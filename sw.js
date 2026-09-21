@@ -70,14 +70,14 @@ self.addEventListener('notificationclick', function(event) {
     event.waitUntil(
       fetch(`/push.php?action=recordatorio_del&id=${data.id}&aviso_ts=${data.aviso_ts || ''}`, {
         method: 'POST',
-        headers: { 'x-app-token': 'PEGAR_TOKEN_AQUI' }
+        headers: { 'x-app-token': '57a921847b942349c0f6d6d187658edb6c9991b313adb010036554e81bc4af19' }
       })
     );
   } else if (action === 'snooze') {
     event.waitUntil(
       fetch(`/push.php?action=recordatorio_snooze&id=${data.id}&aviso_ts=${data.aviso_ts || ''}`, {
         method: 'POST',
-        headers: { 'x-app-token': 'PEGAR_TOKEN_AQUI' }
+        headers: { 'x-app-token': '57a921847b942349c0f6d6d187658edb6c9991b313adb010036554e81bc4af19' }
       })
     );
   } else {
