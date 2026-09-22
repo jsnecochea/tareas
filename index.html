@@ -319,19 +319,19 @@ button{font:inherit;color:inherit}
 .sb-atora{background:linear-gradient(180deg,rgba(255,69,58,.16),rgba(255,69,58,.05));border-color:rgba(255,69,58,.45);box-shadow:0 0 24px rgba(255,69,58,.22);animation:pulsoat 1.5s ease-in-out infinite}
 @keyframes pulsoat{0%,100%{box-shadow:0 0 20px rgba(255,69,58,.18)}50%{box-shadow:0 0 30px rgba(255,69,58,.42)}}
 @media (prefers-reduced-motion:reduce){.sb-atora{animation:none}}
-.sb-atora .sicw{background:rgba(255,69,58,.20);color:#ff8a83}.sb-atora .scnt{background:var(--venc);color:#3a0705}.sb-atora b{color:#ff8a83}
+.sb-atora .sicw{background:rgba(255,69,58,.20);color:#ff8a83}.sb-atora .scnt{background:var(--venc);color:#3a0705}.sb-atora b{color:var(--ink)}
 .sb-pend{background:linear-gradient(180deg,rgba(210,102,10,.20),rgba(210,102,10,.06));border-color:rgba(210,102,10,.5);box-shadow:0 0 20px rgba(210,102,10,.20)}
-.sb-pend .sicw{background:rgba(210,102,10,.24);color:#ffab5c}.sb-pend .scnt{background:var(--naranjaosc);color:#2a1400}.sb-pend b{color:#ffab5c}
+.sb-pend .sicw{background:rgba(210,102,10,.24);color:#ffab5c}.sb-pend .scnt{background:var(--naranjaosc);color:#2a1400}.sb-pend b{color:var(--ink)}
 .sb-venc{background:linear-gradient(180deg,rgba(255,214,10,.14),rgba(255,214,10,.05));border-color:rgba(255,214,10,.40);box-shadow:0 0 20px rgba(255,214,10,.16)}
-.sb-venc .sicw{background:rgba(255,214,10,.18);color:#ffe066}.sb-venc .scnt{background:var(--amar);color:#3a2f00}.sb-venc b{color:#ffe066}
+.sb-venc .sicw{background:rgba(255,214,10,.18);color:#ffe066}.sb-venc .scnt{background:var(--amar);color:#3a2f00}.sb-venc b{color:var(--ink)}
 .sb-msg{background:linear-gradient(180deg,rgba(48,209,88,.14),rgba(48,209,88,.05));border-color:rgba(48,209,88,.40);box-shadow:0 0 20px rgba(48,209,88,.20)}
-.sb-msg .sicw{background:rgba(48,209,88,.18);color:#5ef08a}.sb-msg .scnt{background:var(--hacer);color:#06340f}.sb-msg b{color:#8ff0a9}
+.sb-msg .sicw{background:rgba(48,209,88,.18);color:#5ef08a}.sb-msg .scnt{background:var(--hacer);color:#06340f}.sb-msg b{color:var(--ink)}
 .sb-hoy{background:linear-gradient(180deg,rgba(10,132,255,.14),rgba(10,132,255,.05));border-color:rgba(10,132,255,.40);box-shadow:0 0 20px rgba(10,132,255,.18)}
-.sb-hoy .sicw{background:rgba(10,132,255,.18);color:#8fc4ff}.sb-hoy .scnt{background:var(--azul);color:#031c33}.sb-hoy b{color:#8fc4ff}
+.sb-hoy .sicw{background:rgba(10,132,255,.18);color:#8fc4ff}.sb-hoy .scnt{background:var(--azul);color:#031c33}.sb-hoy b{color:var(--ink)}
 .sb-rec{background:linear-gradient(180deg,rgba(124,100,255,.14),rgba(124,100,255,.05));border-color:rgba(124,100,255,.40);box-shadow:0 0 20px rgba(124,100,255,.18)}
-.sb-rec .sicw{background:rgba(124,100,255,.18);color:#b3a4ff}.sb-rec .scnt{background:var(--morado);color:#180f3a}.sb-rec b{color:#c9beff}
+.sb-rec .sicw{background:rgba(124,100,255,.18);color:#b3a4ff}.sb-rec .scnt{background:var(--morado);color:#180f3a}.sb-rec b{color:var(--ink)}
 .sb-prox{background:linear-gradient(180deg,rgba(142,142,147,.14),rgba(142,142,147,.05));border-color:rgba(142,142,147,.35)}
-.sb-prox .sicw{background:rgba(142,142,147,.18);color:#c7c7cc}.sb-prox .scnt{background:var(--gris-b);color:#1c1c1e}.sb-prox b{color:#d4d4d8}
+.sb-prox .sicw{background:rgba(142,142,147,.18);color:#c7c7cc}.sb-prox .scnt{background:var(--gris-b);color:#1c1c1e}.sb-prox b{color:var(--ink)}
 
 .sec-head .grow{flex:1}
 .marcaje{color:var(--super);font-weight:600}
@@ -480,6 +480,7 @@ button{font:inherit;color:inherit}
 .op.alrm.gris{color:var(--ink-3)}
 .op.alrm.amb{background:rgba(255,159,10,.14);border-color:rgba(255,159,10,.55);color:var(--esper)}
 .op.alrm.roj{background:rgba(255,69,58,.14);border-color:rgba(255,69,58,.6);color:var(--venc)}
+.op.del{flex:0 0 54px;min-width:54px;max-width:54px;display:grid;place-items:center;padding:9px 0}/* Salvador 2026-09-22: bote de basura mismo tamano que la campana, no se estiraba */
 /* la hoja de recordatorios */
 .avscrim{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:60}
 .avsheet{position:fixed;left:0;right:0;bottom:0;z-index:61;background:var(--surface);border-top-left-radius:24px;border-top-right-radius:24px;border-top:.5px solid var(--line);padding:8px 16px calc(22px + env(safe-area-inset-bottom));max-height:84%;overflow-y:auto}
