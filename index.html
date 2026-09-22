@@ -265,11 +265,15 @@ button{font:inherit;color:inherit}
   padding:16px 15px 26px;color:var(--ink-4);font-size:16.2px;cursor:pointer}
 .row:active{background:var(--surface-2)}
 .dot{width:10px;height:10px;border-radius:50%;margin-top:6px}
-.rico{display:flex;align-items:flex-start;margin-top:1px;color:var(--ink-3)}
+.rico{display:flex;align-items:flex-start;margin-top:1px;color:var(--morado)}/* Salvador 2026-09-22: color de su seccion */
 .rico .icx{opacity:.8}
 .d-hacer{background:var(--hacer)}.d-super{background:var(--super)}
 .d-esper{background:var(--esper)}.d-sil{background:var(--sil)}.d-ok{background:var(--ink-3)}
 .d-venc{background:var(--venc)}
+/* puntitos del color de su seccion en el home (Salvador 2026-09-22) */
+.d-sec-atora{background:var(--venc)}.d-sec-pend{background:var(--naranjaosc)}
+.d-sec-venc{background:var(--amar)}.d-sec-msg{background:var(--hacer)}
+.d-sec-hoy{background:var(--azul)}.d-sec-rec{background:var(--morado)}.d-sec-prox{background:var(--gris-b)}
 .d-tenue{background:var(--super);opacity:.42}
 .buscar{padding:8px 14px 4px}
 .binp{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;
@@ -3316,20 +3320,20 @@ function vLista(){
   if(mias_venc.length){
     hVenc=secHead("venc","Vencidas",mias_venc.length,"sb-venc","calx");
     if(secAbierta==="venc"){ hVenc+='<ul class="list">';
-      mias_venc.forEach(function(t){hVenc+=fila(t)}); hVenc+='</ul>'; }
+      mias_venc.forEach(function(t){hVenc+=fila(t,false,"d-sec-venc")}); hVenc+='</ul>'; }
   }
 
   var hMsg="";
   if(msgs.length){
     hMsg=secHead("msg","Tienes mensajes sin leer",msgs.length,"sb-msg","chat");
     if(secAbierta==="msg"){ hMsg+='<ul class="list">';
-      msgs.forEach(function(t){hMsg+=fila(t)}); hMsg+='</ul>'; }
+      msgs.forEach(function(t){hMsg+=fila(t,false,"d-sec-msg")}); hMsg+='</ul>'; }
   }
 
   var hHoy="";
   if(hoyYa.length){
     hHoy=secHead("hoy","Hoy",hoyYa.length,"sb-hoy","hoja");
-    if(secAbierta==="hoy"){ hHoy+='<ul class="list">'; hoyYa.forEach(function(t){hHoy+=fila(t)}); hHoy+='</ul>'; }
+    if(secAbierta==="hoy"){ hHoy+='<ul class="list">'; hoyYa.forEach(function(t){hHoy+=fila(t,false,"d-sec-hoy")}); hHoy+='</ul>'; }
   } else {
     hHoy='<div class="hoyh"><b>Hoy</b></div><ul class="list">'+
       (futuras.length?'':'<li class="vacio">Nada para hoy.</li>')+'</ul>';
@@ -3357,7 +3361,7 @@ function vLista(){
           hProxBody+='<div class="proxd">'+esc(ad===1?"Ma\u00f1ana":fechaBonita(f))+'</div><ul class="list">';
           diaAnt=f;
         }
-        hProxBody+=fila(t,true);
+        hProxBody+=fila(t,true,"d-sec-prox");
       });
       hProxBody+='</ul>';
       if(proxRestan) hProxBody+='<div class="futwrap"><button class="futbtn" id="bmas">'+
@@ -3401,6 +3405,25 @@ function vLista(){
     }
   }
 
+  /* ORDEN DEL SWIPE ENTRE TAREAS — Salvador 2026-09-22: el swipe (window.
+     ordenSwipe) sigue el mismo orden de las 7 secciones AUNQUE esten
+     plegadas, para que al llegar al final de "Hoy" siga solo con
+     Recordatorios, luego Proximas, etc., sin detenerse por el acordeon.
+     Antes se armaba leyendo los renglones pintados en pantalla; con el
+     acordeon (solo una seccion pintada a la vez) eso ya no alcanzaba, asi
+     que ahora se arma directo de las listas, en el mismo orden fijo. */
+  (function(){
+    var seen={}, out=[];
+    function agrega(lista){
+      lista.forEach(function(t){
+        if(!seen[t.id]){ seen[t.id]=1; out.push(t.id); }
+      });
+    }
+    agrega(det); agrega(pend); agrega(mias_venc); agrega(msgs);
+    agrega(hoyYa); agrega(recs); agrega(dentro); agrega(futuras);
+    window.ordenSwipe=out;
+  })();
+
   /* LA PANTALLA ES SOLO TUYA — decision de Salvador, 2026-09-03. La pantalla
      del jefe muestra solo lo suyo y lo que lo detiene; lo de los demas se
      consulta preguntandole a Claude. */
@@ -3421,10 +3444,13 @@ function fechaChip(f){
   if(ad>=2 && ad<=6) return DIAS_L[d.getDay()];
   return d.getDate()+" "+MES_3[d.getMonth()];
 }
-function fila(t, mudo){
+function fila(t, mudo, secClass){
   var b=badge(t), enc=t.encargado, r=ritmo(t);
+  /* Salvador 2026-09-22: si la fila se pinta dentro de una de las 7 secciones
+     con color del home, el puntito toma el color de esa seccion; si no, sigue
+     el estado real de la tarea (como siempre). */
   return '<li><button class="row'+(estadoReal(t)==="cerrada"?" done":"")+
-    '" data-id="'+t.id+'"><span class="dot '+(enc?"d-tenue":dotc(t))+'"></span><span>'+
+    '" data-id="'+t.id+'"><span class="dot '+(secClass||(enc?"d-tenue":dotc(t)))+'"></span><span>'+
     '<span class="nm">'+esc(t.nombre)+'</span>'+
     (enc
       ? '<span class="ls"><span class="marcaje">→ '+esc(PERSONAS[enc.a].nombre)+'</span> · '+esc(esperaDe(t))+'</span>'
@@ -5434,6 +5460,7 @@ function pendientesInfo(){
 function filaPend(t){
   var titulo=(t.nombre&&String(t.nombre).trim())?t.nombre:"Recordatorio sin título";
   return '<div class="pendrow">'+
+    '<span class="dot d-sec-pend" style="margin-top:2px"></span>'+
     '<div class="ptx"><div class="pnm">'+esc(titulo)+'</div>'+
     '<div class="pq" id="cq_'+t.id+'">'+esc(t.pendiente_info||"Falta un dato")+'</div></div>'+
     '<button class="pmic" id="cm_'+t.id+'" data-cmic="'+t.id+'" aria-label="Contestar dictando">'+
@@ -6579,18 +6606,9 @@ function bindLista(){
       vista="hilo"; fichaOpen=false; detOpen={}; menuOpen=false; render();
     };
   });
-  /* orden para el swipe: los renglones TAL COMO quedaron pintados, de arriba
-     hacia abajo (tareas y recordatorios). Los "toque:" apuntan a su tarea padre;
-     se dedup y solo entran los que existen. */
-  window.ordenSwipe=(function(){
-    var seen={}, out=[];
-    Array.prototype.forEach.call(document.querySelectorAll(".row[data-id]"),function(el){
-      var id=el.getAttribute("data-id");
-      if(id.indexOf("toque:")===0) id=id.slice(6);
-      if(!seen[id] && tareas.some(function(t){return t.id===id})){ seen[id]=1; out.push(id); }
-    });
-    return out;
-  })();
+  /* el orden del swipe (window.ordenSwipe) ya se arma en vLista(), en el
+     orden fijo de las 7 secciones, no leyendo el DOM — asi sigue funcionando
+     aunque la seccion este plegada. Salvador 2026-09-22. */
 }
 function bindHilo(){
   var t=tareas.filter(function(x){return x.id===abierta})[0]; if(!t)return;
