@@ -21,6 +21,8 @@
   --ink:#F5F5F7;--ink-2:#98989E;--ink-3:#7A7A80;--ink-4:#636368;
   --hacer:#30D158;--super:#98989E;--esper:#FF9F0A;--venc:#FF453A;--sil:#FF453A;
   --bin:#1D1D21;--bout:#14301F;
+  /* Salvador 2026-09-22: colores de las 7 franjas de seccion del home */
+  --amar:#FFD60A;--azul:#0A84FF;--morado:#7C64FF;--naranjaosc:#D2660A;--gris-b:#8E8E93;
   /* la banda roja del encabezado */
   --rojo-bg:#2B0E0C;--rojo-ctl:#3B1210;--rojo-ink:#FF6961;--rojo-ink2:#D89795;
   --rojo-icon:#A05A55;
@@ -296,6 +298,37 @@ button{font:inherit;color:inherit}
 .sec-chev{width:8px;height:8px;border-right:1.6px solid var(--ink-3);border-bottom:1.6px solid var(--ink-3);
   transform:rotate(-45deg);transition:transform .2s ease;flex:none}
 .sec-chev.open{transform:rotate(45deg)}
+/* ===== BARRAS DE SECCION UNIFORMES — mismo molde, un color por seccion.
+   Aprobado por Salvador 2026-09-22: acordeon (solo una abierta a la vez),
+   contenido siempre blanco/gris (nunca texto de color), puntito/icono lateral
+   del color de su seccion. Reemplaza los .sec-head planos de venc/hoy/rec/prox
+   y unifica con el molde que ya traian .msgbar/.pendbar. ===== */
+.sbar{display:flex;align-items:center;gap:12px;width:calc(100% - 30px);margin:11px 15px 3px;
+  padding:9px 13px;border-radius:12px;cursor:pointer;text-align:left;border:1px solid transparent;
+  background:none;font:inherit;color:inherit}
+.sbar .sicw{position:relative;flex:none;width:34px;height:34px;border-radius:9px;display:grid;place-items:center}
+.sbar .scnt{position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;border-radius:10px;
+  padding:0 5px;display:grid;place-items:center;font-size:12px;font-weight:800;border:2px solid var(--ground)}
+.sbar b{font-size:16px;font-weight:600}
+.sbar .grow{flex:1}
+.sbar .schev{font-size:15px;color:var(--ink-3)}
+.sb-atora{background:linear-gradient(180deg,rgba(255,69,58,.16),rgba(255,69,58,.05));border-color:rgba(255,69,58,.45);box-shadow:0 0 24px rgba(255,69,58,.22);animation:pulsoat 1.5s ease-in-out infinite}
+@keyframes pulsoat{0%,100%{box-shadow:0 0 20px rgba(255,69,58,.18)}50%{box-shadow:0 0 30px rgba(255,69,58,.42)}}
+@media (prefers-reduced-motion:reduce){.sb-atora{animation:none}}
+.sb-atora .sicw{background:rgba(255,69,58,.20);color:#ff8a83}.sb-atora .scnt{background:var(--venc);color:#3a0705}.sb-atora b{color:#ff8a83}
+.sb-pend{background:linear-gradient(180deg,rgba(210,102,10,.20),rgba(210,102,10,.06));border-color:rgba(210,102,10,.5);box-shadow:0 0 20px rgba(210,102,10,.20)}
+.sb-pend .sicw{background:rgba(210,102,10,.24);color:#ffab5c}.sb-pend .scnt{background:var(--naranjaosc);color:#2a1400}.sb-pend b{color:#ffab5c}
+.sb-venc{background:linear-gradient(180deg,rgba(255,214,10,.14),rgba(255,214,10,.05));border-color:rgba(255,214,10,.40);box-shadow:0 0 20px rgba(255,214,10,.16)}
+.sb-venc .sicw{background:rgba(255,214,10,.18);color:#ffe066}.sb-venc .scnt{background:var(--amar);color:#3a2f00}.sb-venc b{color:#ffe066}
+.sb-msg{background:linear-gradient(180deg,rgba(48,209,88,.14),rgba(48,209,88,.05));border-color:rgba(48,209,88,.40);box-shadow:0 0 20px rgba(48,209,88,.20)}
+.sb-msg .sicw{background:rgba(48,209,88,.18);color:#5ef08a}.sb-msg .scnt{background:var(--hacer);color:#06340f}.sb-msg b{color:#8ff0a9}
+.sb-hoy{background:linear-gradient(180deg,rgba(10,132,255,.14),rgba(10,132,255,.05));border-color:rgba(10,132,255,.40);box-shadow:0 0 20px rgba(10,132,255,.18)}
+.sb-hoy .sicw{background:rgba(10,132,255,.18);color:#8fc4ff}.sb-hoy .scnt{background:var(--azul);color:#031c33}.sb-hoy b{color:#8fc4ff}
+.sb-rec{background:linear-gradient(180deg,rgba(124,100,255,.14),rgba(124,100,255,.05));border-color:rgba(124,100,255,.40);box-shadow:0 0 20px rgba(124,100,255,.18)}
+.sb-rec .sicw{background:rgba(124,100,255,.18);color:#b3a4ff}.sb-rec .scnt{background:var(--morado);color:#180f3a}.sb-rec b{color:#c9beff}
+.sb-prox{background:linear-gradient(180deg,rgba(142,142,147,.14),rgba(142,142,147,.05));border-color:rgba(142,142,147,.35)}
+.sb-prox .sicw{background:rgba(142,142,147,.18);color:#c7c7cc}.sb-prox .scnt{background:var(--gris-b);color:#1c1c1e}.sb-prox b{color:#d4d4d8}
+
 .sec-head .grow{flex:1}
 .marcaje{color:var(--super);font-weight:600}
 .pieacc{padding:14px 15px 26px}
@@ -443,7 +476,6 @@ button{font:inherit;color:inherit}
 .op.alrm.gris{color:var(--ink-3)}
 .op.alrm.amb{background:rgba(255,159,10,.14);border-color:rgba(255,159,10,.55);color:var(--esper)}
 .op.alrm.roj{background:rgba(255,69,58,.14);border-color:rgba(255,69,58,.6);color:var(--venc)}
-   .op.del{flex:0 0 54px;min-width:54px;max-width:54px;display:grid;place-items:center;padding:9px 0}/* Salvador 2026-09-22: bote de basura mismo tamano que la campana, no se estiraba */
 /* la hoja de recordatorios */
 .avscrim{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:60}
 .avsheet{position:fixed;left:0;right:0;bottom:0;z-index:61;background:var(--surface);border-top-left-radius:24px;border-top-right-radius:24px;border-top:.5px solid var(--line);padding:8px 16px calc(22px + env(safe-area-inset-bottom));max-height:84%;overflow-y:auto}
@@ -622,7 +654,7 @@ button{font:inherit;color:inherit}
   border:1px solid rgba(255,159,10,.40);border-radius:14px;padding:11px 11px 11px 14px}
 .pendrow .ptx{flex:1;min-width:0}
 .pendrow .pnm{font-size:16px;font-weight:600;color:#fff}
-.pendrow .pq{font-size:14px;font-weight:600;color:var(--esper);margin-top:2px}
+.pendrow .pq{font-size:14px;font-weight:600;color:var(--ink-2);margin-top:2px}/* Salvador 2026-09-22: gris, nunca de color */
 /* el micrófono del bote SIEMPRE naranja vivo (invita a picarle), como en WhatsApp.
    Al grabar cambia el ícono a la flechita de enviar y late. Salvador 2026-09-17. */
 .pmic{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
@@ -1386,19 +1418,16 @@ function transfiere(t, nuevo, razon){
 var menuOpen=false, encAbierto=null, sueltoOpen=false, yoOpen=false;
 var verFuturas=false;   /* despliega la lista de tareas con fecha por delante */
 var masDias=0;          /* cuántos días extra de "Próximas" pidió ver */
-var verMsgs=false;
-var verPend=false;   /* despliega el bote de informacion pendiente */
-var plegado={venc:false,hoy:false,rec:false,prox:false};  /* Salvador 2026-09-21: cada
-   seccion se puede plegar; false = desplegada (asi arranca, igual que antes). Plegada
-   solo se ve su numerito de pendientes, como en WhatsApp o el correo. */
-function secHead(key,label,n){
-  var abierta=!plegado[key];
-  return '<button class="sec-head" data-plegar="'+key+'">'+
-    '<span class="sec-chev'+(abierta?" open":"")+'"></span>'+
-    '<span class="grp">'+esc(label)+'</span>'+
-    '<span class="grow"></span>'+
-    (abierta?"":'<span class="bdg">'+n+'</span>')+
-    '</button>';
+var secAbierta=null;   /* Salvador 2026-09-22: acordeon de las 7 secciones del home
+   (atora/pend/venc/msg/hoy/rec/prox). null = todas colapsadas; si trae una clave, esa
+   es la UNICA seccion abierta — al abrir otra se cierra la anterior sola, sin mover
+   el scroll. Reemplaza a verMsgs/verPend/plegado, que aislaban cada quien a su modo. */
+function secHead(key,label,n,cls,iconKey){
+  var abierta=secAbierta===key;
+  return '<button class="sbar '+cls+(abierta?" open":"")+'" data-sb="'+key+'">'+
+    '<span class="sicw">'+ico(iconKey,18,1.8)+'<span class="scnt">'+n+'</span></span>'+
+    '<b>'+esc(label)+'</b><span class="grow"></span>'+
+    '<span class="schev">'+(abierta?"\u25be":"\u203a")+'</span></button>';
 }
 var posRev=false;       /* hoja de "posponer revisión": ¿cuándo la vuelves a ver? */      /* aísla las tareas con mensajes sin leer */
 var negociar=null;      /* flujo "Muy caro": {id, cargando, mensaje, ops[]} */
@@ -3204,15 +3233,6 @@ function vLista(){
   var det=loQueDetengo();
   var arr=mias(), mis=misEncargos();
   var res=esJefe?resumenDelDia():null;
-  /* ---- ENCABEZADO FIJO DE DOS RENGLONES — aprobado 2026-09-02, OPCION A ----
-     Verde discreto al lado del nombre; en rojo se tine TODO el encabezado y
-     respira. No hay "marcar como visto": el rojo se apaga solo cuando ya nadie
-     espera. SE QUITARON de aqui el resumen de conteos, el renglon "nadie esta
-     parado esperandote", los dos botones sueltos y la flechita de cada renglon. */
-  /* Encabezado LIMPIO: solo el nombre y el engrane. Se quitó el contador
-     "Detienes a N" (Salvador 2026-09-04): esas tareas ya salen SIEMPRE hasta
-     arriba de la lista con su reloj y su "fulano lleva X esperando", así que
-     el contador no aportaba nada y ensuciaba. */
   h='<div class="enc" id="enc">'+
     '<div class="r1"><div class="nom" id="byo" role="button">'+esc(PERSONAS[yo].nombre)+'</div>'+
     '<div class="grow"></div>'+
@@ -3221,18 +3241,12 @@ function vLista(){
 
   h+='<div class="scroll">';
 
-  /* PANTALLA IMPECABLE — Salvador, 2026-09-04. Se quitaron de aquí el aviso rojo de
-     "base cerrada" y el letrero de "agrégala a tu inicio": ensuciaban la pantalla y
-     asustan al abrir. Las fallas técnicas (como la base cerrada) se le reportan a
-     Salvador por el chat, NO en la app. El fallo puntual de un guardado sigue
-     avisándose con un toast momentáneo, no con una caja fija. */
-
   if(consulta){
     var enc=busca(consulta);
-    h+='<div class="grp">Resultado · '+enc.length+'</div><ul class="list">';
-    if(!enc.length) h+='<li class="vacio">No encontré nada con eso.</li>';
+    h+='<div class="grp">Resultado \u00b7 '+enc.length+'</div><ul class="list">';
+    if(!enc.length) h+='<li class="vacio">No encontr\u00e9 nada con eso.</li>';
     enc.forEach(function(t){ h+=fila(t) });
-    h+='</ul><div class="pieacc"><button class="op" id="bclr">Limpiar búsqueda</button></div></div>';
+    h+='</ul><div class="pieacc"><button class="op" id="bclr">Limpiar b\u00fasqueda</button></div></div>';
     return h+barraPie();
   }
 
@@ -3240,149 +3254,146 @@ function vLista(){
 
   var msgs=misMensajes();
   var pend=pendientesInfo();
-  function franjaPend(abierta){
-    return '<button class="pendbar" id="bpend">'+
-      '<span class="pcw"><b class="qmk">?</b><span class="pcount">'+pend.length+'</span></span>'+
-      '<b>'+pend.length+' con información pendiente</b><span class="grow"></span>'+
-      '<span class="pchev">'+(abierta?"\u25be":"\u203a")+'</span></button>';
-  }
-  if(verPend && !pend.length) verPend=false;
-  if(verPend && pend.length){
-    h+=franjaPend(true)+'<div class="pendwrap">';
-    pend.forEach(function(t){ h+=filaPend(t) });
-    h+='</div></div>'; return h+barraPie();
-  }
+  /* si la seccion abierta se quedo sin contenido (se resolvio la ultima
+     pendiente/mensaje/traba), se cierra el acordeon solo */
+  if(secAbierta==="pend" && !pend.length) secAbierta=null;
+  if(secAbierta==="msg" && !msgs.length) secAbierta=null;
+  if(secAbierta==="atora" && !det.length) secAbierta=null;
 
-  /* LA FRANJA VERDE se toca y AÍSLA: desaparece todo lo demás y solo quedan las
-     tareas con mensaje sin leer, hasta que las acabas o vuelves a tocarla. */
-  function franjaMsg(abierta){
-    return '<button class="msgbar" id="bmsg">'+
-      '<span class="micw">'+ico("chat",19,1.7)+'<span class="mcount">'+msgs.length+'</span></span>'+
-      '<b>Tienes mensajes sin leer</b><span class="grow"></span>'+
-      '<span class="mchev">'+(abierta?"▾":"›")+'</span></button>';
-  }
-
-  /* MODO AISLADO de la verde: solo la franja abierta y su lista, nada más. */
-  if(verMsgs && msgs.length){
-    h+=franjaMsg(true)+'<ul class="list">';
-    msgs.forEach(function(t){ h+=fila(t) });
-    h+='</ul></div>'; return h+barraPie();
-  }
-
-  /* HOME NORMAL: la franja verde arriba, y luego el flujo.
-     LO QUE TÚ DETIENES ya no lleva franja: son las PRIMERAS tareas de la lista,
-     marcadas URGENTE (Salvador 2026-09-04). Si están a la vista no hay que
-     aislarlas: ya son lo primero que se ve. */
-  if(pend.length) h+=franjaPend(false);
   h+=vRecienCreadas();
-  if(msgs.length) h+=franjaMsg(false);
+
+  /* ===== ACORDEON DE 7 SECCIONES DEL HOME — orden y color fijos, aprobados
+     por Salvador 2026-09-22 (mock-up v3): 1 atoras a alguien (rojo) \u00b7
+     2 con informacion pendiente (naranja oscuro) \u00b7 3 vencidas (amarillo) \u00b7
+     4 avisos/mensajes sin leer (verde) \u00b7 5 hoy (azul) \u00b7 6 recordatorios
+     (morado) \u00b7 7 proximas (gris). Solo UNA seccion abierta a la vez
+     (secAbierta); el contenido de cada renglon queda siempre blanco/gris,
+     nunca de color \u2014 lo unico que cambia por seccion es el icono y el
+     puntito/franja. "Te encargaron" no es de las 7 con color: sigue igual,
+     pegada despues de "Atoras a alguien". */
+
+  var hAtora="";
   if(det.length){
-    h+='<ul class="list">';
-    det.forEach(function(t){ h+=filaUrg(t) });
-    h+='</ul>';
+    hAtora=secHead("atora","Atoras a alguien m\u00e1s",det.length,"sb-atora","warn");
+    if(secAbierta==="atora"){
+      hAtora+='<ul class="list">'; det.forEach(function(t){hAtora+=filaUrg(t)}); hAtora+='</ul>';
+    }
   }
 
+  var hMis="";
   if(mis.length){
-    h+='<div class="grp">Te encargaron · '+mis.length+'</div><ul class="list">';
+    hMis='<div class="grp">Te encargaron \u00b7 '+mis.length+'</div><ul class="list">';
     mis.forEach(function(e){
       var venc=dDif(e.limite,hoy())>0;
-      h+='<li><button class="row" data-enc="'+e.id+'">'+
+      hMis+='<li><button class="row" data-enc="'+e.id+'">'+
         '<span class="dot '+(venc?"d-venc":"d-esper")+'"></span><span>'+
-        '<span class="nm">'+esc(PERSONAS[e.de].nombre)+' te encargó</span>'+
+        '<span class="nm">'+esc(PERSONAS[e.de].nombre)+' te encarg\u00f3</span>'+
         '<span class="ls">'+esc(e.texto)+'</span></span>'+
         '<span class="meta">'+(venc?'<span class="bdg g-venc">!</span>':'<span class="bdg g-esper">1</span>')+
         '</span></button></li>';
     });
-    h+='</ul>';
+    hMis+='</ul>';
   }
 
-  /* ---- UNA SOLA LISTA, NO PESTAÑAS. En cuanto hay pestañas, la gente vive
-     en una y se olvida de las otras. Así murió la app anterior. ----
-     Decisión de Salvador 2026-09-04: NO dividir por tipo de traba. Las que uno
-     persigue (autorización, proveedor, presupuesto, delegadas) van al FLUJO
-     NORMAL, mandadas por su ritmo; atrasadas = rojas en Vencidas. Solo se separa
-     arriba lo que DETIENE A OTRO (te están esperando). Se quitó el grupo
-     "Delegaste y no te contestaron": una delegada atrasada ya sale en Vencidas. */
+  var hPend="";
+  if(pend.length){
+    hPend=secHead("pend","Con informaci\u00f3n pendiente",pend.length,"sb-pend","pencil");
+    if(secAbierta==="pend"){
+      hPend+='<div class="pendwrap">'; pend.forEach(function(t){hPend+=filaPend(t)}); hPend+='</div>';
+    }
+  }
+
+  /* ---- UNA SOLA LISTA, NO PESTAÑAS. Decisión de Salvador 2026-09-04: no
+     dividir por tipo de traba; atrasadas = Vencidas, lo que DETIENE A OTRO
+     va aparte arriba (seccion "atora"). ---- */
   var mias_venc=arr.filter(function(t){return det.indexOf(t)<0 && estadoReal(t)==="vencida"});
   var resto=arr.filter(function(t){return det.indexOf(t)<0 && mias_venc.indexOf(t)<0});
-  /* HOY = para hoy o antes. FUTURAS = con fecha por delante, escondidas tras un
-     boton — pedido por Salvador 2026-09-04: cuando no hay nada hoy, un botoncito
-     bonito "Ver tareas futuras" en vez de una lista larga. Semilla de "Proximas". */
   var hoyYa=resto.filter(function(t){return dDif(t.f_vigente||hoy(),hoy())>=0});
   var futuras=resto.filter(function(t){return dDif(t.f_vigente||hoy(),hoy())<0})
                    .sort(function(a,b){return (a.f_vigente||"").localeCompare(b.f_vigente||"")});
 
+  var hVenc="";
   if(mias_venc.length){
-    h+=secHead("venc","Vencidas",mias_venc.length);
-    if(!plegado.venc){ h+='<ul class="list">';
-      mias_venc.forEach(function(t){h+=fila(t)}); h+='</ul>'; }
-  }
-  if(hoyYa.length){
-    h+=secHead("hoy","Hoy",hoyYa.length);
-    if(!plegado.hoy){ h+='<ul class="list">'; hoyYa.forEach(function(t){h+=fila(t)}); h+='</ul>'; }
-  } else {
-    h+='<div class="hoyh"><b>Hoy</b></div><ul class="list">';
-    if(!futuras.length) h+='<li class="vacio">Nada para hoy.</li>';
-    h+='</ul>';
+    hVenc=secHead("venc","Vencidas",mias_venc.length,"sb-venc","calx");
+    if(secAbierta==="venc"){ hVenc+='<ul class="list">';
+      mias_venc.forEach(function(t){hVenc+=fila(t)}); hVenc+='</ul>'; }
   }
 
-  /* PRÓXIMAS — dictada por Salvador: cuando no hay nada para hoy, en vez del
-     hueco de "Nada para hoy" se ven las que vienen, en orden, agrupadas por día.
-     El HORIZONTE se adapta al volumen: si trae muchas, solo un par de días; si
-     trae pocas, hasta una semana. Abajo, "Ver más" abre otra semana. */
-  var proxRestan=0;
+  var hMsg="";
+  if(msgs.length){
+    hMsg=secHead("msg","Tienes mensajes sin leer",msgs.length,"sb-msg","chat");
+    if(secAbierta==="msg"){ hMsg+='<ul class="list">';
+      msgs.forEach(function(t){hMsg+=fila(t)}); hMsg+='</ul>'; }
+  }
+
+  var hHoy="";
+  if(hoyYa.length){
+    hHoy=secHead("hoy","Hoy",hoyYa.length,"sb-hoy","hoja");
+    if(secAbierta==="hoy"){ hHoy+='<ul class="list">'; hoyYa.forEach(function(t){hHoy+=fila(t)}); hHoy+='</ul>'; }
+  } else {
+    hHoy='<div class="hoyh"><b>Hoy</b></div><ul class="list">'+
+      (futuras.length?'':'<li class="vacio">Nada para hoy.</li>')+'</ul>';
+  }
+
+  /* PRÓXIMAS — cuando no hay nada para hoy, en vez del hueco se ven las que
+     vienen, agrupadas por dia. El horizonte se adapta al volumen. */
+  var proxRestan=0, hProxBody="", dentro=[];
   if(!hoyYa.length && futuras.length){
     var base = futuras.length>=20 ? 2 : (futuras.length>=10 ? 4 : 8);
     var tope = base + masDias;
-    var dentro=[], fuera=[];
+    var fuera=[];
     futuras.forEach(function(t){
       var ad = -dDif(t.f_vigente||hoy(), hoy());
       (ad<=tope ? dentro : fuera).push(t);
     });
     proxRestan=fuera.length;
-    if(dentro.length){
-      h+=secHead("prox","Próximas",dentro.length);
-      if(!plegado.prox){
-        var diaAnt="";
-        dentro.forEach(function(t){
-          var f=t.f_vigente||hoy();
-          if(f!==diaAnt){
-            if(diaAnt) h+='</ul>';
-            var ad=-dDif(f,hoy());
-            h+='<div class="proxd">'+esc(ad===1?"Mañana":fechaBonita(f))+'</div><ul class="list">';
-            diaAnt=f;
-          }
-          h+=fila(t,true);
-        });
-        h+='</ul>';
-        if(proxRestan) h+='<div class="futwrap"><button class="futbtn" id="bmas">'+
-          ico("cal",18,1.8)+'<span>Ver más · '+proxRestan+'</span></button></div>';
-      }
+    if(dentro.length && secAbierta==="prox"){
+      var diaAnt="";
+      dentro.forEach(function(t){
+        var f=t.f_vigente||hoy();
+        if(f!==diaAnt){
+          if(diaAnt) hProxBody+='</ul>';
+          var ad=-dDif(f,hoy());
+          hProxBody+='<div class="proxd">'+esc(ad===1?"Ma\u00f1ana":fechaBonita(f))+'</div><ul class="list">';
+          diaAnt=f;
+        }
+        hProxBody+=fila(t,true);
+      });
+      hProxBody+='</ul>';
+      if(proxRestan) hProxBody+='<div class="futwrap"><button class="futbtn" id="bmas">'+
+        ico("cal",18,1.8)+'<span>Ver m\u00e1s \u00b7 '+proxRestan+'</span></button></div>';
     }
   }
 
-  /* RECORDATORIOS — aparte, sin semáforo. Solo avisan; no se ejecutan ni cierran. */
   var recs=misRecordatorios();
+  var hRec="";
   if(recs.length){
-    h+=secHead("rec","Recordatorios",recs.length);
-    if(!plegado.rec){ h+='<ul class="list">';
+    hRec=secHead("rec","Recordatorios",recs.length,"sb-rec","bell");
+    if(secAbierta==="rec"){
+      hRec+='<ul class="list">';
       recs.forEach(function(t){
-        h+='<li><button class="row" data-id="'+t.id+'">'+
+        hRec+='<li><button class="row" data-id="'+t.id+'">'+
           '<span class="rico">'+ico("bell",18,1.7)+'</span><span>'+
           '<span class="nm">'+esc(t.nombre)+'</span>'+
           '<span class="ls">te aviso el '+esc(fechaBonita(t.f_vigente))+'</span></span>'+
           '</button></li>';
       });
-      h+='</ul>';
+      hRec+='</ul>';
     }
   }
 
-  /* boton de tareas futuras + lista que se despliega (solo si no salieron ya
-     como "Próximas", para no repetirlas) */
+  var hProx="";
+  if(dentro.length){
+    hProx=secHead("prox","Pr\u00f3ximas",dentro.length,"sb-prox","cal")+hProxBody;
+  }
+
+  /* ===== orden final aprobado 2026-09-22 ===== */
+  h+=hAtora+hMis+hPend+hVenc+hMsg+hHoy+hRec+hProx;
+
   if(futuras.length && hoyYa.length){
     h+='<div class="futwrap"><button class="futbtn" id="bfut">'+
        ico("cal",18,1.8)+'<span>'+(verFuturas?"Ocultar futuras":"Ver tareas futuras")+
-       ' · '+futuras.length+'</span></button></div>';
+       ' \u00b7 '+futuras.length+'</span></button></div>';
     if(verFuturas){
       h+='<ul class="list">';
       futuras.forEach(function(t){h+=fila(t)});
@@ -3390,13 +3401,9 @@ function vLista(){
     }
   }
 
-  /* LA PANTALLA ES SOLO TUYA — decision de Salvador, 2026-09-03.
-     Se quito el pie "en seguimiento mio · Ver todo". Con 100 empleados, un
-     "ver todo" con las tareas de todos es un chorizo inutil. La pantalla del
-     jefe muestra SOLO lo suyo y lo que lo detiene (ya sale arriba). Lo de los
-     demas NO se lista: se consulta preguntandole a Claude — "muestrame las de
-     Samuel", "que reviso de Karina", "en que colaboro con Samuel". Eso lo
-     contesta el cerebro bajo demanda, no satura la pantalla. */
+  /* LA PANTALLA ES SOLO TUYA — decision de Salvador, 2026-09-03. La pantalla
+     del jefe muestra solo lo suyo y lo que lo detiene; lo de los demas se
+     consulta preguntandole a Claude. */
   return h+'</div>'+barraPie();
 }
 
@@ -3523,7 +3530,12 @@ function ico(n,px,gr){
     mas :'<path d="M12 5.6v12.8M5.6 12h12.8"/>',
     /* bote de basura — eliminar tarea/recordatorio (Salvador 2026-09-22) */
     trash:'<path d="M4 7h16M9.5 7V4.8a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1V7M6.5 7l.9 12.1a2 2 0 0 0 2 1.9h5.2a2 2 0 0 0 2-1.9L18.5 7"/>'+
-          '<path d="M10 11v6M14 11v6"/>'
+          '<path d="M10 11v6M14 11v6"/>',
+    /* iconos de las 7 franjas de seccion del home (Salvador 2026-09-22) */
+    warn:'<path d="M12 3.4 21.6 20H2.4L12 3.4Z"/><path d="M12 9.6v4.4M12 17.2h.01"/>',
+    pencil:'<path d="M15 4l5 5-11 11H4v-5L15 4Z"/><path d="M13 6l5 5"/>',
+    calx:'<path d="M7 3h8l3 3v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M9 9l6 6M15 9l-6 6"/>',
+    hoja:'<path d="M7 3h10v18l-5-3-5 3V3Z"/><path d="M9 8h6M9 11.5h6"/>'
   }[n]||"";
   return '<svg class="icx" viewBox="0 0 24 24" width="'+s+'" height="'+s+'" fill="none" '+
     'stroke="currentColor" stroke-width="'+w+'" stroke-linecap="round" '+
@@ -5471,7 +5483,7 @@ function autoEjecuta(b){
   }
   if(meta){ window.recienCreadas.unshift(meta);
     if(window.recienCreadas.length>8) window.recienCreadas.length=8; }
-  barraEstado=null; consulta=""; fotoEnMano=null; vista="lista"; verPend=false; render();
+  barraEstado=null; consulta=""; fotoEnMano=null; vista="lista"; secAbierta=null; render();
 }
 /* ===== RECORDATORIO QUE PERTENECE A UNA TAREA (Salvador 2026-09-17) =====
    Cuando un "recuerdame" habla de algo que YA es una tarea, no nace suelto: se
@@ -5660,7 +5672,7 @@ function insertaAviso(t, r, foto){
   if(foto) pegaFotoA(t,foto);
   guarda(t); sincronizaAvisos(t);
   fichitaAviso(t, av);
-  barraEstado=null; consulta=""; fotoEnMano=null; vista="lista"; verPend=false; render();
+  barraEstado=null; consulta=""; fotoEnMano=null; vista="lista"; secAbierta=null; render();
   toast("Insertado en “"+t.nombre+"”");
 }
 function desinsertaAviso(taskId, ts){
@@ -5683,7 +5695,7 @@ function preguntaCuandoInserta(t, r, foto){
   barraEstado={modo:"pregunta", insertaEn:t.id, avisoTs:av.ts, foto:null,
     titulo:"Recordatorio en “"+t.nombre+"”",
     pregunta:"¿Cuándo te aviso? Dime el día o la hora."};
-  consulta=""; fotoEnMano=null; vista="barra"; verPend=false; render();
+  consulta=""; fotoEnMano=null; vista="barra"; secAbierta=null; render();
 }
 /* GUARDA EL RECORDATORIO DE UNA, ANTES DE PREGUNTAR NADA (Salvador 2026-09-17:
    la prioridad es que NADA se pierda). Si trae cuándo, nace como recordatorio
@@ -5731,7 +5743,7 @@ function creaIncompleta(d, pregunta, tipo, foto){
       para:(tc.duenio!==yo?tc.duenio:null),
       fecha:(tc.f_vigente?("para el "+fechaBonita(tc.f_vigente)):"")});
     if(window.recienCreadas.length>8) window.recienCreadas.length=8;
-    barraEstado=null; consulta=""; fotoEnMano=null; vista="lista"; verPend=false; render();
+    barraEstado=null; consulta=""; fotoEnMano=null; vista="lista"; secAbierta=null; render();
     return;
   }
   /* CASO 4: ni dia ni hora -> se guarda YA en el bote (nada se pierde) y se
@@ -5744,7 +5756,7 @@ function creaIncompleta(d, pregunta, tipo, foto){
   if(foto) pegaFotoA(t,foto);
   barraEstado={modo:"pregunta", dicho:d.dicho||"", pregunta:(pregunta||"Falta un dato"),
     titulo:(t.nombre||""), completandoId:t.id};
-  consulta=""; fotoEnMano=null; vista="barra"; verPend=false; render();
+  consulta=""; fotoEnMano=null; vista="barra"; secAbierta=null; render();
 }
 /* borra de verdad (para Deshacer) */
 function borraTarea(id){
@@ -6514,10 +6526,9 @@ function bindLista(){
   var bc=$("bclr"); if(bc) bc.onclick=function(){ consulta=""; render() };
   var bfu=$("bfut"); if(bfu) bfu.onclick=function(){ verFuturas=!verFuturas; render() };
   var bms2=$("bmas"); if(bms2) bms2.onclick=function(){ masDias+=7; render() };
-  var bms=$("bmsg"); if(bms) bms.onclick=function(){ verMsgs=!verMsgs; render() };
-  var bpe=$("bpend"); if(bpe) bpe.onclick=function(){ verPend=!verPend; render() };
-  Array.prototype.forEach.call(document.querySelectorAll("[data-plegar]"),function(el){
-    el.onclick=function(){ var k=el.getAttribute("data-plegar"); plegado[k]=!plegado[k]; render() };
+  /* Salvador 2026-09-22: una sola franja de seccion abierta a la vez (acordeon) */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-sb]"),function(el){
+    el.onclick=function(){ var k=el.getAttribute("data-sb"); secAbierta=(secAbierta===k?null:k); render() };
   });
   Array.prototype.forEach.call(document.querySelectorAll("[data-cmic]"),function(el){
     el.onclick=function(){ arrancaDictadoCompleta(el, el.getAttribute("data-cmic")); };
