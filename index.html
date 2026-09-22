@@ -3519,7 +3519,10 @@ function ico(n,px,gr){
     reloj:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.4V12l3 2"/>',
     /* la flecha de enviar: arriba, como la de Claude y la de WhatsApp */
     sube:'<path d="M12 19.2V5.2"/><path d="M5.6 11.6 12 5.2l6.4 6.4"/>',
-    mas :'<path d="M12 5.6v12.8M5.6 12h12.8"/>'
+    mas :'<path d="M12 5.6v12.8M5.6 12h12.8"/>',
+    /* bote de basura — eliminar tarea/recordatorio (Salvador 2026-09-22) */
+    trash:'<path d="M4 7h16M9.5 7V4.8a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1V7M6.5 7l.9 12.1a2 2 0 0 0 2 1.9h5.2a2 2 0 0 0 2-1.9L18.5 7"/>'+
+          '<path d="M10 11v6M14 11v6"/>'
   }[n]||"";
   return '<svg class="icx" viewBox="0 0 24 24" width="'+s+'" height="'+s+'" fill="none" '+
     'stroke="currentColor" stroke-width="'+w+'" stroke-linecap="round" '+
@@ -4011,10 +4014,14 @@ function vHilo(){
     var _est=estadoRelojito(t);
     var _rel='<button class="op alrm '+_est+'" id="brel" aria-label="Recordatorios">'+ico("bell",22,1.7)+'</button>';
     var _ya='<button class="op ya" id="bya"><svg class="icx" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg> Ya está</button>';
+    /* bote de basura (Salvador 2026-09-22): mismo tamaño que la campana.
+       En tarea abre el cierre honesto (motivo) que ya existia en el menu "...".
+       En recordatorio suelto solo pide confirmar y lo borra, sin pedir motivo. */
+    var _tr='<button class="op del" id="'+(t.es_recordatorio?"btrashrec":"btrash")+'" aria-label="Eliminar">'+ico("trash",22,1.7)+'</button>';
     if(t.es_recordatorio){
-      sug=_rel+_ya;
+      sug=_rel+_ya+_tr;
     } else {
-      sug=_rel+'<button class="op nt" id="batorado">Estoy atorado</button>'+_ya;
+      sug=_rel+'<button class="op nt" id="batorado">Estoy atorado</button>'+_ya+_tr;
     }
   }
   var pre=t.pregunta&&t.duenio===yo?'<div class="b bi" style="margin:0 14px 8px">'+esc(t.pregunta)+'</div>':"";
@@ -6695,6 +6702,11 @@ function bindHilo(){
       leeEnVoz(x.tr||x.t||"", el); };
   });
   var bya=$("bya"); if(bya) bya.onclick=function(){ intentaCerrar(t) };
+  /* bote de basura (Salvador 2026-09-22) */
+  var btr=$("btrash"); if(btr) btr.onclick=function(){ vista="cerrarmotivo"; render(); };
+  var btrr=$("btrashrec"); if(btrr) btrr.onclick=function(){
+    if(confirm("¿Seguro que deseas eliminar este recordatorio?")) eliminaAvisoDe(t,"self");
+  };
   /* ===== HOJA DE RECORDATORIOS (relojito) — Salvador 2026-09-18 ===== */
   var brel=$("brel"); if(brel) brel.onclick=function(){ window.__avSheet=(window.__avSheet===t.id?null:t.id); render(); };
   var avsc=$("avscrim"); if(avsc) avsc.onclick=function(){ window.__avSheet=null; render(); };
@@ -7163,14 +7175,30 @@ function entraPorInvitacion(tk){
                  cierra:"",revisar:"",criticidad:"normal",periodicidad:null,
                  recuperable:true,gasto:""};
     }
-    /* C7-bis (Salvador 2026-09-16): "recuerdame ..." es un RECORDATORIO, nunca un
-       PASO de otra tarea ni una busqueda. Asi no lo confunde con "llamar al doctor". */
+    /* C7-bis (Salvador 2026-09-16, corregida 2026-09-22): "recuerdame ..." NO es
+       automaticamente RECORDATORIO. Si lo dictado trae un verbo de accion (algo
+       que HACER, no solo un aviso que llega solo), es TAREA con su fecha, y el
+       recordatorio se cuelga ahi \u2014 nunca recordatorio suelto. Ejemplo real de
+       Salvador: "recuerdame cortarte el pelo" -> tarea "Cortarte el pelo", NO
+       recordatorio. Solo sigue siendo RECORDATORIO cuando no hay nada que
+       ejecutar (p. ej. "recuerdame que sale mi vuelo a las 6"). Lista de verbos
+       es heuristica: se amplia si aparece un caso que no cubre. */
+    var _VERBO_ACCION=/\b(cort(a|ar|arte|arme|alo|ala)|ba[n\u00f1](a|ar|arte|arme|alo|ala)|llam(a|ar|arle|arla|arlo)|llev(a|ar|arte|arlo|arla|arlos|arlas)|pag(a|ar|arle|alo|ala)|revis(a|ar|alo|ala)|entreg(a|ar|arlo|arla)|compr(a|ar|arlo|arla)|recog(e|er|elo|ela)|mand(a|ar|arlo|arla)|envi(a|ar|arlo|arla)|arregl(a|ar|arlo|arla)|repar(a|ar|arlo|arla)|chec(a|ar|alo|ala)|confirm(a|ar|alo|ala)|cobr(a|ar|arle)|firm(a|ar|alo|ala)|imprim(e|ir|elo|ela)|renov(a|ar|arlo|arla)|tramit(a|ar|arlo|arla)|sac(a|ar|alo|ala)|contrat(a|ar|arlo|arla)|agend(a|ar|alo|ala)|program(a|ar|alo|ala)|visit(a|ar|arlo|arla)|hac(er|elo|ela)|cambi(a|ar|arlo|ala)|limpi(a|ar|alo|ala)|organiz(a|ar|alo|ala)|comprar|actualiz(a|ar|alo|ala)|termin(a|ar|alo|ala)|escrib(e|ir|elo|ela)|mand(a|ar))\b/i;
     if(/\b(recu[e\u00e9]rda(me|nos)?|acu[e\u00e9]rda(te|me)?|recordatorio)\b/.test(_norm(dicho)) &&
-       ["RECORDATORIO","CREAR","ENVIAR"].indexOf(i)<0){
+       ["RECORDATORIO","CREAR","ENVIAR"].indexOf(i)<0 && !_VERBO_ACCION.test(_norm(dicho))){
       i="RECORDATORIO"; j.intencion="RECORDATORIO";
       var _rt=String(dicho||"").replace(/^\s*(recu[e\u00e9]rda(me|nos)?|acu[e\u00e9]rda(te|me)?|ponme (un )?recordatorio( de| para)?)\s+/i,"");
       j.recordatorio={texto:conMayuscula(limpiaDictado(sinLaFecha(nombreDeLoDicho(_rt||dicho)))),
                       fecha:diaW(dichoTotal)||""};
+    } else if(/\b(recu[e\u00e9]rda(me|nos)?|acu[e\u00e9]rda(te|me)?|recordatorio)\b/.test(_norm(dicho)) &&
+       ["CREAR","ENVIAR"].indexOf(i)<0 && _VERBO_ACCION.test(_norm(dicho))){
+      i="CREAR"; j.intencion="CREAR";
+      var _rt2=String(dicho||"").replace(/^\s*(recu[e\u00e9]rda(me|nos)?|acu[e\u00e9]rda(te|me)?|ponme (un )?recordatorio( de| para)?)\s+/i,"");
+      if(!j.tarea||!j.tarea.nombre)
+        j.tarea={nombre:conMayuscula(limpiaDictado(sinLaFecha(nombreDeLoDicho(_rt2||dicho)))),
+                 duenio:quienDicho(dicho)||yo, fecha:diaW(dichoTotal)||"",
+                 cierra:"",revisar:"",criticidad:"normal",periodicidad:null,
+                 recuperable:true,gasto:""};
     }
     /* C2: peticion que espera respuesta = ENCARGO, nunca comentario */
     if(i==="COMENTAR" && j.comentar && j.comentar.a && PET.test(_norm(j.comentar.texto||dicho))){
