@@ -910,17 +910,40 @@ function activaAvisos(cb){
   }).catch(function(){ cb(false,"No se pudo pedir el permiso."); });
 }
 
+/* RESINCRONIZAR SIN PREGUNTAR (Salvador 2026-09-22). Al borrar y reinstalar la
+   app, el iPhone conserva el permiso pero el servidor pierde la suscripcion:
+   push.php contestaba "No se encontro suscripcion push para el usuario". Como
+   el permiso ya esta dado, aqui NO se pide (no hace falta toque): solo se toma
+   la suscripcion del navegador (o se crea) y se vuelve a mandar al servidor.
+   Corre al arrancar y cada vez que se pica el boton de avisos. */
+function resincronizaAvisos(cb){
+  cb=cb||function(){};
+  try{
+    if(!("serviceWorker" in navigator) || !("PushManager" in window) || Notification.permission!=="granted"){ cb(false); return; }
+    navigator.serviceWorker.ready.then(function(reg){
+      return reg.pushManager.getSubscription().then(function(sub){
+        if(sub) return sub;
+        return reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:vapidBytes(VAPID_PUBLIC)});
+      });
+    }).then(function(sub){
+      var j=sub.toJSON();
+      return fetch(PUSH,{method:"POST",
+        headers:{"content-type":"application/json","x-app-token":APP_TOKEN},
+        body:JSON.stringify({usuario:yo||"anonimo", subscription:{endpoint:j.endpoint, keys:j.keys}})});
+    }).then(function(r){ cb(!!(r&&r.ok)); }).catch(function(){ cb(false); });
+  }catch(e){ cb(false); }
+}
 /* --- AVISOS PUSH: tarjeta y banner compartidos (Salvador 2026-09-18).
    La tarjeta vive en "Tu cuenta" (todos) y como PRIMERA sección del engrane.
    El banner sale en el home mientras no estén activados. --- */
 function cardAvisos(){
   var e=estadoAvisos(), ya=(e.ok && e.ya);
-  var sub = ya ? "Este teléfono ya recibe tus avisos."
+  var sub = ya ? "Este teléfono tiene permiso de avisos. Si dejaron de llegar (por ejemplo, reinstalaste la app), vuelve a activarlos aquí."
          : (e.ok ? "Un aviso al celular cuando algo te espera o se te vence. Actívalo en cada teléfono donde quieras recibirlos."
                  : (e.motivo||""));
   return '<h2>Avisos en este teléfono</h2>'+
     '<div class="card"><div class="sm">'+esc(sub)+'</div>'+
-    (e.ok ? '<div class="acts"><button class="mini" id="bavisos"'+(ya?' disabled':'')+'>'+(ya?"Avisos activados":"Activar avisos aquí")+'</button></div>' : '')+
+    (e.ok ? '<div class="acts"><button class="mini" id="bavisos">'+(ya?"Reactivar avisos aquí":"Activar avisos aquí")+'</button></div>' : '')+
     '</div>';
 }
 function bindBotonAvisos(){
@@ -931,6 +954,8 @@ function bindBotonAvisos(){
       ba.disabled=false; ba.textContent=ok?"Avisos activados":"Activar avisos aquí";
       toast(msg);
       if(ok){ window.__nudgeAvisos=false; render(); }
+      /* aunque el permiso ya estuviera dado, se re-manda la suscripcion al servidor */
+      if(ok) resincronizaAvisos(function(ok2){ if(!ok2) toast("El servidor no confirmó la suscripción."); });
     });
   };
 }
@@ -1792,7 +1817,10 @@ function pasoAvisos(cont){
     activaAvisos(function(ok,m){ cont(); if(m) toast(m) });
   };
 }
-function entrar(u){ yo=u; $("gate").classList.remove("on"); $("app").style.display="flex"; arranca(); }
+function entrar(u){ yo=u; $("gate").classList.remove("on"); $("app").style.display="flex"; arranca();
+  /* Salvador 2026-09-22: re-mandar la suscripcion push al servidor en cada
+     arranque, por si se reinstalo la app y el servidor la perdio. Silencioso. */
+  setTimeout(function(){ resincronizaAvisos(); }, 2500); }
 
 /* ============ DATOS ============ */
 function arranca(){
