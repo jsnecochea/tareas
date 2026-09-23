@@ -402,6 +402,9 @@ button{font:inherit;color:inherit}
 .bal{align-self:flex-start;background:var(--sil);color:#fff;border-bottom-left-radius:3px}
 .st{display:block;font-size:14.2px;color:var(--ink-3);margin-top:2px;font-variant-numeric:tabular-nums}
 .bal .st{color:rgba(255,255,255,.7)}
+.mdel{float:right;margin:-3px -4px 0 10px;padding:4px 6px;border:0;background:none;color:var(--ink-3);
+  cursor:pointer;display:inline-grid;place-items:center;border-radius:8px;-webkit-tap-highlight-color:transparent}
+.mdel:active{background:rgba(255,255,255,.08);color:var(--venc)}
 /* ===== BURBUJA HABLADA (Salvador 2026-09-17): lo dictado largo se guarda
    completo pero se muestra corto. Resumen mío arriba, y a un toque el texto
    exacto. Abajo, la fecha y un play que lo lee en voz alta. ===== */
@@ -997,7 +1000,10 @@ var CADENCIA_TOQUE={diario:1,normal:1,lento:3};
 var TOPE_UNICA_VENCIDA=30;   // días vencida sin nada -> no ejecutada
 var MAX_MOVIDAS=2;           // la tercera no existe
 
-function iso(d){ return new Date(d).toISOString().slice(0,10) }
+/* Salvador 2026-09-22: antes usaba toISOString (UTC). En Mexico (UTC-6), de las
+   6 pm en adelante eso devolvia el dia SIGUIENTE: "26 de septiembre" dictado a
+   las 18:45 quedaba como 27. Ahora usa la fecha LOCAL, igual que hoy(). */
+function iso(d){ d=new Date(d); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0") }
 function dm(n){ var d=new Date(); d.setDate(d.getDate()+n); return iso(d) }
 function dDif(a,b){ return Math.round((new Date(b+"T00:00:00")-new Date(a+"T00:00:00"))/86400000) }
 
@@ -2724,7 +2730,7 @@ function dotc(t){
   if(t.duenio!==yo)return"d-super";
   return"d-hacer";
 }
-function msg(t,k,txt){ t.msgs=t.msgs||[]; t.msgs.push({k:k,t:txt,h:hhmm()}); }
+function msg(t,k,txt){ t.msgs=t.msgs||[]; t.msgs.push({k:k,t:txt,h:hhmm(),ts:Date.now(),de:(k==="bo"?yo:undefined)}); }
 /* ===== LO HABLADO LARGO NO SE HACE CHORIZO (Salvador 2026-09-17) =====
    Se guarda COMPLETO (transcript) pero se muestra un resumen mío de 2-3
    renglones; a un toque sale el texto exacto. Un dictado corto se muestra tal
@@ -2816,12 +2822,13 @@ function autorMsg(x,t){
    Solo dispara una PREGUNTA, nunca una accion a ciegas. */
 function sonaraNoComentario(v, t){
   var s=String(v||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-  /* Salvador 2026-09-22: lista ampliada con todos los sinonimos de "recuerdame"
-     que el use, y ademas -- si dijo una HORA (horaDicha, ya existe mas abajo)
-     se entiende que es un recordatorio especifico aunque no diga ninguna de
-     estas palabras. "Ponle una hora a lo que sea y ya cuenta como recordatorio." */
-  if(/\b(abre|abreme|abrir|crea|creame|crear|apunta|apuntame|levanta|nueva tarea|recuerdame|recuerdanos|recuerda|acuerdame|acuerdate|acuerda|recordatorio|recordame|alarma|alerta|avisame|avisa|aviso|notificame|notifica|dime|comentame|encargale|encarga a|encargarle|programa|agenda)\b/.test(s)) return true;
-  if(horaDicha(v)) return true;
+  /* Salvador 2026-09-22 (segunda vuelta): la pregunta "comentario o algo
+     nuevo" salia casi siempre y estorbaba. Ahora SOLO sale con lo raro de
+     verdad: pedir explicitamente una tarea nueva, o encargarle algo a OTRA
+     persona del equipo (rama de abajo). Lo de recordatorio/hora ya no pasa por
+     aqui: eso se arma directo en la tarea (sonaraRecordatorio). Todo lo demas
+     entra como comentario, con bote de basura 5 min por si fue error. */
+  if(/\b(abre|abreme|abrir|crea|creame|crear|levanta|nueva tarea|nuevo recordatorio|encargale|encarga a|encargarle)\b/.test(s)) return true;
   var otros=Object.keys(PERSONAS).filter(function(k){return k!==yo && k!==(t&&t.duenio)});
   for(var i=0;i<otros.length;i++){
     var nom=String((PERSONAS[otros[i]]||{}).nombre||"").toLowerCase().normalize("NFD")
@@ -2830,6 +2837,32 @@ function sonaraNoComentario(v, t){
        /\b(dile|digale|que |encargale|comentale|manda|mandale|avisa|avisale|recuerda|pidele|habla|llama)\b/.test(s)) return true;
   }
   return false;
+}
+/* ¿lo dictado DENTRO de una tarea es un recordatorio PARA esa tarea? Palabra
+   de recordatorio (todos los sinonimos que usa Salvador) o una hora o un tiempo
+   relativo ("en 20 minutos"). Regla suya 2026-09-22: "si le pongo una hora, se
+   entiende que es un recordatorio especifico". */
+function sonaraRecordatorio(v){
+  var s=" "+String(v||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")+" ";
+  if(/\b(recuerdame|recuerdanos|recuerda|acuerdame|acuerdate|acuerda|recordatorio|recordame|alarma|alerta|avisame|avisa|aviso|notificame|notifica|dime|comentame)\b/.test(s)) return true;
+  if(horaDicha(v)) return true;
+  if(relativoDicho(v)) return true;
+  return false;
+}
+/* el ASUNTO del recordatorio: lo dictado sin la palabra de recordatorio ni el
+   tiempo. Si no queda nada ("recuerdame a las 6"), se usa el nombre de la tarea. */
+function asuntoRecordatorio(v, t){
+  var s=String(v||"").trim();
+  s=s.replace(/\b(recu[e\u00e9]rdame|recu[e\u00e9]rdanos|recuerda|acu[e\u00e9]rdame|acu[e\u00e9]rdate|acuerda|recordatorio|record[a\u00e1]me|alarma|alerta|av[i\u00ed]same|avisa|aviso|notif[i\u00ed]came|notifica|dime|com[e\u00e9]ntame)\b/gi," ")
+     .replace(/\b(por|en|a|de)\s+la\s+(ma[n\u00f1]ana|tarde|noche)\b/gi," ")
+     .replace(/\ba\s+la(s)?\s+(una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|\d{1,2})([:.]\d{2})?\b/gi," ")
+     .replace(/\b\d{1,2}([:.]\d{2})?\s*(am|pm|a\.?m\.?|p\.?m\.?|horas?|hrs?)\b/gi," ")
+     .replace(/\b(en|dentro de)\s+(\d{1,3}|un|una|uno|dos|tres|cuatro|cinco|diez|quince|veinte|treinta|media|un cuarto de)\s*(minutos?|min|horas?|hrs?|hora y media)?\b/gi," ")
+     .replace(/\b(mediod[i\u00ed]a|medianoche|hoy|ma[n\u00f1]ana|pasado ma[n\u00f1]ana|lunes|martes|mi[e\u00e9]rcoles|jueves|viernes|s[a\u00e1]bado|domingo)\b/gi," ")
+     .replace(/\s+/g," ").trim()
+     .replace(/^(que|de|para|a|el|la|y|,|\.)\s+/i,"").replace(/^[,.\s]+|[,.\s]+$/g,"").trim();
+  if(s.length<3) return t.nombre||"Recordatorio";
+  return s;
 }
 function nombreCortoTarea(t){
   var n=String((t&&t.nombre)||"").trim();
@@ -2890,6 +2923,21 @@ function muestraDudaHilo(t, v){
     barraEnviar(v);
   };
 }
+/* saca una fecha "26 de septiembre" / "2026-09-26" de un texto -> ISO, o null.
+   Si el dia/mes ya paso este anio, se va al que viene. (Era codigo inline de
+   mandar(); se saco aparte el 2026-09-22 para usarlo tambien al dictar directo.) */
+function fechaEnTexto(txt){
+  var mm=String(txt||"").match(/(\d{1,2})\s*(?:de\s+)?([a-z\u00e1\u00e9\u00ed\u00f3\u00fa]+)|(\d{4}-\d{2}-\d{2})/i);
+  if(!mm) return null;
+  if(mm[3]) return mm[3];
+  var MES={enero:0,febrero:1,marzo:2,abril:3,mayo:4,junio:5,julio:6,agosto:7,
+    septiembre:8,setiembre:8,octubre:9,noviembre:10,diciembre:11};
+  var k=String(mm[2]||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  if(MES[k]==null) return null;
+  var d=new Date(); d.setMonth(MES[k]); d.setDate(+mm[1]);
+  if(dDif(iso(d),hoy())>0) d.setFullYear(d.getFullYear()+1);
+  return iso(d);
+}
 function mandar(t,txt){
   guardaHablado(t,"bo",txt);
   t.ultima=PERSONAS[yo].nombre+": "+(esLargo(txt)?localResumen(txt):txt);
@@ -2911,23 +2959,33 @@ function mandar(t,txt){
     guarda(t); return;
   }
 
+  /* ---- MOVER FECHA dictado directo (Salvador 2026-09-22): "mueveme la fecha
+     al 26 de septiembre" en el hilo antes no hacia NADA (solo funcionaba por el
+     menu "..."). Ahora: verbo de mover + fecha = se toma. Si trae motivo
+     ("porque ..."), se mueve; si no, se guarda la fecha y se pide el motivo. ---- */
+  var _sn=String(txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  if(!t.pide_fecha && /\b(muev\w*|mov\w*|cambi\w*|pas(a|ala|ame|amela|ar|arla)|pospon\w*|reprogram\w*|recorr\w*|aplaz\w*)\b/.test(_sn)
+     && (/\bfecha\b/.test(_sn) || fechaEnTexto(txt))){
+    var _fx=fechaEnTexto(txt);
+    var _mot=(txt.match(/\b(?:porque|por que|porqu\u00e9|ya que|debido a)\b\s*(.+)$/i)||[])[1]||"";
+    if(!_fx){ t.pide_fecha=true; msg(t,"bi","\u00bfPara cu\u00e1ndo, y por qu\u00e9? Escr\u00edbelo abajo as\u00ed: 12 de septiembre, porque el proveedor no entrega antes."); guarda(t); return; }
+    if(_mot.trim().length<8){
+      t.pide_fecha=true; t.fecha_pendiente=_fx;
+      msg(t,"bi","Va, al "+fechaBonita(_fx)+". \u00bfPor qu\u00e9? Escribe el motivo abajo; sin motivo por escrito no se mueve.");
+      guarda(t); return;
+    }
+    var _r0=mueveFecha(t,_fx,_mot.trim()); if(!_r0.ok) msg(t,"bi",_r0.msg);
+    guarda(t); return;
+  }
+
   /* ---- está moviendo la fecha: necesita fecha Y motivo ---- */
   if(t.pide_fecha){
-    var mm=txt.match(/(\d{1,2})\s*(?:de\s+)?([a-záéíóú]+)|(\d{4}-\d{2}-\d{2})/i);
-    var nueva=null;
-    if(mm && mm[3]) nueva=mm[3];
-    else if(mm){
-      var MES={enero:0,febrero:1,marzo:2,abril:3,mayo:4,junio:5,julio:6,agosto:7,
-        septiembre:8,setiembre:8,octubre:9,noviembre:10,diciembre:11};
-      var k=String(mm[2]||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-      if(MES[k]!=null){ var d=new Date(); d.setMonth(MES[k]); d.setDate(+mm[1]);
-        if(dDif(iso(d),hoy())>0) d.setFullYear(d.getFullYear()+1);
-        nueva=iso(d); }
-    }
-    var razon=txt.replace(/^[^,]*,\s*/,"").trim();
+    var nueva=fechaEnTexto(txt), razon;
+    if(nueva){ razon=txt.replace(/^[^,]*,\s*/,"").trim(); }
+    else if(t.fecha_pendiente){ nueva=t.fecha_pendiente; razon=txt.trim(); }   /* ya dio la fecha, esto es el motivo */
     if(!nueva){ msg(t,"bi","No le entendí la fecha. Escríbela así: 12 de septiembre, y luego el motivo."); guarda(t); return }
     if(razon.length<8){ msg(t,"bi","Falta el motivo por escrito. Sin eso no se mueve."); guarda(t); return }
-    t.pide_fecha=false;
+    t.pide_fecha=false; t.fecha_pendiente=null;
     var r=mueveFecha(t,nueva,razon);
     if(!r.ok) msg(t,"bi",r.msg);
     guarda(t); return;
@@ -4041,7 +4099,12 @@ function vHilo(){
     var q=autorMsg(x,t);
     if(x.hab){ m+=burbujaHablada(x, (q||""), t.id+"|"+ix); return; }
     var meta=(q?esc(q)+" · ":"")+esc(x.h);
-    m+='<div class="b '+(x.k==="bal"?"bal":(x.k==="bo"?"bo":"bi"))+'">'+esc(x.t)+'<span class="st">'+meta+'</span></div>';
+    /* Salvador 2026-09-22: el ULTIMO mensaje mio trae un botecito 5 minutos,
+       por si se subio mal y era otra cosa. Se borra sin preguntar. */
+    var undo=(x.k==="bo" && ix===(t.msgs.length-1) && x.ts && (Date.now()-x.ts)<5*60000 && (!x.de||x.de===yo));
+    m+='<div class="b '+(x.k==="bal"?"bal":(x.k==="bo"?"bo":"bi"))+'">'+esc(x.t)+'<span class="st">'+meta+
+       (undo?'<button class="mdel" data-mdel="'+ix+'" aria-label="Borrar este mensaje">'+ico("trash",15,1.8)+'</button>':'')+
+       '</span></div>';
   });
   if(t.puntos){
     var mk=t.marcados||{}, ft=t.fotos||{}, n=Object.keys(mk).length;
@@ -6792,6 +6855,11 @@ function bindHilo(){
       var x=(tt.msgs||[])[+p[1]]; if(!x) return;
       leeEnVoz(x.tr||x.t||"", el); };
   });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-mdel]"),function(el){
+    el.onclick=function(ev){ ev.stopPropagation();
+      var ix=+el.getAttribute("data-mdel"); if(!t.msgs||!t.msgs[ix]) return;
+      t.msgs.splice(ix,1); guarda(t); render(); };
+  });
   var bya=$("bya"); if(bya) bya.onclick=function(){ intentaCerrar(t) };
   /* bote de basura (Salvador 2026-09-22) */
   var btr=$("btrash"); if(btr) btr.onclick=function(){ vista="cerrarmotivo"; render(); };
@@ -6881,6 +6949,17 @@ function bindHilo(){
       if(ed.id==="self" && nc.cada) t.aviso_cada=normalizaCada(nc.cada);
       window.__avSonando=null; guarda(t); sincronizaAvisos(t);
       toast("Reprogramado: "+fechaBonita(nc.fecha)+(nc.hora?" a las "+nc.hora:"")); render(); return;
+    }
+    /* RECORDATORIO PARA ESTA TAREA (Salvador 2026-09-22): palabra de recordatorio
+       u hora dicha = aviso de ESTA tarea, armado directo, sin preguntar. No aplica
+       si esta contestando una pregunta del bot (atorado / fecha / toque). */
+    if(!(PERSONAS[yo].jefe && t.estado==="espera") && !t.pide_atoro && !t.pide_fecha && !t.espera_toque && sonaraRecordatorio(v)){
+      $("txt").value=""; marcaEnvio("tenv","");
+      var rr2=armaCuando(v);
+      var av2=nuevoAviso(t, {texto:asuntoRecordatorio(v,t), dicho:v, fecha:rr2.fecha, hora:rr2.hora, cada:rr2.cada});
+      msg(t,"bo",v);
+      msg(t,"bi","Anotado. Te aviso "+(textoCuando(av2)||"en la siguiente franja")+": "+av2.texto+".");
+      guarda(t); sincronizaAvisos(t); render(); return;
     }
     /* si estamos en una tarea y lo dictado NO suena a comentario de ella,
        preguntar antes en vez de encajarlo como comentario (Salvador 2026-09-16) */
