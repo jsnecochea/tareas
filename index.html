@@ -4061,7 +4061,13 @@ function vHilo(){
     if(t.es_recordatorio){
       sug=_rel+_ya+_tr;
     } else {
-      sug=_rel+'<button class="op nt" id="batorado">Estoy atorado</button>'+_ya+_tr;
+      /* Salvador 2026-09-22: mientras espera nombre+motivo (t.pide_atoro) el
+         boton se apaga, para que no de la impresion de que aceptar de nuevo
+         hace algo -- ya se le pregunto, esta esperando la respuesta escrita. */
+      var _at=t.pide_atoro
+        ? '<button class="op nt" disabled>Esperando tu respuesta…</button>'
+        : '<button class="op nt" id="batorado">Estoy atorado</button>';
+      sug=_rel+_at+_ya+_tr;
     }
   }
   var pre=t.pregunta&&t.duenio===yo?'<div class="b bi" style="margin:0 14px 8px">'+esc(t.pregunta)+'</div>':"";
