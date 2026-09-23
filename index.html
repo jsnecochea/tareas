@@ -462,6 +462,24 @@ button{font:inherit;color:inherit}
 .dudah .rw button{flex:1 1 0;padding:12px;border-radius:12px;border:1px solid var(--line);
   background:var(--surface);color:var(--ink);font-size:16px;font-weight:600;cursor:pointer}
 .dudah .rw .nuevo{background:var(--hacer);border-color:var(--hacer);color:#fff}
+/* HOJA DE CONFIRMACION estilo iOS (Salvador 2026-09-22): reemplaza al confirm()
+   nativo. Grupo redondeado con titulo + accion (roja si es destructiva) y un
+   "Cancelar" aparte abajo, como el action sheet de Apple. */
+.hoja-velo{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:70;display:flex;
+  align-items:flex-end;justify-content:center;padding:0 8px max(8px,env(safe-area-inset-bottom));
+  animation:veloIn .18s ease-out}
+.hoja{width:100%;max-width:440px;animation:hojaIn .24s cubic-bezier(.2,.8,.2,1)}
+.hoja .grp{background:var(--surface-2);border-radius:14px;overflow:hidden}
+.hoja .ttl{padding:14px 16px 12px;text-align:center;color:var(--ink-2);font-size:13.5px;
+  line-height:1.4;border-bottom:1px solid rgba(255,255,255,.08)}
+.hoja .ttl b{display:block;color:var(--ink);font-size:15px;font-weight:600;margin-bottom:2px}
+.hoja button{display:block;width:100%;padding:17px;border:0;background:none;font:inherit;
+  font-size:20px;color:var(--azul);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.hoja button:active{background:rgba(255,255,255,.06)}
+.hoja button.rojo{color:var(--venc)}
+.hoja button.cancel{margin-top:8px;background:var(--surface-2);border-radius:14px;font-weight:600}
+@keyframes veloIn{from{opacity:0}to{opacity:1}}
+@keyframes hojaIn{from{transform:translateY(28px);opacity:.5}to{transform:none;opacity:1}}
 /* dos botones = MITAD Y MITAD (Salvador 2026-09-04): flex-basis 0 iguala el ancho
    sin importar el largo del texto. El verde nunca queda más chico que el negativo. */
 .op{flex:1 1 0;min-width:0;min-height:42px;padding:9px 12px;border-radius:9px;border:1px solid var(--line);
@@ -2818,6 +2836,37 @@ function nombreCortoTarea(t){
   return n.length>26 ? n.slice(0,25)+"\u2026" : n;
 }
 function cierraDudaHilo(){ var e=document.getElementById("dudah"); if(e&&e.parentNode) e.parentNode.removeChild(e); }
+/* hoja de confirmacion estilo iOS. o = {titulo, sub, accion, rojo, cb}. Tocar
+   fuera o "Cancelar" cierra sin hacer nada. */
+function hojaConfirma(o){
+  cierraHoja();
+  var v=document.createElement("div"); v.className="hoja-velo"; v.id="hojav";
+  v.innerHTML='<div class="hoja"><div class="grp">'+
+    ((o.titulo||o.sub)?'<div class="ttl">'+(o.titulo?'<b>'+esc(o.titulo)+'</b>':'')+(o.sub?esc(o.sub):'')+'</div>':'')+
+    '<button class="'+(o.rojo?'rojo':'')+'" id="hojaok">'+esc(o.accion||"OK")+'</button></div>'+
+    '<button class="cancel" id="hojano">Cancelar</button></div>';
+  document.body.appendChild(v);
+  v.onclick=function(e){ if(e.target===v) cierraHoja(); };
+  $("hojano").onclick=cierraHoja;
+  $("hojaok").onclick=function(){ cierraHoja(); if(o.cb) o.cb(); };
+}
+function cierraHoja(){ var e=$("hojav"); if(e&&e.parentNode) e.parentNode.removeChild(e); }
+/* borrar un recordatorio suelto y SEGUIR: sin toast, brinca al que sigue en el
+   orden del swipe; si era el ultimo, al anterior; si no queda ninguno, al home.
+   Salvador 2026-09-22: "una vez que confirmas, ya no requieres que te digan que
+   fue borrada; mandanos al recordatorio siguiente". */
+function borraRecordatorioYSigue(t){
+  var ordVieja=window.ordenSwipe||[], i=ordVieja.indexOf(t.id);
+  var ord=ordVieja.filter(function(id){return id!==t.id});
+  t.estado="cerrada"; t.cierre={tipo:"cancelado",f:hoy()}; guarda(t);
+  sincronizaAvisos(t);
+  window.__avSheet=null; window.__avSonando=null;
+  var sigId=(i>=0)?(ord[i]||ord[i-1]||null):null;
+  var sig=sigId?tareas.filter(function(x){return x.id===sigId})[0]:null;
+  if(sig){ window.ordenSwipe=ord; abierta=sig.id; vista="hilo"; fichaOpen=false; detOpen={}; menuOpen=false; }
+  else { abierta=null; vista="lista"; }
+  render();
+}
 /* la tarjetita chiquita: "esto no suena a comentario de X" con dos salidas.
    Comentar aqui = mete lo dictado sin repetirlo y sin salir. Es algo nuevo =
    lo procesa como intencion (crear/encargar/...). */
@@ -6747,7 +6796,8 @@ function bindHilo(){
   /* bote de basura (Salvador 2026-09-22) */
   var btr=$("btrash"); if(btr) btr.onclick=function(){ vista="cerrarmotivo"; render(); };
   var btrr=$("btrashrec"); if(btrr) btrr.onclick=function(){
-    if(confirm("¿Seguro que deseas eliminar este recordatorio?")) eliminaAvisoDe(t,"self");
+    hojaConfirma({titulo:"\u00bfEliminar este recordatorio?", sub:"Se quita de tu lista. No se puede deshacer.",
+      accion:"Eliminar recordatorio", rojo:true, cb:function(){ borraRecordatorioYSigue(t); }});
   };
   /* ===== HOJA DE RECORDATORIOS (relojito) — Salvador 2026-09-18 ===== */
   var brel=$("brel"); if(brel) brel.onclick=function(){ window.__avSheet=(window.__avSheet===t.id?null:t.id); render(); };
