@@ -811,7 +811,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP="build 126 · 2026-09-23 · arreglado: recordatorios y tareas nuevas no se guardaban (campo undefined) y la pantalla se quedaba en Leyendo; minutos dictados (3 45); recordatorio abre su chat; la caja se limpia al enviar";
+var VERSION_APP="build 127 · 2026-09-23 · los recordatorios ya se programan en el servidor de push nuevo (aviso_set); hora 4:20 sin a las; hora ambigua de hoy toma la tarde; sin hora en el titulo";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -1836,7 +1836,9 @@ function pasoAvisos(cont){
 function entrar(u){ yo=u; $("gate").classList.remove("on"); $("app").style.display="flex"; arranca();
   /* Salvador 2026-09-22: re-mandar la suscripcion push al servidor en cada
      arranque, por si se reinstalo la app y el servidor la perdio. Silencioso. */
-  setTimeout(function(){ resincronizaAvisos(); }, 2500); }
+  setTimeout(function(){ resincronizaAvisos(); }, 2500);
+  /* y los avisos que nunca llegaron al servidor nuevo (2026-09-23) */
+  setTimeout(function(){ try{ subeAvisosPendientes(); }catch(e){} }, 9000); }
 
 /* ============ DATOS ============ */
 function arranca(){
@@ -4827,6 +4829,9 @@ var SINONIMOS_INT={
 function horaDicha(txt){
   var s=" "+String(txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")+" ";
   if(/\ba\s+la(s)?\s+(una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|\d{1,2})\b/.test(s)) return true;
+  /* "4:20" suelto tambien es hora (Salvador 2026-09-23: "recuerdame 4:20
+     prender la camioneta" quedaba para mañana a las 9) */
+  if(/\b\d{1,2}:\d{2}\b/.test(s)) return true;
   /* "cuarto para las cuatro", "diez para las cinco" (Salvador 2026-09-23) */
   if(/\b(cuarto|cinco|diez|quince|veinte|\d{1,2})\s+para\s+la(s)?\s+(una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|\d{1,2})\b/.test(s)) return true;
   if(/\b\d{1,2}(\s*[:.]\s*\d{2})?\s*(am|pm|a\.?m\.?|p\.?m\.?)\b/.test(s)) return true;
@@ -4838,7 +4843,15 @@ function horaDicha(txt){
    sirve para los casos comunes: "a las 10 de la manana"->10:00, "6 de la tarde"->
    18:00, "a las 7"->07:00, mediodia->12:00. Salvador 2026-09-17. */
 var NUMHORA={una:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,diez:10,once:11,doce:12};
+/* EL DICTADO DE IPHONE CORRIGE LA HORA EN VIVO y deja las dos versiones:
+   "cuatro treinta y cinco" llega como "4:30 35", "4:40 45", "4:50 51". No hay
+   segundos: el segundo numero, de la misma decena, ES el minuto. Salvador 2026-09-23. */
+function limpiaHoraDictada(txt){
+  return String(txt||"").replace(/\b(\d{1,2}):([0-5])0(?:\s+|:\s*)([0-5]\d)\b/g,
+    function(all,h,dz,nn){ return nn.charAt(0)===dz ? h+":"+nn : all; });
+}
 function horaValor(txt){
+  txt=limpiaHoraDictada(txt);
   var s=String(txt||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
   if(/\bmediodia\b/.test(s)) return "12:00";
   if(/\bmedianoche\b/.test(s)) return "00:00";
@@ -4855,6 +4868,7 @@ function horaValor(txt){
   }
   var m=s.match(/\ba\s+la(?:s)?\s+(una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|\d{1,2})(?:[:.](\d{2}))?/);
   if(!m) m=s.match(/\b(\d{1,2})(?:[:.](\d{2}))?\s*(?:de\s+la\s+(?:manana|tarde|noche)|am|pm|a\.?m|p\.?m|hrs?|horas?)/);
+  if(!m) m=s.match(/\b(\d{1,2}):(\d{2})\b/);
   if(!m) return "";
   var h=NUMHORA[m[1]]!=null?NUMHORA[m[1]]:parseInt(m[1],10);
   var mm=m[2]?parseInt(m[2],10):0;
@@ -4921,6 +4935,29 @@ function relativoDicho(txt, nowMs){
 /* cuando un recordatorio no trae hora ni día: suena en la PRÓXIMA franja del día
    —9:00, 12:00 o 16:00— y si ya pasaron las 4, a las 9:00 de mañana. Salvador
    2026-09-17. */
+/* HORA AMBIGUA DE HOY (Salvador 2026-09-23): "a las 4:20" sin decir mañana/tarde,
+   dicho a las 4:15 pm, es HOY a las 16:20, no las 4:20 am que ya pasaron. Si no
+   dijo parte del dia, es para hoy, ya paso y +12 h todavia no: se toma la tarde. */
+function horaCercana(fecha, hora, txt){
+  if(!hora || fecha!==hoy()) return hora;
+  var s=String(txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  if(/(manana|tarde|noche|madrugada|mediodia|medianoche|\bam\b|\bpm\b|a\.m|p\.m)/.test(s)) return hora;
+  var h=parseInt(hora.slice(0,2),10), mm=hora.slice(3);
+  if(isNaN(h) || h<1 || h>11) return hora;
+  var pm=String(h+12).padStart(2,"0")+":"+mm, ya=nowHM();
+  return (hora<=ya && pm>ya) ? pm : hora;
+}
+/* quita la hora dicha del titulo de un recordatorio ("4:20 prende camioneta") */
+function sinHoraEnTitulo(txt){
+  var s=String(txt||"")
+    .replace(/\b(hoy|ma[nñ]ana)\s+/gi," ")
+    .replace(/\ba\s+la(s)?\s+\d{1,2}([:.]\d{2})?\s*(am|pm|a\.?m\.?|p\.?m\.?|hrs?|horas?)?\b/gi," ")
+    .replace(/\b\d{1,2}[:.]\d{2}\s*(am|pm|a\.?m\.?|p\.?m\.?|hrs?|horas?)?\b/gi," ")
+    .replace(/\b\d{1,2}\s*(am|pm|a\.?m\.?|p\.?m\.?)\b/gi," ")
+    .replace(/\s+/g," ").trim().replace(/^(de|para|a|que|,|\.)\s+/i,"")
+    .replace(/^\d{1,2}\s+/,"").replace(/^(de|para|a|que)\s+/i,"").trim();
+  return s.length>=3 ? conMayuscula(s) : String(txt||"");
+}
 function proximaFranja(){
   var d=new Date(), franjas=[9,12,16];
   for(var i=0;i<franjas.length;i++){
@@ -5538,7 +5575,8 @@ function aplicaIntencion(j, dicho, hist, foto){
     var _hor=horaDicha(dicho) ? horaValor(dicho) : "";
     var _vg=_hor ? "" : franjaVaga(dicho);   /* {fecha,hora} de la parte del día */
     if(_rel){ r.fecha=_rel.fecha; r.hora=_rel.hora; }         /* tiempo relativo exacto */
-    else if(_hor){ r.fecha=_dia||hoy(); r.hora=_hor; }        /* hora exacta dicha */
+    else if(_hor){ r.fecha=_dia||hoy(); r.hora=horaCercana(r.fecha,_hor,dicho); } /* hora exacta dicha */
+    if(r.texto) r.texto=sinHoraEnTitulo(asuntoRecordatorio(limpiaHoraDictada(r.texto),{nombre:r.texto}));
     else if(_vg){ r.fecha=_dia||_vg.fecha; r.hora=_vg.hora; } /* "en la tarde" -> hora calculada por la parte */
     else if(_dia){ r.fecha=_dia; r.hora="09:00"; }            /* solo día -> 9:00 */
     else { var _pf=proximaFranja(); r.fecha=_pf.fecha; r.hora=_pf.hora; } /* ni día ni hora ni parte */
@@ -5900,8 +5938,69 @@ function escribeAvisoEspejo(t, a){
     texto:(a.texto||t.nombre||""), fecha:(a.fecha||""), hora:(a.hora||""),
     cada:normalizaCada(a.cada), deep:key, activo:true, avisado_en:null, actualizado:Date.now() };
   try{ db.collection(COLAV).doc(key).set(doc); }catch(e){}
+  avisoAlServidor(t, a, key);
 }
-function borraAvisoEspejo(key){ if(!db||!key) return; try{ db.collection(COLAV).doc(key).delete(); }catch(e){} }
+function borraAvisoEspejo(key){ if(!db||!key) return; try{ db.collection(COLAV).doc(key).delete(); }catch(e){}
+  llamaPush("aviso_del", {id:key}); }
+/* ===== LOS AVISOS AL SERVIDOR DE PUSH (Salvador 2026-09-23) =====
+   Desde el 23-sep Josue cambio el servidor: barrido.php ya NO lee Firestore,
+   lee la tabla avisos_push de MySQL, que solo se llena con push.php
+   action=aviso_set. La app seguia escribiendo solo a Firestore, asi que NINGUN
+   recordatorio nuevo sonaba. Contrato probado en vivo el 23-sep 16:33:
+   {id, usuario, tarea, texto, cuando:"AAAA-MM-DD HH:MM:SS", cada?}; aviso_del {id}.
+   Nunca se manda un aviso ya pasado (sonaria de golpe): si es recurrente se
+   corre a su proxima vez; si no, se omite. */
+function llamaPush(accion, cuerpo){
+  if(typeof APP_TOKEN==="undefined" || String(APP_TOKEN).indexOf("__")===0) return;
+  try{
+    fetch(PUSH+"?action="+accion,{method:"POST", keepalive:true,
+      headers:{"content-type":"application/json","x-app-token":APP_TOKEN},
+      body:JSON.stringify(cuerpo)})
+    .then(function(r){ return r.json().catch(function(){return {}}).then(function(j){
+      if(!r.ok || (j&&j.error)) fallaPush(accion+": "+((j&&j.error)||("HTTP "+r.status))); }); })
+    .catch(function(e){ fallaPush(accion+": "+((e&&e.message)||"sin red")); });
+  }catch(e){ fallaPush(accion+": "+e.message); }
+}
+function fallaPush(m){
+  window.__fallasPush=(window.__fallasPush||[]); window.__fallasPush.push(m);
+  try{ console.error("push", m); }catch(_e){}
+  if(!window.__fallaPushAvisada){ window.__fallaPushAvisada=true;
+    toast("No pude programar el aviso en el servidor: "+String(m).slice(0,70)); }
+}
+function sumaDias(f,n){ return dmDe(f,n); }
+function proximaVez(fecha, hora, cada){
+  var ahora=hoy()+" "+nowHM();
+  if(fecha+" "+hora > ahora) return fecha;
+  if(!cada) return "";
+  var f=fecha, g=0;
+  while(f+" "+hora <= ahora && g<400){ g++;
+    if(cada==="DIARIO") f=sumaDias(f,1);
+    else if(cada==="LV"){ f=sumaDias(f,1); var dw=new Date(f+"T00:00:00").getDay(); while(dw===0||dw===6){ f=sumaDias(f,1); dw=new Date(f+"T00:00:00").getDay(); } }
+    else if(cada==="SEMANAL") f=sumaDias(f,7);
+    else if(cada==="QUINCENAL") f=sumaDias(f,14);
+    else if(cada==="MENSUAL"){ var x=new Date(f+"T00:00:00"); x.setMonth(x.getMonth()+1); f=iso(x); }
+    else return "";
+  }
+  return f;
+}
+function avisoAlServidor(t, a, key){
+  if(!a || !a.fecha || !/^\d{4}-\d{2}-\d{2}$/.test(a.fecha) || !/^\d{2}:\d{2}$/.test(a.hora||"")) return;
+  var cada=normalizaCada(a.cada), f=proximaVez(a.fecha, a.hora, cada);
+  if(!f) return;
+  var cuerpo={id:key||claveAviso(t,a), usuario:(t.duenio||yo), tarea:t.id,
+    texto:String(a.texto||t.nombre||"Recordatorio").slice(0,180), cuando:f+" "+a.hora+":00"};
+  if(cada) cuerpo.cada=cada;
+  llamaPush("aviso_set", cuerpo);
+}
+/* una vez por arranque: sube los avisos FUTUROS de mis tareas vivas, para los
+   que se crearon antes de este arreglo y nunca llegaron al servidor */
+function subeAvisosPendientes(){
+  if(window.__avisosSubidos) return; window.__avisosSubidos=true;
+  (tareas||[]).forEach(function(t){
+    if(!t || t.cierre || estadoReal(t)==="cerrada" || (t.duenio||"")!==yo) return;
+    avisosDe(t).forEach(function(a){ avisoAlServidor(t, a, claveAviso(t,a)); });
+  });
+}
 function sincronizaAvisos(t){
   if(!db||!t) return;
   var cerr=!!(t.cierre) || estadoReal(t)==="cerrada";
@@ -5924,7 +6023,7 @@ function armaCuando(v){
   var _dia=diaDicho(v), _rel=relativoDicho(v), _hor=horaDicha(v)?horaValor(v):"", _vg=_hor?"":franjaVaga(v), _cada=cadaDicho(v);
   var f,h;
   if(_rel){ f=_rel.fecha; h=_rel.hora; }
-  else if(_hor){ f=_dia||hoy(); h=_hor; }
+  else if(_hor){ f=_dia||hoy(); h=horaCercana(f,_hor,v); }
   else if(_vg){ f=_dia||_vg.fecha; h=_vg.hora; }
   else if(_dia){ f=_dia; h="09:00"; }
   else { var _pf=proximaFranja(); f=_pf.fecha; h=_pf.hora; }
@@ -7123,7 +7222,7 @@ function bindHilo(){
     });
   };
   function enviaHilo(){
-    var v=$("txt").value.trim(); if(!v)return;
+    var v=limpiaHoraDictada($("txt").value.trim()); if(!v)return;
     /* AGREGAR RECORDATORIO: lo dictado no es comentario, es un aviso nuevo para
        ESTA tarea. Se arma su fecha/hora con la hora inteligente y se inserta. */
     if(window.__avAdd===t.id){
@@ -7150,7 +7249,7 @@ function bindHilo(){
     if(!(PERSONAS[yo].jefe && t.estado==="espera") && !t.pide_atoro && !t.pide_fecha && !t.espera_toque && sonaraRecordatorio(v)){
       $("txt").value=""; marcaEnvio("tenv","");
       var rr2=armaCuando(v);
-      var av2=nuevoAviso(t, {texto:asuntoRecordatorio(v,t), dicho:v, fecha:rr2.fecha, hora:rr2.hora, cada:rr2.cada});
+      var av2=nuevoAviso(t, {texto:sinHoraEnTitulo(asuntoRecordatorio(v,t)), dicho:v, fecha:rr2.fecha, hora:rr2.hora, cada:rr2.cada});
       msg(t,"bo",v);
       msg(t,"bi","Anotado. Te aviso "+(textoCuando(av2)||"en la siguiente franja")+": "+av2.texto+".");
       guarda(t); sincronizaAvisos(t); render(); return;
@@ -7448,7 +7547,7 @@ function entraPorInvitacion(tk){
   var _barraEnviar=barraEnviar;
   window.__terminosExtra=null;
   barraEnviar=function(texto){
-    texto=String(texto||"").trim();
+    texto=limpiaHoraDictada(String(texto||"").trim());
     /* BLINDAJE: si hay una pregunta en el momento (tarea a medias esperando su
        dato), la respuesta la COMPLETA y nunca pasa por los filtros ni por Claude.
        Antes el "completandoId" solo se veia dentro de _barraEnviar, despues de los
