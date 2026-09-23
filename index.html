@@ -2860,7 +2860,10 @@ function asuntoRecordatorio(v, t){
      .replace(/\b(en|dentro de)\s+(\d{1,3}|un|una|uno|dos|tres|cuatro|cinco|diez|quince|veinte|treinta|media|un cuarto de)\s*(minutos?|min|horas?|hrs?|hora y media)?\b/gi," ")
      .replace(/\b(mediod[i\u00ed]a|medianoche|hoy|ma[n\u00f1]ana|pasado ma[n\u00f1]ana|lunes|martes|mi[e\u00e9]rcoles|jueves|viernes|s[a\u00e1]bado|domingo)\b/gi," ")
      .replace(/\s+/g," ").trim()
-     .replace(/^(que|de|para|a|el|la|y|,|\.)\s+/i,"").replace(/^[,.\s]+|[,.\s]+$/g,"").trim();
+     .replace(/^(que|de|para|a|el|la|y|,|\.)\s+/i,"")
+     /* el dictado a veces repite la hora en letra ("6:55 cinco"): fuera */
+     .replace(/^(una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|y\s+(media|cuarto)|en\s+punto)\s+/i,"")
+     .replace(/^[,.\s]+|[,.\s]+$/g,"").trim();
   if(s.length<3) return t.nombre||"Recordatorio";
   return s;
 }
@@ -3349,6 +3352,10 @@ function vLista(){
   var esJefe=PERSONAS[yo].jefe;
   var det=loQueDetengo();
   var arr=mias(), mis=misEncargos();
+  /* Salvador 2026-09-22: las ya hechas/eliminadas (tachadas) NO se pintan en el
+     home, ensucian la lista. Siguen en el buscador ("lo que hice hoy") y al
+     abrirlas por voz. */
+  arr=arr.filter(function(t){ return !t.cierre && estadoReal(t)!=="cerrada"; });
   var res=esJefe?resumenDelDia():null;
   h='<div class="enc" id="enc">'+
     '<div class="r1"><div class="nom" id="byo" role="button">'+esc(PERSONAS[yo].nombre)+'</div>'+
@@ -3890,6 +3897,17 @@ function busca(q){
   Object.keys(PERSONAS).forEach(function(k){
     if(ql.indexOf(PERSONAS[k].nombre.toLowerCase())>=0) quien=k;
   });
+  /* "lo que hice hoy" / "las que terminé ayer" / "las hechas": solo cerradas.
+     Salvador 2026-09-22 — las tachadas ya no salen en el home, se piden aqui. */
+  if(/\b(hech[oa]s?|hice|hicimos|realic\w*|realizad\w*|termin\w*|logr\w*|cerrad\w*|tachad\w*|complet\w*|cumplid\w*)\b/.test(ql)){
+    var diaH=/\bhoy\b/.test(ql)?hoy():(/\bayer\b/.test(ql)?dm(-1):null);
+    return tareas.filter(function(t){
+        if(!(t.cierre||estadoReal(t)==="cerrada")) return false;
+        if(quien && t.duenio!==quien) return false;
+        if(diaH) return (t.cierre&&t.cierre.f)===diaH;
+        return true;
+      }).sort(function(a,b){ return String((b.cierre||{}).f||"").localeCompare(String((a.cierre||{}).f||"")); });
+  }
   var soloVenc=/vencid|atrasad|tarde|rojo/.test(ql);
   var soloRitmo=/ritmo|avance|va mal|van mal|atrasad/.test(ql);
   var base=tareas.filter(function(t){
@@ -3900,7 +3918,7 @@ function busca(q){
   });
   if(quien||soloVenc||soloRitmo) return base.filter(function(t){return !t.cierre});
   if(ql==="todo") return base.filter(function(t){return !t.cierre});
-  var c=candidatas(q,null);
+  var c=candidatas(q,null,true);   /* cerradas tambien: ya no se ven en el home */
   return c.length?c:base.filter(function(t){return !t.cierre});
 }
 
@@ -4310,9 +4328,20 @@ function contextoBarra(){
               fecha:t.f_vigente||"", cada:t.periodicidad||"unica",
               ultima:t.ultima||""};
     });
+  /* Salvador 2026-09-22: las cerradas ya no se pintan en el home, asi que
+     "que hice / termine / elimine hoy" se contesta de aqui. Ultimos 7 dias. */
+  var cerradas=tareas.filter(function(t){ return t.cierre && t.cierre.f && dDif(t.cierre.f,hoy())<=7 })
+    .sort(function(a,b){ return String(b.cierre.f).localeCompare(String(a.cierre.f)); })
+    .slice(0,60)
+    .map(function(t){
+      return {id:t.id, nombre:t.nombre, de:t.duenio||"", cerrada_el:t.cierre.f,
+              como:(t.cierre.tipo==="hecha"?"hecha":(t.cierre.tipo==="cancelado"?"eliminada":"cerrada sin hacerse")),
+              es_recordatorio:!!t.es_recordatorio};
+    });
   return {yo:yo, soy_jefe:!!(PERSONAS[yo]&&PERSONAS[yo].jefe), hoy:hoy(),
           hoy_es:DIAS_SEM[new Date().getDay()],
           calendario:calendarioProximo(16),
+          cerradas_recientes:cerradas,
           gente:Object.keys(PERSONAS).map(function(k){
             return {clave:k, nombre:PERSONAS[k].nombre};
           }),
@@ -4331,6 +4360,11 @@ var SYS_BARRA =
 "ya sabias con lo nuevo y AVANZA a la intencion que ya traias. NUNCA reinicies.\n"+
 "2. ¿Esta PIDIENDO UN DATO que ya deberia estar guardado ('cual es la direccion "+
 "del hotel', 'cuanto quedo el presupuesto', 'que dijo Karina')? -> RESPONDER.\n"+
+"2b. ¿Pregunta que HIZO, TERMINO, EJECUTO, ELIMINO o TACHO (hoy, ayer, esta "+
+"semana)? -> RESPONDER con la lista 'cerradas_recientes' del contexto, filtrada por "+
+"el dia que pide (cerrada_el) y por 'como': hecha = la hizo, eliminada = la borro, "+
+"cerrada sin hacerse. NUNCA contestes con las abiertas de hoy: eso es otra pregunta. "+
+"Si 'cerradas_recientes' viene vacia para ese dia, di que no hay nada cerrado ese dia.\n"+
 "3. ¿Quiere REVISARLE a OTRO algo que ese otro ejecuta? -> SUPERVISAR.\n"+
 "4. ¿Habla de una tarea que YA EXISTE en la lista de abiertas?\n"+
 "   - le agrega un paso o un avance -> PASO\n"+
@@ -5340,8 +5374,24 @@ function aplicaIntencion(j, dicho, hist, foto){
     var r=j.recordatorio||{};
     /* SIN ASUNTO -> preguntar. Cubre "recuerdame" a secas y también cuando solo
        dijo la hora ("recuerdame por la tarde"): no hay QUÉ recordar. */
+    /* Salvador 2026-09-22: si Claude devolvio el texto vacio pero LO DICTADO si
+       trae asunto ("recuerdame a las 6:55 salir a caminar hoy"), se saca del
+       dictado en el telefono en vez de preguntar "que te recuerdo". */
     if(!r.texto || soloEsTiempo(r.texto)){
-      barraEstado={modo:"respuesta",dicho:dicho,texto:"¿Qué te recuerdo?"};
+      var _asun=soloEsTiempo(dicho)?"":asuntoRecordatorio(dicho,{nombre:""});
+      if(_asun==="Recordatorio") _asun="";
+      if(_asun) r.texto=_asun;
+    }
+    /* Salvador 2026-09-22: "en el acto lo debe haber creado". Si aun asi no hay
+       asunto, el recordatorio NACE de todos modos con su hora, en el bote de
+       informacion pendiente, y se pregunta el asunto con la barra abajo. Nada se
+       pierde aunque se regrese. */
+    if(!r.texto || soloEsTiempo(r.texto)){
+      var _rr=armaCuando(dicho);
+      var tb=creaRecordatorio({texto:"Recordatorio (falta el asunto)", dicho:dicho, fecha:_rr.fecha, hora:_rr.hora, cada:_rr.cada});
+      tb.pendiente_info="\u00bfQu\u00e9 te recuerdo?"; tb.pendiente_tipo="asunto"; guarda(tb);
+      barraEstado={modo:"pregunta", dicho:dicho, pregunta:"\u00bfQu\u00e9 te recuerdo? Ya qued\u00f3 para "+fechaBonita(_rr.fecha)+(_rr.hora?" a las "+_rr.hora:"")+".",
+        titulo:"Recordatorio", completandoId:tb.id};
       vista="barra"; render(); return; }
     r.dicho=dicho;
     /* MATRIZ DE CUÁNDO (Salvador 2026-09-17): un recordatorio SIEMPRE nace con
@@ -5951,6 +6001,9 @@ function completaPendiente(id, texto){
     if(_cc) t.aviso_cada=_cc;
     t.aviso_dicho=texto;
     msg(t,"bi","Le pusiste cuándo: "+fechaBonita(f)+(_hc?" a las "+_hc:"")+(_cc?" · "+_cc:"")+".");
+  }else if(tipo==="asunto"){
+    /* recordatorio que nacio sin asunto (solo hora): ahora se le pone el nombre */
+    t.nombre=conMayuscula(asuntoRecordatorio(texto,{nombre:texto})); msg(t,"bi","Queda: "+t.nombre+".");
   }else if(tipo==="monto"){
     t.gasto=texto; msg(t,"bi","Monto o tope: "+texto+".");
   }else{
@@ -6033,11 +6086,13 @@ function cruzRoja(){ return '<svg viewBox="0 0 24 24" width="26" height="26" fil
 
 function vBarra(){
   var b=barraEstado||{};
-  if(b.modo==="pregunta") return vBarraPregunta(b);
-  if(b.modo==="escoge")   return vBarraEscoge(b);
-  if(b.modo==="ligarec")  return vBarraLigaRec(b);
-  if(b.modo==="confirmar") return vBarraConfirmar(b);
-  return vBarraTexto(b);   /* cargando y respuesta */
+  if(b.modo==="pregunta") return vBarraPregunta(b);   /* ya trae su barra */
+  if(b.modo==="escoge")   return vBarraEscoge(b)+barraPie();
+  if(b.modo==="ligarec")  return vBarraLigaRec(b)+barraPie();
+  if(b.modo==="confirmar") return vBarraConfirmar(b)+barraPie();
+  /* Salvador 2026-09-22: la barra de abajo (microfono) va SIEMPRE, tambien en
+     la pantalla de respuesta, para seguir preguntando sin regresar al home. */
+  return vBarraTexto(b)+barraPie();   /* cargando y respuesta */
 }
 /* DE QUIÉN ES LO QUE SE ESTÁ CREANDO — Salvador 2026-09-04: arriba NO va la
    palabra "Claude" (nadie sabe qué es eso), va el NOMBRE de la persona a la que
