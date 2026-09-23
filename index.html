@@ -811,7 +811,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP="build 125 · 2026-09-18 · activar avisos ahora es la PRIMERA seccion del engrane (y sigue en Tu cuenta); banner suave en el home cuando aun no estan activados, con boton Activar y una cruz para cerrarlo la sesion";
+var VERSION_APP="build 126 · 2026-09-23 · arreglado: recordatorios y tareas nuevas no se guardaban (campo undefined) y la pantalla se quedaba en Leyendo; minutos dictados (3 45); recordatorio abre su chat; la caja se limpia al enviar";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -994,6 +994,9 @@ function preguntaAClaude(mensajes, modelo, cb){
     var ctrl = (typeof AbortController!=="undefined") ? new AbortController() : null;
     var vencio = false;
     var tOut = ctrl ? setTimeout(function(){ vencio=true; ctrl.abort(); }, 25000) : null;
+    /* si Claude YA contesto y lo que truena es lo que la app hace despues, NO se
+       vuelve a preguntar (antes eso duplicaba el recordatorio). 2026-09-23 */
+    var entregado = false;
     fetch(PROXY,{method:"POST",
       headers:{"content-type":"application/json","x-app-token":APP_TOKEN,"x-usuario":yo||"anonimo"},
       body:JSON.stringify({modelo:modelo||"rapido",messages:planos}),
@@ -1001,10 +1004,12 @@ function preguntaAClaude(mensajes, modelo, cb){
     }).then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j} }) })
      .then(function(res){
        if(tOut) clearTimeout(tOut);
+       entregado = true;
        if(!res.ok){ cb(null,(res.j&&res.j.error)||"No se pudo preguntar."); return }
        cb((res.j.content&&res.j.content[0]&&res.j.content[0].text)||"",null);
      }).catch(function(e){
        if(tOut) clearTimeout(tOut);
+       if(entregado){ try{console.error(e)}catch(_e){} toast("Falló después de la respuesta: "+String((e&&e.message)||e).slice(0,80)); return }
        if(intento<1){ setTimeout(function(){tira(intento+1)},800); return }
        cb(null, vencio ? "No contesto a tiempo." : "Sin conexion.");
      });
@@ -1951,11 +1956,25 @@ function guarda(t){
      equipo. Y se dice, para que nadie crea que quedó guardado. */
   if(esEjemplo(t)){ toast("Es una tarea de ejemplo: no se guarda"); render(); return }
   if(!db){render();return}
-  db.collection(COL).doc(t.id).set(t).catch(function(e){
+  /* Red: se limpian los undefined antes de subir, y si Firestore truena en el
+     acto se DICE (antes el error rompia todo lo que venia despues). 2026-09-23 */
+  limpiaUndef(t);
+  var _p;
+  try{ _p=db.collection(COL).doc(t.id).set(t); }
+  catch(e){ try{console.error(e)}catch(_e){} toast("No se pudo guardar: "+String((e&&e.message)||e).slice(0,80)); return; }
+  _p.catch(function(e){
     console.error(e);
     if(e && e.code==="permission-denied"){ dbFail=true; render(); }
     toast("No se pudo guardar");
   });
+}
+/* quita (en su lugar) los campos undefined de objetos y arreglos anidados */
+function limpiaUndef(o){
+  if(Array.isArray(o)){ for(var i=0;i<o.length;i++){ if(o[i]===undefined) o[i]=null; else limpiaUndef(o[i]); } return o; }
+  if(o && typeof o==="object" && Object.getPrototypeOf(o)===Object.prototype){
+    Object.keys(o).forEach(function(k){ if(o[k]===undefined) delete o[k]; else limpiaUndef(o[k]); });
+  }
+  return o;
 }
 /* semilla() SE ELIMINÓ el 2026-09-04: sembraba los ejemplos en la base que
    comparte el equipo. Los ejemplos ahora viven solo en pantalla. */
@@ -2769,7 +2788,12 @@ function dotc(t){
   if(t.duenio!==yo)return"d-super";
   return"d-hacer";
 }
-function msg(t,k,txt){ t.msgs=t.msgs||[]; t.msgs.push({k:k,t:txt,h:hhmm(),ts:Date.now(),de:(k==="bo"?yo:undefined)}); }
+/* OJO 2026-09-23: NUNCA un campo con valor undefined — Firestore rechaza el
+   documento COMPLETO ("Unsupported field value: undefined") y la tarea no se
+   guarda. Desde el 2026-09-22 18:50 cada mensaje del sistema llevaba de:undefined
+   y por eso los recordatorios y tareas nuevas no se guardaban y la pantalla se
+   quedaba en "Leyendo lo que dijiste…". */
+function msg(t,k,txt){ t.msgs=t.msgs||[]; var o={k:k,t:txt,h:hhmm(),ts:Date.now()}; if(k==="bo" && yo) o.de=yo; t.msgs.push(o); }
 /* ===== LO HABLADO LARGO NO SE HACE CHORIZO (Salvador 2026-09-17) =====
    Se guarda COMPLETO (transcript) pero se muestra un resumen mío de 2-3
    renglones; a un toque sale el texto exacto. Un dictado corto se muestra tal
@@ -4700,6 +4724,8 @@ function barraEnviar(texto){
   var foto = (barraEstado && barraEstado.foto) || fotoEnMano || null;
   hist.push("Persona: "+texto);
 
+  /* lo enviado SUBE al encabezado y la caja queda en blanco, como WhatsApp */
+  consulta="";
   barraEstado={modo:"cargando", dicho:texto, hist:hist, foto:foto, texto:"Leyendo lo que dijiste…"};
   vista="barra"; render();
 
@@ -4740,16 +4766,40 @@ function barraEnviar(texto){
         "tuya, junta y avanza):\n"+hist.join("\n")
       : "\n\nLO QUE DIJO "+((PERSONAS[yo]&&PERSONAS[yo].nombre)||yo)+":\n"+texto);
 
+  /* NUNCA SE QUEDA CONGELADO EN "Leyendo lo que dijiste…" — Salvador 2026-09-23.
+     Tres redes: (1) si lo que hace la app con la respuesta TRUENA a medio camino
+     (ya guardo el recordatorio pero no alcanzo a pintar), se atrapa, se dice el
+     error exacto y se sale de la pantalla; (2) si al terminar la pantalla sigue
+     en "Leyendo" con este mismo dictado, se destraba; (3) vigia de 60 s por si la
+     respuesta nunca llega a este callback. */
+  var _esteEstado=barraEstado;
+  var _vigia=setTimeout(function(){
+    if(barraEstado===_esteEstado && vista==="barra")
+      caeALocal(texto,"Claude no contestó a tiempo — busqué local");
+  }, 60000);
   preguntaAClaude([{role:"user", content: prompt}],"rapido",function(txt,err){
+    clearTimeout(_vigia);
     if(err){ caeALocal(texto,"No alcance a Claude ("+err+") — busque local"); return }
     var j=null;
     try{ var m=txt.match(/\{[\s\S]*\}/); j=m?JSON.parse(m[0]):null }catch(e){ j=null }
     if(!j){ caeALocal(texto,"Claude contesto algo que no entendi — busque local"); return }
-    aplicaIntencion(j, texto, hist, foto);
+    try{ aplicaIntencion(j, texto, hist, foto); }
+    catch(e){
+      try{ console.error("aplicaIntencion", e); }catch(_e){}
+      var _ult=(window.recienCreadas||[])[0], _ok=_ult && tareas.some(function(t){return t.id===_ult.id});
+      if(_ok && _ult.tipo==="recordatorio"){
+        barraEstado=null; consulta=""; fotoEnMano=null; secAbierta=null;
+        abierta=_ult.id; vista="hilo"; render();
+      } else caeALocal(texto,"");
+      toast("Se guardó, pero falló al mostrarlo: "+String((e&&e.message)||e).slice(0,90));
+      return;
+    }
+    if(barraEstado===_esteEstado && vista==="barra")
+      caeALocal(texto,"No se pudo mostrar la respuesta — busqué local");
   });
 }
 function caeALocal(texto,aviso){
-  barraEstado=null; consulta=texto; vista="lista"; render(); toast(aviso);
+  barraEstado=null; consulta=texto; vista="lista"; render(); if(aviso) toast(aviso);
 }
 
 /* Claude a veces contesta la intencion en singular o con otra palabra
