@@ -2798,7 +2798,10 @@ function autorMsg(x,t){
    Solo dispara una PREGUNTA, nunca una accion a ciegas. */
 function sonaraNoComentario(v, t){
   var s=String(v||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-  if(/\b(abre|abreme|abrir|crea|creame|crear|apunta|apuntame|levanta|nueva tarea|recuerdame|encargale|encarga a|encargarle|programa|agenda)\b/.test(s)) return true;
+  /* Salvador 2026-09-22: "acuerdame"/"acuerdate" es lo mismo que "recuerdame"
+     dicho distinto -- no estaba en la lista y por eso se colaba como comentario
+     normal sin armar el recordatorio. */
+  if(/\b(abre|abreme|abrir|crea|creame|crear|apunta|apuntame|levanta|nueva tarea|recuerdame|acuerdame|acuerdate|encargale|encarga a|encargarle|programa|agenda)\b/.test(s)) return true;
   var otros=Object.keys(PERSONAS).filter(function(k){return k!==yo && k!==(t&&t.duenio)});
   for(var i=0;i<otros.length;i++){
     var nom=String((PERSONAS[otros[i]]||{}).nombre||"").toLowerCase().normalize("NFD")
