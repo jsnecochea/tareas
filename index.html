@@ -3744,7 +3744,7 @@ function ico(n,px,gr){
      2026-09-23 (recordatorio nuevo por voz que ademas se quedo trabado). */
   function tecladoReal(){
     var e=document.activeElement;
-    return !!(e && (e.tagName==="INPUT"||e.tagName==="TEXTAREA"));
+    return !!(e && (e.tagName==="INPUT"||e.tagName==="TEXTAREA"||e.isContentEditable));
   }
   function acomoda(){
     var pie=document.querySelector(".pie"); if(!pie) return;
@@ -4777,6 +4777,8 @@ var SINONIMOS_INT={
 function horaDicha(txt){
   var s=" "+String(txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")+" ";
   if(/\ba\s+la(s)?\s+(una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|\d{1,2})\b/.test(s)) return true;
+  /* "cuarto para las cuatro", "diez para las cinco" (Salvador 2026-09-23) */
+  if(/\b(cuarto|cinco|diez|quince|veinte|\d{1,2})\s+para\s+la(s)?\s+(una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|\d{1,2})\b/.test(s)) return true;
   if(/\b\d{1,2}(\s*[:.]\s*\d{2})?\s*(am|pm|a\.?m\.?|p\.?m\.?)\b/.test(s)) return true;
   if(/\b\d{1,2}(\s*[:.]\s*\d{2})?\s*(de\s+la\s+(manana|tarde|noche)|horas?|hrs?)\b/.test(s)) return true;
   if(/\b(mediodia|medianoche)\b/.test(s)) return true;
@@ -4790,11 +4792,40 @@ function horaValor(txt){
   var s=String(txt||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
   if(/\bmediodia\b/.test(s)) return "12:00";
   if(/\bmedianoche\b/.test(s)) return "00:00";
+  var _para=s.match(/\b(cuarto|cinco|diez|quince|veinte|\d{1,2})\s+para\s+la(?:s)?\s+(una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|\d{1,2})\b/);
+  if(_para){
+    var _pm={cuarto:15,cinco:5,diez:10,quince:15,veinte:20}[_para[1]]; if(_pm==null) _pm=parseInt(_para[1],10);
+    var _ph=NUMHORA[_para[2]]!=null?NUMHORA[_para[2]]:parseInt(_para[2],10);
+    if(!isNaN(_pm)&&_pm>0&&_pm<60&&!isNaN(_ph)){
+      _ph=_ph-1; if(_ph<0) _ph=23;
+      var _pc=s.slice(_para.index, _para.index+50);
+      if(/(tarde|noche|\bpm\b|p\.?m)/.test(_pc) && _ph<12) _ph+=12;
+      return String(_ph).padStart(2,"0")+":"+String(60-_pm).padStart(2,"0");
+    }
+  }
   var m=s.match(/\ba\s+la(?:s)?\s+(una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|\d{1,2})(?:[:.](\d{2}))?/);
   if(!m) m=s.match(/\b(\d{1,2})(?:[:.](\d{2}))?\s*(?:de\s+la\s+(?:manana|tarde|noche)|am|pm|a\.?m|p\.?m|hrs?|horas?)/);
   if(!m) return "";
   var h=NUMHORA[m[1]]!=null?NUMHORA[m[1]]:parseInt(m[1],10);
   var mm=m[2]?parseInt(m[2],10):0;
+  /* MINUTOS DICTADOS SIN DOS PUNTOS — Salvador 2026-09-23: "a las tres 45 de la
+     tarde" quedaba a las 15:00 porque solo se leian minutos con ":" o ".". El
+     dictado de iPhone escribe "tres 45", "3 45", "tres y media", "tres y cuarto",
+     "tres cuarenta y cinco", "cuatro menos cuarto". */
+  if(!m[2] && /^a\s+la/.test(m[0])){
+    var resto=s.slice(m.index+m[0].length), mw;
+    var MINPAL={"cincuenta y cinco":55,"cincuenta":50,"cuarenta y cinco":45,"cuarenta":40,
+      "treinta y cinco":35,"treinta":30,"veinticinco":25,"veinte":20,"quince":15,
+      "diez":10,"cinco":5,"media":30,"cuarto":15};
+    var PALRE="cincuenta y cinco|cincuenta|cuarenta y cinco|cuarenta|treinta y cinco|treinta|veinticinco|veinte|quince|diez|cinco";
+    if((mw=resto.match(/^\s+y\s+(media|cuarto)\b/))) mm=MINPAL[mw[1]];
+    else if((mw=resto.match(/^\s+menos\s+(cuarto|\d{1,2}|cinco|diez|quince|veinte|veinticinco)\b/))){
+      var mn=MINPAL[mw[1]]!=null?MINPAL[mw[1]]:parseInt(mw[1],10);
+      if(!isNaN(mn)&&mn>0&&mn<60){ h=h-1; if(h<0) h=23; mm=60-mn; } }
+    else if((mw=resto.match(/^\s+y\s+(\d{1,2})\b/))) mm=parseInt(mw[1],10);
+    else if((mw=resto.match(/^\s+(\d{2})\b/))) mm=parseInt(mw[1],10);
+    else if((mw=resto.match(new RegExp("^\\s+(?:y\\s+)?("+PALRE+")\\b")))) mm=MINPAL[mw[1]];
+  }
   var cola=s.slice(m.index, m.index+40);
   if(/(tarde|noche|\bpm\b|p\.?m)/.test(cola) && h<12) h+=12;
   if(/(manana|\bam\b|a\.?m)/.test(cola) && h===12) h=0;
@@ -5734,6 +5765,14 @@ function autoEjecuta(b){
   }
   if(meta){ window.recienCreadas.unshift(meta);
     if(window.recienCreadas.length>8) window.recienCreadas.length=8; }
+  /* Salvador 2026-09-23: un RECORDATORIO recien dictado abre SU chat, para seguir
+     platicando ahi (la campana, "Ya esta" y el bote quedan a la mano). Las tareas
+     siguen yendo al home (regla build 36). */
+  if(b.accion==="recordatorio" && creada && creada.id){
+    barraEstado=null; consulta=""; fotoEnMano=null; secAbierta=null;
+    abierta=creada.id; vista="hilo"; fichaOpen=false; detOpen={}; menuOpen=false; render();
+    return;
+  }
   barraEstado=null; consulta=""; fotoEnMano=null; vista="lista"; secAbierta=null; render();
 }
 /* ===== RECORDATORIO QUE PERTENECE A UNA TAREA (Salvador 2026-09-17) =====
