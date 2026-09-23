@@ -138,55 +138,44 @@ button{font:inherit;color:inherit}
 .r2{display:flex;align-items:center;gap:8px}
 .barra{flex:1;min-width:0;display:flex;align-items:center;gap:6px;background:var(--surface-2);
   border:.5px solid var(--line);border-radius:12px;padding:0 4px 0 9px;height:46px}
-/* ===== LA CAJA DE ESCRIBIR, EN DOS PISOS — Salvador 2026-09-04 =====
-   Antes era UN SOLO RENGLON horizontal: lupa, texto, microfono, camara. Con
-   varios renglones el texto se salia por arriba de la pastilla, porque la
-   pastilla tenia alto fijo de 46px y el texto crecia por su cuenta.
-   Ahora es como la de Claude: ARRIBA el texto, que crece solo hasta 5
-   renglones y de ahi se recorre; ABAJO la fila de botones, que no se mueve.
-   Asi el texto nunca pelea con los iconos y la pastilla crece pareja. */
-.caja2{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;
-  background:var(--surface-2);border:.5px solid var(--line);border-radius:22px;
-  padding:9px 10px 8px}
-/* crece hasta CUATRO renglones y de ahi se recorre sola, igual que la de
-   Claude: 18.9px de letra por 1.35 de interlinea = 25.5px el renglon. */
-.caja2 .caja{max-height:106px;overflow-y:auto;-webkit-overflow-scrolling:touch;
-  padding:2px 4px}
-/* LA FILA DE BOTONES. El + pegado a la izquierda; el microfono y la flecha
-   pegados a la derecha con margin-left:auto — NO con un <div class="grow">,
-   porque .grow solo esta definido dentro de .enc, .top y .msgbar y aqui no
-   empujaba nada: los tres botones se amontonaban a la izquierda. */
-.caja2 .ctrl{display:flex;align-items:center;gap:6px}
-.caja2 .ctrl .mic,.caja2 .ctrl .env{margin-left:auto}
-/* Los tres botones miden lo mismo y se definen AQUI COMPLETOS. Antes el
-   microfono heredaba de ".barra .mic", y al sacarlo de .barra se quedo con el
-   estilo de boton del navegador: salia un cuadro blanco. 2026-09-05. */
-.caja2 .ctrl button{width:36px;height:36px;flex:none;border-radius:50%;
+/* ===== LA CAJA DE ESCRIBIR, UN SOLO RENGLON COMO WHATSAPP — Salvador 2026-09-23 =====
+   El "+" a la izquierda, el texto en medio (crece hasta 4 renglones y de ahi se
+   recorre) y el microfono / la flecha a la derecha, TODO en la misma fila. Antes
+   era en dos pisos (texto arriba, botones abajo) y el cursor salia encimado
+   sobre el "+". Los botones se pegan al borde de abajo (align-items:flex-end)
+   para que al crecer el texto queden junto al ultimo renglon, como WhatsApp. */
+.caja2{flex:1;min-width:0;display:flex;flex-direction:row;align-items:flex-end;gap:6px;
+  background:var(--surface-2);border:.5px solid var(--line);border-radius:24px;
+  padding:5px 6px}
+/* 18.9px de letra por 1.35 de interlinea = 25.5px el renglon; 4 renglones = 102 + padding */
+.caja2 .caja{flex:1;min-width:0;max-height:112px;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:5px 4px;min-height:36px;display:flex;flex-direction:column;justify-content:center}
+/* Los tres botones miden lo mismo y se definen AQUI COMPLETOS (sin esto el
+   microfono heredaba el estilo de boton del navegador y salia un cuadro blanco). */
+.caja2>button{width:36px;height:36px;flex:none;border-radius:50%;
   display:grid;place-items:center;padding:0;cursor:pointer;
   -webkit-appearance:none;appearance:none}
-.caja2 .ctrl .mas{background:var(--surface);border:.5px solid var(--line);color:var(--ink-2)}
-.caja2 .ctrl .mas:active{background:var(--line)}
-.caja2 .ctrl .mic{background:var(--hacer);border:0;color:#06340f}
-.caja2 .ctrl .mic.oyendo{background:var(--hacer);border:0;color:#06340f;box-shadow:0 0 16px rgba(48,209,88,.5);animation:resp 1.1s ease-in-out infinite}
-.caja2 .ctrl .env{background:var(--surface-2);border:.5px solid #34343a;
+.caja2 .mas{background:var(--surface);border:.5px solid var(--line);color:var(--ink-2)}
+.caja2 .mas:active{background:var(--line)}
+.caja2 .mic{background:var(--hacer);border:0;color:#06340f}
+.caja2 .mic.oyendo{background:var(--hacer);border:0;color:#06340f;box-shadow:0 0 16px rgba(48,209,88,.5);animation:resp 1.1s ease-in-out infinite}
+.caja2 .env{background:var(--surface-2);border:.5px solid #34343a;
   color:var(--ink-3);transition:background .18s ease,color .18s ease,box-shadow .18s ease}
-.caja2 .ctrl .env{display:none}                 /* WhatsApp: la flecha solo con texto */
-.caja2 .ctrl .env.listo{display:grid;background:var(--hacer);border:0;color:#06340f;box-shadow:0 0 14px rgba(48,209,88,.45)}
-.caja2 .ctrl .mic.oculto{display:none}          /* y el micro se esconde al escribir */
-.caja2 .ctrl .env:active{filter:brightness(.9)}
+.caja2 .env{display:none}                 /* WhatsApp: la flecha solo con texto */
+.caja2 .env.listo{display:grid;background:var(--hacer);border:0;color:#06340f;box-shadow:0 0 14px rgba(48,209,88,.45)}
+.caja2 .mic.oculto{display:none}          /* y el micro se esconde al escribir */
+.caja2 .env:active{filter:brightness(.9)}
 /* CUANDO QUEDA TEXTO SIN MANDAR, LA FLECHA LLAMA. Salvador 2026-09-05: la
    palomita de la franja gris de iOS parece de enviar, pero solo cierra el
-   teclado — no manda nada, y esa franja no se puede quitar ni mover porque es
-   del sistema. Entonces, en cuanto se cierra el teclado con texto escrito, la
-   flecha verde de la app se pone a latir para que se vea que ELLA es la que
-   manda. Se apaga sola al mandar o al volver a escribir. */
-.caja2 .ctrl .env.pendiente{animation:llama 1.25s ease-in-out infinite}
+   teclado — no manda nada. En cuanto se cierra el teclado con texto escrito, la
+   flecha verde de la app se pone a latir. Se apaga sola al mandar o al volver a escribir. */
+.caja2 .env.pendiente{animation:llama 1.25s ease-in-out infinite}
 @keyframes llama{
   0%,100%{box-shadow:0 0 0 0 rgba(48,209,88,0); transform:scale(1)}
   50%{box-shadow:0 0 0 7px rgba(48,209,88,.22); transform:scale(1.06)}}
-@media (prefers-reduced-motion:reduce){.caja2 .ctrl .env.pendiente{animation:none;
+@media (prefers-reduced-motion:reduce){.caja2 .env.pendiente{animation:none;
   box-shadow:0 0 0 5px rgba(48,209,88,.22)}}
-@media (prefers-reduced-motion:reduce){.caja2 .ctrl .mic.oyendo{animation:none}}
+@media (prefers-reduced-motion:reduce){.caja2 .mic.oyendo{animation:none}}
 /* el microfono crece y gana area de toque SIN crecer la barra: el boton mide
    36px pero la barra sigue en 46 de alto. Y queda separado del borde, como la lupa. */
 .barra .lupa{color:var(--ink-3);flex:none;display:grid;place-items:center}
@@ -219,7 +208,7 @@ button{font:inherit;color:inherit}
   white-space:pre-wrap;overflow-wrap:anywhere;-webkit-user-select:text;user-select:text}
 .caja:focus,.caja:focus-visible{outline:0;box-shadow:none}
 .caja.vacia:before{content:attr(data-ph);color:var(--ink-3);font-size:17.4px;
-  pointer-events:none;display:block}
+  pointer-events:none}
 /* el texto que TU escribes va al tamano grande; solo la pista de adentro va un
    punto mas chica, para que 'Crea, busca o revisa' quepa completa. */
 .barra input::placeholder,.barra textarea::placeholder{color:var(--ink-3);font-size:17.4px}
@@ -521,6 +510,8 @@ button{font:inherit;color:inherit}
 .avadd{display:flex;align-items:center;gap:12px;padding:15px 4px 4px;color:var(--hacer);font-size:17px;font-weight:600;background:none;border:0;width:100%;cursor:pointer}
 .avadd .ic{width:34px;height:34px;border-radius:10px;background:rgba(48,209,88,.14);display:grid;place-items:center;flex:none;color:var(--hacer)}
 .avempty{color:var(--ink-3);font-size:16px;padding:6px 4px 14px}
+.avsheet .avpie{border-top:0;background:none;padding:12px 0 0;margin:0 -4px}
+.avsheet .avpie .caja{cursor:text}
 .op[disabled]{opacity:.5}
 .op.full{flex:1 1 100%;text-align:left}
 .negmsg{flex:1 1 100%;color:var(--ink-2);font-size:16px;margin-bottom:2px;line-height:1.35}
@@ -811,7 +802,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP="build 127 · 2026-09-23 · los recordatorios ya se programan en el servidor de push nuevo (aviso_set); hora 4:20 sin a las; hora ambigua de hoy toma la tarde; sin hora en el titulo";
+var VERSION_APP="build 128 · 2026-09-23 · caja de un renglon tipo WhatsApp (+ | texto | mic); hoja de recordatorios con la barra de siempre; horas AM/PM (o 24 h en Tu cuenta)";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -3226,6 +3217,9 @@ function vYo(){
      (mp.mail_personal?'<br>'+esc(mp.mail_personal):'')+'</div>'+
      '<div class="acts"><button class="mini" id="bficha">Corregir</button></div></div>';
   h+=cardAvisos();
+  h+='<h2>Horas</h2><div class="card"><div class="sm">C\u00f3mo se ven las horas de tus recordatorios y avisos.</div>'+
+     '<div class="acts"><button class="mini" id="bfmt12"'+(fmt24()?'':' disabled')+'>4:35 PM</button> '+
+     '<button class="mini" id="bfmt24"'+(fmt24()?' disabled':'')+'>16:35</button></div></div>';
   h+='<h2>Voy a estar fuera</h2>';
   if(s && estaFuera(yo)){
     h+='<div class="card"><h3>Fuera del '+esc(s.desde)+' al '+esc(s.hasta)+'</h3>'+
@@ -3400,17 +3394,15 @@ function barraPie(pista, vacia){
   var txt = vacia ? "" : (consulta||"");
   return '<div class="pie">'+
     '<div class="caja2">'+
+      (fotoEnMano
+        ? '<button class="mas" id="bnofoto" aria-label="Quitar la foto">\u00d7</button>'
+        : '<button class="mas" id="bcam" aria-label="Agregar foto">'+ico("mas",22,2)+'</button>')+
       '<div id="bq" class="caja'+(txt?"":" vacia")+'" contenteditable="true" role="textbox" '+
         'data-ph="'+(pista || (fotoEnMano?"Di de qu\u00e9 es la foto":""))+'" '+
         'autocorrect="on" autocapitalize="sentences" spellcheck="true" '+
         'enterkeyhint="send" inputmode="text" data-lpignore="true">'+esc(txt)+'</div>'+
-      '<div class="ctrl">'+
-        (fotoEnMano
-          ? '<button class="mas" id="bnofoto" aria-label="Quitar la foto">\u00d7</button>'
-          : '<button class="mas" id="bcam" aria-label="Agregar foto">'+ico("mas",22,2)+'</button>')+
-        '<button class="env" id="benv" aria-label="Enviar">'+ico("sube",21,2.2)+'</button>'+
-        '<button class="mic" id="bmic" aria-label="Dictar">'+ico("mic",26,1.7)+'</button>'+
-      '</div>'+
+      '<button class="env" id="benv" aria-label="Enviar">'+ico("sube",21,2.2)+'</button>'+
+      '<button class="mic" id="bmic" aria-label="Dictar">'+ico("mic",26,1.7)+'</button>'+
     '</div></div>';
 }
 function vLista(){
@@ -4087,14 +4079,12 @@ function vRevision(t,org){
     '<div class="comp">'+(sug?'<div class="sug">'+sug+'</div>':'')+
     '<div class="pie">'+
       '<div class="caja2">'+
+        '<button class="mas" id="tcam" aria-label="Agregar foto">'+ico("mas",22,2)+'</button>'+
         '<div id="txt" class="caja vacia" contenteditable="true" role="textbox" '+
-          'data-ph="" enterkeyhint="send" '+
+          'data-ph="'+(window.__avAdd===t.id?"Dicta o escribe el recordatorio":"")+'" enterkeyhint="send" '+
           'autocorrect="on" autocapitalize="sentences" spellcheck="true"></div>'+
-        '<div class="ctrl">'+
-          '<button class="mas" id="tcam" aria-label="Agregar foto">'+ico("mas",22,2)+'</button>'+
-          '<button class="env" id="tenv" aria-label="Enviar">'+ico("sube",21,2.2)+'</button>'+
-          '<button class="mic" id="tmic" aria-label="Dictar">'+ico("mic",26,1.7)+'</button>'+
-        '</div>'+
+        '<button class="env" id="tenv" aria-label="Enviar">'+ico("sube",21,2.2)+'</button>'+
+        '<button class="mic" id="tmic" aria-label="Dictar">'+ico("mic",26,1.7)+'</button>'+
       '</div>'+
     '</div></div>';
 }
@@ -4293,14 +4283,12 @@ function vHilo(){
       (sug?'<div class="sug">'+sug+'</div>':'')+
     '<div class="pie">'+
       '<div class="caja2">'+
+        '<button class="mas" id="tcam" aria-label="Agregar foto">'+ico("mas",22,2)+'</button>'+
         '<div id="txt" class="caja vacia" contenteditable="true" role="textbox" '+
-          'data-ph="" enterkeyhint="send" '+
+          'data-ph="'+(window.__avAdd===t.id?"Dicta o escribe el recordatorio":"")+'" enterkeyhint="send" '+
           'autocorrect="on" autocapitalize="sentences" spellcheck="true"></div>'+
-        '<div class="ctrl">'+
-          '<button class="mas" id="tcam" aria-label="Agregar foto">'+ico("mas",22,2)+'</button>'+
-          '<button class="env" id="tenv" aria-label="Enviar">'+ico("sube",21,2.2)+'</button>'+
-          '<button class="mic" id="tmic" aria-label="Dictar">'+ico("mic",26,1.7)+'</button>'+
-        '</div>'+
+        '<button class="env" id="tenv" aria-label="Enviar">'+ico("sube",21,2.2)+'</button>'+
+        '<button class="mic" id="tmic" aria-label="Dictar">'+ico("mic",26,1.7)+'</button>'+
       '</div>'+
     '</div></div>'+
     (window.__avSheet===t.id?vAvisosSheet(t):"");
@@ -5558,7 +5546,7 @@ function aplicaIntencion(j, dicho, hist, foto){
       var _rr=armaCuando(dicho);
       var tb=creaRecordatorio({texto:"Recordatorio (falta el asunto)", dicho:dicho, fecha:_rr.fecha, hora:_rr.hora, cada:_rr.cada});
       tb.pendiente_info="\u00bfQu\u00e9 te recuerdo?"; tb.pendiente_tipo="asunto"; guarda(tb);
-      barraEstado={modo:"pregunta", dicho:dicho, pregunta:"\u00bfQu\u00e9 te recuerdo? Ya qued\u00f3 para "+fechaBonita(_rr.fecha)+(_rr.hora?" a las "+_rr.hora:"")+".",
+      barraEstado={modo:"pregunta", dicho:dicho, pregunta:"\u00bfQu\u00e9 te recuerdo? Ya qued\u00f3 para "+fechaBonita(_rr.fecha)+(_rr.hora?" a las "+horaBonita(_rr.hora):"")+".",
         titulo:"Recordatorio", completandoId:tb.id};
       vista="barra"; render(); return; }
     r.dicho=dicho;
@@ -5779,7 +5767,7 @@ function creaRecordatorio(r){
     estado:"abierta", detenido:null, cierre:null, encargado:null,
     ultima:"", msgs:[], creada:Date.now(), creada_por:yo
   };
-  msg(t,"bi","Recordatorio. Te aviso el "+fechaBonita(f)+(_hora?" a las "+_hora:"")+".");
+  msg(t,"bi","Recordatorio. Te aviso el "+fechaBonita(f)+(_hora?" a las "+horaBonita(_hora):"")+".");
   tareas.push(t); guarda(t); sincronizaAvisos(t);
   return t;
 }
@@ -5868,10 +5856,21 @@ function autoEjecuta(b){
    inserta DENTRO de esa tarea como un aviso (un "ritmo") que brincara a la hora
    o el dia que dijo, para picar el avance. La app guarda el aviso y lo enseña;
    que la alerta BRINQUE a la hora exacta es el push del servidor (Josue). */
+/* HORAS SIN AMBIGUEDAD — Salvador 2026-09-23: "9:35" a secas no dice si es de
+   la manana o de la tarde. Todo aviso y recordatorio sale "4:35 PM"; quien
+   prefiera 24 horas ("16:35") lo cambia en Tu cuenta y se guarda en su telefono. */
+function fmt24(){ try{ return localStorage.getItem("bit_fmt24")==="1" }catch(e){ return false } }
+function horaBonita(hm){
+  var m=/^(\d{1,2}):(\d{2})$/.exec(String(hm||"").trim()); if(!m) return hm||"";
+  var h=parseInt(m[1],10), mi=m[2];
+  if(fmt24()) return String(h).padStart(2,"0")+":"+mi;
+  var suf=h>=12?"PM":"AM"; h=h%12; if(h===0) h=12;
+  return h+":"+mi+" "+suf;
+}
 function textoCuando(av){
   var p=[];
   if(av.fecha) p.push(fechaBonita(av.fecha));
-  if(av.hora) p.push("a las "+av.hora);
+  if(av.hora) p.push("a las "+horaBonita(av.hora));
   if(av.cada) p.push(av.cada);
   return p.join(" · ");
 }
@@ -6014,7 +6013,7 @@ function textoRec(a){
   var p=[];
   if(a.cada) p.push(nombraCada(a.cada));
   else if(a.fecha && /^\d{4}-\d{2}-\d{2}$/.test(a.fecha)) p.push(fechaBonita(a.fecha));
-  if(a.hora) p.push(a.hora);
+  if(a.hora) p.push(horaBonita(a.hora));
   return p.join(" · ")||"sin hora fija";
 }
 function svgBote(){ return '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M10 4h4M6 7l1 13h10l1-13"/><path d="M10 10.5v6M14 10.5v6"/></svg>'; }
@@ -6032,7 +6031,7 @@ function armaCuando(v){
 /* el resumen de 2 renglones que se ve con la ficha colapsada */
 function resumenTarea(t){
   if(t.es_recordatorio){
-    var q=[]; if(t.f_vigente) q.push(fechaBonita(t.f_vigente)); if(t.aviso_hora) q.push("a las "+t.aviso_hora);
+    var q=[]; if(t.f_vigente) q.push(fechaBonita(t.f_vigente)); if(t.aviso_hora) q.push("a las "+horaBonita(t.aviso_hora));
     return conMayuscula(t.nombre||"Recordatorio")+(q.length?" · te aviso "+q.join(" "):"");
   }
   var p=[conMayuscula(t.revisar||t.nombre||"")];
@@ -6063,7 +6062,14 @@ function vAvisosSheet(t){
     });
   }
   if(!todos.length) h+='<div class="avempty">No hay recordatorios en esta tarea.</div>';
-  h+='<button class="avadd" id="avadd"><span class="ic">'+ico("mas",22,2)+'</span> Agregar recordatorio</button></div>';
+  /* Salvador 2026-09-23: abajo va LA BARRA DE SIEMPRE (+, caja, microfono), no
+     un renglon "Agregar recordatorio". Tocar la caja, el + o el microfono cierra
+     la hoja y deja la barra del hilo lista para dictar o escribir el aviso nuevo. */
+  h+='<div class="pie avpie"><div class="caja2">'+
+       '<button class="mas" id="avadd" aria-label="Agregar recordatorio">'+ico("mas",22,2)+'</button>'+
+       '<div id="avtxt" class="caja vacia" role="textbox" data-ph="Dicta o escribe un recordatorio" data-avadd="1"></div>'+
+       '<button class="mic" id="avmic" aria-label="Dictar recordatorio">'+ico("mic",26,1.7)+'</button>'+
+     '</div></div></div>';
   return h;
 }
 /* borra un aviso (por id) de la tarea. "self" = el recordatorio suelto -> se cierra. */
@@ -6082,7 +6088,7 @@ function posponeAvisoDe(t, id){
   else { var a=(t.avisos||[]).filter(function(x){return String(x.ts)===String(id)})[0];
          if(a){ a.fecha=f; a.hora=hh; a.avisado_en=null; guarda(t); } }
   sincronizaAvisos(t);
-  window.__avSonando=null; window.__avSheet=null; toast("Pospuesto a las "+hh); render();
+  window.__avSonando=null; window.__avSheet=null; toast("Pospuesto a las "+horaBonita(hh)); render();
 }
 /* crea el aviso dentro de la tarea y lo devuelve. NO navega, NO pinta fichita:
    sirve para insertar de una (loss-proof) y luego, si hace falta, preguntar. */
@@ -6238,7 +6244,7 @@ function completaPendiente(id, texto){
     if(_hc) t.aviso_hora=_hc;
     if(_cc) t.aviso_cada=_cc;
     t.aviso_dicho=texto;
-    msg(t,"bi","Le pusiste cuándo: "+fechaBonita(f)+(_hc?" a las "+_hc:"")+(_cc?" · "+_cc:"")+".");
+    msg(t,"bi","Le pusiste cuándo: "+fechaBonita(f)+(_hc?" a las "+horaBonita(_hc):"")+(_cc?" · "+_cc:"")+".");
   }else if(tipo==="asunto"){
     /* recordatorio que nacio sin asunto (solo hora): ahora se le pone el nombre */
     t.nombre=conMayuscula(asuntoRecordatorio(texto,{nombre:texto})); msg(t,"bi","Queda: "+t.nombre+".");
@@ -6263,9 +6269,9 @@ function completaPendiente(id, texto){
   window.recienCreadas=window.recienCreadas.filter(function(o){return o.id!==t.id});
   window.recienCreadas.unshift({id:t.id, tipo:"completada", nombre:t.nombre,
     para:(t.duenio!==yo?t.duenio:null),
-    fecha:("para el "+fechaBonita(t.f_vigente)+(t.aviso_hora?" a las "+t.aviso_hora:""))});
+    fecha:("para el "+fechaBonita(t.f_vigente)+(t.aviso_hora?" a las "+horaBonita(t.aviso_hora):""))});
   if(window.recienCreadas.length>8) window.recienCreadas.length=8;
-  toast("Listo: "+t.nombre+" · "+fechaBonita(t.f_vigente)+(t.aviso_hora?" a las "+t.aviso_hora:""));
+  toast("Listo: "+t.nombre+" · "+fechaBonita(t.f_vigente)+(t.aviso_hora?" a las "+horaBonita(t.aviso_hora):""));
   vista="lista"; render();
 }
 /* microfono de cada renglon del bote — mismo mecanismo robusto del hilo */
@@ -7174,10 +7180,18 @@ function bindHilo(){
       window.__avSheet=null; window.__avEdit={taskId:t.id, id:el.getAttribute("data-avedit")}; render();
       setTimeout(function(){ var m=$("tmic"); if(m) m.click(); toast("Dicta la nueva fecha u hora (ej: “el lunes a las 8”)"); }, 60); };
   });
-  var avadd=$("avadd"); if(avadd) avadd.onclick=function(){
+  /* + o caja: cierra la hoja y abre el teclado en la barra del hilo, ya en modo
+     "agregar recordatorio"; microfono: lo mismo pero dictando de una. */
+  function aAgregarAviso(dictar){
     window.__avSheet=null; window.__avAdd=t.id; render();
-    setTimeout(function(){ var m=$("tmic"); if(m) m.click(); toast("Dicta el recordatorio (ej: “el viernes a las 9”)"); }, 60);
-  };
+    setTimeout(function(){
+      if(dictar){ var m=$("tmic"); if(m) m.click(); toast("Dicta el recordatorio (ej: “el viernes a las 9”)"); }
+      else { var tx=$("txt"); if(tx) tx.focus(); }
+    }, 60);
+  }
+  var avadd=$("avadd"); if(avadd) avadd.onclick=function(ev){ ev.stopPropagation(); aAgregarAviso(false); };
+  var avtx=$("avtxt"); if(avtx) avtx.onclick=function(ev){ ev.stopPropagation(); aAgregarAviso(false); };
+  var avmc=$("avmic"); if(avmc) avmc.onclick=function(ev){ ev.stopPropagation(); aAgregarAviso(true); };
   var bat=$("batorado"); if(bat) bat.onclick=function(){
     t.pregunta=null; t.pide_atoro=true;
     msg(t,"bi","Va. Para detener el reloj necesito DOS cosas: a quién estás esperando (nombre y teléfono) y qué exactamente. Escríbelo abajo así: Rodrigo Méndez, 6621234567, el presupuesto del alumbrado.");
@@ -7228,7 +7242,7 @@ function bindHilo(){
     if(window.__avAdd===t.id){
       window.__avAdd=null; $("txt").value=""; marcaEnvio("tenv","");
       var rr=armaCuando(v);
-      var av=nuevoAviso(t, {texto:v, dicho:v, fecha:rr.fecha, hora:rr.hora, cada:rr.cada});
+      var av=nuevoAviso(t, {texto:sinHoraEnTitulo(asuntoRecordatorio(v,t)), dicho:v, fecha:rr.fecha, hora:rr.hora, cada:rr.cada});
       guarda(t); sincronizaAvisos(t);
       toast("Recordatorio agregado: "+(textoCuando(av)||"sin hora")); render(); return;
     }
@@ -7241,7 +7255,7 @@ function bindHilo(){
              if(a){ a.fecha=nc.fecha; a.hora=nc.hora; a.cada=normalizaCada(nc.cada); a.avisado_en=null; } }
       if(ed.id==="self" && nc.cada) t.aviso_cada=normalizaCada(nc.cada);
       window.__avSonando=null; guarda(t); sincronizaAvisos(t);
-      toast("Reprogramado: "+fechaBonita(nc.fecha)+(nc.hora?" a las "+nc.hora:"")); render(); return;
+      toast("Reprogramado: "+fechaBonita(nc.fecha)+(nc.hora?" a las "+horaBonita(nc.hora):"")); render(); return;
     }
     /* RECORDATORIO PARA ESTA TAREA (Salvador 2026-09-22): palabra de recordatorio
        u hora dicha = aviso de ESTA tarea, armado directo, sin preguntar. No aplica
@@ -7402,6 +7416,8 @@ function bindAdmin(){
 /* ---- binds de las pantallas nuevas ---- */
 function bindYo(){
   var bf=$("bficha"); if(bf) bf.onclick=function(){ vista="ficha"; render() };
+  var f12=$("bfmt12"); if(f12) f12.onclick=function(){ try{localStorage.setItem("bit_fmt24","0")}catch(e){} toast("Horas como 4:35 PM"); render() };
+  var f24=$("bfmt24"); if(f24) f24.onclick=function(){ try{localStorage.setItem("bit_fmt24","1")}catch(e){} toast("Horas como 16:35"); render() };
   bindBotonAvisos();
   var bb=$("bback"); if(bb) bb.onclick=function(){ vista="lista"; render() };
   var bp=$("bponsup"); if(bp) bp.onclick=function(){
