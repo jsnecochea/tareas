@@ -986,16 +986,27 @@ function preguntaAClaude(mensajes, modelo, cb){
     } else planos.push(m);
   });
   function tira(intento){
+    /* Candado de tiempo — Salvador 2026-09-23: sin esto, si el proxy se
+       quedaba pensando (servidor saturado, sin red de vuelta), el fetch
+       jamas contestaba ni fallaba y la pantalla se quedaba trabada para
+       siempre en "Leyendo lo que dijiste...". Ahora, si no hay respuesta en
+       25s, se corta solo y cae al intento/aviso de siempre. */
+    var ctrl = (typeof AbortController!=="undefined") ? new AbortController() : null;
+    var vencio = false;
+    var tOut = ctrl ? setTimeout(function(){ vencio=true; ctrl.abort(); }, 25000) : null;
     fetch(PROXY,{method:"POST",
       headers:{"content-type":"application/json","x-app-token":APP_TOKEN,"x-usuario":yo||"anonimo"},
-      body:JSON.stringify({modelo:modelo||"rapido",messages:planos})
+      body:JSON.stringify({modelo:modelo||"rapido",messages:planos}),
+      signal: ctrl ? ctrl.signal : undefined
     }).then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j} }) })
      .then(function(res){
+       if(tOut) clearTimeout(tOut);
        if(!res.ok){ cb(null,(res.j&&res.j.error)||"No se pudo preguntar."); return }
        cb((res.j.content&&res.j.content[0]&&res.j.content[0].text)||"",null);
      }).catch(function(e){
+       if(tOut) clearTimeout(tOut);
        if(intento<1){ setTimeout(function(){tira(intento+1)},800); return }
-       cb(null,"Sin conexion.");
+       cb(null, vencio ? "No contesto a tiempo." : "Sin conexion.");
      });
   }
   tira(0);
@@ -3724,9 +3735,20 @@ function ico(n,px,gr){
    teclado, como en WhatsApp, y lo que dictas o escribes se ve siempre. */
 (function(){
   var vv=window.visualViewport; if(!vv) return;
+  /* SOLO es "tapado por teclado" si de veras hay un input/textarea enfocado:
+     el teclado real de iOS nada mas sale entonces. Sin este candado, el
+     indicador de grabacion del microfono (u otro cambio del viewport durante
+     el dictado por voz) se confundia con el teclado y dejaba la barra de
+     abajo empujada hacia arriba, con un hueco vacio debajo, sin que hubiera
+     teclado ni texto que lo justificara — bug reportado por Salvador el
+     2026-09-23 (recordatorio nuevo por voz que ademas se quedo trabado). */
+  function tecladoReal(){
+    var e=document.activeElement;
+    return !!(e && (e.tagName==="INPUT"||e.tagName==="TEXTAREA"));
+  }
   function acomoda(){
     var pie=document.querySelector(".pie"); if(!pie) return;
-    var tapado=Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    var tapado=tecladoReal() ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) : 0;
     pie.style.transform = tapado>0 ? "translateY(-"+tapado+"px)" : "";
     var sc=document.querySelector(".scroll");
     if(sc) sc.style.paddingBottom = tapado>0 ? tapado+"px" : "";
