@@ -2798,10 +2798,12 @@ function autorMsg(x,t){
    Solo dispara una PREGUNTA, nunca una accion a ciegas. */
 function sonaraNoComentario(v, t){
   var s=String(v||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-  /* Salvador 2026-09-22: "acuerdame"/"acuerdate" es lo mismo que "recuerdame"
-     dicho distinto -- no estaba en la lista y por eso se colaba como comentario
-     normal sin armar el recordatorio. */
-  if(/\b(abre|abreme|abrir|crea|creame|crear|apunta|apuntame|levanta|nueva tarea|recuerdame|acuerdame|acuerdate|encargale|encarga a|encargarle|programa|agenda)\b/.test(s)) return true;
+  /* Salvador 2026-09-22: lista ampliada con todos los sinonimos de "recuerdame"
+     que el use, y ademas -- si dijo una HORA (horaDicha, ya existe mas abajo)
+     se entiende que es un recordatorio especifico aunque no diga ninguna de
+     estas palabras. "Ponle una hora a lo que sea y ya cuenta como recordatorio." */
+  if(/\b(abre|abreme|abrir|crea|creame|crear|apunta|apuntame|levanta|nueva tarea|recuerdame|recuerdanos|recuerda|acuerdame|acuerdate|acuerda|recordatorio|recordame|alarma|alerta|avisame|avisa|aviso|notificame|notifica|dime|comentame|encargale|encarga a|encargarle|programa|agenda)\b/.test(s)) return true;
+  if(horaDicha(v)) return true;
   var otros=Object.keys(PERSONAS).filter(function(k){return k!==yo && k!==(t&&t.duenio)});
   for(var i=0;i<otros.length;i++){
     var nom=String((PERSONAS[otros[i]]||{}).nombre||"").toLowerCase().normalize("NFD")
