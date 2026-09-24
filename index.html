@@ -823,7 +823,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP="build 131 · 2026-09-24 · sello y quedate: quitar alarma, Ya esta o eliminar no cambian de tarea; palomita, campana gris, titulo tachado, cintillo con Deshacer";
+var VERSION_APP="build 132 · 2026-09-24 · al abrir desde un push solo se abre la hoja si algo suena; al cerrar o quitar alarma se borra en el servidor toda clave (ya no llegan push de cerrados)";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -1903,7 +1903,7 @@ function arranca(){
          los ejemplos: solo si había datos reales en la base. */
       if(db && _hayReal && !window.__espejoInicial){ window.__espejoInicial=true;
         setTimeout(function(){ tareas.forEach(function(x){
-          if((x.es_recordatorio || (x.avisos&&x.avisos.length)) && !x.avisos_espejo){
+          if(!x.cierre && (x.es_recordatorio || (x.avisos&&x.avisos.length)) && !x.avisos_espejo){
             try{ sincronizaAvisos(x); }catch(e){}
           }
         }); }, 3000);
@@ -1920,7 +1920,9 @@ function arranca(){
           if(_rr) window.__avSonando={taskId:_rr.id, id:_pp[1]};
         } else if(_rr){ window.__avSonando={taskId:_rr.id, id:"self"}; }
         window.__irARec=null;
-        if(_rr){ abierta=_rr.id; vista="hilo"; window.__avSheet=_rr.id; render(); }
+        /* Salvador 2026-09-24: la hoja de recordatorios solo se abre si hay
+           uno sonando; si la tarea ya esta cerrada o sin alarmas, solo el hilo. */
+        if(_rr){ abierta=_rr.id; vista="hilo"; window.__avSheet=avisoSonando(_rr)?_rr.id:null; if(!avisoSonando(_rr)) window.__avSonando=null; render(); }
       }
       /* EL CORRETEO ARRANCA SOLO. Se espera 6 segundos para que terminen de
          llegar encargos, fichas y suplencias, y se le mete un empujoncito al
@@ -6069,7 +6071,13 @@ function sincronizaAvisos(t){
   var cerr=!!(t.cierre) || estadoReal(t)==="cerrada";
   var av=cerr?[]:avisosDe(t);
   var ahora=av.map(function(a){ return claveAviso(t,a); });
-  (t.avisos_espejo||[]).forEach(function(k){ if(ahora.indexOf(k)<0) borraAvisoEspejo(k); });
+  /* Salvador 2026-09-24: al cerrar o quitar la alarma se borra en el servidor
+     TODA clave posible (la propia y las insertadas), no solo las anotadas en
+     avisos_espejo -- las tareas viejas no traian esa lista y el servidor les
+     seguia mandando push (caso "Prueba de push numero cuatro", 14:10). */
+  var viejas=(t.avisos_espejo||[]).slice(); viejas.push(t.id);
+  (t.avisos||[]).forEach(function(a){ viejas.push(t.id+"|"+a.ts); });
+  viejas.filter(function(k,i){ return viejas.indexOf(k)===i; }).forEach(function(k){ if(ahora.indexOf(k)<0) borraAvisoEspejo(k); });
   av.forEach(function(a){ escribeAvisoEspejo(t,a); });
   t.avisos_espejo=ahora;
 }
