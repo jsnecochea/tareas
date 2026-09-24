@@ -802,7 +802,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP="build 128 · 2026-09-23 · caja de un renglon tipo WhatsApp (+ | texto | mic); hoja de recordatorios con la barra de siempre; horas AM/PM (o 24 h en Tu cuenta)";
+var VERSION_APP="build 129 · 2026-09-24 · Eliminar en SONANDO AHORA si quita el recordatorio (cierra y pasa al siguiente); un recordatorio cerrado ya no suena";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -5883,6 +5883,9 @@ function textoCuando(av){
 function nowHM(){var d=new Date();return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");}
 function avisosDe(t){
   var out=[];
+  /* Salvador 2026-09-24: una tarea/recordatorio ya cerrado no tiene avisos vivos
+     (antes "Eliminar" en SONANDO AHORA cerraba la tarea pero la tarjeta seguia ahi). */
+  if(t.cierre || t.estado==="cerrada") return out;
   if(t.es_recordatorio) out.push({id:"self", self:true, texto:t.nombre, fecha:t.f_vigente||"", hora:t.aviso_hora||"", cada:t.aviso_cada||""});
   (t.avisos||[]).forEach(function(a){ out.push({id:String(a.ts), texto:a.texto||"", fecha:a.fecha||"", hora:a.hora||"", cada:a.cada||""}); });
   return out;
@@ -6074,7 +6077,7 @@ function vAvisosSheet(t){
 }
 /* borra un aviso (por id) de la tarea. "self" = el recordatorio suelto -> se cierra. */
 function eliminaAvisoDe(t, id){
-  if(id==="self" && t.es_recordatorio){ t.estado="cerrada"; t.cierre={tipo:"cancelado",f:hoy()}; guarda(t); toast("Recordatorio eliminado"); }
+  if(id==="self" && t.es_recordatorio){ toast("Recordatorio eliminado"); borraRecordatorioYSigue(t); return; }
   else { t.avisos=(t.avisos||[]).filter(function(a){return String(a.ts)!==String(id)}); guarda(t); toast("Recordatorio eliminado"); }
   sincronizaAvisos(t);
   if(!avisosDe(t).length) window.__avSheet=null;
