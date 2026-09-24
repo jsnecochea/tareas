@@ -490,6 +490,26 @@ button{font:inherit;color:inherit}
 .op.alrm.gris{color:var(--ink-3)}
 .op.alrm.amb{background:rgba(255,159,10,.14);border-color:rgba(255,159,10,.55);color:var(--esper)}
 .op.alrm.roj{background:rgba(255,69,58,.14);border-color:rgba(255,69,58,.6);color:var(--venc)}
+/* SALTO AL SIGUIENTE al eliminar un recordatorio (Salvador 2026-09-24, mock-up
+   aprobado): sello de palomita + vibracion, la pantalla vieja se va a la izq y
+   la nueva entra de la derecha, el titulo parpadea 3 veces en verde, el chat y
+   la campana quedan en gris mientras dura el cintillo "Eliminado · Deshacer". */
+.salto-stamp{position:fixed;inset:0;display:grid;place-items:center;z-index:60;pointer-events:none}
+.salto-stamp span{width:76px;height:76px;border-radius:50%;background:rgba(255,69,58,.18);border:2px solid var(--venc);display:grid;place-items:center;color:var(--venc);animation:saltoPop .45s cubic-bezier(.2,.8,.2,1)}
+@keyframes saltoPop{0%{transform:scale(.5);opacity:0}100%{transform:scale(1);opacity:1}}
+#app.salto-out{animation:saltoOut .3s ease forwards}
+@keyframes saltoOut{to{transform:translateX(-18%) scale(.96);opacity:0}}
+#app.salto-in{animation:saltoIn .32s cubic-bezier(.2,.8,.2,1)}
+@keyframes saltoIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+#app.salto .top .t{animation:saltoFlash 1.8s steps(1,end)}
+@keyframes saltoFlash{0%,33%,66%{color:var(--hacer)}16%,50%,83%,100%{color:var(--ink)}}
+#app.salto .msgs{opacity:0;transition:opacity .35s ease}
+#app.salto .msgs.reaparece{opacity:1}
+.saltopill{position:sticky;bottom:8px;margin:8px 14px 0;background:var(--surface-2);border:.5px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;font-size:15px;color:var(--ink-2);animation:saltoPill .3s cubic-bezier(.2,.8,.2,1)}
+@keyframes saltoPill{from{transform:translateY(140%);opacity:0}to{transform:translateY(0);opacity:1}}
+.saltopill .tx{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.saltopill button{background:none;border:0;color:var(--hacer);font:600 15px Archivo,sans-serif;padding:0}
+@media (prefers-reduced-motion:reduce){#app.salto-in,#app.salto-out,.salto-stamp span,.saltopill,#app.salto .top .t{animation:none}}
 .op.del{flex:0 0 54px;min-width:54px;max-width:54px;display:grid;place-items:center;padding:9px 0;color:var(--ink-3)}/* Salvador 2026-09-22: mismo tamano y mismo gris en reposo que la campana (.op.alrm.gris), para que se vean parejos */
 /* la hoja de recordatorios */
 .avscrim{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:60}
@@ -802,7 +822,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP="build 129 · 2026-09-24 · Eliminar en SONANDO AHORA si quita el recordatorio (cierra y pasa al siguiente); un recordatorio cerrado ya no suena";
+var VERSION_APP="build 130 · 2026-09-24 · al eliminar un recordatorio: palomita, salto animado al siguiente, titulo parpadea en verde, cintillo Eliminado · Deshacer";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -2950,14 +2970,46 @@ function cierraHoja(){ var e=$("hojav"); if(e&&e.parentNode) e.parentNode.remove
 function borraRecordatorioYSigue(t){
   var ordVieja=window.ordenSwipe||[], i=ordVieja.indexOf(t.id);
   var ord=ordVieja.filter(function(id){return id!==t.id});
+  var prev={estado:t.estado, cierre:t.cierre||null};
   t.estado="cerrada"; t.cierre={tipo:"cancelado",f:hoy()}; guarda(t);
   sincronizaAvisos(t);
   window.__avSheet=null; window.__avSonando=null;
   var sigId=(i>=0)?(ord[i]||ord[i-1]||null):null;
   var sig=sigId?tareas.filter(function(x){return x.id===sigId})[0]:null;
-  if(sig){ window.ordenSwipe=ord; abierta=sig.id; vista="hilo"; fichaOpen=false; detOpen={}; menuOpen=false; }
-  else { abierta=null; vista="lista"; }
-  render();
+  /* SALTO AL SIGUIENTE (Salvador 2026-09-24): sello de palomita, la pantalla
+     vieja se va, la nueva entra, y 4.8 s de "Eliminado · Deshacer". */
+  window.__salto={de:t.nombre, id:t.id, prev:prev, sig:sig?sig.id:null, hasta:Date.now()+5300};
+  try{ if(navigator.vibrate) navigator.vibrate(12); }catch(e){}
+  var app=$("app");
+  var st=document.createElement("div"); st.className="salto-stamp";
+  st.innerHTML='<span><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>';
+  document.body.appendChild(st);
+  if(app) app.classList.add("salto-out");
+  setTimeout(function(){
+    if(st.parentNode) st.parentNode.removeChild(st);
+    if(sig){ window.ordenSwipe=ord; abierta=sig.id; vista="hilo"; fichaOpen=false; detOpen={}; menuOpen=false; }
+    else { abierta=null; vista="lista"; }
+    if(app){ app.classList.remove("salto-out"); app.classList.add("salto-in"); }
+    render();
+    setTimeout(function(){ if(app) app.classList.remove("salto-in"); },400);
+  }, 520);
+  setTimeout(function(){
+    /* se va el cintillo: reaparece el chat con fundido, luego vuelve el color de la campana */
+    var m=document.querySelector("#app.salto .msgs"); if(m) m.classList.add("reaparece");
+    var p=document.getElementById("saltopill"); if(p) p.style.display="none";
+  }, 4900);
+  setTimeout(function(){ if(window.__salto && window.__salto.id===t.id){ window.__salto=null; if(vista==="hilo") render(); } }, 5300);
+}
+/* Deshacer del salto: regresa el recordatorio recién eliminado y vuelve a él. */
+function deshaceSalto(){
+  var sal=window.__salto; if(!sal) return;
+  var t=tareas.filter(function(x){return x.id===sal.id})[0];
+  window.__salto=null;
+  if(!t){ render(); return; }
+  t.estado=sal.prev.estado||"abierta"; t.cierre=sal.prev.cierre||null;
+  guarda(t); sincronizaAvisos(t);
+  if(window.ordenSwipe && window.ordenSwipe.indexOf(t.id)<0) window.ordenSwipe.unshift(t.id);
+  abierta=t.id; vista="hilo"; menuOpen=false; render(); toast("Recuperado");
 }
 /* la tarjetita chiquita: "esto no suena a comentario de X" con dos salidas.
    Comentar aqui = mete lo dictado sin repetirlo y sin salir. Es algo nuevo =
@@ -3322,7 +3374,12 @@ function render(){
   if(vista==="foto"){a.innerHTML=vFoto();bindLista();return}
   if(vista==="cerrarmotivo"){a.innerHTML=vCerrarMotivo();bindMotivo();return}
   if(vista==="transferir"){a.innerHTML=vTransferir();bindTransferir();return}
-  if((vista==="hilo"||vista==="galeria")&&abierta){a.innerHTML=vHilo();bindHilo();return}
+  if((vista==="hilo"||vista==="galeria")&&abierta){
+    window.__saltoActivo=false; a.innerHTML=vHilo(); bindHilo();
+    a.classList.toggle("salto", !!window.__saltoActivo);
+    var _bu=$("bsaltoundo"); if(_bu) _bu.onclick=function(ev){ ev.stopPropagation(); deshaceSalto(); };
+    return }
+  a.classList.remove("salto");
   var _sc=a.querySelector(".scroll"), _scTop=_sc?_sc.scrollTop:0;
   a.innerHTML=vLista(); bindLista();
   var _sc2=a.querySelector(".scroll"); if(_sc2) _sc2.scrollTop=_scTop;
@@ -4100,6 +4157,9 @@ function vHilo(){
   /* "MUY CARO": pantalla limpia y centrada con las opciones grandes, SIN la ficha
      ni el chat (Salvador 2026-09-04). Se escoge una o se dicta otra. */
   if(negociar && negociar.id===t.id) return vNegociar(t);
+  /* salto al siguiente en curso (recordatorio recién eliminado) */
+  var _sal=!!(window.__salto && window.__salto.sig===t.id && Date.now()<window.__salto.hasta);
+  window.__saltoActivo=_sal;
   var adj=adjuntos(t);
   var h='<div class="top"><button class="iconbtn" id="bback">‹</button>'+
     '<div><div class="t">'+esc(t.nombre)+'</div><div class="d">'+
@@ -4252,7 +4312,7 @@ function vHilo(){
   } else if(estadoReal(t)!=="cerrada" && t.duenio===yo){
     /* orden nuevo (Salvador 2026-09-18): relojito a la izq, "Ya está" a la derecha
        arriba del micrófono. Un recordatorio suelto no lleva "Estoy atorado". */
-    var _est=estadoRelojito(t);
+    var _est=_sal?"gris":estadoRelojito(t);
     var _rel='<button class="op alrm '+_est+'" id="brel" aria-label="Recordatorios">'+ico("bell",22,1.7)+'</button>';
     var _ya='<button class="op ya" id="bya"><svg class="icx" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg> Ya está</button>';
     /* bote de basura (Salvador 2026-09-22): mismo tamaño que la campana.
@@ -4273,7 +4333,8 @@ function vHilo(){
   }
   var pre=t.pregunta&&t.duenio===yo?'<div class="b bi" style="margin:0 14px 8px">'+esc(t.pregunta)+'</div>':"";
 
-  return h+'<div class="scroll"><div class="msgs">'+m+pre+'</div></div>'+
+  var _pill=_sal?'<div class="saltopill" id="saltopill">'+ico("trash",18,1.8)+'<span class="tx">Eliminado «'+esc(window.__salto.de)+'»</span><button id="bsaltoundo">Deshacer</button></div>':'';
+  return h+'<div class="scroll"><div class="msgs">'+m+pre+'</div>'+_pill+'</div>'+
     /* LA MISMA BARRA DE TODAS LAS VISTAS — 2026-09-04. Antes el hilo tenia la
        camara a la IZQUIERDA y una flecha de enviar a la derecha, distinto de la
        caratula (camara a la DERECHA, sin flecha). Salvador lo cacho: "tiene que
