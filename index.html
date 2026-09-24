@@ -823,7 +823,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP="build 132 · 2026-09-24 · al abrir desde un push solo se abre la hoja si algo suena; al cerrar o quitar alarma se borra en el servidor toda clave (ya no llegan push de cerrados)";
+var VERSION_APP="build 133 · 2026-09-24 · sin cintillo (solo palomita 1 s); sin boton Estoy atorado (se dice hablando, con el nombre basta); mensajes cortos; tarea cerrada acepta comentarios";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -1143,9 +1143,7 @@ function mueveFecha(t,nueva,razon){
 function declaraAtorado(t,quien,tel,que,esDeFuera){
   if(!quien||!que) return {ok:false,msg:"Para declararte atorado hace falta A QUIÉN esperas y QUÉ. Sin nombre no se detiene nada."};
   t.detenido={quien:quien,tel:tel||"",que:que,desde:hoy(),fuera:!!esDeFuera,toques:[]};
-  msg(t,"bi","Anotado: esperando a "+quien+" por "+que+". El reloj se para, PERO el toque "+
-    (CADENCIA_TOQUE[t.criticidad||"normal"]===1?"diario":"cada 3 días")+" no. Mañana te aparece la tarea de volverle a hablar. "+
-    "Si no la haces, los días detenido vuelven a contar como tuyos.");
+  msg(t,"bi","Anotado: esperas a "+quien+". Mañana te recuerdo hablarle.");
   guarda(t); 
   //Notificación push instantánea al que destraba, si no soy yo mismo
   if (quien && quien !== yo) {
@@ -1224,8 +1222,8 @@ function motivosPara(t){
 function cierraHecha(t){
   t.cierre={tipo:"hecha",motivo:"",f:hoy()};
   var tarde=t.f_original&&dDif(t.f_original,hoy())>0;
-  msg(t,"bi",tarde?"Cerrada, pero después de la fecha original. Cuenta como entregada tarde.":"Cerrada en tiempo.");
-  t.estado="cerrada"; guarda(t); sincronizaAvisos(t);
+  msg(t,"bi",tarde?"Cerrada. Lo importante es que ya quedó.":"Cerrada a tiempo. Bien hecho.");
+  t.estado="cerrada"; t.pide_atoro=false; t.pide_tel=false; t.pide_fecha=false; guarda(t); sincronizaAvisos(t);
 }
 function cierraSinEjecutar(t,motivoK){
   var lista=MOTIVOS_NO_EJECUTADA.concat(MOTIVOS_JEFE);
@@ -1238,8 +1236,8 @@ function cierraSinEjecutar(t,motivoK){
     t.cierre.culpa="suya";
     t.cierre.nota="Dijo que lo trabaron pero no hay ni un toque registrado.";
   }
-  t.estado="no_ejecutada";
-  msg(t,"bal","Cerrada sin hacerse. Ya le pregunté a Salvador si se reprograma, se cancela, o se deja muerta. Si no contesta en 5 días, queda muerta.");
+  t.estado="no_ejecutada"; t.pide_atoro=false; t.pide_tel=false; t.pide_fecha=false;
+  msg(t,"bal","Cerrada sin hacerse. Le pregunto a Salvador qué sigue.");
   guarda(t);
 }
 
@@ -2973,27 +2971,27 @@ function cierraHoja(){ var e=$("hojav"); if(e&&e.parentNode) e.parentNode.remove
 /* SELLO Y QUEDATE (Salvador 2026-09-24): la app cambia el estado, el usuario
    cambia de pantalla. o = {tipo:"alarma"|"hecha"|"eliminada", texto, restaurar}. */
 function selloYQuedate(t, o){
+  /* Salvador 2026-09-24 (v2): SIN cintillo de Deshacer. Solo la palomita ~1 s
+     con el chat oculto y la campana gris; luego vuelve el chat. Si se
+     equivocaron, lo piden por el chat ("regresa el recordatorio que borre"). */
   window.__avSheet=null; window.__avSonando=null; menuOpen=false;
-  window.__salto={id:t.id, sig:t.id, tipo:o.tipo, de:o.texto||"", restaurar:o.restaurar, hasta:Date.now()+5300};
+  window.__ultimoDeshacer={id:t.id, tipo:o.tipo, de:o.texto||"", restaurar:o.restaurar, cuando:Date.now()};
+  window.__salto={id:t.id, sig:t.id, tipo:o.tipo, de:o.texto||"", hasta:Date.now()+1100};
   try{ if(navigator.vibrate) navigator.vibrate(12); }catch(e){}
   var st=document.createElement("div"); st.className="salto-stamp";
   st.innerHTML='<span><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>';
   document.body.appendChild(st);
   abierta=t.id; vista="hilo"; render();
-  setTimeout(function(){ if(st.parentNode) st.parentNode.removeChild(st); }, 520);
-  setTimeout(function(){
-    /* se va el cintillo: reaparece el chat con fundido */
-    var m=document.querySelector("#app.salto .msgs"); if(m) m.classList.add("reaparece");
-    var p=document.getElementById("saltopill"); if(p) p.style.display="none";
-  }, 4900);
-  setTimeout(function(){ if(window.__salto && window.__salto.id===t.id){ window.__salto=null; if(vista==="hilo") render(); } }, 5300);
+  setTimeout(function(){ if(st.parentNode) st.parentNode.removeChild(st); }, 900);
+  setTimeout(function(){ if(window.__salto && window.__salto.id===t.id){ window.__salto=null; if(vista==="hilo") render(); } }, 1100);
 }
-/* Deshacer: regresa lo que se acaba de quitar (alarma, cierre o eliminacion). */
+/* Deshacer lo ultimo que se quito (alarma, cierre o eliminacion); se pide
+   por el chat, ya no hay boton. */
 function deshaceSalto(){
-  var sal=window.__salto; if(!sal) return;
-  window.__salto=null;
-  try{ if(typeof sal.restaurar==="function") sal.restaurar(); }catch(e){ toast("No se pudo deshacer: "+(e&&e.message||e)); }
-  abierta=sal.id; vista="hilo"; menuOpen=false; render(); toast("Recuperado");
+  var sal=window.__ultimoDeshacer; if(!sal) return false;
+  window.__ultimoDeshacer=null;
+  try{ if(typeof sal.restaurar==="function") sal.restaurar(); }catch(e){ toast("No se pudo deshacer: "+(e&&e.message||e)); return false; }
+  abierta=sal.id; vista="hilo"; menuOpen=false; render(); toast("Recuperado"); return true;
 }
 /* bote de basura de un recordatorio suelto: se cierra como cancelado y te
    quedas en el, tachado, con Deshacer. */
@@ -3046,20 +3044,39 @@ function mandar(t,txt){
   guardaHablado(t,"bo",txt);
   t.ultima=PERSONAS[yo].nombre+": "+(esLargo(txt)?localResumen(txt):txt);
 
-  /* ---- está declarando que se atoró: hay que sacarle nombre, teléfono y qué ---- */
-  if(t.pide_atoro){
+  /* Salvador 2026-09-24: una tarea cerrada no sigue esperando nada; lo que se
+     escribe ahi es comentario (antes repetia "Todavia me falta..." sin parar). */
+  if(t.cierre){ t.pide_atoro=false; t.pide_tel=false; t.pide_fecha=false; }
+
+  /* ---- "regresa lo que acabo de borrar / deshacer" ---- */
+  if(/\b(deshac\w*|regres\w*|devuelv\w*|vuelve a poner|reactiv\w*)\b/i.test(txt) && window.__ultimoDeshacer && (Date.now()-window.__ultimoDeshacer.cuando)<10*60*1000){
+    if(deshaceSalto()){ msg(t,"bi","Listo, lo regresé."); guarda(t); }
+    return;
+  }
+
+  /* ---- ATORADO, hablando (Salvador 2026-09-24): con el nombre basta; el
+     telefono se pide despues, en una linea, solo si no esta en el directorio. */
+  var _sa=String(txt||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+  if(t.pide_tel){
+    var telx=(txt.match(/(\+?\d[\d\s\-()]{7,})/)||[])[1]||"";
+    t.pide_tel=false;
+    if(telx && t.detenido){ t.detenido.tel=telx.replace(/[\s\-()]/g,""); msg(t,"bi","Listo, ya lo tengo."); }
+    else msg(t,"bi","Va, sin teléfono por ahora. Cuando lo tengas me lo pasas.");
+    guarda(t); return;
+  }
+  var _dice=t.pide_atoro || /\b(esper(o|ando|amos)|atorad|detenid|trabad|depend(o|e|iendo)|me falta que)\b/.test(_sa);
+  if(_dice && !t.cierre){
+    var _m=txt.match(/\b(?:a|de|por|con)\s+([A-ZÁÉÍÓÚ][\wáéíóú]+(?:\s+[A-ZÁÉÍÓÚ][\wáéíóú]+)?)/);
+    var quien=_m?_m[1]:(t.pide_atoro?(txt.split(/[,;]/)[0]||"").trim():"");
+    if(!quien){ t.pide_atoro=true; msg(t,"bi","¿Quién te está deteniendo?"); guarda(t); return; }
     var tel=(txt.match(/(\+?\d[\d\s\-()]{7,})/)||[])[1]||"";
-    var partes=txt.split(/[,;]/).map(function(x){return x.trim()}).filter(Boolean);
-    var quien=partes[0]||"";
-    var que=partes.filter(function(x){return x!==quien && x.replace(/[\s\-()+]/g,"")!==tel.replace(/[\s\-()+]/g,"")}).join(", ");
-    if(!quien || !que){
-      msg(t,"bi","Todavía me falta. Necesito el nombre de a quién esperas y qué le estás esperando. Sin eso el reloj no se para.");
-      guarda(t); return;
-    }
+    var que=(txt.match(/\b(?:por|para|que me|el|la|los|las)\s+(.{4,80})$/i)||[])[1]||"su parte";
     var fuera=/proveedor|electric|eléctric|taller|agronom|agrónom|plomer|jardiner|cotiza|presupuesto/i.test(txt);
     t.pide_atoro=false;
-    declaraAtorado(t,quien,tel,que,fuera);    
+    declaraAtorado(t,quien,tel,que,fuera);
     t.ultima="Detenida: espera a "+quien;
+    var _conocido=Object.keys(PERSONAS).some(function(k){ return (PERSONAS[k].nombre||"").toLowerCase()===quien.toLowerCase().split(" ")[0]; });
+    if(!_conocido && !tel){ t.pide_tel=true; msg(t,"bi","No tengo a "+quien+" en el directorio. ¿Me pasas su teléfono?"); }
     guarda(t); return;
   }
 
@@ -3072,7 +3089,7 @@ function mandar(t,txt){
      && (/\bfecha\b/.test(_sn) || fechaEnTexto(txt))){
     var _fx=fechaEnTexto(txt);
     var _mot=(txt.match(/\b(?:porque|por que|porqu\u00e9|ya que|debido a)\b\s*(.+)$/i)||[])[1]||"";
-    if(!_fx){ t.pide_fecha=true; msg(t,"bi","\u00bfPara cu\u00e1ndo, y por qu\u00e9? Escr\u00edbelo abajo as\u00ed: 12 de septiembre, porque el proveedor no entrega antes."); guarda(t); return; }
+    if(!_fx){ t.pide_fecha=true; msg(t,"bi","\u00bfPara cu\u00e1ndo, y por qu\u00e9?"); guarda(t); return; }
     if(_mot.trim().length<8){
       t.pide_fecha=true; t.fecha_pendiente=_fx;
       msg(t,"bi","Va, al "+fechaBonita(_fx)+". \u00bfPor qu\u00e9? Escribe el motivo abajo; sin motivo por escrito no se mueve.");
@@ -3371,7 +3388,6 @@ function render(){
     window.__saltoActivo=false; a.innerHTML=vHilo(); bindHilo();
     a.classList.toggle("salto", !!window.__saltoActivo);
     a.classList.toggle("salto-cierre", !!window.__saltoCierre);
-    var _bu=$("bsaltoundo"); if(_bu) _bu.onclick=function(ev){ ev.stopPropagation(); deshaceSalto(); };
     return }
   a.classList.remove("salto");
   var _sc=a.querySelector(".scroll"), _scTop=_sc?_sc.scrollTop:0;
@@ -4321,21 +4337,14 @@ function vHilo(){
       /* Salvador 2026-09-22: mientras espera nombre+motivo (t.pide_atoro) el
          boton se apaga, para que no de la impresion de que aceptar de nuevo
          hace algo -- ya se le pregunto, esta esperando la respuesta escrita. */
-      var _at=t.pide_atoro
-        ? '<button class="op nt" disabled>Esperando tu respuesta…</button>'
-        : '<button class="op nt" id="batorado">Estoy atorado</button>';
-      sug=_rel+_at+_ya+_tr;
+      /* Salvador 2026-09-24: ya no hay boton "Estoy atorado"; el atoro se
+         dice hablando ("estoy esperando a Rodrigo") y Claude lo entiende. */
+      sug=_rel+_ya+_tr;
     }
   }
   var pre=t.pregunta&&t.duenio===yo?'<div class="b bi" style="margin:0 14px 8px">'+esc(t.pregunta)+'</div>':"";
 
-  var _pill="";
-  if(_sal){
-    var _sp=window.__salto, _ptx=_sp.tipo==="alarma"?"Alarma eliminada"+(_sp.de?" · "+esc(_sp.de):"")
-           :_sp.tipo==="hecha"?"Hecha «"+esc(_sp.de)+"»":"Eliminada «"+esc(_sp.de)+"»";
-    _pill='<div class="saltopill" id="saltopill">'+ico(_sp.tipo==="hecha"?"check":"trash",18,1.9)+'<span class="tx">'+_ptx+'</span><button id="bsaltoundo">Deshacer</button></div>';
-  }
-  return h+'<div class="scroll"><div class="msgs">'+m+pre+'</div>'+_pill+'</div>'+
+  return h+'<div class="scroll"><div class="msgs">'+m+pre+'</div></div>'+
     /* LA MISMA BARRA DE TODAS LAS VISTAS — 2026-09-04. Antes el hilo tenia la
        camara a la IZQUIERDA y una flecha de enviar a la derecha, distinto de la
        caratula (camara a la DERECHA, sin flecha). Salvador lo cacho: "tiene que
@@ -7298,7 +7307,7 @@ function bindHilo(){
       if(k==="cerrar"){ render(); return }
       if(k==="encargar"){ vista="encargar"; render(); return }
       if(k==="fecha"){ t.pide_fecha=true;
-        msg(t,"bi","¿Para cuándo, y por qué? Escríbelo abajo así: 12 de septiembre, porque el proveedor no entrega antes. Sin el motivo por escrito no se mueve.");
+        msg(t,"bi","¿Para cuándo, y por qué?");
         guarda(t); render(); return }
       if(k==="nose"){ vista="cerrarmotivo"; render(); return }
       if(k==="pasar"){ vista="transferir"; render(); return }
