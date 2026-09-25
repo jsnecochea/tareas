@@ -510,7 +510,13 @@ button{font:inherit;color:inherit}
 @keyframes saltoPill{from{transform:translateY(140%);opacity:0}to{transform:translateY(0);opacity:1}}
 .saltopill .tx{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .saltopill button{background:none;border:0;color:var(--hacer);font:600 15px Archivo,sans-serif;padding:0}
-@media (prefers-reduced-motion:reduce){.salto-stamp span,.saltopill,#app.salto .top .t{animation:none}}
+/* cintillo delgado de Deshacer, arriba de la barra de acciones (Salvador 2026-09-25) */
+.undopill{position:fixed;left:50%;transform:translateX(-50%);z-index:61;display:flex;align-items:center;gap:12px;max-width:calc(100% - 32px);background:var(--surface-2);border:.5px solid var(--line);border-radius:999px;padding:7px 8px 7px 14px;font-size:14px;color:var(--ink-2);box-shadow:0 6px 20px rgba(0,0,0,.35);animation:undoIn .25s cubic-bezier(.2,.8,.2,1);transition:opacity .25s ease}
+.undopill.fuera{opacity:0}
+.undopill .tx{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.undopill button{background:none;border:0;color:var(--hacer);font:600 14px Archivo,sans-serif;padding:4px 8px;border-radius:999px}
+@keyframes undoIn{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+@media (prefers-reduced-motion:reduce){.salto-stamp span,.saltopill,.undopill,#app.salto .top .t{animation:none}}
 .op.del{flex:0 0 54px;min-width:54px;max-width:54px;display:grid;place-items:center;padding:9px 0;color:var(--ink-3)}/* Salvador 2026-09-22: mismo tamano y mismo gris en reposo que la campana (.op.alrm.gris), para que se vean parejos */
 /* la hoja de recordatorios */
 .avscrim{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:60}
@@ -823,7 +829,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP="build 134 · 2026-09-24 · el teclado no se cierra al mandar, se cierra al tocar el chat; reabrir tarea cerrada desde el chat (reactivar / se me paso / falto...), pide fecha nueva si ya venció; deshacer solo aplica a la misma tarea";
+var VERSION_APP="build 135 · 2026-09-25 · bote de recordatorio sin confirmacion; regresa el cintillo delgado de Deshacer 3 s arriba de la barra (eliminar, Ya esta, quitar alarma)";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -2985,9 +2991,8 @@ function cierraHoja(){ var e=$("hojav"); if(e&&e.parentNode) e.parentNode.remove
 /* SELLO Y QUEDATE (Salvador 2026-09-24): la app cambia el estado, el usuario
    cambia de pantalla. o = {tipo:"alarma"|"hecha"|"eliminada", texto, restaurar}. */
 function selloYQuedate(t, o){
-  /* Salvador 2026-09-24 (v2): SIN cintillo de Deshacer. Solo la palomita ~1 s
-     con el chat oculto y la campana gris; luego vuelve el chat. Si se
-     equivocaron, lo piden por el chat ("regresa el recordatorio que borre"). */
+  /* Salvador 2026-09-24/25: palomita ~1 s con el chat oculto y la campana
+     gris; luego vuelve el chat. Cintillo delgado de Deshacer 3 s (build 135). */
   window.__avSheet=null; window.__avSonando=null; menuOpen=false;
   window.__ultimoDeshacer={id:t.id, tipo:o.tipo, de:o.texto||"", restaurar:o.restaurar, cuando:Date.now()};
   window.__salto={id:t.id, sig:t.id, tipo:o.tipo, de:o.texto||"", hasta:Date.now()+1100};
@@ -2998,6 +3003,28 @@ function selloYQuedate(t, o){
   abierta=t.id; vista="hilo"; render();
   setTimeout(function(){ if(st.parentNode) st.parentNode.removeChild(st); }, 900);
   setTimeout(function(){ if(window.__salto && window.__salto.id===t.id){ window.__salto=null; if(vista==="hilo") render(); } }, 1100);
+  muestraDeshacer(o.tipo);
+}
+/* CINTILLO DE DESHACER — Salvador 2026-09-25: regresa, delgadito, justo arriba
+   de la barra donde se pico la accion, unos 3 segundos. Vive en <body>, asi
+   sobrevive a los render(). El deshacer por chat ("regresalo") sigue igual. */
+function muestraDeshacer(tipo){
+  var viejo=document.getElementById("undopill"); if(viejo) viejo.parentNode.removeChild(viejo);
+  if(window.__undoT){ clearTimeout(window.__undoT); window.__undoT=null; }
+  var txt=tipo==="alarma"?"Alarma quitada":tipo==="hecha"?"Marcada como hecha":"Eliminado";
+  var el=document.createElement("div"); el.id="undopill"; el.className="undopill"; el.setAttribute("role","status");
+  el.innerHTML='<span class="tx">'+txt+'</span><button type="button" id="bundo">Deshacer</button>';
+  var comp=document.querySelector(".comp"), abajo=comp?Math.max(12, window.innerHeight-comp.getBoundingClientRect().top+10):96;
+  el.style.bottom=abajo+"px";
+  document.body.appendChild(el);
+  el.querySelector("#bundo").onclick=function(ev){ ev.stopPropagation(); quitaDeshacer(true); deshaceSalto(); };
+  window.__undoT=setTimeout(function(){ quitaDeshacer(false); }, 3000);
+}
+function quitaDeshacer(ya){
+  var el=document.getElementById("undopill"); if(!el) return;
+  if(window.__undoT){ clearTimeout(window.__undoT); window.__undoT=null; }
+  if(ya){ el.parentNode.removeChild(el); return; }
+  el.classList.add("fuera"); setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 260);
 }
 /* Deshacer lo ultimo que se quito (alarma, cierre o eliminacion); se pide
    por el chat, ya no hay boton. */
@@ -7330,10 +7357,9 @@ function bindHilo(){
   };
   /* bote de basura (Salvador 2026-09-22) */
   var btr=$("btrash"); if(btr) btr.onclick=function(){ vista="cerrarmotivo"; render(); };
-  var btrr=$("btrashrec"); if(btrr) btrr.onclick=function(){
-    hojaConfirma({titulo:"\u00bfEliminar este recordatorio?", sub:"Se quita de tu lista. No se puede deshacer.",
-      accion:"Eliminar recordatorio", rojo:true, cb:function(){ borraRecordatorioYQuedate(t); }});
-  };
+  /* Salvador 2026-09-25: sin hoja de confirmacion; se borra en el acto y
+     sale el cintillo de Deshacer arriba de la barra. */
+  var btrr=$("btrashrec"); if(btrr) btrr.onclick=function(){ borraRecordatorioYQuedate(t); };
   /* ===== HOJA DE RECORDATORIOS (relojito) — Salvador 2026-09-18 ===== */
   var brel=$("brel"); if(brel) brel.onclick=function(){ window.__avSheet=(window.__avSheet===t.id?null:t.id); render(); };
   var avsc=$("avscrim"); if(avsc) avsc.onclick=function(){ window.__avSheet=null; render(); };
