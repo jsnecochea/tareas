@@ -829,7 +829,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP="build 136 · 2026-09-25 · WhatsApp desde la tarea (escribele/preguntale a alguien de fuera -> cola wa_pedido en el servidor); action=visto al abrir y al volver a la app; cache local de Firestore (menos lecturas y cola sin red)";
+var VERSION_APP="build 137 · 2026-09-25 · WhatsApp: desde el home sin tarea abre una tarea nueva y manda; Carlos/Josue (del equipo) si van por WhatsApp cuando dices escribele o WhatsApp; ya no se pierde la tarea por buscar con el nombre del contacto";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -2969,8 +2969,11 @@ function autorMsg(x,t){
 /* build 136: suena a "mandale un WhatsApp a alguien de fuera" (no del equipo) */
 function sonaraWhatsApp(v){
   var s=String(v||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  s=s.replace(/\ba\s+(whats?\s?app|whats|wasap|guasap|was)\s+a\s+/g,"a ");
   var m=s.match(/(?:escribe(?:le|les|la)?|preguntale|mandale(?: un)?(?: whats(?:app)?| mensaje)?|whats(?:app)?)\s+al?\s+([a-z\u00f1]+)/);
   if(!m) return false;
+  /* build 137: "escribele" o decir WhatsApp manda aunque sea del equipo */
+  if(/\b(whats?\s?app|whats|wasap|guasap|escribele|escribeles)\b/.test(s)) return true;
   var nom=m[1];
   var esEquipo=Object.keys(PERSONAS).some(function(k){
     var n=String(PERSONAS[k].nombre||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
@@ -4806,8 +4809,8 @@ var SYS_BARRA =
 "(proveedor, ingeniero, contacto) desde el telefono del que habla, ligado a una "+
 "tarea. Ej: 'escribele a Carlos que si ya quedo el servidor', 'preguntale a Josue "+
 "por WhatsApp como va el avance', 'mandale un whats al herrero que cuando entrega'. "+
-"Solo aplica si el nombre NO es de alguien del equipo (si es del equipo es ENCARGAR o "+
-"COMENTAR). Pon en 'whatsapp' el contacto tal cual lo dijo, el mensaje ya redactado "+
+"Si dice WhatsApp o 'escribele' es WHATSAPP AUNQUE sea del equipo (Carlos, Josue); "+
+"si no lo dice y es del equipo, es ENCARGAR o COMENTAR. Pon en 'whatsapp' el contacto tal cual lo dijo, el mensaje ya redactado "+
 "en segunda persona listo para mandarse (corto, natural, sin 'preguntale que'), y "+
 "terminos para hallar la tarea (vacio si no dijo).\n"+
 "  BUSCAR     quiere ver algo que ya existe. Ej: 'las vencidas de Samuel'.\n"+
@@ -5744,28 +5747,30 @@ function aplicaIntencion(j, dicho, hist, foto){
         texto:"¿A quién le escribo por WhatsApp y qué le digo? Dilo con su nombre."};
       vista="barra"; render(); return;
     }
-    var tw=null;
+    /* build 137: la tarea se busca SOLO entre las tuyas abiertas y por las
+       palabras (antes busca() veia "Carlos" y filtraba tareas DE Carlos: nunca
+       encontraba nada). Si no pega ninguna, se abre una tarea nueva tuya. */
+    var tw=null, _nueva="";
     if(_waDesde) tw=tareas.filter(function(x){ return x.id===_waDesde })[0];
     if(!tw){
-      var cand=busca(w.tarea||w.texto).filter(function(t){
-        return t.duenio===yo && estadoReal(t)!=="cerrada"; });
-      if(!w.tarea && cand.length!==1) cand=[];
-      if(cand.length===0){
+      var _pis=[w.tarea||"", w.texto||"", w.contacto||""].join(" ");
+      var _mias=tareas.filter(function(t){ return t.duenio===yo && !t.es_recordatorio && !t.cierre && estadoReal(t)!=="cerrada" });
+      var _sc=_mias.map(function(t){ return {t:t, n:pegaFuerte(t,_pis)} })
+                   .filter(function(x){ return x.n>0 }).sort(function(a,b){ return b.n-a.n });
+      if(_sc.length===1 || (_sc.length>1 && _sc[0].n>_sc[1].n)) tw=_sc[0].t;
+      else if(_sc.length>1){
         barraEstado={modo:"respuesta", dicho:dicho,
-          texto:"¿En cuál tarea va ese WhatsApp? Ábrela y dímelo desde ahí, o dime su nombre."};
+          texto:"¿A cuál tarea va ese WhatsApp? Pegan "+_sc.length+": "+
+                _sc.slice(0,3).map(function(x){ return "“"+x.t.nombre+"”" }).join(", ")+
+                ". Ábrela y dímelo desde ahí."};
         vista="barra"; render(); return;
       }
-      if(cand.length>1){
-        barraEstado={modo:"respuesta", dicho:dicho,
-          texto:"¿A cuál tarea va? Pegan "+cand.length+". Ábrela y dímelo desde ahí."};
-        vista="barra"; render(); return;
-      }
-      tw=cand[0];
+      else _nueva=("WhatsApp a "+w.contacto+" · "+w.texto).slice(0,90);
     }
     barraEstado={modo:"confirmar", accion:"whatsapp", dicho:dicho, para:yo, foto:foto,
       renglones:[{k:"m",v:w.texto},{k:"d",v:"WhatsApp a "+w.contacto+" · desde tu número"},
-                 {k:"d",v:"en “"+tw.nombre+"” · la respuesta cae en el hilo"}],
-      pendiente:{whatsapp:{tareaId:tw.id, contacto:w.contacto, texto:w.texto}}};
+                 {k:"d",v:(tw?"en “"+tw.nombre+"”":"abre tarea nueva tuya: “"+_nueva+"”")+" · la respuesta cae en el hilo"}],
+      pendiente:{whatsapp:{tareaId:tw?tw.id:null, nueva:_nueva, contacto:w.contacto, texto:w.texto}}};
     vista="barra"; render(); return;
   }
 
@@ -7023,7 +7028,8 @@ function confirmaAccion(b){
   }
   if(b.accion==="whatsapp"){
     var wp=b.pendiente.whatsapp;
-    var tw2=tareas.filter(function(x){ return x.id===wp.tareaId })[0];
+    var tw2=wp.tareaId ? tareas.filter(function(x){ return x.id===wp.tareaId })[0] : null;
+    if(!tw2 && wp.nueva) tw2=creaTarea({nombre:wp.nueva, duenio:yo, dicho:b.dicho||wp.nueva});
     if(tw2){
       msg(tw2,"bi","WhatsApp a "+wp.contacto+": “"+wp.texto+"” · en cola, esperando respuesta");
       if(b.foto) pegaFotoA(tw2,b.foto);
@@ -8025,13 +8031,17 @@ function entraPorInvitacion(tk){
     /* C0 (build 136): si suena a WhatsApp y el destinatario NO es del equipo,
        es WHATSAPP aunque Claude lo haya marcado como comentar/encargar */
     var _WA=/\b(whats?app|whats|escr[ií]bele|escr[ií]bale|escr[ií]beles|m[aá]ndale (un )?(whats|mensaje)|preg[uú]ntale)\b/i;
-    if((i==="COMENTAR"||i==="ENCARGAR"||i==="CREAR") && _WA.test(String(dicho||""))){
+    if((i==="COMENTAR"||i==="ENCARGAR"||i==="CREAR"||i==="PREGUNTA") && _WA.test(String(dicho||""))){
       var _dest=(i==="COMENTAR"&&j.comentar&&j.comentar.a)||(i==="ENCARGAR"&&j.encargo&&j.encargo.para)||(j.tarea&&j.tarea.duenio)||"";
-      var _mNom=String(dicho||"").match(/(?:escr[ií]be(?:le|les|la)?|preg[uú]ntale|m[aá]ndale(?: un)?(?: whats(?:app)?| mensaje)?)\s+al?\s+([A-Za-zÁÉÍÓÚÑáéíóúñ]+(?:\s+[A-Za-zÁÉÍÓÚÑáéíóúñ]+)?)/i);
-      var _nom=_mNom?_mNom[1].replace(/\s+(que|si|por|como|c[oó]mo|cu[aá]ndo|d[oó]nde|para)$/i,"").trim():"";
+      /* build 137: "escribele" o decir WhatsApp = WhatsApp, aunque sea del equipo
+         (Carlos, Josue). "a was a Carlos" (dictado) se limpia a "a Carlos". */
+      var _explWA=/\b(whats?\s?app|whats|wasap|guasap|was|escr[ií]bele|escr[ií]beles|escr[ií]bale)\b/i.test(String(dicho||""));
+      var _dLimpio=String(dicho||"").replace(/\ba\s+(whats?\s?app|whats|wasap|guasap|was)\s+a\s+/gi,"a ");
+      var _mNom=_dLimpio.match(/(?:escr[ií]be(?:le|les|la)?|preg[uú]ntale|m[aá]ndale(?: un)?(?: whats(?:app)?| mensaje)?)\s+al?\s+([A-Za-zÁÉÍÓÚÑáéíóúñ]+(?:\s+[A-Za-zÁÉÍÓÚÑáéíóúñ]+)?)/i);
+      var _nom=_mNom?_mNom[1].replace(/\s+(que|si|por|como|c[oó]mo|cu[aá]ndo|d[oó]nde|para|a|al|y|de|del|en|ver)$/i,"").trim():"";
       var _esEquipo=!!(_dest&&PERSONAS[_dest]) || Object.keys(PERSONAS).some(function(k){
         return _nom && PERSONAS[k].nombre.toLowerCase().indexOf(_nom.toLowerCase())===0; });
-      if(!_esEquipo && _nom){
+      if(_nom && (!_esEquipo || _explWA)){
         i="WHATSAPP"; j.intencion="WHATSAPP";
         var _txt=(j.comentar&&j.comentar.texto)||(j.encargo&&j.encargo.texto)||(j.tarea&&j.tarea.nombre)||"";
         j.whatsapp=j.whatsapp||{contacto:_nom, texto:_txt, tarea:(j.comentar&&j.comentar.tarea)||""};
