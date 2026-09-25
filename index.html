@@ -247,6 +247,7 @@ button{font:inherit;color:inherit}
 .row .paso{font-size:15.5px}
 /* el encabezado de la lista: Hoy + fecha larga */
 .hoyh{display:flex;align-items:baseline;gap:8px;padding:16px 15px 6px}
+.hoynada{padding:18px 15px 8px;text-align:center;color:var(--ink-3);font-size:16px}
 .hoyh b{font-family:Archivo;font-size:23px;font-weight:600;color:var(--ink)}
 .hoyh span{font-size:16.9px;color:var(--ink-3)}
 /* pie tenue: lo que Claude persigue y no subio */
@@ -792,6 +793,14 @@ button{font:inherit;color:inherit}
   animation:onda .7s ease-in-out infinite;opacity:.28;filter:grayscale(1)}
 .dictacapa.vivo .dbars i{opacity:1;filter:none}
 @keyframes onda{0%,100%{height:5px;opacity:.45}50%{height:24px;opacity:1}}
+/* build 138 (Salvador 2026-09-25): como en Claude, lo dictado se ve EN VIVO
+   arriba de las onditas; crece hacia arriba hasta 4 renglones y luego se
+   recorre para que siempre se vea lo ultimo. Lo que aun se esta oyendo, gris. */
+.dictacapa .dtxt{font-size:16px;line-height:22px;color:var(--ink);max-height:88px;
+  overflow-y:auto;padding:4px 14px 8px;white-space:pre-wrap;word-break:break-word;
+  -webkit-overflow-scrolling:touch}
+.dictacapa .dtxt.vacio{color:var(--ink-3)}
+.dictacapa .dtxt .par{color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){.dbars i{animation:none;height:18px}}
 </style>
 </head>
@@ -829,7 +838,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP="build 137 · 2026-09-25 · WhatsApp: desde el home sin tarea abre una tarea nueva y manda; Carlos/Josue (del equipo) si van por WhatsApp cuando dices escribele o WhatsApp; ya no se pierde la tarea por buscar con el nombre del contacto";
+var VERSION_APP="build 138 · 2026-09-25 · dictado como Claude: el texto se ve en vivo arriba de las onditas, crece hasta 4 renglones y luego se recorre; home ordenado: fichas seguidas y abajo un solo renglon si hoy no hay tareas";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -3735,10 +3744,11 @@ function vLista(){
   if(hoyYa.length){
     hHoy=secHead("hoy","Hoy",hoyYa.length,"sb-hoy","hoja");
     if(secAbierta==="hoy"){ hHoy+='<ul class="list">'; hoyYa.forEach(function(t){hHoy+=fila(t,false,"d-sec-hoy")}); hHoy+='</ul>'; }
-  } else {
-    hHoy='<div class="hoyh"><b>Hoy</b></div><ul class="list">'+
-      (futuras.length?'':'<li class="vacio">Nada para hoy.</li>')+'</ul>';
   }
+  /* build 138 (Salvador 2026-09-25): si hoy no hay tareas, ya no se mete el
+     titulo "Hoy" con su hueco entre las fichas; las fichas quedan seguidas y
+     hasta abajo va UN renglon limpio. */
+  var hHoyNada=hoyYa.length?'':'<div class="hoynada">Hoy no tienes tareas por hacer.</div>';
 
   /* PRÓXIMAS — cuando no hay nada para hoy, en vez del hueco se ven las que
      vienen, agrupadas por dia. El horizonte se adapta al volumen. */
@@ -3793,7 +3803,7 @@ function vLista(){
   }
 
   /* ===== orden final aprobado 2026-09-22 ===== */
-  h+=hAtora+hMis+hPend+hVenc+hMsg+hHoy+hRec+hProx;
+  h+=hAtora+hMis+hPend+hVenc+hMsg+hHoy+hRec+hProx+hHoyNada;
 
   if(futuras.length && hoyYa.length){
     h+='<div class="futwrap"><button class="futbtn" id="bfut">'+
@@ -4021,7 +4031,8 @@ function abreDictado(onListo,onCancel){
   /* UNA SOLA FILA, del mismo tamaño que la barra de escribir: basura, tiempo,
      onditas y avioncito. Sin bloque de texto arriba, para que no crezca ni empuje
      nada (Salvador 2026-09-17). */
-  el.innerHTML='<div class="dfila">'+
+  el.innerHTML='<div class="dtxt vacio" id="dictatxt">Te escucho…</div>'+
+    '<div class="dfila">'+
       '<button class="dx" id="dictax" aria-label="Cancelar">'+svgBasura()+'</button>'+
       '<span class="dtime" id="dictatime">0:00</span>'+
       '<div class="dbars">'+barritasAudio()+'</div>'+
