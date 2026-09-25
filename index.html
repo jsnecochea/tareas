@@ -248,6 +248,7 @@ button{font:inherit;color:inherit}
 /* el encabezado de la lista: Hoy + fecha larga */
 .hoyh{display:flex;align-items:baseline;gap:8px;padding:16px 15px 6px}
 .hoynada{padding:18px 15px 8px;text-align:center;color:var(--ink-3);font-size:16px}
+.iatag{display:inline-block;font-size:11.5px;font-weight:600;color:#9FE1CB;background:rgba(29,158,117,.18);border-radius:6px;padding:1px 6px;margin-right:6px;vertical-align:1px}
 .hoyh b{font-family:Archivo;font-size:23px;font-weight:600;color:var(--ink)}
 .hoyh span{font-size:16.9px;color:var(--ink-3)}
 /* pie tenue: lo que Claude persigue y no subio */
@@ -838,7 +839,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP="build 138 · 2026-09-25 · dictado como Claude: el texto se ve en vivo arriba de las onditas, crece hasta 4 renglones y luego se recorre; home ordenado: fichas seguidas y abajo un solo renglon si hoy no hay tareas";
+var VERSION_APP="build 139 · 2026-09-25 · WhatsApp sin confirmar: dile/escribele/comentale sale directo con Deshacer 3 s y boton de cancelar en el mensaje mientras no sale; sin candado (Claude solo confirma el destinatario); contactos ligados a la tarea; marca IA · WhatsApp junto al dueno";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -1891,6 +1892,49 @@ function entrar(u){ yo=u; $("gate").classList.remove("on"); $("app").style.displ
   /* build 136: le dice al servidor que este usuario acaba de ver la app, para
      que no le repita por push lo que ya vio (Carlos: nunca se llamaba visto) */
   setTimeout(function(){ try{ avisaVisto(); }catch(e){} }, 1500); }
+/* build 139: CANDADO DE PRIVACIDAD. true = hay que confirmar antes de mandar:
+   el texto trae dinero/cifras o nombra a otro contacto ligado a la tarea. */
+function waCandado(texto, contacto, t){
+  var s=String(texto||"");
+  if(/\$\s*\d|\b\d{1,3}(,\d{3})+\b|\b\d{4,}\b|\b\d+\s*(mil|k|pesos|usd|dlls?|d[oó]lares)\b|\bpresupuest|\bcotizaci/i.test(s)) return true;
+  var otros=((t&&t.wa_contactos)||[]).map(function(c){ return String(c.nombre||c) })
+    .filter(function(n){ return n.toLowerCase()!==String(contacto||"").toLowerCase() });
+  var low=s.toLowerCase();
+  return otros.some(function(n){ var p=n.toLowerCase().split(/\s+/)[0]; return p.length>2 && low.indexOf(p)>=0; });
+}
+/* build 139: manda el WhatsApp SIN confirmar. Se deja en la cola del servidor
+   al instante (si cierras la app no se pierde) y el cintillo de Deshacer 5 s
+   lo cancela en el servidor (wa_marca cerrado) antes de que Claude lo mande. */
+function enviaWhatsAppYa(b){
+  var wp=b.pendiente.whatsapp;
+  var t=wp.tareaId ? tareas.filter(function(x){ return x.id===wp.tareaId })[0] : null;
+  if(!t && wp.nueva) t=creaTarea({nombre:wp.nueva, duenio:yo, dicho:b.dicho||wp.nueva});
+  if(!t){ toast("No encontré la tarea para ese WhatsApp"); return; }
+  t.wa_contactos=t.wa_contactos||[];
+  if(!t.wa_contactos.some(function(c){ return String(c.nombre||c).toLowerCase()===String(wp.contacto).toLowerCase() }))
+    t.wa_contactos.push({nombre:wp.contacto, desde:Date.now()});
+  msg(t,"bi","→ WhatsApp a "+wp.contacto+": “"+wp.texto+"” · en cola");
+  var _m=t.msgs[t.msgs.length-1]; _m.wa=1; _m.wa_c=wp.contacto;
+  if(b.foto) pegaFotoA(t,b.foto);
+  t.ultima="→ "+wp.contacto+": "+wp.texto; guarda(t);
+  var _estado={id:null, cancelado:false};
+  pideWhatsApp({usuario:yo, tarea_id:t.id, contacto:wp.contacto, texto:wp.texto})
+    .then(function(j){ _estado.id=(j&&(j.id||j.pedido_id))||null;
+      if(_estado.id && !_estado.cancelado){ _m.wa_pid=_estado.id; guarda(t); }
+      if(_estado.cancelado && _estado.id) llamaPush("wa_marca",{id:_estado.id, estado:"cerrado"}); })
+    .catch(function(e){
+      msg(t,"bi","No se pudo dejar el WhatsApp en el servidor ("+String((e&&e.message)||e).slice(0,60)+"). Díctalo otra vez.");
+      guarda(t); toast("No se pudo dejar el WhatsApp en el servidor"); if(vista==="hilo") render(); });
+  barraEstado=null; consulta=""; fotoEnMano=null; abierta=t.id; vista="hilo"; render();
+  window.__ultimoDeshacer={id:t.id, tipo:"whatsapp", cuando:Date.now(), restaurar:function(){
+    _estado.cancelado=true;
+    if(_estado.id) llamaPush("wa_marca",{id:_estado.id, estado:"cerrado"});
+    t.msgs=(t.msgs||[]).filter(function(x){ return x!==_m });
+    msg(t,"bi","WhatsApp a "+wp.contacto+" cancelado, no salió.");
+    t.ultima=""; guarda(t);
+  }};
+  muestraDeshacer("whatsapp", "WhatsApp a "+wp.contacto, 3000);
+}
 /* action=visto: al entrar y cada vez que la app vuelve al frente (max 1/min) */
 function avisaVisto(){
   if(!yo) return;
@@ -3080,17 +3124,17 @@ function selloYQuedate(t, o){
 /* CINTILLO DE DESHACER — Salvador 2026-09-25: regresa, delgadito, justo arriba
    de la barra donde se pico la accion, unos 3 segundos. Vive en <body>, asi
    sobrevive a los render(). El deshacer por chat ("regresalo") sigue igual. */
-function muestraDeshacer(tipo){
+function muestraDeshacer(tipo, txtLibre, ms){
   var viejo=document.getElementById("undopill"); if(viejo) viejo.parentNode.removeChild(viejo);
   if(window.__undoT){ clearTimeout(window.__undoT); window.__undoT=null; }
-  var txt=tipo==="alarma"?"Alarma quitada":tipo==="hecha"?"Marcada como hecha":"Eliminado";
+  var txt=txtLibre||(tipo==="alarma"?"Alarma quitada":tipo==="hecha"?"Marcada como hecha":"Eliminado");
   var el=document.createElement("div"); el.id="undopill"; el.className="undopill"; el.setAttribute("role","status");
-  el.innerHTML='<span class="tx">'+txt+'</span><button type="button" id="bundo">Deshacer</button>';
+  el.innerHTML='<span class="tx">'+esc(txt)+'</span><button type="button" id="bundo">Deshacer</button>';
   var comp=document.querySelector(".comp"), abajo=comp?Math.max(12, window.innerHeight-comp.getBoundingClientRect().top+10):96;
   el.style.bottom=abajo+"px";
   document.body.appendChild(el);
   el.querySelector("#bundo").onclick=function(ev){ ev.stopPropagation(); quitaDeshacer(true); deshaceSalto(); };
-  window.__undoT=setTimeout(function(){ quitaDeshacer(false); }, 3000);
+  window.__undoT=setTimeout(function(){ quitaDeshacer(false); }, ms||3000);
 }
 function quitaDeshacer(ya){
   var el=document.getElementById("undopill"); if(!el) return;
@@ -3871,6 +3915,7 @@ function fila(t, mudo, secClass){
               ? '<span class="paso">→ '+esc(t.pasos[t.paso||0].t)+'</span>'
               : '<span class="ls">'+esc(t.ultima||"")+'</span>')))+'</span>'+
     '<span class="meta">'+((mudo?"":fechaChip(t.f_vigente))?'<span class="fdate">'+esc(fechaChip(t.f_vigente))+'</span>':'')+
+    (t.ia_wa?'<span class="iatag" title="Creada por IA desde WhatsApp">IA·WA</span>':'')+
     '<span class="tm">'+((t.duenio&&t.duenio!==yo&&PERSONAS[t.duenio])?PERSONAS[t.duenio].ini:"")+'</span>'+
     (b?(b.ico?'<span class="bico">'+b.ico+'</span>':'<span class="bdg">'+b.n+'</span>'):'')+'</span></button></li>';
 }
@@ -4426,7 +4471,9 @@ function vHilo(){
     /* Salvador 2026-09-22: el ULTIMO mensaje mio trae un botecito 5 minutos,
        por si se subio mal y era otra cosa. Se borra sin preguntar. */
     var undo=(x.k==="bo" && ix===(t.msgs.length-1) && x.ts && (Date.now()-x.ts)<5*60000 && (!x.de||x.de===yo));
+    var waCan=(x.wa && x.wa_pid && !x.wa_can && x.ts && (Date.now()-x.ts)<10*60000);
     m+='<div class="b '+(x.k==="bal"?"bal":(x.k==="bo"?"bo":"bi"))+'">'+esc(x.t)+'<span class="st">'+meta+
+       (waCan?'<button class="mdel" data-wacan="'+ix+'" aria-label="Cancelar este WhatsApp">'+ico("trash",15,1.8)+'</button>':'')+
        (undo?'<button class="mdel" data-mdel="'+ix+'" aria-label="Borrar este mensaje">'+ico("trash",15,1.8)+'</button>':'')+
        '</span></div>';
   });
@@ -5778,8 +5825,23 @@ function aplicaIntencion(j, dicho, hist, foto){
       }
       else _nueva=("WhatsApp a "+w.contacto+" · "+w.texto).slice(0,90);
     }
+    /* build 139 (Salvador 2026-09-25): si dijo dile/escribele/comentale, SALE
+       DIRECTO, sin pantalla de confirmar; queda el cintillo de Deshacer 5 s.
+       CANDADO DE PRIVACIDAD: si el texto trae montos o el nombre de OTRO
+       contacto de la tarea, entonces si se detiene a confirmar. */
+    if(tw){
+      var _ligados=(tw.wa_contactos||[]).map(function(c){ return String(c.nombre||c) });
+      var _pn=String(w.contacto||"").toLowerCase().split(/\s+/)[0];
+      var _mismo=_ligados.filter(function(n){ return n.toLowerCase().split(/\s+/)[0]===_pn })[0];
+      if(_mismo) w.contacto=_mismo;
+    }
+    /* Salvador 17:49: sin candado; montos y presupuestos si se hablan con
+       proveedores. Sale siempre directo; Claude confirma el destinatario. */
+    enviaWhatsAppYa({dicho:dicho, foto:foto,
+      pendiente:{whatsapp:{tareaId:tw?tw.id:null, nueva:_nueva, contacto:w.contacto, texto:w.texto}}});
+    return;
     barraEstado={modo:"confirmar", accion:"whatsapp", dicho:dicho, para:yo, foto:foto,
-      renglones:[{k:"m",v:w.texto},{k:"d",v:"WhatsApp a "+w.contacto+" · desde tu número"},
+      renglones:[{k:"m",v:w.texto},{k:"d",v:"Ojo: trae montos o nombres de otros · revísalo antes de mandar"},{k:"d",v:"WhatsApp a "+w.contacto+" · desde tu número"},
                  {k:"d",v:(tw?"en “"+tw.nombre+"”":"abre tarea nueva tuya: “"+_nueva+"”")+" · la respuesta cae en el hilo"}],
       pendiente:{whatsapp:{tareaId:tw?tw.id:null, nueva:_nueva, contacto:w.contacto, texto:w.texto}}};
     vista="barra"; render(); return;
@@ -7037,6 +7099,7 @@ function confirmaAccion(b){
     }
     barraEstado=null; consulta=""; vista="lista"; render(); return;
   }
+  if(b.accion==="whatsapp" && typeof enviaWhatsAppYa==="function"){ enviaWhatsAppYa(b); return; }
   if(b.accion==="whatsapp"){
     var wp=b.pendiente.whatsapp;
     var tw2=wp.tareaId ? tareas.filter(function(x){ return x.id===wp.tareaId })[0] : null;
@@ -7491,6 +7554,14 @@ function bindHilo(){
     el.onclick=function(ev){ ev.stopPropagation();
       var ix=+el.getAttribute("data-mdel"); if(!t.msgs||!t.msgs[ix]) return;
       t.msgs.splice(ix,1); guarda(t); render(); };
+  });
+  /* build 139: cancelar un WhatsApp desde su mensaje (10 min, mientras no sale) */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-wacan]"),function(el){
+    el.onclick=function(ev){ ev.stopPropagation();
+      var ix=+el.getAttribute("data-wacan"), x=t.msgs&&t.msgs[ix]; if(!x||!x.wa_pid) return;
+      llamaPush("wa_marca",{id:x.wa_pid, estado:"cerrado"});
+      x.wa_can=1; x.t="WhatsApp a "+(x.wa_c||"")+" cancelado · si ya había salido, te aviso";
+      guarda(t); render(); toast("WhatsApp cancelado"); };
   });
   var bya=$("bya"); if(bya) bya.onclick=function(){
     /* Salvador 2026-09-24: "Ya esta" no te saca de la tarea. Si de verdad se
