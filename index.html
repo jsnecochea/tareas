@@ -829,7 +829,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP="build 135 · 2026-09-25 · bote de recordatorio sin confirmacion; regresa el cintillo delgado de Deshacer 3 s arriba de la barra (eliminar, Ya esta, quitar alarma)";
+var VERSION_APP="build 136 · 2026-09-25 · WhatsApp desde la tarea (escribele/preguntale a alguien de fuera -> cola wa_pedido en el servidor); action=visto al abrir y al volver a la app; cache local de Firestore (menos lecturas y cola sin red)";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -1702,7 +1702,17 @@ var CORREOS_SEMILLA={ "jsnecochea@gruponec.com.mx":"salvador",
 /* quienes pueden DAR de alta correos (decision 2026-09-16: Salvador y Josue) */
 var PUEDE_ALTA={salvador:true,josue:true};
 
-function fbListo(){ if(!firebase.apps.length) firebase.initializeApp(FB) }
+function fbListo(){
+  if(firebase.apps.length) return;
+  firebase.initializeApp(FB);
+  /* build 136: cache local de Firestore. Cada telefono guarda las tareas en
+     disco y al abrir pinta desde ahi; solo baja lo que cambio (menos lecturas
+     cobradas) y lo que se guarda sin red se encola y sube solo. Si el navegador
+     no lo soporta o hay otra pestana vieja, sigue como antes, sin cache. */
+  try{ firebase.firestore().enablePersistence({synchronizeTabs:true})
+       .catch(function(e){ try{ console.warn("sin cache local", e&&e.code) }catch(_e){} }); }
+  catch(e){}
+}
 /* build 73 (diseno pedido por Salvador 2026-09-16): en el gate manda el LOGO.
    El "Doit" en letras y el subtitulo sobraban — el logo ya lo dice. gname se
    esconde siempre; gtxt solo sale cuando la pantalla necesita decir algo. */
@@ -1868,13 +1878,43 @@ function entrar(u){ yo=u; $("gate").classList.remove("on"); $("app").style.displ
      arranque, por si se reinstalo la app y el servidor la perdio. Silencioso. */
   setTimeout(function(){ resincronizaAvisos(); }, 2500);
   /* y los avisos que nunca llegaron al servidor nuevo (2026-09-23) */
-  setTimeout(function(){ try{ subeAvisosPendientes(); }catch(e){} }, 9000); }
+  setTimeout(function(){ try{ subeAvisosPendientes(); }catch(e){} }, 9000);
+  /* build 136: le dice al servidor que este usuario acaba de ver la app, para
+     que no le repita por push lo que ya vio (Carlos: nunca se llamaba visto) */
+  setTimeout(function(){ try{ avisaVisto(); }catch(e){} }, 1500); }
+/* action=visto: al entrar y cada vez que la app vuelve al frente (max 1/min) */
+function avisaVisto(){
+  if(!yo) return;
+  if(typeof APP_TOKEN==="undefined" || String(APP_TOKEN).indexOf("__")===0) return;
+  var ah=Date.now();
+  if(window.__vistoTs && ah-window.__vistoTs<60000) return;
+  window.__vistoTs=ah;
+  try{
+    fetch(PUSH+"?action=visto&usuario="+encodeURIComponent(yo),{method:"GET", keepalive:true,
+      headers:{"x-app-token":APP_TOKEN}}).catch(function(){});
+  }catch(e){}
+}
+document.addEventListener("visibilitychange", function(){ if(document.visibilityState==="visible"){ try{ avisaVisto(); }catch(e){} } });
+window.addEventListener("pageshow", function(){ try{ avisaVisto(); }catch(e){} });
+/* build 136: deja el pedido de WhatsApp en la cola del servidor (wa_pedido).
+   Claude, desde la computadora del que lo pide, lo manda por SU WhatsApp y la
+   respuesta cae en el hilo de la tarea (wa_respuesta). Devuelve promesa. */
+function pideWhatsApp(cuerpo){
+  if(typeof APP_TOKEN==="undefined" || String(APP_TOKEN).indexOf("__")===0)
+    return Promise.reject(new Error("sin token"));
+  return fetch(PUSH+"?action=wa_pedido",{method:"POST", keepalive:true,
+      headers:{"content-type":"application/json","x-app-token":APP_TOKEN},
+      body:JSON.stringify(cuerpo)})
+    .then(function(r){ return r.json().catch(function(){return {}}).then(function(j){
+      if(!r.ok || (j&&j.error)) throw new Error((j&&j.error)||("HTTP "+r.status)); return j; }); });
+}
 
 /* ============ DATOS ============ */
 function arranca(){
   try{
-    /* build 72: la entrada ya inicializo Firebase para el login */
-    if(!firebase.apps.length) firebase.initializeApp(FB);
+    /* build 72: la entrada ya inicializo Firebase para el login;
+       build 136: fbListo() tambien prende la cache local */
+    fbListo();
     db=firebase.firestore();
     db.collection(COLE).onSnapshot(function(snap){
       encargos=[]; snap.forEach(function(d){var o=d.data();o.id=d.id;encargos.push(o)});
@@ -1914,7 +1954,10 @@ function arranca(){
          pintan SOLO en pantalla y jamás se suben (ver el candado en guarda()).
          En cuanto haya una tarea de verdad, los ejemplos desaparecen solos. */
       var _hayReal=tareas.length>0;
-      if(!tareas.length) tareas=SEMILLA.slice();
+      /* build 136: si el snapshot vacio viene de la cache local (aun no llega
+         el servidor) NO se siembran ejemplos: en un segundo llega lo real. */
+      var _deCache=!!(snap.metadata && snap.metadata.fromCache);
+      if(!tareas.length && !_deCache) tareas=SEMILLA.slice();
       listo=true; render();
       /* ESPEJO INICIAL: los avisos que ya existían también se registran en
          bitacora_avisos, una sola vez por tarea (Salvador 2026-09-18). Nunca con
@@ -1993,6 +2036,12 @@ function guarda(t){
   /* Red: se limpian los undefined antes de subir, y si Firestore truena en el
      acto se DICE (antes el error rompia todo lo que venia despues). 2026-09-23 */
   limpiaUndef(t);
+  /* build 136: sin red queda en la cola local y sube solo; se dice una vez/min */
+  if(navigator.onLine===false){
+    var _ahoraSR=Date.now();
+    if(!window.__sinRedAviso || _ahoraSR-window.__sinRedAviso>60000){
+      window.__sinRedAviso=_ahoraSR; toast("Sin red · queda guardado aqui y sube en cuanto haya conexion"); }
+  }
   var _p;
   try{ _p=db.collection(COL).doc(t.id).set(t); }
   catch(e){ try{console.error(e)}catch(_e){} toast("No se pudo guardar: "+String((e&&e.message)||e).slice(0,80)); return; }
@@ -2917,6 +2966,17 @@ function autorMsg(x,t){
    sino a una instruccion o tarea nueva? Heuristica local (sin tokens): verbos
    de crear/pedir, o mencionar a OTRA persona del equipo con un verbo de mandar.
    Solo dispara una PREGUNTA, nunca una accion a ciegas. */
+/* build 136: suena a "mandale un WhatsApp a alguien de fuera" (no del equipo) */
+function sonaraWhatsApp(v){
+  var s=String(v||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  var m=s.match(/(?:escribe(?:le|les|la)?|preguntale|mandale(?: un)?(?: whats(?:app)?| mensaje)?|whats(?:app)?)\s+al?\s+([a-z\u00f1]+)/);
+  if(!m) return false;
+  var nom=m[1];
+  var esEquipo=Object.keys(PERSONAS).some(function(k){
+    var n=String(PERSONAS[k].nombre||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+    return n.indexOf(nom)===0; });
+  return !esEquipo;
+}
 function sonaraNoComentario(v, t){
   var s=String(v||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
   /* Salvador 2026-09-22 (segunda vuelta): la pregunta "comentario o algo
@@ -4742,6 +4802,14 @@ var SYS_BARRA =
 "detiene ni lo obliga a contestar. EL EJE: ¿le PIDES algo (tarea/encargo) o solo le "+
 "INFORMAS (comentario)? Pon en 'comentar' la clave de a quién, los términos para "+
 "hallar su tarea, y el texto.\n"+
+"  WHATSAPP   quiere que se le mande un WhatsApp a alguien de FUERA del equipo "+
+"(proveedor, ingeniero, contacto) desde el telefono del que habla, ligado a una "+
+"tarea. Ej: 'escribele a Carlos que si ya quedo el servidor', 'preguntale a Josue "+
+"por WhatsApp como va el avance', 'mandale un whats al herrero que cuando entrega'. "+
+"Solo aplica si el nombre NO es de alguien del equipo (si es del equipo es ENCARGAR o "+
+"COMENTAR). Pon en 'whatsapp' el contacto tal cual lo dijo, el mensaje ya redactado "+
+"en segunda persona listo para mandarse (corto, natural, sin 'preguntale que'), y "+
+"terminos para hallar la tarea (vacio si no dijo).\n"+
 "  BUSCAR     quiere ver algo que ya existe. Ej: 'las vencidas de Samuel'.\n"+
 "  RESPONDER  te PREGUNTARON algo: el estado de una tarea, o un DATO guardado "+
 "(la direccion del hotel, el monto del ultimo presupuesto, que dijo fulano). "+
@@ -4785,7 +4853,7 @@ var SYS_BARRA =
 "criticidad ('diario'|'normal'|'lento'), periodicidad (null|'semanal'|'mensual'), "+
 "recuperable (bool), gasto.\n"+
 "CONTESTA SOLO ESTE JSON:\n"+
-"{\"intencion\":\"PREGUNTA|CREAR|SUPERVISAR|ENCARGAR|REASIGNAR|PASO|RECORDATORIO|BUSCAR|RESPONDER\","+
+"{\"intencion\":\"PREGUNTA|CREAR|SUPERVISAR|ENCARGAR|REASIGNAR|PASO|RECORDATORIO|COMENTAR|WHATSAPP|BUSCAR|RESPONDER\","+
 "\"titulo\":\"<si PREGUNTA: interpretacion corta con ... si falta>\","+
 "\"pregunta\":\"<si PREGUNTA: una sola>\","+
 "\"tarea\":{\"nombre\":\"\",\"duenio\":\"\",\"fecha\":\"\",\"cierra\":\"\",\"revisar\":\"\","+
@@ -4794,6 +4862,7 @@ var SYS_BARRA =
 "\"reasignar\":{\"tarea\":\"<terminos para hallarla>\",\"a\":\"<clave>\",\"razon\":\"\"},"+
 "\"paso\":{\"tarea\":\"<terminos para hallar la existente>\",\"quien\":\"<clave o vacio>\",\"texto\":\"\",\"cuando\":\"AAAA-MM-DD\"},"+
 "\"comentar\":{\"a\":\"<clave>\",\"tarea\":\"<terminos>\",\"texto\":\"\"},"+
+"\"whatsapp\":{\"contacto\":\"<nombre tal cual>\",\"texto\":\"<mensaje listo>\",\"tarea\":\"<terminos o vacio>\"},"+
 "\"recordatorio\":{\"texto\":\"\",\"fecha\":\"AAAA-MM-DD\"},"+
 "\"supervisar\":{\"que\":\"<que se revisa, en infinitivo>\",\"ejecuta\":\"<clave del equipo, o vacio si es alguien de fuera>\",\"externo\":\"<nombre si es de fuera>\",\"tarea_existente\":\"<terminos para hallarla si ya existe, o vacio>\",\"fecha_ejecuta\":\"AAAA-MM-DD\",\"mi_fecha\":\"AAAA-MM-DD\",\"revisa\":\"<clave de QUIEN REVISA; vacio = el que habla>\",\"de_quien\":\"<clave del DUENIO de la tarea a revisar, si lo dijeron>\"},"+
 "\"terminos\":\"<si BUSCAR>\",\"respuesta\":\"<si RESPONDER, 1-3 lineas tuteando>\","+
@@ -4970,7 +5039,9 @@ var SINONIMOS_INT={
   RECORDAR:"RECORDATORIO", AVISO:"RECORDATORIO",
   BUSQUEDA:"BUSCAR", ABRIR_TAREA:"BUSCAR",
   RESPUESTA:"RESPONDER", CONSULTA:"RESPONDER", CONTESTAR:"RESPONDER",
-  PREGUNTAR:"PREGUNTA", DUDA:"PREGUNTA"
+  PREGUNTAR:"PREGUNTA", DUDA:"PREGUNTA",
+  WHATS:"WHATSAPP", WA:"WHATSAPP", MENSAJE_WHATSAPP:"WHATSAPP", WHATSAPPEAR:"WHATSAPP",
+  ESCRIBIR:"WHATSAPP", ESCRIBIRLE:"WHATSAPP"
 };
 /* EL DIA DE LA SEMANA NO SE LE DEJA A CLAUDE. Aunque se le pase el calendario
    hecho, se equivoca de vez en cuando y una tarea dictada "para el jueves" cae
@@ -5657,6 +5728,44 @@ function aplicaIntencion(j, dicho, hist, foto){
               {k:"d",v:(quienP&&quienP!==yo?PERSONAS[quienP].nombre+" · ":"")+"para el "+fechaBonita(ps.cuando)}];
     barraEstado={modo:"confirmar", accion:"paso", dicho:dicho, para:(quienP&&quienP!==yo?quienP:null), foto:foto,
       renglones:rens, pendiente:{paso:{tareaId:tp.id, quien:quienP, texto:ps.texto, cuando:ps.cuando}}};
+    vista="barra"; render(); return;
+  }
+
+  /* WHATSAPP (build 136) — mandarle un WhatsApp a alguien de FUERA desde el
+     numero del que habla, ligado a una tarea. La app solo deja el pedido en la
+     cola del servidor; Claude lo manda desde su computadora y la respuesta cae
+     aqui en el hilo. Si venia desde un hilo (__waDesde) la tarea es esa. */
+  if(i==="WHATSAPP"){
+    var w=j.whatsapp||{};
+    var _waDesde=(window.__waDesde && Date.now()-window.__waDesde.ts<180000)?window.__waDesde.id:null; window.__waDesde=null;
+    if(w.contacto && PERSONAS[w.contacto]) w.contacto=PERSONAS[w.contacto].nombre;
+    if(!w.contacto || !w.texto){
+      barraEstado={modo:"respuesta", dicho:dicho,
+        texto:"¿A quién le escribo por WhatsApp y qué le digo? Dilo con su nombre."};
+      vista="barra"; render(); return;
+    }
+    var tw=null;
+    if(_waDesde) tw=tareas.filter(function(x){ return x.id===_waDesde })[0];
+    if(!tw){
+      var cand=busca(w.tarea||w.texto).filter(function(t){
+        return t.duenio===yo && estadoReal(t)!=="cerrada"; });
+      if(!w.tarea && cand.length!==1) cand=[];
+      if(cand.length===0){
+        barraEstado={modo:"respuesta", dicho:dicho,
+          texto:"¿En cuál tarea va ese WhatsApp? Ábrela y dímelo desde ahí, o dime su nombre."};
+        vista="barra"; render(); return;
+      }
+      if(cand.length>1){
+        barraEstado={modo:"respuesta", dicho:dicho,
+          texto:"¿A cuál tarea va? Pegan "+cand.length+". Ábrela y dímelo desde ahí."};
+        vista="barra"; render(); return;
+      }
+      tw=cand[0];
+    }
+    barraEstado={modo:"confirmar", accion:"whatsapp", dicho:dicho, para:yo, foto:foto,
+      renglones:[{k:"m",v:w.texto},{k:"d",v:"WhatsApp a "+w.contacto+" · desde tu número"},
+                 {k:"d",v:"en “"+tw.nombre+"” · la respuesta cae en el hilo"}],
+      pendiente:{whatsapp:{tareaId:tw.id, contacto:w.contacto, texto:w.texto}}};
     vista="barra"; render(); return;
   }
 
@@ -6538,6 +6647,7 @@ function paraQuien(b){
       ? tareas.filter(function(x){return x.id===p.comentar.tareaId})[0] : null;
     k=tc?tc.duenio:"";
   }
+  else if(b.accion==="whatsapp") k=yo;
   if(!k) k=b.para||yo;
   return (PERSONAS[k]?PERSONAS[k].nombre:(PERSONAS[yo]?PERSONAS[yo].nombre:""));
 }
@@ -6722,6 +6832,11 @@ function botonAccion(b){
   if(b.accion==="comentar")
     return '<button class="cbtn dos" id="cok"><span class="g">Comentar a '+esc(nom)+'</span>'+
            '<span class="c">solo le llega el aviso</span></button>';
+  if(b.accion==="whatsapp"){
+    var _wc=(b.pendiente&&b.pendiente.whatsapp&&b.pendiente.whatsapp.contacto)||"";
+    return '<button class="cbtn dos" id="cok"><span class="g">Mandar WhatsApp a '+esc(_wc)+'</span>'+
+           '<span class="c">desde tu número · la respuesta cae aquí</span></button>';
+  }
   return '<button class="cbtn" id="cok">Crear tarea</button>';
 }
 
@@ -6905,6 +7020,22 @@ function confirmaAccion(b){
             barraEstado=null; consulta=""; vista="hilo"; render(); return; }
     }
     barraEstado=null; consulta=""; vista="lista"; render(); return;
+  }
+  if(b.accion==="whatsapp"){
+    var wp=b.pendiente.whatsapp;
+    var tw2=tareas.filter(function(x){ return x.id===wp.tareaId })[0];
+    if(tw2){
+      msg(tw2,"bi","WhatsApp a "+wp.contacto+": “"+wp.texto+"” · en cola, esperando respuesta");
+      if(b.foto) pegaFotoA(tw2,b.foto);
+      tw2.ultima="WhatsApp a "+wp.contacto+": "+wp.texto; guarda(tw2);
+      pideWhatsApp({usuario:yo, tarea_id:tw2.id, contacto:wp.contacto, texto:wp.texto})
+        .then(function(){ toast("WhatsApp en cola para "+wp.contacto); })
+        .catch(function(e){
+          msg(tw2,"bi","No se pudo dejar el WhatsApp en el servidor ("+String((e&&e.message)||e).slice(0,60)+"). Dictalo otra vez.");
+          guarda(tw2); toast("No se pudo dejar el WhatsApp en el servidor"); if(vista==="hilo") render(); });
+      barraEstado=null; consulta=""; fotoEnMano=null; abierta=tw2.id; vista="hilo"; render(); return;
+    }
+    barraEstado=null; consulta=""; fotoEnMano=null; vista="lista"; render(); return;
   }
   if(b.accion==="comentar"){
     var cp=b.pendiente.comentar;
@@ -7464,6 +7595,12 @@ function bindHilo(){
     }
     /* si estamos en una tarea y lo dictado NO suena a comentario de ella,
        preguntar antes en vez de encajarlo como comentario (Salvador 2026-09-16) */
+    /* build 136: WhatsApp a alguien de fuera dicho desde el hilo: la tarea es
+       ESTA. Se manda a Claude con la marca y el confirmar sale en la barra. */
+    if(!(PERSONAS[yo].jefe && t.estado==="espera") && sonaraWhatsApp(v)){
+      $("txt").value=""; marcaEnvio("tenv","");
+      window.__waDesde={id:t.id, ts:Date.now()}; abierta=null; barraEnviar(v); return;
+    }
     if(!(PERSONAS[yo].jefe && t.estado==="espera") && sonaraNoComentario(v,t)){
       muestraDudaHilo(t, v); return;
     }
@@ -7884,6 +8021,22 @@ function entraPorInvitacion(tk){
                  duenio:quienDicho(dicho)||yo, fecha:diaW(dichoTotal)||"",
                  cierra:"",revisar:"",criticidad:"normal",periodicidad:null,
                  recuperable:true,gasto:""};
+    }
+    /* C0 (build 136): si suena a WhatsApp y el destinatario NO es del equipo,
+       es WHATSAPP aunque Claude lo haya marcado como comentar/encargar */
+    var _WA=/\b(whats?app|whats|escr[ií]bele|escr[ií]bale|escr[ií]beles|m[aá]ndale (un )?(whats|mensaje)|preg[uú]ntale)\b/i;
+    if((i==="COMENTAR"||i==="ENCARGAR"||i==="CREAR") && _WA.test(String(dicho||""))){
+      var _dest=(i==="COMENTAR"&&j.comentar&&j.comentar.a)||(i==="ENCARGAR"&&j.encargo&&j.encargo.para)||(j.tarea&&j.tarea.duenio)||"";
+      var _mNom=String(dicho||"").match(/(?:escr[ií]be(?:le|les|la)?|preg[uú]ntale|m[aá]ndale(?: un)?(?: whats(?:app)?| mensaje)?)\s+al?\s+([A-Za-zÁÉÍÓÚÑáéíóúñ]+(?:\s+[A-Za-zÁÉÍÓÚÑáéíóúñ]+)?)/i);
+      var _nom=_mNom?_mNom[1].replace(/\s+(que|si|por|como|c[oó]mo|cu[aá]ndo|d[oó]nde|para)$/i,"").trim():"";
+      var _esEquipo=!!(_dest&&PERSONAS[_dest]) || Object.keys(PERSONAS).some(function(k){
+        return _nom && PERSONAS[k].nombre.toLowerCase().indexOf(_nom.toLowerCase())===0; });
+      if(!_esEquipo && _nom){
+        i="WHATSAPP"; j.intencion="WHATSAPP";
+        var _txt=(j.comentar&&j.comentar.texto)||(j.encargo&&j.encargo.texto)||(j.tarea&&j.tarea.nombre)||"";
+        j.whatsapp=j.whatsapp||{contacto:_nom, texto:_txt, tarea:(j.comentar&&j.comentar.tarea)||""};
+        if(!j.whatsapp.contacto) j.whatsapp.contacto=_nom;
+      }
     }
     /* C2: peticion que espera respuesta = ENCARGO, nunca comentario */
     if(i==="COMENTAR" && j.comentar && j.comentar.a && PET.test(_norm(j.comentar.texto||dicho))){
