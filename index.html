@@ -823,7 +823,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP="build 133 · 2026-09-24 · sin cintillo (solo palomita 1 s); sin boton Estoy atorado (se dice hablando, con el nombre basta); mensajes cortos; tarea cerrada acepta comentarios";
+var VERSION_APP="build 134 · 2026-09-24 · el teclado no se cierra al mandar, se cierra al tocar el chat; reabrir tarea cerrada desde el chat (reactivar / se me paso / falto...), pide fecha nueva si ya venció; deshacer solo aplica a la misma tarea";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -1224,6 +1224,20 @@ function cierraHecha(t){
   var tarde=t.f_original&&dDif(t.f_original,hoy())>0;
   msg(t,"bi",tarde?"Cerrada. Lo importante es que ya quedó.":"Cerrada a tiempo. Bien hecho.");
   t.estado="cerrada"; t.pide_atoro=false; t.pide_tel=false; t.pide_fecha=false; guarda(t); sincronizaAvisos(t);
+}
+/* REABRIR: la tarea vuelve a estar viva tal cual estaba, con su historial.
+   Se anota quien y por que la reabrio. Si la fecha ya paso, se pide la nueva
+   (sin motivo por escrito: reabrir no es mover). Salvador 2026-09-24. */
+function reabre(t, porque){
+  var ant=t.cierre;
+  t.cierre=null; t.estado="abierta"; t.sin_alarma=null;
+  t.pide_atoro=false; t.pide_tel=false; t.pide_fecha=false; t.fecha_pendiente=null;
+  t.reabierta=(t.reabierta||[]).concat([{f:hoy(), por:yo, motivo:String(porque||"").slice(0,200), cierre_previo:ant?ant.tipo:null}]);
+  var fx=fechaEnTexto(porque||"")||diaDicho(porque||"");
+  if(fx){ t.f_vigente=fx; msg(t,"bi","Reabierta, para el "+fechaBonita(fx)+"."); }
+  else if(t.f_vigente && dDif(t.f_vigente,hoy())>0){ t.pide_fecha=true; t.reabre_fecha=true; msg(t,"bi","Reabierta. ¿Para cuándo?"); }
+  else msg(t,"bi","Reabierta."+(t.f_vigente?" Sigue para el "+fechaBonita(t.f_vigente)+".":""));
+  sincronizaAvisos(t); guarda(t);
 }
 function cierraSinEjecutar(t,motivoK){
   var lista=MOTIVOS_NO_EJECUTADA.concat(MOTIVOS_JEFE);
@@ -3048,10 +3062,20 @@ function mandar(t,txt){
      escribe ahi es comentario (antes repetia "Todavia me falta..." sin parar). */
   if(t.cierre){ t.pide_atoro=false; t.pide_tel=false; t.pide_fecha=false; }
 
-  /* ---- "regresa lo que acabo de borrar / deshacer" ---- */
-  if(/\b(deshac\w*|regres\w*|devuelv\w*|vuelve a poner|reactiv\w*)\b/i.test(txt) && window.__ultimoDeshacer && (Date.now()-window.__ultimoDeshacer.cuando)<10*60*1000){
+  /* ---- "regresa lo que acabo de borrar / deshacer": SOLO si lo ultimo borrado
+     es ESTA tarea. Salvador 2026-09-24: "reactivar" en una tarea cerrada
+     deshizo el cierre de OTRA (la del golf) y lo brinco alla. ---- */
+  if(/\b(deshac\w*|regres\w*|devuelv\w*|vuelve a poner)\b/i.test(txt) && window.__ultimoDeshacer && window.__ultimoDeshacer.id===t.id && (Date.now()-window.__ultimoDeshacer.cuando)<10*60*1000){
     if(deshaceSalto()){ msg(t,"bi","Listo, lo regresé."); guarda(t); }
     return;
+  }
+
+  /* ---- REABRIR UNA TAREA CERRADA DESDE EL CHAT (Salvador 2026-09-24): "hay
+     que reactivarla", "se me paso", "falto hacer otra llamada", "abrela". Se
+     queda en la misma tarea; si su fecha ya paso, se pide la nueva. ---- */
+  var _sr=String(txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  if(t.cierre && /\b(reactiv\w*|reabr\w*|se me paso|falt(o|a|an|aron) (hacer|otra|otro|una|un|algo|la|el|que)|no (esta|quedo|quedaron|quedaba) (lista|hecha|terminada|completa)|abrela|abrirla|vuelve(la)? a abrir|regres\w*|devuelv\w*|reviv\w*|sigue pendiente|no la (cierres|des por))\b/.test(_sr)){
+    reabre(t, txt); return;
   }
 
   /* ---- ATORADO, hablando (Salvador 2026-09-24): con el nombre basta; el
@@ -3097,6 +3121,14 @@ function mandar(t,txt){
     }
     var _r0=mueveFecha(t,_fx,_mot.trim()); if(!_r0.ok) msg(t,"bi",_r0.msg);
     guarda(t); return;
+  }
+
+  /* ---- reabierta con fecha vencida: solo hace falta la nueva fecha ---- */
+  if(t.reabre_fecha){
+    var _nf=fechaEnTexto(txt)||diaDicho(txt);
+    if(!_nf){ msg(t,"bi","No le entendí la fecha. Dime por ejemplo: el lunes, o 3 de octubre."); guarda(t); return; }
+    t.reabre_fecha=false; t.pide_fecha=false; t.f_vigente=_nf;
+    msg(t,"bi","Va, para el "+fechaBonita(_nf)+"."); sincronizaAvisos(t); guarda(t); return;
   }
 
   /* ---- está moviendo la fecha: necesita fecha Y motivo ---- */
@@ -3385,7 +3417,7 @@ function render(){
   if(vista==="cerrarmotivo"){a.innerHTML=vCerrarMotivo();bindMotivo();return}
   if(vista==="transferir"){a.innerHTML=vTransferir();bindTransferir();return}
   if((vista==="hilo"||vista==="galeria")&&abierta){
-    window.__saltoActivo=false; a.innerHTML=vHilo(); bindHilo();
+    window.__saltoActivo=false; pintaHilo(a); bindHilo();
     a.classList.toggle("salto", !!window.__saltoActivo);
     a.classList.toggle("salto-cierre", !!window.__saltoCierre);
     return }
@@ -3393,6 +3425,32 @@ function render(){
   var _sc=a.querySelector(".scroll"), _scTop=_sc?_sc.scrollTop:0;
   a.innerHTML=vLista(); bindLista();
   var _sc2=a.querySelector(".scroll"); if(_sc2) _sc2.scrollTop=_scTop;
+}
+/* EL TECLADO NO SE CIERRA AL MANDAR — Salvador 2026-09-24. Antes cada render()
+   reemplazaba TODO el hilo, la caja de escribir incluida; al destruirla el
+   telefono cerraba el teclado en el acto. Como WhatsApp: si la caja tiene el
+   foco y sigue siendo la misma tarea, se repinta todo MENOS la barra (.pie),
+   que se queda viva en su lugar. Solo cambia su placeholder. */
+function pintaHilo(a){
+  var oldPie=a.querySelector(".comp > .pie"), ae=document.activeElement;
+  var keep=vista==="hilo" && oldPie && a.__hiloId===abierta && ae && oldPie.contains(ae);
+  if(!keep){ a.innerHTML=vHilo(); a.__hiloId=abierta; return; }
+  var tmp=document.createElement("div"); tmp.innerHTML=vHilo();
+  var newComp=tmp.querySelector(".comp"), newPie=newComp&&newComp.querySelector(".pie");
+  if(!newPie){ a.innerHTML=tmp.innerHTML; a.__hiloId=abierta; return; }
+  var oldComp=oldPie.parentNode;
+  Array.prototype.slice.call(a.childNodes).forEach(function(n){ if(n!==oldComp) a.removeChild(n); });
+  Array.prototype.slice.call(oldComp.childNodes).forEach(function(n){ if(n!==oldPie) oldComp.removeChild(n); });
+  var despues=false;
+  Array.prototype.slice.call(tmp.childNodes).forEach(function(n){
+    if(n===newComp){
+      Array.prototype.slice.call(newComp.childNodes).forEach(function(c){ if(c!==newPie) oldComp.insertBefore(c, oldPie); });
+      despues=true;
+    } else if(!despues) a.insertBefore(n, oldComp); else a.appendChild(n);
+  });
+  var ot=oldPie.querySelector("#txt"), nt=newPie.querySelector("#txt");
+  if(ot&&nt) ot.setAttribute("data-ph", nt.getAttribute("data-ph")||"");
+  a.__hiloId=abierta;
 }
 function volver(){ vista=abierta?"hilo":"lista"; menuOpen=false; render() }
 
@@ -3422,6 +3480,15 @@ function montaSwipeUnaVez(){
   function zonaViva(el){
     return !!(el&&el.closest&&el.closest('input,textarea,[contenteditable="true"],.caja,.barra,.pie,.galgrid,.tira,.hoja,.top,button'));
   }
+  /* Como WhatsApp: el teclado se cierra al tocar cualquier parte que no sea
+     la barra de escribir ni un boton (Salvador 2026-09-24). */
+  app.addEventListener('touchend',function(ev){
+    var ae=document.activeElement;
+    if(!(ae && ae.id==="txt" && ae.isContentEditable)) return;
+    var el=ev.target;
+    if(el && el.closest && el.closest('.pie,.sug,.hoja,button,input,textarea,[contenteditable="true"]')) return;
+    ae.blur();
+  },{passive:true});
   app.addEventListener('touchstart',function(ev){
     ok=false;
     if(vista!=="hilo") return;
@@ -7388,9 +7455,16 @@ function bindHilo(){
     if(!ta.value.trim()){ ta.focus(); return }
     enviaHilo();
   };
-  ta.addEventListener("blur", function(){ avisaPendiente("tenv", ta.value); marcaEnvio("tenv", ta.value) });
-  ta.addEventListener("focus", function(){ avisaPendiente("tenv", ""); marcaEnvio("tenv", ta.value) });
-  ta.addEventListener("input", function(){ avisaPendiente("tenv", ""); marcaEnvio("tenv", ta.value) });
+  /* la barra puede sobrevivir al render (pintaHilo): los listeners fijos se
+     cuelgan UNA vez, y tocar la flecha no le quita el foco a la caja para que
+     el teclado siga abierto, como en WhatsApp (Salvador 2026-09-24). */
+  if(!ta.__hiloEv){ ta.__hiloEv=true;
+    ta.addEventListener("blur", function(){ avisaPendiente("tenv", ta.value); marcaEnvio("tenv", ta.value) });
+    ta.addEventListener("focus", function(){ avisaPendiente("tenv", ""); marcaEnvio("tenv", ta.value) });
+    ta.addEventListener("input", function(){ avisaPendiente("tenv", ""); marcaEnvio("tenv", ta.value) });
+    if(tenv){ tenv.addEventListener("pointerdown", function(ev){ ev.preventDefault(); });
+              tenv.addEventListener("mousedown", function(ev){ ev.preventDefault(); }); }
+  }
   marcaEnvio("tenv", ta.value);   /* al abrir el hilo: vacío -> micrófono */
   /* DICTAR SIN ABRIR EL TECLADO, aqui igual que en la caratula. Mismo motor:
      continuous + interimResults + el reinicio en onend, que es lo que lo
