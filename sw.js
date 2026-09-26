@@ -89,6 +89,9 @@ self.addEventListener('notificationclick', function(event) {
         for (let i = 0; i < clientList.length; i++) {
           let client = clientList[i];
           if (client.url.includes('doit.ok-doit.com') && 'focus' in client) {
+            // build 142: si la notificacion es de una tarea/alarma, la app ya
+            // abierta abre ESA tarea (postMessage); si es general, al home.
+            if (data.id) { client.postMessage({ tipo: 'abre', id: String(data.id) }); return client.focus(); }
             client.navigate(deepLink);
             return client.focus();
           }
