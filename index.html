@@ -853,7 +853,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP="build 141 · 2026-09-25 · campanitas: azul ritmo, naranja por sonar (con hora), roja ya sono y obliga Eliminar o Posponer 1 h; se quita la seccion Recordatorios (todo en la lista); horas sin am/pm: pregunta y por omision 1-5 tarde; puntitos lineales por cada movida (tope 3)";
+var VERSION_APP="build 142 · 2026-09-25 · la notificacion de una tarea o alarma abre ESA tarea (antes caia al home si la tarea aun no llegaba del servidor o si la app ya estaba abierta)";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -2115,7 +2115,11 @@ function arranca(){
       }
       /* si venías de una notificación, abre ese recordatorio directo, con el
          micrófono listo para dictar qué hacer con él (una sola vez) */
-      if(window.__irARec && !window.__recAbierto){
+      /* build 142: si el primer snapshot viene de la cache local y la tarea de la
+         notificacion aun no esta (se creo en otro lado), se ESPERA al del servidor
+         en vez de rendirse y quedarse en el home. */
+      if(window.__irARec && !window.__recAbierto &&
+         !(_deCache && !tareas.some(function(x){ return x.id===String(window.__irARec).split("|")[0]; }))){
         window.__recAbierto=true;
         var _rr=tareas.filter(function(x){return x.id===window.__irARec})[0];
         /* también puede venir el id de un aviso insertado (tarea|ts) */
@@ -8199,6 +8203,18 @@ function entraPorInvitacion(tk){
     else pintaLogin();
   });
   if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(function(){}); }
+  /* build 142 (Salvador 2026-09-25): con la app YA abierta, al tocar la
+     notificacion el sw.js manda {tipo:"abre", id} y aqui se abre esa tarea
+     (antes solo se enfocaba la app y se quedaba en el home). */
+  if("serviceWorker" in navigator){ try{ navigator.serviceWorker.addEventListener("message", function(ev){
+    var d=ev&&ev.data; if(!d || d.tipo!=="abre" || !d.id) return;
+    var pp=String(d.id).split("|"), t=(typeof tareas!=="undefined"?tareas:[]).filter(function(x){ return x.id===pp[0]; })[0];
+    if(!t){ window.__irARec=String(d.id); window.__recAbierto=false; return; }
+    window.__avSonando={taskId:t.id, id:(pp[1]||"self")};
+    barraEstado=null; menuOpen=false; abierta=t.id; vista="hilo";
+    window.__avSheet=avisoSonando(t)?t.id:null; if(!avisoSonando(t)) window.__avSonando=null;
+    render();
+  }); }catch(e){} }
 })();
 
 /* ===== CANDADOS DE LA BARRA · batería 2026-09-05 (30/30) ===== */
