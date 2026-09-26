@@ -853,7 +853,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP="build 142 · 2026-09-25 · la notificacion de una tarea o alarma abre ESA tarea (antes caia al home si la tarea aun no llegaba del servidor o si la app ya estaba abierta)";
+var VERSION_APP="build 142b · 2026-09-26 · la notificacion abre ESA tarea; campanita naranja tambien en Proximas y tareas futuras (alarma programada otro dia, con dia y hora)";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -3859,8 +3859,8 @@ function vLista(){
      (hoy o ya pasado -> Hoy, nunca Vencidas; futuro -> Proximas). */
   var recs=misRecordatorios();
   resto=resto.concat(recs);
-  var hoyYa=resto.filter(function(t){return dDif(t.f_vigente||hoy(),hoy())>=0 || !!campanaDe(t)});
-  var futuras=resto.filter(function(t){return dDif(t.f_vigente||hoy(),hoy())<0 && !campanaDe(t)})
+  var hoyYa=resto.filter(function(t){var c=campanaDe(t); return dDif(t.f_vigente||hoy(),hoy())>=0 || !!(c&&!c.fut)});
+  var futuras=resto.filter(function(t){var c=campanaDe(t); return dDif(t.f_vigente||hoy(),hoy())<0 && !(c&&!c.fut)})
                    .sort(function(a,b){return (a.f_vigente||"").localeCompare(b.f_vigente||"")});
 
   var hVenc="";
@@ -4004,6 +4004,12 @@ function campanaDe(t){
     .sort(function(a,b){ return a.hora.localeCompare(b.hora); })[0];
   if(n) return {c:"naranja", txt:"suena a las "+horaChica(n.hora)+ent};
   if(tocaRevisarHoy(t)) return {c:"azul", txt:"toca revisar · entrega "+fechaMovCorta(t.f_vigente)};
+  /* build 142b (Salvador 2026-09-26): alarma programada OTRO dia (p. ej. se
+     pospuso y cruzo la medianoche) = campanita naranja tambien en Proximas y
+     tareas futuras, con dia y hora. fut:true = NO la sube a Hoy. */
+  var nf=avisosDe(t).filter(function(a){ return a.fecha && a.fecha>H && a.hora; })
+    .sort(function(a,b){ return (a.fecha+a.hora).localeCompare(b.fecha+b.hora); })[0];
+  if(nf) return {c:"naranja", fut:true, txt:"suena "+fechaMovCorta(nf.fecha)+" a las "+horaChica(nf.hora)+ent};
   return null;
 }
 /* build 141: puntitos lineales por cada movida: 1 = nunca, 2 = una, 3 = dos o mas */
