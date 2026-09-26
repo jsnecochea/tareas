@@ -258,7 +258,20 @@ button{font:inherit;color:inherit}
 .dot{width:10px;height:10px;border-radius:50%;margin-top:6px}
 .rico{display:flex;align-items:flex-start;margin-top:1px;color:var(--morado)}/* Salvador 2026-09-22: color de su seccion */
 .rico .icx{opacity:.8}
-.rico.rtoca{color:var(--azul);margin-left:-3px}/* build 140: tarea con aviso hoy */
+.rico.rcamp{margin-left:-3px}/* build 141: campanitas del renglon */
+.rico.c-azul{color:var(--azul)}.rico.c-naranja{color:#FF9F0A}.rico.c-roja{color:var(--venc)}
+.row{grid-template-columns:24px 1fr auto;gap:8px}/* build 141: cabe ••• y el nombre queda parejo en todas */
+.dots{display:flex;gap:3px;margin-top:8px}.dots .dot{width:6px;height:6px;margin:0;flex:none}
+/* build 141: ALARMA ROJA — tarjeta al centro que obliga a escoger */
+.armodal{position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.66);display:flex;align-items:center;justify-content:center;padding:24px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.arcard{width:100%;max-width:340px;background:#1C1C1E;border-radius:20px;padding:26px 20px 18px;text-align:center;border:.5px solid rgba(255,255,255,.12);box-shadow:0 24px 70px rgba(0,0,0,.6)}
+.arcard .aric{width:64px;height:64px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;background:rgba(255,69,58,.16);color:var(--venc)}
+.arcard .artit{font-size:21px;font-weight:600;color:var(--ink);line-height:1.3}
+.arcard .arhora{font-size:16px;color:var(--venc);margin-top:6px}
+.arcard .arn{font-size:13px;color:var(--ink-3);margin-top:4px}
+.arcard .arbtn{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+.arcard .arbtn button{height:54px;border-radius:14px;border:0;font-size:18px;font-weight:600;cursor:pointer}
+.arcard .arpos{background:var(--azul);color:#fff}.arcard .ardel{background:#2C2C2E;color:var(--venc)}
 .d-hacer{background:var(--hacer)}.d-super{background:var(--super)}
 .d-esper{background:var(--esper)}.d-sil{background:var(--sil)}.d-ok{background:var(--ink-3)}
 .d-venc{background:var(--venc)}
@@ -840,7 +853,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP="build 140 · 2026-09-25 · mover fecha hablando (proximo viernes, en 15 dias, fin de mes) sin boton, con Deshacer 3 s; registro de cada movida y su motivo (se pregunta, no se exige); ya no se queda en Vencidas al moverla; ritmo: recuerdame el lunes y miercoles = avisos de la tarea, sale en Hoy con campanita, no en Recordatorios";
+var VERSION_APP="build 141 · 2026-09-25 · campanitas: azul ritmo, naranja por sonar (con hora), roja ya sono y obliga Eliminar o Posponer 1 h; se quita la seccion Recordatorios (todo en la lista); horas sin am/pm: pregunta y por omision 1-5 tarde; puntitos lineales por cada movida (tope 3)";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -3837,8 +3850,13 @@ function vLista(){
   var resto=arr.filter(function(t){return det.indexOf(t)<0 && mias_venc.indexOf(t)<0});
   /* build 140: una tarea con aviso HOY (ritmo) y entrega futura sale en Hoy,
      con campanita en vez de punto (tocaRevisarHoy). */
-  var hoyYa=resto.filter(function(t){return dDif(t.f_vigente||hoy(),hoy())>=0 || tocaRevisarHoy(t)});
-  var futuras=resto.filter(function(t){return dDif(t.f_vigente||hoy(),hoy())<0 && !tocaRevisarHoy(t)})
+  /* build 141: con campanita (roja/naranja/azul) tambien va en Hoy. Y ya no hay
+     seccion Recordatorios: el recordatorio suelto va en la lista como cualquiera
+     (hoy o ya pasado -> Hoy, nunca Vencidas; futuro -> Proximas). */
+  var recs=misRecordatorios();
+  resto=resto.concat(recs);
+  var hoyYa=resto.filter(function(t){return dDif(t.f_vigente||hoy(),hoy())>=0 || !!campanaDe(t)});
+  var futuras=resto.filter(function(t){return dDif(t.f_vigente||hoy(),hoy())<0 && !campanaDe(t)})
                    .sort(function(a,b){return (a.f_vigente||"").localeCompare(b.f_vigente||"")});
 
   var hVenc="";
@@ -3895,30 +3913,13 @@ function vLista(){
     }
   }
 
-  var recs=misRecordatorios();
-  var hRec="";
-  if(recs.length){
-    hRec=secHead("rec","Recordatorios",recs.length,"sb-rec","bell");
-    if(secAbierta==="rec"){
-      hRec+='<ul class="list">';
-      recs.forEach(function(t){
-        hRec+='<li><button class="row" data-id="'+t.id+'">'+
-          '<span class="rico">'+ico("bell",18,1.7)+'</span><span>'+
-          '<span class="nm">'+esc(t.nombre)+'</span>'+
-          '<span class="ls">te aviso el '+esc(fechaBonita(t.f_vigente))+'</span></span>'+
-          '</button></li>';
-      });
-      hRec+='</ul>';
-    }
-  }
-
   var hProx="";
   if(dentro.length){
     hProx=secHead("prox","Pr\u00f3ximas",dentro.length,"sb-prox","cal")+hProxBody;
   }
 
   /* ===== orden final aprobado 2026-09-22 ===== */
-  h+=hAtora+hMis+hPend+hVenc+hMsg+hHoy+hRec+hProx+hHoyNada;
+  h+=hAtora+hMis+hPend+hVenc+hMsg+hHoy+hProx+hHoyNada;
 
   if(futuras.length && hoyYa.length){
     h+='<div class="futwrap"><button class="futbtn" id="bfut">'+
@@ -3970,22 +3971,53 @@ function fechaChip(f){
   if(ad>=2 && ad<=6) return DIAS_L[d.getDay()];
   return d.getDate()+" "+MES_3[d.getMonth()];
 }
-/* build 140: hoy le toca un aviso (ritmo) pero la entrega es otro dia */
+/* build 140: hoy le toca un aviso (ritmo) pero la entrega es otro dia.
+   build 141: tambien si hoy se atendio (elimino) el aviso de ritmo. */
 function tocaRevisarHoy(t){
   if(!t || t.es_recordatorio || t.cierre || !t.f_vigente || t.f_vigente<=hoy()) return false;
   var H=hoy();
-  return (t.avisos||[]).some(function(a){ return a.fecha===H; });
+  return t.revisar_hoy===H || (t.avisos||[]).some(function(a){ return a.fecha===H; });
+}
+/* build 141: la alarma que ya sono y no se ha atendido (ni eliminada ni
+   pospuesta). Primero la que llego por push; si no, la primera vencida. */
+function alarmaRoja(t){
+  if(!t || t.cierre || estadoReal(t)==="cerrada") return null;
+  var s=avisoSonando(t);
+  if(s && avisoVence(s)) return s;
+  return avisosDe(t).filter(avisoVence)[0]||null;
+}
+function horaChica(h){ return String(horaBonita(h)||"").toLowerCase(); }
+/* build 141 (Salvador 2026-09-25): LA CAMPANITA DEL RENGLON, en vez del punto.
+   roja = ya sono y no la atiendes > naranja = suena hoy mas tarde > azul = ritmo
+   (toca revisar, la entrega es otro dia). Solo en lo abierto. */
+function campanaDe(t){
+  if(!t || t.cierre || estadoReal(t)==="cerrada") return null;
+  var H=hoy(), ent=(!t.es_recordatorio && t.f_vigente && t.f_vigente>H)?" · entrega "+fechaMovCorta(t.f_vigente):"";
+  var r=alarmaRoja(t);
+  if(r) return {c:"roja", txt:"sonó "+(r.fecha&&r.fecha<H?"el "+fechaMovCorta(r.fecha)+" ":"")+
+    (r.hora?"a las "+horaChica(r.hora)+" ":"")+"· no la has atendido"};
+  var ya=nowHM(), n=avisosDe(t).filter(function(a){ return a.fecha===H && a.hora && a.hora>ya; })
+    .sort(function(a,b){ return a.hora.localeCompare(b.hora); })[0];
+  if(n) return {c:"naranja", txt:"suena a las "+horaChica(n.hora)+ent};
+  if(tocaRevisarHoy(t)) return {c:"azul", txt:"toca revisar · entrega "+fechaMovCorta(t.f_vigente)};
+  return null;
+}
+/* build 141: puntitos lineales por cada movida: 1 = nunca, 2 = una, 3 = dos o mas */
+function puntosDe(t, cls){
+  var n=!t.movidas?1:(t.movidas===1?2:3), h="";
+  for(var i=0;i<n;i++) h+='<span class="dot '+cls+'"></span>';
+  return n===1?h:'<span class="dots n'+n+'">'+h+'</span>';
 }
 function fila(t, mudo, secClass){
-  var b=badge(t), enc=t.encargado, r=ritmo(t), toca=tocaRevisarHoy(t);
+  var b=badge(t), enc=t.encargado, r=ritmo(t), camp=campanaDe(t), toca=!!camp;
   /* Salvador 2026-09-22: si la fila se pinta dentro de una de las 7 secciones
      con color del home, el puntito toma el color de esa seccion; si no, sigue
      el estado real de la tarea (como siempre). */
   return '<li><button class="row'+(estadoReal(t)==="cerrada"?" done":"")+
-    '" data-id="'+t.id+'">'+(toca?'<span class="rico rtoca" aria-label="Toca revisar hoy">'+ico("bell",16,1.8)+'</span>'
-      :'<span class="dot '+(secClass||(enc?"d-tenue":dotc(t)))+'"></span>')+'<span>'+
+    '" data-id="'+t.id+'">'+(toca?'<span class="rico rcamp c-'+camp.c+'" aria-label="Alarma">'+ico(camp.c==="roja"?"bellr":"bell",16,1.8)+'</span>'
+      :puntosDe(t, secClass||(enc?"d-tenue":dotc(t))))+'<span>'+
     '<span class="nm">'+esc(t.nombre)+'</span>'+
-    (toca&&!enc?'<span class="ls">toca revisar · entrega '+esc(fechaMovCorta(t.f_vigente))+'</span>':enc
+    (toca&&!enc?'<span class="ls">'+esc(camp.txt)+'</span>':enc
       ? '<span class="ls"><span class="marcaje">→ '+esc(PERSONAS[enc.a].nombre)+'</span> · '+esc(esperaDe(t))+'</span>'
       : (r&&r.va_a_fallar
           ? '<span class="ls"><span class="alerta">va a fallar</span> · atrasado en “'+esc(r.paso)+'”</span>'
@@ -4083,6 +4115,9 @@ function ico(n,px,gr){
          '<path d="M3.2 9.2h17.6M8 2.8v3.4M16 2.8v3.4"/>',
     bell:'<path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/>'+
          '<path d="M10 20a2 2 0 0 0 4 0"/>',
+    /* build 141: campana sonando (con ondas) para la alarma roja */
+    bellr:'<path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/>'+
+         '<path d="M10 20a2 2 0 0 0 4 0"/><path d="M3 5.5A9 9 0 0 1 5.4 3M21 5.5A9 9 0 0 0 18.6 3"/>',
     chat:'<path d="M4 5h16v11H8l-4 4z"/>',
     reloj:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.4V12l3 2"/>',
     /* la flecha de enviar: arriba, como la de Claude y la de WhatsApp */
@@ -4655,7 +4690,23 @@ function vHilo(){
         '<button class="mic" id="tmic" aria-label="Dictar">'+ico("mic",26,1.7)+'</button>'+
       '</div>'+
     '</div></div>'+
-    (window.__avSheet===t.id?vAvisosSheet(t):"");
+    (alarmaRoja(t)?vAlarmaRoja(t):(window.__avSheet===t.id?vAvisosSheet(t):""));
+}
+/* build 141 (Salvador 2026-09-25): ALARMA ROJA. Al abrir algo cuya alarma ya
+   sono y no se atendio, sale al centro esta tarjeta y NO se quita tocando
+   afuera: solo "Eliminar alarma" o "Posponer 1 hora". Mientras esta, la caja y
+   el microfono no sirven. Si hay varias rojas, salen una tras otra. */
+function vAlarmaRoja(t){
+  var a=alarmaRoja(t); if(!a) return "";
+  var n=avisosDe(t).filter(avisoVence).length, H=hoy();
+  return '<div class="armodal" id="armodal"><div class="arcard" role="alertdialog" aria-modal="true">'+
+    '<div class="aric">'+ico("bellr",34,1.9)+'</div>'+
+    '<div class="artit">'+esc(a.texto||t.nombre||"Alarma")+'</div>'+
+    '<div class="arhora">Sonó '+(a.fecha&&a.fecha!==H?"el "+esc(fechaBonita(a.fecha)):"hoy")+
+      (a.hora?" a las "+esc(horaBonita(a.hora)):"")+'</div>'+
+    (n>1?'<div class="arn">1 de '+n+' alarmas</div>':'')+
+    '<div class="arbtn"><button class="arpos" data-arpos="'+esc(a.id)+'">Posponer 1 hora</button>'+
+    '<button class="ardel" data-ardel="'+esc(a.id)+'">Eliminar alarma</button></div></div></div>';
 }
 
 function vAdmin(){
@@ -5064,7 +5115,7 @@ function barraEnviar(texto){
     if(!_f){ toast('Sigue guardado sin hora — dímela otra vez (ej. "mañana" o "a las 7")'); return; }
     if(_t && _t.avisos){
       var _av=_t.avisos.filter(function(a){return String(a.ts)===String(_ts)})[0];
-      if(_av){ _av.fecha=_f; _av.hora=horaValor(texto)||_av.hora;
+      if(_av){ _av.fecha=_f; _av.hora=horaCercana(_f,horaValor(texto),texto)||_av.hora;
                _av.cada=cadaDicho(texto)||_av.cada; _av.dicho=((_av.dicho||"")+" "+texto).trim();
                msg(_t,"bi","Le pusiste cuándo al recordatorio: "+textoCuando(_av)+".");
                guarda(_t); fichitaAviso(_t, _av); }
@@ -5304,13 +5355,59 @@ function relativoDicho(txt, nowMs){
    dicho a las 4:15 pm, es HOY a las 16:20, no las 4:20 am que ya pasaron. Si no
    dijo parte del dia, es para hoy, ya paso y +12 h todavia no: se toma la tarde. */
 function horaCercana(fecha, hora, txt){
-  if(!hora || fecha!==hoy()) return hora;
-  var s=String(txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-  if(/(manana|tarde|noche|madrugada|mediodia|medianoche|\bam\b|\bpm\b|a\.m|p\.m)/.test(s)) return hora;
+  if(!hora) return hora;
+  var s=" "+String(txt||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"")+" ";
+  if(parteDelDia(s) || /\b(0\d|1[3-9]|2[0-3]):\d{2}\b/.test(s)) return hora;
   var h=parseInt(hora.slice(0,2),10), mm=hora.slice(3);
   if(isNaN(h) || h<1 || h>11) return hora;
-  var pm=String(h+12).padStart(2,"0")+":"+mm, ya=nowHM();
+  var pm=String(h+12).padStart(2,"0")+":"+mm;
+  /* build 141 (Salvador 2026-09-25): de 1 a 5 sin decir = de la tarde,
+     cualquier dia; de 6 a 11 = de la mañana (salvo hoy si ya paso, abajo). */
+  if(h<=5) return pm;
+  if(fecha!==hoy()) return hora;
+  var ya=nowHM();
   return (hora<=ya && pm>ya) ? pm : hora;
+}
+/* build 141: ¿dijo la parte del dia? "de la mañana/tarde/noche", am/pm,
+   mediodia... OJO: "mañana" solo (el dia de mañana) NO es parte del dia. */
+function parteDelDia(s){
+  s=" "+String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"")+" ";
+  return /\b(de|en|por|a)\s+la\s+(manana|tarde|noche|madrugada)\b|\b(tarde|noche|madrugada|mediodia|medianoche|am|pm)\b|\ba\.\s?m\b|\bp\.\s?m\b|\btemprano\b/.test(s);
+}
+/* build 141: la hora dicha sin mañana/tarde (1 a 11, no 24 h ni "en 20 min").
+   Devuelve la hora en numero, o 0 si no hay duda. */
+function horaAmbigua(txt){
+  if(!horaDicha(txt) || relativoDicho(txt) || parteDelDia(txt)) return 0;
+  var s=String(txt||"").toLowerCase();
+  if(/\b(0\d|1[3-9]|2[0-3]):\d{2}\b/.test(s)) return 0;
+  var hv=horaValor(txt), h=parseInt(String(hv).slice(0,2),10);
+  return (h>=1 && h<=11) ? h : 0;
+}
+/* build 141: el aviso ya quedo con la hora por omision; en el hilo se
+   pregunta "¿5 de la mañana o de la tarde?" y la respuesta la corrige. */
+function preguntaAmPm(t, ids, dicho){
+  var h=horaAmbigua(dicho); if(!h) return false;
+  var mm=String(horaValor(dicho)).slice(3)||"00";
+  t.pide_ampm={ids:ids, h:h, mm:mm, ts:Date.now()};
+  msg(t,"bi","¿"+h+(mm!=="00"?":"+mm:"")+" de la mañana o de la tarde?");
+  return true;
+}
+/* la respuesta: "de la tarde" / "pm" / "noche" -> tarde; "mañana" / "am" -> mañana */
+function respuestaAmPm(v){
+  var s=" "+String(v||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"")+" ";
+  if(s.trim().split(/\s+/).length>6) return "";
+  if(/\b(tarde|noche|pm)\b|\bp\.\s?m\b/.test(s)) return "pm";
+  if(/\b(manana|madrugada|am|temprano)\b|\ba\.\s?m\b/.test(s)) return "am";
+  return "";
+}
+function aplicaAmPm(t, cual){
+  var p=t.pide_ampm; t.pide_ampm=null; if(!p) return "";
+  var nh=String(cual==="pm"?p.h+12:p.h).padStart(2,"0")+":"+p.mm;
+  (p.ids||[]).forEach(function(id){
+    if(id==="self" && t.es_recordatorio){ t.aviso_hora=nh; t.avisado_en=null; t.sin_alarma=null; }
+    else (t.avisos||[]).forEach(function(a){ if(String(a.ts)===String(id)){ a.hora=nh; a.avisado_en=null; } });
+  });
+  return nh;
 }
 /* quita la hora dicha del titulo de un recordatorio ("4:20 prende camioneta") */
 function sinHoraEnTitulo(txt){
@@ -6215,6 +6312,7 @@ function creaRecordatorio(r){
     ultima:"", msgs:[], creada:Date.now(), creada_por:yo
   };
   msg(t,"bi","Recordatorio. Te aviso el "+fechaBonita(f)+(_hora?" a las "+horaBonita(_hora):"")+".");
+  preguntaAmPm(t, ["self"], _dic);
   tareas.push(t); guarda(t); sincronizaAvisos(t);
   return t;
 }
@@ -6549,8 +6647,9 @@ function eliminaAvisoDe(t, id){
 }
 /* posponer 1 hora: mueve el aviso a hoy + (ahora+1h), en punto. */
 function posponeAvisoDe(t, id){
-  var d=new Date(); d.setMinutes(0,0,0); d.setHours(d.getHours()+1);
-  var hh=String(d.getHours()).padStart(2,"0")+":00", f=hoy();
+  /* build 141: ahora + 1 hora exacta; si cruza la medianoche, mañana */
+  var d=new Date(Date.now()+60*60*1000);
+  var hh=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"), f=iso(d);
   if(id==="self" && t.es_recordatorio){ t.f_vigente=f; t.aviso_hora=hh; t.sin_alarma=null; guarda(t); }
   else { var a=(t.avisos||[]).filter(function(x){return String(x.ts)===String(id)})[0];
          if(a){ a.fecha=f; a.hora=hh; a.avisado_en=null; guarda(t); } }
@@ -6582,6 +6681,7 @@ function insertaAviso(t, r, foto){
   var av=nuevoAviso(t, r);
   var cuando=textoCuando(av);
   msg(t,"bi","Le insertaste un recordatorio: “"+av.texto+"”"+(cuando?" · "+cuando:"")+".");
+  preguntaAmPm(t, [String(av.ts)], r.dicho||"");
   if(foto) pegaFotoA(t,foto);
   guarda(t); sincronizaAvisos(t);
   fichitaAviso(t, av);
@@ -6708,7 +6808,7 @@ function completaPendiente(id, texto){
     /* CAPTURA TAMBIÉN LA HORA Y LA RECURRENCIA (Salvador 2026-09-17): antes solo
        agarraba el día y tiraba la hora, así el "a las 6" se perdía y no quedaba
        alarma. Ahora se guarda para que el servidor la haga sonar a esa hora. */
-    var _hc=horaValor(texto), _cc=cadaDicho(texto);
+    var _hc=horaCercana(f,horaValor(texto),texto), _cc=cadaDicho(texto);
     if(_hc) t.aviso_hora=_hc;
     if(_cc) t.aviso_cada=_cc;
     t.aviso_dicho=texto;
@@ -7677,6 +7777,18 @@ function bindHilo(){
   var btrr=$("btrashrec"); if(btrr) btrr.onclick=function(){ borraRecordatorioYQuedate(t); };
   /* ===== HOJA DE RECORDATORIOS (relojito) — Salvador 2026-09-18 ===== */
   var brel=$("brel"); if(brel) brel.onclick=function(){ window.__avSheet=(window.__avSheet===t.id?null:t.id); render(); };
+  /* build 141: alarma roja — la caja se apaga y solo quedan los dos botones */
+  var arm=$("armodal");
+  if(arm){
+    var _tx=$("txt"); if(_tx){ _tx.setAttribute("contenteditable","false"); try{ _tx.blur(); }catch(e){} }
+    arm.onclick=function(ev){ ev.stopPropagation(); };
+    var _ad=arm.querySelector("[data-ardel]"), _ap=arm.querySelector("[data-arpos]");
+    if(_ad) _ad.onclick=function(ev){ ev.stopPropagation(); var id=_ad.getAttribute("data-ardel");
+      var _a=avisosDe(t).filter(function(x){ return x.id===id; })[0];
+      if(_a && !_a.self && _a.fecha===hoy() && !t.es_recordatorio && t.f_vigente>hoy()) t.revisar_hoy=hoy();
+      window.__avSonando=null; eliminaAvisoDe(t, id); };
+    if(_ap) _ap.onclick=function(ev){ ev.stopPropagation(); posponeAvisoDe(t, _ap.getAttribute("data-arpos")); };
+  }
   var avsc=$("avscrim"); if(avsc) avsc.onclick=function(){ window.__avSheet=null; render(); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-avdel]"),function(el){
     el.onclick=function(ev){ ev.stopPropagation(); eliminaAvisoDe(t, el.getAttribute("data-avdel")); };
@@ -7745,13 +7857,23 @@ function bindHilo(){
     });
   };
   function enviaHilo(){
+    /* build 141: con la alarma roja abierta no se escribe ni se dicta */
+    if(alarmaRoja(t)){ toast("Primero: Eliminar alarma o Posponer 1 hora"); render(); return; }
     var v=limpiaHoraDictada($("txt").value.trim()); if(!v)return;
+    /* build 141: contesta "¿5 de la mañana o de la tarde?" */
+    if(t.pide_ampm && (Date.now()-t.pide_ampm.ts)<60*60*1000 && respuestaAmPm(v) && !(esMovida(v) && !soloFecha(v))){
+      $("txt").value=""; marcaEnvio("tenv","");
+      var _nh=aplicaAmPm(t, respuestaAmPm(v));
+      msg(t,"bo",v); msg(t,"bi","Listo, a las "+horaBonita(_nh)+".");
+      guarda(t); sincronizaAvisos(t); render(); return;
+    }
     /* AGREGAR RECORDATORIO: lo dictado no es comentario, es un aviso nuevo para
        ESTA tarea. Se arma su fecha/hora con la hora inteligente y se inserta. */
     if(window.__avAdd===t.id){
       window.__avAdd=null; $("txt").value=""; marcaEnvio("tenv","");
       var rr=armaCuando(v);
       var av=nuevoAviso(t, {texto:sinHoraEnTitulo(asuntoRecordatorio(v,t)), dicho:v, fecha:rr.fecha, hora:rr.hora, cada:rr.cada});
+      preguntaAmPm(t, [String(av.ts)], v);
       guarda(t); sincronizaAvisos(t);
       toast("Recordatorio agregado: "+(textoCuando(av)||"sin hora")); render(); return;
     }
@@ -7780,17 +7902,19 @@ function bindHilo(){
          tarea por cada dia dicho, a la hora dicha o a las 9:00. */
       var _dias=cadaDicho(v)?[]:diasDichos(v);
       if(_dias.length>1){
-        var _hr=horaDicha(v)?horaValor(v):"09:00", _as=sinHoraEnTitulo(asuntoRecordatorio(v,t)), _avs=[];
+        var _hr=horaDicha(v)?horaValor(v):"", _as=sinHoraEnTitulo(asuntoRecordatorio(v,t)), _avs=[];
         if(/^((el|la|los|las|y|e|de|para|a|,)\s*)+$/i.test(_as+" ")) _as=t.nombre||"Recordatorio";
-        _dias.forEach(function(f){ _avs.push(nuevoAviso(t, {texto:_as, dicho:v, fecha:f, hora:_hr})); });
+        _dias.forEach(function(f){ _avs.push(nuevoAviso(t, {texto:_as, dicho:v, fecha:f, hora:(_hr?horaCercana(f,_hr,v):"09:00")})); });
         msg(t,"bo",v);
         msg(t,"bi","Anotado. Te aviso "+_avs.map(textoCuando).join(" y ")+": "+_avs[0].texto+".");
+        preguntaAmPm(t, _avs.map(function(a){ return String(a.ts); }), v);
         guarda(t); sincronizaAvisos(t); render(); return;
       }
       var rr2=armaCuando(v);
       var av2=nuevoAviso(t, {texto:sinHoraEnTitulo(asuntoRecordatorio(v,t)), dicho:v, fecha:rr2.fecha, hora:rr2.hora, cada:rr2.cada});
       msg(t,"bo",v);
       msg(t,"bi","Anotado. Te aviso "+(textoCuando(av2)||"en la siguiente franja")+": "+av2.texto+".");
+      preguntaAmPm(t, [String(av2.ts)], v);
       guarda(t); sincronizaAvisos(t); render(); return;
     }
     /* si estamos en una tarea y lo dictado NO suena a comentario de ella,
@@ -7835,6 +7959,7 @@ function bindHilo(){
      silencio y deja el texto en la caja, SIN mandarlo: aqui se relee antes. */
   var tm=$("tmic");
   if(tm) tm.onclick=function(){
+    if(alarmaRoja(t)){ toast("Primero: Eliminar alarma o Posponer 1 hora"); return }
     if(window.__oyendo){ paraDictadoHilo(); enviaHilo(); return }
     aseguraMic(function(){
     recargaMic();
