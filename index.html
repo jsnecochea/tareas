@@ -728,6 +728,11 @@ button{font:inherit;color:inherit}
 .dacc{background:var(--hacer);color:#fff;border:0}
 .dcopy{background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)}
 .dcopy.ok{background:rgba(48,209,88,.18);color:#8ff0a9;border-color:rgba(48,209,88,.4)}
+/* build 145: pastilla "Vincular" en la pantalla de escoger tarea -- mismo
+   lenguaje visual que .dacc/.dcopy, en azul (el color que la app ya usa
+   para "toca esto para avanzar"). Salvador 2026-09-27. */
+.vinc{display:inline-block;border-radius:11px;padding:9px 13px;font-size:15px;
+  font-weight:600;background:rgba(10,132,255,.16);color:var(--azul)}
 /* RENGLON DE MENSAJES — verde difuminado (glow), delgado, un solo renglon */
 .msgbar{display:flex;align-items:center;gap:12px;width:calc(100% - 30px);margin:11px 15px 3px;
   padding:9px 13px;border-radius:12px;cursor:pointer;text-align:left;
@@ -904,7 +909,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP="build 144 · 2026-09-26 · pasos dentro de la tarea (plegables, por sección/lugar, se palomean hablando); hora dicha = alarma siempre";
+var VERSION_APP="build 145 · 2026-09-27 · escoger tarea siempre visible al coincidir; lista completa de pasos al vincular; 'ya compré X' palomea desde donde sea";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -5612,6 +5617,30 @@ function barraEnviar(texto){
   if(_fp){ abrePersona(_fp); return; }
   var _pp=pidePrepara(texto);
   if(_pp){ preparamePara(_pp, texto); return; }
+  /* build 145: "ya compre el camaron", "ya quedo el vino" -- es un PALOMEO de
+     un paso pendiente en alguna tarea con lista de pasos; se resuelve aqui
+     mismo, sin pasar por Claude (igual que ficha o prepara), se dicte desde
+     donde se dicte. Si ya estas DENTRO de la tarea, enviaHilo ya lo resuelve
+     solo; esto es para el resto de los casos (home, otra tarea abierta).
+     Salvador 2026-09-27, caso real de Costco. */
+  if(!window.__saltaPaso && diceQueYa(texto)){
+    var _pgTareas=buscaTareaConPaso(texto);
+    if(_pgTareas.length===1){
+      var _pgHechos=palomeaPorTexto(_pgTareas[0], texto);
+      if(_pgHechos.length){
+        msg(_pgTareas[0],"bo",texto); msg(_pgTareas[0],"bi",respuestaPalomeo(_pgTareas[0],_pgHechos));
+        _pgTareas[0].ultima=PERSONAS[yo].nombre+": "+texto; guarda(_pgTareas[0]);
+        abierta=_pgTareas[0].id; barraEstado=null; consulta=""; fotoEnMano=null; vista="hilo"; render();
+        return;
+      }
+    }else if(_pgTareas.length>1){
+      barraEstado={modo:"escoge", dicho:texto, hist:[], foto:fotoEnMano||null,
+        sv:{__paso:true, texto:texto}, ops:_pgTareas.slice(0,6).map(function(t){return t.id}),
+        pregunta:"¿De cuál tarea es ese paso?"};
+      vista="barra"; render(); return;
+    }
+  }
+  window.__saltaPaso=false;
   if(APP_TOKEN.indexOf("__")===0){
     consulta=texto; vista="lista"; render();
     toast("Claude no esta conectado todavia — busque con el filtro local");
@@ -5622,6 +5651,11 @@ function barraEnviar(texto){
   var foto = (barraEstado && barraEstado.foto) || fotoEnMano || null;
   hist.push("Persona: "+texto);
 
+  /* build 145: si el dictado salio desde DENTRO de una tarea (mic flotante),
+     se recuerda cual era -- para que una respuesta de Claude sobre esa MISMA
+     tarea se conteste en su hilo, sin tarjeta ni boton de mas. Salvador
+     2026-09-27, caso real de Costco. */
+  window.__origenHilo=(vista==="hilo" && abierta) ? abierta : null;
   /* lo enviado SUBE al encabezado y la caja queda en blanco, como WhatsApp */
   consulta="";
   barraEstado={modo:"cargando", dicho:texto, hist:hist, foto:foto, texto:"Leyendo lo que dijiste…"};
@@ -6189,6 +6223,15 @@ function aplicaIntencion(j, dicho, hist, foto){
   if(i==="RESPONDER"){
     /* si el dato salio de una tarea, se deja el acceso para verla completa */
     var org0=j.abrir_tarea ? tareas.filter(function(x){return x.id===j.abrir_tarea})[0] : null;
+    /* build 145: si la pregunta salio de DENTRO de esa misma tarea, se
+       contesta ahi, en su hilo -- sin tarjeta ni boton para "explorarla"
+       cuando ya la tienes abierta enfrente. Salvador 2026-09-27. */
+    if(org0 && window.__origenHilo===org0.id){
+      window.__origenHilo=null;
+      msg(org0,"bo",dicho); msg(org0,"bi", j.respuesta||"No supe qué contestar con lo que tengo.");
+      org0.ultima=PERSONAS[yo].nombre+": "+dicho; guarda(org0);
+      abierta=org0.id; barraEstado=null; consulta=""; fotoEnMano=null; vista="hilo"; render(); return;
+    }
     barraEstado={modo:"respuesta", dicho:dicho, consulta:true,
       abrir:(org0?org0.id:null),
       datos:(j.datos&&j.datos.length?j.datos:datosDelTexto(j.respuesta||"")),
@@ -6270,15 +6313,17 @@ function aplicaIntencion(j, dicho, hist, foto){
             pregunta:"Dime más de la tarea y quién es el responsable, para encontrarte la tuya."};
           vista="barra"; render(); return;
         }
-        if(buenas.length===1) ya=buenas[0];
-        else if(buenas.length>1 || (cs.length && !buenas.length)){
-          /* COINCIDEN VARIAS (o ninguna clara): NO se adivina. Se le enseña la
-             lista limpia y el escoge cual, o pide crear una nueva.
-             Salvador 2026-09-04. */
+        /* build 145: antes, con UNA sola coincidencia fuerte se pegaba sola,
+           sin preguntar -- asi paso el caso real del Mori: se penso que ya
+           sabia y adjunto el dictado a una tarea vieja sin que Salvador lo
+           viera venir. Ahora, con 1 o mas, siempre se enseña la pantalla de
+           escoger (un toque nomas); "crear tarea nueva" siempre sigue abajo.
+           Salvador 2026-09-27. */
+        if(buenas.length>=1 || (cs.length && !buenas.length)){
           barraEstado={modo:"escoge", dicho:dicho, hist:hist, foto:foto, sv:sv,
             ops:(buenas.length?buenas:cs).slice(0,6).map(function(t){return t.id}),
             nota:(sinLasDeEl?PERSONAS[dq].nombre+" no tiene ninguna que pegue con eso.":""),
-            pregunta:"¿Tiene que ver con alguna de estas?"};
+            pregunta:(buenas.length===1?"¿Tiene que ver con esta tarea tuya?":"¿Tiene que ver con alguna de estas?")};
           vista="barra"; render(); return;
         }
       }
@@ -6311,6 +6356,20 @@ function aplicaIntencion(j, dicho, hist, foto){
        ritmo de la tarea". Se le dice y se guarda como PASO, no como revisión
        aparte — asi no se le llena la lista de revisiones de si mismo. */
     if(ya && ya.duenio===yo && (!PERSONAS[sv.revisa] || sv.revisa===yo)){
+      /* build 145: "revisar el menu, los vinos, el acomodo de las mesas y la
+         musica" no es UN paso -- son varios. Si lo dicho trae 2 o mas cosas
+         (coma o "y"), se agregan como lista completa (regla u), igual que si
+         la tarea hubiera nacido asi. Salvador 2026-09-27, caso real del Mori. */
+      var _partes145=String(sv.que||"").split(/\s*,\s*|\s+y\s+(?=\S)/i)
+        .map(function(x){ return x.trim(); }).filter(function(x){ return x.length>=2; });
+      if(_partes145.length>=2){
+        barraEstado={modo:"confirmar", accion:"pasos_multi", esRevision:true, dicho:dicho, foto:foto,
+          renglones:[{k:"m",v:"Se agregan "+_partes145.length+" pasos"},
+                     {k:"d",v:"A tu tarea: “"+ya.nombre+"”"},
+                     {k:"d",v:juntaY(_partes145.map(conMayuscula))}],
+          pendiente:{pasos_multi:{tareaId:ya.id, partes:_partes145}}};
+        vista="barra"; render(); return;
+      }
       barraEstado={modo:"confirmar", accion:"paso", esRevision:true, dicho:dicho, foto:foto,
         renglones:[{k:"m",v:sv.que},
                    {k:"d",v:"Esa tarea ya es tuya: “"+ya.nombre+"”"},
@@ -6870,6 +6929,22 @@ function palomeaPorTexto(t, v){
   return hechos;
 }
 /* la contestacion corta de Claude en el chat, max. dos renglones */
+/* build 145: entre TODAS las tareas con pasos pendientes, cuales pegan con
+   lo dicho -- para palomear "ya compre el camaron" se dicte desde donde se
+   dicte, no solo dentro de la tarea. Salvador 2026-09-27, caso Costco. */
+function buscaTareaConPaso(v){
+  var ws=palabrasPaso(v); if(!ws.length) return [];
+  return tareas.filter(function(t){
+    if(t.cierre || !tienePasos(t)) return false;
+    var falt=pasosFaltan(t); if(!falt.length) return false;
+    return ws.some(function(w){
+      return falt.some(function(p){
+        var pw=palabrasPaso(p.tx+" "+(p.sec||""));
+        return (pw.length?pw:palabrasPaso(p.tx)).some(function(x){ return pegaPalabra(w,x); });
+      });
+    });
+  });
+}
 function respuestaPalomeo(t, hechos){
   var falta=pasosFaltan(t), tot=t.lista_pasos.length, n=tot-falta.length;
   var s=hechos.length===1 ? "Palomeé “"+hechos[0].tx+"”." : "Listo, palomeé "+juntaY(hechos.map(pasoChico))+".";
@@ -7698,7 +7773,7 @@ function vBarraEscoge(b){
        '<span class="dot '+dotc(t)+'"></span><span>'+
        '<span class="nm">'+esc(t.nombre)+'</span>'+
        '<span class="ls">'+esc(sub)+'</span></span>'+
-       '<span class="meta"></span></button></li>';
+       '<span class="meta"><span class="vinc">Vincular</span></span></button></li>';
   });
   h+='</ul></div>'+
      /* MISMO PIE QUE LA PANTALLA DE CONFIRMAR: la acción a la izquierda y la
@@ -7763,6 +7838,11 @@ function botonAccion(b){
   if(b.accion==="reasignar")
     return '<button class="cbtn dos" id="cok"><span class="g">Pasar a '+esc(nom)+'</span>'+
            '<span class="c">cambia de dueño</span></button>';
+  if(b.accion==="pasos_multi"){
+    var _n145=(b.pendiente&&b.pendiente.pasos_multi&&b.pendiente.pasos_multi.partes||[]).length;
+    return '<button class="cbtn dos" id="cok"><span class="g">Agregar '+_n145+' pasos</span>'+
+           '<span class="c">a tu tarea</span></button>';
+  }
   if(b.accion==="paso" && b.esRevision)
     return '<button class="cbtn dos" id="cok"><span class="g">Programar revisión</span>'+
            '<span class="c">queda en tu propia tarea</span></button>';
@@ -7813,6 +7893,23 @@ function bindBarra(){
   Array.prototype.forEach.call(document.querySelectorAll("[data-esc]"),function(el){
     el.onclick=function(){
       var k=el.getAttribute("data-esc"), sv=(b.sv||{});
+      /* build 145: escoger a cual tarea pertenece un PASO suelto ("ya compre
+         el camaron") -- se palomea directo, no se reentra a SUPERVISAR. */
+      if(sv.__paso){
+        if(k==="nueva"){
+          window.__saltaPaso=true; barraEstado=null; consulta=sv.texto; vista="lista"; render(); return;
+        }
+        var t145=tareas.filter(function(x){return x.id===k})[0];
+        if(t145){
+          var h145=palomeaPorTexto(t145, sv.texto);
+          if(h145.length){
+            msg(t145,"bo",sv.texto); msg(t145,"bi",respuestaPalomeo(t145,h145));
+            t145.ultima=PERSONAS[yo].nombre+": "+sv.texto; guarda(t145);
+          }
+          abierta=t145.id; barraEstado=null; consulta=""; fotoEnMano=null; vista="hilo"; render(); return;
+        }
+        cancelaBarra(); return;
+      }
       if(k==="nueva"){ sv.__nueva=true; sv.__yaId=null; }
       else { sv.__yaId=k; sv.__nueva=false; sv.__deLista=true; }
       aplicaIntencion({intencion:"SUPERVISAR",supervisar:sv}, b.dicho, b.hist||[], b.foto);
@@ -8031,6 +8128,19 @@ function confirmaAccion(b){
       toast("Comentario enviado a "+PERSONAS[tc2.duenio].nombre);
     }
     barraEstado=null; consulta=""; fotoEnMano=null; vista="lista"; render(); return;
+  }
+  if(b.accion==="pasos_multi"){
+    var pm145=b.pendiente.pasos_multi;
+    var tt145=tareas.filter(function(x){ return x.id===pm145.tareaId })[0];
+    if(tt145){
+      var _nv145=agregaPasos(tt145, pm145.partes.join(", "));
+      msg(tt145,"bi", _nv145.length
+        ? "Agregué "+juntaY(_nv145.map(pasoChico))+" a la lista."
+        : "Esos pasos ya estaban en la lista.");
+      tt145.ultima="Pasos: "+juntaY(pm145.partes); guarda(tt145);
+      abierta=tt145.id; barraEstado=null; consulta=""; fotoEnMano=null; vista="hilo"; render(); return;
+    }
+    barraEstado=null; consulta=""; vista="lista"; render(); return;
   }
   if(b.accion==="paso"){
     var pp=b.pendiente.paso;
