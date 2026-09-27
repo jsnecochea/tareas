@@ -733,6 +733,11 @@ button{font:inherit;color:inherit}
    para "toca esto para avanzar"). Salvador 2026-09-27. */
 .vinc{display:inline-block;border-radius:11px;padding:9px 13px;font-size:15px;
   font-weight:600;background:rgba(10,132,255,.16);color:var(--azul)}
+/* build 146: lapiz para renombrar la tarea, junto al titulo del hilo */
+.tnm{display:flex;align-items:center;gap:7px}
+.lapiz{flex:none;color:var(--ink-3);opacity:.85;padding:2px}
+.lapiz:active{opacity:.5}
+.tin{font:inherit;font-weight:600;color:var(--ink);background:var(--surface-2);border:1px solid var(--azul);border-radius:8px;padding:3px 8px;width:100%;max-width:280px}
 /* RENGLON DE MENSAJES — verde difuminado (glow), delgado, un solo renglon */
 .msgbar{display:flex;align-items:center;gap:12px;width:calc(100% - 30px);margin:11px 15px 3px;
   padding:9px 13px;border-radius:12px;cursor:pointer;text-align:left;
@@ -909,7 +914,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP="build 145 · 2026-09-27 · escoger tarea siempre visible al coincidir; lista completa de pasos al vincular; 'ya compré X' palomea desde donde sea";
+var VERSION_APP="build 146 · 2026-09-27 · lápiz para renombrar la tarea + 'cambia el nombre a X' por dictado";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -2088,7 +2093,7 @@ var dbFail=false;       /* Firestore niega permisos: NADA se guarda (lo dice el 
 var fotoEnMano=null;      /* la foto recien tomada, todavia sin destino */
 var fichasLeidas=false;   /* true cuando Firestore ya contesto las fichas */
 var db=null, yo=null, tareas=[], vista="lista", abierta=null, fichaOpen=false,
-    chkCerrado={}, detOpen={}, listo=false, visorList=[], visorI=0;
+    chkCerrado={}, detOpen={}, listo=false, visorList=[], visorI=0, editaNombre=null;
 
 /* ---- todos los adjuntos de una tarea, en orden ---- */
 function adjuntos(t){
@@ -4150,7 +4155,7 @@ function swipeATarea(dir){
   if(j>=ord.length){ toast("Es la última"); return }
   var sig=tareas.filter(function(x){return x.id===ord[j]})[0];
   if(!sig){ return }
-  abierta=ord[j]; vista="hilo"; fichaOpen=false; detOpen={}; menuOpen=false;
+  abierta=ord[j]; vista="hilo"; fichaOpen=false; detOpen={}; menuOpen=false; editaNombre=null;
   render();
 }
 /* Se monta UNA sola vez: #app es un elemento estable, así que sus listeners
@@ -4970,7 +4975,13 @@ function vHilo(){
   window.__saltoActivo=_sal; window.__saltoCierre=_sal && window.__salto.tipo!=="alarma";
   var adj=adjuntos(t);
   var h='<div class="top"><button class="iconbtn" id="bback">‹</button>'+
-    '<div><div class="t'+(t.cierre?" tach":"")+'">'+esc(t.nombre)+'</div><div class="d">'+
+    '<div><div class="tnm">'+(editaNombre===t.id
+      ? '<input id="enom" class="tin" value="'+esc(t.nombre)+'">'
+      : '<span class="t'+(t.cierre?" tach":"")+'">'+esc(t.nombre)+'</span>'+
+        (!t.cierre && estadoReal(t)!=="cerrada"
+          ? '<button class="lapiz" id="blapiz" aria-label="Cambiar el nombre">'+ico("pencil",15,1.8)+'</button>'
+          : ''))+
+    '</div><div class="d">'+
     (t.duenio===yo?"Tuya":"De "+PERSONAS[t.duenio].nombre)+
     /* build 143: la persona de fuera (contactos / WhatsApp / acuerdo): un toque = su ficha */
     personasDe(t).slice(0,2).map(function(n){
@@ -6903,6 +6914,25 @@ function pegaPalabra(a,b){
   return n>=5 && a.slice(0,5)===b.slice(0,5);
 }
 /* ¿dice que ya quedo algo? "ya compré la carne", "ya quedó el acomodo", "listo el vino" */
+/* build 146: "cambia el nombre de la tarea a/por X", "ponle de nombre X",
+   "renombrala X", "el nombre correcto es X" -- el nombre nuevo se recorta
+   ademas en la primera coma o "y" que introduzca un comentario aparte
+   (dictado corrido: "...a Julio Mori. Ya te lo puse como se escribe..."),
+   asi el pedazo que sigue explicando algo no se cuela en el nombre.
+   Salvador 2026-09-27, caso real "Julio de MKS". */
+function detectaRenombre(v){
+  var s=String(v||"").trim();
+  var m=s.match(/c[aá]mbia(le)?\s+el\s+nombre\s+(de\s+la\s+tarea\s+)?(a|por)\s+(.+)/i)
+    || s.match(/cambia(le)?\s+(el\s+)?nombre\s+(a|por)\s+(.+)/i)
+    || s.match(/ponle\s+(de\s+|por\s+)?nombre\s+(.+)/i)
+    || s.match(/renombra(la)?\s+(a|por)?\s*(.+)/i)
+    || s.match(/el\s+nombre\s+correcto\s+es\s+(.+)/i);
+  if(!m) return "";
+  var nuevo=m[m.length-1];
+  nuevo=nuevo.replace(/\s*[.,;]?\s*\b(ya te lo puse|c[oó]mo se escribe|as[ií] se escribe|revisa el chat|ah[ií] en el chat|registra(lo)?|apuntal[oó])\b.*$/i, "");
+  nuevo=nuevo.replace(/[.,;]+$/,"").trim();
+  return nuevo.length>=2 ? nuevo : "";
+}
 function diceQueYa(v){
   var s=_nrm(v);
   if(/\b(no|todavia|aun|falta|faltan)\b/.test(s) && !/\bya\b/.test(s)) return false;
@@ -7149,7 +7179,7 @@ function autoEjecuta(b){
      siguen yendo al home (regla build 36). */
   if(b.accion==="recordatorio" && creada && creada.id){
     barraEstado=null; consulta=""; fotoEnMano=null; secAbierta=null;
-    abierta=creada.id; vista="hilo"; fichaOpen=false; detOpen={}; menuOpen=false; render();
+    abierta=creada.id; vista="hilo"; fichaOpen=false; detOpen={}; menuOpen=false; editaNombre=null; render();
     return;
   }
   barraEstado=null; consulta=""; fotoEnMano=null; vista="lista"; secAbierta=null; render();
@@ -8411,7 +8441,7 @@ function bindLista(){
         }
         abierta=padre;
       } else abierta=id;
-      vista="hilo"; fichaOpen=false; detOpen={}; menuOpen=false; render();
+      vista="hilo"; fichaOpen=false; detOpen={}; menuOpen=false; editaNombre=null; render();
     };
   });
   /* el orden del swipe (window.ordenSwipe) ya se arma en vLista(), en el
@@ -8484,6 +8514,26 @@ function bindHilo(){
     if(window.__desdePersona){ window.__persona=window.__desdePersona; window.__desdePersona=null; vista="persona"; render(); return }
     vista="lista";abierta=null;render();
   };
+  /* build 146: lapiz junto al nombre -> se vuelve editable ahi mismo */
+  var blp146=$("blapiz"); if(blp146) blp146.onclick=function(ev){
+    if(ev&&ev.stopPropagation) ev.stopPropagation();
+    editaNombre=t.id; render();
+    setTimeout(function(){ var i=$("enom"); if(i){ i.focus(); i.select(); } }, 30);
+  };
+  var enm146=$("enom");
+  if(enm146){
+    var guardaNombre146=function(){
+      var v146=(enm146.value||"").trim();
+      editaNombre=null;
+      if(v146 && v146!==t.nombre){ t.nombre=v146; guarda(t); toast("Nombre actualizado"); }
+      render();
+    };
+    enm146.onkeydown=function(ev){
+      if(ev.key==="Enter"){ ev.preventDefault(); guardaNombre146(); }
+      else if(ev.key==="Escape"){ editaNombre=null; render(); }
+    };
+    enm146.onblur=guardaNombre146;
+  }
   /* build 143: "Listo: ..." abre la tarea nueva; el chip abre la ficha */
   Array.prototype.forEach.call(document.querySelectorAll("[data-abre]"),function(el){
     el.onclick=function(){ var id=el.getAttribute("data-abre");
@@ -8685,6 +8735,15 @@ function bindHilo(){
     /* build 141: con la alarma roja abierta no se escribe ni se dicta */
     if(alarmaRoja(t)){ toast("Primero: Eliminar alarma o Posponer 1 hora"); render(); return; }
     var v=limpiaHoraDictada($("txt").value.trim()); if(!v)return;
+    /* build 146: renombrar la tarea por voz o escrito, sin confirmar aparte */
+    var _rn146=detectaRenombre(v);
+    if(_rn146){
+      $("txt").value=""; marcaEnvio("tenv","");
+      var _viejo146=t.nombre;
+      t.nombre=conMayuscula(_rn146);
+      msg(t,"bi","Cambié el nombre: “"+_viejo146+"” → “"+t.nombre+"”.");
+      guarda(t); render(); return;
+    }
     /* build 141: contesta "¿5 de la mañana o de la tarde?" */
     if(t.pide_ampm && (Date.now()-t.pide_ampm.ts)<60*60*1000 && respuestaAmPm(v) && !(esMovida(v) && !soloFecha(v))){
       $("txt").value=""; marcaEnvio("tenv","");
