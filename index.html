@@ -733,10 +733,8 @@ button{font:inherit;color:inherit}
    para "toca esto para avanzar"). Salvador 2026-09-27. */
 .vinc{display:inline-block;border-radius:11px;padding:9px 13px;font-size:15px;
   font-weight:600;background:rgba(10,132,255,.16);color:var(--azul)}
-/* build 146: lapiz para renombrar la tarea, junto al titulo del hilo */
+/* build 147: el lapiz se quito -> "Cambiar nombre" vive en el menu de tres puntos */
 .tnm{display:flex;align-items:center;gap:7px}
-.lapiz{flex:none;color:var(--ink-3);opacity:.85;padding:2px}
-.lapiz:active{opacity:.5}
 .tin{font:inherit;font-weight:600;color:var(--ink);background:var(--surface-2);border:1px solid var(--azul);border-radius:8px;padding:3px 8px;width:100%;max-width:280px}
 /* RENGLON DE MENSAJES — verde difuminado (glow), delgado, un solo renglon */
 .msgbar{display:flex;align-items:center;gap:12px;width:calc(100% - 30px);margin:11px 15px 3px;
@@ -914,7 +912,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP="build 146 · 2026-09-27 · lápiz para renombrar la tarea + 'cambia el nombre a X' por dictado";
+var VERSION_APP="build 147 · 2026-09-28 · Cambiar nombre movido al menú de '...' + qué hice/eliminé hoy con listas separadas y Ver más";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -4977,10 +4975,7 @@ function vHilo(){
   var h='<div class="top"><button class="iconbtn" id="bback">‹</button>'+
     '<div><div class="tnm">'+(editaNombre===t.id
       ? '<input id="enom" class="tin" value="'+esc(t.nombre)+'">'
-      : '<span class="t'+(t.cierre?" tach":"")+'">'+esc(t.nombre)+'</span>'+
-        (!t.cierre && estadoReal(t)!=="cerrada"
-          ? '<button class="lapiz" id="blapiz" aria-label="Cambiar el nombre">'+ico("pencil",15,1.8)+'</button>'
-          : ''))+
+      : '<span class="t'+(t.cierre?" tach":"")+'">'+esc(t.nombre)+'</span>')+
     '</div><div class="d">'+
     (t.duenio===yo?"Tuya":"De "+PERSONAS[t.duenio].nombre)+
     /* build 143: la persona de fuera (contactos / WhatsApp / acuerdo): un toque = su ficha */
@@ -4994,7 +4989,8 @@ function vHilo(){
     '</div>'+
     /* TODO LO QUE NO ES RESPUESTA DEL DÍA VIVE AQUÍ. Nadie lo usa a diario,
        así que no merece lugar permanente en la pantalla. */
-    (menuOpen?'<div class="hoja"><button class="hop" data-mn="encargar">Pedirle a alguien que lo haga</button>'+
+    (menuOpen?'<div class="hoja"><button class="hop" data-mn="renombrar">Cambiar nombre</button>'+
+      '<button class="hop" data-mn="encargar">Pedirle a alguien que lo haga</button>'+
       '<button class="hop" data-mn="fecha">Mover la fecha</button>'+
       '<button class="hop" data-mn="nose">Esto ya no se va a hacer</button>'+
       (PERSONAS[yo].jefe?'<button class="hop" data-mn="pasar">Pasársela a alguien definitivamente</button>':'')+
@@ -5293,7 +5289,7 @@ function detalleTarea(t, ancho){
   return d;
 }
 
-function contextoBarra(){
+function contextoBarra(completo){
   var abiertas=tareas.filter(function(t){ return !t.cierre })
     .slice(0,120)
     .map(function(t){
@@ -5302,19 +5298,26 @@ function contextoBarra(){
               ultima:t.ultima||""};
     });
   /* Salvador 2026-09-22: las cerradas ya no se pintan en el home, asi que
-     "que hice / termine / elimine hoy" se contesta de aqui. Ultimos 7 dias. */
-  var cerradas=tareas.filter(function(t){ return t.cierre && t.cierre.f && dDif(t.cierre.f,hoy())<=7 })
+     "que hice / termine / elimine hoy" se contesta de aqui. Por default
+     ultimos 7 dias (build 147: "Ver mas" pide completo=true y ya no hay
+     tope de dias ni de renglones). */
+  var cerradas=tareas.filter(function(t){ return t.cierre && t.cierre.f && (completo || dDif(t.cierre.f,hoy())<=7) })
     .sort(function(a,b){ return String(b.cierre.f).localeCompare(String(a.cierre.f)); })
-    .slice(0,60)
+    .slice(0, completo?400:60)
     .map(function(t){
+      /* build 147: las eliminaciones normales (papelera+motivo, no_ejecutada)
+         TAMBIEN cuentan como "eliminada" para esta respuesta, sin importar el
+         motivo -- no_ejecutada sigue significando lo mismo en el resto de la
+         app (semaforo, estadoReal, etc.), esto solo cambia como se narra aqui. */
       return {id:t.id, nombre:t.nombre, de:t.duenio||"", cerrada_el:t.cierre.f,
-              como:(t.cierre.tipo==="hecha"?"hecha":(t.cierre.tipo==="cancelado"?"eliminada":"cerrada sin hacerse")),
+              como:(t.cierre.tipo==="hecha"?"hecha":"eliminada"),
               es_recordatorio:!!t.es_recordatorio};
     });
   return {yo:yo, soy_jefe:!!(PERSONAS[yo]&&PERSONAS[yo].jefe), hoy:hoy(),
           hoy_es:DIAS_SEM[new Date().getDay()],
           calendario:calendarioProximo(16),
           cerradas_recientes:cerradas,
+          cerradas_rango:(completo?"todo el historial":"ultimos 7 dias"),
           gente:Object.keys(PERSONAS).map(function(k){
             return {clave:k, nombre:PERSONAS[k].nombre};
           }),
@@ -5333,11 +5336,18 @@ var SYS_BARRA =
 "ya sabias con lo nuevo y AVANZA a la intencion que ya traias. NUNCA reinicies.\n"+
 "2. ¿Esta PIDIENDO UN DATO que ya deberia estar guardado ('cual es la direccion "+
 "del hotel', 'cuanto quedo el presupuesto', 'que dijo Karina')? -> RESPONDER.\n"+
-"2b. ¿Pregunta que HIZO, TERMINO, EJECUTO, ELIMINO o TACHO (hoy, ayer, esta "+
-"semana)? -> RESPONDER con la lista 'cerradas_recientes' del contexto, filtrada por "+
-"el dia que pide (cerrada_el) y por 'como': hecha = la hizo, eliminada = la borro, "+
-"cerrada sin hacerse. NUNCA contestes con las abiertas de hoy: eso es otra pregunta. "+
-"Si 'cerradas_recientes' viene vacia para ese dia, di que no hay nada cerrado ese dia.\n"+
+"2b. ¿Pregunta que HIZO, TERMINO, EJECUTO, COMPLETO, LOGRO, AVANZO, CERRO, TACHO, "+
+"RESOLVIO, como le fue o en que trabajo (hoy/ayer/esta semana/este mes) -- o que "+
+"ELIMINO, CANCELO, QUITO, DESECHO, BOTO, saco de la lista o ya no aplica? -> "+
+"RESPONDER con la lista 'cerradas_recientes' del contexto ('cerradas_rango' dice "+
+"que tanto cubre), filtrada por el dia que pide (cerrada_el) y por 'como': hecha o "+
+"eliminada (ya no hay 'cerrada sin hacerse': toda no-hecha se cuenta como eliminada "+
+"para esta respuesta, sin importar el motivo). FORMATO OBLIGATORIO en 'respuesta': "+
+"DOS LISTAS con salto de linea, la mas reciente primero dentro de cada una, nunca "+
+"un parrafo corrido -- 'Hechas hoy:' con las hecha, luego 'Eliminadas hoy:' con las "+
+"eliminada (cambia 'hoy' por el dia que pidio); una lista vacia se omite. NUNCA "+
+"contestes con las abiertas de hoy: eso es otra pregunta. Si 'cerradas_recientes' "+
+"viene vacia para ese dia, di que no hay nada cerrado ni eliminado ese dia.\n"+
 "3. ¿Quiere REVISARLE a OTRO algo que ese otro ejecuta? -> SUPERVISAR.\n"+
 "4. ¿Habla de una tarea que YA EXISTE en la lista de abiertas?\n"+
 "   - le agrega un paso o un avance -> PASO\n"+
@@ -5588,7 +5598,7 @@ function fechaBonita(iso){
    Ahora es una conversacion con memoria: si Claude te pregunta algo, tu respuesta se
    junta con lo anterior y avanza (no empieza de cero). Cuestionario expres: pregunta
    solo lo que falta, en una sola. Y distingue tarea, encargo, recordatorio. */
-function barraEnviar(texto){
+function barraEnviar(texto,completo){
   texto=String(texto||"").trim();
   if(!texto) return;
   /* Si venia una pregunta para COMPLETAR una tarea a medias, esto es la
@@ -5691,8 +5701,9 @@ function barraEnviar(texto){
             "si no los dijo, se anotan despues en el chat de la tarea.\n";
   }
 
+  window.__barraCompleto=!!completo;
   var prompt = SYS_BARRA +
-    "\n\nHOY (resumen para ubicar):\n"+JSON.stringify(contextoBarra()) + yaSe +
+    "\n\nHOY (resumen para ubicar):\n"+JSON.stringify(contextoBarra(!!completo)) + yaSe +
     detalleRelevante(texto, pareceConsulta(texto)) +
     (foto?"\n\nHAY UNA FOTO en mano. Su PROPOSITO lo dice el texto, y segun eso eliges la "+
           "intencion:\n"+
@@ -6111,6 +6122,10 @@ function hayQueHacerAlgo(dicho, j){
   return /^[a-záéíóúñ]+(ar|er|ir)\b/i.test(tit.normalize("NFC"));
 }
 
+/* build 147: sinonimos para detectar si la pregunta es del tipo "que hice /
+   que elimine hoy", para decidir si se ofrece el boton "Ver mas" (historial
+   completo). Coincide con los sinonimos que ya trae SYS_BARRA 2b. */
+var RE_CERRADAS_Q=/\b(qu[eé]\s+(hice|hizo|complet[eé]|termin[eé]|elimin[eé]|cancel[eé]))\b|\blogr[eé]\b|\bavanc[eé]\b|\bcerr[eé]\b|\btach[eé]\b|\bresolv[ií]\b|\bc[oó]mo\s+me\s+fue\b|\ben\s+qu[eé]\s+trabaj[eé]\b|\bresumen\s+del\s+d[ií]a\b|\bcancel[eé]\b|\bquit[eé]\b|\bdesech[eé]\b|\bbot[eé]\b|\bsaqu[eé]\s+de\s+la\s+lista\b|\bya\s+no\s+aplica\b/i;
 function aplicaIntencion(j, dicho, hist, foto){
   var i=String(j.intencion||"").toUpperCase().replace(/[^A-Z_]/g,"");
   if(SINONIMOS_INT[i]) i=SINONIMOS_INT[i];
@@ -6243,10 +6258,15 @@ function aplicaIntencion(j, dicho, hist, foto){
       org0.ultima=PERSONAS[yo].nombre+": "+dicho; guarda(org0);
       abierta=org0.id; barraEstado=null; consulta=""; fotoEnMano=null; vista="hilo"; render(); return;
     }
+    /* build 147: "que hice / elimine hoy" viene con tope de 7 dias por
+       default; si NO se pidio ya con completo=true, se ofrece "Ver mas"
+       para volver a preguntar sobre TODO el historial. */
+    var _verMas=RE_CERRADAS_Q.test(dicho) && !window.__barraCompleto;
     barraEstado={modo:"respuesta", dicho:dicho, consulta:true,
       abrir:(org0?org0.id:null),
       datos:(j.datos&&j.datos.length?j.datos:datosDelTexto(j.respuesta||"")),
-      texto:(j.respuesta||"No supe que contestar con lo que tengo.")};
+      texto:(j.respuesta||"No supe que contestar con lo que tengo."),
+      ops:(_verMas?[{k:"ver_mas_cerr", t:"Ver más"}]:null)};
     vista="barra"; render(); return;
   }
 
@@ -8002,6 +8022,7 @@ function bindBarra(){
   Array.prototype.forEach.call(document.querySelectorAll("[data-bop]"),function(el){
     el.onclick=function(){
       var k=el.getAttribute("data-bop");
+      if(k==="ver_mas_cerr"){ barraEnviar(b.dicho, true); return }
       if(k==="nada"){ cancelaBarra(); return }
       if(k==="aparte"){
         var d=(b.pendiente&&b.pendiente.tarea)||null;
@@ -8514,12 +8535,8 @@ function bindHilo(){
     if(window.__desdePersona){ window.__persona=window.__desdePersona; window.__desdePersona=null; vista="persona"; render(); return }
     vista="lista";abierta=null;render();
   };
-  /* build 146: lapiz junto al nombre -> se vuelve editable ahi mismo */
-  var blp146=$("blapiz"); if(blp146) blp146.onclick=function(ev){
-    if(ev&&ev.stopPropagation) ev.stopPropagation();
-    editaNombre=t.id; render();
-    setTimeout(function(){ var i=$("enom"); if(i){ i.focus(); i.select(); } }, 30);
-  };
+  /* build 147: "Cambiar nombre" ahora vive como primera opcion del menu de tres
+     puntos (ver data-mn==="renombrar" abajo); el lapiz del header se quito. */
   var enm146=$("enom");
   if(enm146){
     var guardaNombre146=function(){
@@ -8699,6 +8716,11 @@ function bindHilo(){
     el.onclick=function(){
       var k=el.getAttribute("data-mn");
       menuOpen=false;
+      if(k==="renombrar"){
+        editaNombre=t.id; render();
+        setTimeout(function(){ var i=$("enom"); if(i){ i.focus(); i.select(); } }, 30);
+        return;
+      }
       if(k==="cerrar"){ render(); return }
       if(k==="encargar"){ vista="encargar"; render(); return }
       if(k==="fecha"){ t.pide_fecha=true;
