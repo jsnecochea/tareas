@@ -912,7 +912,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 150 · 2026-09-29 · Dictado a equipo (Cynthia) sale directo por WhatsApp + archivo; 'en mi tarea de X'; 'ponle un mensaje a…'";
+var VERSION_APP = "build 150 · 2026-09-29 · Doble vida: WhatsApp + tarea espejo en su app; dictado a equipo (Cynthia) sale directo por WhatsApp + archivo; 'en mi tarea de X'; 'ponle un mensaje a…'";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -2465,12 +2465,32 @@ function enviaWhatsAppYa(b){
   var _txPed=wp.texto;
   if(_canal==="correo") _txPed="[CORREO] asunto: "+(wp.asunto||"(sin asunto)")+" | mensaje: "+wp.texto;
   else if(_canal==="archivo") _txPed="[ARCHIVO] archivo: "+(wp.archivo||wp.texto)+(wp.texto&&wp.texto!==wp.archivo?" | nota: "+wp.texto:"");
-  msg(t,"bi","→ "+_et+" a "+wp.contacto+": “"+(_canal==="archivo"?(wp.archivo||wp.texto):wp.texto)+"” · en cola");
+  /* build 150 (Salvador 2026-09-29): DOBLE VIDA. Si el contacto es del equipo con
+     app (PERSONAS), ademas del WhatsApp/correo le queda una tarea ESPEJO suya con
+     el mensaje en su app (badge + push). El pedido va ligado al espejo: su
+     respuesta por WhatsApp, o escrita en la app, cae en ese mismo hilo, y a ti
+     (creada_por) te aparece en "mensajes sin leer". */
+  var _tid=t.id, _esp=null;
+  try{
+    var _kp=Object.keys(PERSONAS).filter(function(k){ return k!==yo && String(PERSONAS[k].nombre||"").toLowerCase()===String(wp.contacto).toLowerCase() })[0];
+    if(_kp){
+      t.espejos=t.espejos||{};
+      _esp=t.espejos[_kp]?tareas.filter(function(x){ return x.id===t.espejos[_kp] })[0]:null;
+      var _txE=PERSONAS[yo].nombre+": "+(_canal==="archivo"?("te comparto el archivo “"+(wp.archivo||wp.texto)+"”"):wp.texto);
+      if(!_esp){
+        _esp=creaTarea({nombre:t.nombre, duenio:_kp, dicho:wp.texto});
+        _esp.msgs=[]; _esp.espejo_de=t.id; t.espejos[_kp]=_esp.id;
+      } else disparaPushInstantaneo(_kp,"Nuevo mensaje",_txE);
+      msg(_esp,"bo",_txE); _esp.ultima=_txE; guarda(_esp);
+      _tid=_esp.id;
+    }
+  }catch(e){ console.warn("espejo",e); }
+  msg(t,"bi","→ "+_et+" a "+wp.contacto+(_esp?" (y en su app)":"")+": “"+(_canal==="archivo"?(wp.archivo||wp.texto):wp.texto)+"” · en cola");
   var _m=t.msgs[t.msgs.length-1]; _m.wa=1; _m.wa_c=wp.contacto;
   if(b.foto) pegaFotoA(t,b.foto);
   t.ultima="→ "+wp.contacto+": "+wp.texto; guarda(t);
   var _estado={id:null, cancelado:false};
-  pideWhatsApp({usuario:yo, tarea_id:t.id, contacto:wp.contacto, texto:_txPed})
+  pideWhatsApp({usuario:yo, tarea_id:_tid, contacto:wp.contacto, texto:_txPed})
     .then(function(j){ _estado.id=(j&&(j.id||j.pedido_id))||null;
       if(_estado.id && !_estado.cancelado){ _m.wa_pid=_estado.id; guarda(t); }
       if(_estado.cancelado && _estado.id) llamaPush("wa_marca",{id:_estado.id, estado:"cerrado"}); })
@@ -2480,7 +2500,7 @@ function enviaWhatsAppYa(b){
   if(wp.archivo2){
     msg(t,"bi","→ Archivo a "+wp.contacto+": “"+wp.archivo2+"” · en cola");
     var _m2=t.msgs[t.msgs.length-1]; _m2.wa=1; _m2.wa_c=wp.contacto; guarda(t);
-    pideWhatsApp({usuario:yo, tarea_id:t.id, contacto:wp.contacto, texto:"[ARCHIVO] archivo: "+wp.archivo2})
+    pideWhatsApp({usuario:yo, tarea_id:_tid, contacto:wp.contacto, texto:"[ARCHIVO] archivo: "+wp.archivo2})
       .then(function(j2){ var id2=(j2&&(j2.id||j2.pedido_id))||null; if(id2){ _m2.wa_pid=id2; guarda(t); } })
       .catch(function(e){ msg(t,"bi","No se pudo dejar el archivo en el servidor ("+String((e&&e.message)||e).slice(0,60)+")."); guarda(t); });
   }
