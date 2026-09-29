@@ -776,6 +776,13 @@ button{font:inherit;color:inherit}
 .pendrow .pq{font-size:14px;font-weight:600;color:var(--ink-2);margin-top:2px}/* Salvador 2026-09-22: gris, nunca de color */
 /* el micrófono del bote SIEMPRE naranja vivo (invita a picarle), como en WhatsApp.
    Al grabar cambia el ícono a la flechita de enviar y late. Salvador 2026-09-17. */
+.pendrow .pctx{font-size:13px;font-weight:400;line-height:1.35;color:var(--ink-3,#8e8e93);margin-top:5px;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.pplay{flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;padding:0;cursor:pointer;
+  background:rgba(255,255,255,.10);border:0;color:#fff;-webkit-appearance:none;appearance:none;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);transition:background .15s}
+.pplay:active{background:rgba(255,255,255,.2)}
+.pplay.on{background:rgba(255,255,255,.22)}
 .pmic{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
   background:var(--esper);border:0;color:#3a2400;cursor:pointer;padding:0;
   box-shadow:0 0 13px rgba(255,159,10,.45);-webkit-appearance:none;appearance:none}
@@ -912,7 +919,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 150 · 2026-09-29 · Doble vida: WhatsApp + tarea espejo en su app; dictado a equipo (Cynthia) sale directo por WhatsApp + archivo; 'en mi tarea de X'; 'ponle un mensaje a…'";
+var VERSION_APP = "build 150 · 2026-09-29 · Bote naranja con play y contexto; doble vida: WhatsApp + tarea espejo en su app; dictado a equipo (Cynthia) sale directo por WhatsApp + archivo; 'en mi tarea de X'; 'ponle un mensaje a…'";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -7267,12 +7274,28 @@ function pendientesInfo(){
   }).sort(function(a,b){ return (b.creada||0)-(a.creada||0); });
 }
 /* un renglon del bote: nombre, la pregunta, y su microfono ahi mismo */
+/* build 150 (Salvador 2026-09-29): el renglon del bote dice QUE dictaste (contexto
+   en texto) y trae un PLAY que lo lee en voz alta: la pregunta + lo que dijiste,
+   para acordarte de cual tarea era antes de contestar. */
+function contextoPend(t){
+  var ms=t.msgs||[], c="";
+  for(var i=0;i<ms.length;i++){
+    var m=String(ms[i].t||"").match(/dictando:\s*[“"](.+?)[”"]\.?(?:\s*Se cierra|$)/);
+    if(m){ c=m[1]; break; }
+  }
+  if(!c && ms.length){ c=String(ms[0].t||""); }
+  if(!c) c=t.nombre||"";
+  return String(c).trim();
+}
 function filaPend(t){
   var titulo=(t.nombre&&String(t.nombre).trim())?t.nombre:"Recordatorio sin título";
+  var ctx=contextoPend(t);
   return '<div class="pendrow">'+
     '<span class="dot d-sec-pend" style="margin-top:2px"></span>'+
     '<div class="ptx"><div class="pnm">'+esc(titulo)+'</div>'+
-    '<div class="pq" id="cq_'+t.id+'">'+esc(t.pendiente_info||"Falta un dato")+'</div></div>'+
+    '<div class="pq" id="cq_'+t.id+'">'+esc(t.pendiente_info||"Falta un dato")+'</div>'+
+    (ctx?'<div class="pctx">Dijiste: “'+esc(ctx)+'”</div>':'')+'</div>'+
+    '<button class="pplay" data-cplay="'+t.id+'" aria-label="Escuchar el contexto">'+svgPlay()+'</button>'+
     '<button class="pmic" id="cm_'+t.id+'" data-cmic="'+t.id+'" aria-label="Contestar dictando">'+
       ico("mic",22,1.7)+'</button>'+
     '</div>';
@@ -8541,6 +8564,11 @@ function bindLista(){
   /* Salvador 2026-09-22: una sola franja de seccion abierta a la vez (acordeon) */
   Array.prototype.forEach.call(document.querySelectorAll("[data-sb]"),function(el){
     el.onclick=function(){ var k=el.getAttribute("data-sb"); secAbierta=(secAbierta===k?null:k); render() };
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-cplay]"),function(el){
+    el.onclick=function(ev){ ev.stopPropagation();
+      var tp=tareas.filter(function(x){ return x.id===el.getAttribute("data-cplay") })[0]; if(!tp) return;
+      leeEnVoz("Falta un dato en "+(tp.nombre||"una tarea")+". "+(tp.pendiente_info||"")+" Esto dijiste: "+contextoPend(tp), el); };
   });
   Array.prototype.forEach.call(document.querySelectorAll("[data-cmic]"),function(el){
     el.onclick=function(){ arrancaDictadoCompleta(el, el.getAttribute("data-cmic")); };
