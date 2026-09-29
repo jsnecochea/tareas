@@ -919,7 +919,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 150 · 2026-09-29 · Bote naranja con play y contexto; doble vida: WhatsApp + tarea espejo en su app; dictado a equipo (Cynthia) sale directo por WhatsApp + archivo; 'en mi tarea de X'; 'ponle un mensaje a…'";
+var VERSION_APP = "build 151 · 2026-09-29 · Cierre de tareas con lista palomeada/ticket corregido · Bote naranja con play y contexto; doble vida: WhatsApp + tarea espejo en su app; dictado a equipo (Cynthia) sale directo por WhatsApp + archivo; 'en mi tarea de X'; 'ponle un mensaje a…'";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -3944,12 +3944,21 @@ function jefeResponde(t,txt){
 
 
 /* ---- cerrar: el criterio manda, no el botón ---- */
-function intentaCerrar(t){
+/* build 151: que falta para cerrar. Ticket = 1 evidencia basta (antes pedia 2);
+   si toda la lista de pasos esta palomeada (Costco), la evidencia no se exige. */
+function faltanParaCerrar(t){
   var faltan=[];
+  var lp=t.lista_pasos||[];
+  var todoPalomeado=lp.length>0 && lp.every(function(p){return p.hecho});
   if(t.puntos){ var n=Object.keys(t.marcados||{}).length;
     if(n<t.puntos.length) faltan.push("faltan "+(t.puntos.length-n)+" puntos del rondín") }
+  if(todoPalomeado) return faltan;
   if(/foto/i.test(t.cierra||"") && !(t.evidencias&&t.evidencias.length) && !t.puntos) faltan.push("falta la foto");
-  if(/ticket/i.test(t.cierra||"") && !(t.evidencias&&t.evidencias.length>1)) faltan.push("falta el ticket");
+  if(/ticket/i.test(t.cierra||"") && !(t.evidencias&&t.evidencias.length)) faltan.push("falta el ticket");
+  return faltan;
+}
+function intentaCerrar(t){
+  var faltan=faltanParaCerrar(t);
   if(faltan.length){
     msg(t,"bi","Todavía no la puedo cerrar: "+faltan.join(" y ")+". Eso fue lo que se escribió cuando nació la tarea.");
     guarda(t); return false;
@@ -8925,14 +8934,11 @@ function bindHilo(){
   });
   var bcz=$("bcerrar");
   if(bcz) bcz.onclick=function(){
-    var faltan=[];
-    if(t.puntos){ var n=Object.keys(t.marcados||{}).length; if(n<t.puntos.length) faltan.push("faltan "+(t.puntos.length-n)+" puntos del rondín") }
-    if(/foto/i.test(t.cierra) && !(t.evidencias&&t.evidencias.length) && !t.puntos) faltan.push("falta la foto");
-    if(/ticket/i.test(t.cierra) && !(t.evidencias&&t.evidencias.length>1)) faltan.push("falta el ticket");
+    var faltan=faltanParaCerrar(t);
     if(faltan.length){ msg(t,"bi","Todavía no la puedo cerrar: "+faltan.join(" y ")+". Eso fue lo que se escribió cuando nació la tarea."); guarda(t); return }
-    t.estado="cerrada"; t.ultima="Cerrada con su evidencia";
-    msg(t,"bi","Cerrada. Le aviso a Salvador."); guarda(t);
+    cierraHecha(t);
   };
+
   var tc=$("tcam"); if(tc) tc.onclick=function(){
     pideFoto(function(data,meta){
       t.evidencias=t.evidencias||[];
