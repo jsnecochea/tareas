@@ -912,7 +912,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP="build 148 · 2026-09-28 · Blindaje: un dato mal guardado ya no tumba una sección completa + icono ⓘ de análisis en mensajes de IA + ficha de persona sin nombre ya no truena la barra";
+var VERSION_APP="build 149 · 2026-09-29 · WhatsApp dictado sale directo (manda WhatsApp a X que diga…; mi cel) · Blindaje: un dato mal guardado ya no tumba una sección completa + icono ⓘ de análisis en mensajes de IA + ficha de persona sin nombre ya no truena la barra";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -6167,6 +6167,18 @@ function aplicaIntencion(j, dicho, hist, foto){
   var i=String(j.intencion||"").toUpperCase().replace(/[^A-Z_]/g,"");
   if(SINONIMOS_INT[i]) i=SINONIMOS_INT[i];
   hist = hist || [];
+
+  /* build 149 (Salvador 2026-09-29): "manda WhatsApp a X que diga ..." SALE AHORA,
+     sin preguntar fecha ni contacto. Se decide aqui, no se le deja al modelo.
+     "mi cel / mi celular" = su propio chat de WhatsApp ("Mi Cel (tú)"). */
+  try{
+    var _mW=String(dicho||"").match(/\b(?:m[aá]nda(?:r|le|me)?|env[ií]a(?:r|le)?|escr[ií]be(?:le)?)\s+(?:un\s+)?(?:whats?\s?app|whats|wasap|guasap|mensaje)\s+(?:a|al)\s+(.+?)\s*,?\s+(?:que\s+(?:diga|dice|le\s+diga|dijera)|diciendo(?:le)?|con\s+el\s+(?:texto|mensaje))\s*:?\s*(.+)$/i);
+    if(_mW){
+      var _cW=_mW[1].trim(), _tW=_mW[2].trim().replace(/[.\s]+$/,"");
+      if(/^(mi|m[ií])\s+(cel|celular|m[oó]vil|whats(app)?|tel[eé]fono)$/i.test(_cW)) _cW="Mi Cel (tú)";
+      if(_tW){ i="WHATSAPP"; j.intencion="WHATSAPP"; j.whatsapp={contacto:_cW,texto:_tW,tarea:""}; }
+    }
+  }catch(e){}
 
   var _dd=diaDicho(dicho);
   if(_dd){
