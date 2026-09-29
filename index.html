@@ -912,7 +912,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP="build 147 · 2026-09-28 · Cambiar nombre movido al menú de '...' + qué hice/eliminé hoy con listas separadas y Ver más";
+var VERSION_APP="build 148 · 2026-09-28 · Blindaje: un dato mal guardado ya no tumba una sección completa + icono ⓘ de análisis en mensajes de IA";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -2091,7 +2091,8 @@ var dbFail=false;       /* Firestore niega permisos: NADA se guarda (lo dice el 
 var fotoEnMano=null;      /* la foto recien tomada, todavia sin destino */
 var fichasLeidas=false;   /* true cuando Firestore ya contesto las fichas */
 var db=null, yo=null, tareas=[], vista="lista", abierta=null, fichaOpen=false,
-    chkCerrado={}, detOpen={}, listo=false, visorList=[], visorI=0, editaNombre=null;
+    chkCerrado={}, detOpen={}, listo=false, visorList=[], visorI=0, editaNombre=null,
+    msgAn={};  /* build 148: qué mensajes de IA traen su "análisis" desplegado (icono ⓘ) */
 
 /* ---- todos los adjuntos de una tarea, en orden ---- */
 function adjuntos(t){
@@ -4452,22 +4453,32 @@ function horaChica(h){ return String(horaBonita(h)||"").toLowerCase(); }
    roja = ya sono y no la atiendes > naranja = suena hoy mas tarde > azul = ritmo
    (toca revisar, la entrega es otro dia). Solo en lo abierto. */
 function campanaDe(t){
-  if(!t || t.cierre || estadoReal(t)==="cerrada") return null;
-  var H=hoy(), ent=(!t.es_recordatorio && t.f_vigente && t.f_vigente>H)?" · entrega "+fechaMovCorta(t.f_vigente):"";
-  var r=alarmaRoja(t);
-  if(r) return {c:"roja", txt:"sonó "+(r.fecha&&r.fecha<H?"el "+fechaMovCorta(r.fecha)+" ":"")+
-    (r.hora?"a las "+horaChica(r.hora)+" ":"")+"· no la has atendido"};
-  var ya=nowHM(), n=avisosDe(t).filter(function(a){ return a.fecha===H && a.hora && a.hora>ya; })
-    .sort(function(a,b){ return a.hora.localeCompare(b.hora); })[0];
-  if(n) return {c:"naranja", txt:"suena a las "+horaChica(n.hora)+ent};
-  if(tocaRevisarHoy(t)) return {c:"azul", txt:"toca revisar · entrega "+fechaMovCorta(t.f_vigente)};
-  /* build 142b (Salvador 2026-09-26): alarma programada OTRO dia (p. ej. se
-     pospuso y cruzo la medianoche) = campanita naranja tambien en Proximas y
-     tareas futuras, con dia y hora. fut:true = NO la sube a Hoy. */
-  var nf=avisosDe(t).filter(function(a){ return a.fecha && a.fecha>H && a.hora; })
-    .sort(function(a,b){ return (a.fecha+a.hora).localeCompare(b.fecha+b.hora); })[0];
-  if(nf) return {c:"naranja", fut:true, txt:"suena "+fechaMovCorta(nf.fecha)+" a las "+horaChica(nf.hora)+ent};
-  return null;
+  /* build 148 (Salvador 2026-09-28): blindaje — un documento con un campo mal
+     formado (p. ej. un encargado guardado como texto suelto en vez de objeto,
+     visto en producción el 28-sep) no debe tronar esta función y tumbar TODO
+     el render() de la sección donde se pinta; se registra en consola y esa
+     tarea simplemente no trae campanita, en vez de romper a las demás. */
+  try{
+    if(!t || t.cierre || estadoReal(t)==="cerrada") return null;
+    var H=hoy(), ent=(!t.es_recordatorio && t.f_vigente && t.f_vigente>H)?" · entrega "+fechaMovCorta(t.f_vigente):"";
+    var r=alarmaRoja(t);
+    if(r) return {c:"roja", txt:"sonó "+(r.fecha&&r.fecha<H?"el "+fechaMovCorta(r.fecha)+" ":"")+
+      (r.hora?"a las "+horaChica(r.hora)+" ":"")+"· no la has atendido"};
+    var ya=nowHM(), n=avisosDe(t).filter(function(a){ return a.fecha===H && a.hora && a.hora>ya; })
+      .sort(function(a,b){ return a.hora.localeCompare(b.hora); })[0];
+    if(n) return {c:"naranja", txt:"suena a las "+horaChica(n.hora)+ent};
+    if(tocaRevisarHoy(t)) return {c:"azul", txt:"toca revisar · entrega "+fechaMovCorta(t.f_vigente)};
+    /* build 142b (Salvador 2026-09-26): alarma programada OTRO dia (p. ej. se
+       pospuso y cruzo la medianoche) = campanita naranja tambien en Proximas y
+       tareas futuras, con dia y hora. fut:true = NO la sube a Hoy. */
+    var nf=avisosDe(t).filter(function(a){ return a.fecha && a.fecha>H && a.hora; })
+      .sort(function(a,b){ return (a.fecha+a.hora).localeCompare(b.fecha+b.hora); })[0];
+    if(nf) return {c:"naranja", fut:true, txt:"suena "+fechaMovCorta(nf.fecha)+" a las "+horaChica(nf.hora)+ent};
+    return null;
+  }catch(e){
+    console.error("campanaDe() truena con tarea", t&&t.id, e);
+    return null;
+  }
 }
 /* build 141: puntitos lineales por cada movida: 1 = nunca, 2 = una, 3 = dos o mas */
 function puntosDe(t, cls){
@@ -4476,29 +4487,42 @@ function puntosDe(t, cls){
   return n===1?h:'<span class="dots n'+n+'">'+h+'</span>';
 }
 function fila(t, mudo, secClass){
-  var b=badge(t), enc=t.encargado, r=ritmo(t), camp=campanaDe(t), toca=!!camp;
-  /* build 144: con pasos, anillo de avance (1/3) y "Falta: ..." en el renglon */
-  var _pz=tienePasos(t) && !t.cierre && estadoReal(t)!=="cerrada";
-  /* Salvador 2026-09-22: si la fila se pinta dentro de una de las 7 secciones
-     con color del home, el puntito toma el color de esa seccion; si no, sigue
-     el estado real de la tarea (como siempre). */
-  return '<li><button class="row'+(estadoReal(t)==="cerrada"?" done":"")+
-    '" data-id="'+t.id+'">'+(_pz?anilloPasos(t):toca?'<span class="rico rcamp c-'+camp.c+'" aria-label="Alarma">'+ico(camp.c==="roja"?"bellr":"bell",16,1.8)+'</span>'
-      :puntosDe(t, secClass||(enc?"d-tenue":dotc(t))))+'<span>'+
-    '<span class="nm">'+esc(t.nombre)+'</span>'+
-    (_pz&&!enc&&!(camp&&camp.c==="roja")?'<span class="ls">'+esc(faltaTxt(t))+'</span>':
-     toca&&!enc?'<span class="ls">'+esc(camp.txt)+'</span>':enc
-      ? '<span class="ls"><span class="marcaje">→ '+esc(PERSONAS[enc.a].nombre)+'</span> · '+esc(esperaDe(t))+'</span>'
-      : (r&&r.va_a_fallar
-          ? '<span class="ls"><span class="alerta">va a fallar</span> · atrasado en “'+esc(r.paso)+'”</span>'
-          : (t.pasos&&t.pasos[t.paso!=null?t.paso:0]&&estadoReal(t)!=="cerrada"
-              ? '<span class="paso">→ '+esc(t.pasos[t.paso||0].t)+'</span>'
-              : '<span class="ls">'+esc(t.ultima||"")+'</span>')))+'</span>'+
-    '<span class="meta">'+(_pz&&toca&&camp.c!=="roja"&&/a las (\S+ [ap]m)/.test(camp.txt)?'<span class="fdate pcamp c-'+camp.c+'">'+ico("bell",13,1.9)+esc(camp.txt.match(/a las (\S+ [ap]m)/)[1])+'</span>':'')+
-    ((mudo||toca?"":fechaChip(t.f_vigente))?'<span class="fdate">'+esc(fechaChip(t.f_vigente))+'</span>':'')+
-    (t.ia_wa?'<span class="iatag" title="Creada por IA desde WhatsApp">IA·WA</span>':'')+
-    '<span class="tm">'+((t.duenio&&t.duenio!==yo&&PERSONAS[t.duenio])?PERSONAS[t.duenio].ini:"")+'</span>'+
-    (b?(b.ico?'<span class="bico">'+b.ico+'</span>':'<span class="bdg">'+b.n+'</span>'):'')+'</span></button></li>';
+  /* build 148 (Salvador 2026-09-28, tras el bug real del "Hoy" que no abría):
+     un documento con un campo mal formado (encargado guardado como texto
+     suelto en vez de {a:...}, por ejemplo) truena esta función — y como se
+     llama dentro de un .map() de toda la sección, ANTES tumbaba el render()
+     completo (por eso "Hoy" no reaccionaba a nada). Ahora ese renglón se
+     pinta como aviso corto en vez de tronar, y las demás filas siguen bien. */
+  try{
+    var b=badge(t), enc=t.encargado, r=ritmo(t), camp=campanaDe(t), toca=!!camp;
+    /* build 144: con pasos, anillo de avance (1/3) y "Falta: ..." en el renglon */
+    var _pz=tienePasos(t) && !t.cierre && estadoReal(t)!=="cerrada";
+    /* Salvador 2026-09-22: si la fila se pinta dentro de una de las 7 secciones
+       con color del home, el puntito toma el color de esa seccion; si no, sigue
+       el estado real de la tarea (como siempre). */
+    return '<li><button class="row'+(estadoReal(t)==="cerrada"?" done":"")+
+      '" data-id="'+t.id+'">'+(_pz?anilloPasos(t):toca?'<span class="rico rcamp c-'+camp.c+'" aria-label="Alarma">'+ico(camp.c==="roja"?"bellr":"bell",16,1.8)+'</span>'
+        :puntosDe(t, secClass||(enc?"d-tenue":dotc(t))))+'<span>'+
+      '<span class="nm">'+esc(t.nombre)+'</span>'+
+      (_pz&&!enc&&!(camp&&camp.c==="roja")?'<span class="ls">'+esc(faltaTxt(t))+'</span>':
+       toca&&!enc?'<span class="ls">'+esc(camp.txt)+'</span>':enc
+        ? '<span class="ls"><span class="marcaje">→ '+esc(PERSONAS[enc.a]?PERSONAS[enc.a].nombre:String(enc.a||enc))+'</span> · '+esc(esperaDe(t))+'</span>'
+        : (r&&r.va_a_fallar
+            ? '<span class="ls"><span class="alerta">va a fallar</span> · atrasado en “'+esc(r.paso)+'”</span>'
+            : (t.pasos&&t.pasos[t.paso!=null?t.paso:0]&&estadoReal(t)!=="cerrada"
+                ? '<span class="paso">→ '+esc(t.pasos[t.paso||0].t)+'</span>'
+                : '<span class="ls">'+esc(t.ultima||"")+'</span>')))+'</span>'+
+      '<span class="meta">'+(_pz&&toca&&camp.c!=="roja"&&/a las (\S+ [ap]m)/.test(camp.txt)?'<span class="fdate pcamp c-'+camp.c+'">'+ico("bell",13,1.9)+esc(camp.txt.match(/a las (\S+ [ap]m)/)[1])+'</span>':'')+
+      ((mudo||toca?"":fechaChip(t.f_vigente))?'<span class="fdate">'+esc(fechaChip(t.f_vigente))+'</span>':'')+
+      (t.ia_wa?'<span class="iatag" title="Creada por IA desde WhatsApp">IA·WA</span>':'')+
+      '<span class="tm">'+((t.duenio&&t.duenio!==yo&&PERSONAS[t.duenio])?PERSONAS[t.duenio].ini:"")+'</span>'+
+      (b?(b.ico?'<span class="bico">'+b.ico+'</span>':'<span class="bdg">'+b.n+'</span>'):'')+'</span></button></li>';
+  }catch(e){
+    console.error("fila() truena con tarea", t&&t.id, e);
+    return '<li><button class="row" data-id="'+(t&&t.id||"")+'"><span class="dot d-tenue"></span>'+
+      '<span><span class="nm">'+esc((t&&t.nombre)||"(tarea con datos dañados)")+'</span>'+
+      '<span class="ls"><span class="alerta">esta tarea tiene un dato mal guardado — ábrela para revisarla</span></span></span></button></li>';
+  }
 }
 
 /* CUÁNTO LLEVA ESPERANDO — Salvador 2026-09-04: primero en horas, luego en
@@ -4605,7 +4629,9 @@ function ico(n,px,gr){
     calx:'<path d="M7 3h8l3 3v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M9 9l6 6M15 9l-6 6"/>',
     hoja:'<path d="M7 3h10v18l-5-3-5 3V3Z"/><path d="M9 8h6M9 11.5h6"/>',
     /* palomita sola (cintillo "Hecha · Deshacer", 2026-09-24) */
-    check:'<path d="M5 12.5l4.5 4.5L19 7"/>'
+    check:'<path d="M5 12.5l4.5 4.5L19 7"/>',
+    /* circulo con "i" — build 148: icono de "análisis" en mensajes de IA */
+    info:'<circle cx="12" cy="12" r="8.5"/><path d="M12 11.6v4.6M12 8.1v.01"/>'
   }[n]||"";
   return '<svg class="icx" viewBox="0 0 24 24" width="'+s+'" height="'+s+'" fill="none" '+
     'stroke="currentColor" stroke-width="'+w+'" stroke-linecap="round" '+
@@ -5066,11 +5092,17 @@ function vHilo(){
        por si se subio mal y era otra cosa. Se borra sin preguntar. */
     var undo=(x.k==="bo" && ix===(t.msgs.length-1) && x.ts && (Date.now()-x.ts)<5*60000 && (!x.de||x.de===yo));
     var waCan=(x.wa && x.wa_pid && !x.wa_can && x.ts && (Date.now()-x.ts)<10*60000);
+    /* build 148 (Salvador 2026-09-28): mensajes de IA con análisis guardado (súper-
+       revisión de vigencia, cita textual, etc. — lo llena el trabajador de WhatsApp)
+       traen un iconito ⓘ; al picarlo despliega ese análisis SIN ensuciar el mensaje
+       normal. Si no hay x.analisis, no aparece nada — cero cambio visual de por sí. */
+    var tieneAn=(x.k==="bi" && x.analisis);
     m+='<div class="b '+(x.k==="bal"?"bal":(x.k==="bo"?"bo":"bi"))+(x.abre?' liga" data-abre="'+esc(x.abre):'')+'">'+esc(x.t)+
        (x.abre?'<span class="abre">Abrir ›</span>':'')+'<span class="st">'+meta+
+       (tieneAn?'<button class="mdel" data-an="'+ix+'" aria-label="Ver cómo se decidió este mensaje">'+ico("info",15,1.8)+'</button>':'')+
        (waCan?'<button class="mdel" data-wacan="'+ix+'" aria-label="Cancelar este WhatsApp">'+ico("trash",15,1.8)+'</button>':'')+
        (undo?'<button class="mdel" data-mdel="'+ix+'" aria-label="Borrar este mensaje">'+ico("trash",15,1.8)+'</button>':'')+
-       '</span></div>';
+       '</span>'+(tieneAn&&msgAn[ix]?'<div class="dt">'+esc(x.analisis)+'</div>':'')+'</div>';
   });
   if(t.puntos){
     var mk=t.marcados||{}, ft=t.fotos||{}, n=Object.keys(mk).length;
@@ -8610,6 +8642,11 @@ function bindHilo(){
   });
   Array.prototype.forEach.call(document.querySelectorAll("[data-lb]"),function(el){
     el.onclick=function(){var i=+el.getAttribute("data-lb");detOpen[i]=!detOpen[i];render()};
+  });
+  /* build 148: icono ⓘ en un mensaje de IA — despliega/oculta su campo "analisis" */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-an]"),function(el){
+    el.onclick=function(ev){ ev.stopPropagation();
+      var i=+el.getAttribute("data-an"); msgAn[i]=!msgAn[i]; render(); };
   });
   /* burbuja hablada: ver más / ver menos, y el play que la lee en voz alta */
   window.__habAbre=window.__habAbre||{};
