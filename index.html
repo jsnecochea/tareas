@@ -912,7 +912,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP="build 148 · 2026-09-28 · Blindaje: un dato mal guardado ya no tumba una sección completa + icono ⓘ de análisis en mensajes de IA";
+var VERSION_APP="build 148 · 2026-09-28 · Blindaje: un dato mal guardado ya no tumba una sección completa + icono ⓘ de análisis en mensajes de IA + ficha de persona sin nombre ya no truena la barra";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -2531,6 +2531,10 @@ function arranca(){
         var o=d.data()||{}, p=PERSONAS[d.id];
         if(!p){ PERSONAS[d.id]={jefe:false}; p=PERSONAS[d.id] }
         if(o.nombre) p.nombre=o.nombre;
+        /* build 148 (2026-09-29): una ficha sin nombre (p. ej. un registro de
+           prueba técnica) tronaba la barra con "PERSONAS[k].nombre.toLowerCase";
+           nunca se deja una persona sin nombre. */
+        if(!p.nombre) p.nombre=d.id;
         p.apellido=o.apellido||"";
         p.mail_trabajo=o.mail_trabajo||"";
         p.mail_personal=o.mail_personal||"";
@@ -4857,7 +4861,8 @@ function busca(q){
   /* por persona: "las vencidas de Samuel", "quién va mal de ritmo" */
   var quien=null;
   Object.keys(PERSONAS).forEach(function(k){
-    if(ql.indexOf(PERSONAS[k].nombre.toLowerCase())>=0) quien=k;
+    var _nk=String((PERSONAS[k]&&PERSONAS[k].nombre)||"").toLowerCase();
+    if(_nk && ql.indexOf(_nk)>=0) quien=k;
   });
   /* "lo que hice hoy" / "las que terminé ayer" / "las hechas": solo cerradas.
      Salvador 2026-09-22 — las tachadas ya no salen en el home, se piden aqui. */
