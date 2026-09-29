@@ -7774,11 +7774,21 @@ function completaPendiente(id, texto){
   barraEstado=null;
   texto=String(texto||"").trim();
   if(!texto){ vista="lista"; render(); return }
+  /* build 150 (Salvador 2026-09-29): si contesta que YA SE HIZO ("ya lo mande", "ya lo
+     envie", "ya quedo", "es para mi mismo y ya lo envie"), la tarea NO es una fecha
+     pendiente: se anota lo que dijo y se CIERRA. Antes se quedaba pidiendo fecha. */
+  if(/\bya\s+(?:se\s+|lo\s+|la\s+|los\s+|las\s+)*(?:envi|mand|hice|hizo|hic|termin|qued|resolv|contest|cumpl|pas[eé]|dej[eé])|\bya\s+est[aá](?:\s+hech[oa])?\b|\bya\s+lo\s+hic/i.test(texto.normalize("NFD").replace(/[\u0300-\u036f]/g,""))){
+    msg(t,"bi","Contestaste: “"+texto+"”.");
+    t.pendiente_info=""; t.pendiente_tipo=""; t.falta_fecha=false;
+    cierraHecha(t);
+    toast("Cerrada: "+t.nombre); vista="lista"; render(); return;
+  }
   var tipo=t.pendiente_tipo||"dato";
   if(tipo==="fecha"){
     var f=diaDicho(texto)||(/^\d{4}-\d{2}-\d{2}$/.test(texto)?texto:"");
     if(!f && horaDicha(texto)) f=hoy();   /* si contestó una hora, es HOY */
-    if(!f){ toast('No pesqué la fecha, dímela otra vez (ej. "mañana", "el viernes" o una hora)');
+    if(!f){ msg(t,"bi","Anotado: “"+texto+"” (sin fecha todavía)."); guarda(t);
+            toast('No pesqué la fecha, dímela otra vez (ej. "mañana", "el viernes" o una hora)');
             vista="lista"; render(); return; }
     t.f_original=f; t.f_vigente=f; t.falta_fecha=false;
     /* CAPTURA TAMBIÉN LA HORA Y LA RECURRENCIA (Salvador 2026-09-17): antes solo
