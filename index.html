@@ -934,6 +934,9 @@ var APP_TOKEN="__APP_TOKEN__";
 var PUSH="push.php";
 var VAPID_PUBLIC="BFnf9NwBioqZIXQ7jibjMPViaGHLDfB5aNLowJMco_u9PdaEZVRibceXV8mlG38wcYi-cjipIi8V4BU0ZjftMwE";
 
+/* build 150: la notificacion lleva la liga EXACTA a la tarea (?recordatorio=<id>),
+   asi al tocarla abre ese hilo y no otro. */
+function urlTarea(id){ return "https://doit.ok-doit.com/?recordatorio="+encodeURIComponent(id); }
 function disparaPushInstantaneo(para, titulo, cuerpo, url) {
   if (!para || para === yo) return; // No auto-notificar si la acción la hace uno mismo
   
@@ -1718,7 +1721,8 @@ function declaraAtorado(t,quien,tel,que,esDeFuera){
     disparaPushInstantaneo(
       quien,
       'Urgente: Requiere tu acción',
-      'La tarea "' + t.nombre + '" requiere tu decisión/autorización'
+      'La tarea "' + t.nombre + '" requiere tu decisión/autorización',
+      urlTarea(t.id)
     );
   }
   return {ok:true};
@@ -2148,7 +2152,7 @@ function abreUltimoNuevo(){
   c.sort(function(a,b){
     var ma=(a.msgs||[]).slice(-1)[0]||{}, mb=(b.msgs||[]).slice(-1)[0]||{};
     return (mb.ts||0)-(ma.ts||0); });
-  return c[0]||null;
+  return c.length===1?c[0]:null;   /* exacto o nada: con 2+ no se adivina */
 }
 function nuevosNov(t){ return Math.max(0, novedadesTot(t) - vistosNov(t.id)) }
 
@@ -2495,7 +2499,7 @@ function enviaWhatsAppYa(b){
       if(!_esp){
         _esp=creaTarea({nombre:t.nombre, duenio:_kp, dicho:wp.texto});
         _esp.msgs=[]; _esp.espejo_de=t.id; t.espejos[_kp]=_esp.id;
-      } else disparaPushInstantaneo(_kp,"Nuevo mensaje",_txE);
+      } else disparaPushInstantaneo(_kp,"Nuevo mensaje",_txE,urlTarea(_esp.id));
       msg(_esp,"bo",_txE); _esp.ultima=_txE; guarda(_esp);
       _tid=_esp.id;
     }
@@ -7240,7 +7244,8 @@ function creaTarea(d){
     disparaPushInstantaneo(
       t.duenio,
       'Nueva tarea asignada',
-      'Te asignaron: "' + t.nombre + '"'
+      'Te asignaron: "' + t.nombre + '"',
+      urlTarea(t.id)
     );
   }
   return t;
@@ -7799,7 +7804,7 @@ function completaPendiente(id, texto){
   }
   t.pendiente_info=""; t.pendiente_tipo="";
   if(t.duenio && t.duenio!==yo && !t.es_recordatorio)
-    disparaPushInstantaneo(t.duenio,'Nueva tarea asignada','Te asignaron: "'+t.nombre+'"');
+    disparaPushInstantaneo(t.duenio,'Nueva tarea asignada','Te asignaron: "'+t.nombre+'"',urlTarea(t.id));
   guarda(t);
   /* sube ARRIBA en "Recién creadas" para que se VEA lo que acaba de salir del bote,
      igual que las nuevas; a la siguiente entrada ya se acomoda en su lugar. El
@@ -8325,7 +8330,8 @@ function confirmaAccion(b){
         disparaPushInstantaneo(
           tc2.duenio,
           'Nuevo comentario',
-          autor + ' comentó en "' + tc2.nombre + '": ' + cp.texto
+          autor + ' comentó en "' + tc2.nombre + '": ' + cp.texto,
+          urlTarea(tc2.id)
         );
       }
 
@@ -8334,7 +8340,8 @@ function confirmaAccion(b){
         disparaPushInstantaneo(
           creadorDelHilo,
           'Respuesta a tu consulta',
-          autor + ' respondió en "' + tc2.nombre + '": ' + cp.texto
+          autor + ' respondió en "' + tc2.nombre + '": ' + cp.texto,
+          urlTarea(tc2.id)
         );
       }
       // ===== FIN SITUACIÓN 5 =====
