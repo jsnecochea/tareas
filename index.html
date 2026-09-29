@@ -919,7 +919,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 151 · 2026-09-29 · Cierre de tareas con lista palomeada/ticket corregido · Bote naranja con play y contexto; doble vida: WhatsApp + tarea espejo en su app; dictado a equipo (Cynthia) sale directo por WhatsApp + archivo; 'en mi tarea de X'; 'ponle un mensaje a…'";
+var VERSION_APP = "build 152 · 2026-09-29 · Lo que llega por WhatsApp (wa_in) prende el renglon verde y el badge · Cierre de tareas con lista palomeada/ticket corregido · Bote naranja con play y contexto; doble vida: WhatsApp + tarea espejo en su app; dictado a equipo (Cynthia) sale directo por WhatsApp + archivo; 'en mi tarea de X'; 'ponle un mensaje a…'";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -2137,7 +2137,10 @@ function nuevos(t){ return Math.max(0, adjuntos(t).length - vistos(t.id)) }
    Corregido 2026-09-04: antes solo contaba fotos, por eso un comentario de texto
    no prendia nada. */
 function msgsEntrantes(t){
-  return ((t.msgs||[]).filter(function(m){ return m.k==="bo" })).length;
+  /* build 152 (Salvador 2026-09-29): lo que llega por WhatsApp (wa_respuesta del
+     servidor o del trabajador) se guardaba como "bi" y NUNCA prendia el renglon verde
+     ni el badge. Ahora tambien cuenta todo mensaje marcado wa_in:1 (entrante de WhatsApp). */
+  return ((t.msgs||[]).filter(function(m){ return m.k==="bo" || m.wa_in===1 })).length;
 }
 function novedadesTot(t){ return adjuntos(t).length + msgsEntrantes(t); }
 function vistosNov(id){
