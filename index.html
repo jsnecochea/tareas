@@ -6178,7 +6178,7 @@ function aplicaIntencion(j, dicho, hist, foto){
      ni contacto. No hace falta decir WhatsApp. Sale por WhatsApp y queda ligado al
      hilo de la tarea (las respuestas vuelven a los dos lados). Si X es del equipo
      (PERSONAS) y no dijo whatsapp, sigue el camino de siempre (encargo/comentario).
-     "mi cel / mi celular" = su propio chat ("Mi Cel (tú)"). */
+     "mi cel / mi celular" = su propio chat ("Salvador Necochea (Tú)"). */
   try{
     var _dW=String(dicho||"");
     var _mW=_dW.match(/\b(?:m[aá]nda(?:r|le|me)?|env[ií]a(?:r|le)?|escr[ií]be(?:le)?|av[ií]sa(?:le|r)?|com[eé]nta(?:le|r)?|d[ií]le|d[ií]game)\s+(?:un\s+)?(?:(whats?\s?app|whats|wasap|guasap|mensaje|aviso)\s+)?(?:a|al)\s+(.+?)\s*,?\s+(?:que(?:\s+(?:diga|dice|le\s+diga|dijera))?|diciendo(?:le)?|con\s+el\s+(?:texto|mensaje))\s*:?\s*(.+)$/i);
@@ -6189,7 +6189,7 @@ function aplicaIntencion(j, dicho, hist, foto){
       var _pn0=_cW.toLowerCase().split(/\s+/)[0];
       var _eqW=!_mio && Object.keys(PERSONAS).some(function(k){
         return k.toLowerCase()===_pn0 || String(PERSONAS[k].nombre||"").toLowerCase().indexOf(_pn0)===0; });
-      if(_mio) _cW="Mi Cel (tú)";
+      if(_mio) _cW="Salvador Necochea (Tú)";
       if(_tW && (!_eqW || _wpal)){ i="WHATSAPP"; j.intencion="WHATSAPP"; j.whatsapp={contacto:_cW,texto:_tW,tarea:""}; }
     }
   }catch(e){}
