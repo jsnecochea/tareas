@@ -2142,6 +2142,14 @@ function vistosNov(id){
 function marcaVistosNov(id,n){
   try{ localStorage.setItem("bit_nov_"+yo+"_"+id,n) }catch(e){}
 }
+/* la tarea con lo mas reciente sin ver (mensajes de otros); null si no hay */
+function abreUltimoNuevo(){
+  var c=tareas.filter(function(t){ return !t.es_recordatorio && estadoReal(t)!=="cerrada" && nuevosNov(t)>0 });
+  c.sort(function(a,b){
+    var ma=(a.msgs||[]).slice(-1)[0]||{}, mb=(b.msgs||[]).slice(-1)[0]||{};
+    return (mb.ts||0)-(ma.ts||0); });
+  return c[0]||null;
+}
 function nuevosNov(t){ return Math.max(0, novedadesTot(t) - vistosNov(t.id)) }
 
 function abreVisor(lista,i){
@@ -2617,6 +2625,12 @@ function arranca(){
       /* build 142: si el primer snapshot viene de la cache local y la tarea de la
          notificacion aun no esta (se creo en otro lado), se ESPERA al del servidor
          en vez de rendirse y quedarse en el home. */
+      /* build 150: notificacion sin id (p. ej. "LISTO" de un WhatsApp): abre el hilo
+         con lo mas reciente sin leer, en vez del home */
+      if(window.__irUltimo && !_deCache){
+        window.__irUltimo=false;
+        try{ var _u=abreUltimoNuevo(); if(_u){ abierta=_u.id; vista="hilo"; render(); } }catch(e){}
+      }
       if(window.__irARec && !window.__recAbierto &&
          !(_deCache && !tareas.some(function(x){ return x.id===String(window.__irARec).split("|")[0]; }))){
         window.__recAbierto=true;
@@ -9286,6 +9300,7 @@ function entraPorInvitacion(tk){
   /* LLEGÓ DESDE UNA NOTIFICACIÓN de recordatorio: el sw.js abre la app con
      ?recordatorio=<id>. Se guarda para, en cuanto carguen las tareas, abrir ese
      recordatorio directo (no la pantalla de inicio). Salvador 2026-09-17. */
+  if(q.get("ultimo")){ window.__irUltimo=true; try{ history.replaceState(null,"",location.pathname) }catch(e){} }
   var _rec=q.get("recordatorio");
   if(_rec){ window.__irARec=_rec;
             try{ history.replaceState(null,"",location.pathname) }catch(e){} }
@@ -9300,7 +9315,9 @@ function entraPorInvitacion(tk){
      notificacion el sw.js manda {tipo:"abre", id} y aqui se abre esa tarea
      (antes solo se enfocaba la app y se quedaba en el home). */
   if("serviceWorker" in navigator){ try{ navigator.serviceWorker.addEventListener("message", function(ev){
-    var d=ev&&ev.data; if(!d || d.tipo!=="abre" || !d.id) return;
+    var d=ev&&ev.data;
+    if(d && d.tipo==="abre_ultimo"){ var _u2=abreUltimoNuevo(); if(_u2){ barraEstado=null; menuOpen=false; abierta=_u2.id; vista="hilo"; render(); } return; }
+    if(!d || d.tipo!=="abre" || !d.id) return;
     var pp=String(d.id).split("|"), t=(typeof tareas!=="undefined"?tareas:[]).filter(function(x){ return x.id===pp[0]; })[0];
     if(!t){ window.__irARec=String(d.id); window.__recAbierto=false; return; }
     window.__avSonando={taskId:t.id, id:(pp[1]||"self")};

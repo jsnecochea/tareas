@@ -82,7 +82,7 @@ self.addEventListener('notificationclick', function(event) {
     );
   } else {
     // Acción 'mic' o clic directo sobre la notificación: ABRE LA APP
-    const deepLink = data.url || (data.id ? `https://doit.ok-doit.com/?recordatorio=${data.id}&action=mic` : 'https://doit.ok-doit.com/');
+    const deepLink = data.url || (data.id ? `https://doit.ok-doit.com/?recordatorio=${data.id}&action=mic` : 'https://doit.ok-doit.com/?ultimo=1');
     
     event.waitUntil(
       clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
@@ -92,6 +92,7 @@ self.addEventListener('notificationclick', function(event) {
             // build 142: si la notificacion es de una tarea/alarma, la app ya
             // abierta abre ESA tarea (postMessage); si es general, al home.
             if (data.id) { client.postMessage({ tipo: 'abre', id: String(data.id) }); return client.focus(); }
+            if (!data.url) { client.postMessage({ tipo: 'abre_ultimo' }); return client.focus(); }
             client.navigate(deepLink);
             return client.focus();
           }
