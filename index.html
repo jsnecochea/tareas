@@ -919,7 +919,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 152 · 2026-09-29 · Lo que llega por WhatsApp (wa_in) prende el renglon verde y el badge · Cierre de tareas con lista palomeada/ticket corregido · Bote naranja con play y contexto; doble vida: WhatsApp + tarea espejo en su app; dictado a equipo (Cynthia) sale directo por WhatsApp + archivo; 'en mi tarea de X'; 'ponle un mensaje a…'";
+var VERSION_APP = "build 153 · 2026-09-29 · Mensajes en cola cortos (70 caracteres) · Lo que llega por WhatsApp (wa_in) prende el renglon verde y el badge · Cierre de tareas con lista palomeada/ticket corregido · Bote naranja con play y contexto; doble vida: WhatsApp + tarea espejo en su app; dictado a equipo (Cynthia) sale directo por WhatsApp + archivo; 'en mi tarea de X'; 'ponle un mensaje a…'";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -2136,6 +2136,7 @@ function nuevos(t){ return Math.max(0, adjuntos(t).length - vistos(t.id)) }
    y el renglon verde "Tienes mensajes sin leer". Se marca visto al abrir el hilo.
    Corregido 2026-09-04: antes solo contaba fotos, por eso un comentario de texto
    no prendia nada. */
+function _corto(x){ x=String(x||"").replace(/\s+/g," ").trim(); return x.length>70 ? x.slice(0,70)+"…" : x; }
 function msgsEntrantes(t){
   /* build 152 (Salvador 2026-09-29): lo que llega por WhatsApp (wa_respuesta del
      servidor o del trabajador) se guardaba como "bi" y NUNCA prendia el renglon verde
@@ -2507,7 +2508,7 @@ function enviaWhatsAppYa(b){
       _tid=_esp.id;
     }
   }catch(e){ console.warn("espejo",e); }
-  msg(t,"bi","→ "+_et+" a "+wp.contacto+(_esp?" (y en su app)":"")+": “"+(_canal==="archivo"?(wp.archivo||wp.texto):wp.texto)+"” · en cola");
+  msg(t,"bi","→ "+_et+" a "+wp.contacto+(_esp?" (y en su app)":"")+": “"+_corto(_canal==="archivo"?(wp.archivo||wp.texto):wp.texto)+"” · en cola");
   var _m=t.msgs[t.msgs.length-1]; _m.wa=1; _m.wa_c=wp.contacto;
   if(b.foto) pegaFotoA(t,b.foto);
   t.ultima="→ "+wp.contacto+": "+wp.texto; guarda(t);
@@ -8322,7 +8323,7 @@ function confirmaAccion(b){
     var tw2=wp.tareaId ? tareas.filter(function(x){ return x.id===wp.tareaId })[0] : null;
     if(!tw2 && wp.nueva) tw2=creaTarea({nombre:wp.nueva, duenio:yo, dicho:b.dicho||wp.nueva});
     if(tw2){
-      msg(tw2,"bi","WhatsApp a "+wp.contacto+": “"+wp.texto+"” · en cola, esperando respuesta");
+      msg(tw2,"bi","WhatsApp a "+wp.contacto+": “"+_corto(wp.texto)+"” · en cola");
       if(b.foto) pegaFotoA(tw2,b.foto);
       tw2.ultima="WhatsApp a "+wp.contacto+": "+wp.texto; guarda(tw2);
       pideWhatsApp({usuario:yo, tarea_id:tw2.id, contacto:wp.contacto, texto:wp.texto})
