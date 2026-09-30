@@ -919,7 +919,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 153 · 2026-09-29 · Mensajes en cola cortos (70 caracteres) · Lo que llega por WhatsApp (wa_in) prende el renglon verde y el badge · Cierre de tareas con lista palomeada/ticket corregido · Bote naranja con play y contexto; doble vida: WhatsApp + tarea espejo en su app; dictado a equipo (Cynthia) sale directo por WhatsApp + archivo; 'en mi tarea de X'; 'ponle un mensaje a…'";
+var VERSION_APP = "build 154 · 2026-09-29 · Flecha atrás en resultados de búsqueda · (antes) build 153 · 2026-09-29 · Mensajes en cola cortos (70 caracteres) · Lo que llega por WhatsApp (wa_in) prende el renglon verde y el badge · Cierre de tareas con lista palomeada/ticket corregido · Bote naranja con play y contexto; doble vida: WhatsApp + tarea espejo en su app; dictado a equipo (Cynthia) sale directo por WhatsApp + archivo; 'en mi tarea de X'; 'ponle un mensaje a…'";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -4310,7 +4310,7 @@ function vLista(){
   arr=arr.filter(function(t){ return !t.cierre && estadoReal(t)!=="cerrada"; });
   var res=esJefe?resumenDelDia():null;
   h='<div class="enc" id="enc">'+
-    '<div class="r1"><div class="nom" id="byo" role="button">'+esc(PERSONAS[yo].nombre)+'</div>'+
+    '<div class="r1">'+(consulta?'<button class="iconbtn" id="bback" aria-label="Volver">\u2039</button>':'')+'<div class="nom" id="byo" role="button">'+esc(PERSONAS[yo].nombre)+'</div>'+
     '<div class="grow"></div>'+
     (esJefe?'<button class="eng" id="badm" aria-label="Ajustes">'+ico("eng",24,1.6)+'</button>':'')+'</div>'+
     '</div>';
@@ -8602,7 +8602,7 @@ function bindLista(){
   var xn=$("xnudav"); if(xn) xn.onclick=function(){ window.__nudgeAvisos=false; render(); };
   var bs=$("bsuelto"); if(bs) bs.onclick=function(){ sueltoOpen=true; vista="suelto"; render() };
   bindCaja2();
-  var bc=$("bclr"); if(bc) bc.onclick=function(){ consulta=""; render() };
+  var bc=$("bclr"); if(bc) bc.onclick=function(){ consulta=""; render() }; var bkc=$("bback"); if(bkc && consulta) bkc.onclick=function(){ consulta=""; render() };
   var bfu=$("bfut"); if(bfu) bfu.onclick=function(){ verFuturas=!verFuturas; render() };
   var bms2=$("bmas"); if(bms2) bms2.onclick=function(){ masDias+=7; render() };
   /* Salvador 2026-09-22: una sola franja de seccion abierta a la vez (acordeon) */
