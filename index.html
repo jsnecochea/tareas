@@ -441,6 +441,8 @@ button{font:inherit;color:inherit}
 .bal .st{color:rgba(255,255,255,.7)}
 .mdel{float:right;margin:-3px -4px 0 10px;padding:4px 6px;border:0;background:none;color:var(--ink-3);
   cursor:pointer;display:inline-grid;place-items:center;border-radius:8px;-webkit-tap-highlight-color:transparent}
+.bcomp .cn{font-weight:700}
+.mdot{float:right;border:0;background:none;color:var(--ink-3);opacity:.45;font-size:22px;line-height:14px;padding:2px 6px;margin:-2px -6px 0 6px}
 .mdel:active{background:rgba(255,255,255,.08);color:var(--venc)}
 /* ===== BURBUJA HABLADA (Salvador 2026-09-17): lo dictado largo se guarda
    completo pero se muestra corto. Resumen mío arriba, y a un toque el texto
@@ -940,7 +942,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 157 · 2026-09-30 · Atorados incluye tareas que esperan TU decisión (pendiente_tipo=decision_salvador) con botón Ya decidí · (antes) build 156 · 2026-09-30 · \"Vincular a otra tarea\" (antes Enlazar), con pastilla Vincular en cada resultado · (antes) build 155 · 2026-09-30 · Pestaña \"Creadas hoy\" (primera, gris) · \"Enlazar a otra tarea\" en el menú ⋯ · (antes) build 154 · 2026-09-29 · Flecha atrás en resultados de búsqueda · (antes) build 153 · 2026-09-29 · Mensajes en cola cortos (70 caracteres) · Lo que llega por WhatsApp (wa_in) prende el renglon verde y el badge · Cierre de tareas con lista palomeada/ticket corregido · Bote naranja con play y contexto; doble vida: WhatsApp + tarea espejo en su app; dictado a equipo (Cynthia) sale directo por WhatsApp + archivo; 'en mi tarea de X'; 'ponle un mensaje a…'";
+var VERSION_APP = "build 158 · 2026-09-30 · Mensajes de WhatsApp súper compactos \"Nombre: texto\" con puntito de detalle (fecha, origen, tipo, archivo) · (antes) build 157 · 2026-09-30 · Atorados incluye tareas que esperan TU decisión (pendiente_tipo=decision_salvador) con botón Ya decidí · (antes) build 156 · 2026-09-30 · \"Vincular a otra tarea\" (antes Enlazar), con pastilla Vincular en cada resultado · (antes) build 155 · 2026-09-30 · Pestaña \"Creadas hoy\" (primera, gris) · \"Enlazar a otra tarea\" en el menú ⋯ · (antes) build 154 · 2026-09-29 · Flecha atrás en resultados de búsqueda · (antes) build 153 · 2026-09-29 · Mensajes en cola cortos (70 caracteres) · Lo que llega por WhatsApp (wa_in) prende el renglon verde y el badge · Cierre de tareas con lista palomeada/ticket corregido · Bote naranja con play y contexto; doble vida: WhatsApp + tarea espejo en su app; dictado a equipo (Cynthia) sale directo por WhatsApp + archivo; 'en mi tarea de X'; 'ponle un mensaje a…'";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -5373,6 +5375,23 @@ function vHilo(){
        traen un iconito ⓘ; al picarlo despliega ese análisis SIN ensuciar el mensaje
        normal. Si no hay x.analisis, no aparece nada — cero cambio visual de por sí. */
     var tieneAn=(x.k==="bi" && x.analisis);
+    /* build 158 (Salvador 2026-09-30): mensaje de WhatsApp capturado = súper compacto:
+       solo "Nombre: texto" y un puntito tenue que despliega el detalle. */
+    if(x.k==="bi" && (x.wa_in||x.wa_c||x.origen||x.tipo)){
+      var tx=String(x.t||""), mm=tx.match(/^([^:\n]{1,24}):\s*([\s\S]*)$/);
+      var cab=mm?'<b class="cn">'+esc(mm[1])+':</b> '+esc(mm[2]):esc(tx);
+      var dt="";
+      if(msgAn[ix]){
+        var fd=x.ts?new Date(x.ts).toLocaleString("es-MX",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):(x.h||"");
+        var og={wa_entrante:"WhatsApp · entrante",wa_saliente:"WhatsApp · enviado por Salvador",arrastrado:"Arrastrado a mano"}[x.origen]||(x.wa_in?"WhatsApp · entrante":"Capturado");
+        dt='<div class="dt">'+esc(fd)+' · '+esc(og)+(x.wa_c?' · '+esc(x.wa_c):'')+(x.chat?' · chat: '+esc(x.chat):'')+
+           (x.tipo&&x.tipo!=="texto"?' · '+esc(String(x.tipo).replace("audio_transcrito","audio transcrito")):'')+
+           (x.url?' · <a href="'+esc(x.url)+'" target="_blank" rel="noopener">abrir archivo</a>':'')+
+           (x.analisis?'<br>'+esc(x.analisis):'')+'</div>';
+      }
+      m+='<div class="b bi bcomp">'+cab+'<button class="mdot" data-an="'+ix+'" aria-label="Ver detalle del mensaje">·</button>'+dt+'</div>';
+      return;
+    }
     m+='<div class="b '+(x.k==="bal"?"bal":(x.k==="bo"?"bo":"bi"))+(x.abre?' liga" data-abre="'+esc(x.abre):'')+'">'+esc(x.t)+
        (x.abre?'<span class="abre">Abrir ›</span>':'')+'<span class="st">'+meta+
        (tieneAn?'<button class="mdel" data-an="'+ix+'" aria-label="Ver cómo se decidió este mensaje">'+ico("info",15,1.8)+'</button>':'')+
