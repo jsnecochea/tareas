@@ -364,7 +364,8 @@ button{font:inherit;color:inherit}
 .enlh .enlb{display:flex;align-items:center;gap:8px;margin:4px 12px 10px;padding:0 10px;border-radius:10px;background:var(--ground);color:var(--ink-3)}
 .enlh .enlb input{flex:1;min-width:0;padding:11px 0;border:0;background:none;outline:none;font:inherit;font-size:16px;color:var(--ink)}
 .enlh .enll{max-height:46vh;overflow-y:auto;-webkit-overflow-scrolling:touch;border-top:1px solid rgba(255,255,255,.08)}
-.enlh .enlr{display:block;width:100%;text-align:left;padding:13px 16px;border:0;border-bottom:1px solid rgba(255,255,255,.06);background:none;font:inherit;font-size:17px;color:var(--ink);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-tap-highlight-color:transparent}
+.enlh .enlr{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 16px;border:0;border-bottom:1px solid rgba(255,255,255,.06);background:none;font:inherit;font-size:17px;color:var(--ink);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.enlh .enlr .enln{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .enlh .enlr:active{background:rgba(255,255,255,.06)}
 .enlh .enlv{padding:22px 16px;text-align:center;color:var(--ink-3);font-size:15px}
 .enlh .enlc{display:block;width:100%;margin-top:8px;padding:17px;border:0;border-radius:14px;background:var(--surface-2);font:inherit;font-size:20px;font-weight:600;color:var(--azul);cursor:pointer}
@@ -934,7 +935,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 155 · 2026-09-30 · Pestaña \"Creadas hoy\" (primera, gris) · \"Enlazar a otra tarea\" en el menú ⋯ · (antes) build 154 · 2026-09-29 · Flecha atrás en resultados de búsqueda · (antes) build 153 · 2026-09-29 · Mensajes en cola cortos (70 caracteres) · Lo que llega por WhatsApp (wa_in) prende el renglon verde y el badge · Cierre de tareas con lista palomeada/ticket corregido · Bote naranja con play y contexto; doble vida: WhatsApp + tarea espejo en su app; dictado a equipo (Cynthia) sale directo por WhatsApp + archivo; 'en mi tarea de X'; 'ponle un mensaje a…'";
+var VERSION_APP = "build 156 · 2026-09-30 · \"Vincular a otra tarea\" (antes Enlazar), con pastilla Vincular en cada resultado · (antes) build 155 · 2026-09-30 · Pestaña \"Creadas hoy\" (primera, gris) · \"Enlazar a otra tarea\" en el menú ⋯ · (antes) build 154 · 2026-09-29 · Flecha atrás en resultados de búsqueda · (antes) build 153 · 2026-09-29 · Mensajes en cola cortos (70 caracteres) · Lo que llega por WhatsApp (wa_in) prende el renglon verde y el badge · Cierre de tareas con lista palomeada/ticket corregido · Bote naranja con play y contexto; doble vida: WhatsApp + tarea espejo en su app; dictado a equipo (Cynthia) sale directo por WhatsApp + archivo; 'en mi tarea de X'; 'ponle un mensaje a…'";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -3792,7 +3793,7 @@ function abreEnlazar(oid){
   var nrmDe={}; cand.forEach(function(x){ nrmDe[x.id]=_nrm(x.nombre); });   /* aparte: nunca se escribe en la tarea */
   var v=document.createElement("div"); v.className="hoja-velo"; v.id="enlv";
   v.innerHTML='<div class="enlh"><div class="enlg">'+
-    '<div class="enlt"><b>Enlazar a otra tarea</b>Elige a cu\u00e1l pasar todo lo de \u201c'+esc(corta40(o.nombre))+'\u201d</div>'+
+    '<div class="enlt"><b>Vincular a otra tarea</b>Elige a cu\u00e1l pasar todo lo de \u201c'+esc(corta40(o.nombre))+'\u201d</div>'+
     '<div class="enlb">'+ico("lupa",18,1.8)+'<input id="enlq" type="text" placeholder="Buscar tarea" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search"></div>'+
     '<div class="enll" id="enll"></div></div>'+
     '<button class="enlc" id="enlno">Cancelar</button></div>';
@@ -3804,7 +3805,7 @@ function abreEnlazar(oid){
     var txt=_nrm(q.value).trim(), ws=txt?txt.split(/\s+/):[];
     var r=cand.filter(function(x){ return ws.every(function(w){ return nrmDe[x.id].indexOf(w)>=0 }) });
     var tot=r.length; r=r.slice(0,60);
-    lista.innerHTML=r.length?r.map(function(x){ return '<button class="enlr" data-d="'+esc(x.id)+'">'+esc(x.nombre)+'</button>' }).join("")+
+    lista.innerHTML=r.length?r.map(function(x){ return '<button class="enlr" data-d="'+esc(x.id)+'"><span class="enln">'+esc(x.nombre)+'</span><span class="vinc">Vincular</span></button>' }).join("")+
         (tot>r.length?'<div class="enlv">Escribe m\u00e1s para acotar \u00b7 '+tot+' tareas</div>':'')
       : '<div class="enlv">'+(cand.length?'No encontr\u00e9 nada con eso.':'No hay otras tareas abiertas.')+'</div>';
   }
@@ -3823,9 +3824,9 @@ function corta40(s){ s=String(s||"").trim(); return s.length>40 ? s.slice(0,39)+
 function enlazaTareas(oid,did){
   var o=tareas.filter(function(x){return x.id===oid})[0], d=tareas.filter(function(x){return x.id===did})[0];
   cierraEnlazar();
-  if(!o||!d||o===d){ toast("No se pudo enlazar"); render(); return; }
+  if(!o||!d||o===d){ toast("No se pudo vincular"); render(); return; }
   if(o.cierre||d.cierre||o.fusionada_en||d.fusionada_en){ toast("Una de las dos ya est\u00e1 cerrada"); render(); return; }
-  if(esEjemplo(o)||esEjemplo(d)){ toast("Es una tarea de ejemplo: no se enlaza"); render(); return; }
+  if(esEjemplo(o)||esEjemplo(d)){ toast("Es una tarea de ejemplo: no se vincula"); render(); return; }
   var cp=function(x){ return JSON.parse(JSON.stringify(x)); };
   /* 1) se arma todo sobre COPIAS y se revisa el tama\u00f1o (1 MB por documento en Firestore) */
   var msgsO=cp(o.msgs||[]), msgsD=cp(d.msgs||[]);
@@ -3851,7 +3852,7 @@ function enlazaTareas(oid,did){
   var ultO=0, ultD=0;
   msgsO.forEach(function(m){ if(m&&m.ts>ultO) ultO=m.ts }); msgsD.forEach(function(m){ if(m&&m.ts>ultD) ultD=m.ts });
   var tam=JSON.stringify(msgsN).length+JSON.stringify(evN).length+JSON.stringify(d).length-JSON.stringify(d.msgs||[]).length-JSON.stringify(d.evidencias||[]).length;
-  if(tam>900000){ toast("Juntas pesar\u00edan demasiado (fotos). No se enlaz\u00f3 nada."); render(); return; }
+  if(tam>900000){ toast("Juntas pesar\u00edan demasiado (fotos). No se vincul\u00f3 nada."); render(); return; }
   /* 2) se aplica a la destino */
   d.msgs=msgsN;
   if(evN.length) d.evidencias=evN;
@@ -5255,7 +5256,7 @@ function vHilo(){
     (menuOpen?'<div class="hoja"><button class="hop" data-mn="renombrar">Cambiar nombre</button>'+
       '<button class="hop" data-mn="encargar">Pedirle a alguien que lo haga</button>'+
       '<button class="hop" data-mn="fecha">Mover la fecha</button>'+
-      '<button class="hop" data-mn="enlazar">Enlazar a otra tarea</button>'+
+      '<button class="hop" data-mn="enlazar">Vincular a otra tarea</button>'+
       '<button class="hop" data-mn="nose">Esto ya no se va a hacer</button>'+
       (PERSONAS[yo].jefe?'<button class="hop" data-mn="pasar">Pasársela a alguien definitivamente</button>':'')+
       '<button class="hop x" data-mn="cerrar">Cancelar</button></div>':'');
