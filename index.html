@@ -510,6 +510,7 @@ button{font:inherit;color:inherit}
 .hoja-velo{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:70;display:flex;
   align-items:flex-end;justify-content:center;padding:0 8px max(8px,env(safe-area-inset-bottom));
   animation:veloIn .18s ease-out}
+#enlv.hoja-velo{align-items:flex-start;padding-top:max(12px,env(safe-area-inset-top));padding-bottom:8px}
 .hoja{width:100%;max-width:440px;animation:hojaIn .24s cubic-bezier(.2,.8,.2,1)}
 .hoja .grp{background:var(--surface-2);border-radius:14px;overflow:hidden}
 .hoja .ttl{padding:14px 16px 12px;text-align:center;color:var(--ink-2);font-size:13.5px;
@@ -942,7 +943,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 161 · 2026-09-30 · Picar una tarea \"con información pendiente\" la abre como cualquier otra · (antes) build 160 · 2026-09-30 · \"Cambia el nombre de esta tarea a X\" por voz/escrito ya funciona · (antes) build 159 · 2026-09-30 · Cambiar nombre: el teclado sale solo y el campo viene vacío (el nombre actual queda de guía) · (antes) build 158 · 2026-09-30 · Mensajes de WhatsApp súper compactos \"Nombre: texto\" con puntito de detalle (fecha, origen, tipo, archivo) · (antes) build 157 · 2026-09-30 · Atorados incluye tareas que esperan TU decisión (pendiente_tipo=decision_salvador) con botón Ya decidí · (antes) build 156 · 2026-09-30 · \"Vincular a otra tarea\" (antes Enlazar), con pastilla Vincular en cada resultado · (antes) build 155 · 2026-09-30 · Pestaña \"Creadas hoy\" (primera, gris) · \"Enlazar a otra tarea\" en el menú ⋯ · (antes) build 154 · 2026-09-29 · Flecha atrás en resultados de búsqueda · (antes) build 153 · 2026-09-29 · Mensajes en cola cortos (70 caracteres) · Lo que llega por WhatsApp (wa_in) prende el renglon verde y el badge · Cierre de tareas con lista palomeada/ticket corregido · Bote naranja con play y contexto; doble vida: WhatsApp + tarea espejo en su app; dictado a equipo (Cynthia) sale directo por WhatsApp + archivo; 'en mi tarea de X'; 'ponle un mensaje a…'";
+var VERSION_APP = "build 162 · 2026-10-01 · Resultados de búsqueda con botón \"Es una tarea nueva\" · Vincular: la lupa y la lista salen ARRIBA, no abajo · (antes) build 161 · 2026-09-30 · Picar una tarea \"con información pendiente\" la abre como cualquier otra · (antes) build 160 · 2026-09-30 · \"Cambia el nombre de esta tarea a X\" por voz/escrito ya funciona · (antes) build 159 · 2026-09-30 · Cambiar nombre: el teclado sale solo y el campo viene vacío (el nombre actual queda de guía) · (antes) build 158 · 2026-09-30 · Mensajes de WhatsApp súper compactos \"Nombre: texto\" con puntito de detalle (fecha, origen, tipo, archivo) · (antes) build 157 · 2026-09-30 · Atorados incluye tareas que esperan TU decisión (pendiente_tipo=decision_salvador) con botón Ya decidí · (antes) build 156 · 2026-09-30 · \"Vincular a otra tarea\" (antes Enlazar), con pastilla Vincular en cada resultado · (antes) build 155 · 2026-09-30 · Pestaña \"Creadas hoy\" (primera, gris) · \"Enlazar a otra tarea\" en el menú ⋯ · (antes) build 154 · 2026-09-29 · Flecha atrás en resultados de búsqueda · (antes) build 153 · 2026-09-29 · Mensajes en cola cortos (70 caracteres) · Lo que llega por WhatsApp (wa_in) prende el renglon verde y el badge · Cierre de tareas con lista palomeada/ticket corregido · Bote naranja con play y contexto; doble vida: WhatsApp + tarea espejo en su app; dictado a equipo (Cynthia) sale directo por WhatsApp + archivo; 'en mi tarea de X'; 'ponle un mensaje a…'";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -4482,7 +4483,7 @@ function vLista(){
     h+='<div class="grp">Resultado \u00b7 '+enc.length+'</div><ul class="list">';
     if(!enc.length) h+='<li class="vacio">No encontr\u00e9 nada con eso.</li>';
     enc.forEach(function(t){ h+=fila(t) });
-    h+='</ul><div class="pieacc"><button class="op" id="bclr">Limpiar b\u00fasqueda</button></div></div>';
+    h+='</ul><div class="pieacc"><button class="op" id="bnueva">Es una tarea nueva</button><button class="op" id="bclr">Limpiar b\u00fasqueda</button></div></div>';
     return h+barraPie();
   }
 
@@ -8822,6 +8823,16 @@ function bindLista(){
   var xn=$("xnudav"); if(xn) xn.onclick=function(){ window.__nudgeAvisos=false; render(); };
   var bs=$("bsuelto"); if(bs) bs.onclick=function(){ sueltoOpen=true; vista="suelto"; render() };
   bindCaja2();
+  /* build 162: la pantalla de resultados siempre deja crear lo dicho como tarea
+     (o recordatorio) NUEVA — antes solo se podia buscar, sin salida. */
+  var bnu=$("bnueva"); if(bnu) bnu.onclick=function(){
+    var tx=String(consulta||"").trim(); if(!tx) return;
+    var nom=(nombreDeLoDicho(tx)||tx).replace(/\s+/g," ").trim(); nom=conMayuscula(nom.length>60?nom.slice(0,59)+"\u2026":nom);
+    var nt;
+    if(/recu[e\u00e9]rdame|recordatorio|av[i\u00ed]same/i.test(tx)) nt=creaRecordatorio({texto:nom,dicho:tx});
+    else nt=creaTarea({nombre:nom,dicho:tx,aviso_hora_dicha:true});
+    consulta=""; barraEstado=null; abierta=nt.id; vista="hilo"; render(); toast("Tarea nueva creada");
+  };
   var bc=$("bclr"); if(bc) bc.onclick=function(){ consulta=""; render() }; var bkc=$("bback"); if(bkc && consulta) bkc.onclick=function(){ consulta=""; render() };
   var bfu=$("bfut"); if(bfu) bfu.onclick=function(){ verFuturas=!verFuturas; render() };
   var bms2=$("bmas"); if(bms2) bms2.onclick=function(){ masDias+=7; render() };
