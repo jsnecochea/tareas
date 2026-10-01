@@ -856,6 +856,11 @@ button{font:inherit;color:inherit}
    (donde empiezan las letras) a ~44.7px. El conjunto reloj+palabra mide 40.5px
    y arranca en 5px, así que cierra pareja arriba y abajo. */
 .row.urg{grid-template-columns:44px 1fr auto;align-items:start}
+.ls.dec b{color:#FFC26B;font-weight:700}
+.decban{margin:6px 14px 4px;padding:10px 12px;border:1px solid rgba(255,159,10,.5);border-radius:12px;background:rgba(255,159,10,.10)}
+.decban .dect{font-family:Archivo;font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#FFC26B}
+.decban .decq{font-size:15px;font-weight:600;margin:4px 0 8px;color:var(--ink)}
+.decban .op{width:100%}
 .utag{width:44px;margin-top:1px;display:flex;flex-direction:column;align-items:center;gap:3px}
 .utag .ur{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
   color:#FFC26B;animation:brillo 1.9s ease-in-out infinite}
@@ -935,7 +940,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 156 · 2026-09-30 · \"Vincular a otra tarea\" (antes Enlazar), con pastilla Vincular en cada resultado · (antes) build 155 · 2026-09-30 · Pestaña \"Creadas hoy\" (primera, gris) · \"Enlazar a otra tarea\" en el menú ⋯ · (antes) build 154 · 2026-09-29 · Flecha atrás en resultados de búsqueda · (antes) build 153 · 2026-09-29 · Mensajes en cola cortos (70 caracteres) · Lo que llega por WhatsApp (wa_in) prende el renglon verde y el badge · Cierre de tareas con lista palomeada/ticket corregido · Bote naranja con play y contexto; doble vida: WhatsApp + tarea espejo en su app; dictado a equipo (Cynthia) sale directo por WhatsApp + archivo; 'en mi tarea de X'; 'ponle un mensaje a…'";
+var VERSION_APP = "build 157 · 2026-09-30 · Atorados incluye tareas que esperan TU decisión (pendiente_tipo=decision_salvador) con botón Ya decidí · (antes) build 156 · 2026-09-30 · \"Vincular a otra tarea\" (antes Enlazar), con pastilla Vincular en cada resultado · (antes) build 155 · 2026-09-30 · Pestaña \"Creadas hoy\" (primera, gris) · \"Enlazar a otra tarea\" en el menú ⋯ · (antes) build 154 · 2026-09-29 · Flecha atrás en resultados de búsqueda · (antes) build 153 · 2026-09-29 · Mensajes en cola cortos (70 caracteres) · Lo que llega por WhatsApp (wa_in) prende el renglon verde y el badge · Cierre de tareas con lista palomeada/ticket corregido · Bote naranja con play y contexto; doble vida: WhatsApp + tarea espejo en su app; dictado a equipo (Cynthia) sale directo por WhatsApp + archivo; 'en mi tarea de X'; 'ponle un mensaje a…'";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -4513,9 +4518,9 @@ function vLista(){
 
   var hAtora="";
   if(det.length){
-    hAtora=secHead("atora","Atoras a alguien m\u00e1s",det.length,"sb-atora","warn");
+    hAtora=secHead("atora","Atorados",det.length,"sb-atora","warn");
     if(secAbierta==="atora"){
-      hAtora+='<ul class="list">'; det.forEach(function(t){hAtora+=filaUrg(t)}); hAtora+='</ul>';
+      hAtora+='<ul class="list">'; det.forEach(function(t){hAtora+=(esDecisionSal(t)?filaDecision(t):filaUrg(t))}); hAtora+='</ul>';
     }
   }
 
@@ -4815,7 +4820,39 @@ function meDetiene(t){
      String(t.detenido.quien).toLowerCase().indexOf(PERSONAS[yo].nombre.toLowerCase())>=0) return true;
   return false;
 }
-function loQueDetengo(){ return tareas.filter(function(t){ return meDetiene(t) && !t.pendiente_info }) }
+/* build 157 (Salvador 2026-09-30): ATORADA POR UNA DECISION DE SALVADOR (autorizar un
+   evento, una cita de compras, cual reunion se queda si se empalman, aprobar un
+   pedido...). Se escribe (workers/Claude por fs_set) con:
+     pendiente_tipo = "decision_salvador"   y   pendiente_info = "la pregunta a decidir"
+   Sale en la seccion Atorados con la etiqueta "Esperando tu decision". Se limpia con
+   "Ya decidi" (pone pendiente_tipo="" y pendiente_info="", guarda decision_ts). */
+function esDecisionSal(t){
+  return !!(t && t.pendiente_tipo==="decision_salvador" && t.pendiente_info && !t.cierre &&
+            !t.fusionada_en && estadoReal(t)!=="cerrada");
+}
+function loQueDetengo(){
+  var a=tareas.filter(function(t){ return meDetiene(t) && !t.pendiente_info && !esDecisionSal(t) });
+  if(PERSONAS[yo] && PERSONAS[yo].jefe){
+    tareas.forEach(function(t){ if(esDecisionSal(t) && a.indexOf(t)<0) a.push(t) });
+  }
+  return a;
+}
+function filaDecision(t){
+  var b=badge(t);
+  return '<li><button class="row urg" data-id="'+t.id+'" data-decision="1">'+
+    '<span class="utag" aria-label="Esperando tu decisi\u00f3n">'+
+      '<span class="ur">'+ico("pencil",17,1.8)+'</span><span class="uw">Decide</span></span><span>'+
+    '<span class="nm">'+esc(t.nombre)+'</span>'+
+    '<span class="ls dec"><b>Esperando tu decisi\u00f3n</b> \u00b7 '+esc(t.pendiente_info)+'</span></span>'+
+    '<span class="meta"><span class="tm">'+((t.duenio&&t.duenio!==yo&&PERSONAS[t.duenio])?PERSONAS[t.duenio].ini:"")+'</span>'+
+    (b?(b.ico?'<span class="bico">'+b.ico+'</span>':'<span class="bdg">'+b.n+'</span>'):'')+'</span></button></li>';
+}
+function bannerDecision(t){
+  if(!esDecisionSal(t) || !PERSONAS[yo] || !PERSONAS[yo].jefe) return "";
+  return '<div class="decban"><div class="dect">Esperando tu decisi\u00f3n</div>'+
+    '<div class="decq">'+esc(t.pendiente_info)+'</div>'+
+    '<button class="op k" id="bdecidi">Ya decid\u00ed</button></div>';
+}
 
 /* EL BUSCADOR. Reusa el mismo filtro de las repetidas: cero tokens. */
 var consulta="";
@@ -5425,7 +5462,7 @@ function vHilo(){
   }
   var pre=t.pregunta&&t.duenio===yo?'<div class="b bi" style="margin:0 14px 8px">'+esc(t.pregunta)+'</div>':"";
 
-  return h+vPasos(t)+'<div class="scroll"><div class="msgs">'+m+pre+'</div></div>'+
+  return h+vPasos(t)+bannerDecision(t)+'<div class="scroll"><div class="msgs">'+m+pre+'</div></div>'+
     /* LA MISMA BARRA DE TODAS LAS VISTAS — 2026-09-04. Antes el hilo tenia la
        camara a la IZQUIERDA y una flecha de enviar a la derecha, distinto de la
        caratula (camara a la DERECHA, sin flecha). Salvador lo cacho: "tiene que
@@ -7465,7 +7502,7 @@ window.recienCreadas = window.recienCreadas || [];
 /* las que estan a medias, para el bote naranja (del que las dicto) */
 function pendientesInfo(){
   return tareas.filter(function(t){
-    return t.pendiente_info && (t.creada_por===yo || t.duenio===yo) &&
+    return t.pendiente_info && !esDecisionSal(t) && (t.creada_por===yo || t.duenio===yo) &&
            !t.cierre && estadoReal(t)!=="cerrada";
   }).sort(function(a,b){ return (b.creada||0)-(a.creada||0); });
 }
@@ -8926,6 +8963,11 @@ function bindHilo(){
   (t.acuerdos_pend||[]).slice().forEach(function(p){
     if(p && (Date.now()-(p.ts||0))>30000){ try{ creaAcuerdo(t, p, null, "la app se cerró antes de terminar"); }catch(e){} }
   });
+  var bdc=$("bdecidi"); if(bdc) bdc.onclick=function(){
+    msg(t,"bi","Ya decidiste: "+t.pendiente_info);
+    t.pendiente_tipo=""; t.pendiente_info=""; t.decision_ts=Date.now();
+    guarda(t); toast("Listo, ya no est\u00e1 atorada"); render();
+  };
   var bvo=$("bverorig"); if(bvo) bvo.onclick=function(){
     if(t.revisa_a){ abierta=t.revisa_a; vista="hilo"; render(); }
   };
