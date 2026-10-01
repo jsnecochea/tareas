@@ -353,6 +353,21 @@ button{font:inherit;color:inherit}
 .sb-rec .sicw{background:rgba(124,100,255,.18);color:#b3a4ff}.sb-rec .scnt{background:var(--morado);color:#180f3a}.sb-rec b{color:var(--ink)}
 .sb-prox{background:linear-gradient(180deg,rgba(142,142,147,.14),rgba(142,142,147,.05));border-color:rgba(142,142,147,.35)}
 .sb-prox .sicw{background:rgba(142,142,147,.18);color:#c7c7cc}.sb-prox .scnt{background:var(--gris-b);color:#1c1c1e}.sb-prox b{color:var(--ink)}
+/* build 155: "Creadas hoy" (vista duplicada, sin color: gris plano) */
+.sb-cre{background:var(--surface);border-color:rgba(142,142,147,.28)}
+.sb-cre .sicw{background:rgba(142,142,147,.16);color:#c7c7cc}.sb-cre .scnt{background:var(--gris-b);color:#1c1c1e}.sb-cre b{color:var(--ink)}
+/* build 155: hoja "Enlazar a otra tarea" (buscador + lista) */
+.enlh{width:100%;max-width:440px;animation:hojaIn .24s cubic-bezier(.2,.8,.2,1)}
+.enlh .enlg{background:var(--surface-2);border-radius:14px;overflow:hidden}
+.enlh .enlt{padding:14px 16px 8px;text-align:center;color:var(--ink-2);font-size:13.5px}
+.enlh .enlt b{display:block;color:var(--ink);font-size:15px;font-weight:600}
+.enlh .enlb{display:flex;align-items:center;gap:8px;margin:4px 12px 10px;padding:0 10px;border-radius:10px;background:var(--ground);color:var(--ink-3)}
+.enlh .enlb input{flex:1;min-width:0;padding:11px 0;border:0;background:none;outline:none;font:inherit;font-size:16px;color:var(--ink)}
+.enlh .enll{max-height:46vh;overflow-y:auto;-webkit-overflow-scrolling:touch;border-top:1px solid rgba(255,255,255,.08)}
+.enlh .enlr{display:block;width:100%;text-align:left;padding:13px 16px;border:0;border-bottom:1px solid rgba(255,255,255,.06);background:none;font:inherit;font-size:17px;color:var(--ink);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-tap-highlight-color:transparent}
+.enlh .enlr:active{background:rgba(255,255,255,.06)}
+.enlh .enlv{padding:22px 16px;text-align:center;color:var(--ink-3);font-size:15px}
+.enlh .enlc{display:block;width:100%;margin-top:8px;padding:17px;border:0;border-radius:14px;background:var(--surface-2);font:inherit;font-size:20px;font-weight:600;color:var(--azul);cursor:pointer}
 
 .sec-head .grow{flex:1}
 .marcaje{color:var(--super);font-weight:600}
@@ -919,7 +934,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 154 · 2026-09-29 · Flecha atrás en resultados de búsqueda · (antes) build 153 · 2026-09-29 · Mensajes en cola cortos (70 caracteres) · Lo que llega por WhatsApp (wa_in) prende el renglon verde y el badge · Cierre de tareas con lista palomeada/ticket corregido · Bote naranja con play y contexto; doble vida: WhatsApp + tarea espejo en su app; dictado a equipo (Cynthia) sale directo por WhatsApp + archivo; 'en mi tarea de X'; 'ponle un mensaje a…'";
+var VERSION_APP = "build 155 · 2026-09-30 · Pestaña \"Creadas hoy\" (primera, gris) · \"Enlazar a otra tarea\" en el menú ⋯ · (antes) build 154 · 2026-09-29 · Flecha atrás en resultados de búsqueda · (antes) build 153 · 2026-09-29 · Mensajes en cola cortos (70 caracteres) · Lo que llega por WhatsApp (wa_in) prende el renglon verde y el badge · Cierre de tareas con lista palomeada/ticket corregido · Bote naranja con play y contexto; doble vida: WhatsApp + tarea espejo en su app; dictado a equipo (Cynthia) sale directo por WhatsApp + archivo; 'en mi tarea de X'; 'ponle un mensaje a…'";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -2089,6 +2104,39 @@ var secAbierta=null;   /* Salvador 2026-09-22: acordeon de las 7 secciones del h
    (atora/pend/venc/msg/hoy/rec/prox). null = todas colapsadas; si trae una clave, esa
    es la UNICA seccion abierta — al abrir otra se cierra la anterior sola, sin mover
    el scroll. Reemplaza a verMsgs/verPend/plegado, que aislaban cada quien a su modo. */
+/* build 155: dia calendario (YYYY-MM-DD) en America/Monterrey de un epoch ms */
+function diaMonterrey(ms){
+  try{
+    var p=new Intl.DateTimeFormat("en-CA",{timeZone:"America/Monterrey",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date(ms)), o={};
+    p.forEach(function(x){ o[x.type]=x.value });
+    return o.year+"-"+o.month+"-"+o.day;
+  }catch(e){ var d=new Date(ms); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+}
+/* dia de creacion de una tarea ("" si no hay dato): `creada` epoch ms; las
+   auto-creadas por WhatsApp traen `creado` 'YYYY-MM-DD HH:MM:SS' (hora de Monterrey). */
+function diaCreacion(t){
+  var c=t&&t.creada;
+  if(typeof c==="string" && /^\d{10,}$/.test(c)) c=+c;
+  if(typeof c==="number" && isFinite(c) && c>0) return diaMonterrey(c);
+  var s=t&&t.creado;
+  if(typeof s==="number" && isFinite(s) && s>0) return diaMonterrey(s);
+  if(typeof s==="string"){ var m=s.match(/^(\d{4}-\d{2}-\d{2})[ T]\d{2}:\d{2}/); if(m) return m[1]; }
+  return "";
+}
+function msCreacion(t){
+  if(typeof t.creada==="number") return t.creada;
+  var s=t.creado; if(typeof s==="number") return s;
+  if(typeof s==="string"){ var m=s.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/);
+    if(m) return Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+(m[6]||0)); }
+  return 0;
+}
+function tareasCreadasHoy(lista){
+  var H=diaMonterrey(Date.now()), seen={};
+  return lista.filter(function(t){
+    if(!t || t.fusionada_en || seen[t.id]) return false;
+    seen[t.id]=1; return diaCreacion(t)===H;
+  }).sort(function(a,b){ return msCreacion(b)-msCreacion(a); });
+}
 function secHead(key,label,n,cls,iconKey){
   var abierta=secAbierta===key;
   return '<button class="sbar '+cls+(abierta?" open":"")+'" data-sb="'+key+'">'+
@@ -2605,7 +2653,13 @@ function arranca(){
     });
     db.collection(COL).onSnapshot(function(snap){
       dbFail=false;   /* enganchó de verdad: no hay falla */
-      tareas=[]; snap.forEach(function(d){var o=d.data();o.id=d.id;tareas.push(o)});
+      tareas=[]; snap.forEach(function(d){var o=d.data();o.id=d.id;
+        /* build 155: una tarea fusionada (enlazada a otra) NO se pinta en ninguna vista;
+           sigue en la base (nada se borra). Y las que crea WhatsApp con `tarea` en vez de
+           `nombre` se leen con ese nombre. */
+        if(o.estado==="fusionada" || o.fusionada_en) return;
+        if(!o.nombre && o.tarea) o.nombre=String(o.tarea);
+        tareas.push(o)});
       /* LOS EJEMPLOS NO SE SIEMBRAN EN LA BASE — corregido 2026-09-04, el día
          que Josué abrió las reglas. Antes, con la base vacía, se subían las ~15
          tareas de ejemplo a Firestore y le habrían aparecido a TODO el equipo
@@ -3717,6 +3771,104 @@ function hojaConfirma(o){
   $("hojaok").onclick=function(){ cierraHoja(); if(o.cb) o.cb(); };
 }
 function cierraHoja(){ var e=$("hojav"); if(e&&e.parentNode) e.parentNode.removeChild(e); }
+
+/* ===== build 155: ENLAZAR A OTRA TAREA =====
+   Pasa TODO lo de la tarea origen (msgs: texto, audios transcritos, fotos, url,
+   WhatsApp; evidencias; fotos de puntos) a la tarea destino, ordenado por ts, y
+   aparta la origen: estado "fusionada" + fusionada_en=<id destino>. NADA SE
+   BORRA (regla 8 de Salvador): la origen queda en la base y solo se excluye de
+   toda vista (snapshot) y de las alarmas del servidor. */
+function cierraEnlazar(){ var e=$("enlv"); if(e&&e.parentNode) e.parentNode.removeChild(e); }
+function enlazaCandidatas(oid){
+  return tareas.filter(function(x){
+    return x.id!==oid && !x.cierre && !x.fusionada_en && x.estado!=="fusionada" && !x.es_recordatorio &&
+           estadoReal(x)!=="cerrada" && !esEjemplo(x) && (leToca(x)||sigoElHilo(x)) && String(x.nombre||"").trim();
+  }).sort(function(a,b){ return (b.tocada||0)-(a.tocada||0); });
+}
+function abreEnlazar(oid){
+  var o=tareas.filter(function(x){return x.id===oid})[0]; if(!o) return;
+  cierraEnlazar();
+  var cand=enlazaCandidatas(oid);
+  var nrmDe={}; cand.forEach(function(x){ nrmDe[x.id]=_nrm(x.nombre); });   /* aparte: nunca se escribe en la tarea */
+  var v=document.createElement("div"); v.className="hoja-velo"; v.id="enlv";
+  v.innerHTML='<div class="enlh"><div class="enlg">'+
+    '<div class="enlt"><b>Enlazar a otra tarea</b>Elige a cu\u00e1l pasar todo lo de \u201c'+esc(corta40(o.nombre))+'\u201d</div>'+
+    '<div class="enlb">'+ico("lupa",18,1.8)+'<input id="enlq" type="text" placeholder="Buscar tarea" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search"></div>'+
+    '<div class="enll" id="enll"></div></div>'+
+    '<button class="enlc" id="enlno">Cancelar</button></div>';
+  document.body.appendChild(v);
+  v.onclick=function(e){ if(e.target===v) cierraEnlazar(); };
+  $("enlno").onclick=cierraEnlazar;
+  var lista=$("enll"), q=$("enlq");
+  function pinta(){
+    var txt=_nrm(q.value).trim(), ws=txt?txt.split(/\s+/):[];
+    var r=cand.filter(function(x){ return ws.every(function(w){ return nrmDe[x.id].indexOf(w)>=0 }) });
+    var tot=r.length; r=r.slice(0,60);
+    lista.innerHTML=r.length?r.map(function(x){ return '<button class="enlr" data-d="'+esc(x.id)+'">'+esc(x.nombre)+'</button>' }).join("")+
+        (tot>r.length?'<div class="enlv">Escribe m\u00e1s para acotar \u00b7 '+tot+' tareas</div>':'')
+      : '<div class="enlv">'+(cand.length?'No encontr\u00e9 nada con eso.':'No hay otras tareas abiertas.')+'</div>';
+  }
+  lista.onclick=function(e){
+    var b=e.target; while(b&&b!==lista&&!(b.getAttribute&&b.getAttribute("data-d"))) b=b.parentNode;
+    if(!b||b===lista) return;
+    var did=b.getAttribute("data-d"), d=tareas.filter(function(x){return x.id===did})[0]; if(!d) return;
+    hojaConfirma({titulo:"Pasar todo a \u201c"+corta40(d.nombre)+"\u201d",
+      sub:"Lo de \u201c"+corta40(o.nombre)+"\u201d se junta all\u00e1 y esta tarea sale de tu lista.",
+      accion:"Pasar todo a "+corta40(d.nombre), cb:function(){ enlazaTareas(oid,did); }});
+  };
+  q.oninput=pinta; pinta();
+  setTimeout(function(){ try{ q.focus() }catch(e){} }, 60);
+}
+function corta40(s){ s=String(s||"").trim(); return s.length>40 ? s.slice(0,39)+"\u2026" : s; }
+function enlazaTareas(oid,did){
+  var o=tareas.filter(function(x){return x.id===oid})[0], d=tareas.filter(function(x){return x.id===did})[0];
+  cierraEnlazar();
+  if(!o||!d||o===d){ toast("No se pudo enlazar"); render(); return; }
+  if(o.cierre||d.cierre||o.fusionada_en||d.fusionada_en){ toast("Una de las dos ya est\u00e1 cerrada"); render(); return; }
+  if(esEjemplo(o)||esEjemplo(d)){ toast("Es una tarea de ejemplo: no se enlaza"); render(); return; }
+  var cp=function(x){ return JSON.parse(JSON.stringify(x)); };
+  /* 1) se arma todo sobre COPIAS y se revisa el tama\u00f1o (1 MB por documento en Firestore) */
+  var msgsO=cp(o.msgs||[]), msgsD=cp(d.msgs||[]);
+  var todos=msgsD.concat(msgsO).map(function(m,i){ return {m:m,i:i}; });
+  todos.sort(function(a,b){ return ((a.m&&a.m.ts)||0)-((b.m&&b.m.ts)||0) || a.i-b.i; });
+  var msgsN=todos.map(function(z){ return z.m; });
+  /* si algun mensaje no trae ts, se conserva su lugar relativo dentro de su tarea:
+     el sort con ts=0 los manda al inicio, que es donde estarian los mas viejos */
+  var evN=cp(d.evidencias||[]).concat(cp(o.evidencias||[]));
+  var ftO=o.fotos||{};
+  Object.keys(ftO).forEach(function(k){
+    var f=ftO[k]; if(!f||!f.data) return;
+    var p=(o.puntos&&o.puntos[k])?o.puntos[k].t:"punto "+k;
+    evN.push({data:f.data,lat:f.lat,lon:f.lon,ts:f.ts,de:p+" (de \u201c"+corta40(o.nombre)+"\u201d)"});
+  });
+  evN.sort(function(a,b){ return ((a&&a.ts)||0)-((b&&b.ts)||0); });
+  var wa=cp(d.wa_contactos||[]);
+  (o.wa_contactos||[]).forEach(function(c){
+    var n=String((c&&c.nombre)||c).toLowerCase();
+    if(!wa.some(function(w){ return String((w&&w.nombre)||w).toLowerCase()===n })) wa.push(cp(c));
+  });
+  var nMsg=msgsO.length, nArch=(o.evidencias||[]).length+Object.keys(ftO).length;
+  var ultO=0, ultD=0;
+  msgsO.forEach(function(m){ if(m&&m.ts>ultO) ultO=m.ts }); msgsD.forEach(function(m){ if(m&&m.ts>ultD) ultD=m.ts });
+  var tam=JSON.stringify(msgsN).length+JSON.stringify(evN).length+JSON.stringify(d).length-JSON.stringify(d.msgs||[]).length-JSON.stringify(d.evidencias||[]).length;
+  if(tam>900000){ toast("Juntas pesar\u00edan demasiado (fotos). No se enlaz\u00f3 nada."); render(); return; }
+  /* 2) se aplica a la destino */
+  d.msgs=msgsN;
+  if(evN.length) d.evidencias=evN;
+  if(wa.length) d.wa_contactos=wa;
+  if(nMsg && ultO>=ultD && o.ultima) d.ultima=o.ultima;
+  d.enlazadas=(d.enlazadas||[]).concat([{id:o.id,nombre:o.nombre||"",ts:Date.now(),msgs:nMsg,archivos:nArch}]);
+  msg(d,"bi","Se pas\u00f3 aqu\u00ed todo lo de \u201c"+(o.nombre||"otra tarea")+"\u201d ("+nMsg+" mensaje"+(nMsg===1?"":"s")+(nArch?" y "+nArch+" archivo"+(nArch===1?"":"s"):"")+").");
+  /* 3) la origen se aparta (no se borra) */
+  o.estado="fusionada"; o.fusionada_en=d.id; o.fusionada_ts=Date.now();
+  try{ sincronizaAvisos(o); }catch(e){}
+  guarda(d); guarda(o);
+  /* fuera de la memoria local de inmediato (el snapshot tambien la excluye) */
+  var i=tareas.indexOf(o); if(i>=0) tareas.splice(i,1);
+  window.recienCreadas=(window.recienCreadas||[]).filter(function(r){ return r.id!==o.id && r.taskId!==o.id; });
+  toast("Pasado a \u201c"+corta40(d.nombre)+"\u201d");
+  abierta=d.id; vista="hilo"; fichaOpen=false; detOpen={}; menuOpen=false; editaNombre=null; render();
+}
 /* borrar un recordatorio suelto y SEGUIR: sin toast, brinca al que sigue en el
    orden del swipe; si era el ultimo, al anterior; si no queda ninguno, al home.
    Salvador 2026-09-22: "una vez que confirmas, ya no requieres que te digan que
@@ -4338,6 +4490,16 @@ function vLista(){
 
   h+=vRecienCreadas();
 
+  /* build 155: PESTANA "CREADAS HOY" — la primera, gris, vista DUPLICADA (las
+     tareas siguen en Hoy/Proximas/etc. segun su fecha). Dia = America/Monterrey. */
+  var creadasHoy=tareasCreadasHoy(arr.concat(misRecordatorios()));
+  if(secAbierta==="cre" && !creadasHoy.length) secAbierta=null;
+  var hCre="";
+  if(creadasHoy.length){
+    hCre=secHead("cre","Creadas hoy",creadasHoy.length,"sb-cre","hoja");
+    if(secAbierta==="cre"){ hCre+='<ul class="list">'; creadasHoy.forEach(function(t){hCre+=fila(t,false,"d-sec-prox")}); hCre+='</ul>'; }
+  }
+
   /* ===== ACORDEON DE 7 SECCIONES DEL HOME — orden y color fijos, aprobados
      por Salvador 2026-09-22 (mock-up v3): 1 atoras a alguien (rojo) \u00b7
      2 con informacion pendiente (naranja oscuro) \u00b7 3 vencidas (amarillo) \u00b7
@@ -4455,7 +4617,7 @@ function vLista(){
   }
 
   /* ===== orden final aprobado 2026-09-22 ===== */
-  h+=hAtora+hMis+hPend+hVenc+hMsg+hHoy+hProx+hHoyNada;
+  h+=hCre+hAtora+hMis+hPend+hVenc+hMsg+hHoy+hProx+hHoyNada;
 
   if(futuras.length && hoyYa.length){
     h+='<div class="futwrap"><button class="futbtn" id="bfut">'+
@@ -5093,6 +5255,7 @@ function vHilo(){
     (menuOpen?'<div class="hoja"><button class="hop" data-mn="renombrar">Cambiar nombre</button>'+
       '<button class="hop" data-mn="encargar">Pedirle a alguien que lo haga</button>'+
       '<button class="hop" data-mn="fecha">Mover la fecha</button>'+
+      '<button class="hop" data-mn="enlazar">Enlazar a otra tarea</button>'+
       '<button class="hop" data-mn="nose">Esto ya no se va a hacer</button>'+
       (PERSONAS[yo].jefe?'<button class="hop" data-mn="pasar">Pasársela a alguien definitivamente</button>':'')+
       '<button class="hop x" data-mn="cerrar">Cancelar</button></div>':'');
@@ -7540,7 +7703,7 @@ function subeAvisosPendientes(){
 }
 function sincronizaAvisos(t){
   if(!db||!t) return;
-  var cerr=!!(t.cierre) || estadoReal(t)==="cerrada";
+  var cerr=!!(t.cierre) || !!t.fusionada_en || estadoReal(t)==="cerrada";   /* build 155: una fusionada no suena */
   var av=cerr?[]:avisosDe(t);
   var ahora=av.map(function(a){ return claveAviso(t,a); });
   /* Salvador 2026-09-24: al cerrar o quitar la alarma se borra en el servidor
@@ -8929,6 +9092,7 @@ function bindHilo(){
       if(k==="fecha"){ t.pide_fecha=true;
         msg(t,"bi","¿Para cuándo la muevo? Dime por ejemplo: el viernes, en 15 días o a fin de mes.");
         guarda(t); render(); return }
+      if(k==="enlazar"){ render(); abreEnlazar(t.id); return }
       if(k==="nose"){ vista="cerrarmotivo"; render(); return }
       if(k==="pasar"){ vista="transferir"; render(); return }
     };
