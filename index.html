@@ -943,7 +943,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 162 · 2026-10-01 · Resultados de búsqueda con botón \"Es una tarea nueva\" · Vincular: la lupa y la lista salen ARRIBA, no abajo · (antes) build 161 · 2026-09-30 · Picar una tarea \"con información pendiente\" la abre como cualquier otra · (antes) build 160 · 2026-09-30 · \"Cambia el nombre de esta tarea a X\" por voz/escrito ya funciona · (antes) build 159 · 2026-09-30 · Cambiar nombre: el teclado sale solo y el campo viene vacío (el nombre actual queda de guía) · (antes) build 158 · 2026-09-30 · Mensajes de WhatsApp súper compactos \"Nombre: texto\" con puntito de detalle (fecha, origen, tipo, archivo) · (antes) build 157 · 2026-09-30 · Atorados incluye tareas que esperan TU decisión (pendiente_tipo=decision_salvador) con botón Ya decidí · (antes) build 156 · 2026-09-30 · \"Vincular a otra tarea\" (antes Enlazar), con pastilla Vincular en cada resultado · (antes) build 155 · 2026-09-30 · Pestaña \"Creadas hoy\" (primera, gris) · \"Enlazar a otra tarea\" en el menú ⋯ · (antes) build 154 · 2026-09-29 · Flecha atrás en resultados de búsqueda · (antes) build 153 · 2026-09-29 · Mensajes en cola cortos (70 caracteres) · Lo que llega por WhatsApp (wa_in) prende el renglon verde y el badge · Cierre de tareas con lista palomeada/ticket corregido · Bote naranja con play y contexto; doble vida: WhatsApp + tarea espejo en su app; dictado a equipo (Cynthia) sale directo por WhatsApp + archivo; 'en mi tarea de X'; 'ponle un mensaje a…'";
+var VERSION_APP = "build 163 · 2026-10-01 · Recordatorios que se repiten sin fecha de fin caen a información pendiente (¿hasta cuándo?)"Es una tarea nueva\" · Vincular: la lupa y la lista salen ARRIBA, no abajo · (antes) build 161 · 2026-09-30 · Picar una tarea \"con información pendiente\" la abre como cualquier otra · (antes) build 160 · 2026-09-30 · \"Cambia el nombre de esta tarea a X\" por voz/escrito ya funciona · (antes) build 159 · 2026-09-30 · Cambiar nombre: el teclado sale solo y el campo viene vacío (el nombre actual queda de guía) · (antes) build 158 · 2026-09-30 · Mensajes de WhatsApp súper compactos \"Nombre: texto\" con puntito de detalle (fecha, origen, tipo, archivo) · (antes) build 157 · 2026-09-30 · Atorados incluye tareas que esperan TU decisión (pendiente_tipo=decision_salvador) con botón Ya decidí · (antes) build 156 · 2026-09-30 · \"Vincular a otra tarea\" (antes Enlazar), con pastilla Vincular en cada resultado · (antes) build 155 · 2026-09-30 · Pestaña \"Creadas hoy\" (primera, gris) · \"Enlazar a otra tarea\" en el menú ⋯ · (antes) build 154 · 2026-09-29 · Flecha atrás en resultados de búsqueda · (antes) build 153 · 2026-09-29 · Mensajes en cola cortos (70 caracteres) · Lo que llega por WhatsApp (wa_in) prende el renglon verde y el badge · Cierre de tareas con lista palomeada/ticket corregido · Bote naranja con play y contexto; doble vida: WhatsApp + tarea espejo en su app; dictado a equipo (Cynthia) sale directo por WhatsApp + archivo; 'en mi tarea de X'; 'ponle un mensaje a…'";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -7488,6 +7488,11 @@ function creaTarea(d){
 /* RECORDATORIO — MVP: se guarda marcado, sin la maquinaria de tarea (no escala,
    no pide comprobante). Vive en la misma coleccion con es_recordatorio:true.
    Su comportamiento fino (avisar por push, verse aparte) se pule despues. */
+/* build 163: ¿lo dictado ya trae fin? ("hasta el 30 de nov", "sin fin", "por 3 meses") */
+function finDicho(tx){
+  var n=String(tx||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+  return /\b(hasta\s+(el|que|fin|diciembre|enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre)|sin\s+fin|por\s+\d+\s+(semanas|meses|dias)|indefinid)/.test(n);
+}
 function creaRecordatorio(r){
   var f=(r.fecha&&/^\d{4}-\d{2}-\d{2}$/.test(r.fecha))?r.fecha:hoy();
   var _dic=r.dicho||r.texto||"";
@@ -7506,6 +7511,9 @@ function creaRecordatorio(r){
     ultima:"", msgs:[], creada:Date.now(), creada_por:yo
   };
   msg(t,"bi","Recordatorio. Te aviso el "+fechaBonita(f)+(_hora?" a las "+horaBonita(_hora):"")+".");
+  /* build 163 (Salvador 2026-10-01): si se repite y no dijo hasta cuándo, cae a
+     información pendiente preguntando la fecha de finalización. */
+  if(_cada && !finDicho(_dic)){ t.pendiente_info="¿Hasta cuándo se repite? Dime la fecha de finalización, o “sin fin”."; t.pendiente_tipo="fin"; }
   preguntaAmPm(t, ["self"], _dic);
   tareas.push(t); guarda(t); sincronizaAvisos(t);
   return t;
@@ -8033,6 +8041,15 @@ function completaPendiente(id, texto){
     if(_cc) t.aviso_cada=_cc;
     t.aviso_dicho=texto;
     msg(t,"bi","Le pusiste cuándo: "+fechaBonita(f)+(_hc?" a las "+horaBonita(_hc):"")+(_cc?" · "+_cc:"")+".");
+  }else if(tipo==="fin"){
+    var _n=texto.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+    if(/sin\s+fin|indefinid|siempre|no\s+termina|no\s+tiene/.test(_n)){ t.f_fin="sin_fin"; msg(t,"bi","Sin fecha de finalización."); }
+    else{
+      var _ff=diaDicho(texto)||(/^\d{4}-\d{2}-\d{2}$/.test(texto)?texto:"");
+      if(!_ff){ msg(t,"bi","Anotado: “"+texto+"” (sin fecha de fin todavía)."); guarda(t);
+        toast('No pesqué la fecha de fin. Dime "hasta el 30 de noviembre" o "sin fin"'); vista="lista"; render(); return; }
+      t.f_fin=_ff; msg(t,"bi","Se repite hasta el "+fechaBonita(_ff)+".");
+    }
   }else if(tipo==="asunto"){
     /* recordatorio que nacio sin asunto (solo hora): ahora se le pone el nombre */
     t.nombre=conMayuscula(asuntoRecordatorio(texto,{nombre:texto})); msg(t,"bi","Queda: "+t.nombre+".");
