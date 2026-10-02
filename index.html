@@ -563,6 +563,12 @@ button{font:inherit;color:inherit}
 .pasos .pit.on .pmeta{color:var(--ink-4)}
 .pasos .padd{display:flex;align-items:center;gap:12px;width:100%;padding:9px 0 3px;border:0;border-top:1px solid var(--line);background:none;color:var(--ink-3);font:inherit;font-size:16px;text-align:left;cursor:pointer}
 .pasos .padd svg{flex:0 0 23px}
+/* build 167: pestañas de listas */
+.pasos .ph .lmas{font-size:13px;color:var(--ink-2);background:var(--line);border-radius:8px;padding:1px 7px;flex:none}
+.pasos .ltabs{display:flex;gap:6px;margin-top:10px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.pasos .ltab{flex:1 0 auto;background:transparent;border:0;border-radius:10px;padding:8px 10px;color:var(--ink-2);font:inherit;font-size:15px;cursor:pointer;white-space:nowrap}
+.pasos .ltab span{font-size:13px;opacity:.8}
+.pasos .ltab.on{background:var(--line);color:var(--ink);font-weight:600}
 .op.ya.listo{background:var(--hacer);border-color:var(--hacer);color:#06340f}
 .op.ya.listo .icx{stroke:#06340f}
 /* home: anillo de avance en vez del puntito */
@@ -973,7 +979,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 166 · 2026-10-02 · Checklist en una tarea que ya existe: \"en la tarea de X ponme un checklist: número uno..., número dos...\" agrega los puntos a ESA tarea (no crea otra); listas dictadas con número uno/dos se parten en puntos";
+var VERSION_APP = "build 167 · 2026-10-02 · Antes de crear, compara por SIGNIFICADO contra todas tus tareas abiertas (consejo = mesa directiva); \"abre/busca X\" enseña las que pegan y nunca crea sola; varias listas con nombre en una misma tarea (pestañas)";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -3200,6 +3206,21 @@ function claveCache(txt,quien){ return (quien||"")+"|"+String(txt).toLowerCase()
    Antes de crear cualquier tarea, se compara contra las que ya están abiertas.
    NO se compara por texto igual: se compara por DE QUÉ SE TRATA.
    Cuatro salidas, y una de ellas es no decidir solo. */
+/* build 167: busqueda por SIGNIFICADO (cuando las palabras no coinciden). Manda solo
+   id y nombre de las abiertas; regresa hasta 5 ids de las que tratan de eso. */
+function buscaPorSignificado(q, cb){
+  var ab=tareas.filter(function(t){ return !t.cierre && !t.es_recordatorio && estadoReal(t)!=="cerrada"; })
+    .slice(0,220).map(function(t){ return {id:t.id, nombre:t.nombre}; });
+  if(!ab.length){ cb([]); return; }
+  var sys="Te doy las tareas abiertas (id y nombre) y lo que alguien busca con sus propias palabras. "+
+    "Nadie recuerda el nombre exacto: compara por SIGNIFICADO ('consejo cumbres' = 'mesa directiva cumbres'). "+
+    "Contesta SOLO un JSON: {\"ids\":[<hasta 5 ids, la mas probable primero; vacio si ninguna trata de eso>]}";
+  preguntaAClaude([{role:"user",content:sys+"\n\nTAREAS:\n"+JSON.stringify(ab)+"\n\nBUSCA: "+q}],"rapido",function(txt,err){
+    if(err){ cb([]); return; }
+    try{ var m=String(txt).match(/\{[\s\S]*\}/); var j=m?JSON.parse(m[0]):{}; cb((j.ids||[]).filter(function(id){ return ab.some(function(t){ return t.id===id; }); })); }
+    catch(e){ cb([]); }
+  });
+}
 function buscaDuplicado(texto, quien, cb){
   /* 1. caché: mismo dictado en los últimos 10 minutos */
   var ck=claveCache(texto,quien), hit=CACHE_DUP[ck];
@@ -3207,8 +3228,15 @@ function buscaDuplicado(texto, quien, cb){
 
   /* 2. filtro local, cero tokens */
   var cand=candidatas(texto,quien);
-  if(!cand.length){ var v0={veredicto:"NUEVA",local:true};
-    CACHE_DUP[ck]={ts:Date.now(),v:v0}; cb(v0); return }
+  /* build 167 (Salvador 2026-10-02): antes, si ninguna PALABRA coincidia se daba
+     por NUEVA sin preguntar, y por eso "consejo cumbres" no veia "mesa directiva
+     cumbres". Ahora, sin coincidencias de palabra, Claude compara por SIGNIFICADO
+     contra TODAS las abiertas (solo id y nombre: barato). */
+  if(!cand.length){
+    cand=tareas.filter(function(t){ return !t.cierre && !t.es_recordatorio && estadoReal(t)!=="cerrada" && (!quien || t.duenio===quien); })
+      .slice(0,220);
+    if(!cand.length){ var v0={veredicto:"NUEVA",local:true}; CACHE_DUP[ck]={ts:Date.now(),v:v0}; cb(v0); return }
+  }
 
   /* 3. solo las candidatas, y con los campos cortos */
   var abiertas=cand.map(function(t){
@@ -3233,6 +3261,7 @@ function buscaDuplicado(texto, quien, cb){
     "- Ante VECINA o DUDA nunca decidas solo: hay que preguntar. Equivocarse callado es peor que preguntar.\n"+
     "- Compartir TEMA general (jardin, agua, dinero, mantenimiento) NO hace VECINA: VECINA exige el MISMO objeto o el MISMO servicio. Pagar al jardinero y hacer la poda NO son vecinas.\n"+
     "- NUEVA solo cuando de verdad no toca nada de lo que ya está abierto.\n"+
+    "- COMPARA POR SIGNIFICADO, NO POR PALABRAS: la gente no recuerda el nombre exacto. 'Consejo Cumbres' = 'Mesa directiva Cumbres' = 'junta de la colonia'; 'reporte de ventas' = 'informe semanal'; 'seguimiento X' = 'X'. Un archivo o seguimiento NUEVO de una actividad que ya tiene tarea es la MISMA tarea.\n"+
     "Contesta SOLO un JSON: {\"veredicto\":\"MISMA|ENRIQUECE|VECINA|NUEVA|DUDA\",\"id\":\"<id o null>\","+
     "\"que_agrega\":\"<si es ENRIQUECE o VECINA, qué trae de nuevo>\",\"por_que\":\"<una línea>\"}";
 
@@ -6150,6 +6179,28 @@ function barraEnviar(texto,completo){
       vista="barra"; render(); return;
     }
   }
+  /* build 167 (Salvador 2026-10-02): "abre / busca / dime / muestrame / donde esta X"
+     = quiere una tarea que YA EXISTE. Nunca se crea sola: se ensenan las que pegan
+     (basta una palabra) y abajo "Ninguna · crear tarea nueva". Una sola: abre directo.
+     Ninguna por palabras: Claude busca por significado. */
+  var _ab=String(texto).match(/^\s*(?:por\s+favor\s+)?(?:[aá]bre(?:me)?|abrir|b[uú]sca(?:me)?|buscar|mu[eé]strame|ens[eé][nñ]ame|ve\s+a|vete\s+a|ir\s+a|d[oó]nde\s+est[aá]|d[oó]nde\s+qued[oó]|dame)\s+(?:la\s+tarea\s+|mi\s+tarea\s+|la\s+de\s+|lo\s+de\s+|el\s+tema\s+|la\s+|el\s+|mi\s+)?(?:de\s+|del\s+)?(.{3,})$/i);
+  if(_ab && !detectaLista(texto)){
+    var _q=_ab[1].replace(/[?.!]+$/,"").trim();
+    var _ca=candidatas(_q,null,false).filter(function(t){ return !t.es_recordatorio; });
+    function _escoge(lista){
+      if(lista.length===1){ abierta=lista[0].id; barraEstado=null; consulta=""; vista="hilo"; render(); return; }
+      barraEstado={modo:"escoge", dicho:texto, hist:[], foto:fotoEnMano||null,
+        sv:{__abrir:true, texto:_q}, ops:lista.slice(0,6).map(function(t){return t.id}),
+        pregunta:lista.length?"¿Cuál de estas?":"No encontré ninguna parecida"};
+      vista="barra"; render();
+    }
+    if(_ca.length){ _escoge(_ca); return; }
+    barraEstado={modo:"cargando", dicho:texto, texto:"Busco “"+_q+"”…"}; vista="barra"; render();
+    buscaPorSignificado(_q, function(ids){
+      _escoge(ids.map(function(id){ return tareas.filter(function(t){ return t.id===id; })[0]; }).filter(Boolean));
+    });
+    return;
+  }
   /* build 166 (Salvador 2026-10-02): "en la tarea de la mesa directiva ponme un
      checklist de..." = la lista va DENTRO de esa tarea. Antes se iba a Claude y
      nacia una tarea nueva con el nombre de la lista. Se resuelve aqui, sin tokens. */
@@ -6163,10 +6214,10 @@ function barraEnviar(texto,completo){
       var _mx=Math.max.apply(null,_sc);
       if(_sc.filter(function(x){ return x===_mx; }).length===1) _lc=[_lc[_sc.indexOf(_mx)]];
     }
-    if(_lc.length===1){ aplicaLista(_lc[0], _dl.items, texto); return; }
+    if(_lc.length===1){ aplicaLista(_lc[0], _dl.items, texto, _dl.nombre); return; }
     if(_lc.length>1){
       barraEstado={modo:"escoge", dicho:texto, hist:[], foto:fotoEnMano||null,
-        sv:{__lista:true, items:_dl.items, texto:texto}, ops:_lc.slice(0,6).map(function(t){return t.id}),
+        sv:{__lista:true, items:_dl.items, texto:texto, nombre:_dl.nombre}, ops:_lc.slice(0,6).map(function(t){return t.id}),
         pregunta:"¿En cuál tarea va la lista?"};
       vista="barra"; render(); return;
     }
@@ -7302,7 +7353,7 @@ function aplicaIntencion(j, dicho, hist, foto){
     function procedeCrear(){
       barraEstado={modo:"cargando", dicho:dicho, foto:foto, texto:"Reviso si ya la tienes…"};
       vista="barra"; render();
-      buscaDuplicado(d.nombre+(d.revisar?" · "+d.revisar:""), d.duenio||yo, function(v){
+      buscaDuplicado(d.nombre+(d.revisar?" · "+d.revisar:"")+(dicho&&dicho!==d.nombre?" — dijo: "+String(dicho).slice(0,300):""), d.duenio||yo, function(v){
         var rr=respuestaDuplicado(v);
         if(rr.crear===true){
           /* si el filtro de repetidas no pudo correr, se dice con un toast */
@@ -7327,7 +7378,7 @@ function aplicaIntencion(j, dicho, hist, foto){
     if(esOtro){
       barraEstado={modo:"cargando", dicho:dicho, foto:foto, texto:"Reviso si ya existe…"};
       vista="barra"; render();
-      buscaDuplicado(d.nombre+(d.revisar?" · "+d.revisar:""), null, function(v){
+      buscaDuplicado(d.nombre+(d.revisar?" · "+d.revisar:"")+(dicho&&dicho!==d.nombre?" — dijo: "+String(dicho).slice(0,300):""), null, function(v){
         var ya=v.id?tareas.filter(function(x){return x.id===v.id})[0]:null;
         var pega=(["MISMA","ENRIQUECE","VECINA","DUDA"].indexOf(v.veredicto)>=0);
         if(ya && pega && ya.duenio!==d.duenio && estadoReal(ya)!=="cerrada"){
@@ -7453,16 +7504,28 @@ var SVG_CHK='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke=
 /* la barra fija de arriba del chat. window.__pasosOpen[id] = desplegada (solo pantalla) */
 function vPasos(t){
   if(!tienePasos(t)) return "";
-  var L=t.lista_pasos, n=pasosHechos(t), tot=L.length, sig=pasosFaltan(t)[0];
+  /* build 167: varias listas con nombre = pestañas; se ve una a la vez */
+  var LS=listasDe(t), act=listaActiva(t);
+  var L=t.lista_pasos.filter(function(p){ return (p.lista||"")===act; });
+  var n=L.filter(function(p){ return p.hecho; }).length, tot=L.length, sig=L.filter(function(p){ return !p.hecho; })[0];
   var ab=!!((window.__pasosOpen||{})[t.id]);
   var h='<div class="pasosw"><div class="pasos'+(ab?' open':'')+'" id="pasos">'+
     '<button class="ph" id="bpasos" aria-expanded="'+(ab?"true":"false")+'">'+
-      '<span class="ttl">Pasos</span>'+
+      '<span class="ttl">'+esc(act||"Pasos")+'</span>'+
       '<span class="nx">'+(sig?'Sigue: '+esc(sig.tx):'Todo palomeado')+'</span>'+
-      '<span class="cn'+(n===tot?' full':'')+'">'+n+' de '+tot+'</span>'+
+      '<span class="cn'+(n===tot?' full':'')+'">'+n+'/'+tot+'</span>'+
+      (LS.length>1?'<span class="lmas">+'+(LS.length-1)+'</span>':'')+
       '<svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>'+
     '</button>'+
     '<div class="pbar"><i style="width:'+Math.round(tot?n*100/tot:0)+'%"></i></div>';
+  if(ab && LS.length>1){
+    h+='<div class="ltabs">';
+    LS.forEach(function(nm){
+      var it=t.lista_pasos.filter(function(p){ return (p.lista||"")===nm; }), hh=it.filter(function(p){ return p.hecho; }).length;
+      h+='<button class="ltab'+(nm===act?' on':'')+'" data-ltab="'+esc(nm)+'">'+esc(nm||"Pasos")+' <span>'+hh+'/'+it.length+'</span></button>';
+    });
+    h+='</div>';
+  }
   if(ab){
     h+='<div class="plst">';
     var secAnt=null;
@@ -7477,7 +7540,7 @@ function vPasos(t){
            '<span class="ptx">'+esc(p.tx)+(p.meta?'<span class="pmeta">'+esc(p.meta)+'</span>':'')+'</span></button>';
       });
     });
-    h+='<button class="padd" id="bpadd"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Dicta otro paso</button>';
+    h+='<button class="padd" id="bpadd"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Dicta otro punto</button>';
     h+='</div>';
   }
   return h+'</div></div>';
@@ -7623,13 +7686,33 @@ function detectaLista(texto){
       items=dp.slice(1).join(":").split(/\s*,\s*|\s+y\s+(?=\S)/i).map(function(x){ return x.trim(); }).filter(function(x){ return x.length>=2; });
     }
   }
-  return {frase:frase, items:items};
+  /* build 167: nombre de la lista ("checklist PARA LA JUNTA DEL CONSEJO", "lista DE MIS TAREAS") */
+  var nm=s.match(/\b(?:check\s*-?\s*lists?|checklists?|lista|puntos|temas|agenda)\s+(?:de|para|con)\s+(?!los\s+siguientes|las\s+siguientes|lo\s+siguiente)(.+?)(?=\s*[:,]|\s+(?:n[uú]mero|punto|primero)\b|$)/i);
+  var nomL=nm?conMayuscula(nm[1].replace(/^(la|el|los|las)\s+/i,"").trim().slice(0,30)):"";
+  return {frase:frase, items:items, nombre:nomL};
 }
 /* agrega los puntos a ESA tarea y la abre con la lista desplegada; sin puntos,
    la abre esperando que se dicten */
-function aplicaLista(t, items, texto){
+function listasDe(t){
+  var o=[]; (t.lista_pasos||[]).forEach(function(p){ var n=p.lista||""; if(o.indexOf(n)<0) o.push(n); }); return o;
+}
+function listaActiva(t){
+  var ls=listasDe(t), a=(window.__listaAct||{})[t.id];
+  if(a!=null && ls.indexOf(a)>=0) return a;
+  /* la primera con pendientes */
+  for(var i=0;i<ls.length;i++){ if((t.lista_pasos||[]).some(function(p){ return (p.lista||"")===ls[i] && !p.hecho; })) return ls[i]; }
+  return ls[0]||"";
+}
+function aplicaLista(t, items, texto, nombre){
   msg(t,"bo",texto);
+  /* build 167: cada lista con su nombre es una pestaña. Sin nombre: va a la activa. */
+  var ls=listasDe(t), dest=nombre||"";
+  if(!dest && ls.length) dest=listaActiva(t);
+  if(dest && ls.length===1 && ls[0]==="" && !(t.lista_pasos||[]).length) dest=dest;
+  window.__listaDest=dest;
   var nuevos=agregaPasos(t, items.length?items.join(" | "):"", items);
+  window.__listaDest=null;
+  window.__listaAct=window.__listaAct||{}; window.__listaAct[t.id]=dest;
   if(nuevos.length){
     msg(t,"bi", nuevos.length<=3 ? "Agregué "+juntaY(nuevos.map(function(p){ return "“"+p.tx+"”"; }))+" a la lista."
                                  : "Agregué "+nuevos.length+" puntos a la lista.");
@@ -7652,10 +7735,14 @@ function agregaPasos(t, texto, yaPartidos){
   var _num=yaPartidos&&yaPartidos.length?yaPartidos:listaNumerada(s);
   var partes=_num.length?_num:s.split(/\s*,\s*|\s+y\s+(?=\S)/i).map(function(x){ return x.trim(); }).filter(function(x){ return x.length>=2; });
   var nuevos=normalizaPasos(partes);
-  var ult=(t.lista_pasos||[]).length ? t.lista_pasos[t.lista_pasos.length-1].sec||"" : "";
-  var ya={}; (t.lista_pasos||[]).forEach(function(p){ ya[_nrm(p.tx).trim()]=1; });
+  var _dst0=(window.__listaDest!=null)?window.__listaDest:listaActiva(t);
+  /* los nuevos van a la ultima seccion (tienda/lugar) de ESA lista */
+  var _mis=(t.lista_pasos||[]).filter(function(p){ return (p.lista||"")===(_dst0||""); });
+  var ult=_mis.length?(_mis[_mis.length-1].sec||""):"";
+  var ya={}; (t.lista_pasos||[]).forEach(function(p){ if((p.lista||"")===(_dst0||"")) ya[_nrm(p.tx).trim()]=1; });
   nuevos=nuevos.filter(function(p){ return !ya[_nrm(p.tx).trim()]; });
-  nuevos.forEach(function(p){ p.sec=ult; });
+  var _dst=(window.__listaDest!=null)?window.__listaDest:listaActiva(t);
+  nuevos.forEach(function(p){ p.sec=ult; p.lista=_dst||""; });
   t.lista_pasos=(t.lista_pasos||[]).concat(nuevos);
   return nuevos;
 }
@@ -8631,6 +8718,14 @@ function bindBarra(){
       var k=el.getAttribute("data-esc"), sv=(b.sv||{});
       /* build 145: escoger a cual tarea pertenece un PASO suelto ("ya compre
          el camaron") -- se palomea directo, no se reentra a SUPERVISAR. */
+      /* build 167: "abre X" -> abrir la que toco, o crear nueva con lo dicho */
+      if(sv.__abrir){
+        if(k==="nueva"){
+          var nn=creaTarea({nombre:conMayuscula(sv.texto.slice(0,60)), dicho:b.dicho||sv.texto});
+          abierta=nn.id; barraEstado=null; consulta=""; vista="hilo"; render(); toast("Tarea nueva creada"); return;
+        }
+        abierta=k; barraEstado=null; consulta=""; vista="hilo"; render(); return;
+      }
       /* build 166: escoger en cual tarea va la lista */
       if(sv.__lista){
         var t166=tareas.filter(function(x){return x.id===k})[0];
@@ -8638,7 +8733,7 @@ function bindBarra(){
           var nl=creaTarea({nombre:nombreLista(sv.texto), dicho:sv.texto, pasos:sv.items});
           abierta=nl.id; barraEstado=null; consulta=""; vista="hilo"; render(); return;
         }
-        aplicaLista(t166, sv.items||[], sv.texto); return;
+        aplicaLista(t166, sv.items||[], sv.texto, sv.nombre); return;
       }
       if(sv.__paso){
         if(k==="nueva"){
@@ -9371,6 +9466,10 @@ function bindHilo(){
   /* build 164: barra Vuelta (recurrentes) se abre/cierra con su historial */
   var bvu=$("bvuel"); if(bvu) bvu.onclick=function(ev){ ev.stopPropagation();
     window.__vuelOpen=window.__vuelOpen||{}; window.__vuelOpen[t.id]=!window.__vuelOpen[t.id]; render(); };
+  Array.prototype.forEach.call(document.querySelectorAll("[data-ltab]"),function(el){
+    el.onclick=function(ev){ ev.stopPropagation(); window.__listaAct=window.__listaAct||{};
+      window.__listaAct[t.id]=el.getAttribute("data-ltab"); render(); };
+  });
   var bps=$("bpasos"); if(bps) bps.onclick=function(ev){ ev.stopPropagation();
     window.__pasosOpen=window.__pasosOpen||{}; window.__pasosOpen[t.id]=!window.__pasosOpen[t.id]; render(); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-paso]"),function(el){
