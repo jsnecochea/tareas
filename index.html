@@ -926,6 +926,17 @@ button{font:inherit;color:inherit}
 .dictacapa .dtxt.vacio{color:var(--ink-3)}
 .dictacapa .dtxt .par{color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){.dbars i{animation:none;height:18px}}
+/* build 165 (Salvador 2026-10-02): DICTADO EN PAUSA, como en Claude. Si entra una
+   llamada o el microfono se corta, NO se manda nada: lo dicho se queda arriba,
+   las onditas se cambian por un microfono para seguir dictando, y el avioncito
+   y la basura siguen ahi. El reloj se detiene. */
+.dmid{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;height:36px}
+.dmid .dbars{flex:1}
+.dsigue{display:none;width:36px;height:36px;flex:none;border:0;border-radius:50%;background:none;
+  color:var(--ink);place-items:center;cursor:pointer;-webkit-appearance:none;-webkit-tap-highlight-color:transparent}
+.dictacapa.pausa .dbars{display:none}
+.dictacapa.pausa .dsigue{display:grid}
+.dictacapa.pausa .dtime{color:var(--ink-3)}
 </style>
 </head>
 <body>
@@ -962,7 +973,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 164 · 2026-10-02 · Recurrentes: al darle Ya está se guarda la vuelta en su historial y la misma tarea arranca la siguiente (fecha nueva, pasos sin palomear); arriba del chat solo la fecha de entrega, al tocarla el historial";
+var VERSION_APP = "build 165 · 2026-10-02 · Dictado que se corta (llamada, silencio, app en segundo plano) ya no se manda ni se pierde: queda en pausa con lo dicho y un micrófono para seguir dictando";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -5071,7 +5082,8 @@ function abreDictado(onListo,onCancel){
     '<div class="dfila">'+
       '<button class="dx" id="dictax" aria-label="Cancelar">'+svgBasura()+'</button>'+
       '<span class="dtime" id="dictatime">0:00</span>'+
-      '<div class="dbars">'+barritasAudio()+'</div>'+
+      '<div class="dmid"><div class="dbars">'+barritasAudio()+'</div>'+
+        '<button class="dsigue" id="dictasigue" aria-label="Seguir dictando">'+ico("mic",24,1.8)+'</button></div>'+
       '<button class="dok" id="dictaok" aria-label="Enviar">'+ico("sube",21,2.2)+'</button>'+
     '</div>';
   document.body.appendChild(el);
@@ -5080,12 +5092,15 @@ function abreDictado(onListo,onCancel){
   var bx=document.getElementById("dictax");
   if(bx) bx.onclick=function(){ if(typeof onCancel==="function") onCancel();
                                 else cierraDictado(); };
-  window.__pausado=false;
+  window.__pausado=false; window.__enPausa=false; window.__recPausa=null;
+  var bsg=document.getElementById("dictasigue");
+  if(bsg) bsg.onclick=function(){ sigueDictado(); };
   /* cronometro del dictado */
   window.__dictaSec=0;
   if(window.__dictaTimer) clearInterval(window.__dictaTimer);
   window.__dictaTimer=setInterval(function(){
     if(!document.getElementById("dictacapa")){ clearInterval(window.__dictaTimer); window.__dictaTimer=null; return }
+    if(window.__enPausa) return;   /* build 165: en pausa el reloj no corre */
     window.__dictaSec++;
     var tt=document.getElementById("dictatime");
     if(tt){ var mm=Math.floor(window.__dictaSec/60), ss=window.__dictaSec%60; tt.textContent=mm+":"+(ss<10?"0":"")+ss; }
@@ -5098,7 +5113,7 @@ function svgBasura(){ return '<svg viewBox="0 0 24 24" width="23" height="23" fi
 function pintaDictado(){
   var c=document.getElementById("dictatxt"); if(!c) return;
   var firme=(window.__dicho||""), par=(window.__parcial||"");
-  if(!firme.trim() && !par.trim()){ c.className="dtxt vacio"; c.textContent="Te escucho…"; return }
+  if(!firme.trim() && !par.trim()){ c.className="dtxt vacio"; c.textContent=window.__enPausa?"En pausa":"Te escucho…"; return }
   c.className="dtxt";
   c.innerHTML=esc(firme)+(par?'<span class="par">'+esc(par)+'</span>':'');
   c.scrollTop=c.scrollHeight;
@@ -5107,7 +5122,7 @@ function cierraDictado(){
   var el=document.getElementById("dictacapa");
   if(el && el.parentNode) el.parentNode.removeChild(el);
   if(window.__dictaTimer){ clearInterval(window.__dictaTimer); window.__dictaTimer=null; }
-  window.__pausado=false;
+  window.__pausado=false; window.__enPausa=false; window.__recPausa=null;
 }
 /* ===== ROBUSTEZ DEL MICROFONO EN IPHONE (build 81) =====
    El motor de Safari se corta solo cada rato. Antes se reprendia AL INSTANTE y
@@ -5157,7 +5172,51 @@ function reaccionaFrio(){
     toast("El micrófono no arrancó, tócalo otra vez");
   }
 }
+/* build 165: PAUSA DEL DICTADO. Antes, si el microfono se cortaba (llamada,
+   silencio largo, la app se iba a segundo plano) se cerraba el dictado: lo dicho
+   se perdia o salia incompleto y al querer completarlo nacia OTRA tarea. Ahora
+   se pausa: el texto se queda y el microfono de en medio lo retoma, pegado a lo
+   que ya llevaba. Nunca se manda solo: solo el avioncito manda. */
+function pausaDictado(r, stopFn){
+  if(!window.__oyendo || (r && window.__rec!==r)) return;
+  var capa=document.getElementById("dictacapa");
+  if(!capa){ if(stopFn) stopFn(); return; }   /* sin capa de dictado: como antes */
+  window.__oyendo=false; paraVigia();
+  if(window.__silT){ clearTimeout(window.__silT); window.__silT=null }
+  try{ if(r){ if(r.abort) r.abort(); else r.stop(); } }catch(e){}
+  if(String(window.__parcial||"").trim()){ window.__dicho=(window.__dicho||"")+window.__parcial+" "; }
+  window.__parcial="";
+  window.__enPausa=true; window.__recPausa={r:r, stopFn:stopFn};
+  capa.classList.remove("vivo"); capa.classList.add("pausa");
+  pintaDictado();
+}
+function sigueDictado(){
+  var p=window.__recPausa, capa=document.getElementById("dictacapa");
+  if(!p || !capa) return;
+  var r=p.r;
+  function arranca(x){ try{ x.start(); return true; }catch(e){ return false; } }
+  if(!arranca(r)){
+    var SR=window.SpeechRecognition||window.webkitSpeechRecognition, n=null;
+    try{ n=new SR(); }catch(e){}
+    if(!n){ toast("No se pudo abrir el micrófono"); return; }
+    n.lang=r.lang||"es-MX"; n.continuous=true; n.interimResults=true;
+    n.onresult=r.onresult; n.onerror=r.onerror;
+    if(!arranca(n)){ toast("No se pudo abrir el micrófono"); return; }
+    r=n;
+  }
+  window.__rec=r; window.__oyendo=true; window.__pausado=false;
+  window.__enPausa=false; window.__recPausa=null;
+  capa.classList.remove("pausa");
+  pintaDictado();
+  enlazaRec(r, p.stopFn);
+}
+/* si la app se va a segundo plano (entra una llamada) mientras se dicta: pausa */
+document.addEventListener("visibilitychange", function(){
+  if(document.visibilityState==="hidden" && window.__oyendo && window.__rec)
+    pausaDictado(window.__rec, window.__recStop);
+});
 function enlazaRec(r, stopFn){
+  window.__recStop=stopFn;
   window.__micIntentos=(window.__micIntentos||0)+1;
   window.__audioAbrio=false; window.__inicioRec=Date.now();
   r.onaudiostart=marcaVivo; r.onspeechstart=marcaVivo; r.onsoundstart=marcaVivo;
@@ -5170,7 +5229,7 @@ function enlazaRec(r, stopFn){
         setTimeout(function(){
           if(!window.__oyendo || window.__rec!==r) return;
           try{ r.start(); }
-          catch(e2){ if(stopFn) stopFn(); toast("El micrófono se cortó, tócalo otra vez"); }
+          catch(e2){ pausaDictado(r, stopFn); }   /* build 165: pausa, no cierra */
         }, 500);
       }
     }, 250);
@@ -5185,7 +5244,7 @@ function enlazaRec(r, stopFn){
       paraVigia(); if(stopFn) stopFn(); reaccionaFrio(); return;
     }
     if(window.__audioAbrio && ahora-(window.__ultOye||0) > 9000){
-      paraVigia(); if(stopFn) stopFn(); toast("El micrófono se cortó, tócalo otra vez");
+      pausaDictado(r, stopFn);   /* build 165: pausa con lo dicho, no cierra */
     }
   }, 1200);
 }
