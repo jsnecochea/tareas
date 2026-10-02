@@ -570,6 +570,25 @@ button{font:inherit;color:inherit}
 .row .fdate.pcamp{display:inline-flex;align-items:center;gap:3px;color:#FF9F0A}
 .row .fdate.pcamp.c-roja{color:var(--venc)}.row .fdate.pcamp.c-azul{color:var(--azul)}
 @media (prefers-reduced-motion:reduce){.pasos .ph .chev,.pasos .pbar i,.pasos .pck{transition:none}}
+/* build 164 (Salvador 2026-10-02): RECURRENTES. Barra "Vuelta" arriba del chat
+   (encima de Pasos): para que dia es ESTA vuelta y cada cuanto se repite. Al
+   tocarla se despliega el historial de vueltas cerradas (a tiempo / tarde). */
+.vuelw{background:var(--surface-2);padding:8px 12px 0;flex:none;position:relative;z-index:1}
+.vuel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:9px 14px}
+.vuel .vh{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;padding:0;color:var(--ink);font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.vuel .vh .ttl{font-family:Archivo;font-weight:600;font-size:17px;flex:none}
+.vuel .vh .nx{flex:1;min-width:0;font-size:15.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vuel .vh .nx b{font-weight:600}
+.vuel .vh .nx.venc b{color:var(--venc)}
+.vuel .vh .cd{font-size:14px;color:var(--ink-2);flex:none}
+.vuel .vh .chev{color:var(--ink-2);flex:none;transition:transform .25s}
+.vuel.open .vh .chev{transform:rotate(180deg)}
+.vuel .vlst{max-height:40vh;overflow-y:auto;margin-top:8px;border-top:1px dashed var(--line);padding-top:4px}
+.vuel .vit{display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:15px;color:var(--ink-2)}
+.vuel .vit b{font-weight:600}
+.vuel .vit .ok{color:var(--hacer)}
+.vuel .vit .tarde{color:#FF9F0A}
+.vuel .vvacio{font-size:14.5px;color:var(--ink-3);padding:6px 0}
 .op.nt{background:var(--surface-2);border-color:var(--line);color:var(--ink)}
 /* el relojito: gris (sin aviso) · ámbar (programado) · rojo (sonando) */
 .op.alrm{flex:0 0 54px;min-width:54px;max-width:54px;display:grid;place-items:center;padding:9px 0}
@@ -943,7 +962,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 163 · 2026-10-01 · Recordatorios que se repiten sin fecha de fin caen a información pendiente (¿hasta cuándo?)";
+var VERSION_APP = "build 164 · 2026-10-02 · Recurrentes: al darle Ya está se guarda la vuelta en su historial y la misma tarea arranca la siguiente (fecha nueva, pasos sin palomear); barra Vuelta arriba del chat con el día de entrega e historial";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -1815,8 +1834,92 @@ var MOTIVOS_JEFE=[
 function motivosPara(t){
   return (PERSONAS[yo].jefe && t.duenio!==yo) ? MOTIVOS_JEFE : MOTIVOS_NO_EJECUTADA;
 }
-/* build 144: TODO pasos de recurrentes -> ver la nota junto a quitaHoraNombre() */
+/* ===== build 164 (Salvador 2026-10-02): RECURRENTES QUE SE RENUEVAN SOLAS =====
+   Antes "Ya está" en una tarea con periodicidad la CERRABA para siempre y no
+   nacia la siguiente vuelta. Ahora: la vuelta se guarda en t.vueltas
+   [{para, f, a_tiempo, dias_tarde, pasos:"2/3", faltaron:[..], por}], la MISMA
+   tarea (mismo id, mismo chat) se va a la fecha de la siguiente vuelta, los
+   pasos (t.lista_pasos) vuelven a quedar sin palomear y los recordatorios
+   sueltos de esa vuelta se recorren igual. Si se cierra tarde, la siguiente
+   vuelta se cuenta desde el dia que tocaba (no desde el dia que se cerro):
+   un reporte de los lunes sigue siendo de los lunes.
+   Para terminarla para siempre: el bote de basura ("Ya no hace falta"). */
+function esRecurrente(t){ return !!(t && (t.periodicidad==="semanal" || t.periodicidad==="mensual") && !t.es_recordatorio); }
+function sumaVuelta(f, per, diaMes){
+  var d=new Date(f+"T00:00:00");
+  if(per==="mensual"){
+    var dia=diaMes||d.getDate(); d.setDate(1); d.setMonth(d.getMonth()+1);
+    var ult=new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+    d.setDate(Math.min(dia, ult));
+  } else d.setDate(d.getDate()+7);
+  return iso(d);
+}
+/* "lunes 13 oct" — el dia que hay que entregar ESTA vuelta */
+function diaEntrega(f){
+  if(!f||!/^\d{4}-\d{2}-\d{2}$/.test(f)) return "";
+  var d=new Date(f+"T00:00:00");
+  return DIAS_L[d.getDay()]+" "+d.getDate()+" "+MES_3[d.getMonth()];
+}
+function cadaTxt(t){
+  if(t.periodicidad==="mensual"){ var f=t.f_vigente||t.f_original; return t.dia_mes?"cada mes, el "+t.dia_mes:(f?"cada mes, el "+Number(f.slice(8,10)):"cada mes"); }
+  var g=t.f_vigente||t.f_original; return g?"cada "+DIAS_L[new Date(g+"T00:00:00").getDay()]:"cada semana";
+}
+function siguienteVuelta(t){
+  var H=hoy(), para=t.f_vigente||t.f_original||H;
+  var tarde=dDif(para,H);
+  var tot=(t.lista_pasos||[]).length, faltaron=pasosFaltan(t).map(function(p){ return p.tx; });
+  t.vueltas=t.vueltas||[];
+  t.vueltas.push({para:para, f:H, a_tiempo:tarde<=0, dias_tarde:tarde>0?tarde:0,
+                  pasos:tot?(tot-faltaron.length)+"/"+tot:"", faltaron:faltaron, por:yo||""});
+  if(t.vueltas.length>60) t.vueltas=t.vueltas.slice(-60);
+  if(!t.f_primera) t.f_primera=t.f_original||para;
+  /* mensual: se recuerda el dia del mes (el 31 cae en 28-feb y regresa al 31 en marzo) */
+  if(t.periodicidad==="mensual" && !t.dia_mes) t.dia_mes=Number(para.slice(8,10));
+  var nueva=sumaVuelta(para, t.periodicidad, t.dia_mes);
+  /* recordatorios sueltos de ESTA vuelta (sin "cada"): se recorren a la siguiente */
+  var largo=dDif(para,nueva);
+  (t.avisos||[]).forEach(function(a){
+    if(a.cada || !a.fecha) return;
+    if(a.fecha<=para && dDif(a.fecha,para)<largo){ a.fecha=dmDe(a.fecha,largo); a.avisado_en=null; }
+  });
+  (t.lista_pasos||[]).forEach(function(p){ marcaPaso(t,p,false); });
+  t.f_original=nueva; t.f_vigente=nueva; t.movidas=0; t.paso=0;
+  t.estado="abierta"; t.cierre=null; t.sin_alarma=null; t.revisar_hoy=null;
+  t.pide_atoro=false; t.pide_tel=false; t.pide_fecha=false; t.fecha_pendiente=null;
+  if(window.__pasosOpen) window.__pasosOpen[t.id]=false;
+  msg(t,"bi",(tarde>0?"Vuelta del "+diaEntrega(para)+" cerrada, "+tarde+" día"+(tarde===1?"":"s")+" tarde.":"Vuelta del "+diaEntrega(para)+" cerrada a tiempo.")+
+    (faltaron.length?" Quedaron sin palomear: "+juntaY(faltaron.map(function(x){ return pasoChico({tx:x}); }))+".":"")+
+    " La siguiente es para el "+diaEntrega(nueva)+(tot?"; los pasos ya están en blanco.":"."));
+  t.ultima="Siguiente vuelta: "+diaEntrega(nueva);
+  guarda(t); sincronizaAvisos(t);
+}
+/* la barra de arriba del chat. window.__vuelOpen[id] = desplegada (solo pantalla) */
+function vVuelta(t){
+  if(!esRecurrente(t) || t.cierre) return "";
+  var f=t.f_vigente||t.f_original, V=(t.vueltas||[]).slice().reverse();
+  var ab=!!((window.__vuelOpen||{})[t.id]);
+  var venc=f && dDif(f,hoy())>0;
+  var h='<div class="vuelw"><div class="vuel'+(ab?' open':'')+'">'+
+    '<button class="vh" id="bvuel" aria-expanded="'+(ab?"true":"false")+'">'+
+      '<span class="ttl">Vuelta</span>'+
+      '<span class="nx'+(venc?' venc':'')+'">'+(f?(venc?'Vencida · era para el <b>':'Para el <b>')+esc(diaEntrega(f))+'</b>':'Sin fecha todavía')+'</span>'+
+      '<span class="cd">'+esc(cadaTxt(t))+'</span>'+
+      '<svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>'+
+    '</button>';
+  if(ab){
+    h+='<div class="vlst">';
+    if(!V.length) h+='<div class="vvacio">Todavía no hay vueltas cerradas.</div>';
+    V.forEach(function(v){
+      h+='<div class="vit"><span>'+esc(diaEntrega(v.para))+(v.pasos?' · '+esc(v.pasos):'')+'</span>'+
+         (v.a_tiempo?'<b class="ok">✓ a tiempo</b>':'<b class="tarde">✓ '+v.dias_tarde+' día'+(v.dias_tarde===1?'':'s')+' tarde</b>')+'</div>';
+    });
+    h+='</div>';
+  }
+  return h+'</div></div>';
+}
 function cierraHecha(t){
+  /* build 164: una recurrente no se cierra, arranca su siguiente vuelta */
+  if(esRecurrente(t)){ siguienteVuelta(t); return; }
   t.cierre={tipo:"hecha",motivo:"",f:hoy()};
   var tarde=t.f_original&&dDif(t.f_original,hoy())>0;
   msg(t,"bi",tarde?"Cerrada. Lo importante es que ya quedó.":"Cerrada a tiempo. Bien hecho.");
@@ -5482,7 +5585,7 @@ function vHilo(){
   }
   var pre=t.pregunta&&t.duenio===yo?'<div class="b bi" style="margin:0 14px 8px">'+esc(t.pregunta)+'</div>':"";
 
-  return h+vPasos(t)+bannerDecision(t)+'<div class="scroll"><div class="msgs">'+m+pre+'</div></div>'+
+  return h+vVuelta(t)+vPasos(t)+bannerDecision(t)+'<div class="scroll"><div class="msgs">'+m+pre+'</div></div>'+
     /* LA MISMA BARRA DE TODAS LAS VISTAS — 2026-09-04. Antes el hilo tenia la
        camara a la IZQUIERDA y una flecha de enviar a la derecha, distinto de la
        caratula (camara a la DERECHA, sin flecha). Salvador lo cacho: "tiene que
@@ -7409,10 +7512,8 @@ function quitaHoraNombre(n){
     .replace(/\s+·\s*$/,"").replace(/\s{2,}/g," ").trim();
   return sinHoraEnTitulo(s);
 }
-/* TODO build 144: tareas RECURRENTES con pasos. Hoy la app NO tiene camino de
-   "siguiente vuelta" al cerrar una recurrente (cierraHecha solo la cierra). Cuando
-   exista, ahi va: t.lista_pasos.forEach(function(p){ marcaPaso(t,p,false); })
-   y guardar el historial de la vuelta. No se invento un sistema aparte. */
+/* build 164: las RECURRENTES (con o sin pasos) ya arrancan su siguiente vuelta:
+   ver siguienteVuelta() junto a cierraHecha(). */
 
 /* CREAR TAREA — campos reales del motor. La fecha ya viene de Claude (si faltaba,
    se pregunto); si de plano no hay, hoy. */
@@ -9102,6 +9203,9 @@ function bindHilo(){
       guarda(t); render(); toast("WhatsApp cancelado"); };
   });
   /* build 144: PASOS — la barra se abre/cierra; el circulo palomea */
+  /* build 164: barra Vuelta (recurrentes) se abre/cierra con su historial */
+  var bvu=$("bvuel"); if(bvu) bvu.onclick=function(ev){ ev.stopPropagation();
+    window.__vuelOpen=window.__vuelOpen||{}; window.__vuelOpen[t.id]=!window.__vuelOpen[t.id]; render(); };
   var bps=$("bpasos"); if(bps) bps.onclick=function(ev){ ev.stopPropagation();
     window.__pasosOpen=window.__pasosOpen||{}; window.__pasosOpen[t.id]=!window.__pasosOpen[t.id]; render(); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-paso]"),function(el){
@@ -9117,7 +9221,9 @@ function bindHilo(){
        cerro, sello de palomita, titulo tachado y "Hecha · Deshacer". */
     var prev={estado:t.estado, cierre:t.cierre||null, n:(t.msgs||[]).length};
     var _faltanP=pasosFaltan(t);
+    var _nv0=(t.vueltas||[]).length;
     intentaCerrar(t);
+    if((t.vueltas||[]).length>_nv0){ toast("Vuelta cerrada · sigue el "+diaEntrega(t.f_vigente)); render(); return; }
     /* build 144: se puede cerrar con pasos sin palomear, pero se dice cuales */
     if(t.estado==="cerrada" && _faltanP.length && tienePasos(t)){
       msg(t,"bi","Quedaron sin palomear: "+juntaY(_faltanP.map(pasoChico))+"."); guarda(t); }
