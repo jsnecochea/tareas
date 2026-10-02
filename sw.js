@@ -82,7 +82,12 @@ self.addEventListener('notificationclick', function(event) {
     );
   } else {
     // Acción 'mic' o clic directo sobre la notificación: ABRE LA APP
-    const deepLink = data.url || (data.id ? `https://doit.ok-doit.com/?recordatorio=${data.id}&action=mic` : 'https://doit.ok-doit.com/?ultimo=1');
+    // build 164 (Salvador 2026-10-02): la notificacion de WhatsApp abria OTRA tarea.
+    // Sin id, la app "adivinaba" la unica tarea con novedades (abre_ultimo) y esa
+    // no era la del mensaje. Ahora: se busca el id en todos los nombres que puede
+    // traer el servidor; si no viene ninguno, se abre el INICIO, nunca se adivina.
+    const tid = String(data.id || data.tarea_id || data.tareaId || data.tarea || '');
+    const deepLink = data.url || (tid ? `https://doit.ok-doit.com/?recordatorio=${tid}&action=mic` : 'https://doit.ok-doit.com/');
     
     event.waitUntil(
       clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
@@ -91,8 +96,8 @@ self.addEventListener('notificationclick', function(event) {
           if (client.url.includes('doit.ok-doit.com') && 'focus' in client) {
             // build 142: si la notificacion es de una tarea/alarma, la app ya
             // abierta abre ESA tarea (postMessage); si es general, al home.
-            if (data.id) { client.postMessage({ tipo: 'abre', id: String(data.id) }); return client.focus(); }
-            if (!data.url) { client.postMessage({ tipo: 'abre_ultimo' }); return client.focus(); }
+            if (tid) { client.postMessage({ tipo: 'abre', id: tid }); return client.focus(); }
+            if (!data.url) return client.focus();
             client.navigate(deepLink);
             return client.focus();
           }
