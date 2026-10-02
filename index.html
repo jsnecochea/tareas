@@ -812,6 +812,38 @@ button{font:inherit;color:inherit}
 .pendbar .grow{flex:1}.pendbar .pchev{color:#ffb340;font-size:17px}
 .pendbar:active{filter:brightness(1.08)}
 .pendwrap{padding:2px 12px 8px;display:flex;flex-direction:column;gap:9px}
+/* build 168 (Salvador 2026-10-02): POR REVISAR — una sola seccion compacta */
+.revh{display:flex;align-items:baseline;gap:8px;margin:12px 19px 6px}
+.revh b{font-family:Archivo;font-size:20px;font-weight:700;color:var(--ink)}
+.revh span{font-size:16px;color:var(--ink-2)}
+.revl{margin:0 15px 4px;background:var(--surface);border-radius:14px;overflow:hidden}
+.revr{display:flex;align-items:center;gap:10px;width:100%;padding:11px 14px;background:none;border:0;border-top:1px solid var(--line);color:var(--ink);font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.revr:first-child{border-top:0}
+.revr i{width:8px;height:8px;border-radius:50%;flex:none}
+.revr .rn{flex:1;min-width:0;font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.revr .rl{font-size:13px;flex:none}
+.rv-espera i{background:#FF9F0A}.rv-espera .rl{color:#FF9F0A}
+.rv-falta i{background:#0A84FF}.rv-falta .rl{color:#0A84FF}
+.rv-vincular i{background:#BF5AF2}.rv-vincular .rl{color:#BF5AF2}
+.rv-autorizar i{background:#30D158}.rv-autorizar .rl{color:#30D158}
+/* la tarjeta dentro de la tarea, arriba del microfono */
+.revc{margin:0 12px 8px;border-radius:16px;padding:13px 15px;display:flex;flex-direction:column;gap:7px;flex:none}
+.revc .rct{font-size:13px;font-weight:600;letter-spacing:.02em}
+.revc .rcq{font-size:16.5px;font-weight:600;line-height:1.3;color:var(--ink)}
+.revc .rcp{font-size:13px;opacity:.85}
+.revc ul{margin:2px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:16px;line-height:1.3;color:var(--ink)}
+.revc.c-espera{background:#2E1E05;border:1px solid #FF9F0A}.revc.c-espera .rct,.revc.c-espera .rcp{color:#FFC266}
+.revc.c-falta{background:#0A2540;border:1px solid #0A84FF}.revc.c-falta .rct,.revc.c-falta .rcp{color:#8EB8E6}
+.revc.c-vincular{background:#241933;border:1px solid #BF5AF2}.revc.c-vincular .rct{color:#D9B3FF}
+.revc.c-autorizar{background:#0D2A16;border:1px solid #30D158;flex-direction:row;align-items:center;gap:12px}
+.revc.c-autorizar .rct,.revc.c-autorizar .rcp{color:#7FE39A}
+.revc .rvv{display:flex;align-items:center;gap:10px;background:#33244A;border-radius:12px;padding:9px 12px}
+.revc .rvv span{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.revc .rvv b{font-size:15.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.revc .rvv small{font-size:12.5px;color:#B9A3D6}
+.revc .rvb{background:#BF5AF2;border:0;border-radius:10px;padding:8px 12px;color:#1C0B2B;font:inherit;font-size:14px;font-weight:600;flex:none;cursor:pointer}
+.revc .rvn{height:42px;border-radius:12px;background:transparent;border:1px solid #BF5AF2;color:#D9B3FF;font:inherit;font-size:15px;font-weight:600;cursor:pointer}
+.revc .rva{height:40px;border-radius:10px;background:#30D158;border:0;padding:0 16px;color:#06340f;font:inherit;font-size:15px;font-weight:600;flex:none;cursor:pointer}
 .pendrow{cursor:pointer;display:flex;align-items:center;gap:12px;
   background:linear-gradient(180deg,rgba(255,159,10,.07),var(--surface));
   border:1px solid rgba(255,159,10,.40);border-radius:14px;padding:11px 11px 11px 14px}
@@ -979,7 +1011,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 167 · 2026-10-02 · Antes de crear, compara por SIGNIFICADO contra todas tus tareas abiertas (consejo = mesa directiva); \"abre/busca X\" enseña las que pegan y nunca crea sola; varias listas con nombre en una misma tarea (pestañas)";
+var VERSION_APP = "build 168 · 2026-10-02 · POR REVISAR: una sola sección arriba (te espera / falta información / posible vinculación / por autorizar); cada tarea trae su tarjeta arriba del micrófono y se resuelve ahí; renombrar por voz más flexible";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -4640,6 +4672,10 @@ function vLista(){
   if(secAbierta==="atora" && !det.length) secAbierta=null;
 
   h+=vRecienCreadas();
+  /* build 168: POR REVISAR reemplaza "Creadas hoy", "Atorados" e "informacion pendiente" */
+  var _rev=porRevisar(), _revIds={};
+  _rev.forEach(function(x){ _revIds[x.t.id]=1; });
+  var hRev=vPorRevisar(_rev);
 
   /* build 155: PESTANA "CREADAS HOY" — la primera, gris, vista DUPLICADA (las
      tareas siguen en Hoy/Proximas/etc. segun su fecha). Dia = America/Monterrey. */
@@ -4695,6 +4731,8 @@ function vLista(){
   /* ---- UNA SOLA LISTA, NO PESTAÑAS. Decisión de Salvador 2026-09-04: no
      dividir por tipo de traba; atrasadas = Vencidas, lo que DETIENE A OTRO
      va aparte arriba (seccion "atora"). ---- */
+  arr=arr.filter(function(t){ return !_revIds[t.id]; });   /* build 168: lo que esta por revisar no sale en otro lado */
+  msgs=msgs.filter(function(t){ return !_revIds[t.id]; });
   var mias_venc=arr.filter(function(t){return det.indexOf(t)<0 && estadoReal(t)==="vencida"});
   var resto=arr.filter(function(t){return det.indexOf(t)<0 && mias_venc.indexOf(t)<0});
   /* build 140: una tarea con aviso HOY (ritmo) y entrega futura sale en Hoy,
@@ -4768,7 +4806,7 @@ function vLista(){
   }
 
   /* ===== orden final aprobado 2026-09-22 ===== */
-  h+=hCre+hAtora+hMis+hPend+hVenc+hMsg+hHoy+hProx+hHoyNada;
+  h+=hRev+hMis+hVenc+hMsg+hHoy+hProx+hHoyNada;
 
   if(futuras.length && hoyYa.length){
     h+='<div class="futwrap"><button class="futbtn" id="bfut">'+
@@ -4795,7 +4833,7 @@ function vLista(){
         if(!seen[t.id]){ seen[t.id]=1; out.push(t.id); }
       });
     }
-    agrega(det); agrega(pend); agrega(mias_venc); agrega(msgs);
+    agrega(_rev.map(function(x){ return x.t; })); agrega(mias_venc); agrega(msgs);
     agrega(hoyYa); agrega(recs); agrega(dentro); agrega(futuras);
     window.ordenSwipe=out;
   })();
@@ -4974,6 +5012,144 @@ function meDetiene(t){
 function esDecisionSal(t){
   return !!(t && t.pendiente_tipo==="decision_salvador" && t.pendiente_info && !t.cierre &&
             !t.fusionada_en && estadoReal(t)!=="cerrada");
+}
+/* ===== build 168 (Salvador 2026-10-02): POR REVISAR =====
+   Una sola seccion arriba con todo lo que necesita a Salvador, en este orden:
+   1 alguien te espera (naranja) · 2 falta informacion (azul) · 3 posible
+   vinculacion (morado) · 4 por autorizar (verde). Nada se aprueba desde la
+   lista: se toca, se abre la tarea y arriba del microfono sale UNA tarjeta con
+   lo que falta; al resolverla, la tarea se va sola a su lugar (Hoy, Futuras...).
+   "Por autorizar" = la creo el sistema (WhatsApp, correo, trabajador), no Salvador
+   dictando; vale para lo creado desde el 2-oct (no inunda con lo viejo). */
+var REV_DESDE=Date.UTC(2026,9,2,6,0,0);
+function _fechaDeId(id){ var m=String(id||"").match(/_(\d{2})(\d{2})(\d{2})$/); return m?Date.UTC(2000+(+m[3]),(+m[2])-1,+m[1],12):0; }
+function creadaPorSistema(t){
+  if(t.por_autorizar===true) return true;
+  if(t.creada_por && t.creada_por!==yo) return true;
+  return /^(wa_|tWA_|t[A-Z])/.test(String(t.id||""));
+}
+function porAutorizar(t){
+  if(!t || t.cierre || t.fusionada_en || t.estado==="fusionada" || t.es_recordatorio || t.autorizada) return false;
+  if(t.duenio!==yo || estadoReal(t)==="cerrada" || esEjemplo(t)) return false;
+  if(!creadaPorSistema(t)) return false;
+  return t.por_autorizar===true || Math.max(msCreacion(t),_fechaDeId(t.id))>=REV_DESDE;
+}
+function posibleDup(t){
+  return (t.posible_dup||[]).map(function(id){ return tareas.filter(function(x){ return x.id===id; })[0]; })
+    .filter(function(x){ return x && x.id!==t.id && !x.cierre && !x.fusionada_en && estadoReal(x)!=="cerrada"; });
+}
+function faltaInfoRev(t){
+  if(t.pendiente_info && !esDecisionSal(t)) return true;
+  return porAutorizar(t) && !t.f_vigente && !t.periodicidad;
+}
+function tipoRevisar(t){
+  if(!t || t.cierre || t.fusionada_en || t.estado==="fusionada" || estadoReal(t)==="cerrada") return null;
+  if((meDetiene(t) && !t.pendiente_info) || (esDecisionSal(t) && PERSONAS[yo] && PERSONAS[yo].jefe)) return "espera";
+  if(faltaInfoRev(t) && (t.creada_por===yo || t.duenio===yo)) return "falta";
+  if(t.duenio===yo && !t.dup_resuelto && posibleDup(t).length) return "vincular";
+  if(porAutorizar(t)) return "autorizar";
+  return null;
+}
+function porRevisar(){
+  var ord={espera:0,falta:1,vincular:2,autorizar:3};
+  return tareas.map(function(t){ return {t:t,k:tipoRevisar(t)}; }).filter(function(x){ return x.k; })
+    .sort(function(a,b){ return ord[a.k]-ord[b.k] || (msCreacion(b.t)-msCreacion(a.t)); });
+}
+/* quien te espera: el nombre corto */
+function quienTeEspera(t){
+  if(t.duenio && t.duenio!==yo && PERSONAS[t.duenio]) return PERSONAS[t.duenio].nombre;
+  if(t.detenido && t.detenido.de) return String(t.detenido.de);
+  var ms=t.msgs||[];
+  for(var i=ms.length-1;i>=0;i--){ var x=ms[i]; if(x && (x.wa_in||x.de&&x.de!==yo) && (x.wa_c||x.de)) return String(x.wa_c||(PERSONAS[x.de]&&PERSONAS[x.de].nombre)||x.de).split(" ")[0]; }
+  return "Alguien";
+}
+function etiquetaRev(t,k){
+  if(k==="espera") return (esDecisionSal(t)?"Te esperan":quienTeEspera(t)+" te espera");
+  if(k==="falta") return "Falta información";
+  if(k==="vincular") return "Posible vinculación";
+  return "Por autorizar";
+}
+function vPorRevisar(lista){
+  if(!lista.length) return "";
+  var h='<div class="revh"><b>Por revisar</b><span>'+lista.length+'</span></div><div class="revl">';
+  lista.forEach(function(x){
+    h+='<button class="revr rv-'+x.k+'" data-id="'+esc(x.t.id)+'"><i></i><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span><span class="rl">'+esc(etiquetaRev(x.t,x.k))+'</span></button>';
+  });
+  return h+'</div>';
+}
+/* las preguntas de lo que falta, cortas, max. 4 */
+function preguntasFalta(t){
+  var b=[], pi=String(t.pendiente_info||"").trim();
+  var nomMal=!String(t.nombre||"").trim() || /^(whats\s?app:|recordatorio sin)/i.test(t.nombre) || /^\+?\d[\d\s]+$/.test(t.nombre);
+  if(nomMal) b.push("¿Cómo la llamo?");
+  if(pi && !/cu[aá]ndo|fecha|d[ií]a|hasta/i.test(pi)) b.push(pi);
+  if(!t.f_vigente || /cu[aá]ndo|fecha|d[ií]a|hasta/i.test(pi)){
+    if(!t.periodicidad) b.push("¿Se repite? ¿Cada cuánto?");
+    b.push("¿Cuándo termina?");
+  }
+  if(!(t.avisos||[]).length) b.push("¿Cuándo te recuerdo antes?");
+  if((t.msgs||[]).length<=1 && b.length<4) b.push("Contexto: ¿de qué se trata?");
+  return b.slice(0,4);
+}
+function ultimoDeOtro(t){
+  var ms=t.msgs||[];
+  for(var i=ms.length-1;i>=0;i--){ var x=ms[i]; if(x && x.k!=="bi" && (x.wa_in || (x.de && x.de!==yo))) return String(x.t||""); }
+  return "";
+}
+function vTarjetaRev(t){
+  var k=tipoRevisar(t); if(!k) return "";
+  if(k==="espera"){
+    if(esDecisionSal(t)) return "";   /* ya trae su banner "Esperando tu decision" */
+    var q=ultimoDeOtro(t)||quienEspera(t)||"";
+    return '<div class="revc c-espera"><span class="rct">'+esc(quienTeEspera(t).toUpperCase())+' TE ESPERA</span>'+
+      (q?'<span class="rcq">'+esc(q.length>160?q.slice(0,159)+"…":q)+'</span>':'')+
+      '<span class="rcp">Contéstale abajo.</span></div>';
+  }
+  if(k==="falta"){
+    return '<div class="revc c-falta"><span class="rct">FALTA INFORMACIÓN</span><ul>'+
+      preguntasFalta(t).map(function(p){ return '<li>'+esc(p)+'</li>'; }).join("")+
+      '</ul><span class="rcp">Contéstame abajo, con voz o escrito.</span></div>';
+  }
+  if(k==="vincular"){
+    var h='<div class="revc c-vincular"><span class="rct">POSIBLE VINCULACIÓN · se parece a</span>';
+    posibleDup(t).slice(0,3).forEach(function(d){
+      var quien=(d.duenio&&PERSONAS[d.duenio])?(d.duenio===yo?"Tuya":PERSONAS[d.duenio].nombre):"";
+      var cu=d.f_vigente?fechaChip(d.f_vigente):"";
+      h+='<div class="rvv"><span><b>'+esc(d.nombre)+'</b><small>'+esc([quien,cu].filter(Boolean).join(" · "))+'</small></span>'+
+         '<button class="rvb" data-rvinc="'+esc(d.id)+'">Vincular</button></div>';
+    });
+    return h+'<button class="rvn" id="rvnueva">Crear tarea nueva</button></div>';
+  }
+  return '<div class="revc c-autorizar"><span style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:0">'+
+    '<span class="rct">POR AUTORIZAR</span><span class="rcp">Cambios: díctamelos abajo</span></span>'+
+    '<button class="rva" id="rvautz">Autorizar</button></div>';
+}
+/* contestar "falta informacion": Claude saca nombre, fecha, ritmo, avisos y contexto */
+function completaRevision(t, v){
+  msg(t,"bo",v); guarda(t); render();
+  var qs=preguntasFalta(t);
+  var sys="Eres el asistente de tareas. Te doy una tarea, las preguntas que le hice al usuario y su respuesta. "+
+    "Saca SOLO lo que dijo, sin inventar. Fechas AAAA-MM-DD usando este calendario: "+calendarioProximo(40).join(", ")+". "+
+    "periodicidad solo 'semanal', 'mensual' o null. recordar = avisos antes de terminar (fecha y hora HH:MM si la dijo). "+
+    "Si dice que ya se hizo, ya_hecha=true. Contesta SOLO JSON: "+
+    "{\"nombre\":null,\"fecha\":null,\"periodicidad\":null,\"recordar\":[],\"contexto\":null,\"ya_hecha\":false}";
+  preguntaAClaude([{role:"user",content:sys+"\n\nTAREA: "+(t.nombre||"")+"\nPREGUNTAS: "+qs.join(" | ")+"\nRESPUESTA: "+v}],"rapido",function(txt,err){
+    if(err){ if(t.pendiente_info) completaPendiente(t.id, v); else { msg(t,"bi","No pude leer tu respuesta ahorita; quedó anotada."); guarda(t); render(); } return; }
+    var j={}; try{ var mm=String(txt).match(/\{[\s\S]*\}/); j=mm?JSON.parse(mm[0]):{}; }catch(e){ j={}; }
+    if(j.ya_hecha){ t.pendiente_info=""; t.pendiente_tipo=""; t.falta_fecha=false; t.autorizada=true; cierraHecha(t); render(); return; }
+    var hecho=[];
+    if(j.nombre && String(j.nombre).trim().length>=2){ t.nombre=conMayuscula(String(j.nombre).trim().slice(0,60)); hecho.push("nombre “"+t.nombre+"”"); }
+    if(j.fecha && /^\d{4}-\d{2}-\d{2}$/.test(j.fecha)){ t.f_original=j.fecha; t.f_vigente=j.fecha; t.falta_fecha=false; hecho.push("termina el "+fechaBonita(j.fecha)); }
+    if(j.periodicidad==="semanal"||j.periodicidad==="mensual"){ t.periodicidad=j.periodicidad; hecho.push(j.periodicidad==="semanal"?"cada semana":"cada mes"); }
+    (Array.isArray(j.recordar)?j.recordar:[]).slice(0,6).forEach(function(r){
+      if(r && /^\d{4}-\d{2}-\d{2}$/.test(r.fecha||"")){ nuevoAviso(t,{texto:t.nombre, fecha:r.fecha, hora:r.hora||"", dicho:v}); hecho.push("aviso "+fechaBonita(r.fecha)+(r.hora?" "+r.hora:"")); }
+    });
+    if(j.contexto && String(j.contexto).trim()){ t.contexto=String(j.contexto).trim().slice(0,400); hecho.push("contexto"); }
+    if(t.f_vigente || t.periodicidad){ t.pendiente_info=""; t.pendiente_tipo=""; }
+    msg(t,"bi", hecho.length ? "Listo: "+hecho.join(" · ")+"." : "No pesqué datos nuevos; dímelo otra vez, en el orden de las preguntas.");
+    guarda(t); try{ sincronizaAvisos(t); }catch(e){}
+    render();
+  });
 }
 function loQueDetengo(){
   var a=tareas.filter(function(t){ return meDetiene(t) && !t.pendiente_info && !esDecisionSal(t) });
@@ -5672,7 +5848,7 @@ function vHilo(){
   }
   var pre=t.pregunta&&t.duenio===yo?'<div class="b bi" style="margin:0 14px 8px">'+esc(t.pregunta)+'</div>':"";
 
-  return h+vVuelta(t)+vPasos(t)+bannerDecision(t)+'<div class="scroll"><div class="msgs">'+m+pre+'</div></div>'+
+  return h+vVuelta(t)+vPasos(t)+bannerDecision(t)+'<div class="scroll"><div class="msgs">'+m+pre+'</div></div>'+vTarjetaRev(t)+
     /* LA MISMA BARRA DE TODAS LAS VISTAS — 2026-09-04. Antes el hilo tenia la
        camara a la IZQUIERDA y una flecha de enviar a la derecha, distinto de la
        caratula (camara a la DERECHA, sin flecha). Salvador lo cacho: "tiene que
@@ -7578,7 +7754,10 @@ function pegaPalabra(a,b){
    Salvador 2026-09-27, caso real "Julio de MKS". */
 function detectaRenombre(v){
   var s=String(v||"").trim();
-  var m=s.match(/c[aá]mbia(le)?\s+(el\s+)?nombre\s+(de\s+(la|esta|[eé]sta|esa|[eé]sa)\s+(tarea|chat|conversaci[oó]n)\s+)?(a|por|como|:)\s*(.+)/i)
+  /* build 168: "cambiale el nombre A ESTA TAREA por X", "que se llame X", "llamala X" */
+  s=s.replace(/\b(a|de)\s+(la|esta|[eé]sta|esa|[eé]sa)\s+(tarea|chat|conversaci[oó]n)\b/i,"").replace(/\s{2,}/g," ");
+  var m=s.match(/c[aá]mbia(le|r|rle)?\s+(el\s+)?nombre\s+(de\s+(la|esta|[eé]sta|esa|[eé]sa)\s+(tarea|chat|conversaci[oó]n)\s+)?(a|por|como|:)\s*(.+)/i)
+    || s.match(/\b(?:que\s+se\s+llame|ll[aá]mala|n[oó]mbrala|el\s+nombre\s+(?:debe\s+ser|ser[aá]|va\s+a\s+ser))\s+(.+)/i)
     || s.match(/cambia(le)?\s+(el\s+)?nombre\s+(a|por)\s+(.+)/i)
     || s.match(/ponle\s+(de\s+|por\s+)?nombre\s+(.+)/i)
     || s.match(/renombra(la)?\s+((a|por)\s+)?(.+)/i)
@@ -9470,6 +9649,14 @@ function bindHilo(){
     el.onclick=function(ev){ ev.stopPropagation(); window.__listaAct=window.__listaAct||{};
       window.__listaAct[t.id]=el.getAttribute("data-ltab"); render(); };
   });
+  /* build 168: tarjeta POR REVISAR */
+  var rva=$("rvautz"); if(rva) rva.onclick=function(){ t.autorizada=true; t.autorizada_ts=Date.now(); msg(t,"bi","Autorizada."); guarda(t); toast("Tarea autorizada"); render(); };
+  var rvn=$("rvnueva"); if(rvn) rvn.onclick=function(){ t.dup_resuelto=true; msg(t,"bi","Queda como tarea aparte."); guarda(t); render(); };
+  Array.prototype.forEach.call(document.querySelectorAll("[data-rvinc]"),function(el){
+    el.onclick=function(){ var did=el.getAttribute("data-rvinc"), d=tareas.filter(function(x){ return x.id===did; })[0]; if(!d) return;
+      hojaConfirma({titulo:"Pasar todo a \u201c"+corta40(d.nombre)+"\u201d", sub:"Lo de \u201c"+corta40(t.nombre)+"\u201d se junta all\u00e1.",
+        accion:"Vincular", cb:function(){ d.autorizada=true; enlazaTareas(t.id, did); }}); };
+  });
   var bps=$("bpasos"); if(bps) bps.onclick=function(ev){ ev.stopPropagation();
     window.__pasosOpen=window.__pasosOpen||{}; window.__pasosOpen[t.id]=!window.__pasosOpen[t.id]; render(); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-paso]"),function(el){
@@ -9604,6 +9791,11 @@ function bindHilo(){
       t.nombre=conMayuscula(_rn146);
       msg(t,"bi","Cambié el nombre: “"+_viejo146+"” → “"+t.nombre+"”.");
       guarda(t); render(); return;
+    }
+    /* build 168: si la tarea esta en "Falta informacion", lo que contesta llena los datos */
+    if(tipoRevisar(t)==="falta" && !detectaLista(v) && listaNumerada(v).length<2){
+      $("txt").value=""; marcaEnvio("tenv","");
+      completaRevision(t, v); return;
     }
     /* build 141: contesta "¿5 de la mañana o de la tarde?" */
     if(t.pide_ampm && (Date.now()-t.pide_ampm.ts)<60*60*1000 && respuestaAmPm(v) && !(esMovida(v) && !soloFecha(v))){
