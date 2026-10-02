@@ -1011,7 +1011,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 168 · 2026-10-02 · POR REVISAR: una sola sección arriba (te espera / falta información / posible vinculación / por autorizar); cada tarea trae su tarjeta arriba del micrófono y se resuelve ahí; renombrar por voz más flexible";
+var VERSION_APP = "build 169 · 2026-10-02 · avisos al servidor: \"cada lunes\" = SEMANAL y mandan f_fin (fecha de fin o sin_fin) para que el servidor deje de repetirlos";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -8209,6 +8209,8 @@ function normalizaCada(c){ c=String(c||"").toLowerCase().normalize("NFD").replac
   if(/diario|cada dia|todos los dias|cada d[ií]a/.test(c)) return "DIARIO";
   if(/mensual|cada mes|al mes/.test(c)) return "MENSUAL";
   if(/semanal|cada semana|por semana/.test(c)) return "SEMANAL";
+  /* build 169 (Josue 2-oct): "cada lunes", "los martes", "todos los jueves" = SEMANAL (antes se iba vacio) */
+  if(/(cada|los|todos los)\s+(lunes|martes|miercoles|jueves|viernes|sabados?|domingos?)/.test(c)) return "SEMANAL";
   return "";
 }
 function nombraCada(c){ var cod=normalizaCada(c);
@@ -8283,7 +8285,13 @@ function avisoAlServidor(t, a, key){
   if(!f) return;
   var cuerpo={id:key||claveAviso(t,a), usuario:(t.duenio||yo), tarea:t.id,
     texto:String(a.texto||t.nombre||"Recordatorio").slice(0,180), cuando:f+" "+a.hora+":00"};
-  if(cada) cuerpo.cada=cada;
+  if(cada){
+    cuerpo.cada=cada;
+    /* build 169 (contrato con Josue 2-oct): f_fin AAAA-MM-DD o "sin_fin". El servidor deja de repetir despues de esa fecha. */
+    var fin=String(a.fin||t.f_fin||"").trim();
+    if(/^\d{4}-\d{2}-\d{2}$/.test(fin)){ if(f>fin) return; cuerpo.f_fin=fin; }
+    else cuerpo.f_fin="sin_fin";
+  }
   llamaPush("aviso_set", cuerpo);
 }
 /* una vez por arranque: sube los avisos FUTUROS de mis tareas vivas, para los
