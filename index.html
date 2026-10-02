@@ -1011,7 +1011,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 170 · 2026-10-02 · recordatorios \"cada lunes / los martes / de lunes a viernes / cada 15 dias\" se reconocen al dictar y los viejos que quedaron sin ritmo se recuperan de lo dicho y se reenvian al servidor con cada y f_fin";
+var VERSION_APP = "build 171 · 2026-10-02 · WhatsApp que pide Salvador desde la app sale como URGENTE (el programa de la Mac lo manda antes que la fila, una sola boca)";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -2763,6 +2763,9 @@ window.addEventListener("pageshow", function(){ try{ avisaVisto(); }catch(e){} }
    Claude, desde la computadora del que lo pide, lo manda por SU WhatsApp y la
    respuesta cae en el hilo de la tarea (wa_respuesta). Devuelve promesa. */
 function pideWhatsApp(cuerpo){
+  /* build 171 (Salvador 2-oct): lo que se pide desde la app lo pidio una persona en ese momento:
+     va como "urgente" y el programa de la Mac lo manda antes que la fila automatica */
+  cuerpo=Object.assign({prioridad:"urgente"}, cuerpo||{});
   if(typeof APP_TOKEN==="undefined" || String(APP_TOKEN).indexOf("__")===0)
     return Promise.reject(new Error("sin token"));
   return fetch(PUSH+"?action=wa_pedido",{method:"POST", keepalive:true,
