@@ -973,7 +973,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 165 · 2026-10-02 · Dictado que se corta (llamada, silencio, app en segundo plano) ya no se manda ni se pierde: queda en pausa con lo dicho y un micrófono para seguir dictando";
+var VERSION_APP = "build 166 · 2026-10-02 · Checklist en una tarea que ya existe: \"en la tarea de X ponme un checklist: número uno..., número dos...\" agrega los puntos a ESA tarea (no crea otra); listas dictadas con número uno/dos se parten en puntos";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -6150,6 +6150,30 @@ function barraEnviar(texto,completo){
       vista="barra"; render(); return;
     }
   }
+  /* build 166 (Salvador 2026-10-02): "en la tarea de la mesa directiva ponme un
+     checklist de..." = la lista va DENTRO de esa tarea. Antes se iba a Claude y
+     nacia una tarea nueva con el nombre de la lista. Se resuelve aqui, sin tokens. */
+  var _dl=detectaLista(texto);
+  if(_dl){
+    var _lc=candidatas(_dl.frase).filter(function(t){ return !t.cierre && !t.es_recordatorio; });
+    /* si una pega claramente mas que las otras, va directo a esa */
+    if(_lc.length>1){
+      var _pw=palabras(_dl.frase).map(raiz);
+      var _sc=_lc.map(function(t){ var tw=palabras(t.nombre).map(raiz); return _pw.filter(function(r){ return tw.indexOf(r)>=0; }).length; });
+      var _mx=Math.max.apply(null,_sc);
+      if(_sc.filter(function(x){ return x===_mx; }).length===1) _lc=[_lc[_sc.indexOf(_mx)]];
+    }
+    if(_lc.length===1){ aplicaLista(_lc[0], _dl.items, texto); return; }
+    if(_lc.length>1){
+      barraEstado={modo:"escoge", dicho:texto, hist:[], foto:fotoEnMano||null,
+        sv:{__lista:true, items:_dl.items, texto:texto}, ops:_lc.slice(0,6).map(function(t){return t.id}),
+        pregunta:"¿En cuál tarea va la lista?"};
+      vista="barra"; render(); return;
+    }
+    barraEstado={modo:"respuesta", dicho:texto,
+      texto:"No encontré la tarea “"+_dl.frase+"”. Dime cómo se llama, o ábrela y dicta ahí la lista."};
+    vista="barra"; render(); return;
+  }
   window.__saltaPaso=false;
   if(APP_TOKEN.indexOf("__")===0){
     consulta=texto; vista="lista"; render();
@@ -7251,6 +7275,9 @@ function aplicaIntencion(j, dicho, hist, foto){
     var d=j.tarea||{};
     /* build 144: los pasos pueden venir dentro de tarea o sueltos en el JSON */
     if(!d.pasos && j.pasos) d.pasos=j.pasos;
+    /* build 166: si Claude no partio la lista dictada ("numero uno..., numero dos..."), se parte aqui */
+    if(!(d.pasos&&d.pasos.length)){ var _ln=listaNumerada(dicho);
+      if(_ln.length>=2){ d.pasos=_ln; if(!d.nombre || /\b(n[uú]mero|punto)\s+(uno|dos|1|2)\b/i.test(d.nombre) || d.nombre.length>60) d.nombre=nombreLista(dicho); } }
     /* build 144 (Salvador 2026-09-26): HORA DICHA = ALARMA. Si dijo una hora (o
        "en 20 minutos") y no dijo dia, la tarea es de HOY (o del dia de ese
        tiempo) y nace con su aviso, aunque no haya dicho "recuerdame". */
@@ -7550,9 +7577,80 @@ function respuestaPalomeo(t, hechos){
   return s;
 }
 /* "agrega pan y leche" -> dos pasos nuevos (van a la ultima seccion) */
-function agregaPasos(t, texto){
+/* ===== build 166 (Salvador 2026-10-02): LISTAS DICTADAS =====
+   "numero uno mi aportacion de 500,000 numero dos las bardas numero tres..."
+   -> ["mi aportacion de 500,000","las bardas",...]. Un numero sin nada (numero
+   cuatro numero cinco) se salta. Solo parte con "numero/punto + N", ordinales
+   (primero, segundo...) o "1." / "2)": nunca con cifras sueltas como 500,000. */
+var NUM_LISTA="uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|\\d{1,2}";
+function listaNumerada(texto){
+  var s=" "+String(texto||"").replace(/\s+/g," ")+" ";
+  var marca=new RegExp("(?:\\b(?:n[uú]mero|punto|el\\s+n[uú]mero)\\s+(?:"+NUM_LISTA+")\\b|\\b(?:primero|segundo|tercero|cuarto|quinto|sexto|s[eé]ptimo|octavo|noveno|d[eé]cimo)\\b|(?:^|\\s)\\d{1,2}\\s*[.)-](?=\\s))\\s*[.,:;)-]?","ig");
+  var cortes=[], m;
+  while((m=marca.exec(s))){ cortes.push({i:m.index, f:m.index+m[0].length}); if(m[0].length===0) marca.lastIndex++; }
+  if(cortes.length<2) return [];
+  var out=[];
+  for(var k=0;k<cortes.length;k++){
+    var pz=s.slice(cortes[k].f, k+1<cortes.length?cortes[k+1].i:s.length)
+      .replace(/^[\s,.;:y-]+/i,"").replace(/[\s,.;:-]+$/,"").replace(/\s+y$/i,"").trim();
+    if(pz.length>=2) out.push(pz);
+  }
+  return out;
+}
+/* el nombre corto de una tarea-lista: lo de antes del "numero uno" */
+function nombreLista(texto){
+  var s=String(texto||"");
+  var m=s.match(new RegExp("\\b(?:n[uú]mero|punto)\\s+(?:"+NUM_LISTA+")\\b","i"));
+  var pre=(m?s.slice(0,m.index):s)
+    .replace(/\b(por\s+favor|porfa|hazme|haz|ponme|pon|cr[eé]ame|crea|quiero|necesito|me|un|una|el|la|los|las|de|del|siguientes?)\b/gi," ")
+    .replace(/[,:;.]/g," ").replace(/\s+/g," ").trim();
+  if(pre.length<3) pre="Lista de puntos";
+  return conMayuscula(pre.slice(0,60));
+}
+/* "en la tarea (que tengo) de X ponme un checklist..." -> {frase:"X", items:[...]}.
+   Solo si nombra una TAREA/JUNTA que ya existe Y pide lista/checklist/puntos. */
+function detectaLista(texto){
+  var s=String(texto||"").replace(/\s+/g," ");
+  if(!/\b(check\s*-?\s*lists?|checklists?|lista|puntos|pasos|temas|agenda|orden del d[ií]a)\b/i.test(s)) return null;
+  var m=s.match(/\b(?:en|a|dentro\s+de|para)\s+(?:mi|la|esta|el)\s+(?:tarea|junta|reuni[oó]n)\s+(?:que\s+tengo\s+)?(?:del|de|sobre|con)?\s*(.+?)(?=\s+(?:p[oó]n(?:me|le|gas)?|h[aá]z(?:me|le)?|agr[eé]ga(?:me|le)?|m[eé]te(?:me|le)?|cr[eé]a(?:me|le)?|quiero|necesito|an[oó]ta(?:me|le)?|arma(?:me|le)?)\b|[,:]|$)/i);
+  if(!m) return null;
+  var frase=m[1].replace(/\b(que\s+tengo|ahorita|ahora|hoy|de\s+hoy)\b/gi," ").replace(/\s+/g," ").trim();
+  if(palabras(frase).length===0) return null;
+  var resto=s.slice(m.index+m[0].length);
+  var items=listaNumerada(resto);
+  if(!items.length){
+    var dp=resto.split(/:/); if(dp.length>1){
+      items=dp.slice(1).join(":").split(/\s*,\s*|\s+y\s+(?=\S)/i).map(function(x){ return x.trim(); }).filter(function(x){ return x.length>=2; });
+    }
+  }
+  return {frase:frase, items:items};
+}
+/* agrega los puntos a ESA tarea y la abre con la lista desplegada; sin puntos,
+   la abre esperando que se dicten */
+function aplicaLista(t, items, texto){
+  msg(t,"bo",texto);
+  var nuevos=agregaPasos(t, items.length?items.join(" | "):"", items);
+  if(nuevos.length){
+    msg(t,"bi", nuevos.length<=3 ? "Agregué "+juntaY(nuevos.map(function(p){ return "“"+p.tx+"”"; }))+" a la lista."
+                                 : "Agregué "+nuevos.length+" puntos a la lista.");
+    window.__pasosOpen=window.__pasosOpen||{}; window.__pasosOpen[t.id]=true;
+    toast("Lista en “"+t.nombre+"”");
+  } else if(items.length){
+    msg(t,"bi","Esos puntos ya estaban en la lista.");
+  } else {
+    msg(t,"bi","Dime los puntos de la lista (por ejemplo: número uno…, número dos…).");
+    window.__pasoAdd=t.id;
+    toast("Dicta los puntos de la lista");
+  }
+  t.ultima=PERSONAS[yo].nombre+": "+texto;
+  guarda(t);
+  abierta=t.id; barraEstado=null; consulta=""; fotoEnMano=null; vista="hilo"; render();
+}
+function agregaPasos(t, texto, yaPartidos){
   var s=String(texto||"").replace(/^\s*(agr[eé]ga(le|me)?|a[nñ]ade(le)?|s[uú]male|apunta(le|me)?|pon(le)?|mete(le)?|tambi[eé]n)\s+(a\s+la\s+lista\s+|otro\s+paso:?\s*|un\s+paso:?\s*)?/i,"");
-  var partes=s.split(/\s*,\s*|\s+y\s+(?=\S)/i).map(function(x){ return x.trim(); }).filter(function(x){ return x.length>=2; });
+  /* build 166: lista ya partida, o dictada con numero uno/dos... */
+  var _num=yaPartidos&&yaPartidos.length?yaPartidos:listaNumerada(s);
+  var partes=_num.length?_num:s.split(/\s*,\s*|\s+y\s+(?=\S)/i).map(function(x){ return x.trim(); }).filter(function(x){ return x.length>=2; });
   var nuevos=normalizaPasos(partes);
   var ult=(t.lista_pasos||[]).length ? t.lista_pasos[t.lista_pasos.length-1].sec||"" : "";
   var ya={}; (t.lista_pasos||[]).forEach(function(p){ ya[_nrm(p.tx).trim()]=1; });
@@ -8533,6 +8631,15 @@ function bindBarra(){
       var k=el.getAttribute("data-esc"), sv=(b.sv||{});
       /* build 145: escoger a cual tarea pertenece un PASO suelto ("ya compre
          el camaron") -- se palomea directo, no se reentra a SUPERVISAR. */
+      /* build 166: escoger en cual tarea va la lista */
+      if(sv.__lista){
+        var t166=tareas.filter(function(x){return x.id===k})[0];
+        if(k==="nueva" || !t166){
+          var nl=creaTarea({nombre:nombreLista(sv.texto), dicho:sv.texto, pasos:sv.items});
+          abierta=nl.id; barraEstado=null; consulta=""; vista="hilo"; render(); return;
+        }
+        aplicaLista(t166, sv.items||[], sv.texto); return;
+      }
       if(sv.__paso){
         if(k==="nueva"){
           window.__saltaPaso=true; barraEstado=null; consulta=sv.texto; vista="lista"; render(); return;
@@ -9430,13 +9537,15 @@ function bindHilo(){
     /* build 144: PASOS POR VOZ. "+ Dicta otro paso" o "agrega pan y leche"
        suma pasos; "ya compre la carne" / "ya quedo el acomodo" los palomea y
        Claude contesta corto. Si no pega con ningun paso, sigue como siempre. */
-    if(window.__pasoAdd===t.id || (tienePasos(t) && !t.cierre && /^\s*(agr[eé]ga(le|me)?|a[nñ]ade(le)?|s[uú]male)\b/i.test(v))){
+    if(window.__pasoAdd===t.id || (tienePasos(t) && !t.cierre && /^\s*(agr[eé]ga(le|me)?|a[nñ]ade(le)?|s[uú]male)\b/i.test(v))
+       || (!t.cierre && listaNumerada(v).length>=2)){   /* build 166: "numero uno..., numero dos..." dentro de la tarea */
       var _adding=window.__pasoAdd===t.id; window.__pasoAdd=null;
       var _nv=agregaPasos(t, v);
       if(_nv.length || _adding){
         $("txt").value=""; marcaEnvio("tenv","");
         msg(t,"bo",v);
-        msg(t,"bi", _nv.length ? "Agregué "+juntaY(_nv.map(function(p){ return "“"+p.tx+"”"; }))+"." : "Ese paso ya estaba en la lista.");
+        msg(t,"bi", _nv.length ? (_nv.length<=3 ? "Agregué "+juntaY(_nv.map(function(p){ return "“"+p.tx+"”"; }))+"." : "Agregué "+_nv.length+" puntos a la lista.") : "Ese paso ya estaba en la lista.");
+        if(_nv.length){ window.__pasosOpen=window.__pasosOpen||{}; window.__pasosOpen[t.id]=true; }
         guarda(t); render(); return;
       }
     }
