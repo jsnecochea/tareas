@@ -1011,7 +1011,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 169 · 2026-10-02 · avisos al servidor: \"cada lunes\" = SEMANAL y mandan f_fin (fecha de fin o sin_fin) para que el servidor deje de repetirlos";
+var VERSION_APP = "build 170 · 2026-10-02 · recordatorios \"cada lunes / los martes / de lunes a viernes / cada 15 dias\" se reconocen al dictar y los viejos que quedaron sin ritmo se recuperan de lo dicho y se reenvian al servidor con cada y f_fin";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -6602,6 +6602,10 @@ function cadaDicho(txt){
   if(/\b(todos los dias|cada dia|diario|diariamente|a diario)\b/.test(s)) return "diario";
   if(/\b(cada semana|semanal|todas las semanas)\b/.test(s)) return "semanal";
   if(/\b(cada mes|mensual|todos los meses)\b/.test(s)) return "mensual";
+  /* build 170 (Josue 2-oct): antes "cada lunes" no se reconocia y el aviso se guardaba como de una sola vez */
+  if(/\b(de lunes a viernes|entre semana|dias habiles)\b/.test(s)) return "LV";
+  if(/\b(cada quince dias|cada 15 dias|quincenal|cada dos semanas|cada 2 semanas)\b/.test(s)) return "quincenal";
+  if(/\b(cada|los|todos los)\s+(lunes|martes|miercoles|jueves|viernes|sabados?|domingos?)\b/.test(s)) return "semanal";
   return "";
 }
 /* TIEMPO RELATIVO: "en 2 minutos", "dentro de una hora", "en media hora", "en un
@@ -8178,8 +8182,9 @@ function avisosDe(t){
      (antes "Eliminar" en SONANDO AHORA cerraba la tarea pero la tarjeta seguia ahi). */
   if(t.cierre || t.estado==="cerrada") return out;
   var sinA=t.sin_alarma && t.sin_alarma.f===(t.f_vigente||"") && t.sin_alarma.h===(t.aviso_hora||"");
-  if(t.es_recordatorio && !sinA) out.push({id:"self", self:true, texto:t.nombre, fecha:t.f_vigente||"", hora:t.aviso_hora||"", cada:t.aviso_cada||""});
-  (t.avisos||[]).forEach(function(a){ out.push({id:String(a.ts), texto:a.texto||"", fecha:a.fecha||"", hora:a.hora||"", cada:a.cada||""}); });
+  /* build 170: si se guardo sin ritmo (antes del arreglo), se recupera de lo que se dicto */
+  if(t.es_recordatorio && !sinA) out.push({id:"self", self:true, texto:t.nombre, fecha:t.f_vigente||"", hora:t.aviso_hora||"", cada:t.aviso_cada||normalizaCada(cadaDicho(t.aviso_dicho||""))});
+  (t.avisos||[]).forEach(function(a){ out.push({id:String(a.ts), texto:a.texto||"", fecha:a.fecha||"", hora:a.hora||"", cada:a.cada||normalizaCada(cadaDicho(a.dicho||"")), fin:a.fin||""}); });
   return out;
 }
 function avisoVence(a){
