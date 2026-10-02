@@ -96,7 +96,15 @@ self.addEventListener('notificationclick', function(event) {
           if (client.url.includes('doit.ok-doit.com') && 'focus' in client) {
             // build 142: si la notificacion es de una tarea/alarma, la app ya
             // abierta abre ESA tarea (postMessage); si es general, al home.
-            if (tid) { client.postMessage({ tipo: 'abre', id: tid }); return client.focus(); }
+            // build 164: con la app YA abierta, el aviso por postMessage (build 142) se
+            // perdia cuando iOS tenia la app dormida: solo se enfocaba y quedaba la
+            // ultima tarea vista (la equivocada). Cerrar y abrir si funcionaba porque
+            // entraba por la URL. Ahora SIEMPRE entra por la URL (navigate), igual
+            // que en frio; postMessage queda solo de respaldo si navigate falla.
+            if (tid) {
+              return client.focus().then(function(c){ return (c||client).navigate(deepLink); })
+                .catch(function(){ client.postMessage({ tipo: 'abre', id: tid }); return client.focus(); });
+            }
             if (!data.url) return client.focus();
             client.navigate(deepLink);
             return client.focus();

@@ -962,7 +962,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 164 · 2026-10-02 · Recurrentes: al darle Ya está se guarda la vuelta en su historial y la misma tarea arranca la siguiente (fecha nueva, pasos sin palomear); barra Vuelta arriba del chat con el día de entrega e historial";
+var VERSION_APP = "build 164 · 2026-10-02 · Recurrentes: al darle Ya está se guarda la vuelta en su historial y la misma tarea arranca la siguiente (fecha nueva, pasos sin palomear); arriba del chat solo la fecha de entrega, al tocarla el historial";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -1901,9 +1901,8 @@ function vVuelta(t){
   var venc=f && dDif(f,hoy())>0;
   var h='<div class="vuelw"><div class="vuel'+(ab?' open':'')+'">'+
     '<button class="vh" id="bvuel" aria-expanded="'+(ab?"true":"false")+'">'+
-      '<span class="ttl">Vuelta</span>'+
-      '<span class="nx'+(venc?' venc':'')+'">'+(f?(venc?'Vencida · era para el <b>':'Para el <b>')+esc(diaEntrega(f))+'</b>':'Sin fecha todavía')+'</span>'+
-      '<span class="cd">'+esc(cadaTxt(t))+'</span>'+
+      /* Salvador 2026-10-02: tipo Apple, solo la fecha de ESTA vuelta */
+      '<span class="nx'+(venc?' venc':'')+'"><b>'+(f?esc(diaEntrega(f)):'Sin fecha')+'</b></span>'+
       '<svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>'+
     '</button>';
   if(ab){
