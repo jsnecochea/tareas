@@ -5035,7 +5035,12 @@ function porAutorizar(t){
   return t.por_autorizar===true || Math.max(msCreacion(t),_fechaDeId(t.id))>=REV_DESDE;
 }
 function posibleDup(t){
-  return (t.posible_dup||[]).map(function(id){ return tareas.filter(function(x){ return x.id===id; })[0]; })
+  /* build 168: el trabajador de WhatsApp/correo deja en analisis "posible duplicado de <id o nombre>" */
+  var ids=(t.posible_dup||[]).slice(), an=String(t.analisis||"");
+  var mm=an.match(/posible(?:s)?\s+duplicad[oa]s?\s+(?:de|con)\s+([^\n.;]+)/i);
+  if(mm){ var frag=mm[1].toLowerCase();
+    tareas.forEach(function(x){ if(x.id!==t.id && (frag.indexOf(String(x.id).toLowerCase())>=0 || (x.nombre && x.nombre.length>3 && frag.indexOf(x.nombre.toLowerCase())>=0)) && ids.indexOf(x.id)<0) ids.push(x.id); }); }
+  return ids.map(function(id){ return tareas.filter(function(x){ return x.id===id; })[0]; })
     .filter(function(x){ return x && x.id!==t.id && !x.cierre && !x.fusionada_en && estadoReal(x)!=="cerrada"; });
 }
 function faltaInfoRev(t){
