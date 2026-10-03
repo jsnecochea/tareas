@@ -1074,6 +1074,10 @@ button{font:inherit;color:inherit}
 .fotin{flex-direction:column;align-items:flex-end;gap:2px}.fotin img{width:180px;height:auto;max-height:240px;border-radius:12px}.fotin .fh{font-size:12px;color:var(--ink-3)}
 .gdoc{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;aspect-ratio:1;border-radius:10px;background:#2a2a33;color:#fff;text-decoration:none;padding:6px;text-align:center}
 .gdoc span{font-size:20px;font-weight:700;color:#ff9f0a}.gdoc small{font-size:11px;color:#bbb;word-break:break-all}
+#holdbar{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 150px);z-index:880;display:flex;flex-direction:column;gap:6px}
+#holdbar .hrow{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#1f1f26;border:1.5px solid #ff9f0a;border-radius:14px;padding:8px 8px 8px 14px;color:#fff;font-size:15.5px}
+#holdbar button{border:0;border-radius:10px;background:#ff9f0a;color:#2b1700;font-weight:700;font-size:15px;padding:9px 14px}
+.extpop .cx{background:none;color:#8e8e93}
 </style>
 </head>
 <body>
@@ -1110,7 +1114,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 187 · sin avisos de entrega fallida en el chat; en Todo tu mensaje va al responsable; fotos en su lugar; el clip junta lo de WhatsApp";
+var VERSION_APP = "build 188 · 30 s para deshacer lo que va por WhatsApp (o borrarlo); Cancelar en el aviso; notas para Claude que no salen";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -5513,10 +5517,12 @@ function preguntaExterno(nombre, v, si, no){
   var bg=document.createElement("div"); bg.className="cnlbg";
   var p=document.createElement("div"); p.className="extpop";
   p.innerHTML='<b>'+esc(nombre)+' es externo</b><p>“'+esc(v.length>120?v.slice(0,119)+"…":v)+'”<br>¿Se lo mando a él por WhatsApp?</p>'+
-    '<button class="si">Sí, mandárselo a '+esc(nombre)+'</button><button class="no">No, solo al equipo</button>';
+    '<button class="si">Sí, mandárselo a '+esc(nombre)+'</button><button class="no">No, solo al equipo</button><button class="cx">Cancelar</button>';
   function cierra(){ if(bg.parentNode) bg.parentNode.removeChild(bg); if(p.parentNode) p.parentNode.removeChild(p); }
   p.querySelector(".si").onclick=function(){ cierra(); si(); };
   p.querySelector(".no").onclick=function(){ cierra(); no(); };
+  p.querySelector(".cx").onclick=function(){ cierra(); var ta=$("txt"); if(ta){ ta.value=v; try{ ta.dispatchEvent(new Event("input",{bubbles:true})); }catch(e){} ta.focus(); } };   /* build 188 */
+  bg.onclick=function(){ p.querySelector(".cx").onclick(); };
   document.body.appendChild(bg); document.body.appendChild(p);
 }
 /* candado: lo que va a un externo no debe nombrar a OTRO externo (precios, comparativas) */
@@ -10210,6 +10216,7 @@ function bindHilo(){
   Array.prototype.forEach.call(document.querySelectorAll("[data-mdel]"),function(el){
     el.onclick=function(ev){ ev.stopPropagation();
       var ix=+el.getAttribute("data-mdel"); if(!t.msgs||!t.msgs[ix]) return;
+      try{ cancelaEnvio(t.id, t.msgs[ix].t); }catch(e){}
       t.msgs.splice(ix,1); guarda(t); render(); };
   });
   /* build 139: cancelar un WhatsApp desde su mensaje (10 min, mientras no sale) */
@@ -10372,6 +10379,8 @@ function bindHilo(){
     /* build 141: con la alarma roja abierta no se escribe ni se dicta */
     if(alarmaRoja(t)){ toast("Primero: Eliminar alarma o Posponer 1 hora"); render(); return; }
     var v=limpiaHoraDictada($("txt").value.trim()); if(!v)return;
+    /* build 188 (Salvador 08:39): lo que le dices a Claude (correcciones, aclaraciones) nunca sale por WhatsApp */
+    if(typeof esNotaClaude==="function" && esNotaClaude(v)){ $("txt").value=""; marcaEnvio("tenv",""); notaClaude(t, v); return; }
     /* build 146: renombrar la tarea por voz o escrito, sin confirmar aparte */
     var _rn146=detectaRenombre(v);
     if(_rn146){
@@ -10424,7 +10433,15 @@ function bindHilo(){
         function(){ msg(t,"bo",_vN); var mm=t.msgs[t.msgs.length-1]; mm.canal="equipo"; mm.de=yo; guarda(t); render(); });
       return;
     }
-    var _rx186=(!_esOrden && !_cita && _cnA.id==="todo" && !aQuienRespondo(t,v,null))?responsableExt(t):null;   /* si le estas contestando a lo ultimo que te mando, sale directo (build 175) */
+    /* build 188: si le estas contestando a lo ultimo que te mando un externo, sale directo a el (con 30 s para deshacer) */
+    var _aq188=(!_esOrden && !_cita && _cnA.id==="todo")?aQuienRespondo(t,v,null):"";
+    if(_aq188 && externosDe(t).some(function(n){ return _nn(n)===_nn(_aq188); })){
+      $("txt").value=""; marcaEnvio("tenv","");
+      var _vA=v, _dA=externosDe(t).filter(function(n){ return _nn(n)===_nn(_aq188); })[0];
+      candadoExterno(t, _dA, _vA, function(){ mandaAExterno(t, _dA, _vA, null); });
+      return;
+    }
+    var _rx186=(!_esOrden && !_cita && _cnA.id==="todo")?responsableExt(t):null;
     if(_rx186){
       $("txt").value=""; marcaEnvio("tenv","");
       var _vR=v;
@@ -11408,6 +11425,7 @@ function pideParaTi(t, p, key){
   for(var i=desde;i<ms.length;i++){ var x=ms[i]; if(!x || (x.k==="bi" && !x.wa_in)) continue; var q=x.wa_c||(x.de&&PERSONAS[x.de]&&PERSONAS[x.de].nombre)||(x.k==="bo"?"Salvador":"?"); lines.push("["+i+"] "+q+": "+String(x.tr||x.t||"").slice(0,400)); }
   if(lines.length<4){ window.__paraTi[key]={posturas:[],datos:[],decidido:[],falta:[]}; return; }
   window.__paraTiPidiendo=key;
+  if(t.notas_claude && t.notas_claude.length) lines.push("CORRECCIONES DE SALVADOR (mandan sobre los mensajes): "+t.notas_claude.map(function(n){return n.t;}).join(" | ").slice(0,1200));
   var sys="Armas el contexto MINIMO para que "+((PERSONAS[yo]||{}).nombre||"el usuario")+" conteste esta pregunta: [" + p.ix + "] " + p.t +
     "\nUsa SOLO lo que dicen los mensajes; NO inventes, NO calcules ni redondees cifras (copialas tal cual). Si dos dicen cifras distintas, pon las dos. "+
     "Ignora 'ok', 'si', emojis como texto (cuentalos solo como voto). Solo lo del tema de esa pregunta. Cada renglon lleva ix = numero del mensaje de donde salio. "+
@@ -12124,6 +12142,59 @@ function leeAjustes(){
 }
 document.addEventListener("click",function(e){ var b=e.target.closest && e.target.closest('[data-mn="lectura"]'); if(!b) return;
   e.stopPropagation(); e.preventDefault(); menuOpen=false; render(); leeAjustes(); }, true);
+
+
+/* ===== build 188 (Salvador 2026-10-03 08:39) =====
+   1) Todo mensaje que va a un externo por WhatsApp desde el chat espera 30 s antes de salir:
+      arriba de donde escribes sale "Se manda a X en 30 s · Deshacer"; el bote de basura del
+      mensaje tambien lo cancela. Si lo borras, NO le llega.
+   2) Notas para Claude ("Claude, …", "para que puedas…", "corrige…", "ojo, los 45 son 45 mil")
+      se quedan en la tarea como nota privada y Claude las usa (resumen, lectura); nunca salen. */
+window.__waHold=window.__waHold||{};
+function _holdTxt(s){ return String(s||"").trim().toLowerCase(); }
+(function(){
+  var _pwa=pideWhatsApp;
+  pideWhatsApp=function(c){
+    if(!c || !c.tarea_id || !c.auto_respuesta || c.sin_espera) return _pwa(c);
+    return new Promise(function(res, rej){
+      var k="h"+Date.now()+Math.floor(Math.random()*1e4), fin=Date.now()+30000;
+      var p={c:c, fin:fin, res:res};
+      p.to=setTimeout(function(){ delete window.__waHold[k]; pintaHold(); _pwa(c).then(res, rej); }, 30000);
+      window.__waHold[k]=p; pintaHold();
+    });
+  };
+})();
+function cancelaEnvio(tid, texto, k){
+  var n=0;
+  Object.keys(window.__waHold).forEach(function(q){ var p=window.__waHold[q];
+    if(k ? q===k : (p.c.tarea_id===tid && _holdTxt(p.c.texto)===_holdTxt(texto))){ clearTimeout(p.to); delete window.__waHold[q]; try{ p.res({cancelado:true}); }catch(e){} n++; } });
+  pintaHold(); return n;
+}
+function pintaHold(){
+  var ks=Object.keys(window.__waHold), b=document.getElementById("holdbar");
+  if(!ks.length){ if(b) b.remove(); clearInterval(window.__holdIv); window.__holdIv=null; return; }
+  if(!b){ b=document.createElement("div"); b.id="holdbar"; document.body.appendChild(b);
+    b.addEventListener("click", function(ev){ var x=ev.target.closest("[data-hk]"); if(!x) return; ev.stopPropagation();
+      var p=window.__waHold[x.getAttribute("data-hk")]; if(!p) return;
+      var tt=tareas.filter(function(z){return z.id===p.c.tarea_id})[0];
+      cancelaEnvio(null,null,x.getAttribute("data-hk"));
+      if(tt && tt.msgs){ for(var i=tt.msgs.length-1;i>=0;i--){ var m=tt.msgs[i]; if(m && m.k==="bo" && _holdTxt(m.t)===_holdTxt(p.c.texto)){ tt.msgs.splice(i,1); break; } } guarda(tt); }
+      toast("No se mandó"); render(); }); }
+  b.innerHTML=ks.map(function(k){ var p=window.__waHold[k], s=Math.max(0,Math.ceil((p.fin-Date.now())/1000));
+    return '<div class="hrow"><span>Se manda a '+esc(String(p.c.contacto||"").split(" ")[0])+' en '+s+' s</span><button data-hk="'+k+'">Deshacer</button></div>'; }).join("");
+  if(!window.__holdIv) window.__holdIv=setInterval(pintaHold, 1000);
+}
+function esNotaClaude(v){
+  var s=String(v||"").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+  return /^(claude|oye claude|ia\b|nota para (claude|ti)|nota:|para claude|ojo claude|aclaracion|correccion|corrige)/.test(s) ||
+    /\bpara que (puedas|sepas|tengas|corrijas|lo ajustes|los ajustes)\b/.test(s) ||
+    /\b(el|los|ese|esos) (mensaje|numero|numeros|precio|precios) (de|que (pone|puso|mando|dice|dijo))\b/.test(s) && /\b(son|eran|significa|quiere decir|es)\b/.test(s);
+}
+function notaClaude(t, v){
+  msg(t,"bo",v); var m=t.msgs[t.msgs.length-1]; m.de=yo; m.canal="priv:"+yo; m.nota_claude=1;
+  t.notas_claude=(t.notas_claude||[]).concat([{t:v, ts:Date.now()}]).slice(-30);
+  guarda(t); render(); toast("Nota para Claude · no se manda a nadie");
+}
 
 </script>
 </body>
