@@ -1110,7 +1110,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 186 · en Todo tu mensaje va al responsable (externo por WhatsApp, con aviso); fotos en su lugar del chat; el clip junta también lo de WhatsApp";
+var VERSION_APP = "build 187 · sin avisos de entrega fallida en el chat; en Todo tu mensaje va al responsable; fotos en su lugar; el clip junta lo de WhatsApp";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -6264,6 +6264,9 @@ function vHilo(){
   (t.msgs||[]).forEach(function(x,ix){
     if(x && x.ts) _evHasta(x.ts);
     if(x && x.k==="bi" && !x.wa_in && /^Foto guardada( con ubicaci[oó]n)?\.?$/.test(String(x.t||"").trim())) return;   /* build 186: paja */
+    /* build 187 (Salvador 08:28): los avisos del programa de la Mac ("Sin confirmación de entrega… tras 2 intentos",
+       "NO SALIÓ a…") no ensucian el chat; el estado va en las palomitas del mensaje */
+    if(x && x.k==="bi" && /^(?:[^:\n]{1,40}:\s*)?(Sin confirmaci[oó]n de entrega a |NO SALI[OÓ] a )/.test(String(x.t||""))) return;
     var _cx=canalDe(x);
     if(_cx.indexOf("dm:")===0 && _cx!=="dm:"+yo && x.de!==yo && !(PERSONAS[yo]&&PERSONAS[yo].jefe)) return;  /* lo privado de otros no se pinta */
     if(_cx.indexOf("priv:")===0 && _cx!=="priv:"+yo) return;                 /* build 179: nota de Claude solo para quien contesto */
@@ -10421,7 +10424,7 @@ function bindHilo(){
         function(){ msg(t,"bo",_vN); var mm=t.msgs[t.msgs.length-1]; mm.canal="equipo"; mm.de=yo; guarda(t); render(); });
       return;
     }
-    var _rx186=(!_esOrden && !_cita && _cnA.id==="todo")?responsableExt(t):null;
+    var _rx186=(!_esOrden && !_cita && _cnA.id==="todo" && !aQuienRespondo(t,v,null))?responsableExt(t):null;   /* si le estas contestando a lo ultimo que te mando, sale directo (build 175) */
     if(_rx186){
       $("txt").value=""; marcaEnvio("tenv","");
       var _vR=v;
@@ -11696,6 +11699,7 @@ function leible(x,t){
   else if(x.k==="bo" && (!x.de || x.de===yo)) quien="Tú";
   else { try{ quien=autorMsg(x,t)||""; }catch(e){} }
   if(quien==="Claude") return null;
+  if(/^(Sin confirmaci[oó]n de entrega a |NO SALI[OÓ] a )/.test(raw)) return null;
   var foto=/imagen|foto|video|sticker|documento/i.test(String(x.tipo||"")) || /^\s*\[(imagen|foto|video|documento|sticker)/i.test(raw);
   var tx=limpiaHabla(raw);
   if(foto && tx.length<4) return {quien:quien, tx:"", foto:/video/i.test(String(x.tipo||raw))?"un video":(/documento/i.test(String(x.tipo||raw))?"un documento":"una foto")};
