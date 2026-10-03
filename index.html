@@ -639,6 +639,8 @@ button{font:inherit;color:inherit}
 .supcard{border-left-color:#ffd60a}
 .pth,.sph{font-size:12px;font-weight:700;letter-spacing:.05em;color:#0a84ff}.sph{color:#ffd60a}
 .ptq{font-size:16px;color:var(--ink);cursor:pointer}
+.ptcard:not(.ab) .ptq{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.ptmas{align-self:flex-start;border:0;background:none;color:#0a84ff;font-size:14.5px;font-weight:600;padding:2px 0}
 .ptl,.spl{font-size:14.5px;color:var(--ink-2,#d1d1d6);line-height:1.35}.ptl b{color:var(--ink)}
 .ptf b{color:#ff9f0a}.ptw{color:var(--ink-3);font-style:italic}
 .ptsrc{display:inline-block;color:#0a84ff;font-weight:800;padding:0 6px;cursor:pointer}
@@ -765,6 +767,7 @@ button{font:inherit;color:inherit}
 .visor{position:fixed;inset:0;background:rgba(10,9,8,.94);z-index:70;display:none;
   flex-direction:column;align-items:center;justify-content:center;padding:18px}
 .visor.on{display:flex}
+.visor .vx{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);right:16px;width:42px;height:42px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:28px;line-height:1}
 .visor img{max-width:100%;max-height:76vh;border-radius:8px;object-fit:contain}
 .visor .info{color:#D9D3C9;font-size:17.6px;margin-top:12px;text-align:center;line-height:1.5}
 .visor .nav{display:flex;gap:10px;margin-top:14px}
@@ -1083,7 +1086,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 182 · 2026-10-02 · Claude supervisor: entrevista al supervisor, entregas con fecha, ritmo e insistencia al dueño y aviso al jefe";
+var VERSION_APP = "build 183 · 2026-10-02 · Te pregunta plegado en 3 renglones; sin coordenadas en fotos; el visor de fotos ya no se queda en negro";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -2503,10 +2506,13 @@ function abreVisor(lista,i){
   var v=$("visor"); v.classList.add("on"); pintaVisor();
 }
 function pintaVisor(){
+  /* build 183 (Salvador 22:09): la foto dejaba la pantalla negra sin salida: fechaCorta recibia un
+     numero y tronaba ANTES de pintar el boton Cerrar. Ahora: fecha segura, X fija arriba, tocar el
+     fondo cierra, y sin coordenadas. */
   var v=$("visor"), f=visorList[visorI]; if(!f){v.classList.remove("on");return}
-  v.innerHTML='<img src="'+f.data+'" alt="adjunto">'+
-    '<div class="info">'+esc(f.de)+'<br>'+fechaCorta(f.ts)+(f.lat?(' · '+f.lat+', '+f.lon):' · sin ubicación')+
-    '<br>'+(visorI+1)+' de '+visorList.length+'</div>'+
+  var _fd=""; try{ _fd=fechaCorta(new Date(f.ts||Date.now())); }catch(e){ _fd=""; }
+  v.innerHTML='<button class="vx" id="vx" aria-label="Cerrar">×</button><img src="'+esc(f.data||f.url||"")+'" alt="adjunto">'+
+    '<div class="info">'+esc(f.de||"")+(_fd?' · '+esc(_fd):'')+(visorList.length>1?'<br>'+(visorI+1)+' de '+visorList.length:'')+'</div>'+
     '<div class="nav">'+(visorI>0?'<button id="vprev">‹ Anterior</button>':'')+
     '<button id="vclose">Cerrar</button>'+
     (visorI<visorList.length-1?'<button id="vnext">Siguiente ›</button>':'')+'</div>';
@@ -2514,6 +2520,8 @@ function pintaVisor(){
   if(p)p.onclick=function(){visorI--;pintaVisor()};
   if(n)n.onclick=function(){visorI++;pintaVisor()};
   $("vclose").onclick=function(){$("visor").classList.remove("on")};
+  $("vx").onclick=function(){$("visor").classList.remove("on")};
+  v.onclick=function(ev){ if(ev.target===v) v.classList.remove("on"); };
 }
 
 function $(id){return document.getElementById(id)}
@@ -6258,7 +6266,7 @@ function vHilo(){
   if(t.evidencias&&t.evidencias.length){
     m+='<div class="fot">'+t.evidencias.map(function(f){return '<img src="'+f.data+'" alt="evidencia">'}).join("")+'</div>';
     var u=t.evidencias[t.evidencias.length-1];
-    if(u.lat) m+='<div class="b bi">'+u.lat+', '+u.lon+' · '+hhmm(new Date(u.ts))+'<span class="st">ubicación guardada</span></div>';
+    /* build 183 (Salvador 22:09): sin burbuja de coordenadas/hora; la ubicacion queda guardada en la foto */
   }
 
   /* Tarjeta de decisión: el jefe ve el resumen Y lo adjunto sin ir a buscarlo.
@@ -10278,6 +10286,7 @@ function bindHilo(){
   try{ bindDeslizar(t); }catch(e){ console.warn("deslizar",e); }
   var _cp=$("cnlpill"); if(_cp) _cp.onclick=function(){ abreCanales(t); };
   var _ib=$("intbtn"); if(_ib) _ib.onclick=function(){ abreIntegrantes(t); };
+  Array.prototype.forEach.call(document.querySelectorAll("[data-ptab]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); window.__ptAb=window.__ptAb||{}; window.__ptAb[t.id]=b.getAttribute("data-ptab")==="1"; render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll(".ptcard [data-irmsg]"),function(q){ q.onclick=function(ev){ ev.stopPropagation();
     window.__cnl=window.__cnl||{}; if(window.__cnl[t.id]!=="todo"){ window.__cnl[t.id]="todo"; render(); }
     var o=document.querySelector('.msgs [data-mix="'+q.getAttribute("data-irmsg")+'"]'); if(o){ o.scrollIntoView({behavior:"smooth",block:"center"}); o.classList.add("flash"); setTimeout(function(){ o.classList.remove("flash"); },1200); } }; });
@@ -11287,9 +11296,13 @@ function preguntaParaMi(t){
     var tx=_n179((y.tr||y.t||"")), mm=String(y.t||"").match(/^([^:\n]{1,24}):\s*/), quien=y.wa_c||(y.de&&PERSONAS[y.de]&&PERSONAS[y.de].nombre)||(mm?mm[1]:"Alguien");
     var pide=PIDE_RXf().test(" "+tx+" ") || /\?/.test(String(y.t||""));
     if(!pide) continue;
+    /* build 183: un documento o un borrador largo no es una pregunta; ni lo que saluda a OTRA persona ("¿Qué tal, Roberto?") */
+    if(String(y.tr||y.t||"").length>450) continue;
+    var _voc=String(y.tr||y.t||"").replace(/^\s*[^:\n\[]{1,24}:\s*/,"").replace(/^\s*\[audio\]\s*/i,"").match(/^\s*¿?\s*(?:[Qq]u[eé]\s+tal|[Hh]ola|[Oo]ye|[Bb]uen[oa]s(?:\s+(?:d[ií]as|tardes|noches))?)\s*,?\s*([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)/);
+    if(_voc && misNombres().indexOf(_n179(_voc[1]))<0) continue;
     var meNombra=nombres.some(function(n){ return n && (" "+tx+" ").indexOf(" "+n+" ")>=0; });
     var aMi=meNombra || (y.cita && _n179(y.cita.de)===_n179((PERSONAS[yo]||{}).nombre)) || (j-1===iUlt && iUlt>=0) || (t.duenio===yo && y.wa_in===1);
-    var paraTodos=/\b(todos|equipo|chicos|alguien|opinen|votemos|que opinan)\b/.test(tx);
+    var paraTodos=/\b(todos ustedes|opinen|votemos|que opinan|que opinan todos|alguien sabe)\b/.test(tx);
     if(aMi || paraTodos) return {ix:j, de:String(quien).split(" ")[0], t:String(y.t||"").replace(/^([^:\n]{1,24}):\s*/,""), todos:!aMi&&paraTodos};
   }
   return null;
@@ -11303,14 +11316,16 @@ function vParaTi(t){
   if(!r){ try{ var ls=localStorage.getItem("bit_pt_"+key); if(ls) r=window.__paraTi[key]=JSON.parse(ls); }catch(e){} }
   if(!r && !window.__paraTiPidiendo){ setTimeout(function(){ pideParaTi(t,p,key); },30); }
   function fuente(ix){ return (typeof ix==="number" && t.msgs && t.msgs[ix])?' <span class="ptsrc" data-irmsg="'+ix+'">·</span>':''; }
-  var h='<div class="ptcard"><span class="pth">'+esc((p.todos?"PIDEN A TODOS · ":"TE PREGUNTA · ")+p.de)+'</span><span class="ptq" data-irmsg="'+p.ix+'">“'+esc(p.t.length>220?p.t.slice(0,219)+"…":p.t)+'”</span>';
+  window.__ptAb=window.__ptAb||{}; var _ab=!!window.__ptAb[t.id];
+  var h='<div class="ptcard'+(_ab?' ab':'')+'"><span class="pth">'+esc((p.todos?"PIDEN A TODOS · ":"TE PREGUNTA · ")+p.de)+'</span><span class="ptq" data-irmsg="'+p.ix+'">“'+esc(p.t)+'”</span>';
+  if(!_ab) return h+'<button class="ptmas" data-ptab="1">ver todo ▾</button></div>';
   if(r && !r.err){
     (r.posturas||[]).slice(0,3).forEach(function(x){ if(typeof x.ix==="number"&&t.msgs[x.ix]) h+='<span class="ptl"><b>'+esc(x.postura||"")+':</b> '+esc((x.quienes||[]).join(", "))+fuente(x.ix)+'</span>'; });
     (r.datos||[]).slice(0,4).forEach(function(x){ if(typeof x.ix==="number"&&t.msgs[x.ix]) h+='<span class="ptl"><b>Dato:</b> '+esc(x.texto||"")+fuente(x.ix)+'</span>'; });
     (r.decidido||[]).slice(0,2).forEach(function(x){ if(typeof x.ix==="number"&&t.msgs[x.ix]) h+='<span class="ptl"><b>Se decidió:</b> '+esc(x.texto||"")+fuente(x.ix)+'</span>'; });
     (r.falta||[]).slice(0,2).forEach(function(x){ h+='<span class="ptl ptf"><b>Falta:</b> '+esc(String(x.texto||x))+'</span>'; });
   } else if(!r) h+='<span class="ptl ptw">Armando el contexto…</span>';
-  return h+'<span class="ptp">Contéstale abajo.</span></div>';
+  return h+'<button class="ptmas" data-ptab="0">ver menos ▴</button></div>';
 }
 function pideParaTi(t, p, key){
   window.__paraTi=window.__paraTi||{};
