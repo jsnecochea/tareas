@@ -1050,6 +1050,20 @@ button{font:inherit;color:inherit}
 .dictacapa.pausa .dbars{display:none}
 .dictacapa.pausa .dsigue{display:grid}
 .dictacapa.pausa .dtime{color:var(--ink-3)}
+#leebar{position:fixed;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom) + 84px);z-index:900;background:#16161c;border:1.5px solid #30d158;border-radius:22px;padding:8px 10px 10px;box-shadow:0 6px 24px rgba(0,0,0,.5)}
+.leebar .lbt{color:#cfcfd4;font-size:14.5px;margin:0 4px 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.leebar .lbr{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.lbb{width:50px;height:50px;flex:none;border-radius:50%;border:0;background:#2a2a33;color:#fff;font-size:21px;display:flex;align-items:center;justify-content:center}
+.lbb.on{background:#30d158;color:#04230f}.lbb svg{width:20px;height:20px}.lbv{font-size:15px;font-weight:600}
+.lbg{flex:1;height:56px;border-radius:16px;border:0;background:#2a2a33;color:#fff;font-size:16.5px;white-space:nowrap;padding:0 10px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px}
+.lbg.on{background:#30d158;color:#04230f}
+.msgs .leyendo{outline:2px solid #30d158;outline-offset:2px;box-shadow:0 0 14px rgba(48,209,88,.45)}
+.leemask{position:fixed;inset:0;z-index:950;background:rgba(0,0,0,.25)}
+.leemenu{position:fixed;width:230px;background:#2a2a33;border-radius:14px;padding:4px 0;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.leemenu button{display:block;width:100%;text-align:left;border:0;background:none;color:#fff;font-size:17px;padding:13px 16px}
+.leemenu button+button{border-top:.5px solid #3a3a44}
+.msgs .b,.ptcard,.top .tnm{-webkit-touch-callout:none}.msgs .b,.ptcard{-webkit-user-select:none;user-select:none}
+.ttlee{margin-left:auto;border:0;background:none;color:#30d158;padding:2px 8px;display:flex;align-items:center}
 </style>
 </head>
 <body>
@@ -1086,7 +1100,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 183 · 2026-10-02 · Te pregunta plegado en 3 renglones; sin coordenadas en fotos; el visor de fotos ya no se queda en negro";
+var VERSION_APP = "build 184 · lectura en voz: deja picado un mensaje o el resumen, y audífonos para oír la tarea como podcast";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -11576,6 +11590,288 @@ function pideEntrevista(v){ return /^\s*(entrev[ií]stame|hazme\s+la\s+entrevist
     };
   }
 })();
+/* ===== build 184 (Salvador 2026-10-02 22:40 / 10-03 06:22): LECTURA EN VOZ =====
+   Dejas picado el dedo: en un mensaje "Leer desde aquí"; en el resumen "Leer el resumen" /
+   "Leer toda la tarea"; en el titulo "Leer toda la tarea". Audífonos (arriba en la tarea y en
+   Te toca) = modo podcast: titulo, quien la lleva y para cuando, resumen, repaso de los 3
+   ultimos que ya oiste y lo nuevo. Al acabar la tarea SE DETIENE: "¿Contestas o seguimos?".
+   Solo lee los meros mensajes, el resumen, el nombre y la fecha: NUNCA botones, avisos de
+   seguimiento, mensajes del sistema, ligas, coordenadas ni emojis (se arma de los DATOS, no
+   de la pantalla). */
+var LEE={cola:[],i:0,t:null,act:false,pausa:false,modo:"",fin:false,tok:0};
+function _leeRate(){ try{ var r=+localStorage.getItem("bit_lee_rate"); return r>0?r:1.1; }catch(e){ return 1.1; } }
+function _leeVoz(){ try{ var vs=speechSynthesis.getVoices()||[], v=null;
+  vs.forEach(function(x){ if(!v && /^es[-_]MX/i.test(x.lang)) v=x; });
+  vs.forEach(function(x){ if(!v && /^es[-_](US|419)/i.test(x.lang)) v=x; });
+  vs.forEach(function(x){ if(!v && /^es/i.test(x.lang)) v=x; }); return v; }catch(e){ return null; } }
+function limpiaHabla(s){
+  s=String(s||"");
+  s=s.replace(/^\s*IA:\s*/i,"");
+  s=s.replace(/https?:\/\/\S+|www\.\S+/gi," ");
+  s=s.replace(/\[(?:audio|imagen|foto|video|documento|sticker|archivo|ubicaci[oó]n)[^\]]*\]/gi," ");
+  s=s.replace(/-?\d{1,3}\.\d{4,}\s*,\s*-?\d{1,3}\.\d{4,}/g," ");
+  s=s.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}\u{20E3}]/gu," ");
+  s=s.replace(/[*_~`#>|•·→←▾▴›‹✓✔︎]+/g," ");
+  s=s.replace(/\$\s?(\d[\d,\.]*)/g,"$1 pesos");
+  s=s.replace(/\s+/g," ").trim();
+  if(s.length>420){ var c=s.slice(0,380), p=Math.max(c.lastIndexOf(". "),c.lastIndexOf("? "),c.lastIndexOf("! "));
+    s=(p>150?c.slice(0,p+1):c.replace(/\s+\S*$/,""))+" … y sigue un texto largo."; }
+  return s;
+}
+function _leeVisible(x,t){
+  if(!x) return false;
+  try{ if(esAvisoClaude(x) || x.aviso) return false; }catch(e){}
+  var cx=canalDe(x);
+  if(cx.indexOf("dm:")===0 && cx!=="dm:"+yo && x.de!==yo && !(PERSONAS[yo]&&PERSONAS[yo].jefe)) return false;
+  if(cx.indexOf("priv:")===0 && cx!=="priv:"+yo) return false;
+  if(cx==="sup" && !soySupervisor(t) && x.de!==yo) return false;
+  try{ if(!msgEnCanal(x, canalActual(t).id)) return false; }catch(e){}
+  return true;
+}
+/* un mensaje -> {quien, tx} o null si es paja */
+function leible(x,t){
+  if(!_leeVisible(x,t)) return null;
+  if(x.k==="bal") return null;                                    /* voz de Claude (avisos rojos) */
+  var esWa=(x.k==="bi" && (x.wa_in||x.wa_c||x.origen||x.tipo));
+  if(x.k==="bi" && !esWa && !x.de) return null;                   /* mensajes del sistema */
+  var quien="", raw=String(x.hab?(x.t||x.tr||""):(x.t||""));
+  if(esWa){ var mm=raw.match(/^([^:\n]{1,24}):\s*([\s\S]*)$/); if(mm){ quien=mm[1].trim(); raw=mm[2]; } else quien=x.wa_c?String(x.wa_c).split(" ")[0]:""; }
+  else if(x.k==="bo" && (!x.de || x.de===yo)) quien="Tú";
+  else { try{ quien=autorMsg(x,t)||""; }catch(e){} }
+  if(quien==="Claude") return null;
+  var foto=/imagen|foto|video|sticker|documento/i.test(String(x.tipo||"")) || /^\s*\[(imagen|foto|video|documento|sticker)/i.test(raw);
+  var tx=limpiaHabla(raw);
+  if(foto && tx.length<4) return {quien:quien, tx:"", foto:/video/i.test(String(x.tipo||raw))?"un video":(/documento/i.test(String(x.tipo||raw))?"un documento":"una foto")};
+  if(!tx || tx.length<2) return null;
+  return {quien:quien, tx:tx};
+}
+function _leeMsgs(t, desde, hasta){
+  var out=[], ult="", ms=t.msgs||[];
+  for(var i=desde;i<hasta && i<ms.length;i++){
+    var r=leible(ms[i],t); if(!r) continue;
+    if(r.foto){ var prev=out[out.length-1];
+      if(prev && prev.fotoDe===r.quien){ prev.nf++; prev.tx=(r.quien==="Tú"?"Mandaste ":r.quien+" mandó ")+prev.nf+(/video/.test(r.foto)?" videos":(/doc/.test(r.foto)?" documentos":" fotos"))+"."; prev.ix=i; continue; }
+      out.push({ix:i, quien:r.quien, fotoDe:r.quien, nf:1, tx:(r.quien==="Tú"?"Mandaste ":(r.quien||"Alguien")+" mandó ")+r.foto+"."}); ult=""; continue; }
+    var pre=(r.quien && r.quien!==ult)?(r.quien==="Tú"?"Tú: ":r.quien+" dice: "):"";
+    out.push({ix:i, quien:r.quien, tx:_punto(pre+r.tx)}); ult=r.quien;
+  }
+  return out;
+}
+function _leeEntrada(t){
+  var s=_punto("Tarea: "+limpiaHabla(t.nombre||"sin nombre"))+" ";
+  var d=t.duenio===yo?"La llevas tú":"La lleva "+((PERSONAS[t.duenio]&&PERSONAS[t.duenio].nombre)||"otra persona");
+  if(t.f_vigente){ var e=estadoReal(t);
+    d+=(e==="hoy"?", vence hoy":(e==="vencida"?", venció el "+fechaBonita(t.f_vigente):", para el "+fechaBonita(t.f_vigente))); }
+  return {tx:s+d+"."};
+}
+function _punto(s){ s=String(s||"").trim(); return /[.?!…:]$/.test(s)?s:s+"."; }
+function _leeResumen(t, sinPregunta){
+  var p=null; try{ p=preguntaParaMi(t); }catch(e){}
+  if(!p) return null;
+  var s=sinPregunta?"":_punto((p.todos?"Piden a todos, ":"Te pregunta ")+limpiaHabla(p.de)+": "+limpiaHabla(p.t)), x0=s;
+  var r=(window.__paraTi||{})[t.id+"|"+p.ix];
+  if(!r){ try{ var ls=localStorage.getItem("bit_pt_"+t.id+"|"+p.ix); if(ls) r=JSON.parse(ls); }catch(e){} }
+  if(r && !r.err){
+    (r.posturas||[]).slice(0,3).forEach(function(x){ s+=" "+_punto(limpiaHabla(x.postura||"")+": "+limpiaHabla((x.quienes||[]).join(", "))); });
+    (r.datos||[]).slice(0,4).forEach(function(x){ s+=" "+_punto(limpiaHabla(x.texto||"")); });
+    (r.decidido||[]).slice(0,2).forEach(function(x){ s+=" Se decidió: "+_punto(limpiaHabla(x.texto||"")); });
+    (r.falta||[]).slice(0,2).forEach(function(x){ s+=" Falta: "+_punto(limpiaHabla(String(x.texto||x))); });
+  }
+  s=s.trim(); if(!s) return null;
+  if(sinPregunta) s="Resumen: "+s;
+  return {tx:s, ix:sinPregunta?undefined:p.ix, pix:p.ix};
+}
+function _leeMarca(t){ try{ return +localStorage.getItem("bit_leido_"+t.id)||0; }catch(e){ return 0; } }
+function _leePonMarca(tid, ts){ try{ if(ts && ts>(+localStorage.getItem("bit_leido_"+tid)||0)) localStorage.setItem("bit_leido_"+tid, String(ts)); }catch(e){} }
+function leeArranca(t, cola, modo){
+  if(!window.speechSynthesis){ toast("Este teléfono no lee en voz alta"); return; }
+  if(!cola.length){ toast("No hay mensajes para leer"); return; }
+  try{ if(typeof leeEnVoz==="function" && window.__leyendo){ speechSynthesis.cancel(); window.__leyendo=false; } }catch(e){}
+  LEE.t=t; LEE.cola=cola; LEE.i=0; LEE.act=true; LEE.pausa=false; LEE.fin=false; LEE.modo=modo;
+  leePaso();
+}
+function leeDesde(t, ix){ leeArranca(t, _leeMsgs(t, ix, (t.msgs||[]).length), "desde"); }
+function leeResumenSolo(t){ var r=_leeResumen(t); leeArranca(t, r?[r]:[], "resumen"); }
+function leeTarea(t){
+  var c=[_leeEntrada(t)], r=_leeResumen(t, true); if(r) c.push(r);
+  leeArranca(t, c.concat(_leeMsgs(t,0,(t.msgs||[]).length)), "tarea");
+}
+function leeNuevo(t){
+  var ms=t.msgs||[], mk=_leeMarca(t), k=ms.length;
+  for(var i=0;i<ms.length;i++){ if(ms[i] && (ms[i].ts||0)>mk){ k=i; break; } }
+  if(!mk) k=0;
+  var antes=_leeMsgs(t,0,k).slice(-3), nuevos=_leeMsgs(t,k,ms.length);
+  var leidos=antes.concat(nuevos).map(function(x){ return x.ix; });
+  var c=[_leeEntrada(t)], r0=_leeResumen(t), r=(r0 && leidos.indexOf(r0.pix)>=0)?_leeResumen(t,true):r0; if(r) c.push(r);
+  if(antes.length && mk){ c.push({tx:"Lo último que escuchaste."}); antes.forEach(function(x){ c.push(x); }); }
+  if(nuevos.length){ if(antes.length && mk) c.push({tx:"Ahora lo nuevo."}); nuevos.forEach(function(x){ c.push(x); }); }
+  else c.push({tx:"No hay mensajes nuevos."});
+  leeArranca(t, c, "nuevo");
+}
+function leePaso(){
+  var tok=++LEE.tok;
+  if(!LEE.act || LEE.pausa) { leeBarra(); return; }
+  if(LEE.i>=LEE.cola.length){ return leeFin(); }
+  var it=LEE.cola[LEE.i]; leeBarra(); leeRepinta(true);
+  try{
+    speechSynthesis.cancel();
+    var u=new SpeechSynthesisUtterance(it.tx); u.lang="es-MX"; u.rate=_leeRate(); var v=_leeVoz(); if(v) u.voice=v;
+    var sig=function(){ if(tok!==LEE.tok || !LEE.act || LEE.pausa) return;
+      if(typeof it.ix==="number" && LEE.t && LEE.t.msgs && LEE.t.msgs[it.ix]) _leePonMarca(LEE.t.id, LEE.t.msgs[it.ix].ts);
+      LEE.i++; leePaso(); };
+    u.onend=sig; u.onerror=function(e){ if(e && (e.error==="interrupted"||e.error==="canceled")) return; sig(); };
+    clearTimeout(LEE.wd); LEE.wd=setTimeout(sig, 4000+it.tx.length*90/_leeRate());
+    setTimeout(function(){ if(tok===LEE.tok) speechSynthesis.speak(u); }, 60);
+  }catch(e){ toast("No se pudo leer en voz alta"); leePara(); }
+}
+function leeFin(){
+  clearTimeout(LEE.wd);
+  if(LEE.modo==="tarea"||LEE.modo==="nuevo"){
+    LEE.fin=true; leeBarra(); leeRepinta(false);
+    try{ speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance("Fin de "+limpiaHabla(LEE.t.nombre||"esta tarea")+". ¿Contestas o seguimos?");
+      u.lang="es-MX"; u.rate=_leeRate(); var v=_leeVoz(); if(v) u.voice=v; speechSynthesis.speak(u); }catch(e){}
+    return;
+  }
+  leePara();
+}
+function leePara(){ LEE.act=false; LEE.fin=false; LEE.tok++; clearTimeout(LEE.wd); try{ speechSynthesis.cancel(); }catch(e){} leeRepinta(false); var b=document.getElementById("leebar"); if(b) b.remove(); }
+function leeOrdenTT(){ return (window.__ttOrden||[]).filter(function(id){ return tareas.some(function(x){ return x.id===id && !x.cierre; }); }); }
+function leeAbre(id){
+  var tt=tareas.filter(function(x){return x.id===id})[0]; if(!tt) return null;
+  try{ marcaVistos(tt.id, adjuntos(tt).length); marcaVistosNov(tt.id, novedadesTot(tt)); }catch(e){}
+  abierta=id; vista="hilo"; fichaOpen=false; detOpen={}; menuOpen=false; editaNombre=null; render(); return tt;
+}
+function leeSiguienteTarea(){
+  var ord=leeOrdenTT(), cur=LEE.t?LEE.t.id:null, k=ord.indexOf(cur), sig=ord[k+1];
+  if(!sig){ leePara(); try{ var u=new SpeechSynthesisUtterance("Ya no hay más tareas en Te toca."); u.lang="es-MX"; speechSynthesis.speak(u); }catch(e){} return; }
+  var tt=leeAbre(sig); if(tt) leeNuevo(tt);
+}
+function leeBarra(){
+  var b=document.getElementById("leebar");
+  if(!LEE.act){ if(b) b.remove(); return; }
+  if(!b){ b=document.createElement("div"); b.id="leebar"; document.body.appendChild(b);
+    b.addEventListener("click", leeBarraClick); }
+  var it=LEE.cola[LEE.i]||{}, r=_leeRate();
+  if(LEE.fin){
+    b.className="leebar fin";
+    b.innerHTML='<div class="lbt">Fin de '+esc(LEE.t.nombre||"la tarea")+'</div><div class="lbr">'+
+      '<button class="lbg" data-lee="mic">'+ico("mic",24,1.8)+'<span>Contestar</span></button>'+
+      (leeOrdenTT().length?'<button class="lbg on" data-lee="sigt"><span>Siguiente tarea ›</span></button>':'')+
+      '<button class="lbb" data-lee="x" aria-label="Cerrar lectura">✕</button></div>';
+    return;
+  }
+  b.className="leebar";
+  var q=it.quien?(it.quien==="Tú"?"Tú":it.quien):"";
+  b.innerHTML='<div class="lbt">'+(LEE.pausa?"En pausa · ":"Leyendo ")+(LEE.i+1)+' de '+LEE.cola.length+(q?' · '+esc(q):'')+'</div><div class="lbr">'+
+    '<button class="lbb on" data-lee="pp" aria-label="'+(LEE.pausa?"Seguir":"Pausa")+'">'+(LEE.pausa?svgPlay():svgPausa())+'</button>'+
+    '<button class="lbb" data-lee="rep" aria-label="Repetir">↺</button>'+
+    '<button class="lbb" data-lee="sig" aria-label="Siguiente mensaje">⏭︎</button>'+
+    '<button class="lbb lbv" data-lee="vel">'+(Math.round(r*10)/10)+'x</button>'+
+    '<button class="lbb" data-lee="x" aria-label="Cerrar lectura">✕</button></div>';
+}
+function leeBarraClick(ev){
+  var el=ev.target.closest("[data-lee]"); if(!el) return; ev.stopPropagation();
+  var a=el.getAttribute("data-lee");
+  if(a==="x") return leePara();
+  if(a==="pp"){ LEE.pausa=!LEE.pausa; if(LEE.pausa){ LEE.tok++; clearTimeout(LEE.wd); try{ speechSynthesis.cancel(); }catch(e){} leeBarra(); } else leePaso(); return; }
+  if(a==="rep"){ LEE.pausa=false; leePaso(); return; }
+  if(a==="sig"){ LEE.pausa=false; LEE.i++; leePaso(); return; }
+  if(a==="vel"){ var rs=[1,1.1,1.25,1.5], k=rs.indexOf(_leeRate()); var n=rs[(k+1)%rs.length]; try{ localStorage.setItem("bit_lee_rate",String(n)); }catch(e){} leeBarra(); return; }
+  if(a==="sigt") return leeSiguienteTarea();
+  if(a==="mic"){ var t=LEE.t; leePara(); if(t && (vista!=="hilo"||abierta!==t.id)) leeAbre(t.id);
+    setTimeout(function(){ var m=document.getElementById("bmic"); if(m) m.click(); }, 120); return; }
+}
+function leeRepinta(scroll){
+  Array.prototype.forEach.call(document.querySelectorAll(".msgs .leyendo"),function(e){ e.classList.remove("leyendo"); });
+  if(!LEE.act || LEE.fin || !LEE.t || vista!=="hilo" || abierta!==LEE.t.id) return;
+  var it=LEE.cola[LEE.i]; if(!it || typeof it.ix!=="number") return;
+  var o=document.querySelector('.msgs [data-mix="'+it.ix+'"]')||document.querySelector('.msgs [data-hab$="|'+it.ix+'"]');
+  if(o){ o.classList.add("leyendo"); if(scroll) try{ o.scrollIntoView({behavior:"smooth",block:"center"}); }catch(e){} }
+}
+/* menu de dejar picado */
+function leeMenu(x, y, ops){
+  leeCierraMenu();
+  var m=document.createElement("div"); m.className="leemask"; m.id="leemask";
+  m.innerHTML='<div class="leemenu">'+ops.map(function(o,i){ return '<button data-lmo="'+i+'">'+esc(o[0])+'</button>'; }).join("")+'</div>';
+  document.body.appendChild(m);
+  var mn=m.firstChild, w=230, h=ops.length*50+8;
+  mn.style.left=Math.max(12,Math.min(window.innerWidth-w-12, x-w/2))+"px";
+  mn.style.top=Math.max(12,Math.min(window.innerHeight-h-12, y-h-14))+"px";
+  m.addEventListener("click",function(ev){ ev.stopPropagation(); var b=ev.target.closest("[data-lmo]"); leeCierraMenu(); if(b) ops[+b.getAttribute("data-lmo")][1](); });
+}
+function leeCierraMenu(){ var m=document.getElementById("leemask"); if(m) m.remove(); }
+function _leeTareaAbierta(){ return tareas.filter(function(x){return x.id===abierta})[0]; }
+function leeOpcionesDe(el){
+  var t=_leeTareaAbierta(); if(!t) return null;
+  if(el.closest(".ptcard")) return [["Leer el resumen",function(){ leeResumenSolo(t); }],["Leer toda la tarea",function(){ leeTarea(t); }]];
+  if(el.closest(".top .tnm")) return [["Leer toda la tarea",function(){ leeTarea(t); }]];
+  var b=el.closest(".msgs [data-mix], .msgs [data-hab]"); if(!b) return null;
+  var ix=b.hasAttribute("data-mix")?+b.getAttribute("data-mix"):+String(b.getAttribute("data-hab")).split("|").pop();
+  if(isNaN(ix)) return null;
+  var ops=[["Leer desde aquí",function(){ leeDesde(t, ix); }]];
+  if(typeof ponCita==="function") ops.push(["Responder",function(){ ponCita(t, ix); }]);
+  ops.push(["Copiar",function(){ var x=t.msgs[ix]; var s=String((x&&(x.tr||x.t))||"");
+    try{ navigator.clipboard.writeText(s).then(function(){ toast("Copiado"); },function(){ toast("No se pudo copiar"); }); }catch(e){ toast("No se pudo copiar"); } }]);
+  return ops;
+}
+(function(){
+  var tm=null, x0=0, y0=0, el0=null;
+  var SEL=".msgs [data-mix], .msgs [data-hab], .ptcard, .top .tnm";
+  document.addEventListener("touchstart",function(e){
+    if(vista!=="hilo") return; var el=e.target.closest && e.target.closest(SEL); if(!el) return;
+    if(e.target.closest("button,a,input,[contenteditable]")) return;
+    var p=e.touches[0]; x0=p.clientX; y0=p.clientY; el0=el; clearTimeout(tm);
+    tm=setTimeout(function(){ var ops=leeOpcionesDe(el0); if(!ops) return; window.__leeLP=Date.now();
+      try{ navigator.vibrate&&navigator.vibrate(12); }catch(_){} leeMenu(x0,y0,ops); }, 520);
+  },{passive:true});
+  document.addEventListener("touchmove",function(e){ if(!tm) return; var p=e.touches[0]; if(Math.abs(p.clientX-x0)>10||Math.abs(p.clientY-y0)>10){ clearTimeout(tm); tm=null; } },{passive:true});
+  document.addEventListener("touchend",function(){ clearTimeout(tm); tm=null; },{passive:true});
+  document.addEventListener("contextmenu",function(e){
+    if(vista!=="hilo") return; var el=e.target.closest && e.target.closest(SEL); if(!el) return;
+    e.preventDefault(); if(window.__leeLP && Date.now()-window.__leeLP<900) return;
+    var ops=leeOpcionesDe(el); if(ops){ window.__leeLP=Date.now(); leeMenu(e.clientX,e.clientY,ops); }
+  });
+  document.addEventListener("click",function(e){ if(window.__leeLP && Date.now()-window.__leeLP<700 && !(e.target.closest&&e.target.closest("#leemask"))){ e.stopPropagation(); e.preventDefault(); } },true);
+})();
+/* lo que ya viste en pantalla cuenta como leido: al salir de una tarea se marca hasta su ultimo mensaje */
+(function(){
+  var _r=render;
+  render=function(){
+    var antes=window.__leeHilo||null;
+    var r=_r.apply(this, arguments);
+    var ahora=(vista==="hilo"&&abierta)?abierta:null;
+    if(antes && antes!==ahora && !(LEE.act && LEE.t && LEE.t.id===antes)){
+      var tt=tareas.filter(function(x){return x.id===antes})[0];
+      if(tt && tt.msgs && tt.msgs.length) _leePonMarca(tt.id, tt.msgs[tt.msgs.length-1].ts);
+    }
+    window.__leeHilo=ahora;
+    try{ leeExtras(); }catch(e){}
+    return r;
+  };
+  var _tt=vTeToca;
+  vTeToca=function(items){
+    var ord=[]; (items||[]).forEach(function(x){ if(x && x.t && ord.indexOf(x.t.id)<0) ord.push(x.t.id); });
+    window.__ttOrden=ord;
+    var h=_tt.apply(this, arguments);
+    if(ord.length) h=h.replace('<div class="tth"><b>Te toca</b>','<div class="tth"><b>Te toca</b><button class="ttlee" id="bttlee" aria-label="Escuchar Te toca">'+_icoAudif()+'</button>');
+    return h;
+  };
+})();
+function _icoAudif(){ return '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="6.5" rx="1.6"/><rect x="16.5" y="14" width="4.5" height="6.5" rx="1.6"/></svg>'; }
+function leeExtras(){
+  leeRepinta(false); leeBarra();
+  if(vista==="hilo" && abierta){
+    var top=document.querySelector("#app .top"), g=top&&top.querySelector(".grow");
+    if(g && !document.getElementById("bleeh")){
+      var b=document.createElement("button"); b.className="iconbtn"; b.id="bleeh"; b.setAttribute("aria-label","Escuchar esta tarea"); b.innerHTML=_icoAudif();
+      g.parentNode.insertBefore(b, g.nextSibling);
+      b.onclick=function(ev){ ev.stopPropagation(); var t=_leeTareaAbierta(); if(!t) return; if(LEE.act && LEE.t && LEE.t.id===t.id) return leePara(); leeNuevo(t); };
+    }
+  }
+  var bt=document.getElementById("bttlee");
+  if(bt) bt.onclick=function(ev){ ev.stopPropagation(); var ord=leeOrdenTT(); if(!ord.length) return; var tt=leeAbre(ord[0]); if(tt) leeNuevo(tt); };
+}
+
 </script>
 </body>
 </html>
