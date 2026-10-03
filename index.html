@@ -1353,6 +1353,21 @@ function fechaMovCorta(f){
    hoy es viernes, el de la otra semana); "el viernes de la otra/siguiente
    semana" = +7; "en N dias/semanas/meses"; "fin de mes" = ultimo dia del mes (si
    hoy es el ultimo, el del que sigue); "3 de octubre"; mañana; pasado mañana. */
+/* build 174 (Salvador 2026-10-02 18:27): "el sabado 10" es el sabado DIEZ, no el
+   proximo sabado. Dia de la semana + numero = la siguiente fecha con ese dia del mes
+   (si coincide el dia de la semana, mejor). s ya viene en minusculas y sin acentos. */
+function diaSemanaConNumero(s){
+  var m=String(s||"").match(/\b(domingo|lunes|martes|miercoles|jueves|viernes|sabado)\s+(\d{1,2})\b(?!\s*(?::|am\b|pm\b|hrs?\b|horas?\b|de la\b|y media\b))/);
+  if(!m) return null;
+  var nom=["domingo","lunes","martes","miercoles","jueves","viernes","sabado"], dw=nom.indexOf(m[1]), dd=+m[2];
+  if(dd<1||dd>31) return null;
+  var H=hoy(), d=new Date(H+"T00:00:00"), primero=null;
+  for(var i=0;i<400;i++){
+    if(d.getDate()===dd){ var f=iso(d); if(d.getDay()===dw) return f; if(!primero) primero=f; }
+    d.setDate(d.getDate()+1);
+  }
+  return primero;
+}
 function fechaMovida(txt){
   var fx=fechaEnTexto(txt); if(fx) return fx;
   var s=" "+String(txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")+" ";
@@ -1375,6 +1390,7 @@ function fechaMovida(txt){
   if(/\bpasado\s+manana\b/.test(s)) return dmDe(H,2);
   if(/\bmanana\b/.test(s)) return dmDe(H,1);
   if(/\bhoy\b/.test(s)) return H;
+  var _dn=diaSemanaConNumero(s); if(_dn) return _dn;
   var nom=["domingo","lunes","martes","miercoles","jueves","viernes","sabado"];
   for(var k=0;k<7;k++){
     if(new RegExp("\\b"+nom[k]+"\\b").test(s)){
@@ -1580,6 +1596,17 @@ function creaAcuerdo(t, pend, j, err){
   var frase=String(v||"").trim().replace(/[.\s]+$/,"");
   if(!nombre) nombre=con?"Seguimiento con "+con:"Seguimiento: "+(frase.length>50?frase.slice(0,49)+"…":frase);
   var fz=fechasAcuerdo(v,t);
+  /* build 174 (Salvador 2026-10-02 18:27): contestarle a la misma persona de ESTA tarea
+     ("si, nos vemos el sabado 10") no es una tarea nueva: CERO DUPLICADOS. Se queda en
+     esta; si la fecha dicha es otra, se mueve; si es la misma, no se dice nada. */
+  var _co=_nrm(conDeOrigen(t)||""), _cn=_nrm(con||"");
+  var _mismo=!t.es_recordatorio && !t.cierre && estadoReal(t)!=="cerrada" && _co && (!_cn || _co.indexOf(_cn.split(" ")[0])>=0 || _cn.indexOf(_co.split(" ")[0])>=0);
+  if(_mismo){
+    var _fd=fechaMovida(v);
+    if(_fd && _fd>=hoy() && _fd!==t.f_vigente){ var _ant=t.f_vigente; t.f_vigente=_fd; if(!t.f_original) t.f_original=_fd;
+      msg(t,"bi","Fecha: "+fechaMovCorta(_fd)+(_ant?" (antes "+fechaMovCorta(_ant)+")":"")+"."); }
+    guarda(t); if(vista==="hilo") render(); return null;
+  }
   var n=creaTarea({nombre:nombre, duenio:yo, fecha:fz.fecha, dicho:nombre});
   n.msgs=[]; msg(n,"bi",razonAcuerdo(t,v,con,debe,fz));
   n.acuerdo={texto:texto||frase, con:con, debe:debe, plazo_texto:fz.plazo_texto, plazo_fecha:fz.plazo_fecha,
@@ -6867,6 +6894,7 @@ function diaDicho(txt){
   if(/\b\d{1,2}\s+de\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)/.test(s)) return null;
   if(/\bpasado\s+manana\b/.test(s)) return dmDe(hoy(),2);
   if(/\bmanana\b/.test(s))          return dmDe(hoy(),1);
+  var _dn=diaSemanaConNumero(s); if(_dn) return _dn;
   var nom=["domingo","lunes","martes","miercoles","jueves","viernes","sabado"];
   for(var k=0;k<7;k++){
     if(new RegExp("\\b"+nom[k]+"\\b").test(s)){
@@ -6887,7 +6915,8 @@ function diasDichos(txt){
   while((m=re.exec(s))){
     var w=m[1].replace(/\s+/g," "), f;
     if(w==="hoy") f=H; else if(w==="pasado manana") f=dmDe(H,2); else if(w==="manana") f=dmDe(H,1);
-    else { var dl=(nom.indexOf(w)-dw+7)%7; if(dl===0) dl=7; f=dmDe(H,dl); }
+    else { var _n2=s.slice(m.index).match(/^\w+\s+(\d{1,2})\b/); var _dn2=_n2?diaSemanaConNumero(s.slice(m.index)):null;
+      if(_dn2) f=_dn2; else { var dl=(nom.indexOf(w)-dw+7)%7; if(dl===0) dl=7; f=dmDe(H,dl); } }
     if(out.indexOf(f)<0) out.push(f);
   }
   return out;
@@ -9755,7 +9784,7 @@ function bindHilo(){
       window.__listaAct[t.id]=el.getAttribute("data-ltab"); render(); };
   });
   /* build 168: tarjeta POR REVISAR */
-  var rva=$("rvautz"); if(rva) rva.onclick=function(){ t.autorizada=true; t.autorizada_ts=Date.now(); msg(t,"bi","Autorizada."); guarda(t); toast("Tarea autorizada"); render(); };
+  var rva=$("rvautz"); if(rva) rva.onclick=function(){ t.autorizada=true; t.autorizada_ts=Date.now(); guarda(t); toast("Tarea autorizada"); render(); };
   var rvn=$("rvnueva"); if(rvn) rvn.onclick=function(){ t.dup_resuelto=true; msg(t,"bi","Queda como tarea aparte."); guarda(t); render(); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-rvinc]"),function(el){
     el.onclick=function(){ var did=el.getAttribute("data-rvinc"), d=tareas.filter(function(x){ return x.id===did; })[0]; if(!d) return;
