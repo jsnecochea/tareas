@@ -1050,13 +1050,20 @@ button{font:inherit;color:inherit}
 .dictacapa.pausa .dbars{display:none}
 .dictacapa.pausa .dsigue{display:grid}
 .dictacapa.pausa .dtime{color:var(--ink-3)}
-#leebar{position:fixed;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom) + 84px);z-index:900;background:#16161c;border:1.5px solid #30d158;border-radius:22px;padding:8px 10px 10px;box-shadow:0 6px 24px rgba(0,0,0,.5)}
-.leebar .lbt{color:#cfcfd4;font-size:14.5px;margin:0 4px 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.leebar .lbr{display:flex;gap:8px;align-items:center;justify-content:space-between}
-.lbb{width:50px;height:50px;flex:none;border-radius:50%;border:0;background:#2a2a33;color:#fff;font-size:21px;display:flex;align-items:center;justify-content:center}
-.lbb.on{background:#30d158;color:#04230f}.lbb svg{width:20px;height:20px}.lbv{font-size:15px;font-weight:600}
-.lbg{flex:1;height:56px;border-radius:16px;border:0;background:#2a2a33;color:#fff;font-size:16.5px;white-space:nowrap;padding:0 10px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px}
+#leebar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 86px);z-index:900;max-width:calc(100% - 24px);display:flex;align-items:center;gap:8px;background:#16161c;border:1.5px solid #30d158;border-radius:999px;padding:5px 6px 5px 14px;box-shadow:0 6px 22px rgba(0,0,0,.5)}
+.leebar .lbt{color:#e5e5ea;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:62vw}
+.leebar .lbdot{width:9px;height:9px;border-radius:50%;background:#30d158;flex:none;animation:lbp 1.4s ease-in-out infinite}
+.leebar.oye{border-color:#FF453A}.leebar.oye .lbdot{background:#FF453A;animation-duration:.8s}
+@keyframes lbp{0%,100%{opacity:1}50%{opacity:.25}}
+.lbb{width:38px;height:38px;flex:none;border-radius:50%;border:0;background:#2a2a33;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center}
+.lbb svg{width:16px;height:16px}
+#leebar.big{left:10px;right:10px;transform:none;max-width:none;border-radius:20px;padding:8px}
+.lbg{flex:1;height:56px;border-radius:16px;border:0;background:#2a2a33;color:#fff;font-size:16.5px;font-weight:600;white-space:nowrap;padding:0 10px;display:flex;align-items:center;justify-content:center;gap:8px}
 .lbg.on{background:#30d158;color:#04230f}
+.leeaj{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 16px);background:#1f1f26;border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.leeaj b{color:#fff;font-size:17px;margin:2px 4px 6px}
+.leeaj button{border:0;border-radius:12px;background:#2a2a33;color:#fff;font-size:17px;padding:13px;text-align:left}
+.leeaj button.on{background:#173326;color:#30d158;font-weight:600}.leeaj button.lst{background:none;color:#0a84ff;text-align:center;font-weight:600}
 .msgs .leyendo{outline:2px solid #30d158;outline-offset:2px;box-shadow:0 0 14px rgba(48,209,88,.45)}
 .leemask{position:fixed;inset:0;z-index:950;background:rgba(0,0,0,.25)}
 .leemenu{position:fixed;width:230px;background:#2a2a33;border-radius:14px;padding:4px 0;box-shadow:0 10px 30px rgba(0,0,0,.5)}
@@ -1100,7 +1107,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 184 · lectura en voz: deja picado un mensaje o el resumen, y audífonos para oír la tarea como podcast";
+var VERSION_APP = "build 185 · lectura como podcast en vivo: al acabar te pregunta y te escucha (siguiente, repite, duda, resumen, ya está, elimínala); Leer lo actual; velocidad en ⋯";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -6150,6 +6157,7 @@ function vHilo(){
       '<button class="hop" data-mn="enlazar">Vincular a otra tarea</button>'+
       '<button class="hop" data-mn="nose">Esto ya no se va a hacer</button>'+
       (PERSONAS[yo].jefe?'<button class="hop" data-mn="pasar">Pasársela a alguien definitivamente</button>':'')+
+      '<button class="hop" data-mn="lectura">Ajustar lectura</button>'+
       '<button class="hop x" data-mn="cerrar">Cancelar</button></div>':'');
   if(vista==="galeria"){
     if(!adj.length) return h+'<div class="scroll"><div class="gal"><h2>Archivos de esta tarea</h2>'+
@@ -11687,7 +11695,10 @@ function leeArranca(t, cola, modo){
   if(!window.speechSynthesis){ toast("Este teléfono no lee en voz alta"); return; }
   if(!cola.length){ toast("No hay mensajes para leer"); return; }
   try{ if(typeof leeEnVoz==="function" && window.__leyendo){ speechSynthesis.cancel(); window.__leyendo=false; } }catch(e){}
+  try{ if(LEE.rec) LEE.rec.abort(); }catch(e){}
   LEE.t=t; LEE.cola=cola; LEE.i=0; LEE.act=true; LEE.pausa=false; LEE.fin=false; LEE.modo=modo;
+  LEE.charla=false; LEE.confirma=null; LEE.espera=false; LEE.oye=false; LEE.pensando=false;
+  LEE.rehace=function(){ leeArranca(t, cola, modo); };
   leePaso();
 }
 function leeDesde(t, ix){ leeArranca(t, _leeMsgs(t, ix, (t.msgs||[]).length), "desde"); }
@@ -11726,15 +11737,12 @@ function leePaso(){
 }
 function leeFin(){
   clearTimeout(LEE.wd);
-  if(LEE.modo==="tarea"||LEE.modo==="nuevo"){
-    LEE.fin=true; leeBarra(); leeRepinta(false);
-    try{ speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance("Fin de "+limpiaHabla(LEE.t.nombre||"esta tarea")+". ¿Contestas o seguimos?");
-      u.lang="es-MX"; u.rate=_leeRate(); var v=_leeVoz(); if(v) u.voice=v; speechSynthesis.speak(u); }catch(e){}
-    return;
-  }
+  if(LEE.modo==="tarea"||LEE.modo==="nuevo"||LEE.modo==="actual") return leeCharlaFin();
   leePara();
 }
-function leePara(){ LEE.act=false; LEE.fin=false; LEE.tok++; clearTimeout(LEE.wd); try{ speechSynthesis.cancel(); }catch(e){} leeRepinta(false); var b=document.getElementById("leebar"); if(b) b.remove(); }
+function leePara(){ LEE.charla=false; LEE.confirma=null; LEE.espera=false; LEE.oye=false; LEE.pensando=false;
+  try{ if(LEE.rec) LEE.rec.abort(); }catch(e){} clearTimeout(LEE.swd);
+  LEE.act=false; LEE.fin=false; LEE.tok++; clearTimeout(LEE.wd); try{ speechSynthesis.cancel(); }catch(e){} leeRepinta(false); var b=document.getElementById("leebar"); if(b) b.remove(); }
 function leeOrdenTT(){ return (window.__ttOrden||[]).filter(function(id){ return tareas.some(function(x){ return x.id===id && !x.cierre; }); }); }
 function leeAbre(id){
   var tt=tareas.filter(function(x){return x.id===id})[0]; if(!tt) return null;
@@ -11742,8 +11750,10 @@ function leeAbre(id){
   abierta=id; vista="hilo"; fichaOpen=false; detOpen={}; menuOpen=false; editaNombre=null; render(); return tt;
 }
 function leeSiguienteTarea(){
-  var ord=leeOrdenTT(), cur=LEE.t?LEE.t.id:null, k=ord.indexOf(cur), sig=ord[k+1];
-  if(!sig){ leePara(); try{ var u=new SpeechSynthesisUtterance("Ya no hay más tareas en Te toca."); u.lang="es-MX"; speechSynthesis.speak(u); }catch(e){} return; }
+  var raw=window.__ttOrden||[], ok=leeOrdenTT(), cur=LEE.t?LEE.t.id:null, k=raw.indexOf(cur), sig=null;
+  for(var q=k+1;q<raw.length;q++){ if(ok.indexOf(raw[q])>=0 && raw[q]!==cur){ sig=raw[q]; break; } }
+  if(!sig && k<0) sig=ok.filter(function(id){ return id!==cur; })[0];
+  if(!sig){ LEE.charla=false; leeDi("Ya no hay más tareas en Te toca.", function(){ leePara(); }); return; }
   var tt=leeAbre(sig); if(tt) leeNuevo(tt);
 }
 function leeBarra(){
@@ -11751,35 +11761,29 @@ function leeBarra(){
   if(!LEE.act){ if(b) b.remove(); return; }
   if(!b){ b=document.createElement("div"); b.id="leebar"; document.body.appendChild(b);
     b.addEventListener("click", leeBarraClick); }
-  var it=LEE.cola[LEE.i]||{}, r=_leeRate();
-  if(LEE.fin){
-    b.className="leebar fin";
-    b.innerHTML='<div class="lbt">Fin de '+esc(LEE.t.nombre||"la tarea")+'</div><div class="lbr">'+
-      '<button class="lbg" data-lee="mic">'+ico("mic",24,1.8)+'<span>Contestar</span></button>'+
-      (leeOrdenTT().length?'<button class="lbg on" data-lee="sigt"><span>Siguiente tarea ›</span></button>':'')+
-      '<button class="lbb" data-lee="x" aria-label="Cerrar lectura">✕</button></div>';
+  var x='<button class="lbb" data-lee="x" aria-label="Cerrar lectura">✕</button>';
+  if(LEE.espera){
+    b.className="leebar big";
+    b.innerHTML='<button class="lbg on" data-lee="hablar">'+ico("mic",24,1.9)+'<span>Toca para hablar</span></button>'+
+      (leeOrdenTT().length?'<button class="lbg" data-lee="sigt"><span>Siguiente ›</span></button>':'')+x;
     return;
   }
-  b.className="leebar";
-  var q=it.quien?(it.quien==="Tú"?"Tú":it.quien):"";
-  b.innerHTML='<div class="lbt">'+(LEE.pausa?"En pausa · ":"Leyendo ")+(LEE.i+1)+' de '+LEE.cola.length+(q?' · '+esc(q):'')+'</div><div class="lbr">'+
-    '<button class="lbb on" data-lee="pp" aria-label="'+(LEE.pausa?"Seguir":"Pausa")+'">'+(LEE.pausa?svgPlay():svgPausa())+'</button>'+
-    '<button class="lbb" data-lee="rep" aria-label="Repetir">↺</button>'+
-    '<button class="lbb" data-lee="sig" aria-label="Siguiente mensaje">⏭︎</button>'+
-    '<button class="lbb lbv" data-lee="vel">'+(Math.round(r*10)/10)+'x</button>'+
-    '<button class="lbb" data-lee="x" aria-label="Cerrar lectura">✕</button></div>';
+  var it=LEE.cola[LEE.i]||{}, txt, cls="leebar";
+  if(LEE.oye){ cls+=" oye"; txt=LEE.oido?("“"+esc(LEE.oido)+"”"):"Te escucho…"; }
+  else if(LEE.pensando){ txt="Un momento…"; }
+  else if(LEE.charla||LEE.fin){ txt="Hablando contigo"; }
+  else { txt=(LEE.pausa?"En pausa":"Leyendo")+(it.quien?" · "+esc(it.quien):""); }
+  b.className=cls;
+  b.innerHTML='<span class="lbdot"></span><span class="lbt">'+txt+'</span>'+
+    ((!LEE.charla && !LEE.fin)?'<button class="lbb" data-lee="pp" aria-label="'+(LEE.pausa?"Seguir":"Pausa")+'">'+(LEE.pausa?svgPlay():svgPausa())+'</button>':'')+x;
 }
 function leeBarraClick(ev){
   var el=ev.target.closest("[data-lee]"); if(!el) return; ev.stopPropagation();
   var a=el.getAttribute("data-lee");
   if(a==="x") return leePara();
   if(a==="pp"){ LEE.pausa=!LEE.pausa; if(LEE.pausa){ LEE.tok++; clearTimeout(LEE.wd); try{ speechSynthesis.cancel(); }catch(e){} leeBarra(); } else leePaso(); return; }
-  if(a==="rep"){ LEE.pausa=false; leePaso(); return; }
-  if(a==="sig"){ LEE.pausa=false; LEE.i++; leePaso(); return; }
-  if(a==="vel"){ var rs=[1,1.1,1.25,1.5], k=rs.indexOf(_leeRate()); var n=rs[(k+1)%rs.length]; try{ localStorage.setItem("bit_lee_rate",String(n)); }catch(e){} leeBarra(); return; }
+  if(a==="hablar"){ LEE.charla=true; leeEscucha(leeComando); return; }
   if(a==="sigt") return leeSiguienteTarea();
-  if(a==="mic"){ var t=LEE.t; leePara(); if(t && (vista!=="hilo"||abierta!==t.id)) leeAbre(t.id);
-    setTimeout(function(){ var m=document.getElementById("bmic"); if(m) m.click(); }, 120); return; }
 }
 function leeRepinta(scroll){
   Array.prototype.forEach.call(document.querySelectorAll(".msgs .leyendo"),function(e){ e.classList.remove("leyendo"); });
@@ -11801,18 +11805,21 @@ function leeMenu(x, y, ops){
 }
 function leeCierraMenu(){ var m=document.getElementById("leemask"); if(m) m.remove(); }
 function _leeTareaAbierta(){ return tareas.filter(function(x){return x.id===abierta})[0]; }
+function _leeCopia(s){ try{ navigator.clipboard.writeText(String(s||"")).then(function(){ toast("Copiado"); },function(){ toast("No se pudo copiar"); }); }catch(e){ toast("No se pudo copiar"); } }
 function leeOpcionesDe(el){
   var t=_leeTareaAbierta(); if(!t) return null;
-  if(el.closest(".ptcard")) return [["Leer el resumen",function(){ leeResumenSolo(t); }],["Leer toda la tarea",function(){ leeTarea(t); }]];
-  if(el.closest(".top .tnm")) return [["Leer toda la tarea",function(){ leeTarea(t); }]];
+  var actual=["Leer lo actual",function(){ leeActual(t); }];
+  if(el.closest(".ptcard")){
+    var p=null; try{ p=preguntaParaMi(t); }catch(e){}
+    return [["Leer desde aquí",function(){ var r=_leeResumen(t,false), ms=p?_leeMsgs(t,p.ix+1,(t.msgs||[]).length):[]; leeArranca(t,(r?[r]:[]).concat(ms),"desde"); }],
+      actual, ["Copiar",function(){ var c=el.closest(".ptcard"); _leeCopia(c?c.innerText.replace(/ver (todo|menos)\s*[▾▴]/g,"").trim():""); }]];
+  }
+  if(el.closest(".top .tnm")) return [["Leer toda la tarea",function(){ leeTarea(t); }], actual];
   var b=el.closest(".msgs [data-mix], .msgs [data-hab]"); if(!b) return null;
   var ix=b.hasAttribute("data-mix")?+b.getAttribute("data-mix"):+String(b.getAttribute("data-hab")).split("|").pop();
   if(isNaN(ix)) return null;
-  var ops=[["Leer desde aquí",function(){ leeDesde(t, ix); }]];
-  if(typeof ponCita==="function") ops.push(["Responder",function(){ ponCita(t, ix); }]);
-  ops.push(["Copiar",function(){ var x=t.msgs[ix]; var s=String((x&&(x.tr||x.t))||"");
-    try{ navigator.clipboard.writeText(s).then(function(){ toast("Copiado"); },function(){ toast("No se pudo copiar"); }); }catch(e){ toast("No se pudo copiar"); } }]);
-  return ops;
+  return [["Leer desde aquí",function(){ leeDesde(t, ix); }], actual,
+    ["Copiar",function(){ var x=t.msgs[ix]; _leeCopia((x&&(x.tr||x.t))||""); }]];
 }
 (function(){
   var tm=null, x0=0, y0=0, el0=null;
@@ -11871,6 +11878,199 @@ function leeExtras(){
   var bt=document.getElementById("bttlee");
   if(bt) bt.onclick=function(ev){ ev.stopPropagation(); var ord=leeOrdenTT(); if(!ord.length) return; var tt=leeAbre(ord[0]); if(tt) leeNuevo(tt); };
 }
+
+/* ===== build 185 (Salvador 2026-10-03 06:47): LECTURA = PODCAST EN VIVO =====
+   - Barra: ya no trae velocidad ni controles; solo una pastilla chica (pausa / cerrar).
+     La velocidad vive en ⋯ > "Ajustar lectura" (la ultima opcion).
+   - Dejar picado: mensaje -> Leer desde aquí / Leer lo actual / Copiar;
+     resumen -> Leer desde aquí / Leer lo actual / Copiar. "Lo actual" = lo de hoy (o lo
+     ultimo) y Claude se regresa SOLO lo necesario para entenderlo.
+   - Al acabar (audífonos, toda la tarea, lo actual): "¿Contestas, tienes una duda o
+     seguimos?" y el microfono se abre solo. Entiende: siguiente / repite / léeme todo el
+     chat / hazme el resumen / duda (contesta con lo que dice el chat) / ya está hecha /
+     elimínala (pregunta por qué; si no la pudieron hacer, a quién se la pasa) / para.
+     Lo demas es una respuesta: la repite y pregunta "¿Lo mando?" antes de mandarla. */
+function _nv(s){ return String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[¿?¡!.,;:]/g," ").replace(/\s+/g," ").trim(); }
+function leeDi(txt, done){
+  var tok=++LEE.tok; LEE.hablando=true; leeBarra();
+  var fin=function(){ if(tok!==LEE.tok) return; clearTimeout(LEE.wd); LEE.hablando=false; if(done) done(); };
+  try{ speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(txt); u.lang="es-MX"; u.rate=_leeRate(); var v=_leeVoz(); if(v) u.voice=v;
+    u.onend=fin; u.onerror=function(e){ if(e && (e.error==="interrupted"||e.error==="canceled")) return; fin(); };
+    clearTimeout(LEE.wd); LEE.wd=setTimeout(fin, 4000+String(txt).length*90/_leeRate());
+    setTimeout(function(){ if(tok===LEE.tok) speechSynthesis.speak(u); }, 60);
+  }catch(e){ fin(); }
+}
+function leeEscucha(cb){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition, r=null;
+  LEE.espera=false;
+  try{ r=new SR(); }catch(e){}
+  if(!r){ LEE.espera=true; leeBarra(); return; }
+  r.lang="es-MX"; r.continuous=false; r.interimResults=true;
+  var fin="", par="", hecho=false;
+  r.onresult=function(e){ par=""; for(var i=e.resultIndex;i<e.results.length;i++){ if(e.results[i].isFinal) fin+=e.results[i][0].transcript+" "; else par+=e.results[i][0].transcript; } LEE.oido=(fin+par).trim(); leeBarra(); };
+  var acaba=function(){ if(hecho) return; hecho=true; LEE.oye=false; clearTimeout(LEE.swd); var v=(fin+par).trim();
+    if(!LEE.charla) return; if(!v){ LEE.espera=true; leeBarra(); return; } cb(v); };
+  r.onend=acaba; r.onerror=function(){ acaba(); };
+  try{ r.start(); }catch(e){ LEE.espera=true; leeBarra(); return; }
+  LEE.rec=r; LEE.oye=true; LEE.oido=""; leeBarra();
+  LEE.swd=setTimeout(function(){ try{ r.stop(); }catch(e){} }, 15000);
+}
+function leePregunta(txt){
+  LEE.act=true; LEE.charla=true; LEE.fin=true; LEE.pensando=false;
+  leeDi(txt, function(){ setTimeout(function(){ if(LEE.charla) leeEscucha(leeComando); }, 250); });
+}
+function leeOtraVez(){ leePregunta("¿Algo más, o seguimos?"); }
+function leeCharlaFin(){
+  LEE.fin=true; leeRepinta(false);
+  leePregunta("Fin de "+limpiaHabla(LEE.t.nombre||"esta tarea")+". ¿Contestas, tienes una duda, o seguimos?");
+}
+function leeAseguraHilo(t){ if(vista!=="hilo" || abierta!==t.id) leeAbre(t.id); }
+function leeComando(v){
+  var t=LEE.t; if(!t) return leePara();
+  var s=_nv(v), nw=s.split(" ").length, c=LEE.confirma; LEE.confirma=null;
+  var SI=/^(si|sale|va|vale|claro|ok|okay|dale|andale|mandalo|mandala|correcto|asi|exacto|esta bien|si mandalo|perfecto)\b/, NO=/^(no|nel|cancela|espera|mejor no|todavia no)\b/;
+  if(c && c.tipo==="manda"){
+    if(SI.test(s)) return leeManda(t, c.v);
+    if(NO.test(s) && nw<=4){ leeDi("Va, no lo mando.", leeOtraVez); return; }
+    LEE.confirma={tipo:"manda", v:v}; return leePregunta("Entonces escribo: "+v+". ¿Lo mando?");
+  }
+  if(c && c.tipo==="seguir"){
+    if(SI.test(s) || /siguiente|seguimos|sigue/.test(s)) return leeSiguienteTarea();
+    if(NO.test(s) && nw<=3){ leeDi("Va.", function(){ leePara(); }); return; }
+  }
+  if(c && c.tipo==="motivo") return leeMotivo(t, s, c.n||0);
+  if(c && c.tipo==="aquien") return leeAQuien(t, v, s);
+  if(/\b(eliminala|borrala|desechala|tirala|cancelala|a la basura|ya no (va a )?servir|ya no sirve|ya no se va a hacer|ya no hace falta|eliminar esta)\b/.test(s)) return leePideMotivo(t);
+  if(/\b(ya (la |lo )?(hice|termine|terminamos|terminaron|hicieron|quedo)|ya esta (hecha|terminada|lista)|ya se hizo|marcala (como )?hecha|cierrala|ya esta$)/.test(s)) return leeHecha(t);
+  if(nw<=4 && /^(para|alto|detente|callate|basta|es todo|termina|apaga|ya no|ya estuvo|gracias)\b/.test(s)){ leeDi("Va.", function(){ leePara(); }); return; }
+  if(nw<=6 && /\b(siguiente|seguimos|sigamos|la que sigue|otra tarea|pasa a la otra|adelante|sigue)\b/.test(s)) return leeSiguienteTarea();
+  if(/\bresumen\b/.test(s)) return leeResumenIA(t);
+  if(/\b(todo el (chat|historial|whatsapp)|toda la (tarea|conversacion|platica)|desde el (principio|inicio)|el historial|todo$)/.test(s)) return leeTarea(t);
+  if(/\b(lo actual|lo de hoy|lo ultimo)\b/.test(s)) return leeActual(t);
+  if(nw<=7 && /\b(repite|repitela|repitemela|repiteme|otra vez|de nuevo|no escuche|no entendi)\b/.test(s)) return (LEE.rehace?LEE.rehace():leeNuevo(t));
+  var esPreg=/^(tengo (una )?duda|duda|una pregunta|pregunta|oye)\b/.test(s) || /^(cuando|cuanto|cuantos|cuantas|quien|quienes|como|donde|por que|cual|cuales)\b/.test(s) ||
+    /^que (dijo|dijeron|paso|falta|onda|precio|fecha|tal|hay|es|era|quedo|dice|opina|opinan|respondio|contesto)\b/.test(s) || /\?\s*$/.test(String(v));
+  if(esPreg) return leeDuda(t, v);
+  LEE.confirma={tipo:"manda", v:v};
+  leePregunta("Voy a escribir en la tarea: "+v+". ¿Lo mando?");
+}
+function leeManda(t, v){
+  leeAseguraHilo(t);
+  setTimeout(function(){
+    var ta=document.getElementById("txt"), b=document.getElementById("tenv");
+    if(!ta || !b){ leeDi("No pude escribir en la tarea. Inténtalo en pantalla.", leeOtraVez); return; }
+    ta.value=v; try{ ta.dispatchEvent(new Event("input",{bubbles:true})); }catch(e){}
+    b.click();
+    setTimeout(function(){ LEE.t=tareas.filter(function(x){return x.id===t.id})[0]||t; leeDi("Listo, enviado.", leeOtraVez); }, 300);
+  }, 150);
+}
+function leeHecha(t){
+  var f=[]; try{ f=faltanParaCerrar(t)||[]; }catch(e){}
+  if(f.length){ leeDi("Todavía no la puedo cerrar: "+f.join(" y ")+".", leeOtraVez); return; }
+  try{ cierraHecha(t); }catch(e){ leeDi("No la pude cerrar.", leeOtraVez); return; }
+  leeAseguraHilo(t);
+  LEE.confirma={tipo:"seguir"}; leePregunta("Listo, la marqué como hecha. ¿Seguimos con la siguiente?");
+}
+function _leeEsJefeAjena(t){ return !!(PERSONAS[yo] && PERSONAS[yo].jefe && t.duenio!==yo); }
+function leePideMotivo(t){
+  LEE.confirma={tipo:"motivo", n:0};
+  leePregunta(_leeEsJefeAjena(t)
+    ? "¿Por qué la eliminamos? ¿Ya no hace falta, cambió el plan, se resolvió por otro lado, la haces tú, o no la pudieron hacer y se la paso a alguien más?"
+    : "¿Por qué la eliminamos? ¿Ya no hacía falta, se resolvió por otro lado, nunca te dieron lo que necesitabas, no te dio tiempo, o se te pasó?");
+}
+function leeMotivo(t, s, n){
+  var jefe=_leeEsJefeAjena(t), k="";
+  if(/(no (la )?(pudo|pudieron|hizo|hicieron|alcanzo)|a alguien|otra persona|pasa|encarga|reasigna)/.test(s)) k=jefe?"pasar":"no_dieron";
+  else if(/otro lado|ya se resolvio|se resolvio/.test(s)) k="otro_lado";
+  else if(/la hago yo|lo hago yo|yo la hago/.test(s)) k=jefe?"la_hago":"ya_no";
+  else if(/cambio|cambiamos/.test(s)) k=jefe?"cambio":"ya_no";
+  else if(/no me dieron|no nos dieron|nunca me dieron|me faltaron|no tenia/.test(s)) k=jefe?"ya_no":"no_dieron";
+  else if(/tiempo/.test(s)) k=jefe?"ya_no":"tiempo";
+  else if(/se me paso|se me olvido|olvide/.test(s)) k=jefe?"ya_no":"se_paso";
+  else if(/ya no|no hace falta|no sirve|no servia|innecesari/.test(s)) k="ya_no";
+  if(!k){ if(n>=1){ k="ya_no"; } else { LEE.confirma={tipo:"motivo", n:1}; return leePregunta("No te entendí. ¿Ya no hace falta, se resolvió por otro lado, o se la paso a alguien más?"); } }
+  if(k==="pasar"){ LEE.confirma={tipo:"aquien"}; return leePregunta("¿A quién se la paso?"); }
+  try{ cierraSinEjecutar(t, k); sincronizaAvisos(t); guarda(t); }catch(e){ leeDi("No la pude eliminar.", leeOtraVez); return; }
+  leeAseguraHilo(t); try{ render(); }catch(e){}
+  LEE.confirma={tipo:"seguir"}; leePregunta("Listo, la eliminé. ¿Seguimos con la siguiente?");
+}
+function leeAQuien(t, v, s){
+  if(/^(a nadie|nadie|eliminala|no)\b/.test(s)){ try{ cierraSinEjecutar(t, "ya_no"); sincronizaAvisos(t); guarda(t); }catch(e){}
+    LEE.confirma={tipo:"seguir"}; return leePregunta("Listo, la eliminé. ¿Seguimos con la siguiente?"); }
+  var k=null; try{ k=duenioDicho("pasasela a "+v); }catch(e){}
+  if(!k){ LEE.confirma={tipo:"aquien"}; return leePregunta("No encontré a "+v+". ¿A quién se la paso?"); }
+  var r={ok:false}; try{ r=transfiere(t, k, "lo dijo "+((PERSONAS[yo]||{}).nombre||"")+" por voz"); }catch(e){}
+  if(!r.ok){ leeDi("No se la pude pasar"+(r.msg?": "+r.msg:"")+".", leeOtraVez); return; }
+  try{ msg(t,"bi","Se la pasé a "+PERSONAS[k].nombre+" (dictado en la lectura)."); guarda(t); render(); }catch(e){}
+  LEE.confirma={tipo:"seguir"}; leePregunta("Listo, ahora la lleva "+PERSONAS[k].nombre+". ¿Seguimos con la siguiente?");
+}
+function _leeLineas(t, max){
+  var ms=t.msgs||[], out=[], d0=Math.max(0, ms.length-(max||70));
+  for(var i=d0;i<ms.length;i++){ var r=leible(ms[i],t); if(!r) continue;
+    var f=ms[i].ts?fechaCorta(new Date(ms[i].ts)):"";
+    out.push("["+i+(f?" · "+f:"")+"] "+(r.quien||"?")+": "+(r.foto?"("+r.foto+")":r.tx.slice(0,350))); }
+  return out;
+}
+function _leeClaude(prompt, cb){
+  LEE.pensando=true; leeBarra();
+  try{ preguntaAClaude([{role:"user",content:prompt}],"rapido",function(txt,err){ LEE.pensando=false; cb(err?null:txt); }); }
+  catch(e){ LEE.pensando=false; cb(null); }
+}
+function leeDuda(t, q){
+  var ls=_leeLineas(t, 80);
+  leeDi("Déjame ver.", function(){
+    _leeClaude("Eres la voz de la app Doit. "+((PERSONAS[yo]||{}).nombre||"El usuario")+" va manejando y pregunta sobre la tarea \""+(t.nombre||"")+"\""+(t.f_vigente?" (fecha "+t.f_vigente+")":"")+".\n"+
+      "Contesta en español, para oírse en voz: máximo 3 frases cortas, sin listas ni símbolos. Usa SOLO lo que dicen los mensajes; NO inventes ni calcules cifras. Si no está, di: Eso no está en el chat.\n\nPREGUNTA: "+q+"\n\nMENSAJES:\n"+ls.join("\n"),
+      function(txt){ leeDi(txt?limpiaHabla(txt):"No pude consultar ahorita.", leeOtraVez); });
+  });
+}
+function leeResumenIA(t){
+  var ls=_leeLineas(t, 80);
+  if(ls.length<2){ var r=_leeResumen(t); leeDi(r?r.tx:"Casi no hay mensajes en esta tarea.", leeOtraVez); return; }
+  leeDi("Va, te lo resumo.", function(){
+    _leeClaude("Resume para oírse en voz la tarea \""+(t.nombre||"")+"\". 3 a 5 frases cortas: de qué va, en qué quedó, qué falta y si algo espera respuesta de "+((PERSONAS[yo]||{}).nombre||"el usuario")+". Sin listas ni símbolos. SOLO con lo que dicen los mensajes; no inventes ni calcules cifras.\n\nMENSAJES:\n"+ls.join("\n"),
+      function(txt){ leeDi(txt?limpiaHabla(txt):"No pude armar el resumen ahorita.", leeOtraVez); });
+  });
+}
+/* "Leer lo actual": lo de hoy (o lo ultimo) + lo de atras SOLO si hace falta para entenderlo */
+function _leeDesdeHeur(t){
+  var ms=t.msgs||[], hoy0=new Date(); hoy0.setHours(0,0,0,0);
+  var lb=_leeMsgs(t,0,ms.length); if(!lb.length) return 0;
+  var k=-1; for(var i=0;i<lb.length;i++){ var x=ms[lb[i].ix]; if(x && x.ts && x.ts>=hoy0.getTime()){ k=i; break; } }
+  if(k<0) k=Math.max(0, lb.length-2);
+  return lb[Math.max(0,k-2)].ix;
+}
+function leeActual(t, conResumen){
+  var ls=_leeLineas(t, 80);
+  var arma=function(desde){
+    var ms=t.msgs||[]; if(typeof desde!=="number" || desde<0 || desde>=ms.length || !ms[desde]) desde=_leeDesdeHeur(t);
+    var msgs=_leeMsgs(t, desde, ms.length), ixs=msgs.map(function(x){return x.ix;});
+    var c=[], r0=_leeResumen(t), r=(r0 && ixs.indexOf(r0.pix)>=0)?_leeResumen(t,true):r0;
+    if(conResumen!==false && r) c.push(r);
+    leeArranca(t, c.concat(msgs), "actual"); LEE.rehace=function(){ arma(desde); };
+  };
+  if(ls.length<5) return arma(0);
+  LEE.t=t; LEE.act=true; LEE.fin=false; LEE.charla=false;
+  var hoy=fechaCorta(new Date());
+  _leeClaude("Hoy es "+hoy+". "+((PERSONAS[yo]||{}).nombre||"El usuario")+" quiere ESCUCHAR lo actual de esta conversación: los mensajes de hoy (o los últimos 2 o 3 si hoy no hay) y, antes de eso, SOLO los mensajes anteriores que hagan falta para entenderlos (de qué se está hablando, qué se preguntó). No te regreses de más.\n"+
+    "Contesta SOLO JSON: {\"desde\": n} con el número del primer mensaje que hay que leer.\n\nMENSAJES:\n"+ls.join("\n"),
+    function(txt){ var n=null; try{ var m=String(txt||"").match(/\{[\s\S]*\}/); if(m) n=JSON.parse(m[0]).desde; }catch(e){} arma(typeof n==="number"?n:null); });
+}
+/* ajustes de lectura (⋯ > Ajustar lectura) */
+function leeAjustes(){
+  leeCierraMenu();
+  var rs=[[0.9,"Más lenta"],[1,"Normal"],[1.1,"Un poco rápida"],[1.25,"Rápida"],[1.5,"Muy rápida"]], cur=_leeRate();
+  var m=document.createElement("div"); m.className="leemask"; m.id="leemask";
+  m.innerHTML='<div class="leeaj"><b>Velocidad de lectura</b>'+rs.map(function(r){ return '<button data-lr="'+r[0]+'"'+(Math.abs(r[0]-cur)<0.01?' class="on"':'')+'>'+r[1]+(Math.abs(r[0]-cur)<0.01?' ✓':'')+'</button>'; }).join("")+'<button class="lst" data-lr="0">Listo</button></div>';
+  document.body.appendChild(m);
+  m.addEventListener("click",function(ev){ ev.stopPropagation(); var b=ev.target.closest("[data-lr]");
+    if(!b){ if(ev.target===m) leeCierraMenu(); return; }
+    var r=+b.getAttribute("data-lr"); if(!r){ leeCierraMenu(); return; }
+    try{ localStorage.setItem("bit_lee_rate", String(r)); }catch(e){}
+    leeAjustes(); try{ speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance("Así voy a leer tus mensajes."); u.lang="es-MX"; u.rate=r; var v=_leeVoz(); if(v) u.voice=v; speechSynthesis.speak(u); }catch(e){} });
+}
+document.addEventListener("click",function(e){ var b=e.target.closest && e.target.closest('[data-mn="lectura"]'); if(!b) return;
+  e.stopPropagation(); e.preventDefault(); menuOpen=false; render(); leeAjustes(); }, true);
 
 </script>
 </body>
