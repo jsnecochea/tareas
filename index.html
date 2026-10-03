@@ -1114,7 +1114,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 188 · 30 s para deshacer lo que va por WhatsApp (o borrarlo); Cancelar en el aviso; notas para Claude que no salen";
+var VERSION_APP = "build 189 · lo que va por WhatsApp: el bote vive 30 s y luego sale; Claude/Cloud: notas que Claude entiende y ejecuta";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -6285,6 +6285,8 @@ function vHilo(){
     /* Salvador 2026-09-22: el ULTIMO mensaje mio trae un botecito 5 minutos,
        por si se subio mal y era otra cosa. Se borra sin preguntar. */
     var undo=(x.k==="bo" && ix===(t.msgs.length-1) && x.ts && (Date.now()-x.ts)<5*60000 && (!x.de||x.de===yo));
+    /* build 189 (Salvador 08:48): si va por WhatsApp, el bote solo vive los 30 s antes de que salga */
+    if(x.k==="bo" && x.wa_auto){ undo=(typeof enEspera==="function") && enEspera(t.id, x.t); }
     var waCan=(x.wa && x.wa_pid && !x.wa_can && x.ts && (Date.now()-x.ts)<10*60000);
     /* build 148 (Salvador 2026-09-28): mensajes de IA con análisis guardado (súper-
        revisión de vigencia, cita textual, etc. — lo llena el trabajador de WhatsApp)
@@ -12170,30 +12172,45 @@ function cancelaEnvio(tid, texto, k){
     if(k ? q===k : (p.c.tarea_id===tid && _holdTxt(p.c.texto)===_holdTxt(texto))){ clearTimeout(p.to); delete window.__waHold[q]; try{ p.res({cancelado:true}); }catch(e){} n++; } });
   pintaHold(); return n;
 }
-function pintaHold(){
-  var ks=Object.keys(window.__waHold), b=document.getElementById("holdbar");
-  if(!ks.length){ if(b) b.remove(); clearInterval(window.__holdIv); window.__holdIv=null; return; }
-  if(!b){ b=document.createElement("div"); b.id="holdbar"; document.body.appendChild(b);
-    b.addEventListener("click", function(ev){ var x=ev.target.closest("[data-hk]"); if(!x) return; ev.stopPropagation();
-      var p=window.__waHold[x.getAttribute("data-hk")]; if(!p) return;
-      var tt=tareas.filter(function(z){return z.id===p.c.tarea_id})[0];
-      cancelaEnvio(null,null,x.getAttribute("data-hk"));
-      if(tt && tt.msgs){ for(var i=tt.msgs.length-1;i>=0;i--){ var m=tt.msgs[i]; if(m && m.k==="bo" && _holdTxt(m.t)===_holdTxt(p.c.texto)){ tt.msgs.splice(i,1); break; } } guarda(tt); }
-      toast("No se mandó"); render(); }); }
-  b.innerHTML=ks.map(function(k){ var p=window.__waHold[k], s=Math.max(0,Math.ceil((p.fin-Date.now())/1000));
-    return '<div class="hrow"><span>Se manda a '+esc(String(p.c.contacto||"").split(" ")[0])+' en '+s+' s</span><button data-hk="'+k+'">Deshacer</button></div>'; }).join("");
-  if(!window.__holdIv) window.__holdIv=setInterval(pintaHold, 1000);
-}
+function pintaHold(){ var b=document.getElementById("holdbar"); if(b) b.remove(); try{ if(vista==="hilo") render(); }catch(e){} }
+function enEspera(tid, texto){ return Object.keys(window.__waHold||{}).some(function(k){ var p=window.__waHold[k]; return p.c.tarea_id===tid && _holdTxt(p.c.texto)===_holdTxt(texto); }); }
 function esNotaClaude(v){
   var s=String(v||"").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
-  return /^(claude|oye claude|ia\b|nota para (claude|ti)|nota:|para claude|ojo claude|aclaracion|correccion|corrige)/.test(s) ||
+  return /^(oye\s+)?(claude|cloud|clod|claud|klaud|clau)\b/.test(s) || /^(ia\b|nota para (claude|cloud|ti)|nota:|para (claude|cloud)|ojo (claude|cloud)|aclaracion|correccion|corrige)/.test(s) ||
     /\bpara que (puedas|sepas|tengas|corrijas|lo ajustes|los ajustes)\b/.test(s) ||
     /\b(el|los|ese|esos) (mensaje|numero|numeros|precio|precios) (de|que (pone|puso|mando|dice|dijo))\b/.test(s) && /\b(son|eran|significa|quiere decir|es)\b/.test(s);
 }
 function notaClaude(t, v){
   msg(t,"bo",v); var m=t.msgs[t.msgs.length-1]; m.de=yo; m.canal="priv:"+yo; m.nota_claude=1;
   t.notas_claude=(t.notas_claude||[]).concat([{t:v, ts:Date.now()}]).slice(-30);
-  guarda(t); render(); toast("Nota para Claude · no se manda a nadie");
+  guarda(t); render();
+  ejecutaNotaClaude(t, v);
+}
+/* build 189: Claude entiende lo que le pides en la nota y lo hace (renombrar, fecha, cerrar, eliminar,
+   pasarla) o guarda el dato corregido. Contesta en UNA linea privada, solo para ti. */
+function ejecutaNotaClaude(t, v){
+  var ls=[]; (t.msgs||[]).slice(-40).forEach(function(x,i){ if(!x||x.nota_claude) return; var q=x.wa_c||(x.de&&PERSONAS[x.de]&&PERSONAS[x.de].nombre)||(x.k==="bo"?"Salvador":"Sistema"); ls.push(q+": "+String(x.tr||x.t||"").slice(0,300)); });
+  var hoyS=hoy();
+  var p="Eres Claude dentro de la app de tareas Doit. "+((PERSONAS[yo]||{}).nombre||"El usuario")+" te escribe una nota privada sobre la tarea \""+(t.nombre||"")+"\" (fecha actual de la tarea: "+(t.f_vigente||"sin fecha")+"; hoy es "+hoyS+").\n"+
+    "Decide qué quiere y contesta SOLO JSON: {\"accion\":\"dato|renombrar|fecha|cerrar|eliminar|pasar|nada\",\"valor\":\"...\",\"respuesta\":\"una frase corta en español\"}.\n"+
+    "- dato: corrige o aclara información (precios, medidas, quién dijo qué). valor = el dato ya corregido, claro y completo.\n- renombrar: valor = nombre nuevo.\n- fecha: valor = AAAA-MM-DD.\n- cerrar: ya se hizo.\n- eliminar: ya no se va a hacer.\n- pasar: valor = nombre de la persona.\nNo inventes; si no entiendes, accion nada y pregunta en respuesta.\n\nNOTA: "+v+"\n\nULTIMOS MENSAJES:\n"+ls.join("\n");
+  var nota=function(tx){ msg(t,"bi",tx); var m=t.msgs[t.msgs.length-1]; m.canal="priv:"+yo; m.nota_claude=1; guarda(t); if(vista==="hilo"&&abierta===t.id) render(); };
+  try{
+    preguntaAClaude([{role:"user",content:p}],"rapido",function(txt,err){
+      var j=null; try{ var mm=String(txt||"").match(/\{[\s\S]*\}/); if(mm) j=JSON.parse(mm[0]); }catch(e){}
+      if(!j){ nota("Anotado."); return; }
+      var a=j.accion, val=String(j.valor||"").trim(), r=String(j.respuesta||"").trim();
+      try{
+        if(a==="dato" && val){ t.datos_corregidos=(t.datos_corregidos||[]).concat([{t:val, ts:Date.now()}]).slice(-30); t.notas_claude=(t.notas_claude||[]).concat([{t:"DATO CORREGIDO: "+val, ts:Date.now()}]).slice(-30); nota(r||("Anotado: "+val)); return; }
+        if(a==="renombrar" && val){ t.nombre=conMayuscula(val); nota(r||("Nombre: "+t.nombre)); return; }
+        if(a==="fecha" && /^\d{4}-\d{2}-\d{2}$/.test(val)){ var rr=mueveFecha(t, val, "lo dijo "+((PERSONAS[yo]||{}).nombre||"")+" en nota a Claude"); try{ sincronizaAvisos(t); }catch(e){} nota(rr&&rr.ok===false?rr.msg:(r||("Para el "+fechaBonita(val)))); return; }
+        if(a==="cerrar"){ var f=[]; try{ f=faltanParaCerrar(t)||[]; }catch(e){} if(f.length){ nota("No la puedo cerrar: "+f.join(" y ")+"."); return; } cierraHecha(t); nota(r||"Cerrada."); return; }
+        if(a==="eliminar"){ cierraSinEjecutar(t, "ya_no"); try{ sincronizaAvisos(t); }catch(e){} nota(r||"Eliminada."); return; }
+        if(a==="pasar" && val){ var k=duenioDicho("pasasela a "+val); var rs=k?transfiere(t,k,"nota a Claude"):{ok:false}; nota(rs.ok?(r||("Ahora la lleva "+PERSONAS[k].nombre)):("No encontré a "+val+".")); return; }
+      }catch(e){ nota("No pude hacerlo: "+String(e&&e.message||e).slice(0,60)); return; }
+      nota(r||"Anotado.");
+    });
+  }catch(e){ nota("Anotado."); }
 }
 
 </script>
