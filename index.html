@@ -436,9 +436,10 @@ button{font:inherit;color:inherit}
 .b{max-width:86%;padding:8px 11px;border-radius:12px;font-size:18.2px;line-height:1.42;word-wrap:break-word}
 .bi{align-self:flex-start;background:var(--bin);border-bottom-left-radius:3px}
 .bo{align-self:flex-end;background:var(--bout);border-bottom-right-radius:3px}
-.bal{align-self:flex-start;background:var(--sil);color:#fff;border-bottom-left-radius:3px}
+.bal{align-self:flex-start;background:rgba(255,69,58,.10);color:var(--ink);border:1.5px solid var(--venc);box-shadow:0 0 12px rgba(255,69,58,.18);border-bottom-left-radius:3px}
+.avfold{align-self:center;border:0;background:none;color:var(--ink-3);font-size:13px;padding:2px 10px;opacity:.75}
 .st{display:block;font-size:14.2px;color:var(--ink-3);margin-top:2px;font-variant-numeric:tabular-nums}
-.bal .st{color:rgba(255,255,255,.7)}
+.bal .st{color:var(--ink-3)}
 .mdel{float:right;margin:-3px -4px 0 10px;padding:4px 6px;border:0;background:none;color:var(--ink-3);
   cursor:pointer;display:inline-grid;place-items:center;border-radius:8px;-webkit-tap-highlight-color:transparent}
 .bcomp .cn{font-weight:700}
@@ -1869,7 +1870,7 @@ function toqueHecho(t,resultado){
   msg(t,"bo","Toque a "+t.detenido.quien+": "+(resultado||"no contestó"));
   var n=t.detenido.toques.length, d=diasDetenido(t);
   var esc=escalaHoy(t);
-  if(esc) msg(t,"bal",esc);
+  if(esc){ msg(t,"bal",esc); t.msgs[t.msgs.length-1].aviso=1; }
   guarda(t);
 }
 function destrabar(t){
@@ -3549,7 +3550,7 @@ function empujon(t, dicho){
     txt="Van "+(n+1)+" veces. Si no la puedes sacar, dilo y la movemos con Salvador — pero callado no se queda.";
   }
   t.empujones.push({f:hoy(),t:txt});
-  msg(t,"bal",txt);
+  msg(t,"bal",txt); t.msgs[t.msgs.length-1].aviso=1;
   guarda(t);
   return txt;
 }
@@ -5290,6 +5291,21 @@ function reasignaDicho(t, v, silencioso){
    (la X la quita) -> tu respuesta lleva la cita encima; tocar la cita lleva al original.
    Si el original vino de WhatsApp, la respuesta sale a ESA persona como respuesta a ese
    mensaje (cita_texto; el programa de la Mac v12 la liga). */
+/* build 177 (Salvador 2026-10-02 19:11): los avisos de Claude ("ya venció", "segunda vez
+   que te pregunto", "llevas N días esperando") ya atendidos se pliegan en UN renglon chiquito
+   ("6 avisos de vencimiento"); a un toque se ven. Nada se borra. Atendido = la tarea se cerro
+   o despues del aviso contesto una persona. */
+var AVISO_RX=/^(Ya venci[oó] |Segunda vez que te pregunto|Van \d+ veces|Vas \d+ d[ií]as? atr[aá]s|Te falta “|Llevas \d+ d[ií]as? esperando)/;
+function esAvisoClaude(x){ return !!x && (x.aviso===1 || ((x.k==="bal"||x.k==="bi") && !x.wa_in && AVISO_RX.test(String(x.t||"")))); }
+function avisosPlegados(t){
+  var ms=t.msgs||[], res={set:{}, ult:-1, n:0};
+  if((window.__avExp||{})[t.id]) return res;
+  var cerrada=!!t.cierre || estadoReal(t)==="cerrada", ultPersona=-1;
+  for(var i=0;i<ms.length;i++){ var m=ms[i]; if(m && (m.k==="bo" || m.wa_in===1)) ultPersona=i; }
+  for(var j=0;j<ms.length;j++){ if(esAvisoClaude(ms[j]) && (cerrada || j<ultPersona)){ res.set[j]=1; res.ult=j; res.n++; } }
+  if(res.n<1) res.set={};
+  return res;
+}
 function partesMsg(x){
   var tx=String((x&&(x.tr||x.t))||""), mm=tx.match(/^([^:\n]{1,24}):\s*([\s\S]*)$/);
   var de=x&&x.wa_c?String(x.wa_c):"";
@@ -5988,7 +6004,9 @@ function vHilo(){
   }
 
   var m="";
+  var _plg=avisosPlegados(t);
   (t.msgs||[]).forEach(function(x,ix){
+    if(_plg.set[ix]){ if(ix===_plg.ult) m+='<button class="avfold" data-avexp="1">'+_plg.n+' aviso'+(_plg.n===1?'':'s')+' de seguimiento · ver</button>'; return; }
     var q=autorMsg(x,t);
     if(x.hab){ m+=burbujaHablada(x, (q||""), t.id+"|"+ix); return; }
     var meta=(q?esc(q)+" · ":"")+esc(x.h)+(x.wa_auto?" · → WhatsApp":"");
@@ -9728,7 +9746,8 @@ function bindLista(){
           var d=diasDetenido(t);
           msg(t,"bi","Llevas "+d+" día"+(d===1?"":"s")+" esperando "+t.detenido.que+" de "+t.detenido.quien+
             (t.detenido.tel?" ("+t.detenido.tel+")":"")+". Háblale y escríbeme abajo qué te dijo. \"No contestó\" también cuenta.");
-          var e2=escalaHoy(t); if(e2) msg(t,"bal",e2);
+          t.msgs[t.msgs.length-1].aviso=1;
+          var e2=escalaHoy(t); if(e2){ msg(t,"bal",e2); t.msgs[t.msgs.length-1].aviso=1; }
           guarda(t);
         }
         abierta=padre;
@@ -10047,6 +10066,7 @@ function bindHilo(){
   };
 
   try{ bindDeslizar(t); }catch(e){ console.warn("deslizar",e); }
+  Array.prototype.forEach.call(document.querySelectorAll("[data-avexp]"),function(b){ b.onclick=function(){ window.__avExp=window.__avExp||{}; window.__avExp[t.id]=1; render(); }; });
   var tc=$("tcam"); if(tc) tc.onclick=function(){
     pideFoto(function(data,meta){
       t.evidencias=t.evidencias||[];
