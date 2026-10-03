@@ -1011,7 +1011,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 172 · 2026-10-02 · La notificacion de WhatsApp abre la tarea del mensaje aunque haya varias con novedades";
+var VERSION_APP = "build 173 · 2026-10-02 · \"No es mia, es de Samuel\" pasa la tarea a esa persona, la autoriza y la quita de Por revisar; entiende \"ponerle el nombre X\"";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -5145,6 +5145,17 @@ function ultimoDeOtro(t){
 }
 function vTarjetaRev(t){
   var k=tipoRevisar(t); if(!k) return "";
+  /* build 173: si ya lo habia dicho con un build anterior, se aplica al abrirla */
+  /* build 173: si lo ultimo del chat es algo que el dijo con un build anterior
+     ("no es mia, es de X" o "ponle de nombre X") y nadie lo atendio, se aplica al abrirla */
+  if(!t._chkDuenio){ t._chkDuenio=1;
+    var _ul=(t.msgs||[]).slice(-1)[0];
+    if(_ul && _ul.k==="bo" && (!_ul.de || _ul.de===yo) && _ul.t){
+      if(duenioDicho(_ul.t) && reasignaDicho(t,_ul.t,true)){ setTimeout(function(){ toast("Pasó a "+PERSONAS[t.duenio].nombre); },50); return ""; }
+      var _rn=detectaRenombre(_ul.t);
+      if(_rn && conMayuscula(_rn)!==t.nombre){ var _vj=t.nombre; t.nombre=conMayuscula(_rn); msg(t,"bi","Cambié el nombre: “"+_vj+"” → “"+t.nombre+"”."); guarda(t); }
+    }
+  }
   if(k==="espera"){
     if(esDecisionSal(t)) return "";   /* ya trae su banner "Esperando tu decision" */
     var q=ultimoDeOtro(t)||quienEspera(t)||"";
@@ -5170,6 +5181,38 @@ function vTarjetaRev(t){
   return '<div class="revc c-autorizar"><span style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:0">'+
     '<span class="rct">POR AUTORIZAR</span><span class="rcp">Cambios: díctamelos abajo</span></span>'+
     '<button class="rva" id="rvautz">Autorizar</button></div>';
+}
+/* build 173 (Salvador 2026-10-02 18:21): "no es mia, es de Samuel" dentro de una tarea
+   suya -> pasa a esa persona, queda autorizada y sale de "Por revisar". Se resuelve en
+   el telefono con reglas fijas, sin esperar a Claude. Devuelve la clave de la persona o null. */
+function duenioDicho(v){
+  var n=String(v||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  var claves=Object.keys(PERSONAS).filter(function(k){ return k!==yo; });
+  var nom="("+claves.map(function(k){ return PERSONAS[k].nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,""); }).join("|")+")";
+  var pats=[
+    "no es (mia|para mi|mi tarea)[^.]{0,80}?\\b(es|seria|le toca|la tiene|la lleva|la hace|tarea)\\s+(de|a)\\s+"+nom,
+    "\\b(es|le toca a|le corresponde a|corresponde a|es tarea de|es pendiente de)\\s+(de\\s+)?"+nom+"[^.]{0,40}?\\bno (es )?(mia|a mi|para mi)",
+    "\\b(le toca a|le corresponde a|es tarea de|es pendiente de|la tiene que hacer|la debe hacer)\\s+"+nom,
+    "\\b(pasa(se)?la|pasasela|asigna(se)?la|asignasela|transfierela|transfieresela|mandasela|dasela|ponsela)\\s+(a\\s+)?"+nom,
+    "\\bno (me toca|es mia|es para mi)\\b[^.]{0,60}?\\b"+nom
+  ];
+  for(var i=0;i<pats.length;i++){
+    var m=n.match(new RegExp(pats[i]));
+    if(m){ var nm=""; for(var g=m.length-1;g>0;g--){ if(m[g] && new RegExp("^"+nom+"$").test(m[g])){ nm=m[g]; break; } } var k=claves.filter(function(c){ return PERSONAS[c].nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")===nm; })[0]; if(k) return k; }
+  }
+  return null;
+}
+function reasignaDicho(t, v, silencioso){
+  if(!t || t.duenio!==yo || t.cierre || estadoReal(t)==="cerrada") return false;
+  var k=duenioDicho(v); if(!k) return false;
+  var r=transfiere(t, k, "lo dijo "+(PERSONAS[yo]?PERSONAS[yo].nombre:"")+" al revisarla");
+  if(!r.ok) return false;
+  t.autorizada=true; t.autorizada_ts=Date.now(); t.pendiente_info=""; t.pendiente_tipo="";
+  var falta=[]; if(!t.f_vigente && !t.periodicidad) falta.push("fecha"); if(!String(t.nombre||"").trim()) falta.push("nombre");
+  msg(t,"bi","Listo: es de "+PERSONAS[k].nombre+". Se la pasé con todo lo que dijiste y la quité de tu Por revisar."+
+    (falta.length?" Ojo: le falta "+falta.join(" y ")+".":""));
+  guarda(t); if(!silencioso) toast("Pasó a "+PERSONAS[k].nombre);
+  return true;
 }
 /* contestar "falta informacion": Claude saca nombre, fecha, ritmo, avisos y contexto */
 function completaRevision(t, v){
@@ -7810,13 +7853,15 @@ function detectaRenombre(v){
   var m=s.match(/c[aá]mbia(le|r|rle)?\s+(el\s+)?nombre\s+(de\s+(la|esta|[eé]sta|esa|[eé]sa)\s+(tarea|chat|conversaci[oó]n)\s+)?(a|por|como|:)\s*(.+)/i)
     || s.match(/\b(?:que\s+se\s+llame|ll[aá]mala|n[oó]mbrala|el\s+nombre\s+(?:debe\s+ser|ser[aá]|va\s+a\s+ser))\s+(.+)/i)
     || s.match(/cambia(le)?\s+(el\s+)?nombre\s+(a|por)\s+(.+)/i)
-    || s.match(/ponle\s+(de\s+|por\s+)?nombre\s+(.+)/i)
+    || s.match(/\b(?:p[oó]n(?:le|erle|gale|ganle)?|cambi(?:ale|arle|a)|d[aá]le|tiene\s+que\s+(?:llamarse|tener\s+(?:el\s+)?nombre)|deber[ií]a\s+llamarse)\s+(?:de\s+|por\s+|como\s+|el\s+|un\s+)?(?:nombre|t[ií]tulo)\s*(?:de\s+|a\s+|por\s+|como\s+|:\s*)?(.+)/i)
+    || s.match(/^\s*(?:nombre|t[ií]tulo)\s*:\s*(.+)/i)
     || s.match(/renombra(la)?\s+((a|por)\s+)?(.+)/i)
     || s.match(/el\s+nombre\s+correcto\s+es\s+(.+)/i);
   if(!m) return "";
   var nuevo=m[m.length-1];
   nuevo=nuevo.replace(/\s*[.,;]?\s*\b(ya te lo puse|c[oó]mo se escribe|as[ií] se escribe|revisa el chat|ah[ií] en el chat|registra(lo)?|apuntal[oó])\b.*$/i, "");
   nuevo=nuevo.replace(/[.,;]+$/,"").trim();
+  if(/^(en|del?|al)\s+(la|el|los|las|esta|este)\b/i.test(nuevo)) return "";
   return nuevo.length>=2 ? nuevo : "";
 }
 function diceQueYa(v){
@@ -9851,6 +9896,11 @@ function bindHilo(){
       t.nombre=conMayuscula(_rn146);
       msg(t,"bi","Cambié el nombre: “"+_viejo146+"” → “"+t.nombre+"”.");
       guarda(t); render(); return;
+    }
+    /* build 173: "no es mia, es de Samuel" -> se la pasa y la autoriza */
+    if(t.duenio===yo && duenioDicho(v)){
+      $("txt").value=""; marcaEnvio("tenv","");
+      msg(t,"bo",v); reasignaDicho(t, v); abierta=null; vista="lista"; render(); return;
     }
     /* build 168: si la tarea esta en "Falta informacion", lo que contesta llena los datos */
     if(tipoRevisar(t)==="falta" && !detectaLista(v) && listaNumerada(v).length<2){
