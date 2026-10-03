@@ -87,7 +87,19 @@ self.addEventListener('notificationclick', function(event) {
     // no era la del mensaje. Ahora: se busca el id en todos los nombres que puede
     // traer el servidor; si no viene ninguno, se abre el INICIO, nunca se adivina.
     const tid = String(data.id || data.tarea_id || data.tareaId || data.tarea || '');
-    const deepLink = data.url || (tid ? `https://doit.ok-doit.com/?recordatorio=${tid}&action=mic` : 'https://doit.ok-doit.com/');
+    // build 172 (Salvador 2026-10-02 18:18): sin id, la app solo abria la tarea si UNA
+    // sola tenia novedades; con 2+ se iba al inicio. Ahora la liga lleva el titulo y el
+    // texto de la notificacion para que la app busque el mensaje exacto que acaba de llegar.
+    let deepLink;
+    if (tid) deepLink = data.url || `https://doit.ok-doit.com/?recordatorio=${tid}&action=mic`;
+    else {
+      let u;
+      try { u = new URL(data.url || 'https://doit.ok-doit.com/'); } catch (e) { u = new URL('https://doit.ok-doit.com/'); }
+      u.searchParams.set('ultimo', '1');
+      u.searchParams.set('n_t', String(notification.title || '').slice(0, 120));
+      u.searchParams.set('n_b', String(notification.body || '').slice(0, 300));
+      deepLink = u.toString();
+    }
     
     event.waitUntil(
       clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
@@ -105,9 +117,8 @@ self.addEventListener('notificationclick', function(event) {
               return client.focus().then(function(c){ return (c||client).navigate(deepLink); })
                 .catch(function(){ client.postMessage({ tipo: 'abre', id: tid }); return client.focus(); });
             }
-            if (!data.url) return client.focus();
-            client.navigate(deepLink);
-            return client.focus();
+            return client.focus().then(function(c){ return (c||client).navigate(deepLink); })
+              .catch(function(){ client.postMessage({ tipo: 'abre_pista', t: notification.title || '', b: notification.body || '' }); return client.focus(); });
           }
         }
         if (clients.openWindow) return clients.openWindow(deepLink);

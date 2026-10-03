@@ -1011,7 +1011,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 171 · 2026-10-02 · WhatsApp que pide Salvador desde la app sale como URGENTE (el programa de la Mac lo manda antes que la fila, una sola boca)";
+var VERSION_APP = "build 172 · 2026-10-02 · La notificacion de WhatsApp abre la tarea del mensaje aunque haya varias con novedades";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -2358,6 +2358,36 @@ function vistosNov(id){
 function marcaVistosNov(id,n){
   try{ localStorage.setItem("bit_nov_"+yo+"_"+id,n) }catch(e){}
 }
+/* build 172 (Salvador 2026-10-02 18:18): la notificacion sin id trae su titulo y texto.
+   Se busca la tarea cuyo mensaje coincide con ese texto (el mas reciente gana); si no,
+   la tarea con novedades cuyo nombre o remitente coincide con el titulo. Nunca al azar. */
+function tareaDePista(p){
+  var N=function(s){ return String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9ñ ]+/g," ").replace(/\s+/g," ").trim(); };
+  var tit=N(p&&p.t), bod=N(p&&p.b);
+  /* "Karina: hola" -> nombre y texto por separado */
+  var m2=String((p&&p.b)||"").match(/^\s*([^:]{2,40}):\s*(.+)$/);
+  var bodTxt=m2?N(m2[2]):bod, bodDe=m2?N(m2[1]):"";
+  var abiertas=tareas.filter(function(t){ return !t.es_recordatorio && estadoReal(t)!=="cerrada"; });
+  var mejor=null, mejorTs=0;
+  if(bodTxt.length>=4){
+    var clave=bodTxt.slice(0,60);
+    abiertas.forEach(function(t){ (t.msgs||[]).forEach(function(m){
+      var mt=N(m.t); if(!mt) return;
+      if((mt.indexOf(clave)>=0 || (mt.length>=8 && bodTxt.indexOf(mt.slice(0,60))>=0)) && (m.ts||0)>=mejorTs){ mejor=t; mejorTs=m.ts||0; }
+    }); });
+    if(mejor) return mejor;
+  }
+  var quien=[tit,bodDe].filter(function(x){ return x && x.length>=3; });
+  var cand=abiertas.filter(function(t){
+    var nom=N(t.nombre)+" "+N(t.contacto||t.wa_nombre||"");
+    var ult=(t.msgs||[]).filter(function(m){ return m.k==="bo"||m.wa_in===1; }).slice(-1)[0]||{};
+    var de=N(ult.de||ult.nombre||"");
+    return quien.some(function(q){ return q.split(" ").some(function(w){ return w.length>=4 && (nom.indexOf(w)>=0 || de.indexOf(w)>=0); }); });
+  });
+  if(cand.length>1){ var conNov=cand.filter(function(t){ return nuevosNov(t)>0; }); if(conNov.length) cand=conNov; }
+  cand.sort(function(a,b){ return (((b.msgs||[]).slice(-1)[0]||{}).ts||0)-(((a.msgs||[]).slice(-1)[0]||{}).ts||0); });
+  return cand[0]||null;
+}
 /* la tarea con lo mas reciente sin ver (mensajes de otros); null si no hay */
 function abreUltimoNuevo(){
   var c=tareas.filter(function(t){ return !t.es_recordatorio && estadoReal(t)!=="cerrada" && nuevosNov(t)>0 });
@@ -2853,8 +2883,17 @@ function arranca(){
       /* build 150: notificacion sin id (p. ej. "LISTO" de un WhatsApp): abre el hilo
          con lo mas reciente sin leer, en vez del home */
       if(window.__irUltimo && !_deCache){
-        window.__irUltimo=false;
-        try{ var _u=abreUltimoNuevo(); if(_u){ abierta=_u.id; vista="hilo"; render(); } }catch(e){}
+        /* build 172: primero se busca el mensaje exacto de la notificacion (titulo+texto);
+           si aun no llega al servidor, se espera hasta 25 s a los siguientes cambios. */
+        try{
+          var _pi=window.__notiPista, _u=_pi?tareaDePista(_pi):null;
+          if(!_u && _pi && Date.now()<_pi.hasta){ /* se reintenta en el siguiente cambio */ }
+          else {
+            window.__irUltimo=false; window.__notiPista=null;
+            if(!_u) _u=abreUltimoNuevo();
+            if(_u){ barraEstado=null; menuOpen=false; abierta=_u.id; vista="hilo"; render(); }
+          }
+        }catch(e){ window.__irUltimo=false; }
       }
       if(window.__irARec && !window.__recAbierto &&
          !(_deCache && !tareas.some(function(x){ return x.id===String(window.__irARec).split("|")[0]; }))){
@@ -10181,7 +10220,9 @@ function entraPorInvitacion(tk){
   /* LLEGÓ DESDE UNA NOTIFICACIÓN de recordatorio: el sw.js abre la app con
      ?recordatorio=<id>. Se guarda para, en cuanto carguen las tareas, abrir ese
      recordatorio directo (no la pantalla de inicio). Salvador 2026-09-17. */
-  if(q.get("ultimo")){ window.__irUltimo=true; try{ history.replaceState(null,"",location.pathname) }catch(e){} }
+  if(q.get("ultimo")){ window.__irUltimo=true;
+    if(q.get("n_t")||q.get("n_b")) window.__notiPista={t:q.get("n_t")||"", b:q.get("n_b")||"", hasta:Date.now()+25000};
+    try{ history.replaceState(null,"",location.pathname) }catch(e){} }
   var _rec=q.get("recordatorio");
   if(_rec){ window.__irARec=_rec;
             try{ history.replaceState(null,"",location.pathname) }catch(e){} }
@@ -10197,6 +10238,7 @@ function entraPorInvitacion(tk){
      (antes solo se enfocaba la app y se quedaba en el home). */
   if("serviceWorker" in navigator){ try{ navigator.serviceWorker.addEventListener("message", function(ev){
     var d=ev&&ev.data;
+    if(d && d.tipo==="abre_pista"){ var _tp=tareaDePista({t:d.t,b:d.b}); if(!_tp) _tp=abreUltimoNuevo(); if(_tp){ barraEstado=null; menuOpen=false; abierta=_tp.id; vista="hilo"; render(); } return; }
     if(d && d.tipo==="abre_ultimo"){ var _u2=abreUltimoNuevo(); if(_u2){ barraEstado=null; menuOpen=false; abierta=_u2.id; vista="hilo"; render(); } return; }
     if(!d || d.tipo!=="abre" || !d.id) return;
     var pp=String(d.id).split("|"), t=(typeof tareas!=="undefined"?tareas:[]).filter(function(x){ return x.id===pp[0]; })[0];
