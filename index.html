@@ -650,7 +650,10 @@ button{font:inherit;color:inherit}
 .tth b{font-family:Archivo;font-size:20px;font-weight:700;color:var(--ink)}
 .ttn{background:#FF2D55;color:#fff;border-radius:11px;padding:1px 9px;font-size:14px;font-weight:700}
 .ttz{color:var(--ink-3);font-size:14px}
-.ttr .ttx{flex:1;min-width:0;display:flex;flex-direction:column}.ttr .ttx small{font-size:13px;color:var(--ink-3);font-weight:400}
+.ttr{padding:13px 15px}.ttr .rn{font-size:19.5px!important}.ttr .ttx{flex:1;min-width:0;display:flex;flex-direction:column}.ttr .ttx small{font-size:15.5px;color:var(--ink-3);font-weight:400;margin-top:1px}.ttr i{width:10px;height:10px}
+.ttg{margin:12px 21px 5px;font-size:13.5px;font-weight:700;letter-spacing:.05em;color:var(--ink-3);text-transform:uppercase}
+.ttmas{justify-content:center;color:#0a84ff;font-size:15.5px;font-weight:600}
+.tth b{font-size:24px!important}
 .cnlpill{display:flex;align-items:center;gap:8px;padding:6px 15px;border-radius:20px;font-size:15.5px;font-weight:600;color:var(--ink);background:var(--surface-2,#2c2c2e);border:1.5px solid var(--cc);box-shadow:0 0 14px color-mix(in srgb,var(--cc) 45%,transparent)}
 .cnlpill i{width:9px;height:9px;border-radius:50%;background:var(--cc)}
 .scroll.cnl{border-top:2.5px solid var(--cc);background-image:linear-gradient(to bottom,color-mix(in srgb,var(--cc) 30%,transparent) 0px,transparent 64px);background-repeat:no-repeat}
@@ -1077,7 +1080,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 179 · 2026-10-02 · Te toca, Compartidas, integrantes, organigrama dictado, Para ti, respuestas que no resuelven y supervisor en la misma tarea";
+var VERSION_APP = "build 180 · 2026-10-02 · Te toca por grupos en orden (atoradas, falta info, por autorizar, vencidas, hoy), 3 por grupo y letra 20% mas grande";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -9887,7 +9890,8 @@ function bindLista(){
     consulta=""; barraEstado=null; abierta=nt.id; vista="hilo"; render(); toast("Tarea nueva creada");
   };
   var bc=$("bclr"); if(bc) bc.onclick=function(){ consulta=""; render() };
-  var bcp=$("bcomp"); if(bcp) bcp.onclick=function(){ window.__verComp=!window.__verComp; render(); }; var bkc=$("bback"); if(bkc && consulta) bkc.onclick=function(){ consulta=""; render() };
+  var bcp=$("bcomp"); if(bcp) bcp.onclick=function(){ window.__verComp=!window.__verComp; render(); };
+  Array.prototype.forEach.call(document.querySelectorAll("[data-ttmas]"),function(b){ b.onclick=function(){ window.__ttMas=window.__ttMas||{}; var g=b.getAttribute("data-ttmas"); window.__ttMas[g]=!window.__ttMas[g]; render(); }; }); var bkc=$("bback"); if(bkc && consulta) bkc.onclick=function(){ consulta=""; render() };
   var bfu=$("bfut"); if(bfu) bfu.onclick=function(){ verFuturas=!verFuturas; render() };
   var bms2=$("bmas"); if(bms2) bms2.onclick=function(){ masDias+=7; render() };
   /* Salvador 2026-09-22: una sola franja de seccion abierta a la vez (acordeon) */
@@ -11375,23 +11379,35 @@ function vSupervisor(t){
    autorizar), luego preguntas en compartidas, vencidas, mensajes sin leer y hoy. Sin parpadeos. */
 function vTeToca(items){
   if(!items.length) return '<div class="tth"><b>Te toca</b><span class="ttz">0 · todo al día</span></div>';
-  var h='<div class="tth"><b>Te toca</b><span class="ttn">'+items.length+'</span></div><div class="revl ttl">';
-  items.forEach(function(x){
-    h+='<button class="revr ttr" data-id="'+esc(x.t.id)+'"><i style="background:'+x.col+'"></i><span class="ttx"><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span><small>'+esc(x.why)+'</small></span></button>';
+  /* build 180 (Salvador 21:10): por grupos, en su orden, cada uno con sus primeras 3 y "ver N más" */
+  var h='<div class="tth"><b>Te toca</b><span class="ttn">'+items.length+'</span></div>', gs=[], idx={};
+  items.forEach(function(x){ if(!(x.g in idx)){ idx[x.g]=gs.length; gs.push({g:x.g, l:[]}); } gs[idx[x.g]].l.push(x); });
+  window.__ttMas=window.__ttMas||{};
+  gs.forEach(function(G){
+    var abierto=window.__ttMas[G.g], ver=abierto?G.l:G.l.slice(0,3);
+    h+='<div class="ttg">'+esc(G.g)+' · '+G.l.length+'</div><div class="revl ttl">';
+    ver.forEach(function(x){
+      h+='<button class="revr ttr" data-id="'+esc(x.t.id)+'"><i style="background:'+x.col+'"></i><span class="ttx"><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span><small>'+esc(x.why)+'</small></span></button>';
+    });
+    if(G.l.length>3) h+='<button class="revr ttmas" data-ttmas="'+esc(G.g)+'">'+(abierto?'Ver menos':'Ver '+(G.l.length-3)+' más')+'</button>';
+    h+='</div>';
   });
-  return h+'</div>';
+  return h;
 }
 function armaTeToca(rev, det, venc, msgs, hoyYa){
+  /* orden de Salvador 21:10: 1 atoradas · 2 falta informacion · 3 por autorizar · 4 vencidas · 5 hoy */
   var out=[], ya={};
-  function pon(t, why, col){ if(!t || ya[t.id]) return; ya[t.id]=1; out.push({t:t, why:why, col:col}); }
-  var COLR={espera:"#ff9f0a", falta:"#0a84ff", vincular:"#bf5af2", autorizar:"#30d158"};
-  rev.filter(function(x){ return x.k==="espera"; }).forEach(function(x){ pon(x.t, etiquetaRev(x.t,x.k).replace(/^./,function(c){return c;}), COLR.espera); });
-  det.forEach(function(t){ pon(t, esDecisionSal(t)?"esperan tu decisión":"atorado · alguien espera", "#ff9f0a"); });
-  rev.filter(function(x){ return x.k!=="espera"; }).forEach(function(x){ pon(x.t, ({falta:"falta información",vincular:"posible vinculación",autorizar:"por autorizar"})[x.k]||"", COLR[x.k]); });
-  compartidasDe().forEach(function(t){ var p=preguntaParaMi(t); if(p) pon(t, p.de+(p.todos?" pide opinión a todos":" te pregunta"), "#ff9f0a"); });
-  venc.forEach(function(t){ pon(t, "venció "+(fechaChip(t.f_vigente)||""), "#FF453A"); });
-  msgs.forEach(function(t){ pon(t, "mensaje nuevo", "#64d2ff"); });
-  hoyYa.forEach(function(t){ pon(t, "hoy", "#8e8e93"); });
+  function pon(g, t, why, col){ if(!t || ya[t.id]) return; ya[t.id]=1; out.push({g:g, t:t, why:why, col:col}); }
+  var A="Atoradas", F="Falta información", P="Por autorizar", V="Vencidas", M="Mensajes nuevos", H="Hoy";
+  rev.filter(function(x){ return x.k==="espera"; }).forEach(function(x){ pon(A, x.t, etiquetaRev(x.t,x.k), "#ff9f0a"); });
+  det.forEach(function(t){ pon(A, t, esDecisionSal(t)?"esperan tu decisión":"alguien espera", "#ff9f0a"); });
+  compartidasDe().concat(tareas.filter(function(t){ return t.duenio===yo && !t.cierre && estadoReal(t)!=="cerrada" && !t.es_recordatorio; }))
+    .forEach(function(t){ var p=null; try{ p=preguntaParaMi(t); }catch(e){} if(p) pon(A, t, p.de+(p.todos?" pide opinión a todos":" te pregunta"), "#ff9f0a"); });
+  rev.filter(function(x){ return x.k==="falta"; }).forEach(function(x){ pon(F, x.t, "falta información", "#0a84ff"); });
+  rev.filter(function(x){ return x.k==="autorizar"||x.k==="vincular"; }).forEach(function(x){ pon(P, x.t, x.k==="vincular"?"posible vinculación":"recién creada · ¿a dónde va?", x.k==="vincular"?"#bf5af2":"#30d158"); });
+  venc.forEach(function(t){ pon(V, t, "venció "+(fechaChip(t.f_vigente)||""), "#FF453A"); });
+  msgs.forEach(function(t){ pon(M, t, "mensaje nuevo", "#64d2ff"); });
+  hoyYa.forEach(function(t){ pon(H, t, "hoy", "#8e8e93"); });
   return out;
 }
 
