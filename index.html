@@ -618,7 +618,39 @@ button{font:inherit;color:inherit}
 .b.swback{transition:transform .2s ease}
 .swico{position:absolute;left:-36px;top:50%;width:28px;height:28px;margin-top:-14px;border-radius:50%;background:var(--ok,#30d158);color:#000;display:grid;place-items:center;font-weight:800;opacity:0}
 .b.flash{box-shadow:0 0 0 2px var(--ok,#30d158);transition:box-shadow .3s}
-.cnlwrap{display:flex;justify-content:center;padding:8px 0 0}
+.cnlwrap{display:flex;justify-content:center;align-items:center;gap:8px;padding:8px 0 0}
+.intbtn{display:flex;align-items:center;padding:3px 8px 3px 4px;border:0;border-radius:18px;background:var(--surface-2,#2c2c2e);color:var(--ink-2)}
+.intbtn .av{width:24px;height:24px;margin-left:-6px;border:2px solid var(--bg,#1c1c1e);font-size:9.5px}.intbtn .av:first-child{margin-left:0}
+.intbtn small{margin-left:5px;font-size:13px}
+.av{width:34px;height:34px;border-radius:50%;background:#48484a;color:#fff;display:inline-grid;place-items:center;font-size:12.5px;font-weight:700;flex:none}
+.intsheet{max-height:78vh;overflow:auto}
+.ith{font-size:12.5px;font-weight:700;letter-spacing:.06em;color:var(--ink-3);margin:0 6px}
+.itn{font-size:20px;font-weight:700;margin:2px 6px 8px;color:var(--ink)}
+.itr{display:flex;align-items:center;gap:10px;width:100%;padding:9px 6px;border:0;border-top:1px solid #3a3a3c;background:none;color:var(--ink);text-align:left}
+.itr .ix{flex:1;min-width:0}.itr .ix b{display:block;font-size:16px}.itr .ix small{color:var(--ink-3);font-size:12.5px}
+.itr.q{background:rgba(255,159,10,.12);border-radius:12px;border-top:0;margin-top:4px}.itr.q b{color:#ff9f0a}
+.itr .ok{color:#30d158;font-size:20px}.itr .otro{border:0;background:rgba(10,132,255,.16);color:#0a84ff;border-radius:10px;padding:4px 9px;font-size:13px}
+.itchips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 6px 4px}.itchips button{border:0;background:#3a3a3c;color:var(--ink);border-radius:12px;padding:6px 11px;font-size:14px}
+.itdel{border:0;background:none;color:#FF453A;padding:6px}
+.itadd,.itcrear{display:block;width:100%;margin-top:12px;border:0;border-radius:14px;padding:12px;font-weight:700;font-size:16px;background:#3a3a3c;color:var(--ink)}
+.itcrear{background:#30d158;color:#000}.itcrear:disabled{opacity:.35}
+.itnota{color:var(--ink-3);font-size:13px;text-align:center;margin-top:10px}
+.ptcard,.supcard{display:flex;flex-direction:column;gap:5px;margin:8px 12px 4px;padding:12px 13px;border-radius:16px;background:var(--surface-2,#2c2c2e);border-left:4px solid #0a84ff}
+.supcard{border-left-color:#ffd60a}
+.pth,.sph{font-size:12px;font-weight:700;letter-spacing:.05em;color:#0a84ff}.sph{color:#ffd60a}
+.ptq{font-size:16px;color:var(--ink);cursor:pointer}
+.ptl,.spl{font-size:14.5px;color:var(--ink-2,#d1d1d6);line-height:1.35}.ptl b{color:var(--ink)}
+.ptf b{color:#ff9f0a}.ptw{color:var(--ink-3);font-style:italic}
+.ptsrc{display:inline-block;color:#0a84ff;font-weight:800;padding:0 6px;cursor:pointer}
+.ptp,.spp{font-size:12.5px;color:var(--ink-3)}
+.spsem{display:flex;align-items:center;gap:7px;font-size:15px;font-weight:600;color:var(--ink)}.spsem i{width:10px;height:10px;border-radius:50%;background:var(--sc)}
+.splist{margin:0;padding:0 0 0 2px;list-style:none;font-size:14px;color:var(--ink-2)}.splist li.ok{color:var(--ink-3);text-decoration:line-through}
+.compbtn{display:block;margin:18px auto 10px;border:0;background:none;color:var(--ink-3);font-size:15px;padding:8px 14px}
+.tth{display:flex;align-items:center;justify-content:space-between;margin:12px 19px 6px}
+.tth b{font-family:Archivo;font-size:20px;font-weight:700;color:var(--ink)}
+.ttn{background:#FF2D55;color:#fff;border-radius:11px;padding:1px 9px;font-size:14px;font-weight:700}
+.ttz{color:var(--ink-3);font-size:14px}
+.ttr .ttx{flex:1;min-width:0;display:flex;flex-direction:column}.ttr .ttx small{font-size:13px;color:var(--ink-3);font-weight:400}
 .cnlpill{display:flex;align-items:center;gap:8px;padding:6px 15px;border-radius:20px;font-size:15.5px;font-weight:600;color:var(--ink);background:var(--surface-2,#2c2c2e);border:1.5px solid var(--cc);box-shadow:0 0 14px color-mix(in srgb,var(--cc) 45%,transparent)}
 .cnlpill i{width:9px;height:9px;border-radius:50%;background:var(--cc)}
 .scroll.cnl{border-top:2.5px solid var(--cc);background-image:linear-gradient(to bottom,color-mix(in srgb,var(--cc) 30%,transparent) 0px,transparent 64px);background-repeat:no-repeat}
@@ -1045,7 +1077,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 178 · 2026-10-02 · Canales dentro de la tarea: Todo, Equipo, el dueño y cada externo por WhatsApp; donde estas = a quien le llega";
+var VERSION_APP = "build 179 · 2026-10-02 · Te toca, Compartidas, integrantes, organigrama dictado, Para ti, respuestas que no resuelven y supervisor en la misma tarea";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -2895,6 +2927,8 @@ function arranca(){
         p.apellido=o.apellido||"";
         p.mail_trabajo=o.mail_trabajo||"";
         p.mail_personal=o.mail_personal||"";
+        if(o.reporta_a) p.reporta_a=o.reporta_a;            /* build 179: organigrama dictado */
+        if(Array.isArray(o.apodos)) p.apodos=o.apodos;
         if(o.nombre&&o.apellido) p.ini=iniciales(o.nombre,o.apellido);
       });
       fichasLeidas=true;
@@ -3806,6 +3840,8 @@ function pideFoto(cb){
    cientos de renglones deja de abrirla, y entonces no ve ni lo urgente. */
 function leToca(t){
   if(t.duenio===yo) return true;                 // suya
+  /* build 179: si yo la reviso (papel REVISA dentro de la misma tarea), me toca desde mi fecha */
+  if((t.revisores||[]).indexOf(yo)>=0 && (!t.rev_fecha || dDif(t.rev_fecha,hoy())>=0)) return true;
   if(meDetiene(t)) return true;                  // alguien esta parado por el
   if(!PERSONAS[yo] || !PERSONAS[yo].jefe) return false;
   return !!subeAlJefe(t);                        // ya escalo
@@ -4935,8 +4971,11 @@ function vLista(){
     hProx=secHead("prox","Pr\u00f3ximas",dentro.length,"sb-prox","cal")+hProxBody;
   }
 
-  /* ===== orden final aprobado 2026-09-22 ===== */
-  h+=hRev+hMis+hVenc+hMsg+hHoy+hProx+hHoyNada;
+  /* ===== build 179 (Salvador 20:29): "TE TOCA" — una sola lista arriba con todo lo que te pide
+     algo (primero lo de Por revisar: te espera/atorados, falta informacion, vinculacion, por
+     autorizar; luego vencidas, mensajes nuevos y hoy). Abajo Proximas y "Compartidas · N". ===== */
+  var _tt=armaTeToca(_rev, det, mias_venc, msgs, hoyYa);
+  h+=vTeToca(_tt)+hMis+hProx+(hoyYa.length?'':'');
 
   if(futuras.length && hoyYa.length){
     h+='<div class="futwrap"><button class="futbtn" id="bfut">'+
@@ -4963,11 +5002,12 @@ function vLista(){
         if(!seen[t.id]){ seen[t.id]=1; out.push(t.id); }
       });
     }
-    agrega(_rev.map(function(x){ return x.t; })); agrega(mias_venc); agrega(msgs);
+    agrega(_tt.map(function(x){ return x.t; })); agrega(_rev.map(function(x){ return x.t; })); agrega(mias_venc); agrega(msgs);
     agrega(hoyYa); agrega(recs); agrega(dentro); agrega(futuras);
     window.ordenSwipe=out;
   })();
 
+  try{ h+=vCompartidas(); }catch(e){ console.warn("compartidas",e); }
   /* LA PANTALLA ES SOLO TUYA — decision de Salvador, 2026-09-03. La pantalla
      del jefe muestra solo lo suyo y lo que lo detiene; lo de los demas se
      consulta preguntandole a Claude. */
@@ -5295,6 +5335,7 @@ function reasignaDicho(t, v, silencioso){
   var k=duenioDicho(v); if(!k) return false;
   var r=transfiere(t, k, "lo dijo "+(PERSONAS[yo]?PERSONAS[yo].nombre:"")+" al revisarla");
   if(!r.ok) return false;
+  t.integrantes=t.integrantes||[]; if(t.integrantes.indexOf(yo)<0) t.integrantes.push(yo);   /* build 179: sigo como involucrado */
   t.autorizada=true; t.autorizada_ts=Date.now(); t.pendiente_info=""; t.pendiente_tipo="";
   var falta=[]; if(!t.f_vigente && !t.periodicidad) falta.push("fecha"); if(!String(t.nombre||"").trim()) falta.push("nombre");
   msg(t,"bi","Listo: es de "+PERSONAS[k].nombre+". Se la pasé con todo lo que dijiste y la quité de tu Por revisar."+
@@ -5349,6 +5390,7 @@ function canalesDe(t){
   var eq=[]; if(PERSONAS[yo]) eq.push("tú"); if(t.duenio && t.duenio!==yo && PERSONAS[t.duenio]) eq.push(PERSONAS[t.duenio].nombre);
   l.push({id:"equipo",nom:"Equipo",sub:(eq.length>1?eq.join(" y ")+" · ":"")+"con lo que mandan los externos",col:CNL_COL.equipo});
   if(t.duenio && t.duenio!==yo && PERSONAS[t.duenio]) l.push({id:"dm:"+t.duenio,nom:PERSONAS[t.duenio].nombre,sub:"solo tú y "+PERSONAS[t.duenio].nombre,col:CNL_COL.dm});
+  if(soySupervisor(t)) l.push({id:"sup",nom:"Supervisión",sub:"solo supervisores · "+((PERSONAS[t.duenio]||{}).nombre||"el dueño")+" no lo ve",col:"#ffd60a"});
   externosDe(t).forEach(function(n,i){ l.push({id:"ext:"+n,nom:n,sub:"externo · por WhatsApp · solo ve lo suyo",col:CNL_EXT[i%CNL_EXT.length],ext:true}); });
   return l;
 }
@@ -5359,7 +5401,9 @@ function canalActual(t){
   /* al abrir: si la tarea es la plática con UN solo externo (lo ultimo es suyo), su canal;
      asi contestarle sigue saliendo por WhatsApp como en el build 175 */
   var ex=l.filter(function(x){ return x.ext; });
-  if(ex.length===1){
+  /* build 179: solo si la tarea es la platica con ese externo; si hay mas gente del equipo, se abre en Todo */
+  var _equipo=(t.duenio && t.duenio!==yo) || (t.msgs||[]).some(function(x){ return x && x.de && x.de!==yo && PERSONAS[x.de]; });
+  if(ex.length===1 && !_equipo){
     var ms=t.msgs||[], u=null; for(var i=ms.length-1;i>=0;i--){ if(ms[i] && !(ms[i].k==="bi" && ms[i].wa_in!==1)){ u=ms[i]; break; } }
     if(u && canalDe(u)===ex[0].id){ window.__cnl[t.id]=ex[0].id; return ex[0]; }
   }
@@ -5367,18 +5411,22 @@ function canalActual(t){
 }
 function msgEnCanal(x, cid){
   var c=canalDe(x);
+  if(cid==="sup") return c==="sup";
   if(cid==="todo") return c.indexOf("dm:")!==0 || c==="dm:"+yo || (x.de===yo) || cid===c || true;
   if(cid==="equipo") return c==="equipo" || (c.indexOf("ext:")===0 && (x.wa_in===1) && !!(x.url||x.tipo&&x.tipo!=="texto")) || (x.k!=="bo" && c==="equipo");
   return c===cid;
 }
 function colorExt(t, nombre){ var l=canalesDe(t).filter(function(x){ return x.id==="ext:"+nombre; })[0]; return l?l.col:"#0a84ff"; }
 function vPastilla(t){
-  var c=canalActual(t);
-  if(canalesDe(t).length<=2 && c.id==="todo") return "";   /* tarea sin externos ni dueño distinto: nada nuevo en pantalla */
-  return '<div class="cnlwrap"><button class="cnlpill" id="cnlpill" style="--cc:'+c.col+'"><i></i>'+esc(c.nom+(c.ext?" · WhatsApp":""))+' ▾</button></div>';
+  var c=canalActual(t), ints=integrantesDe(t);
+  var conPill=!(canalesDe(t).length<=2 && c.id==="todo");
+  var intB=ints.length>1?'<button class="intbtn" id="intbtn" aria-label="Integrantes">'+ints.slice(0,4).map(function(x){ return '<span class="av">'+esc(iniInt(x.k))+'</span>'; }).join("")+'<small>'+ints.length+'</small></button>':'';
+  if(!conPill && !intB) return "";
+  return '<div class="cnlwrap">'+(conPill?'<button class="cnlpill" id="cnlpill" style="--cc:'+c.col+'"><i></i>'+esc(c.nom+(c.ext?" · WhatsApp":""))+' ▾</button>':'')+intB+'</div>';
 }
 function phCanal(t){
   var c=canalActual(t);
+  if(c.id==="sup") return "Nota de supervisor…";
   if(c.ext) return "Mensaje a "+c.nom+" por WhatsApp…";
   if(c.id.indexOf("dm:")===0) return "Mensaje solo a "+c.nom+"…";
   if(canalesDe(t).length<=2) return "";
@@ -6144,6 +6192,8 @@ function vHilo(){
   (t.msgs||[]).forEach(function(x,ix){
     var _cx=canalDe(x);
     if(_cx.indexOf("dm:")===0 && _cx!=="dm:"+yo && x.de!==yo && !(PERSONAS[yo]&&PERSONAS[yo].jefe)) return;  /* lo privado de otros no se pinta */
+    if(_cx.indexOf("priv:")===0 && _cx!=="priv:"+yo) return;                 /* build 179: nota de Claude solo para quien contesto */
+    if(_cx==="sup" && !soySupervisor(t) && x.de!==yo) return;                /* build 179: notas de supervisor, el dueño no las ve */
     if(!msgEnCanal(x,_cn.id)) return;
     if(_plg.set[ix]){ if(ix===_plg.ult) m+='<button class="avfold" data-avexp="1">'+_plg.n+' aviso'+(_plg.n===1?'':'s')+' de seguimiento · ver</button>'; return; }
     var q=autorMsg(x,t);
@@ -6265,8 +6315,9 @@ function vHilo(){
   }
   var pre=t.pregunta&&t.duenio===yo?'<div class="b bi" style="margin:0 14px 8px">'+esc(t.pregunta)+'</div>':"";
 
-  var _pil=vPastilla(t), _cc=canalActual(t).col;
-  return h+vVuelta(t)+vPasos(t)+bannerDecision(t)+_pil+'<div class="scroll'+(_pil?' cnl" style="--cc:'+_cc:'')+'"><div class="msgs">'+m+pre+'</div></div>'+vTarjetaRev(t)+
+  var _pil=vPastilla(t), _cc=canalActual(t).col, _conPill=!!(_pil && _pil.indexOf("cnlpill")>=0);
+  var _pre179=""; try{ _pre179=vSupervisor(t)+vParaTi(t); }catch(e){ console.warn("paraTi",e); }
+  return h+vVuelta(t)+vPasos(t)+bannerDecision(t)+_pil+_pre179+'<div class="scroll'+(_conPill?' cnl" style="--cc:'+_cc:'')+'"><div class="msgs">'+m+pre+'</div></div>'+vTarjetaRev(t)+
     /* LA MISMA BARRA DE TODAS LAS VISTAS — 2026-09-04. Antes el hilo tenia la
        camara a la IZQUIERDA y una flecha de enviar a la derecha, distinto de la
        caratula (camara a la DERECHA, sin flecha). Salvador lo cacho: "tiene que
@@ -9479,6 +9530,16 @@ function confirmaAccion(b){
     }
     /* MI revision: tarea mia, con semaforo, ligada a la de el */
     var quienRev=b.pendiente.revisor||yo;
+    /* build 179 (Salvador 19:28): si la tarea del que ejecuta existe, NO se crea "Revisión · X":
+       el revisor entra a la MISMA tarea con el papel REVISA (su lente, su semaforo, sus notas). */
+    if(dela && PERSONAS[dela.duenio] && dela.duenio!==quienRev){
+      dela.revisores=dela.revisores||[]; if(dela.revisores.indexOf(quienRev)<0) dela.revisores.push(quienRev);
+      dela.rev_fecha=sv.mi_fecha||dela.f_vigente||hoy(); guarda(dela);
+      if(quienRev!==yo){ try{ disparaPushInstantaneo(quienRev,'Revisión asignada','Revisas: "'+(sv.que||dela.nombre)+'"',urlTarea(dela.id)); }catch(e){} }
+      if(b.foto) pegaFotoA(dela,b.foto);
+      toast(quienRev!==yo?"La revisión le llegó a "+PERSONAS[quienRev].nombre:"Le llegó a "+PERSONAS[dela.duenio].nombre+" · tú la revisas el "+fechaBonita(dela.rev_fecha));
+      barraEstado=null; consulta=""; fotoEnMano=null; vista="lista"; render(); return;
+    }
     var rev=creaTarea({nombre:"Revisión · "+sv.que, duenio:quienRev, fecha:sv.mi_fecha,
       revisar:sv.que, dicho:b.dicho,
       revisa_a:(dela?dela.id:null),
@@ -9825,7 +9886,8 @@ function bindLista(){
     else nt=creaTarea({nombre:nom,dicho:tx,aviso_hora_dicha:true});
     consulta=""; barraEstado=null; abierta=nt.id; vista="hilo"; render(); toast("Tarea nueva creada");
   };
-  var bc=$("bclr"); if(bc) bc.onclick=function(){ consulta=""; render() }; var bkc=$("bback"); if(bkc && consulta) bkc.onclick=function(){ consulta=""; render() };
+  var bc=$("bclr"); if(bc) bc.onclick=function(){ consulta=""; render() };
+  var bcp=$("bcomp"); if(bcp) bcp.onclick=function(){ window.__verComp=!window.__verComp; render(); }; var bkc=$("bback"); if(bkc && consulta) bkc.onclick=function(){ consulta=""; render() };
   var bfu=$("bfut"); if(bfu) bfu.onclick=function(){ verFuturas=!verFuturas; render() };
   var bms2=$("bmas"); if(bms2) bms2.onclick=function(){ masDias+=7; render() };
   /* Salvador 2026-09-22: una sola franja de seccion abierta a la vez (acordeon) */
@@ -10208,6 +10270,11 @@ function bindHilo(){
 
   try{ bindDeslizar(t); }catch(e){ console.warn("deslizar",e); }
   var _cp=$("cnlpill"); if(_cp) _cp.onclick=function(){ abreCanales(t); };
+  var _ib=$("intbtn"); if(_ib) _ib.onclick=function(){ abreIntegrantes(t); };
+  Array.prototype.forEach.call(document.querySelectorAll(".ptcard [data-irmsg]"),function(q){ q.onclick=function(ev){ ev.stopPropagation();
+    window.__cnl=window.__cnl||{}; if(window.__cnl[t.id]!=="todo"){ window.__cnl[t.id]="todo"; render(); }
+    var o=document.querySelector('.msgs [data-mix="'+q.getAttribute("data-irmsg")+'"]'); if(o){ o.scrollIntoView({behavior:"smooth",block:"center"}); o.classList.add("flash"); setTimeout(function(){ o.classList.remove("flash"); },1200); } }; });
+  if(window.__propInt && window.__propInt.tid===t.id){ var _pp=window.__propInt; window.__propInt=null; setTimeout(function(){ abrePropuestaIntegrantes(t,_pp.prop); },60); }
   Array.prototype.forEach.call(document.querySelectorAll("[data-avexp]"),function(b){ b.onclick=function(){ window.__avExp=window.__avExp||{}; window.__avExp[t.id]=1; render(); }; });
   var tc=$("tcam"); if(tc) tc.onclick=function(){
     pideFoto(function(data,meta){
@@ -10241,6 +10308,15 @@ function bindHilo(){
     /* build 176: si deslizo un mensaje, la respuesta lleva esa cita */
     var _cita=(window.__cita && window.__cita.tid===t.id)?window.__cita:null; window.__cita=null;
     if(_cita){ var _rb=document.getElementById("rqbar"); if(_rb) _rb.parentNode.removeChild(_rb); }
+    /* build 179: "agrega a X" / "quita a X de esta tarea" / organigrama */
+    if(integranteDicho(t, v)){ $("txt").value=""; marcaEnvio("tenv",""); return; }
+    if(organigramaDicho(v)){ $("txt").value=""; marcaEnvio("tenv",""); aplicaOrganigrama(v); return; }
+    var _p179=null; try{ _p179=preguntaParaMi(t); }catch(e){}
+    if(_p179){ var _v179=v; setTimeout(function(){ try{ revisaMiRespuesta(t,_v179,_p179); }catch(e){} }, 900); }
+    if(canalActual(t).id==="sup"){
+      $("txt").value=""; marcaEnvio("tenv","");
+      msg(t,"bo",v); var _ms=t.msgs[t.msgs.length-1]; _ms.canal="sup"; _ms.de=yo; guarda(t); render(); return;
+    }
     /* build 178: DONDE ESTAS = A QUIEN LE LLEGA. Ordenes a Doit (recuerdame, ponle nombre,
        dile a, lista...) nunca se le mandan a un externo: se procesan como siempre. */
     var _cnA=canalActual(t), _esOrden=(aQuienRespondo(t,v,{tid:t.id,wa:"x"})==="" || /^\s*(recu[eé]rda(me|le)|av[ií]sa(me|le)|apunta|anota|agrega|p[oó]n(me|le)|c[aá]mbia(le)?|dile|m[aá]nda(le|me)|preg[uú]nta(le)?|abre|busca|cierra|borra|elimina|crea|hazme)\b/i.test(v));
@@ -10975,6 +11051,379 @@ function entraPorInvitacion(tk){
   "v) HORA DICHA: si dijo una hora ('a las 5:30', 'a las cinco 30', '6 de la tarde'), aunque no diga recuerdame "+
   "(el iPhone a veces escribe 'Dame' en vez de 'Recuerdame'), la tarea lleva alarma: la app la pone sola. "+
   "NO metas la hora en el nombre.\n";
+})();
+
+/* ===================== build 179 (Salvador 2026-10-02 20:25 "Programa todo") =====================
+   INTEGRANTES, ORGANIGRAMA, COMPARTIDAS, "PARA TI", RESPUESTAS QUE NO RESUELVEN y SUPERVISOR.
+   Diseno: claude/doit-diseno-compartidas.md (maquetas aprobadas 18:53-20:20).
+   - Una tarea = un hilo; cada quien la ve con su lente. Nunca una tarea aparte para revisar.
+   - El organigrama se dicta una vez ("Samuel es jefe de Manuel") y se guarda en la ficha.
+   - Los jefes (hacia arriba) nunca se pueden quitar de una tarea.
+   ============================================================================================ */
+function _n179(s){ return String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9ñ ]+/g," ").replace(/\s+/g," ").trim(); }
+/* clave de persona del equipo por nombre o apodo dicho */
+function claveDe(nombre){
+  var n=_n179(nombre); if(!n) return null;
+  var w=n.split(" ")[0];
+  var ks=Object.keys(PERSONAS);
+  for(var i=0;i<ks.length;i++){ var p=PERSONAS[ks[i]]||{};
+    if(ks[i]===w || _n179(p.nombre)===w || _n179((p.nombre||"")+" "+(p.apellido||""))===n) return ks[i];
+    var ap=(p.apodos||[]).map(_n179); if(ap.indexOf(n)>=0 || ap.indexOf(w)>=0) return ks[i]; }
+  return null;
+}
+/* a es jefe (directo o de mas arriba) de b */
+function jefeDe(a, b){
+  if(!a || !b || a===b || !PERSONAS[a] || !PERSONAS[b]) return false;
+  var k=b, vistos={};
+  while(k && !vistos[k]){ vistos[k]=1; var up=(PERSONAS[k]||{}).reporta_a; if(up===a) return true; k=up; }
+  /* sin organigrama dictado: el que trae jefe:true esta arriba de quien no */
+  return !!(PERSONAS[a].jefe && !PERSONAS[b].jefe && !PERSONAS[a].prueba);
+}
+function guardaOrg(k, campos){
+  var p=PERSONAS[k]; if(!p) return;
+  Object.keys(campos).forEach(function(c){ p[c]=campos[c]; });
+  try{ if(db) db.collection(COLP).doc(k).set(campos,{merge:true}).catch(function(){ toast("No se pudo guardar el organigrama"); }); }catch(e){}
+}
+/* "Samuel es jefe de Manuel" / "Manuel reporta a Samuel" / "el jefe de Manuel es Samuel" */
+function organigramaDicho(v){
+  var s=_n179(v), m;
+  if((m=s.match(/^(?:oye )?([a-zñ]+(?: [a-zñ]+)?) es (?:el |la )?(?:jefe|jefa|supervisor|supervisora|encargado|encargada) de ([a-zñ]+(?: [a-zñ]+)?)$/))) return {jefe:m[1], de:m[2]};
+  if((m=s.match(/^(?:oye )?el (?:jefe|supervisor|encargado) de ([a-zñ]+(?: [a-zñ]+)?) es ([a-zñ]+(?: [a-zñ]+)?)$/))) return {jefe:m[2], de:m[1]};
+  if((m=s.match(/^(?:oye )?([a-zñ]+(?: [a-zñ]+)?) (?:reporta|le reporta) a ([a-zñ]+(?: [a-zñ]+)?)$/))) return {jefe:m[2], de:m[1]};
+  return null;
+}
+function aplicaOrganigrama(v){
+  var o=organigramaDicho(v); if(!o) return false;
+  var j=claveDe(o.jefe), d=claveDe(o.de);
+  if(!j || !d){ toast("No encontré a "+(!j?o.jefe:o.de)+" en el equipo"); return true; }
+  if(j===d || jefeDe(d,j)){ toast("Eso haría un círculo en el organigrama; no lo guardé"); return true; }
+  guardaOrg(d,{reporta_a:j});
+  toast(PERSONAS[j].nombre+" es jefe de "+PERSONAS[d].nombre);
+  return true;
+}
+
+/* ---------- integrantes ---------- */
+function integrantesDe(t){
+  var out=[], vistos={};
+  function pon(k, rol){ if(!k || vistos[k]) return; vistos[k]=1; out.push({k:k, rol:rol}); }
+  if(t.duenio) pon(t.duenio,"hace");
+  (t.revisores||[]).forEach(function(k){ pon(k,"revisa"); });
+  if(t.creada_por && PERSONAS[t.creada_por]) pon(t.creada_por,"opina");
+  (t.integrantes||[]).forEach(function(k){ pon(k, String(k).indexOf("ext:")===0?"externo":"opina"); });
+  (t.msgs||[]).forEach(function(x){ if(x && x.de && PERSONAS[x.de]) pon(x.de,"opina"); });
+  try{ externosDe(t).forEach(function(n){ pon("ext:"+n,"externo"); }); }catch(e){}
+  return out.filter(function(x){ return !(t.integrantes_fuera||[]).some(function(f){ return f===x.k; }) || x.rol==="hace"; });
+}
+function nombreInt(k){ return String(k).indexOf("ext:")===0 ? String(k).slice(4) : ((PERSONAS[k]&&PERSONAS[k].nombre)||k); }
+function iniInt(k){ if(String(k).indexOf("ext:")===0){ var w=String(k).slice(4).split(" "); return (w[0][0]||"").toUpperCase()+((w[1]||"")[0]||"").toUpperCase(); } return (PERSONAS[k]&&PERSONAS[k].ini)||String(k).slice(0,2).toUpperCase(); }
+function agregaIntegrante(t, k){
+  t.integrantes=t.integrantes||[];
+  t.integrantes_fuera=(t.integrantes_fuera||[]).filter(function(x){ return x!==k; });
+  if(t.integrantes.indexOf(k)<0 && k!==t.duenio) t.integrantes.push(k);
+  guarda(t);
+}
+/* quitar: solo el dueño, y nunca a sus jefes (hacia arriba) ni al dueño */
+function puedeQuitar(t, k){
+  if(t.duenio!==yo || k===t.duenio || k===yo) return false;
+  if(PERSONAS[k] && jefeDe(k, t.duenio)) return false;
+  return true;
+}
+function quitaIntegrante(t, k){
+  if(!puedeQuitar(t,k)) return false;
+  t.integrantes=(t.integrantes||[]).filter(function(x){ return x!==k; });
+  t.revisores=(t.revisores||[]).filter(function(x){ return x!==k; });
+  t.integrantes_fuera=(t.integrantes_fuera||[]).concat([k]);
+  guarda(t); return true;
+}
+/* contactos para proponer: equipo + nombres de WhatsApp vistos en todas las tareas, con cuanto se platica */
+function contactosConocidos(){
+  var m={};
+  Object.keys(PERSONAS).forEach(function(k){ if(k===yo) return; var p=PERSONAS[k]; m["k:"+k]={id:k, nombre:(p.nombre||k)+(p.apellido?" "+p.apellido:""), sub:"equipo · Doit", n:5, ts:0}; });
+  tareas.forEach(function(t){ (t.msgs||[]).forEach(function(x){
+    var c=x&&(x.wa_c||x.wa_auto); if(!c || /^grupo\b/i.test(c) || /^\+?\d[\d\s]+$/.test(c)) return;
+    var kk=claveDe(c); if(kk && PERSONAS[kk]) return;
+    var id="ext:"+c, o=m[id]||(m[id]={id:id, nombre:c, sub:"WhatsApp", n:0, ts:0});
+    o.n++; if((x.ts||0)>o.ts) o.ts=x.ts||0; }); });
+  return Object.keys(m).map(function(k){ return m[k]; });
+}
+function haceCuanto(ts){ if(!ts) return ""; var d=Math.floor((Date.now()-ts)/86400000); return d<=0?"hablaron hoy":(d===1?"hablaron ayer":(d<14?"hace "+d+" días":(d<60?"hace "+Math.round(d/7)+" semanas":"hace "+Math.round(d/30)+" meses"))); }
+/* candidatos para un nombre dicho ("Perlita" -> "Perla ...") */
+function candidatosDe(nombre){
+  var n=_n179(nombre).replace(/(it[oa]s?|cit[oa]s?)$/,""); if(n.length<3) n=_n179(nombre);
+  return contactosConocidos().filter(function(c){
+    return _n179(c.nombre).split(" ").some(function(w){ return w.indexOf(n)===0 || n.indexOf(w)===0 && w.length>=3; });
+  }).sort(function(a,b){ return (b.n-a.n) || (b.ts-a.ts); });
+}
+/* "que estén Manuel, Cynthia y Perlita" / "con Manuel y Cynthia" */
+function nombresDeIntegrantes(v){
+  var s=String(v||""), m=s.match(/\b(?:que\s+est[eé]n|que\s+participen|integrantes?:?|involucra(?:dos)?\s+a|con\s+la\s+participaci[oó]n\s+de)\s+(.+)$/i);
+  if(!m) return [];
+  return m[1].replace(/[.;]+$/,"").split(/\s*,\s*|\s+y\s+|\s+e\s+/).map(function(x){ return x.replace(/^(a|al|la|el)\s+/i,"").trim(); })
+    .filter(function(x){ return x && x.length>=2 && x.split(" ").length<=3; }).slice(0,8);
+}
+function propuestaIntegrantes(v){
+  return nombresDeIntegrantes(v).map(function(nm){
+    var cs=candidatosDe(nm);
+    var dudoso = cs.length>1 && cs[0].n<=cs[1].n*1.5 && !(PERSONAS[cs[0].id]);
+    return {dicho:nm, cands:cs, elegido:(cs.length && !dudoso)?cs[0].id:null};
+  });
+}
+function abrePropuestaIntegrantes(t, prop){
+  if(!prop || !prop.length) return;
+  var bg=document.createElement("div"); bg.className="cnlbg";
+  var s=document.createElement("div"); s.className="cnlsheet intsheet";
+  function pinta(){
+    var listo=prop.every(function(p){ return p.elegido || !p.cands.length; });
+    s.innerHTML='<div class="hh"></div><div class="ith">NUEVA TAREA</div><div class="itn">'+esc(t.nombre)+'</div>'+
+      prop.map(function(p,i){
+        if(!p.cands.length) return '<div class="itr q"><span class="av">?</span><span class="ix"><b>'+esc(p.dicho)+'</b><small>no está en tus contactos de Doit</small></span></div>';
+        if(!p.elegido) return '<div class="itr q"><span class="av">?</span><span class="ix"><b>¿Cuál '+esc(p.dicho)+'?</b><small>tienes '+p.cands.length+'</small></span></div>'+
+          '<div class="itchips">'+p.cands.slice(0,4).map(function(c,j){ return '<button data-pk="'+i+'|'+j+'">'+esc(c.nombre)+'</button>'; }).join("")+'</div>';
+        var c=p.cands.filter(function(x){ return x.id===p.elegido; })[0]||p.cands[0];
+        return '<div class="itr"><span class="av">'+esc(iniInt(c.id))+'</span><span class="ix"><b>'+esc(c.nombre)+'</b><small>'+esc(c.sub+(c.ts?" · "+haceCuanto(c.ts):""))+'</small></span>'+
+          (p.cands.length>1?'<button class="otro" data-otro="'+i+'">otro ▾</button>':'')+'<span class="ok">✓</span></div>';
+      }).join("")+'<button class="itcrear"'+(listo?'':' disabled')+'>Crear</button>';
+    Array.prototype.forEach.call(s.querySelectorAll("[data-pk]"),function(b){ b.onclick=function(){ var a=b.getAttribute("data-pk").split("|"); prop[+a[0]].elegido=prop[+a[0]].cands[+a[1]].id; pinta(); }; });
+    Array.prototype.forEach.call(s.querySelectorAll("[data-otro]"),function(b){ b.onclick=function(){ prop[+b.getAttribute("data-otro")].elegido=null; pinta(); }; });
+    var bc=s.querySelector(".itcrear"); if(bc) bc.onclick=function(){
+      prop.forEach(function(p){ if(p.elegido) agregaIntegrante(t, p.elegido); });
+      cierra(); toast("Listo: "+t.nombre); abreIntegrantes(t);
+    };
+  }
+  function cierra(){ if(bg.parentNode) bg.parentNode.removeChild(bg); if(s.parentNode) s.parentNode.removeChild(s); }
+  bg.onclick=cierra; pinta();
+  document.body.appendChild(bg); document.body.appendChild(s);
+}
+/* pop-up de integrantes: sale cada vez que se agrega o quita a alguien */
+function abreIntegrantes(t){
+  var vieja=document.querySelector(".intsheet"); if(vieja){ var vb=document.querySelector(".cnlbg"); if(vb) vb.parentNode.removeChild(vb); vieja.parentNode.removeChild(vieja); }
+  var bg=document.createElement("div"); bg.className="cnlbg";
+  var s=document.createElement("div"); s.className="cnlsheet intsheet";
+  function cierra(){ if(bg.parentNode) bg.parentNode.removeChild(bg); if(s.parentNode) s.parentNode.removeChild(s); if(vista==="hilo") render(); }
+  function pinta(){
+    var rolTx={hace:"hace la tarea",revisa:"revisa",opina:"participa",externo:"externo · WhatsApp"};
+    s.innerHTML='<div class="hh"></div><div class="ith">INTEGRANTES</div><div class="itn">'+esc(t.nombre)+'</div>'+
+      integrantesDe(t).map(function(x){
+        var jefe=PERSONAS[x.k] && jefeDe(x.k, t.duenio);
+        return '<div class="itr"><span class="av">'+esc(iniInt(x.k))+'</span><span class="ix"><b>'+esc(nombreInt(x.k))+(x.k===yo?' (tú)':'')+'</b><small>'+esc(rolTx[x.rol]||"")+(jefe?' · jefe':'')+'</small></span>'+
+          (puedeQuitar(t,x.k)?'<button class="itdel" data-qk="'+esc(x.k)+'" aria-label="Quitar">'+(typeof svgBote==="function"?svgBote():"🗑")+'</button>':'')+'</div>';
+      }).join("")+'<button class="itadd">+ Agregar</button>';
+    Array.prototype.forEach.call(s.querySelectorAll("[data-qk]"),function(b){ b.onclick=function(){ var k=b.getAttribute("data-qk"); if(quitaIntegrante(t,k)){ toast("Quité a "+nombreInt(k)); pinta(); } }; });
+    s.querySelector(".itadd").onclick=function(){
+      var ya={}; integrantesDe(t).forEach(function(x){ ya[x.k]=1; });
+      var cs=contactosConocidos().filter(function(c){ return !ya[c.id]; }).sort(function(a,b){ return (b.n-a.n)||(b.ts-a.ts); }).slice(0,12);
+      s.innerHTML='<div class="hh"></div><div class="ith">AGREGAR A</div><div class="itn">'+esc(t.nombre)+'</div>'+
+        cs.map(function(c){ return '<button class="itr itpick" data-ak="'+esc(c.id)+'"><span class="av">'+esc(iniInt(c.id))+'</span><span class="ix"><b>'+esc(c.nombre)+'</b><small>'+esc(c.sub+(c.ts?" · "+haceCuanto(c.ts):""))+'</small></span></button>'; }).join("")+
+        '<div class="itnota">O díctalo: “agrega a Perla a esta tarea”.</div>';
+      Array.prototype.forEach.call(s.querySelectorAll("[data-ak]"),function(b){ b.onclick=function(){ agregaIntegrante(t,b.getAttribute("data-ak")); toast("Agregué a "+nombreInt(b.getAttribute("data-ak"))); pinta(); }; });
+    };
+  }
+  bg.onclick=cierra; pinta();
+  document.body.appendChild(bg); document.body.appendChild(s);
+}
+/* dentro de la tarea: "agrega a Cynthia" / "quita a Pedro de esta tarea" */
+function integranteDicho(t, v){
+  var s=String(v||"").trim(), m;
+  if((m=s.match(/^(?:agrega|agr[eé]gale|mete|m[eé]tele|suma|añade|incluye|invita)\s+a\s+(.+?)(?:\s+(?:a|en)\s+(?:esta|la)\s+tarea)?[.!]?$/i))){
+    var nm=m[1].trim(), cs=candidatosDe(nm);
+    if(cs.length===1 || (cs.length>1 && cs[0].n>cs[1].n*1.5)){ agregaIntegrante(t, cs[0].id); toast("Agregué a "+cs[0].nombre); abreIntegrantes(t); return true; }
+    abrePropuestaIntegrantes(t, [{dicho:nm, cands:cs, elegido:null}]); return true;
+  }
+  if((m=s.match(/^(?:quita|s[aá]ca|elimina|borra)\s+a\s+(.+?)\s+(?:de|en)\s+(?:esta|la)\s+tarea[.!]?$/i))){
+    var nm2=_n179(m[1]), hit=integrantesDe(t).filter(function(x){ return _n179(nombreInt(x.k)).indexOf(nm2.split(" ")[0])===0; })[0];
+    if(!hit){ toast(m[1]+" no está en esta tarea"); abreIntegrantes(t); return true; }
+    if(!puedeQuitar(t,hit.k)){ toast(t.duenio!==yo?"Solo el dueño de la tarea puede quitar gente":("A "+nombreInt(hit.k)+" no se le puede quitar")); abreIntegrantes(t); return true; }
+    quitaIntegrante(t,hit.k); toast("Quité a "+nombreInt(hit.k)); abreIntegrantes(t); return true;
+  }
+  return false;
+}
+
+/* ---------- compartidas ---------- */
+function compartidasDe(){
+  return tareas.filter(function(t){
+    if(t.cierre || estadoReal(t)==="cerrada" || t.es_recordatorio || t.fusionada_en) return false;
+    if(t.duenio===yo) return false;
+    try{ if(leToca(t)) return false; }catch(e){}
+    return integrantesDe(t).some(function(x){ return x.k===yo; });
+  });
+}
+function vCompartidas(){
+  var cs=compartidasDe(); if(!cs.length) return "";
+  var h='<button class="compbtn" id="bcomp">Compartidas · '+cs.length+' '+(window.__verComp?'▴':'›')+'</button>';
+  if(window.__verComp){
+    h+='<div class="revl">'+cs.map(function(t){
+      var p=preguntaParaMi(t), q=(PERSONAS[t.duenio]&&PERSONAS[t.duenio].nombre)||"";
+      return '<button class="revr" data-id="'+esc(t.id)+'"><i style="background:'+(p?'#ff9f0a':'#636366')+'"></i><span class="rn">'+esc(t.nombre||"")+(q?' · '+esc(q):'')+'</span><span class="rl" style="color:'+(p?'#ff9f0a':'var(--ink-3)')+'">'+(p?esc(p.de+" te pregunta"):"")+'</span></button>';
+    }).join("")+'</div>';
+  }
+  return h;
+}
+
+/* ---------- ¿me preguntan algo? ---------- */
+function misNombres(){
+  var p=PERSONAS[yo]||{}, l=[_n179(p.nombre)].concat((p.apodos||[]).map(_n179));
+  if(yo==="salvador") l=l.concat(["chava","jefe","patron","lic","licenciado","ingeniero","inge"]);
+  return l.filter(Boolean);
+}
+function PIDE_RXf(){ return /\?|¿|\b(autoriza|autorizas|me (pasas|mandas|confirmas|dices|apruebas)|necesito|ocupo|pasame|mandame|confirmame|dime|que opinas|como ves|le doy|lo compro|cuanto|cual|apruebas|vobo|visto bueno)\b/; }
+/* la ultima pregunta o pedido de OTRO dirigido a mi, que no he contestado bien */
+function preguntaParaMi(t){
+  var ms=t.msgs||[], nombres=misNombres();
+  var iUlt=-1; for(var i=ms.length-1;i>=0;i--){ var x=ms[i]; if(x && x.k==="bo" && (x.de===yo || (!x.de && t.duenio===yo)) && !x.vaga){ if(x.compromiso && x.compromiso.hasta>Date.now()) return null; iUlt=i; break; } }
+  for(var j=ms.length-1;j>iUlt;j--){
+    var y=ms[j]; if(!y || y.de===yo) continue;
+    var deOtro=(y.wa_in===1) || (y.k==="bo" && y.de && y.de!==yo); if(!deOtro) continue;
+    var tx=_n179((y.tr||y.t||"")), mm=String(y.t||"").match(/^([^:\n]{1,24}):\s*/), quien=y.wa_c||(y.de&&PERSONAS[y.de]&&PERSONAS[y.de].nombre)||(mm?mm[1]:"Alguien");
+    var pide=PIDE_RXf().test(" "+tx+" ") || /\?/.test(String(y.t||""));
+    if(!pide) continue;
+    var meNombra=nombres.some(function(n){ return n && (" "+tx+" ").indexOf(" "+n+" ")>=0; });
+    var aMi=meNombra || (y.cita && _n179(y.cita.de)===_n179((PERSONAS[yo]||{}).nombre)) || (j-1===iUlt && iUlt>=0) || (t.duenio===yo && y.wa_in===1);
+    var paraTodos=/\b(todos|equipo|chicos|alguien|opinen|votemos|que opinan)\b/.test(tx);
+    if(aMi || paraTodos) return {ix:j, de:String(quien).split(" ")[0], t:String(y.t||"").replace(/^([^:\n]{1,24}):\s*/,""), todos:!aMi&&paraTodos};
+  }
+  return null;
+}
+
+/* ---------- "PARA TI": la pregunta textual + resumen con fuentes ---------- */
+function vParaTi(t){
+  window.__paraTi=window.__paraTi||{};
+  var p=preguntaParaMi(t); if(!p) return "";
+  var key=t.id+"|"+p.ix, r=window.__paraTi[key];
+  if(!r){ try{ var ls=localStorage.getItem("bit_pt_"+key); if(ls) r=window.__paraTi[key]=JSON.parse(ls); }catch(e){} }
+  if(!r && !window.__paraTiPidiendo){ setTimeout(function(){ pideParaTi(t,p,key); },30); }
+  function fuente(ix){ return (typeof ix==="number" && t.msgs && t.msgs[ix])?' <span class="ptsrc" data-irmsg="'+ix+'">·</span>':''; }
+  var h='<div class="ptcard"><span class="pth">'+esc((p.todos?"PIDEN A TODOS · ":"TE PREGUNTA · ")+p.de)+'</span><span class="ptq" data-irmsg="'+p.ix+'">“'+esc(p.t.length>220?p.t.slice(0,219)+"…":p.t)+'”</span>';
+  if(r && !r.err){
+    (r.posturas||[]).slice(0,3).forEach(function(x){ if(typeof x.ix==="number"&&t.msgs[x.ix]) h+='<span class="ptl"><b>'+esc(x.postura||"")+':</b> '+esc((x.quienes||[]).join(", "))+fuente(x.ix)+'</span>'; });
+    (r.datos||[]).slice(0,4).forEach(function(x){ if(typeof x.ix==="number"&&t.msgs[x.ix]) h+='<span class="ptl"><b>Dato:</b> '+esc(x.texto||"")+fuente(x.ix)+'</span>'; });
+    (r.decidido||[]).slice(0,2).forEach(function(x){ if(typeof x.ix==="number"&&t.msgs[x.ix]) h+='<span class="ptl"><b>Se decidió:</b> '+esc(x.texto||"")+fuente(x.ix)+'</span>'; });
+    (r.falta||[]).slice(0,2).forEach(function(x){ h+='<span class="ptl ptf"><b>Falta:</b> '+esc(String(x.texto||x))+'</span>'; });
+  } else if(!r) h+='<span class="ptl ptw">Armando el contexto…</span>';
+  return h+'<span class="ptp">Contéstale abajo.</span></div>';
+}
+function pideParaTi(t, p, key){
+  window.__paraTi=window.__paraTi||{};
+  if(window.__paraTi[key] || window.__paraTiPidiendo===key) return;
+  var ms=(t.msgs||[]), desde=Math.max(0, ms.length-60), lines=[];
+  for(var i=desde;i<ms.length;i++){ var x=ms[i]; if(!x || (x.k==="bi" && !x.wa_in)) continue; var q=x.wa_c||(x.de&&PERSONAS[x.de]&&PERSONAS[x.de].nombre)||(x.k==="bo"?"Salvador":"?"); lines.push("["+i+"] "+q+": "+String(x.tr||x.t||"").slice(0,400)); }
+  if(lines.length<4){ window.__paraTi[key]={posturas:[],datos:[],decidido:[],falta:[]}; return; }
+  window.__paraTiPidiendo=key;
+  var sys="Armas el contexto MINIMO para que "+((PERSONAS[yo]||{}).nombre||"el usuario")+" conteste esta pregunta: [" + p.ix + "] " + p.t +
+    "\nUsa SOLO lo que dicen los mensajes; NO inventes, NO calcules ni redondees cifras (copialas tal cual). Si dos dicen cifras distintas, pon las dos. "+
+    "Ignora 'ok', 'si', emojis como texto (cuentalos solo como voto). Solo lo del tema de esa pregunta. Cada renglon lleva ix = numero del mensaje de donde salio. "+
+    "Contesta SOLO JSON: {\"posturas\":[{\"postura\":\"A favor de X\",\"quienes\":[\"Nombre\"],\"ix\":n}],\"datos\":[{\"texto\":\"...\",\"ix\":n}],\"decidido\":[{\"texto\":\"...\",\"ix\":n}],\"falta\":[{\"texto\":\"...\"}]}. Listas vacias si no hay.\n\nMENSAJES:\n"+lines.join("\n");
+  try{
+    preguntaAClaude([{role:"user",content:sys}],"rapido",function(txt,err){
+      window.__paraTiPidiendo=null;
+      var j=null; try{ var mm=String(txt||"").match(/\{[\s\S]*\}/); j=mm?JSON.parse(mm[0]):null; }catch(e){ j=null; }
+      window.__paraTi[key]=j||{err:1};
+      try{ if(j) localStorage.setItem("bit_pt_"+key, JSON.stringify(j)); }catch(e){}
+      if(vista==="hilo" && abierta===t.id) render();
+    });
+  }catch(e){ window.__paraTiPidiendo=null; window.__paraTi[key]={err:1}; }
+}
+
+/* ---------- respuestas que no resuelven ---------- */
+function VAGA_RXf(){ return /\b(lo (estoy )?(analizando|reviso|checo|veo|pienso|consulto)|d[eé]jame (ver|checar|revisar|pensarlo|lo veo)|ahorita (te|lo) (digo|veo|checo|reviso)|al rato|luego (te|lo)|despu[eé]s (te|lo)|lo platicamos|lo vemos|en eso estoy|estoy en eso|ya veremos)\b/i; }
+function clasificaRespuesta(v){
+  var s=String(v||""), fx=null;
+  try{ fx=fechaMovida(s); }catch(e){}
+  var hora=false; try{ hora=!!horaDicha(s); }catch(e){}
+  var vaga=VAGA_RXf().test(s);
+  if(vaga && (fx||hora)){
+    var hasta=Date.now()+24*3600*1000;
+    if(fx){ var d=new Date(fx+"T00:00:00"); d.setHours(hora?12:18); hasta=d.getTime(); }
+    if(hora){ try{ var ac=armaCuando(s); if(ac&&ac.hora){ var d2=new Date((ac.fecha||fx||hoy())+"T"+ac.hora+":00"); if(!isNaN(d2)) hasta=d2.getTime(); } }catch(e){} }
+    return {tipo:"compromiso", hasta:hasta};
+  }
+  if(vaga || s.trim().length<4) return {tipo:"vaga"};
+  return {tipo:"resuelve"};
+}
+/* se llama despues de que se guarda lo que contesto */
+function revisaMiRespuesta(t, v, p){
+  if(!p) return;
+  var c=clasificaRespuesta(v);
+  var ms=t.msgs||[], m=null;
+  for(var i=ms.length-1;i>=0 && i>=ms.length-6;i--){ var x=ms[i]; if(x && x.k==="bo" && (String(x.t||"").trim()===v.trim() || String(x.tr||"").trim()===v.trim())){ m=x; break; } }
+  if(!m) return;
+  if(c.tipo==="vaga"){
+    m.vaga=1;
+    msg(t,"bi","Esto no contesta lo que te pidió "+p.de+": “"+(p.t.length>90?p.t.slice(0,89)+"…":p.t)+"”. Dale el dato, o di para cuándo lo tienes.");
+    var n=t.msgs[t.msgs.length-1]; n.canal="priv:"+yo; n.priv=1;
+  } else if(c.tipo==="compromiso"){ m.compromiso={hasta:c.hasta, ix:p.ix}; }
+  guarda(t); if(vista==="hilo") render();
+}
+
+/* ---------- SUPERVISOR: misma tarea, otra lente ---------- */
+function soySupervisor(t){ return !!(t && t.duenio && t.duenio!==yo && (jefeDe(yo,t.duenio) || (t.revisores||[]).indexOf(yo)>=0)); }
+function vSupervisor(t){
+  if(!soySupervisor(t) || t.cierre) return "";
+  var e=estadoReal(t), en=(e==="vencida")?["Atrasada","#FF453A"]:((t.f_vigente&&dDif(t.f_vigente,hoy())===0)?["Vence hoy","#ff9f0a"]:["En tiempo","#30d158"]);
+  var pasos=(t.lista_pasos||[]), hechos=pasos.filter(function(p){ return p.hecho; }).length;
+  var fotos=(t.evidencias||[]).length+((t.adjuntos||[]).length||0);
+  var h='<div class="supcard"><span class="sph">SUPERVISAS · '+esc((PERSONAS[t.duenio]||{}).nombre||"")+'</span>'+
+    '<span class="spsem" style="--sc:'+en[1]+'"><i></i>'+en[0]+(t.f_vigente?' · entrega '+esc(fechaChip(t.f_vigente)):'')+'</span>';
+  if(pasos.length){
+    h+='<span class="spl">Revisar · '+hechos+'/'+pasos.length+'</span><ul class="splist">'+pasos.slice(0,8).map(function(p){ return '<li class="'+(p.hecho?"ok":"")+'">'+(p.hecho?"✓ ":"○ ")+esc(p.tx||"")+'</li>'; }).join("")+'</ul>';
+  }
+  if(fotos) h+='<span class="spl">'+fotos+' foto'+(fotos===1?'':'s')+'/documento'+(fotos===1?'':'s')+' en la tarea</span>';
+  return h+'<span class="spp">Tus notas en el canal “Supervisión” no las ve '+esc((PERSONAS[t.duenio]||{}).nombre||"el dueño")+'.</span></div>';
+}
+
+/* ---------- "TE TOCA" (Salvador 20:29): una sola lista arriba del inicio. Siempre primero
+   lo de "Por revisar" (te espera / atorados, falta informacion, posible vinculacion, por
+   autorizar), luego preguntas en compartidas, vencidas, mensajes sin leer y hoy. Sin parpadeos. */
+function vTeToca(items){
+  if(!items.length) return '<div class="tth"><b>Te toca</b><span class="ttz">0 · todo al día</span></div>';
+  var h='<div class="tth"><b>Te toca</b><span class="ttn">'+items.length+'</span></div><div class="revl ttl">';
+  items.forEach(function(x){
+    h+='<button class="revr ttr" data-id="'+esc(x.t.id)+'"><i style="background:'+x.col+'"></i><span class="ttx"><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span><small>'+esc(x.why)+'</small></span></button>';
+  });
+  return h+'</div>';
+}
+function armaTeToca(rev, det, venc, msgs, hoyYa){
+  var out=[], ya={};
+  function pon(t, why, col){ if(!t || ya[t.id]) return; ya[t.id]=1; out.push({t:t, why:why, col:col}); }
+  var COLR={espera:"#ff9f0a", falta:"#0a84ff", vincular:"#bf5af2", autorizar:"#30d158"};
+  rev.filter(function(x){ return x.k==="espera"; }).forEach(function(x){ pon(x.t, etiquetaRev(x.t,x.k).replace(/^./,function(c){return c;}), COLR.espera); });
+  det.forEach(function(t){ pon(t, esDecisionSal(t)?"esperan tu decisión":"atorado · alguien espera", "#ff9f0a"); });
+  rev.filter(function(x){ return x.k!=="espera"; }).forEach(function(x){ pon(x.t, ({falta:"falta información",vincular:"posible vinculación",autorizar:"por autorizar"})[x.k]||"", COLR[x.k]); });
+  compartidasDe().forEach(function(t){ var p=preguntaParaMi(t); if(p) pon(t, p.de+(p.todos?" pide opinión a todos":" te pregunta"), "#ff9f0a"); });
+  venc.forEach(function(t){ pon(t, "venció "+(fechaChip(t.f_vigente)||""), "#FF453A"); });
+  msgs.forEach(function(t){ pon(t, "mensaje nuevo", "#64d2ff"); });
+  hoyYa.forEach(function(t){ pon(t, "hoy", "#8e8e93"); });
+  return out;
+}
+
+
+/* build 179: envolturas finales (organigrama desde la barra; integrantes al crear con "que estén ...") */
+(function(){
+  if(typeof barraEnviar==="function"){
+    var _b179=barraEnviar;
+    barraEnviar=function(texto){
+      try{ if(!(barraEstado && (barraEstado.completandoId||barraEstado.insertaEn)) && organigramaDicho(texto)){ aplicaOrganigrama(texto); barraEstado=null; consulta=""; render(); return; } }catch(e){}
+      return _b179.apply(this, arguments);
+    };
+  }
+  if(typeof creaTarea==="function"){
+    var _c179=creaTarea;
+    creaTarea=function(d){
+      var t=_c179.apply(this, arguments);
+      try{
+        var dicho=String((d&&(d.dicho||d.nombre))||"");
+        if(t && nombresDeIntegrantes(dicho).length){
+          var prop=propuestaIntegrantes(dicho);
+          if(prop.length){
+            /* el nombre no carga la lista de personas */
+            t.nombre=conMayuscula(String(t.nombre||"").replace(/\s*,?\s*\b(?:que\s+est[eé]n|que\s+participen|con\s+la\s+participaci[oó]n\s+de)\b.*$/i,"").trim()||t.nombre);
+            window.__propInt={tid:t.id, prop:prop};
+            setTimeout(function(){ if(window.__propInt && window.__propInt.tid===t.id){ window.__propInt=null; abrePropuestaIntegrantes(t,prop); } }, 700);
+          }
+        }
+      }catch(e){ console.warn("integrantes al crear",e); }
+      return t;
+    };
+  }
 })();
 </script>
 </body>
