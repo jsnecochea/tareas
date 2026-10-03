@@ -607,6 +607,13 @@ button{font:inherit;color:inherit}
    Deshacer" (5 s); al cerrar, el titulo parpadea dos veces en verde y queda
    tachado. Cambiar de tarea es siempre con el dedo (swipe), nunca solo.
    Supera la regla del 22-sep de "eliminar recordatorio salta al siguiente". */
+.sigue-ov{position:fixed;inset:0;z-index:70;display:grid;place-items:center;pointer-events:none;background:rgba(0,0,0,0);backdrop-filter:blur(0);-webkit-backdrop-filter:blur(0);animation:sigueOv 1.05s ease forwards}
+.sigue-ov span{width:104px;height:104px;border-radius:50%;display:grid;place-items:center;color:#fff;transform:scale(.4);opacity:0;animation:siguePop 1.05s cubic-bezier(.2,.9,.25,1.2) forwards}
+.sigue-ov.ok span{background:#30d158;box-shadow:0 10px 40px rgba(48,209,88,.45)}
+.sigue-ov.del span{background:#ff453a;box-shadow:0 10px 40px rgba(255,69,58,.45)}
+@keyframes sigueOv{0%{background:rgba(0,0,0,0);backdrop-filter:blur(0);-webkit-backdrop-filter:blur(0)}25%,70%{background:rgba(0,0,0,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}100%{background:rgba(0,0,0,0);backdrop-filter:blur(0);-webkit-backdrop-filter:blur(0)}}
+@keyframes siguePop{0%{transform:scale(.4);opacity:0}30%{transform:scale(1.08);opacity:1}45%,72%{transform:scale(1);opacity:1}100%{transform:scale(.9);opacity:0}}
+@media (prefers-reduced-motion:reduce){.sigue-ov,.sigue-ov span{animation-duration:.01s}}
 .salto-stamp{position:fixed;inset:0;display:grid;place-items:center;z-index:60;pointer-events:none}
 .salto-stamp span{width:76px;height:76px;border-radius:50%;background:rgba(255,69,58,.18);border:2px solid var(--venc);display:grid;place-items:center;color:var(--venc);animation:saltoPop .45s cubic-bezier(.2,.8,.2,1)}
 @keyframes saltoPop{0%{transform:scale(.5);opacity:0}100%{transform:scale(1);opacity:1}}
@@ -4142,6 +4149,33 @@ function selloYQuedate(t, o){
   setTimeout(function(){ if(window.__salto && window.__salto.id===t.id){ window.__salto=null; if(vista==="hilo") render(); } }, 1100);
   muestraDeshacer(o.tipo);
 }
+/* build 175 (Salvador 2026-10-02 18:33): Autorizar, Ya esta y Eliminar son "ya
+   terminé con esta": la pantalla se oscurece, palomita verde (o bote rojo) al centro,
+   se difumina y aparece la SIGUIENTE de "Por revisar" (si no hay, el inicio).
+   Sigue el cintillo de Deshacer. */
+function siguienteDe(t){
+  try{ var l=porRevisar().filter(function(x){ return x.t.id!==t.id; }); if(l.length) return l[0].t; }catch(e){}
+  return null;
+}
+function selloYSigue(t, o){
+  window.__avSheet=null; window.__avSonando=null; menuOpen=false;
+  window.__ultimoDeshacer={id:t.id, tipo:o.tipo, de:o.texto||"", restaurar:o.restaurar, cuando:Date.now()};
+  try{ if(navigator.vibrate) navigator.vibrate(15); }catch(e){}
+  var del=(o.tipo==="eliminada");
+  var ov=document.createElement("div"); ov.className="sigue-ov "+(del?"del":"ok");
+  ov.innerHTML='<span>'+(del
+    ? '<svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4.8h6V7"/><path d="M6.5 7l1 12.2h9l1-12.2"/><path d="M10 11v5"/><path d="M14 11v5"/></svg>'
+    : '<svg viewBox="0 0 24 24" width="52" height="52" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>')+'</span>';
+  document.body.appendChild(ov);
+  setTimeout(function(){
+    var s=siguienteDe(t);
+    if(s){ abierta=s.id; vista="hilo"; }
+    else { abierta=null; vista="lista"; }
+    render();
+    muestraDeshacer(o.tipo, o.tipo==="autorizada"?"Autorizada":null);
+  }, 620);
+  setTimeout(function(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }, 1100);
+}
 /* CINTILLO DE DESHACER — Salvador 2026-09-25: regresa, delgadito, justo arriba
    de la barra donde se pico la accion, unos 3 segundos. Vive en <body>, asi
    sobrevive a los render(). El deshacer por chat ("regresalo") sigue igual. */
@@ -4177,7 +4211,7 @@ function borraRecordatorioYQuedate(t){
   var prev={estado:t.estado, cierre:t.cierre||null, n:(t.msgs||[]).length};
   t.estado="cerrada"; t.cierre={tipo:"cancelado",f:hoy()}; guarda(t);
   sincronizaAvisos(t);
-  selloYQuedate(t,{tipo:"eliminada", texto:t.nombre, restaurar:function(){
+  selloYSigue(t,{tipo:"eliminada", texto:t.nombre, restaurar:function(){
     t.estado=prev.estado||"abierta"; t.cierre=prev.cierre; guarda(t); sincronizaAvisos(t); }});
 }
 /* la tarjetita chiquita: "esto no suena a comentario de X" con dos salidas.
@@ -5241,6 +5275,37 @@ function reasignaDicho(t, v, silencioso){
   guarda(t); if(!silencioso) toast("Pasó a "+PERSONAS[k].nombre);
   return true;
 }
+/* build 175 (Salvador 2026-10-02 18:33): si lo ultimo en la tarea es un mensaje de
+   alguien por WhatsApp (pregunta, pedido, aviso) y Salvador le contesta en el chat de
+   la tarea, se le manda por WhatsApp sin decir "dile". Las ordenes a la app (renombrar,
+   recuerdame, dile a, pasala a, lista...) NO se mandan. Si Salvador ya le contesto en
+   WhatsApp, el programa de la Mac no lo duplica (auto_respuesta + desde_ts). */
+function aQuienRespondo(t, v){
+  if(!t || t.es_recordatorio || t.cierre || estadoReal(t)==="cerrada") return "";
+  var ms=t.msgs||[], x=null;
+  for(var i=ms.length-1;i>=0;i--){ var m=ms[i]; if(!m || (m.k==="bi" && m.wa_in!==1)) continue; if(m.k==="bo" && (!m.de || m.de===yo) && !m.wa_in) return ""; x=m; break; }
+  if(!x || x.wa_in!==1) return "";
+  if(x.ts && Date.now()-x.ts > 3*24*3600*1000) return "";
+  var c=String(x.wa_c||conDeOrigen(t)||"").trim();
+  if(!c || /^grupo\b/i.test(c) || /^\+?\d[\d\s]+$/.test(c)) return "";
+  var s=String(v||"").trim();
+  if(s.length<2) return "";
+  if(detectaRenombre(s) || duenioDicho(s) || detectaLista(s) || listaNumerada(s).length>=2) return "";
+  if(/^\s*(recu[eé]rda(me|le)|av[ií]sa(me|le)|apunta|anota|agrega|p[oó]n(me|le)|c[aá]mbia(le)?|dile|d[ií]gale|m[aá]nda(le|me)|preg[uú]nta(le)?|escr[ií]be(le)?|ll[aá]ma(le|me)|m[aá]rca(le|me)|abre|busca|cierra|ci[eé]rrala|borra|b[oó]rrala|elimina|crea|hazme|haz|recordatorio|alarma|mu[eé]vela|p[aá]sala|reenv[ií]a)\b/i.test(s)) return "";
+  return c;
+}
+function respondeAuto(t, v, contacto){
+  var desde=Date.now();
+  pideWhatsApp({usuario:yo, tarea_id:t.id, contacto:contacto, texto:v, auto_respuesta:1, desde_ts:desde})
+    .then(function(j){ var pid=(j&&(j.id||j.pedido_id))||null; marca(pid); })
+    .catch(function(e){ msg(t,"bi","No se pudo mandar tu respuesta a "+contacto+" por WhatsApp ("+String((e&&e.message)||e).slice(0,60)+")."); guarda(t); if(vista==="hilo") render(); });
+  function marca(pid){
+    var ms=t.msgs||[];
+    for(var i=ms.length-1;i>=0 && i>=ms.length-6;i--){ var m=ms[i]; if(m && m.k==="bo" && String(m.t||"").trim()===v.trim()){ m.wa_auto=contacto; if(pid) m.wa_pid=pid; guarda(t); if(vista==="hilo"&&abierta===t.id) render(); return; } }
+  }
+  setTimeout(function(){ marca(null); }, 400);
+  toast("Se lo mando a "+contacto+" por WhatsApp");
+}
 /* contestar "falta informacion": Claude saca nombre, fecha, ritmo, avisos y contexto */
 function completaRevision(t, v){
   msg(t,"bo",v); guarda(t); render();
@@ -5849,7 +5914,7 @@ function vHilo(){
   (t.msgs||[]).forEach(function(x,ix){
     var q=autorMsg(x,t);
     if(x.hab){ m+=burbujaHablada(x, (q||""), t.id+"|"+ix); return; }
-    var meta=(q?esc(q)+" · ":"")+esc(x.h);
+    var meta=(q?esc(q)+" · ":"")+esc(x.h)+(x.wa_auto?" · → WhatsApp":"");
     /* Salvador 2026-09-22: el ULTIMO mensaje mio trae un botecito 5 minutos,
        por si se subio mal y era otra cosa. Se borra sin preguntar. */
     var undo=(x.k==="bo" && ix===(t.msgs.length-1) && x.ts && (Date.now()-x.ts)<5*60000 && (!x.de||x.de===yo));
@@ -9784,7 +9849,8 @@ function bindHilo(){
       window.__listaAct[t.id]=el.getAttribute("data-ltab"); render(); };
   });
   /* build 168: tarjeta POR REVISAR */
-  var rva=$("rvautz"); if(rva) rva.onclick=function(){ t.autorizada=true; t.autorizada_ts=Date.now(); guarda(t); toast("Tarea autorizada"); render(); };
+  var rva=$("rvautz"); if(rva) rva.onclick=function(){ t.autorizada=true; t.autorizada_ts=Date.now(); guarda(t);
+    selloYSigue(t,{tipo:"autorizada", texto:t.nombre, restaurar:function(){ t.autorizada=false; t.autorizada_ts=null; guarda(t); }}); };
   var rvn=$("rvnueva"); if(rvn) rvn.onclick=function(){ t.dup_resuelto=true; msg(t,"bi","Queda como tarea aparte."); guarda(t); render(); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-rvinc]"),function(el){
     el.onclick=function(){ var did=el.getAttribute("data-rvinc"), d=tareas.filter(function(x){ return x.id===did; })[0]; if(!d) return;
@@ -9813,7 +9879,7 @@ function bindHilo(){
     if(t.estado==="cerrada" && _faltanP.length && tienePasos(t)){
       msg(t,"bi","Quedaron sin palomear: "+juntaY(_faltanP.map(pasoChico))+"."); guarda(t); }
     if(t.estado==="cerrada" && t.cierre && t.cierre.tipo==="hecha"){
-      selloYQuedate(t,{tipo:"hecha", texto:t.nombre, restaurar:function(){
+      selloYSigue(t,{tipo:"hecha", texto:t.nombre, restaurar:function(){
         t.estado=prev.estado||"abierta"; t.cierre=prev.cierre; if(t.msgs && t.msgs.length>prev.n) t.msgs.length=prev.n;
         guarda(t); sincronizaAvisos(t); }});
     } else render();
@@ -9929,8 +9995,11 @@ function bindHilo(){
     /* build 173: "no es mia, es de Samuel" -> se la pasa y la autoriza */
     if(t.duenio===yo && duenioDicho(v)){
       $("txt").value=""; marcaEnvio("tenv","");
-      msg(t,"bo",v); reasignaDicho(t, v); abierta=null; vista="lista"; render(); return;
+      msg(t,"bo",v); reasignaDicho(t, v, true);
+      selloYSigue(t,{tipo:"autorizada", texto:t.nombre, restaurar:null}); return;
     }
+    /* build 175: contestarle a quien escribio por WhatsApp = se le manda por WhatsApp */
+    if(tipoRevisar(t)!=="falta"){ var _aq=aQuienRespondo(t, v); if(_aq){ try{ respondeAuto(t, v, _aq); }catch(e){ console.warn("respondeAuto",e); } } }
     /* build 168: si la tarea esta en "Falta informacion", lo que contesta llena los datos */
     if(tipoRevisar(t)==="falta" && !detectaLista(v) && listaNumerada(v).length<2){
       $("txt").value=""; marcaEnvio("tenv","");
@@ -10250,8 +10319,8 @@ function bindMotivo(){
       var prev={estado:t.estado, cierre:t.cierre||null, n:(t.msgs||[]).length};
       cierraSinEjecutar(t, el.getAttribute("data-mot"));
       sincronizaAvisos(t);
-      /* Salvador 2026-09-24: te quedas en la tarea, tachada, con Deshacer */
-      selloYQuedate(t,{tipo:"eliminada", texto:t.nombre, restaurar:function(){
+      /* build 175: bote rojo y pasa a la siguiente (antes te quedabas en la tarea) */
+      selloYSigue(t,{tipo:"eliminada", texto:t.nombre, restaurar:function(){
         t.estado=prev.estado||"abierta"; t.cierre=prev.cierre; if(t.msgs && t.msgs.length>prev.n) t.msgs.length=prev.n;
         guarda(t); sincronizaAvisos(t); }});
     };
