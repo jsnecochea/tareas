@@ -644,6 +644,7 @@ button{font:inherit;color:inherit}
 .ptsrc{display:inline-block;color:#0a84ff;font-weight:800;padding:0 6px;cursor:pointer}
 .ptp,.spp{font-size:12.5px;color:var(--ink-3)}
 .spsem{display:flex;align-items:center;gap:7px;font-size:15px;font-weight:600;color:var(--ink)}.spsem i{width:10px;height:10px;border-radius:50%;background:var(--sc)}
+.spf{display:inline-block;min-width:58px;color:var(--ink-3)}
 .splist{margin:0;padding:0 0 0 2px;list-style:none;font-size:14px;color:var(--ink-2)}.splist li.ok{color:var(--ink-3);text-decoration:line-through}
 .compbtn{display:block;margin:18px auto 10px;border:0;background:none;color:var(--ink-3);font-size:15px;padding:8px 14px}
 .tth{display:flex;align-items:center;justify-content:space-between;margin:12px 19px 6px}
@@ -1082,7 +1083,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 181 · 2026-10-02 · Te toca limpio: uno por uno lo que pide tu accion; vencidas y hoy en un renglon que se abre";
+var VERSION_APP = "build 182 · 2026-10-02 · Claude supervisor: entrevista al supervisor, entregas con fecha, ritmo e insistencia al dueño y aviso al jefe";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -4979,6 +4980,7 @@ function vLista(){
   /* ===== build 179 (Salvador 20:29): "TE TOCA" — una sola lista arriba con todo lo que te pide
      algo (primero lo de Por revisar: te espera/atorados, falta informacion, vinculacion, por
      autorizar; luego vencidas, mensajes nuevos y hoy). Abajo Proximas y "Compartidas · N". ===== */
+  try{ if(!window.__hitoChk || Date.now()-window.__hitoChk>60000){ window.__hitoChk=Date.now(); chequeoHitos(); } }catch(e){ console.warn("hitos",e); }
   var _tt=armaTeToca(_rev, det, mias_venc, msgs, hoyYa);
   h+=vTeToca(_tt)+hMis;
 
@@ -9537,6 +9539,7 @@ function confirmaAccion(b){
     if(dela && PERSONAS[dela.duenio] && dela.duenio!==quienRev){
       dela.revisores=dela.revisores||[]; if(dela.revisores.indexOf(quienRev)<0) dela.revisores.push(quienRev);
       dela.rev_fecha=sv.mi_fecha||dela.f_vigente||hoy(); guarda(dela);
+      if(quienRev===yo && !dela.medida) iniciaEntrevista(dela, yo);   /* build 182 */
       if(quienRev!==yo){ try{ disparaPushInstantaneo(quienRev,'Revisión asignada','Revisas: "'+(sv.que||dela.nombre)+'"',urlTarea(dela.id)); }catch(e){} }
       if(b.foto) pegaFotoA(dela,b.foto);
       toast(quienRev!==yo?"La revisión le llegó a "+PERSONAS[quienRev].nombre:"Le llegó a "+PERSONAS[dela.duenio].nombre+" · tú la revisas el "+fechaBonita(dela.rev_fecha));
@@ -10312,6 +10315,10 @@ function bindHilo(){
     /* build 176: si deslizo un mensaje, la respuesta lleva esa cita */
     var _cita=(window.__cita && window.__cita.tid===t.id)?window.__cita:null; window.__cita=null;
     if(_cita){ var _rb=document.getElementById("rqbar"); if(_rb) _rb.parentNode.removeChild(_rb); }
+    /* build 182: entrevista del supervisor */
+    if(pideEntrevista(v) && t.duenio!==yo){ $("txt").value=""; marcaEnvio("tenv",""); if(soySupervisor(t)||true){ t.revisores=t.revisores||[]; if(t.revisores.indexOf(yo)<0) t.revisores.push(yo); } iniciaEntrevista(t,yo); window.__cnl=window.__cnl||{}; window.__cnl[t.id]="sup"; render(); return; }
+    if(entrevistaPendiente(t) && (canalActual(t).id==="sup" || canalActual(t).id==="todo")){ $("txt").value=""; marcaEnvio("tenv",""); contestaEntrevista(t,v); return; }
+    if(t.medida && t.medida.espera_dueno && t.duenio===yo){ var _vD2=v; setTimeout(function(){ try{ respuestaDueno(t,_vD2); }catch(e){} },500); }
     /* build 179: "agrega a X" / "quita a X de esta tarea" / organigrama */
     if(integranteDicho(t, v)){ $("txt").value=""; marcaEnvio("tenv",""); return; }
     if(organigramaDicho(v)){ $("txt").value=""; marcaEnvio("tenv",""); aplicaOrganigrama(v); return; }
@@ -11363,13 +11370,17 @@ function soySupervisor(t){ return !!(t && t.duenio && t.duenio!==yo && (jefeDe(y
 function vSupervisor(t){
   if(!soySupervisor(t) || t.cierre) return "";
   var e=estadoReal(t), en=(e==="vencida")?["Atrasada","#FF453A"]:((t.f_vigente&&dDif(t.f_vigente,hoy())===0)?["Vence hoy","#ff9f0a"]:["En tiempo","#30d158"]);
+  var _atr=(t.lista_pasos||[]).filter(function(p){ return p.hito && !p.hecho && p.fecha && p.fecha<hoy(); })[0];
+  if(_atr){ var _d=-dDif(hoy(),_atr.fecha); en=["Atrasado "+Math.abs(dDif(_atr.fecha,hoy()))+" día"+(Math.abs(dDif(_atr.fecha,hoy()))===1?"":"s")+" · "+_atr.tx,"#FF453A"]; }
   var pasos=(t.lista_pasos||[]), hechos=pasos.filter(function(p){ return p.hecho; }).length;
   var fotos=(t.evidencias||[]).length+((t.adjuntos||[]).length||0);
   var h='<div class="supcard"><span class="sph">SUPERVISAS · '+esc((PERSONAS[t.duenio]||{}).nombre||"")+'</span>'+
     '<span class="spsem" style="--sc:'+en[1]+'"><i></i>'+en[0]+(t.f_vigente?' · entrega '+esc(fechaChip(t.f_vigente)):'')+'</span>';
   if(pasos.length){
-    h+='<span class="spl">Revisar · '+hechos+'/'+pasos.length+'</span><ul class="splist">'+pasos.slice(0,8).map(function(p){ return '<li class="'+(p.hecho?"ok":"")+'">'+(p.hecho?"✓ ":"○ ")+esc(p.tx||"")+'</li>'; }).join("")+'</ul>';
+    h+='<span class="spl">'+(pasos.some(function(p){ return p.hito; })?'Entregas':'Revisar')+' · '+hechos+'/'+pasos.length+'</span><ul class="splist">'+pasos.slice(0,8).map(function(p){ return '<li class="'+(p.hecho?"ok":"")+'">'+(p.fecha?'<span class="spf">'+esc(fechaChip(p.fecha))+'</span>':'')+(p.hecho?"✓ ":"○ ")+esc(p.tx||"")+'</li>'; }).join("")+'</ul>';
   }
+  if(t.medida && t.medida.entregable) h+='<span class="spl"><b>Pediste:</b> '+esc(t.medida.entregable)+(t.medida.fecha_final?' · '+esc(fechaChip(t.medida.fecha_final)):'')+'</span>';
+  else if(!entrevistaPendiente(t)) h+='<span class="spl">Sin medida todavía. Dime “entrevístame” y la armamos.</span>';
   if(fotos) h+='<span class="spl">'+fotos+' foto'+(fotos===1?'':'s')+'/documento'+(fotos===1?'':'s')+' en la tarea</span>';
   return h+'<span class="spp">Tus notas en el canal “Supervisión” no las ve '+esc((PERSONAS[t.duenio]||{}).nombre||"el dueño")+'.</span></div>';
 }
@@ -11406,12 +11417,118 @@ function armaTeToca(rev, det, venc, msgs, hoyYa){
   compartidasDe().concat(tareas.filter(function(t){ return t.duenio===yo && !t.cierre && estadoReal(t)!=="cerrada" && !t.es_recordatorio; }))
     .forEach(function(t){ var p=null; try{ p=preguntaParaMi(t); }catch(e){} if(p) pon(t, p.de+(p.todos?" pide opinión a todos":" te pregunta"), "#ff9f0a"); });
   rev.filter(function(x){ return x.k==="falta"; }).forEach(function(x){ pon(x.t, "falta información", "#0a84ff"); });
+  tareas.forEach(function(t){ try{ if(entrevistaPendiente(t)) pon(t, "falta información · ¿cómo medimos a "+((PERSONAS[t.duenio]||{}).nombre||"")+"?", "#0a84ff"); }catch(e){} });
   rev.filter(function(x){ return x.k==="autorizar"||x.k==="vincular"; }).forEach(function(x){ pon(x.t, x.k==="vincular"?"posible vinculación":"por autorizar", x.k==="vincular"?"#bf5af2":"#30d158"); });
   venc.forEach(function(t){ pon(t, "venció "+(fechaChip(t.f_vigente)||""), "#FF453A", "venc"); });
   hoyYa.forEach(function(t){ pon(t, "hoy", "#8e8e93", "hoy"); });
   return out;
 }
 
+
+
+/* ===================== build 182 (Salvador 21:53, maqueta "Claude como supervisor") =====================
+   1 ENTREVISTA al supervisor (max 3 preguntas, una burbuja, contesta con voz; "luego" la deja en Te toca).
+   2 MEDIDA: entregable, fecha final y entregas intermedias (lista "Entregas" con fecha). Si el dueño
+     tenia fecha mas relajada, se le deja la del supervisor y se le dice SOLO al supervisor.
+   3 RITMO: entrega vencida -> Claude le insiste al dueño (1 al dia, maximo 2); si no reacciona,
+     avisa a su jefe inmediato (canal Supervisión + push). Lo corre cualquier app que abra Doit.
+   ====================================================================================================== */
+function quienSupervisa(t){
+  var r=(t.revisores||[]).slice();
+  try{ var up=(PERSONAS[t.duenio]||{}).reporta_a; if(up && r.indexOf(up)<0) r.push(up); }catch(e){}
+  return r;
+}
+function iniciaEntrevista(t, para){
+  if(!t || t.cierre) return;
+  t.entrevista={pend:true, para:para||yo, ts:Date.now()};
+  var q=(PERSONAS[t.duenio]||{}).nombre||"el responsable";
+  msg(t,"bal","Para medir a "+q+":\n1. ¿Qué te tiene que entregar y cómo?\n2. ¿Para cuándo lo quieres terminado?\n3. ¿Cuántos presupuestos (o qué revisiones) antes de decidir?\nContéstame con voz, todo de corrido. Si ahorita no, dime “luego”.");
+  var m=t.msgs[t.msgs.length-1]; m.canal="sup"; m.de_ia=1; m.entrevista=1;
+  guarda(t);
+}
+function entrevistaPendiente(t){ return !!(t && t.entrevista && t.entrevista.pend && t.entrevista.para===yo && !t.cierre); }
+function contestaEntrevista(t, v){
+  if(/^\s*(luego|despu[eé]s|ahorita no|m[aá]s tarde)\b/i.test(v)){
+    msg(t,"bo",v); var mm=t.msgs[t.msgs.length-1]; mm.canal="sup"; mm.de=yo;
+    msg(t,"bi","Va. Queda en “Te toca” hasta que me digas cómo medirlo."); t.msgs[t.msgs.length-1].canal="sup";
+    guarda(t); render(); return;
+  }
+  msg(t,"bo",v); var m0=t.msgs[t.msgs.length-1]; m0.canal="sup"; m0.de=yo; guarda(t); render();
+  var q=(PERSONAS[t.duenio]||{}).nombre||"el responsable";
+  var sys="Eres el supervisor de tareas. El jefe dijo como quiere medir a "+q+" en la tarea “"+(t.nombre||"")+"”. Saca SOLO lo que dijo, sin inventar. "+
+    "Fechas AAAA-MM-DD con este calendario: "+calendarioProximo(120).join(", ")+". Hoy es "+hoy()+". "+
+    "Propon de 2 a 5 entregas intermedias con fecha entre hoy y la fecha final (la primera puede ser lo que el jefe pidio primero). "+
+    "Contesta SOLO JSON: {\"entregable\":\"...\",\"como\":\"...\",\"fecha_final\":\"AAAA-MM-DD o null\",\"presupuestos\":n o null,\"entregas\":[{\"fecha\":\"AAAA-MM-DD\",\"que\":\"corto\"}]}\n\nLO QUE DIJO: "+v;
+  try{
+    preguntaAClaude([{role:"user",content:sys}],"rapido",function(txt,err){
+      var j=null; try{ var mm=String(txt||"").match(/\{[\s\S]*\}/); j=mm?JSON.parse(mm[0]):null; }catch(e){ j=null; }
+      if(!j){ msg(t,"bi","No pude leer tu respuesta ahorita; quedó anotada. Dímela otra vez cuando puedas."); t.msgs[t.msgs.length-1].canal="sup"; guarda(t); render(); return; }
+      aplicaMedida(t, j, v);
+    });
+  }catch(e){}
+}
+function aplicaMedida(t, j, dicho){
+  var q=(PERSONAS[t.duenio]||{}).nombre||"el responsable", ff=/^\d{4}-\d{2}-\d{2}$/.test(j.fecha_final||"")?j.fecha_final:null;
+  t.medida={entregable:String(j.entregable||"").slice(0,200), como:String(j.como||"").slice(0,200), fecha_final:ff, presupuestos:j.presupuestos||null, por:yo, ts:Date.now(), dicho:String(dicho||"").slice(0,600)};
+  t.entrevista={pend:false, para:yo, ts:Date.now()};
+  /* entregas -> lista "Entregas" con fecha (el dueño las palomea hablando como cualquier paso) */
+  var ents=(Array.isArray(j.entregas)?j.entregas:[]).filter(function(e){ return e && /^\d{4}-\d{2}-\d{2}$/.test(e.fecha||"") && String(e.que||"").trim(); }).slice(0,6);
+  t.lista_pasos=(t.lista_pasos||[]).filter(function(p){ return !p.hito; });
+  ents.forEach(function(e){ t.lista_pasos.push({tx:String(e.que).trim().slice(0,80), hecho:false, sec:"", lista:"Entregas", fecha:e.fecha, hito:1}); });
+  var antes=t.f_vigente, txt="Listo. Así medimos a "+q+": ";
+  txt+=ents.map(function(e){ return e.que+" → "+fechaChip(e.fecha); }).join(" · ")||(t.medida.entregable||"");
+  if(ff){ if(!antes || ff<antes){ t.f_vigente=ff; if(!t.f_original) t.f_original=ff; } txt+=(ents.length?"":" → "+fechaChip(ff)); }
+  msg(t,"bi",txt+"."); t.msgs[t.msgs.length-1].canal="sup";
+  if(ff && antes && ff<antes){ msg(t,"bi",q+" había puesto "+fechaBonita(antes)+". Le dejé tu fecha, "+fechaBonita(ff)+(ents.length?", con estas "+ents.length+" entregas":"")+"."); t.msgs[t.msgs.length-1].canal="sup"; }
+  /* al dueño: lo que se le pide, en el chat del equipo */
+  msg(t,"bal",q+": "+((PERSONAS[yo]||{}).nombre||"Tu jefe")+" pide "+(t.medida.entregable||"lo acordado")+(ff?" para el "+fechaBonita(ff):"")+(ents.length?". Entregas: "+ents.map(function(e){ return e.que+" ("+fechaChip(e.fecha)+")"; }).join(", "):"")+". ¿Te queda? Si no, dime para cuándo.");
+  var mdu=t.msgs[t.msgs.length-1]; mdu.canal="equipo"; mdu.de_ia=1; mdu.pide_a=t.duenio;
+  t.medida.espera_dueno=true;
+  guarda(t); try{ sincronizaAvisos(t); }catch(e){}
+  try{ if(t.duenio!==yo) disparaPushInstantaneo(t.duenio,"Nueva medida en "+(t.nombre||"tu tarea"), (t.medida.entregable||"")+(ff?" · para "+fechaChip(ff):""), urlTarea(t.id)); }catch(e){}
+  if(vista==="hilo") render();
+}
+/* el dueño contesta "si me queda" o da otra fecha: se le avisa SOLO al supervisor */
+function respuestaDueno(t, v){
+  if(!t.medida || !t.medida.espera_dueno || t.duenio!==yo) return;
+  t.medida.espera_dueno=false;
+  var f=null; try{ f=fechaMovida(v); }catch(e){}
+  var q=(PERSONAS[yo]||{}).nombre||"El responsable";
+  if(f && t.medida.fecha_final && f>t.medida.fecha_final){
+    msg(t,"bi",q+" dice "+fechaBonita(f)+"; tú pediste "+fechaBonita(t.medida.fecha_final)+". Le dejé tu fecha."); t.msgs[t.msgs.length-1].canal="sup";
+  }
+  guarda(t);
+}
+/* RITMO: entregas vencidas -> insistir al dueño 1 vez al dia (max 2); despues, al jefe inmediato */
+function chequeoHitos(){
+  var H=hoy();
+  tareas.forEach(function(t){
+    if(t.cierre || estadoReal(t)==="cerrada" || !tienePasos(t)) return;
+    var q=(PERSONAS[t.duenio]||{}).nombre||"";
+    (t.lista_pasos||[]).forEach(function(p,ix){
+      if(!p.hito || p.hecho || !p.fecha || p.fecha>=H) return;
+      t.hito_nag=t.hito_nag||{}; var g=t.hito_nag[ix]||(t.hito_nag[ix]={n:0, ult:"", jefe:0});
+      if(g.ult===H) return;
+      /* contesto el dueño despues del ultimo empujon? entonces no se insiste hoy */
+      var ultNag=g.ts||0, contesto=(t.msgs||[]).some(function(m){ return m && m.k==="bo" && (m.de===t.duenio || (!m.de && t.duenio===yo)) && (m.ts||0)>ultNag && ultNag; });
+      if(contesto){ g.ult=H; g.ts=Date.now(); return; }
+      if(g.n<2){
+        msg(t,"bal", g.n===0 ? q+", “"+p.tx+"” era para el "+fechaBonita(p.fecha)+". ¿Para cuándo lo tienes?" : "Van "+(g.n+1)+" días sin respuesta de “"+p.tx+"”. Si mañana no está, le aviso a tu jefe.");
+        var m=t.msgs[t.msgs.length-1]; m.canal="equipo"; m.aviso=1; m.pide_a=t.duenio;
+        g.n++; g.ult=H; g.ts=Date.now(); guarda(t);
+        try{ disparaPushInstantaneo(t.duenio, t.nombre||"Tarea", "“"+p.tx+"” está atrasado", urlTarea(t.id)); }catch(e){}
+      } else if(!g.jefe){
+        var sups=quienSupervisa(t);
+        msg(t,"bi", q+" no ha cumplido “"+p.tx+"” (debía el "+fechaBonita(p.fecha)+"). Ya le insistí 2 veces."); var mj=t.msgs[t.msgs.length-1]; mj.canal="sup"; mj.aviso=1;
+        g.jefe=1; g.ult=H; guarda(t);
+        sups.forEach(function(k){ try{ disparaPushInstantaneo(k, t.nombre||"Tarea", q+" no ha cumplido “"+p.tx+"”", urlTarea(t.id)); }catch(e){} });
+      }
+    });
+  });
+}
+/* "yo lo superviso" / "que Samuel lo revise" al crear; "entrevístame" dentro de la tarea */
+function superviseDicho(v){ return /\b(yo\s+(lo|la|los|las)\s+(superviso|reviso)|lo\s+superviso\s+yo|lo\s+reviso\s+yo)\b/i.test(String(v||"")); }
+function pideEntrevista(v){ return /^\s*(entrev[ií]stame|hazme\s+la\s+entrevista|c[oó]mo\s+lo\s+medimos)\b/i.test(String(v||"")); }
 
 /* build 179: envolturas finales (organigrama desde la barra; integrantes al crear con "que estén ...") */
 (function(){
@@ -11428,6 +11545,8 @@ function armaTeToca(rev, det, venc, msgs, hoyYa){
       var t=_c179.apply(this, arguments);
       try{
         var dicho=String((d&&(d.dicho||d.nombre))||"");
+        /* build 182: "yo lo superviso" -> entro como REVISA y arranca la entrevista */
+        if(t && superviseDicho(dicho) && t.duenio!==yo){ t.revisores=(t.revisores||[]); if(t.revisores.indexOf(yo)<0) t.revisores.push(yo); setTimeout(function(){ iniciaEntrevista(t, yo); }, 50); }
         if(t && nombresDeIntegrantes(dicho).length){
           var prop=propuestaIntegrantes(dicho);
           if(prop.length){
