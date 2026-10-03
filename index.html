@@ -651,6 +651,8 @@ button{font:inherit;color:inherit}
 .ttn{background:#FF2D55;color:#fff;border-radius:11px;padding:1px 9px;font-size:14px;font-weight:700}
 .ttz{color:var(--ink-3);font-size:14px}
 .ttr{padding:13px 15px}.ttr .rn{font-size:19.5px!important}.ttr .ttx{flex:1;min-width:0;display:flex;flex-direction:column}.ttr .ttx small{font-size:15.5px;color:var(--ink-3);font-weight:400;margin-top:1px}.ttr i{width:10px;height:10px}
+.ttpie{display:flex;justify-content:center;gap:22px;margin:18px 0 10px}.ttpie button{border:0;background:none;color:var(--ink-3);font-size:16px;padding:8px 6px}
+.ttsum .rn{font-weight:600}.ttch{color:var(--ink-3);font-size:22px;margin-left:auto}
 .ttg{margin:12px 21px 5px;font-size:13.5px;font-weight:700;letter-spacing:.05em;color:var(--ink-3);text-transform:uppercase}
 .ttmas{justify-content:center;color:#0a84ff;font-size:15.5px;font-weight:600}
 .tth b{font-size:24px!important}
@@ -1080,7 +1082,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 180 · 2026-10-02 · Te toca por grupos en orden (atoradas, falta info, por autorizar, vencidas, hoy), 3 por grupo y letra 20% mas grande";
+var VERSION_APP = "build 181 · 2026-10-02 · Te toca limpio: uno por uno lo que pide tu accion; vencidas y hoy en un renglon que se abre";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -4978,17 +4980,14 @@ function vLista(){
      algo (primero lo de Por revisar: te espera/atorados, falta informacion, vinculacion, por
      autorizar; luego vencidas, mensajes nuevos y hoy). Abajo Proximas y "Compartidas · N". ===== */
   var _tt=armaTeToca(_rev, det, mias_venc, msgs, hoyYa);
-  h+=vTeToca(_tt)+hMis+hProx+(hoyYa.length?'':'');
+  h+=vTeToca(_tt)+hMis;
 
-  if(futuras.length && hoyYa.length){
-    h+='<div class="futwrap"><button class="futbtn" id="bfut">'+
-       ico("cal",18,1.8)+'<span>'+(verFuturas?"Ocultar futuras":"Ver tareas futuras")+
-       ' \u00b7 '+futuras.length+'</span></button></div>';
-    if(verFuturas){
-      h+='<ul class="list">';
-      futuras.forEach(function(t){h+=fila(t)});
-      h+='</ul>';
-    }
+  /* build 181: abajo, chiquito: "Próximas · N ›" y "Compartidas · N ›" (se abren ahi mismo) */
+  var _nComp=0; try{ _nComp=compartidasDe().length; }catch(e){}
+  if(futuras.length || _nComp){
+    h+='<div class="ttpie">'+(futuras.length?'<button id="bfut">Próximas · '+futuras.length+' '+(verFuturas?'⌄':'›')+'</button>':'')+
+       (_nComp?'<button id="bcomp">Compartidas · '+_nComp+' '+(window.__verComp?'⌄':'›')+'</button>':'')+'</div>';
+    if(verFuturas && futuras.length){ h+='<ul class="list">'; futuras.forEach(function(t){h+=fila(t)}); h+='</ul>'; }
   }
 
   /* ORDEN DEL SWIPE ENTRE TAREAS — Salvador 2026-09-22: el swipe (window.
@@ -5010,7 +5009,7 @@ function vLista(){
     window.ordenSwipe=out;
   })();
 
-  try{ h+=vCompartidas(); }catch(e){ console.warn("compartidas",e); }
+  try{ if(window.__verComp) h+=vCompartidas().replace(/^<button class="compbtn"[^>]*>[^<]*<\/button>/,''); }catch(e){ console.warn("compartidas",e); }
   /* LA PANTALLA ES SOLO TUYA — decision de Salvador, 2026-09-03. La pantalla
      del jefe muestra solo lo suyo y lo que lo detiene; lo de los demas se
      consulta preguntandole a Claude. */
@@ -9891,6 +9890,7 @@ function bindLista(){
   };
   var bc=$("bclr"); if(bc) bc.onclick=function(){ consulta=""; render() };
   var bcp=$("bcomp"); if(bcp) bcp.onclick=function(){ window.__verComp=!window.__verComp; render(); };
+  Array.prototype.forEach.call(document.querySelectorAll("[data-ttab]"),function(b){ b.onclick=function(){ window.__ttAb=window.__ttAb||{}; var g=b.getAttribute("data-ttab"); window.__ttAb[g]=!window.__ttAb[g]; render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-ttmas]"),function(b){ b.onclick=function(){ window.__ttMas=window.__ttMas||{}; var g=b.getAttribute("data-ttmas"); window.__ttMas[g]=!window.__ttMas[g]; render(); }; }); var bkc=$("bback"); if(bkc && consulta) bkc.onclick=function(){ consulta=""; render() };
   var bfu=$("bfut"); if(bfu) bfu.onclick=function(){ verFuturas=!verFuturas; render() };
   var bms2=$("bmas"); if(bms2) bms2.onclick=function(){ masDias+=7; render() };
@@ -11378,36 +11378,37 @@ function vSupervisor(t){
    lo de "Por revisar" (te espera / atorados, falta informacion, posible vinculacion, por
    autorizar), luego preguntas en compartidas, vencidas, mensajes sin leer y hoy. Sin parpadeos. */
 function vTeToca(items){
-  if(!items.length) return '<div class="tth"><b>Te toca</b><span class="ttz">0 · todo al día</span></div>';
-  /* build 180 (Salvador 21:10): por grupos, en su orden, cada uno con sus primeras 3 y "ver N más" */
-  var h='<div class="tth"><b>Te toca</b><span class="ttn">'+items.length+'</span></div>', gs=[], idx={};
-  items.forEach(function(x){ if(!(x.g in idx)){ idx[x.g]=gs.length; gs.push({g:x.g, l:[]}); } gs[idx[x.g]].l.push(x); });
-  window.__ttMas=window.__ttMas||{};
-  gs.forEach(function(G){
-    var abierto=window.__ttMas[G.g], ver=abierto?G.l:G.l.slice(0,3);
-    h+='<div class="ttg">'+esc(G.g)+' · '+G.l.length+'</div><div class="revl ttl">';
-    ver.forEach(function(x){
-      h+='<button class="revr ttr" data-id="'+esc(x.t.id)+'"><i style="background:'+x.col+'"></i><span class="ttx"><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span><small>'+esc(x.why)+'</small></span></button>';
-    });
-    if(G.l.length>3) h+='<button class="revr ttmas" data-ttmas="'+esc(G.g)+'">'+(abierto?'Ver menos':'Ver '+(G.l.length-3)+' más')+'</button>';
-    h+='</div>';
+  /* build 181 (maqueta "Propuesta limpia", Salvador 21:31): uno por uno solo lo que pide tu
+     accion (te preguntan / atorado, falta informacion, por autorizar); vencidas y hoy en UN
+     renglon cada uno que se abre ahi mismo. Sin titulos de grupo: el colorcito dice que es.
+     Los mensajes que solo informan NO entran: la tarea se queda con su globito. */
+  if(!items.length) return '<div class="tth"><b>Te toca</b><span class="ttz">todo al día</span></div>';
+  window.__ttAb=window.__ttAb||{};
+  var uno=items.filter(function(x){ return !x.sum; }), sums={};
+  items.filter(function(x){ return x.sum; }).forEach(function(x){ (sums[x.sum]=sums[x.sum]||[]).push(x); });
+  var h='<div class="tth"><b>Te toca</b><span class="ttn">'+items.length+'</span></div><div class="revl ttl">';
+  function fila(x){ return '<button class="revr ttr" data-id="'+esc(x.t.id)+'"><i style="background:'+x.col+'"></i><span class="ttx"><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span><small>'+esc(x.why)+'</small></span></button>'; }
+  uno.forEach(function(x){ h+=fila(x); });
+  [["venc","vencida","vencidas","#FF453A"],["hoy","para hoy","para hoy","#8e8e93"]].forEach(function(s){
+    var l=sums[s[0]]; if(!l) return;
+    var ab=window.__ttAb[s[0]];
+    h+='<button class="revr ttr ttsum" data-ttab="'+s[0]+'"><i style="background:'+s[3]+'"></i><span class="ttx"><span class="rn">'+l.length+' '+(l.length===1?s[1]:s[2])+'</span></span><span class="ttch">'+(ab?'⌄':'›')+'</span></button>';
+    if(ab) l.forEach(function(x){ h+=fila(x); });
   });
-  return h;
+  return h+'</div>';
 }
 function armaTeToca(rev, det, venc, msgs, hoyYa){
-  /* orden de Salvador 21:10: 1 atoradas · 2 falta informacion · 3 por autorizar · 4 vencidas · 5 hoy */
+  /* orden (Salvador 21:10): atoradas/te preguntan · falta informacion · por autorizar · vencidas · hoy */
   var out=[], ya={};
-  function pon(g, t, why, col){ if(!t || ya[t.id]) return; ya[t.id]=1; out.push({g:g, t:t, why:why, col:col}); }
-  var A="Atoradas", F="Falta información", P="Por autorizar", V="Vencidas", M="Mensajes nuevos", H="Hoy";
-  rev.filter(function(x){ return x.k==="espera"; }).forEach(function(x){ pon(A, x.t, etiquetaRev(x.t,x.k), "#ff9f0a"); });
-  det.forEach(function(t){ pon(A, t, esDecisionSal(t)?"esperan tu decisión":"alguien espera", "#ff9f0a"); });
+  function pon(t, why, col, sum){ if(!t || ya[t.id]) return; ya[t.id]=1; out.push({t:t, why:why, col:col, sum:sum||null}); }
+  rev.filter(function(x){ return x.k==="espera"; }).forEach(function(x){ pon(x.t, etiquetaRev(x.t,x.k), "#ff9f0a"); });
+  det.forEach(function(t){ pon(t, esDecisionSal(t)?"esperan tu decisión":"alguien te espera", "#ff9f0a"); });
   compartidasDe().concat(tareas.filter(function(t){ return t.duenio===yo && !t.cierre && estadoReal(t)!=="cerrada" && !t.es_recordatorio; }))
-    .forEach(function(t){ var p=null; try{ p=preguntaParaMi(t); }catch(e){} if(p) pon(A, t, p.de+(p.todos?" pide opinión a todos":" te pregunta"), "#ff9f0a"); });
-  rev.filter(function(x){ return x.k==="falta"; }).forEach(function(x){ pon(F, x.t, "falta información", "#0a84ff"); });
-  rev.filter(function(x){ return x.k==="autorizar"||x.k==="vincular"; }).forEach(function(x){ pon(P, x.t, x.k==="vincular"?"posible vinculación":"recién creada · ¿a dónde va?", x.k==="vincular"?"#bf5af2":"#30d158"); });
-  venc.forEach(function(t){ pon(V, t, "venció "+(fechaChip(t.f_vigente)||""), "#FF453A"); });
-  msgs.forEach(function(t){ pon(M, t, "mensaje nuevo", "#64d2ff"); });
-  hoyYa.forEach(function(t){ pon(H, t, "hoy", "#8e8e93"); });
+    .forEach(function(t){ var p=null; try{ p=preguntaParaMi(t); }catch(e){} if(p) pon(t, p.de+(p.todos?" pide opinión a todos":" te pregunta"), "#ff9f0a"); });
+  rev.filter(function(x){ return x.k==="falta"; }).forEach(function(x){ pon(x.t, "falta información", "#0a84ff"); });
+  rev.filter(function(x){ return x.k==="autorizar"||x.k==="vincular"; }).forEach(function(x){ pon(x.t, x.k==="vincular"?"posible vinculación":"por autorizar", x.k==="vincular"?"#bf5af2":"#30d158"); });
+  venc.forEach(function(t){ pon(t, "venció "+(fechaChip(t.f_vigente)||""), "#FF453A", "venc"); });
+  hoyYa.forEach(function(t){ pon(t, "hoy", "#8e8e93", "hoy"); });
   return out;
 }
 
