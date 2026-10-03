@@ -1071,6 +1071,9 @@ button{font:inherit;color:inherit}
 .leemenu button+button{border-top:.5px solid #3a3a44}
 .msgs .b,.ptcard,.top .tnm{-webkit-touch-callout:none}.msgs .b,.ptcard{-webkit-user-select:none;user-select:none}
 .ttlee{margin-left:auto;border:0;background:none;color:#30d158;padding:2px 8px;display:flex;align-items:center}
+.fotin{flex-direction:column;align-items:flex-end;gap:2px}.fotin img{width:180px;height:auto;max-height:240px;border-radius:12px}.fotin .fh{font-size:12px;color:var(--ink-3)}
+.gdoc{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;aspect-ratio:1;border-radius:10px;background:#2a2a33;color:#fff;text-decoration:none;padding:6px;text-align:center}
+.gdoc span{font-size:20px;font-weight:700;color:#ff9f0a}.gdoc small{font-size:11px;color:#bbb;word-break:break-all}
 </style>
 </head>
 <body>
@@ -1107,7 +1110,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 185 · lectura como podcast en vivo: al acabar te pregunta y te escucha (siguiente, repite, duda, resumen, ya está, elimínala); Leer lo actual; velocidad en ⋯";
+var VERSION_APP = "build 186 · en Todo tu mensaje va al responsable (externo por WhatsApp, con aviso); fotos en su lugar del chat; el clip junta también lo de WhatsApp";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -2445,9 +2448,21 @@ function adjuntos(t){
     var f=ft[k]; var p=(t.puntos&&t.puntos[k])?t.puntos[k].t:"punto "+k;
     out.push({data:f.data,ts:f.ts,lat:f.lat,lon:f.lon,de:p});
   });
+  /* build 186 (Salvador 2026-10-03 08:17): el clip junta TODO: tambien fotos y documentos que llegaron por WhatsApp */
+  (t.msgs||[]).forEach(function(x){
+    if(!x || !x.url) return;
+    var u=String(x.url), tp=String(x.tipo||"").toLowerCase();
+    var esImg=/imagen|foto|sticker/.test(tp) || /\.(jpe?g|png|webp|gif|heic)(\?|$)/i.test(u);
+    var esAud=/audio/.test(tp) || /\.(ogg|opus|mp3|m4a|wav)(\?|$)/i.test(u);
+    var mm=String(x.t||"").match(/^([^:\n]{1,24}):/), quien=mm?mm[1]:(x.wa_c?String(x.wa_c):"WhatsApp");
+    var nom=(u.split("/").pop()||"").split("?")[0];
+    out.push({url:u, data:esImg?u:"", ts:x.ts, de:quien, wa:1, img:esImg, aud:esAud, nombre:decodeURIComponent(nom)});
+  });
+  out.forEach(function(f){ if(f.img===undefined) f.img=true; });
   out.sort(function(a,b){return (a.ts||0)-(b.ts||0)});
   return out;
 }
+function adjImgs(t){ return adjuntos(t).filter(function(f){ return f.img; }); }
 function fechaCorta(ts){
   if(!ts)return"";
   var d=new Date(ts);
@@ -2522,7 +2537,7 @@ function abreUltimoNuevo(){
 function nuevosNov(t){ return Math.max(0, novedadesTot(t) - vistosNov(t.id)) }
 
 function abreVisor(lista,i){
-  if(abierta) marcaVistos(abierta, lista.length);
+  if(abierta){ var _tv=tareas.filter(function(x){return x.id===abierta})[0]; marcaVistos(abierta, Math.max(lista.length, _tv?adjuntos(_tv).length:0)); }
   visorList=lista; visorI=i;
   var v=$("visor"); v.classList.add("on"); pintaVisor();
 }
@@ -5457,8 +5472,20 @@ function vPastilla(t){
   if(!conPill && !intB) return "";
   return '<div class="cnlwrap">'+(conPill?'<button class="cnlpill" id="cnlpill" style="--cc:'+c.col+'"><i></i>'+esc(c.nom+(c.ext?" · WhatsApp":""))+' ▾</button>':'')+intB+'</div>';
 }
+/* build 186 (Salvador 2026-10-03 08:17): en "Todo" sin nombrar a nadie, el mensaje es para el
+   RESPONSABLE: si la tarea es mia y la esta haciendo un externo, ese externo (el ultimo que escribio
+   si hay varios); si la lleva alguien del equipo, ya le llega en la app (no se manda por WhatsApp). */
+function responsableExt(t){
+  if(!t || (t.duenio && t.duenio!==yo)) return null;
+  var ex=externosDe(t); if(!ex.length) return null;
+  if(ex.length===1) return ex[0];
+  var ms=t.msgs||[];
+  for(var i=ms.length-1;i>=0;i--){ var c=canalDe(ms[i]||{}); if(c.indexOf("ext:")===0) return c.slice(4); }
+  return null;
+}
 function phCanal(t){
   var c=canalActual(t);
+  if(c.id==="todo"){ var _rx=responsableExt(t); if(_rx) return "Mensaje para "+_rx+" por WhatsApp…"; }
   if(c.id==="sup") return "Nota de supervisor…";
   if(c.ext) return "Mensaje a "+c.nom+" por WhatsApp…";
   if(c.id.indexOf("dm:")===0) return "Mensaje solo a "+c.nom+"…";
@@ -6165,10 +6192,16 @@ function vHilo(){
       'Las fotos y comprobantes que se suban aquí se van a ir juntando en esta pantalla, por fecha.</p></div></div>';
     /* MÁS RECIENTE ARRIBA (adj viene de viejo a nuevo, se recorre al revés).
        El data-gi apunta al índice real en adj para que el visor abra el correcto. */
+    var _ims=adj.filter(function(f){return f.img;});
     var orden=adj.map(function(f,i){return i}).reverse();
     return h+'<div class="scroll"><div class="gal"><h2>Archivos de esta tarea · '+adj.length+'</h2><div class="galgrid">'+
-      orden.map(function(i){var f=adj[i];return '<figure><img src="'+f.data+'" data-gi="'+i+'" alt="'+esc(f.de)+'">'+
-        '<figcaption>'+esc(f.de)+'<br>'+fechaCorta(f.ts)+'</figcaption></figure>'}).join("")+
+      orden.map(function(i){var f=adj[i];
+        if(f.img) return '<figure><img src="'+esc(f.data||f.url)+'" data-gi="'+_ims.indexOf(f)+'" alt="'+esc(f.de)+'">'+
+          '<figcaption>'+esc(f.de)+'<br>'+(f.ts?fechaCorta(new Date(f.ts)):'')+'</figcaption></figure>';
+        var ext=(String(f.nombre||"").split(".").pop()||"").toUpperCase().slice(0,4)||"DOC";
+        return '<figure><a class="gdoc" href="'+esc(f.url)+'" target="_blank" rel="noopener"><span>'+esc(f.aud?"AUDIO":ext)+'</span><small>'+esc(String(f.nombre||"").slice(0,40))+'</small></a>'+
+          '<figcaption>'+esc(f.de)+'<br>'+(f.ts?fechaCorta(new Date(f.ts)):'')+'</figcaption></figure>';
+      }).join("")+
       '</div></div></div>';
   }
   /* LA FICHA GRIS — resumen clave, SIEMPRE desplegada (Salvador 2026-09-04).
@@ -6223,7 +6256,14 @@ function vHilo(){
 
   var m="";
   var _plg=avisosPlegados(t), _cn=canalActual(t);
+  /* build 186: cada foto subida desde la app va en SU lugar del chat (por hora), no amontonada al final */
+  var _evs=(t.evidencias||[]).map(function(f){return f;}).sort(function(a,b){return (a.ts||0)-(b.ts||0)}), _evI=0;
+  function _evHasta(ts){ while(_evI<_evs.length && (ts===Infinity || (_evs[_evI].ts||0)<=ts)){ var f=_evs[_evI++];
+    var _hh=""; try{ _hh=f.ts?hhmm(new Date(f.ts)):""; }catch(e){}
+    m+='<div class="fot fotin"><img src="'+f.data+'" alt="evidencia"><span class="fh">'+esc(((f.de&&PERSONAS[f.de])?PERSONAS[f.de].nombre+" · ":"")+_hh)+'</span></div>'; } }
   (t.msgs||[]).forEach(function(x,ix){
+    if(x && x.ts) _evHasta(x.ts);
+    if(x && x.k==="bi" && !x.wa_in && /^Foto guardada( con ubicaci[oó]n)?\.?$/.test(String(x.t||"").trim())) return;   /* build 186: paja */
     var _cx=canalDe(x);
     if(_cx.indexOf("dm:")===0 && _cx!=="dm:"+yo && x.de!==yo && !(PERSONAS[yo]&&PERSONAS[yo].jefe)) return;  /* lo privado de otros no se pinta */
     if(_cx.indexOf("priv:")===0 && _cx!=="priv:"+yo) return;                 /* build 179: nota de Claude solo para quien contesto */
@@ -6285,9 +6325,8 @@ function vHilo(){
       m+='<div class="fot">'+fotosArr.map(function(f){return '<img src="'+f.data+'" alt="evidencia">'}).join("")+'</div>';
     }
   }
+  _evHasta(Infinity);
   if(t.evidencias&&t.evidencias.length){
-    m+='<div class="fot">'+t.evidencias.map(function(f){return '<img src="'+f.data+'" alt="evidencia">'}).join("")+'</div>';
-    var u=t.evidencias[t.evidencias.length-1];
     /* build 183 (Salvador 22:09): sin burbuja de coordenadas/hora; la ubicacion queda guardada en la foto */
   }
 
@@ -6477,7 +6516,7 @@ function detalleTarea(t, ancho){
   if(ancho){
     var ad=adjuntos(t);
     if(ad.length) d.documentos=ad.slice(-8).map(function(e,i){
-      var o={n:i+1, que:e.de||"documento", cuando:fechaCorta(e.ts)};
+      var o={n:i+1, que:e.de||"documento", cuando:(e.ts?fechaCorta(new Date(e.ts)):"")};
       if(e.leido) o.dice=e.leido;     /* lo que se leyó de la imagen */
       return o;
     });
@@ -10107,14 +10146,16 @@ function bindHilo(){
     vista=(vista==="galeria"?"hilo":"galeria"); render();
   };
   Array.prototype.forEach.call(document.querySelectorAll("[data-gi]"),function(el){
-    el.onclick=function(){abreVisor(adj,+el.getAttribute("data-gi"))};
+    el.onclick=function(){abreVisor(adj.filter(function(f){return f.img;}),+el.getAttribute("data-gi"))};
   });
   Array.prototype.forEach.call(document.querySelectorAll("[data-ai]"),function(el){
     el.onclick=function(){abreVisor(adj,+el.getAttribute("data-ai"))};
   });
   Array.prototype.forEach.call(document.querySelectorAll(".fot img"),function(el,i){
     el.style.cursor="pointer";
-    el.onclick=function(){abreVisor(adj,Math.min(i,adj.length-1))};
+    el.onclick=function(){ var _ims=adj.filter(function(f){return f.img;}), s=el.getAttribute("src"), k=-1;
+      for(var q=0;q<_ims.length;q++){ if((_ims[q].data||_ims[q].url)===s){ k=q; break; } }
+      abreVisor(_ims, k<0?Math.min(i,_ims.length-1):k); };
   });
   if(vista==="galeria") return;
   montaSwipeUnaVez();   /* deslizar der/izq brinca de tarea en tarea */
@@ -10319,7 +10360,7 @@ function bindHilo(){
       t.evidencias=t.evidencias||[];
       var ev2={data:data,lat:meta&&meta.lat,lon:meta&&meta.lon,ts:Date.now()};
       t.evidencias.push(ev2);
-      msg(t,"bi","Foto guardada"+(meta&&meta.lat?" con ubicación":"")+".");
+      /* build 186: ya no se escribe "Foto guardada": la foto misma aparece en el chat */
       t.ultima=PERSONAS[yo].nombre+": mandó una foto"; guarda(t);
       leeFoto(t, ev2);
     });
@@ -10378,6 +10419,14 @@ function bindHilo(){
       var _vN=v;
       preguntaExterno(_exN, _vN, function(){ candadoExterno(t, _exN, _vN, function(){ mandaAExterno(t, _exN, _vN, _cita); }); },
         function(){ msg(t,"bo",_vN); var mm=t.msgs[t.msgs.length-1]; mm.canal="equipo"; mm.de=yo; guarda(t); render(); });
+      return;
+    }
+    var _rx186=(!_esOrden && !_cita && _cnA.id==="todo")?responsableExt(t):null;
+    if(_rx186){
+      $("txt").value=""; marcaEnvio("tenv","");
+      var _vR=v;
+      preguntaExterno(_rx186, _vR, function(){ candadoExterno(t, _rx186, _vR, function(){ mandaAExterno(t, _rx186, _vR, null); }); },
+        function(){ msg(t,"bo",_vR); var mm=t.msgs[t.msgs.length-1]; mm.canal="equipo"; mm.de=yo; guarda(t); render(); });
       return;
     }
     if(_cita){ var _vC=v; setTimeout(function(){ pegaCita(t, _vC, _cita); }, 0); }
