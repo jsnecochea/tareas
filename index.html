@@ -607,6 +607,16 @@ button{font:inherit;color:inherit}
    Deshacer" (5 s); al cerrar, el titulo parpadea dos veces en verde y queda
    tachado. Cambiar de tarea es siempre con el dedo (swipe), nunca solo.
    Supera la regla del 22-sep de "eliminar recordatorio salta al siguiente". */
+.qcita{display:block;border-left:3px solid var(--ok,#30d158);background:rgba(255,255,255,.07);border-radius:8px;padding:5px 9px;margin:0 0 6px;font-size:13.5px;color:var(--t2,#cfcfd4);text-align:left;cursor:pointer}
+.qcita b{display:block;color:var(--ok,#30d158);font-size:12.5px}
+.qcita span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rqbar{display:flex;align-items:center;gap:8px;margin:0 0 8px;padding:7px 8px;border-radius:12px;background:var(--surface-2,#2c2c2e)}
+.rqbar .qcita{flex:1;margin:0}
+.rqbar button{background:none;border:0;color:var(--t2,#9a9a9f);font-size:20px;padding:4px 8px}
+.b.swp{transition:none}
+.b.swback{transition:transform .2s ease}
+.swico{position:absolute;left:-36px;top:50%;width:28px;height:28px;margin-top:-14px;border-radius:50%;background:var(--ok,#30d158);color:#000;display:grid;place-items:center;font-weight:800;opacity:0}
+.b.flash{box-shadow:0 0 0 2px var(--ok,#30d158);transition:box-shadow .3s}
 .sigue-ov{position:fixed;inset:0;z-index:70;display:grid;place-items:center;pointer-events:none;background:rgba(0,0,0,0);backdrop-filter:blur(0);-webkit-backdrop-filter:blur(0);animation:sigueOv 1.05s ease forwards}
 .sigue-ov span{width:104px;height:104px;border-radius:50%;display:grid;place-items:center;color:#fff;transform:scale(.4);opacity:0;animation:siguePop 1.05s cubic-bezier(.2,.9,.25,1.2) forwards}
 .sigue-ov.ok span{background:#30d158;box-shadow:0 10px 40px rgba(48,209,88,.45)}
@@ -5275,13 +5285,79 @@ function reasignaDicho(t, v, silencioso){
   guarda(t); if(!silencioso) toast("Pasó a "+PERSONAS[k].nombre);
   return true;
 }
+/* build 176 (Salvador 2026-10-02 18:44): contestar UN mensaje en especifico, como en
+   WhatsApp. Deslizas a la derecha la burbuja -> queda pegada arriba de donde escribes
+   (la X la quita) -> tu respuesta lleva la cita encima; tocar la cita lleva al original.
+   Si el original vino de WhatsApp, la respuesta sale a ESA persona como respuesta a ese
+   mensaje (cita_texto; el programa de la Mac v12 la liga). */
+function partesMsg(x){
+  var tx=String((x&&(x.tr||x.t))||""), mm=tx.match(/^([^:\n]{1,24}):\s*([\s\S]*)$/);
+  var de=x&&x.wa_c?String(x.wa_c):"";
+  if(mm && (x.wa_in||x.wa_c||x.origen)){ de=de||mm[1]; tx=mm[2]; }
+  if(!de) de=(x&&x.de&&PERSONAS[x.de])?PERSONAS[x.de].nombre:(x&&x.k==="bo"?((PERSONAS[yo]||{}).nombre||""):"Claude");
+  return {de:de, t:tx.trim()};
+}
+function citaHTML(x){
+  if(!x || !x.cita) return "";
+  return '<span class="qcita" data-irmsg="'+esc(String(x.cita.ix))+'"><b>'+esc(x.cita.de||"")+'</b><span>'+esc(String(x.cita.t||"").slice(0,160))+'</span></span>';
+}
+function ponCita(t, ix){
+  var x=(t.msgs||[])[ix]; if(!x) return;
+  var p=partesMsg(x);
+  window.__cita={tid:t.id, ix:ix, de:p.de, t:p.t, wa:(x.wa_in===1?(x.wa_c||p.de):"")};
+  try{ if(navigator.vibrate) navigator.vibrate(10); }catch(e){}
+  pintaCitaBarra(t);
+  var tx=$("txt"); if(tx) try{ tx.focus(); }catch(e){}
+}
+function pintaCitaBarra(t){
+  var vieja=document.getElementById("rqbar"); if(vieja) vieja.parentNode.removeChild(vieja);
+  var c=window.__cita; if(!c || c.tid!==t.id) return;
+  var comp=document.querySelector(".comp"); if(!comp) return;
+  var d=document.createElement("div"); d.id="rqbar"; d.className="rqbar";
+  d.innerHTML='<span class="qcita"><b>'+esc(c.de)+'</b><span>'+esc(String(c.t).slice(0,160))+'</span></span><button type="button" aria-label="Quitar">✕</button>';
+  d.querySelector("button").onclick=function(ev){ ev.stopPropagation(); window.__cita=null; pintaCitaBarra(t); };
+  comp.insertBefore(d, comp.firstChild);
+}
+function pegaCita(t, v, c){
+  if(!c) return;
+  function hazlo(){
+    var ms=t.msgs||[];
+    for(var i=ms.length-1;i>=0 && i>=ms.length-6;i--){ var m=ms[i];
+      if(m && m.k==="bo" && !m.cita && (String(m.t||"").trim()===v.trim() || String(m.tr||"").trim()===v.trim())){
+        m.cita={ix:c.ix, de:c.de, t:String(c.t).slice(0,300)}; guarda(t); if(vista==="hilo"&&abierta===t.id) render(); return true; } }
+    return false;
+  }
+  if(!hazlo()) setTimeout(hazlo, 400);
+}
+function bindDeslizar(t){
+  Array.prototype.forEach.call(document.querySelectorAll(".msgs [data-mix], .msgs [data-hab]"), function(el){
+    var ix=el.hasAttribute("data-mix") ? +el.getAttribute("data-mix") : +String(el.getAttribute("data-hab")).split("|").pop();
+    if(isNaN(ix)) return;
+    var x0=0,y0=0,dx=0,va=false,no=false;
+    el.addEventListener("touchstart",function(e){ var p=e.touches[0]; x0=p.clientX; y0=p.clientY; dx=0; va=false; no=false; el.classList.remove("swback"); },{passive:true});
+    el.addEventListener("touchmove",function(e){ if(no) return; var p=e.touches[0], ddx=p.clientX-x0, ddy=p.clientY-y0;
+      if(!va){ if(Math.abs(ddy)>12 && Math.abs(ddy)>Math.abs(ddx)){ no=true; return; } if(ddx>10) va=true; else return; }
+      dx=Math.max(0,Math.min(70,ddx)); el.style.transform="translateX("+dx+"px)"; },{passive:true});
+    el.addEventListener("touchend",function(){ if(!va) return; el.classList.add("swback"); el.style.transform=""; if(dx>=48) ponCita(t, ix); },{passive:true});
+  });
+  Array.prototype.forEach.call(document.querySelectorAll(".msgs [data-irmsg]"), function(q){
+    q.onclick=function(ev){ ev.stopPropagation(); var o=document.querySelector('.msgs [data-mix="'+q.getAttribute("data-irmsg")+'"]');
+      if(o){ o.scrollIntoView({behavior:"smooth",block:"center"}); o.classList.add("flash"); setTimeout(function(){ o.classList.remove("flash"); },1200); } };
+  });
+  pintaCitaBarra(t);
+}
 /* build 175 (Salvador 2026-10-02 18:33): si lo ultimo en la tarea es un mensaje de
    alguien por WhatsApp (pregunta, pedido, aviso) y Salvador le contesta en el chat de
    la tarea, se le manda por WhatsApp sin decir "dile". Las ordenes a la app (renombrar,
    recuerdame, dile a, pasala a, lista...) NO se mandan. Si Salvador ya le contesto en
    WhatsApp, el programa de la Mac no lo duplica (auto_respuesta + desde_ts). */
-function aQuienRespondo(t, v){
+function aQuienRespondo(t, v, cita){
   if(!t || t.es_recordatorio || t.cierre || estadoReal(t)==="cerrada") return "";
+  if(cita && cita.tid===t.id){
+    if(!cita.wa || /^grupo\b/i.test(cita.wa)) return "";
+    var s0=String(v||"").trim(); if(s0.length<1 || detectaRenombre(s0) || duenioDicho(s0)) return "";
+    return cita.wa;
+  }
   var ms=t.msgs||[], x=null;
   for(var i=ms.length-1;i>=0;i--){ var m=ms[i]; if(!m || (m.k==="bi" && m.wa_in!==1)) continue; if(m.k==="bo" && (!m.de || m.de===yo) && !m.wa_in) return ""; x=m; break; }
   if(!x || x.wa_in!==1) return "";
@@ -5294,9 +5370,10 @@ function aQuienRespondo(t, v){
   if(/^\s*(recu[eé]rda(me|le)|av[ií]sa(me|le)|apunta|anota|agrega|p[oó]n(me|le)|c[aá]mbia(le)?|dile|d[ií]gale|m[aá]nda(le|me)|preg[uú]nta(le)?|escr[ií]be(le)?|ll[aá]ma(le|me)|m[aá]rca(le|me)|abre|busca|cierra|ci[eé]rrala|borra|b[oó]rrala|elimina|crea|hazme|haz|recordatorio|alarma|mu[eé]vela|p[aá]sala|reenv[ií]a)\b/i.test(s)) return "";
   return c;
 }
-function respondeAuto(t, v, contacto){
-  var desde=Date.now();
-  pideWhatsApp({usuario:yo, tarea_id:t.id, contacto:contacto, texto:v, auto_respuesta:1, desde_ts:desde})
+function respondeAuto(t, v, contacto, cita){
+  var desde=Date.now(), cpo={usuario:yo, tarea_id:t.id, contacto:contacto, texto:v, auto_respuesta:1, desde_ts:desde};
+  if(cita && cita.t) cpo.cita_texto=String(cita.t).slice(0,300);
+  pideWhatsApp(cpo)
     .then(function(j){ var pid=(j&&(j.id||j.pedido_id))||null; marca(pid); })
     .catch(function(e){ msg(t,"bi","No se pudo mandar tu respuesta a "+contacto+" por WhatsApp ("+String((e&&e.message)||e).slice(0,60)+")."); guarda(t); if(vista==="hilo") render(); });
   function marca(pid){
@@ -5938,10 +6015,10 @@ function vHilo(){
            (x.url?' · <a href="'+esc(x.url)+'" target="_blank" rel="noopener">abrir archivo</a>':'')+
            (x.analisis?'<br>'+esc(x.analisis):'')+'</div>';
       }
-      m+='<div class="b bi bcomp">'+cab+'<button class="mdot" data-an="'+ix+'" aria-label="Ver detalle del mensaje">·</button>'+dt+'</div>';
+      m+='<div class="b bi bcomp" data-mix="'+ix+'">'+cab+'<button class="mdot" data-an="'+ix+'" aria-label="Ver detalle del mensaje">·</button>'+dt+'</div>';
       return;
     }
-    m+='<div class="b '+(x.k==="bal"?"bal":(x.k==="bo"?"bo":"bi"))+(x.abre?' liga" data-abre="'+esc(x.abre):'')+'">'+esc(x.t)+
+    m+='<div class="b '+(x.k==="bal"?"bal":(x.k==="bo"?"bo":"bi"))+(x.abre?' liga" data-abre="'+esc(x.abre):'')+'" data-mix="'+ix+'">'+citaHTML(x)+esc(x.t)+
        (x.abre?'<span class="abre">Abrir ›</span>':'')+'<span class="st">'+meta+
        (tieneAn?'<button class="mdel" data-an="'+ix+'" aria-label="Ver cómo se decidió este mensaje">'+ico("info",15,1.8)+'</button>':'')+
        (waCan?'<button class="mdel" data-wacan="'+ix+'" aria-label="Cancelar este WhatsApp">'+ico("trash",15,1.8)+'</button>':'')+
@@ -9969,6 +10046,7 @@ function bindHilo(){
     cierraHecha(t);
   };
 
+  try{ bindDeslizar(t); }catch(e){ console.warn("deslizar",e); }
   var tc=$("tcam"); if(tc) tc.onclick=function(){
     pideFoto(function(data,meta){
       t.evidencias=t.evidencias||[];
@@ -9998,8 +10076,12 @@ function bindHilo(){
       msg(t,"bo",v); reasignaDicho(t, v, true);
       selloYSigue(t,{tipo:"autorizada", texto:t.nombre, restaurar:null}); return;
     }
+    /* build 176: si deslizo un mensaje, la respuesta lleva esa cita */
+    var _cita=(window.__cita && window.__cita.tid===t.id)?window.__cita:null; window.__cita=null;
+    if(_cita){ var _rb=document.getElementById("rqbar"); if(_rb) _rb.parentNode.removeChild(_rb); }
     /* build 175: contestarle a quien escribio por WhatsApp = se le manda por WhatsApp */
-    if(tipoRevisar(t)!=="falta"){ var _aq=aQuienRespondo(t, v); if(_aq){ try{ respondeAuto(t, v, _aq); }catch(e){ console.warn("respondeAuto",e); } } }
+    if(tipoRevisar(t)!=="falta" || _cita){ var _aq=aQuienRespondo(t, v, _cita); if(_aq){ try{ respondeAuto(t, v, _aq, _cita); }catch(e){ console.warn("respondeAuto",e); } } }
+    if(_cita){ var _vC=v; setTimeout(function(){ pegaCita(t, _vC, _cita); }, 0); }
     /* build 168: si la tarea esta en "Falta informacion", lo que contesta llena los datos */
     if(tipoRevisar(t)==="falta" && !detectaLista(v) && listaNumerada(v).length<2){
       $("txt").value=""; marcaEnvio("tenv","");
