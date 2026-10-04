@@ -1114,7 +1114,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 189 · lo que va por WhatsApp: el bote vive 30 s y luego sale; Claude/Cloud: notas que Claude entiende y ejecuta";
+var VERSION_APP = "build 190 · fechas: manda la fecha dictada (candado a Claude), dia+numero tienen que cuadrar o se pregunta";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -1451,60 +1451,233 @@ function fechaMovCorta(f){
   return ["dom","lun","mar","mié","jue","vie","sáb"][d.getDay()]+" "+d.getDate()+" "+
     ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"][d.getMonth()];
 }
-/* build 140: LA FECHA A LA QUE SE MUEVE, calculada por la app (sin pedir la
-   exacta): "el viernes"/"el proximo viernes" = el viernes futuro mas cercano (si
-   hoy es viernes, el de la otra semana); "el viernes de la otra/siguiente
-   semana" = +7; "en N dias/semanas/meses"; "fin de mes" = ultimo dia del mes (si
-   hoy es el ultimo, el del que sigue); "3 de octubre"; mañana; pasado mañana. */
-/* build 174 (Salvador 2026-10-02 18:27): "el sabado 10" es el sabado DIEZ, no el
-   proximo sabado. Dia de la semana + numero = la siguiente fecha con ese dia del mes
-   (si coincide el dia de la semana, mejor). s ya viene en minusculas y sin acentos. */
-function diaSemanaConNumero(s){
-  var m=String(s||"").match(/\b(domingo|lunes|martes|miercoles|jueves|viernes|sabado)\s+(\d{1,2})\b(?!\s*(?::|am\b|pm\b|hrs?\b|horas?\b|de la\b|y media\b))/);
-  if(!m) return null;
-  var nom=["domingo","lunes","martes","miercoles","jueves","viernes","sabado"], dw=nom.indexOf(m[1]), dd=+m[2];
-  if(dd<1||dd>31) return null;
-  var H=hoy(), d=new Date(H+"T00:00:00"), primero=null;
-  for(var i=0;i<400;i++){
-    if(d.getDate()===dd){ var f=iso(d); if(d.getDay()===dw) return f; if(!primero) primero=f; }
-    d.setDate(d.getDate()+1);
-  }
-  return primero;
+/* @@FECHAS-INICIO ===== build 190 (Salvador 2026-10-04 00:49): FECHAS SIN ERROR.
+   "Digo el proximo miercoles y pone miercoles con otro numero, o lo pasa al jueves."
+   REGLA DE SALVADOR: MANDA LA FECHA DICTADA. El telefono calcula TODAS las fechas;
+   lo que proponga Claude (el modelo) solo se guarda si cuadra con lo dictado
+   (candadoFecha) y el texto que se le muestra al usuario lo arma el codigo desde la
+   fecha guardada (el dia de la semana se calcula de la fecha, nunca se copia).
+   CONVENCION (una sola para toda la app; probada en tests/fechas.test.js):
+   - Todo en hora LOCAL del telefono: hoy()/iso()/new Date(f+"T00:00:00"). Nunca
+     toISOString() ni new Date("AAAA-MM-DD") (eso es UTC: en Monterrey da el dia de antes).
+   - "el lunes" = "este lunes" = "el proximo lunes" = "el lunes que viene" = el lunes MAS
+     CERCANO que viene, sin contar hoy. Dicho el domingo 4-oct a las 00:41 -> lunes 5-oct.
+     Dicho un lunes -> el lunes de la otra semana.
+   - "el martes de la proxima/otra/siguiente semana" = el martes de la semana de calendario
+     que sigue (semanas de lunes a domingo). Dicho el sabado 3-oct -> martes 6-oct.
+   - "la proxima semana" sola = dentro de 7 dias.
+   - Dia + numero ("el miercoles 7", F19 "el sabado 10") = la fecha con ESE numero Y ESE
+     dia, de hoy en adelante y dentro de 62 dias. Si ninguna cuadra ("lunes 4" y el 4 cae
+     en domingo) NO se adivina: queda en DUDA y se hace UNA pregunta corta.
+   - "2 de noviembre", "2 de nov", "2-nov", "15 de enero": esa fecha; si ya paso este año,
+     la del que sigue. Con dia de la semana que no cuadra ("miercoles 5 de noviembre",
+     que es jueves) -> DUDA. Fecha que no existe ("31 de noviembre") -> DUDA.
+   - "el 15" / "el dia 15" / "para el 15" = el proximo dia 15 (hoy cuenta).
+   - "en N dias/semanas/meses", "fin de mes", "hoy", "mañana", "pasado mañana".
+   - "a las 10", "10:30", "10 am", "de la mañana", "en 2 horas" son HORA, nunca dia.
+   - Si se dicen varias fechas, la principal es la primera exacta (con numero); si no hay
+     exacta, la primera dicha. "hoy" junto con otra fecha no cuenta para mover. */
+var _NOMDIA=["domingo","lunes","martes","miercoles","jueves","viernes","sabado"];
+var _DIAL=["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+var _MESL=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+var _MESN={enero:0,ene:0,febrero:1,feb:1,marzo:2,mar:2,abril:3,abr:3,mayo:4,may:4,junio:5,jun:5,
+  julio:6,jul:6,agosto:7,ago:7,septiembre:8,setiembre:8,sept:8,sep:8,octubre:9,oct:9,
+  noviembre:10,nov:10,diciembre:11,dic:11};
+var _MESRE="septiembre|setiembre|noviembre|diciembre|febrero|octubre|agosto|marzo|abril|enero|junio|julio|mayo|sept|ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic";
+var _DIARE="domingo|lunes|martes|miercoles|jueves|viernes|sabado";
+function _fsa(txt){
+  return " "+String(txt||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"")
+    .replace(/[¿?¡!,;()\[\]"“”«»]/g," ").replace(/\s+/g," ")+" ";
 }
-function fechaMovida(txt){
-  var fx=fechaEnTexto(txt); if(fx) return fx;
-  var s=" "+String(txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")+" ";
-  s=s.replace(/\b(de|por|en)\s+la\s+(manana|tarde|noche)\b/g," ");
-  var H=hoy(), d0=new Date(H+"T00:00:00"), m;
-  if(/\b(fin|final|ultimo dia)\s+del?\s+mes\b/.test(s)){
-    var f=iso(new Date(d0.getFullYear(), d0.getMonth()+1, 0));
-    if(f===H) f=iso(new Date(d0.getFullYear(), d0.getMonth()+2, 0));
-    return f;
-  }
-  m=s.match(/\b(?:en|dentro de)\s+(\d{1,3}|un|una|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|quince|veinte|treinta)\s+(dias?|semanas?|mes|meses)\b/);
-  if(m){
-    var n=(NUMREL[m[1]]!=null)?NUMREL[m[1]]:parseInt(m[1],10);
-    if(!isNaN(n)&&n>0){
-      if(/^sem/.test(m[2])) return dmDe(H,7*n);
-      if(/^mes/.test(m[2])){ d0.setMonth(d0.getMonth()+n); return iso(d0); }
-      return dmDe(H,n);
-    }
-  }
-  if(/\bpasado\s+manana\b/.test(s)) return dmDe(H,2);
-  if(/\bmanana\b/.test(s)) return dmDe(H,1);
-  if(/\bhoy\b/.test(s)) return H;
-  var _dn=diaSemanaConNumero(s); if(_dn) return _dn;
-  var nom=["domingo","lunes","martes","miercoles","jueves","viernes","sabado"];
-  for(var k=0;k<7;k++){
-    if(new RegExp("\\b"+nom[k]+"\\b").test(s)){
-      var dl=(k-d0.getDay()+7)%7; if(dl===0) dl=7;
-      if(/\bde\s+la\s+(otra|siguiente)\s+semana\b/.test(s)) dl+=7;
-      return dmDe(H,dl);
-    }
-  }
-  if(/\b(la\s+)?(proxima|siguiente|otra)\s+semana\b|\bla\s+semana\s+que\s+(entra|viene)\b/.test(s)) return dmDe(H,7);
+function _tapaTxt(x){ return String(x).replace(/[\s\S]/g," "); }
+/* lo que es HORA se tapa con espacios (mismo largo) para que nunca se lea como dia */
+function _hTapa(s){
+  return s
+    .replace(/\b\d{1,2}(?:\s*[:.]\s*\d{2})?\s*(?:de|por|en)\s+la\s+(?:manana|tarde|noche|madrugada)\b/g,_tapaTxt)
+    .replace(/\b(?:de|por|en|a)\s+la\s+(?:manana|tarde|noche|madrugada)\b/g,_tapaTxt)
+    .replace(/\ba\s+las?\s+(?:una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|\d{1,2})(?:\s*[:.]\s*\d{2})?\b/g,_tapaTxt)
+    .replace(/\b\d{1,2}\s*:\s*\d{2}\b/g,_tapaTxt)
+    .replace(/\b\d{1,2}\.\d{2}\b/g,_tapaTxt)
+    .replace(/\b\d{1,2}\s*(?:am|pm|a\.\s?m\.?|p\.\s?m\.?|hrs?|horas?)(?![a-z])/g,_tapaTxt)
+    .replace(/\b(?:en|dentro de)\s+(?:\d{1,3}|un|una|dos|tres|cuatro|cinco|diez|quince|veinte|treinta|media|un cuarto de)\s*(?:minutos?|min|horas?|hrs?|hora)\b/g,_tapaTxt);
+}
+function _fReal(f){ return /^\d{4}-\d{2}-\d{2}$/.test(f||"") && iso(new Date(f+"T00:00:00"))===f; }
+function _fArma(y,mo,d){ return y+"-"+String(mo+1).padStart(2,"0")+"-"+String(d).padStart(2,"0"); }
+function _dsem(f){ return new Date(f+"T00:00:00").getDay(); }
+/* el proximo dia N del mes, de hoy en adelante (hoy cuenta) */
+function _proxNumero(dd, H){
+  var d=new Date(H+"T00:00:00");
+  for(var i=0;i<400;i++){ if(d.getDate()===dd) return iso(d); d.setDate(d.getDate()+1); }
   return null;
 }
+/* "lunes 5 de octubre", siempre calculado de la fecha. (OJO: no se llama fechaLarga porque
+   ya hay una fechaLarga() mas abajo -la de hoy- y en JS la ultima declarada gana.) */
+function fechaConDia(f){ if(!_fReal(f)) return String(f||""); var d=new Date(f+"T00:00:00");
+  return _DIAL[d.getDay()]+" "+d.getDate()+" de "+_MESL[d.getMonth()]; }
+/* TODAS las fechas dichas, en el orden en que se dijeron, y las dudas. */
+function fechasDichas(txt){
+  var H=hoy(), h0=new Date(H+"T00:00:00"), w=_hTapa(_fsa(txt)), out=[], dudas=[], m, re;
+  function tapa(mm){ w=w.slice(0,mm.index)+_tapaTxt(mm[0])+w.slice(mm.index+mm[0].length); }
+  function add(f,i,k){ out.push({f:f,i:i,k:k}); }
+  var pre="(?:\\b("+_DIARE+")\\s+(?:(?:el\\s+)?(?:proximo|que viene)\\s+)?(?:el\\s+)?)?";
+  /* 1) AAAA-MM-DD (con dia de la semana delante, se revisa que cuadre) */
+  re=new RegExp(pre+"\\b(\\d{4})-(\\d{2})-(\\d{2})\\b","g");
+  while((m=re.exec(w))){
+    var fI=m[2]+"-"+m[3]+"-"+m[4];
+    if(!_fReal(fI)) dudas.push("La fecha "+fI+" no existe. ¿Qué fecha es?");
+    else if(m[1] && _dsem(fI)!==_NOMDIA.indexOf(m[1])) dudas.push("El "+fechaConDia(fI).replace(/^\S+\s+/,"")+" es "+_DIAL[_dsem(fI)]+", no "+_DIAL[_NOMDIA.indexOf(m[1])]+". ¿Qué fecha es?");
+    else add(fI,m.index,"iso");
+    tapa(m);
+  }
+  /* 2) "2 de noviembre", "2 de nov", "2-nov", "2 noviembre 2027" */
+  re=new RegExp(pre+"\\b(?:el\\s+)?(?:dia\\s+)?(\\d{1,2})(?:\\s+de\\s+|\\s*[-/]\\s*|\\s+)("+_MESRE+")\\b\\.?(?:\\s*(?:de\\s+|del\\s+|[-/]\\s*)?(\\d{4})\\b)?","g");
+  while((m=re.exec(w))){
+    var y0=h0.getFullYear(), yx=m[4]?+m[4]:0; if(yx && (yx<y0-1 || yx>y0+5)) yx=0;   /* "2 de nov 1500 pesos" no es año */
+    var dd=+m[2], mo=_MESN[m[3]], yr=yx||y0, f=_fArma(yr,mo,dd);
+    if(!yx && f<H) f=_fArma(yr+1,mo,dd);
+    if(dd<1 || !_fReal(f)) dudas.push("El "+dd+" de "+_MESL[mo]+" no existe. ¿Qué fecha es?");
+    else if(m[1] && _dsem(f)!==_NOMDIA.indexOf(m[1])) dudas.push("El "+dd+" de "+_MESL[mo]+" es "+_DIAL[_dsem(f)]+", no "+_DIAL[_NOMDIA.indexOf(m[1])]+". ¿Qué fecha es?");
+    else add(f,m.index,"mes");
+    tapa(m);
+  }
+  var noNum="(?!\\s*(?:%|por\\s+ciento|mil\\b|pesos|minutos?|horas?|hrs?|personas|veces|lugar|piso|arboles|focos|y\\s+media|de\\s+(?:la|las|los|el)\\b|o\\s+\\d|y\\s+(?:el\\s+)?\\d|[-/]\\d))";
+  /* 2b) "hoy domingo", "mañana lunes", "hoy es sabado": el dia de la semana CONFIRMA, no es
+     otra fecha. Si no cuadra ("mañana martes" y mañana es lunes) -> DUDA. */
+  re=new RegExp("\\b(pasado\\s+manana|manana|hoy)\\s+(?:es\\s+)?("+_DIARE+")\\b(?!\\s+(?:el\\s+)?(?:dia\\s+)?\\d)","g");
+  while((m=re.exec(w))){
+    var kb=/^pasado/.test(m[1])?2:(m[1]==="hoy"?0:1), fb=dmDe(H,kb), wb=_NOMDIA.indexOf(m[2]);
+    if(_dsem(fb)===wb) add(fb,m.index,kb?"rel":"hoy");
+    else dudas.push((kb===0?"Hoy es ":(kb===1?"Mañana es ":"Pasado mañana es "))+fechaConDia(fb)+", no "+_DIAL[wb]+". ¿Qué fecha es?");
+    tapa(m);
+  }
+  /* 3) dia + numero: "el miercoles 7", "sabado 10" */
+  re=new RegExp("\\b("+_DIARE+")\\s+(?:el\\s+)?(?:dia\\s+)?(\\d{1,2})\\b"+noNum,"g");
+  while((m=re.exec(w))){
+    var wd=_NOMDIA.indexOf(m[1]), n=+m[2];
+    if(n>=1 && n<=31){
+      var d=new Date(H+"T00:00:00"), hit=null;
+      for(var i=0;i<=62;i++){ if(d.getDate()===n && d.getDay()===wd){ hit=iso(d); break; } d.setDate(d.getDate()+1); }
+      if(hit) add(hit,m.index,"diaNum");
+      else { var pn=_proxNumero(n,H);
+        dudas.push("Dijiste "+_DIAL[wd]+" "+n+", pero "+(pn?"el "+n+" de "+_MESL[new Date(pn+"T00:00:00").getMonth()]+" es "+_DIAL[_dsem(pn)]:"ese día no existe")+". ¿Qué fecha es?"); }
+      tapa(m);
+    }
+  }
+  /* 4) "el 15", "el dia 15", "para el 15" (sin mes): el proximo 15, hoy cuenta */
+  re=new RegExp("\\b(?:el|al)\\s+(?:dia\\s+)?(\\d{1,2})\\b"+noNum+"(?!\\s*(?:de\\s+)?(?:"+_MESRE+")\\b)","g");
+  while((m=re.exec(w))){
+    var n4=+m[1];
+    if(n4>=1 && n4<=31){ var p4=_proxNumero(n4,H); if(p4) add(p4,m.index,"elN"); tapa(m); }
+  }
+  /* 5) relativas */
+  re=/\b(?:en|dentro de)\s+(\d{1,3}|un|una|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|quince|veinte|treinta)\s+(dias?|semanas?|mes|meses)\b/g;
+  while((m=re.exec(w))){
+    var n5=(NUMREL[m[1]]!=null)?NUMREL[m[1]]:parseInt(m[1],10);
+    if(!isNaN(n5)&&n5>0){
+      add(/^sem/.test(m[2])?dmDe(H,7*n5):(/^mes/.test(m[2])?masMeses(H,n5):dmDe(H,n5)), m.index, "rel");
+    }
+    tapa(m);
+  }
+  re=/\b(?:a\s+)?(?:fin|final|ultimo dia)\s+(?:de|del)\s+mes\b/g;
+  while((m=re.exec(w))){
+    var fm=iso(new Date(h0.getFullYear(), h0.getMonth()+1, 0));
+    if(fm===H) fm=iso(new Date(h0.getFullYear(), h0.getMonth()+2, 0));
+    add(fm,m.index,"rel"); tapa(m);
+  }
+  re=/\bpasado\s+manana\b/g; while((m=re.exec(w))){ add(dmDe(H,2),m.index,"rel"); tapa(m); }
+  re=/\bmanana\b/g;          while((m=re.exec(w))){ add(dmDe(H,1),m.index,"rel"); tapa(m); }
+  re=/\bhoy\b/g;             while((m=re.exec(w))){ add(H,m.index,"hoy"); tapa(m); }
+  /* 6) dia de la semana solo (el mas cercano que viene, sin contar hoy) */
+  re=new RegExp("\\b("+_DIARE+")s?\\b(\\s+(?:de\\s+)?(?:la\\s+)?(?:(?:otra|siguiente|proxima)\\s+semana|semana\\s+que\\s+(?:entra|viene)))?","g");
+  while((m=re.exec(w))){
+    var wd6=_NOMDIA.indexOf(m[1]), dw=h0.getDay(), f6;
+    if(m[2]){ var lunesQueSigue=dmDe(H, 7-((dw+6)%7)); f6=dmDe(lunesQueSigue,(wd6+6)%7); }
+    else { var dl=(wd6-dw+7)%7; if(dl===0) dl=7; f6=dmDe(H,dl); }
+    add(f6,m.index,"dia"); tapa(m);
+  }
+  re=/\b(?:la\s+)?(?:proxima|siguiente|otra)\s+semana\b|\bla\s+semana\s+que\s+(?:entra|viene)\b/g;
+  while((m=re.exec(w))){ add(dmDe(H,7),m.index,"rel"); tapa(m); }
+  out.sort(function(a,b){ return a.i-b.i; });
+  return {lista:out, dudas:dudas};
+}
+function _esExacta(x){ return x.k==="iso"||x.k==="mes"||x.k==="diaNum"||x.k==="elN"; }
+/* LA fecha dictada: {fecha, duda, todas}. duda = la pregunta corta si no se puede saber. */
+function fechaDictada(txt){
+  var r=fechasDichas(txt), L=r.lista, todas=[];
+  L.forEach(function(x){ if(todas.indexOf(x.f)<0) todas.push(x.f); });
+  if(r.dudas.length) return {fecha:null, duda:r.dudas[0], todas:todas};
+  if(!L.length) return {fecha:null, duda:"", todas:[]};
+  var sinHoy=L.filter(function(x){ return x.k!=="hoy"; }); if(!sinHoy.length) sinHoy=L;
+  var ex=sinHoy.filter(_esExacta);
+  return {fecha:(ex.length?ex:sinHoy)[0].f, duda:"", todas:todas};
+}
+function dudaFecha(txt){ return fechaDictada(txt).duda; }
+/* build 174 (F19), ahora con candado: dia + numero = esa fecha si cuadran los dos; si
+   no cuadran, null (y dudaFecha() trae la pregunta). Se deja por compatibilidad. */
+function diaSemanaConNumero(s){
+  var r=fechasDichas(s), x=r.lista.filter(function(y){ return y.k==="diaNum"; })[0];
+  return x?x.f:null;
+}
+/* LA FECHA A LA QUE SE MUEVE (build 140), calculada por la app. null si no hay fecha
+   o si esta en duda (la pregunta sale con dudaFecha). */
+function fechaMovida(txt){ return fechaDictada(txt).fecha; }
+/* CANDADO: la fecha que propone el modelo contra la dictada.
+   -> {ok, fecha, duda, dictada, corregida}. Si lo dictado trae fecha, MANDA lo dictado:
+   la del modelo solo se acepta si es una de las fechas dictadas. Si lo dictado esta en
+   duda, no se guarda nada y se pregunta. */
+function candadoFecha(dicho, fModelo){
+  var fd=fechaDictada(dicho), fm=_fReal(fModelo)?fModelo:"";
+  if(fd.duda) return {ok:false, fecha:null, duda:fd.duda, dictada:true, corregida:false};
+  if(!fd.todas.length) return fm ? {ok:true, fecha:fm, duda:"", dictada:false, corregida:false}
+                                 : {ok:false, fecha:null, duda:"", dictada:false, corregida:false};
+  if(fm && fd.todas.indexOf(fm)>=0) return {ok:true, fecha:fm, duda:"", dictada:true, corregida:false};
+  return {ok:true, fecha:fd.fecha, duda:"", dictada:true, corregida:!!fm};
+}
+/* ¿el texto (del modelo) trae fechas o dias? Si si, NO se le muestra al usuario: el
+   texto lo arma el codigo desde la fecha guardada. */
+function traeFecha(tx){
+  var s=_fsa(tx);
+  return new RegExp("\\b("+_DIARE+"|hoy|manana|"+_MESRE+")\\b|\\b\\d{4}-\\d{2}-\\d{2}\\b|\\b\\d{1,2}\\s*[-/]\\s*\\d{1,2}\\b").test(s);
+}
+/* fechas que el modelo escribio DENTRO de un texto (un dato corregido): cada una debe
+   cuadrar consigo misma (dia de la semana) y venir de lo dictado o del hilo. */
+function fechasRaras(tx, permitidas){
+  var r=fechasDichas(tx), malas=[];
+  if(r.dudas.length) return r.dudas;
+  r.lista.forEach(function(x){ if(_esExacta(x) && permitidas.indexOf(x.f)<0) malas.push(x.f); });
+  return malas.map(function(f){ return "No dictaste el "+fechaConDia(f)+"."; });
+}
+/* CANDADO DE LA BARRA: lo que contesta Claude (j) contra lo dictado, ANTES de aplicarlo.
+   - Si lo que se acaba de decir trae una fecha en duda y la intencion lleva fecha -> no se
+     aplica nada; regresa {duda} (UNA pregunta corta).
+   - Si se dicto alguna fecha (ahora o en las respuestas anteriores), cada fecha de Claude
+     tiene que ser una de las dictadas; si no, tarea/recordatorio/paso se quedan con la
+     dictada y las de supervisar se vacian (y la barra pregunta "para cuando").
+   - "un dia antes / despues de ..." deja la de Claude si cae a menos de 31 dias de una
+     dictada (es aritmetica sobre lo dictado, no un dia inventado).
+   - Si no se dicto ninguna fecha, se respeta la de Claude (se le pide no inventar). */
+function candadoIntencion(j, dicho, hist){
+  var i=String(j&&j.intencion||"").toUpperCase().replace(/[^A-Z_]/g,""), cambios=0;
+  var ant=(hist||[]).map(function(h){ return String(h).replace(/^Persona:\s*/,""); })
+                    .filter(function(h){ return !/^Claude/.test(h); }).join(" . ");
+  var fdA=fechaDictada(dicho), fdT=fechaDictada(ant+" . "+dicho);
+  if(fdA.duda && ["CREAR","RECORDATORIO","PASO","SUPERVISAR","ENCARGAR","PREGUNTA","REASIGNAR"].indexOf(i)>=0)
+    return {duda:fdA.duda, cambios:0};
+  var todas=fdT.todas.slice(); fdA.todas.forEach(function(f){ if(todas.indexOf(f)<0) todas.push(f); });
+  if(!todas.length) return {duda:"", cambios:0};
+  var principal=diaDicho(dicho)||fdA.fecha||fdT.fecha||todas[0];
+  var rel=/\b(antes|despues|previo|previa|vispera)\b/.test(_fsa(ant+" "+dicho));
+  function cerca(f){ return todas.some(function(x){ return Math.abs(dDif(x,f))<=31; }); }
+  function fija(o, k, uno){
+    if(!o || !o[k]) return;
+    if(_fReal(o[k]) && (todas.indexOf(o[k])>=0 || (rel && cerca(o[k])))) return;
+    o[k]=uno?principal:""; cambios++;
+  }
+  fija(j.tarea,"fecha",1); fija(j.recordatorio,"fecha",1); fija(j.paso,"cuando",1);
+  fija(j.supervisar,"fecha_ejecuta",0); fija(j.supervisar,"mi_fecha",0);
+  return {duda:"", cambios:cambios};
+}
+/* @@FECHAS-FIN */
 /* ¿lo dicho en el hilo es "mueve la fecha"? Verbo de mover (sin palabra de
    recordatorio) o el mensaje es SOLO una fecha ("en 15 dias", "a fin de mes"). */
 function esMovida(v){
@@ -1514,14 +1687,16 @@ function esMovida(v){
   return soloFecha(v);
 }
 function soloFecha(v){
-  if(!fechaMovida(v)) return false;
+  /* build 190: tambien "el miercoles 7", "2 de nov", "el 15" y una fecha en duda
+     ("el lunes 4") cuentan: el mensaje es SOLO una fecha. */
+  var _fd=fechaDictada(v); if(!_fd.fecha && !_fd.duda) return false;
   var s=" "+String(v||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g," ")+" ";
   s=s.replace(/\b(fin|final|ultimo dia)\s+del?\s+mes\b/g," ")
      .replace(/\b(en|dentro de)\s+\S+\s+(dias?|semanas?|mes|meses)\b/g," ")
-     .replace(/\b\d{4}\s+\d{2}\s+\d{2}\b/g," ")
-     .replace(/\b\d{1,2}\s+(de\s+)?(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)\b/g," ")
-     .replace(/\b(pasado manana|manana|hoy|lunes|martes|miercoles|jueves|viernes|sabado|domingo)\b/g," ")
-     .replace(/\b(para|a|al|el|la|de|del|proximo|proxima|este|esta|mejor|entonces|siguiente|otra|semana|que|entra|viene|mejor|va|ok|ya|no)\b/g," ")
+     .replace(new RegExp("\\b("+_MESRE+")\\b","g")," ")
+     .replace(/\b(pasado manana|manana|hoy|lunes|martes|miercoles|jueves|viernes|sabado|domingo)s?\b/g," ")
+     .replace(/\b\d{1,4}\b/g," ")
+     .replace(/\b(para|a|al|el|la|de|del|dia|proximo|proxima|este|esta|mejor|entonces|siguiente|otra|semana|que|entra|viene|mejor|va|ok|ya|no)\b/g," ")
      .replace(/\s+/g," ").trim();
   return !s;
 }
@@ -1708,6 +1883,7 @@ function creaAcuerdo(t, pend, j, err){
     var _fd=fechaMovida(v);
     if(_fd && _fd>=hoy() && _fd!==t.f_vigente){ var _ant=t.f_vigente; t.f_vigente=_fd; if(!t.f_original) t.f_original=_fd;
       msg(t,"bi","Fecha: "+fechaMovCorta(_fd)+(_ant?" (antes "+fechaMovCorta(_ant)+")":"")+"."); }
+    else if(!_fd && dudaFecha(v)) msg(t,"bi",dudaFecha(v)+" No cambié la fecha.");   /* build 190 */
     guarda(t); if(vista==="hilo") render(); return null;
   }
   var n=creaTarea({nombre:nombre, duenio:yo, fecha:fz.fecha, dicho:nombre});
@@ -1725,6 +1901,10 @@ function creaAcuerdo(t, pend, j, err){
   guarda(n); if(av) sincronizaAvisos(n);
   msg(t,"bi","Listo: “"+n.nombre+"” para el "+fechaMovCorta(n.f_vigente)+(av?", aviso "+textoCuando(av):"")+".");
   t.msgs[t.msgs.length-1].abre=n.id;
+  /* build 190: si la fecha dicha no cuadra ("el lunes 4" y el 4 es domingo) no se adivina:
+     queda la de siempre (en 7 dias) y se pregunta en la tarea nueva y aqui. */
+  if(dudaFecha(v)){ var _dq=dudaFecha(v)+" La dejé para el "+fechaConDia(n.f_vigente)+"; dime la fecha y la muevo.";
+    msg(n,"bi",_dq); n.pide_fecha=true; guarda(n); msg(t,"bi",_dq); }
   t.acuerdos_nacidos=(t.acuerdos_nacidos||[]).concat([n.id]);
   t.ultima="Listo: "+n.nombre;
   guarda(t);
@@ -4358,16 +4538,12 @@ function muestraDudaHilo(t, v){
    Si el dia/mes ya paso este anio, se va al que viene. (Era codigo inline de
    mandar(); se saco aparte el 2026-09-22 para usarlo tambien al dictar directo.) */
 function fechaEnTexto(txt){
-  var mm=String(txt||"").match(/(\d{1,2})\s*(?:de\s+)?([a-z\u00e1\u00e9\u00ed\u00f3\u00fa]+)|(\d{4}-\d{2}-\d{2})/i);
-  if(!mm) return null;
-  if(mm[3]) return mm[3];
-  var MES={enero:0,febrero:1,marzo:2,abril:3,mayo:4,junio:5,julio:6,agosto:7,
-    septiembre:8,setiembre:8,octubre:9,noviembre:10,diciembre:11};
-  var k=String(mm[2]||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-  if(MES[k]==null) return null;
-  var d=new Date(); d.setMonth(MES[k]); d.setDate(+mm[1]);
-  if(dDif(iso(d),hoy())>0) d.setFullYear(d.getFullYear()+1);
-  return iso(d);
+  /* build 190: antes tomaba SOLO el primer "numero + palabra" (con "a las 10 y el 2 de
+     noviembre" no veia la fecha) y hacia setMonth sobre hoy: dicho un dia 31, "2 de
+     noviembre" quedaba 2 de DICIEMBRE (31-nov no existe y JS lo brinca). Ahora sale del
+     nucleo de fechas (fechasDichas) y acepta "2 de nov", "2-nov" y AAAA-MM-DD. */
+  var r=fechasDichas(txt), x=r.lista.filter(function(y){ return y.k==="iso"||y.k==="mes"; })[0];
+  return (x && !r.dudas.length) ? x.f : null;
 }
 function mandar(t,txt){
   guardaHablado(t,"bo",txt);
@@ -4407,7 +4583,7 @@ function mandar(t,txt){
   /* ---- reabierta con fecha vencida: solo hace falta la nueva fecha ---- */
   if(t.reabre_fecha && !t.cierre){
     var _nf=fechaMovida(txt);
-    if(!_nf){ msg(t,"bi","No le entendí la fecha. Dime por ejemplo: el lunes, o 3 de octubre."); guarda(t); return; }
+    if(!_nf){ msg(t,"bi",dudaFecha(txt)||"No le entendí la fecha. Dime por ejemplo: el lunes, o 3 de octubre."); guarda(t); return; }
     t.reabre_fecha=false; t.pide_fecha=false; t.f_vigente=_nf;
     msg(t,"bi","Va, para el "+fechaBonita(_nf)+"."); sincronizaAvisos(t); guarda(t); return;
   }
@@ -4418,8 +4594,9 @@ function mandar(t,txt){
   if(!t.cierre && (t.pide_fecha || esMovida(txt))){
     var _fm=fechaMovida(txt);
     var _mot=(txt.match(/\b(?:porque|por que|porqu\u00e9|ya que|debido a)\b\s*(.+)$/i)||[])[1]||"";
-    if(!_fm && t.pide_fecha && t.fecha_pendiente){ _fm=t.fecha_pendiente; _mot=String(txt||"").trim(); }
-    if(!_fm){ t.pide_fecha=true; msg(t,"bi","¿Para cuándo la muevo? Dime por ejemplo: el viernes, en 15 días o a fin de mes."); guarda(t); return; }
+    if(!_fm && t.pide_fecha && t.fecha_pendiente && !dudaFecha(txt)){ _fm=t.fecha_pendiente; _mot=String(txt||"").trim(); }
+    /* build 190: fecha en duda ("el lunes 4" y el 4 es domingo) -> UNA pregunta, no se adivina */
+    if(!_fm){ t.pide_fecha=true; msg(t,"bi",dudaFecha(txt)||"¿Para cuándo la muevo? Dime por ejemplo: el viernes, en 15 días o a fin de mes."); guarda(t); return; }
     var _r0=mueveFecha(t,_fm,_mot.trim()); if(!_r0.ok){ t.pide_fecha=false; msg(t,"bi",_r0.msg); }
     guarda(t); return;
   }
@@ -5664,14 +5841,21 @@ function completaRevision(t, v){
     if(j.ya_hecha){ t.pendiente_info=""; t.pendiente_tipo=""; t.falta_fecha=false; t.autorizada=true; cierraHecha(t); render(); return; }
     var hecho=[];
     if(j.nombre && String(j.nombre).trim().length>=2){ t.nombre=conMayuscula(String(j.nombre).trim().slice(0,60)); hecho.push("nombre “"+t.nombre+"”"); }
-    if(j.fecha && /^\d{4}-\d{2}-\d{2}$/.test(j.fecha)){ t.f_original=j.fecha; t.f_vigente=j.fecha; t.falta_fecha=false; hecho.push("termina el "+fechaBonita(j.fecha)); }
+    /* build 190: CANDADO — la fecha de Claude solo entra si cuadra con lo dictado; si lo
+       dictado trae fecha, MANDA la dictada; si esta en duda, no se guarda y se pregunta. */
+    var _cf=candadoFecha(v, j.fecha), _dudaRev=_cf.duda;
+    if(_cf.ok && _cf.fecha){ t.f_original=_cf.fecha; t.f_vigente=_cf.fecha; t.falta_fecha=false; hecho.push("termina el "+fechaBonita(_cf.fecha)); }
     if(j.periodicidad==="semanal"||j.periodicidad==="mensual"){ t.periodicidad=j.periodicidad; hecho.push(j.periodicidad==="semanal"?"cada semana":"cada mes"); }
+    /* build 190: avisos de Claude con candado: si dictaste fechas, el aviso tiene que caer
+       en una de ellas (salvo "un dia antes"/"despues", que no traen fecha propia). */
+    var _todasRev=fechaDictada(v).todas, _relRev=/\b(antes|despues|previo|previa)\b/.test(_fsa(v));
     (Array.isArray(j.recordar)?j.recordar:[]).slice(0,6).forEach(function(r){
-      if(r && /^\d{4}-\d{2}-\d{2}$/.test(r.fecha||"")){ nuevoAviso(t,{texto:t.nombre, fecha:r.fecha, hora:r.hora||"", dicho:v}); hecho.push("aviso "+fechaBonita(r.fecha)+(r.hora?" "+r.hora:"")); }
+      if(r && _fReal(r.fecha) && !_dudaRev && (!_todasRev.length || _relRev || _todasRev.indexOf(r.fecha)>=0)){ nuevoAviso(t,{texto:t.nombre, fecha:r.fecha, hora:r.hora||"", dicho:v}); hecho.push("aviso "+fechaBonita(r.fecha)+(r.hora?" "+r.hora:"")); }
     });
     if(j.contexto && String(j.contexto).trim()){ t.contexto=String(j.contexto).trim().slice(0,400); hecho.push("contexto"); }
     if(t.f_vigente || t.periodicidad){ t.pendiente_info=""; t.pendiente_tipo=""; }
-    msg(t,"bi", hecho.length ? "Listo: "+hecho.join(" · ")+"." : "No pesqué datos nuevos; dímelo otra vez, en el orden de las preguntas.");
+    msg(t,"bi", hecho.length ? "Listo: "+hecho.join(" · ")+"." : (_dudaRev||"No pesqué datos nuevos; dímelo otra vez, en el orden de las preguntas."));
+    if(hecho.length && _dudaRev) msg(t,"bi",_dudaRev+" La fecha no la cambié.");
     guarda(t); try{ sincronizaAvisos(t); }catch(e){}
     render();
   });
@@ -6861,7 +7045,7 @@ function barraEnviar(texto,completo){
     var _ts=barraEstado.avisoTs;
     var _f=diaDicho(texto)||(/^\d{4}-\d{2}-\d{2}$/.test(texto)?texto:"");
     if(!_f && horaDicha(texto)) _f=hoy();
-    if(!_f){ toast('Sigue guardado sin hora — dímela otra vez (ej. "mañana" o "a las 7")'); return; }
+    if(!_f){ toast(dudaFecha(texto)||'Sigue guardado sin hora — dímela otra vez (ej. "mañana" o "a las 7")'); return; }   /* build 190: fecha en duda = la pregunta */
     if(_t && _t.avisos){
       var _av=_t.avisos.filter(function(a){return String(a.ts)===String(_ts)})[0];
       if(_av){ _av.fecha=_f; _av.hora=horaCercana(_f,horaValor(texto),texto)||_av.hora;
@@ -7319,42 +7503,25 @@ function soloEsTiempo(txt){
   return s.length===0;
 }
 function diaDicho(txt){
-  var s=" "+String(txt||"").toLowerCase().normalize("NFD")
-        .replace(/[\u0300-\u036f]/g,"")+" ";
-  /* "de/por/en la manana|tarde|noche" y "N de la manana" son HORA, no dia:
-     el "manana" ahi es la mitad del dia, no el dia siguiente. Se borra para
-     que "hoy a las 10 de la manana" no se guarde para el dia de manana.
-     Salvador 2026-09-17. */
-  s=s.replace(/\b(de|por|en)\s+la\s+(manana|tarde|noche)\b/g," ");
-  if(/\bhoy\b/.test(s)) return hoy();   /* "hoy" explicito manda */
-  if(/\b\d{1,2}\s+de\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)/.test(s)) return null;
-  if(/\bpasado\s+manana\b/.test(s)) return dmDe(hoy(),2);
-  if(/\bmanana\b/.test(s))          return dmDe(hoy(),1);
-  var _dn=diaSemanaConNumero(s); if(_dn) return _dn;
-  var nom=["domingo","lunes","martes","miercoles","jueves","viernes","sabado"];
-  for(var k=0;k<7;k++){
-    if(new RegExp("\\b"+nom[k]+"\\b").test(s)){
-      var delta=(k-new Date().getDay()+7)%7;
-      if(delta===0) delta=7;   /* "el lunes" dicho en lunes es el que viene */
-      return dmDe(hoy(), delta);
-    }
-  }
-  return null;
+  /* build 190: sale del nucleo de fechas (fechasDichas). "de la mañana", "a las 10",
+     "10:30" son HORA, no dia (Salvador 2026-09-17). "hoy" explicito manda (como antes).
+     Antes regresaba null con "2 de noviembre" y la fecha se le dejaba a Claude: ahora la
+     fecha con mes TAMBIEN la pone el telefono (MANDA LA FECHA DICTADA). Fecha en duda
+     ("lunes 4" y el 4 es domingo) -> null; dudaFecha() trae la pregunta. Varias fechas:
+     la primera exacta (con numero); si no hay, la primera dicha (antes ganaba la del
+     orden domingo..sabado, no la que se dijo primero). */
+  var r=fechasDichas(txt), L=r.lista;
+  if(r.dudas.length || !L.length) return null;
+  if(L.some(function(x){ return x.k==="hoy"; })) return hoy();
+  var ex=L.filter(_esExacta);
+  return (ex.length?ex:L)[0].f;
 }
-/* build 140: TODOS los dias dichos, en orden ("el lunes y el miercoles"). */
+/* build 140: TODAS las fechas dichas, en orden ("el lunes y el miercoles"). build 190:
+   del nucleo; si alguna esta en duda, no regresa ninguna (se pregunta). */
 function diasDichos(txt){
-  var s=" "+String(txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")+" ";
-  s=s.replace(/\b(de|por|en)\s+la\s+(manana|tarde|noche)\b/g," ");
-  var H=hoy(), dw=new Date(H+"T00:00:00").getDay(), out=[], m;
-  var nom=["domingo","lunes","martes","miercoles","jueves","viernes","sabado"];
-  var re=/\b(pasado\s+manana|manana|hoy|domingo|lunes|martes|miercoles|jueves|viernes|sabado)\b/g;
-  while((m=re.exec(s))){
-    var w=m[1].replace(/\s+/g," "), f;
-    if(w==="hoy") f=H; else if(w==="pasado manana") f=dmDe(H,2); else if(w==="manana") f=dmDe(H,1);
-    else { var _n2=s.slice(m.index).match(/^\w+\s+(\d{1,2})\b/); var _dn2=_n2?diaSemanaConNumero(s.slice(m.index)):null;
-      if(_dn2) f=_dn2; else { var dl=(nom.indexOf(w)-dw+7)%7; if(dl===0) dl=7; f=dmDe(H,dl); } }
-    if(out.indexOf(f)<0) out.push(f);
-  }
+  var r=fechasDichas(txt), out=[];
+  if(r.dudas.length) return [];
+  r.lista.forEach(function(x){ if(out.indexOf(x.f)<0) out.push(x.f); });
   return out;
 }
 /* saca un nombre presentable de un dictado tipo "abreme una tarea del viaje a
@@ -8831,7 +8998,7 @@ function proximaVez(fecha, hora, cada){
     else if(cada==="LV"){ f=sumaDias(f,1); var dw=new Date(f+"T00:00:00").getDay(); while(dw===0||dw===6){ f=sumaDias(f,1); dw=new Date(f+"T00:00:00").getDay(); } }
     else if(cada==="SEMANAL") f=sumaDias(f,7);
     else if(cada==="QUINCENAL") f=sumaDias(f,14);
-    else if(cada==="MENSUAL"){ var x=new Date(f+"T00:00:00"); x.setMonth(x.getMonth()+1); f=iso(x); }
+    else if(cada==="MENSUAL"){ f=masMeses(f,1); }   /* build 190: antes setMonth: 31-ene + 1 mes = 3-mar */
     else return "";
   }
   return f;
@@ -9122,8 +9289,8 @@ function completaPendiente(id, texto){
   if(tipo==="fecha"){
     var f=diaDicho(texto)||(/^\d{4}-\d{2}-\d{2}$/.test(texto)?texto:"");
     if(!f && horaDicha(texto)) f=hoy();   /* si contestó una hora, es HOY */
-    if(!f){ msg(t,"bi","Anotado: “"+texto+"” (sin fecha todavía)."); guarda(t);
-            toast('No pesqué la fecha, dímela otra vez (ej. "mañana", "el viernes" o una hora)');
+    if(!f){ msg(t,"bi",dudaFecha(texto)||("Anotado: “"+texto+"” (sin fecha todavía).")); guarda(t);   /* build 190: fecha en duda = la pregunta */
+            toast(dudaFecha(texto)||'No pesqué la fecha, dímela otra vez (ej. "mañana", "el viernes" o una hora)');
             vista="lista"; render(); return; }
     t.f_original=f; t.f_vigente=f; t.falta_fecha=false;
     /* CAPTURA TAMBIÉN LA HORA Y LA RECURRENCIA (Salvador 2026-09-17): antes solo
@@ -10078,8 +10245,9 @@ function bindHilo(){
         el.onclick=function(){
           var k=el.getAttribute("data-pr"); posRev=false;
           if(k==="x"){ render(); return }
-          var d=new Date(); d.setDate(d.getDate()+(+k));
-          var nueva=d.toISOString().slice(0,10);
+          /* build 190: antes toISOString (UTC): de las 6 pm en adelante en Monterrey
+             la revision se posponia UN DIA DE MAS. */
+          var nueva=dmDe(hoy(),+k);
           t.f_vigente=nueva; t.estado="abierta";
           msg(t,"bi","Revisión pospuesta al "+fechaBonita(nueva)+".");
           guarda(t); toast("La vuelves a ver el "+fechaBonita(nueva));
@@ -10468,6 +10636,7 @@ function bindHilo(){
        ESTA tarea. Se arma su fecha/hora con la hora inteligente y se inserta. */
     if(window.__avAdd===t.id){
       window.__avAdd=null; $("txt").value=""; marcaEnvio("tenv","");
+      if(dudaFecha(v)){ msg(t,"bo",v); msg(t,"bi",dudaFecha(v)+" No puse nada; dímelo otra vez con la fecha."); guarda(t); render(); return; }   /* build 190 */
       var rr=armaCuando(v);
       var av=nuevoAviso(t, {texto:sinHoraEnTitulo(asuntoRecordatorio(v,t)), dicho:v, fecha:rr.fecha, hora:rr.hora, cada:rr.cada});
       preguntaAmPm(t, [String(av.ts)], v);
@@ -10477,6 +10646,7 @@ function bindHilo(){
     /* REPROGRAMAR un aviso existente: lo dictado es la nueva fecha/hora */
     if(window.__avEdit && window.__avEdit.taskId===t.id){
       var ed=window.__avEdit; window.__avEdit=null; $("txt").value=""; marcaEnvio("tenv","");
+      if(dudaFecha(v)){ msg(t,"bo",v); msg(t,"bi",dudaFecha(v)+" No puse nada; dímelo otra vez con la fecha."); guarda(t); render(); return; }   /* build 190 */
       var nc=armaCuando(v);
       if(ed.id==="self" && t.es_recordatorio){ t.f_vigente=nc.fecha; t.aviso_hora=nc.hora; if(nc.cada) t.aviso_cada=nc.cada; }
       else { var a=(t.avisos||[]).filter(function(x){return String(x.ts)===String(ed.id)})[0];
@@ -10521,6 +10691,7 @@ function bindHilo(){
       $("txt").value=""; marcaEnvio("tenv","");
       /* build 140 RITMO: "recuerdame el lunes y el miercoles" = un aviso de ESTA
          tarea por cada dia dicho, a la hora dicha o a las 9:00. */
+      if(dudaFecha(v)){ msg(t,"bo",v); msg(t,"bi",dudaFecha(v)+" No puse nada; dímelo otra vez con la fecha."); guarda(t); render(); return; }   /* build 190 */
       var _dias=cadaDicho(v)?[]:diasDichos(v);
       if(_dias.length>1){
         var _hr=horaDicha(v)?horaValor(v):"", _as=sinHoraEnTitulo(asuntoRecordatorio(v,t)), _avs=[];
@@ -11101,6 +11272,19 @@ function entraPorInvitacion(tk){
     if(i==="CREAR" && j.terminos) window.__terminosExtra=String(j.terminos);
     _aplica(j,dicho,hist,foto);
   };
+  /* build 190: CANDADO DE FECHAS — va POR FUERA de todos los candados de arriba, asi lo
+     primero que pasa con lo que contesta Claude es cuadrar sus fechas con lo dictado
+     (candadoIntencion). Fecha dictada en duda -> UNA pregunta, no se crea nada. */
+  var _aplicaSinCandado=aplicaIntencion;
+  aplicaIntencion=function(j,dicho,hist,foto){
+    var _ci={duda:""}; try{ _ci=candadoIntencion(j||{}, dicho, hist||[]); }catch(e){}
+    if(_ci.duda){
+      var _hs=(hist||[]).slice(); _hs.push("Claude pregunto: "+_ci.duda);   /* hist ya trae "Persona: "+dicho */
+      barraEstado={modo:"pregunta", dicho:dicho, hist:_hs, foto:foto, titulo:"Fecha", pregunta:_ci.duda};
+      vista="barra"; render(); return;
+    }
+    return _aplicaSinCandado(j,dicho,hist,foto);
+  };
 
   var _confirma=confirmaAccion;
   confirmaAccion=function(b){
@@ -11578,10 +11762,14 @@ function contestaEntrevista(t, v){
 }
 function aplicaMedida(t, j, dicho){
   var q=(PERSONAS[t.duenio]||{}).nombre||"el responsable", ff=/^\d{4}-\d{2}-\d{2}$/.test(j.fecha_final||"")?j.fecha_final:null;
+  /* build 190: CANDADO — la fecha final la manda lo que dijo el jefe; si esta en duda no
+     se pone y se pregunta. Las entregas que propone Claude quedan entre hoy y esa fecha. */
+  var _cm=candadoFecha(dicho, ff); ff=_cm.ok?_cm.fecha:null;
+  if(_cm.duda){ msg(t,"bi",_cm.duda+" La fecha final no la puse."); t.msgs[t.msgs.length-1].canal="sup"; }
   t.medida={entregable:String(j.entregable||"").slice(0,200), como:String(j.como||"").slice(0,200), fecha_final:ff, presupuestos:j.presupuestos||null, por:yo, ts:Date.now(), dicho:String(dicho||"").slice(0,600)};
   t.entrevista={pend:false, para:yo, ts:Date.now()};
   /* entregas -> lista "Entregas" con fecha (el dueño las palomea hablando como cualquier paso) */
-  var ents=(Array.isArray(j.entregas)?j.entregas:[]).filter(function(e){ return e && /^\d{4}-\d{2}-\d{2}$/.test(e.fecha||"") && String(e.que||"").trim(); }).slice(0,6);
+  var ents=(Array.isArray(j.entregas)?j.entregas:[]).filter(function(e){ return e && _fReal(e.fecha) && e.fecha>=hoy() && (!ff || e.fecha<=ff) && String(e.que||"").trim(); }).slice(0,6);
   t.lista_pasos=(t.lista_pasos||[]).filter(function(p){ return !p.hito; });
   ents.forEach(function(e){ t.lista_pasos.push({tx:String(e.que).trim().slice(0,80), hecho:false, sec:"", lista:"Entregas", fecha:e.fecha, hito:1}); });
   var antes=t.f_vigente, txt="Listo. Así medimos a "+q+": ";
@@ -12186,12 +12374,49 @@ function notaClaude(t, v){
   guarda(t); render();
   ejecutaNotaClaude(t, v);
 }
+/* build 190 (Salvador 2026-10-04 00:49): CANDADO de las notas a Claude. Caso real: "el
+   proximo ritmo es el lunes" (domingo 00:41) -> Claude dijo 2026-10-07 y "Movida al lunes
+   7-oct" (el 7 es miercoles). Ahora: la fecha que se guarda es la DICTADA (candadoFecha) y
+   el texto lo arma el codigo desde la fecha guardada; el de Claude, si trae fechas, no se
+   muestra. Un dato corregido con una fecha que no se dicto (o cuyo dia de la semana no
+   cuadra) no se guarda. Regresa el texto para el usuario, o null si la accion no es de
+   fecha/dato/nada (la sigue ejecutaNotaClaude). */
+function aplicaNotaClaude(t, v, j){
+  var a=String(j&&j.accion||"").toLowerCase(), val=String(j&&j.valor||"").trim(), r=String(j&&j.respuesta||"").trim();
+  var fd=fechaDictada(v), rOk=(r && !traeFecha(r))?r:"";
+  if(a==="fecha"){
+    var cf=candadoFecha(v, val);
+    if(cf.duda) return cf.duda+" No moví la fecha.";
+    if(!cf.fecha) return "¿Para qué fecha la muevo? No la moví.";
+    var rr=mueveFecha(t, cf.fecha, "lo dijo "+((PERSONAS[yo]||{}).nombre||"")+" en nota a Claude");
+    try{ sincronizaAvisos(t); }catch(e){}
+    if(rr && rr.ok===false) return rr.msg;
+    return "Movida al "+fechaConDia(cf.fecha)+".";
+  }
+  if(a==="dato" && val){
+    var perm=fd.todas.slice(); if(t.f_vigente) perm.push(t.f_vigente); if(t.f_original) perm.push(t.f_original);
+    (t.avisos||[]).forEach(function(x){ if(x&&x.fecha) perm.push(x.fecha); });
+    var malas=fd.duda?[fd.duda]:fechasRaras(val, perm);
+    if(malas.length) return fd.duda ? fd.duda+" No guardé el dato."
+      : "No lo guardé: traía una fecha que no dictaste"+(fd.fecha?"; dictaste el "+fechaConDia(fd.fecha):"")+". Dímelo otra vez.";
+    t.datos_corregidos=(t.datos_corregidos||[]).concat([{t:val, ts:Date.now()}]).slice(-30);
+    t.notas_claude=(t.notas_claude||[]).concat([{t:"DATO CORREGIDO: "+val, ts:Date.now()}]).slice(-30);
+    return rOk||("Anotado: "+val);
+  }
+  if(a==="nada" || !a) return rOk || fd.duda || (r?"No te entendí bien; dímelo otra vez.":"Anotado.");
+  return null;
+}
 /* build 189: Claude entiende lo que le pides en la nota y lo hace (renombrar, fecha, cerrar, eliminar,
    pasarla) o guarda el dato corregido. Contesta en UNA linea privada, solo para ti. */
 function ejecutaNotaClaude(t, v){
   var ls=[]; (t.msgs||[]).slice(-40).forEach(function(x,i){ if(!x||x.nota_claude) return; var q=x.wa_c||(x.de&&PERSONAS[x.de]&&PERSONAS[x.de].nombre)||(x.k==="bo"?"Salvador":"Sistema"); ls.push(q+": "+String(x.tr||x.t||"").slice(0,300)); });
   var hoyS=hoy();
-  var p="Eres Claude dentro de la app de tareas Doit. "+((PERSONAS[yo]||{}).nombre||"El usuario")+" te escribe una nota privada sobre la tarea \""+(t.nombre||"")+"\" (fecha actual de la tarea: "+(t.f_vigente||"sin fecha")+"; hoy es "+hoyS+").\n"+
+  /* build 190: antes solo iba "hoy es AAAA-MM-DD" y Claude sacaba el dia de la semana a ojo
+     ("el lunes" lo puso 7-oct, que es miercoles). Ahora va el calendario hecho; y de todos
+     modos la fecha la valida el telefono (aplicaNotaClaude -> candadoFecha). */
+  var p="Eres Claude dentro de la app de tareas Doit. "+((PERSONAS[yo]||{}).nombre||"El usuario")+" te escribe una nota privada sobre la tarea \""+(t.nombre||"")+"\" (fecha actual de la tarea: "+(t.f_vigente?t.f_vigente+" "+fechaBonita(t.f_vigente):"sin fecha")+"; hoy es "+fechaBonita(hoyS)+" "+hoyS+").\n"+
+    "CALENDARIO (copia la fecha de aqui, NO calcules el dia de la semana): "+calendarioProximo(70).join(", ")+".\n"+
+    "Si dice para cuando es la tarea o su proxima fecha, accion fecha. En respuesta NO escribas fechas ni dias (las escribe la app).\n"+
     "Decide qué quiere y contesta SOLO JSON: {\"accion\":\"dato|renombrar|fecha|cerrar|eliminar|pasar|nada\",\"valor\":\"...\",\"respuesta\":\"una frase corta en español\"}.\n"+
     "- dato: corrige o aclara información (precios, medidas, quién dijo qué). valor = el dato ya corregido, claro y completo.\n- renombrar: valor = nombre nuevo.\n- fecha: valor = AAAA-MM-DD.\n- cerrar: ya se hizo.\n- eliminar: ya no se va a hacer.\n- pasar: valor = nombre de la persona.\nNo inventes; si no entiendes, accion nada y pregunta en respuesta.\n\nNOTA: "+v+"\n\nULTIMOS MENSAJES:\n"+ls.join("\n");
   var nota=function(tx){ msg(t,"bi",tx); var m=t.msgs[t.msgs.length-1]; m.canal="priv:"+yo; m.nota_claude=1; guarda(t); if(vista==="hilo"&&abierta===t.id) render(); };
@@ -12201,9 +12426,10 @@ function ejecutaNotaClaude(t, v){
       if(!j){ nota("Anotado."); return; }
       var a=j.accion, val=String(j.valor||"").trim(), r=String(j.respuesta||"").trim();
       try{
-        if(a==="dato" && val){ t.datos_corregidos=(t.datos_corregidos||[]).concat([{t:val, ts:Date.now()}]).slice(-30); t.notas_claude=(t.notas_claude||[]).concat([{t:"DATO CORREGIDO: "+val, ts:Date.now()}]).slice(-30); nota(r||("Anotado: "+val)); return; }
+        /* build 190: fecha, dato y nada pasan por el CANDADO (aplicaNotaClaude) */
+        var _tx=aplicaNotaClaude(t, v, j); if(_tx!=null){ nota(_tx); return; }
+        if(traeFecha(r)) r="";   /* el texto de Claude con fechas no se muestra */
         if(a==="renombrar" && val){ t.nombre=conMayuscula(val); nota(r||("Nombre: "+t.nombre)); return; }
-        if(a==="fecha" && /^\d{4}-\d{2}-\d{2}$/.test(val)){ var rr=mueveFecha(t, val, "lo dijo "+((PERSONAS[yo]||{}).nombre||"")+" en nota a Claude"); try{ sincronizaAvisos(t); }catch(e){} nota(rr&&rr.ok===false?rr.msg:(r||("Para el "+fechaBonita(val)))); return; }
         if(a==="cerrar"){ var f=[]; try{ f=faltanParaCerrar(t)||[]; }catch(e){} if(f.length){ nota("No la puedo cerrar: "+f.join(" y ")+"."); return; } cierraHecha(t); nota(r||"Cerrada."); return; }
         if(a==="eliminar"){ cierraSinEjecutar(t, "ya_no"); try{ sincronizaAvisos(t); }catch(e){} nota(r||"Eliminada."); return; }
         if(a==="pasar" && val){ var k=duenioDicho("pasasela a "+val); var rs=k?transfiere(t,k,"nota a Claude"):{ok:false}; nota(rs.ok?(r||("Ahora la lleva "+PERSONAS[k].nombre)):("No encontré a "+val+".")); return; }
