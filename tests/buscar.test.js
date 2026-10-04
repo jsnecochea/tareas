@@ -14,15 +14,15 @@ function saca(tipo, nombre) {
   var out = [lineas[ini]];
   for (var k = ini + 1; k < lineas.length; k++) {
     var L = lineas[k];
-    if (L.length && !/^[\s}]/.test(L)) break;
+    if (L.length && !/^[\s}\]]/.test(L)) break;
     out.push(L);
     if (/^}/.test(L)) break;
   }
   return out.join("\n");
 }
-var FUNCS = ["_bw", "_bst", "_bpega", "palabrasBusqueda", "camposBusqueda", "_snip", "buscaTodo", "busquedaClara",
+var FUNCS = ["_bw", "_bst", "_bpega", "_sinGrupo", "mismoSentido", "palabrasBusqueda", "camposBusqueda", "_snip", "buscaTodo", "busquedaClara",
   "pideBuscar", "fraseCortaDeBusqueda", "vDatosTarea", "abreBusqueda"];
-var codigo = saca("var", "BUSCA_VACIAS") + "\n" + FUNCS.map(function (f) { return saca("function", f); }).join("\n");
+var codigo = saca("var", "BUSCA_VACIAS") + "\n" + saca("var", "SINONIMOS") + "\n" + FUNCS.map(function (f) { return saca("function", f); }).join("\n");
 
 var BARDA = { id: "tBARDA_MANUEL_031026", nombre: "Barda Manuel Parra", duenio: "salvador", estado: "no_ejecutada", tocada: 1791090899254,
   cierra: "Manuel Parra confirma precio total y metros lineales de la barda",

@@ -676,6 +676,36 @@ button{font:inherit;color:inherit}
 .cnlpill.cnlcl{padding:6px 12px;opacity:.55;box-shadow:none}.cnlpill.cnlcl.on{opacity:1;box-shadow:0 0 14px color-mix(in srgb,#D97757 55%,transparent)}
 .cnlpill.off{opacity:.45;box-shadow:none}
 .ncfold{color:#D97757}
+/* build 195: fichas limpias */
+:root{--fi-blue:#4aa3ff;--fi-bluebg:#10283f;--fi-greenbg:#123a20}
+.hrow{display:flex;align-items:center;gap:8px;margin:6px 14px 4px}
+.hchip{flex:1;display:flex;align-items:center;gap:8px;background:var(--surface-2,#2a2a2d);border-radius:12px;padding:9px 12px;font-size:15px;color:var(--ink,#f2f2f4);min-width:0}
+.hchip span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hchip.ind{color:var(--fi-blue)}.hchip.dato svg{color:#ff9f0a}.hchip.sin{color:var(--ink-3,#9a9aa2)}
+.hchev{width:38px;height:38px;border-radius:12px;border:0;background:var(--surface-2,#2a2a2d);color:var(--ink-3,#9a9aa2);font-size:15px;flex:none}
+.dsec,.dctx,.fic{margin:6px 14px;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.dsec{background:var(--surface-2,#232326)}.dsec.ant{opacity:.7}
+.dsec h4,.dctx h4{margin:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3,#9a9aa2)}
+.dsec small{color:var(--ink-3,#9a9aa2);font-size:12px}
+.dquote{border-left:3px solid var(--ink-3,#9a9aa2);padding-left:10px;font-size:15px;line-height:1.4}
+.dfoto{max-width:100%;max-height:220px;border-radius:10px;object-fit:cover}
+.dctx,.fic.ctx{background:var(--fi-greenbg);border:1px solid #1f5a33}.dctx h4{color:#30d158}
+.dctx p,.fic p{margin:0;font-size:15px;line-height:1.4}.dctx .vac,.fic .vac{color:#b9e8c6;font-style:italic}
+.kw{display:flex;flex-wrap:wrap;gap:6px}.kw span{font-size:12.5px;background:#1b4d2b;color:#c9f2d5;border-radius:999px;padding:3px 9px}
+.fic.info{background:var(--fi-bluebg);border:1px solid #1d4a73}
+.meter{display:flex;flex-direction:column;gap:4px}.meter .lb{display:flex;justify-content:space-between;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.fic .ok{color:#30d158}.fic .pend{color:var(--ink-3,#9a9aa2)}
+.bar{height:6px;border-radius:99px;background:#2f2f33;position:relative}.bar.g::after{content:"";position:absolute;left:75%;top:-3px;width:2px;height:12px;background:#d8f7e2;opacity:.8}
+.bar i{display:block;height:100%;border-radius:99px;transition:width .6s ease}.bar.g i{background:#30d158}.bar.b i{background:var(--fi-blue)}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+.chk{list-style:none;margin:0;padding:0;font-size:15px;line-height:1.6}
+.typep{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 14px}
+.typep button{font-size:17px;font-weight:600;border-radius:14px;padding:12px 8px;background:var(--surface-2,#2a2a2d);color:var(--ink-3,#9a9aa2);border:1px solid #3a3a3e}
+.typep button.on{background:var(--fi-bluebg);color:var(--fi-blue);border-color:#2f6fa8}
+.dtot{font-size:27px;font-weight:700;font-variant-numeric:tabular-nums}.dsub{color:var(--ink-3,#9a9aa2);font-size:14px}
+.dl{display:flex;flex-direction:column;font-size:15px;font-variant-numeric:tabular-nums}.dl div{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid #3a3a3e}.dl div:last-child{border-bottom:0}
+.ttgrp{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3,#9a9aa2);padding:8px 4px 2px}
+.pchk{display:flex;align-items:center;gap:8px}.pasos .ph .pchk{flex:1;min-width:0}.pchk svg{color:#30d158;flex:none}
 .datoc{margin:8px 14px 4px;padding:10px 12px;border-radius:14px;background:var(--surface-2,#2c2c2e);border-left:3px solid #64d2ff;font-size:15px;line-height:1.4}
 .datoc .dch{display:block;font-size:12px;font-weight:700;letter-spacing:.04em;color:#64d2ff;margin-bottom:4px}
 .datoc .dct+.dct{margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.08)}
@@ -1121,7 +1151,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 194 · abre/busca/el costo de X busca en todas (también cerradas) y en sus datos; varias = lista; tarjeta de datos";
+var VERSION_APP = "build 195 · fichas limpias: encabezado con chip de fecha y ▾ (Creada con + Contexto), Falta info con Tarea|Dato y barras, datos con Total y Desglose, checklist compacto, sinónimos";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -3666,7 +3696,7 @@ function camposBusqueda(t){
 }
 function _snip(txt, ws){
   var s=String(txt||"").replace(/\s+/g," ").trim(), low=s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-  var at=-1; ws.forEach(function(w){ var i=low.indexOf(_bst(w).slice(0,5)); if(i>=0 && (at<0 || i<at)) at=i; });
+  var at=-1; ws.forEach(function(w){ var g=_sinGrupo(w), vs=g>=0?SINONIMOS[g]:[w]; vs.forEach(function(v){ var i=low.indexOf(_bst(v).slice(0,5)); if(i>=0 && (at<0 || i<at)) at=i; }); });
   if(at<0) at=0; var a=Math.max(0,at-30);
   return (a>0?"…":"")+s.slice(a, a+110).trim()+(s.length>a+110?"…":"");
 }
@@ -3680,7 +3710,7 @@ function buscaTodo(q, lista){
     var n=0, sc=0, mejor=null, mejorP=-1, fuerte=0;
     ws.forEach(function(w){
       var best=0, bi=-1;
-      for(var i=0;i<cs.length;i++){ if(cs[i][1]<=best) continue; if(toks[i].some(function(x){ return _bpega(w,x); })){ best=cs[i][1]; bi=i; } }
+      for(var i=0;i<cs.length;i++){ if(cs[i][1]<=best) continue; if(toks[i].some(function(x){ return mismoSentido(w,x); })){ best=cs[i][1]; bi=i; } }
       if(best){ n++; sc+=best; if(best>=2) fuerte++; if(cs[bi][0]!=="nombre" && best>mejorP){ mejorP=best; mejor=cs[bi]; } }
     });
     if(n>=need){
@@ -3713,6 +3743,47 @@ function fraseCortaDeBusqueda(texto){
   if(typeof fechaDictada==="function" && fechaDictada(s).todas.length) return false;
   return true;
 }
+/* build 195: el detalle del ▾ */
+function vDetalle(t, frows){
+  var cc=creadaCon(t), cuando=cc.ts?fechaCorta(new Date(cc.ts))+" "+hhmm(new Date(cc.ts)):"";
+  var h='<div class="dsec"><h4>Creada con</h4>'+(cc.foto?'<img class="dfoto" src="'+esc(cc.foto)+'" alt="foto con la que se creó">':'')+
+    '<div class="dquote">“'+esc(cc.texto.length>600?cc.texto.slice(0,599)+"…":cc.texto)+'”</div>'+
+    '<small>'+esc([cc.quien,cuando].filter(Boolean).join(" · "))+'</small></div>';
+  var ctx=String(t.contexto||"").trim(), kw=palabrasClave(t);
+  h+='<div class="dctx"><h4>Contexto</h4>'+(ctx?'<p>'+esc(ctx)+'</p>':'<p class="vac">Todavía no tengo contexto. Díctalo abajo y lo sumo aquí.</p>')+
+     (kw.length?'<div class="kw">'+kw.map(function(w){ return '<span>'+esc(w)+'</span>'; }).join("")+'</div>':'')+'</div>';
+  if(frows) h+='<div class="dsec"><dl>'+frows+'</dl></div>';
+  return h;
+}
+/* build 195: Tarea | Dato grande, arriba (solo en lo nuevo/incompleto) */
+function vTipoToggle(t){
+  var tp=tipoItem(t);
+  return '<div class="typep"><button data-tipoi="tarea" class="'+(tp==="tarea"?"on":"")+'">Tarea</button><button data-tipoi="dato" class="'+(tp==="dato"?"on":"")+'">Dato</button></div>';
+}
+/* build 195: tarjetas de lo nuevo/incompleto: Contexto (rayita 75%) + lo que falta */
+function vFaltaInfo(t){
+  var c=completitud(t), ctx=String(t.contexto||"").trim(), kw=palabrasClave(t);
+  var h='<div class="fic ctx"><div class="meter"><div class="lb"><span class="ok">Contexto'+(c.ctxOk?' ✓':'')+'</span><span class="pend">'+(c.ctxOk?'listo':'mínimo en la rayita')+'</span></div>'+
+    '<div class="bar g"><i style="width:'+c.ctxPct+'%"></i></div></div>'+
+    (ctx?'<p>'+esc(ctx)+'</p>':'<p class="vac">Dime de qué se trata.</p>')+
+    (kw.length?'<div class="kw">'+kw.map(function(w){ return '<span>'+esc(w)+'</span>'; }).join("")+'</div>':'')+'</div>';
+  h+='<div class="fic info"><div class="meter"><div class="lb"><span style="color:var(--fi-blue)">'+(c.tipo==="dato"?'Datos del dato':'Datos de la tarea')+'</span><span class="pend">'+c.hechos+' de '+c.items.length+'</span></div>'+
+    '<div class="bar b"><i style="width:'+c.datosPct+'%"></i></div></div><ul class="chk">'+
+    c.items.map(function(x){ return '<li class="'+(x.ok?'ok':'pend')+'">'+(x.ok?'✓ ':'○ ')+esc(x.tx)+'</li>'; }).join("")+'</ul></div>';
+  return h;
+}
+/* build 195: cuerpo de un DATO: Total + Desglose (lo mas nuevo arriba, lo anterior se queda como "anterior") */
+function vDatoCuerpo(t){
+  var ds=(t.datos_corregidos||[]).slice().reverse(), h="";
+  ds.forEach(function(d, i){
+    var tx=String((d&&d.t)||d||""), p=parseDesglose(tx);
+    if(p.total==null && !p.items.length){ h+='<div class="dsec'+(i?' ant':'')+'">'+(i?'<h4>Anterior</h4>':'')+'<div class="dquote">'+esc(tx)+'</div></div>'; return; }
+    if(p.total!=null) h+='<div class="dsec'+(i?' ant':'')+'"><h4>'+(i?'Total anterior':'Total')+'</h4><div class="dtot">'+fmtMonto(p.total,true)+'</div>'+
+      (p.porML!=null?'<div class="dsub">'+fmtMonto(p.porML,true)+' por metro lineal</div>':'')+'</div>';
+    if(p.items.length && !i) h+='<div class="dsec"><h4>Desglose</h4><div class="dl">'+p.items.map(function(x){ return '<div><span>'+esc(x.tx)+'</span><span>'+fmtMonto(x.monto, x.monto%1!==0)+'</span></div>'; }).join("")+'</div></div>';
+  });
+  return h;
+}
 /* build 194: tarjeta de DATOS arriba al abrir una cerrada o una que se abrio buscando */
 function vDatosTarea(t){
   var ds=(t.datos_corregidos||[]).map(function(d){ return String((d&&d.t)||d||"").trim(); }).filter(Boolean);
@@ -3740,6 +3811,133 @@ function abreBusqueda(q, dicho, res){
     barraEstado={modo:"respuesta", dicho:dicho, texto:"No lo encontré: “"+q+"”. No creé nada."}; vista="barra"; render();
   });
 }
+/* ===================== build 195 (Salvador 2026-10-04 11:14, maqueta "Fichas limpias" aprobada) =====================
+   1 Encabezado: titulo · "Tuya · con X y Y" · un renglon: chip de fecha + ▾ (sin resumen debajo).
+   2 ▾ = "Creada con" (el mensaje que la creo) + "Contexto" en verde con palabras (y sinonimos).
+   3 "Falta info": lo nuevo o incompleto (sustituye "Falta información" y "Por autorizar"); dentro:
+     Tarea | Dato, barra de contexto con minimo en la rayita (75%) y lista de lo que falta.
+   4 Dato: Total + Desglose sacados del texto guardado (nunca escritos a mano en el codigo).
+   5 Checklist compacto. 6 Iconos de linea. 7 Sinonimos en la busqueda. ===================================== */
+var CTX_MIN_PAL=18;                       /* con 18 palabras de contexto se llega a la rayita (75%) */
+var SINONIMOS=[
+  ["barda","bardas","muro","muros","cerca","cercas","tapia","tapias","bardeado"],
+  ["porton","portones","puerta","puertas","reja","rejas"],
+  ["costo","costos","precio","precios","cotizacion","cotizaciones","presupuesto","presupuestos"],
+  ["casa","casas","residencia","residencias"]
+];
+function _sinGrupo(w){ var x=_bst(w); for(var i=0;i<SINONIMOS.length;i++){ if(SINONIMOS[i].some(function(y){ return y===w || _bst(y)===x; })) return i; } return -1; }
+function mismoSentido(a,b){ if(_bpega(a,b)) return true; var g=_sinGrupo(a); return g>=0 && g===_sinGrupo(b); }
+function esDato(t){ return !!(t && (t.es_dato===true || t.solo_info===true || t.tipo_item==="dato")); }
+/* Tarea | Dato: lo que el usuario dijo manda; si no, Claude/la app preselecciona */
+function tipoItem(t){
+  if(t.tipo_item==="dato" || t.tipo_item==="tarea") return t.tipo_item;
+  if(esDato(t)) return "dato";
+  var cif=(t.datos_corregidos||[]).some(function(d){ return /\$\s*\d|\d[\d,]*\.\d{2}/.test(String((d&&d.t)||d||"")); });
+  return (cif && !t.f_vigente && !t.periodicidad) ? "dato" : "tarea";
+}
+function _primerNombre(s){ return String(s||"").trim().split(/\s+/)[0]||""; }
+function juntaNombres(l){ l=l.filter(Boolean); if(l.length<=1) return l.join(""); if(l.length>3) return l.slice(0,3).join(", ")+" +"+(l.length-3); return l.slice(0,-1).join(", ")+" y "+l[l.length-1]; }
+/* "Tuya · con Chuy y Pato" / "De Samuel · con Cynthia" / "Dato · de Manuel Parra" */
+function subtituloTarea(t){
+  var ints=[]; try{ ints=integrantesDe(t); }catch(e){}
+  var otros=ints.filter(function(x){ return x.k!==t.duenio && x.k!==yo; }).map(function(x){ return _primerNombre(nombreInt(x.k)); });
+  if(esDato(t)){
+    var de=t.de_quien || (ints.filter(function(x){ return String(x.k).indexOf("ext:")===0; })[0]||{}).k || "";
+    de=String(de).replace(/^ext:/,"") || (t.duenio===yo?"ti":((PERSONAS[t.duenio]||{}).nombre||""));
+    return "Dato · de "+de;
+  }
+  var dueno=t.duenio===yo?"Tuya":"De "+((PERSONAS[t.duenio]||{}).nombre||t.duenio||"");
+  return dueno+(otros.length?" · con "+juntaNombres(otros):"");
+}
+/* el chip del encabezado -> {cls, ico, txt} */
+function chipEncabezado(t){
+  if(esDato(t)){
+    /* la fecha del dato = cuando llego (el mensaje que lo creo), no cuando se capturo */
+    var ds=(t.datos_corregidos||[]), ts=msCreacion(t) || creadaCon(t).ts || (ds.length && ds[ds.length-1].ts) || 0;
+    var f=ts?iso(new Date(ts)):"";
+    return {cls:"dato", ico:"dato", txt:"Dato"+(f?" · "+fechaMovCorta(f).replace(/^\S+\s+/,""):"")};
+  }
+  if(t.indefinida===true || esRecurrente(t) || t.tipo==="recurrente")
+    return {cls:"ind", ico:"recur", txt:"Indefinida"+(t.f_vigente?" · próx. "+fechaMovCorta(t.f_vigente):"")};
+  if(t.f_vigente) return {cls:"", ico:"cal", txt:"Finiquito: "+fechaMovCorta(t.f_vigente)};
+  return {cls:"sin", ico:"cal", txt:"Sin fecha de finiquito"};
+}
+/* el mensaje que creo la tarea -> {texto, ts, quien, foto} */
+function creadaCon(t){
+  var ms=t.msgs||[], x=null;
+  for(var i=0;i<ms.length && i<4;i++){ var m=ms[i]; if(!m) continue; if(m.k==="bal") continue; x=m; break; }
+  if(!x) return {texto:String(t.dicho||t.nombre||""), ts:msCreacion(t)||0, quien:"", foto:""};
+  var tx=String(x.tr||x.t||""), quien="", foto="";
+  var md=tx.match(/^La abriste dictando:\s*“([\s\S]*?)”/);
+  if(md){ tx=md[1]; quien="Dictado tuyo"; }
+  else if(x.wa_in===1 || x.wa_c || /^wa_/.test(String(x.origen||""))){
+    var mm=tx.match(/^([^:\n]{1,40}):\s*([\s\S]*)$/); if(mm) tx=mm[2];
+    quien=(x.origen==="wa_saliente"||x.wa_in===0)?"Tu WhatsApp a "+(x.chat||x.wa_c||""):"WhatsApp de "+(x.wa_c||(mm&&mm[1])||"");
+    if(x.tipo==="foto" && x.url) foto=x.url;
+  } else if(x.k==="bo") quien=(x.de&&x.de!==yo&&PERSONAS[x.de])?PERSONAS[x.de].nombre:"Dictado tuyo";
+  return {texto:tx.trim(), ts:x.ts||msCreacion(t)||0, quien:quien, foto:foto};
+}
+/* palabras para encontrarla (las guardadas, o del nombre y contexto) + un sinonimo de cada una */
+function palabrasClave(t){
+  var base=(t.palabras&&t.palabras.length)?t.palabras.slice():palabrasBusqueda([t.nombre,t.contexto].join(" ")).slice(0,5);
+  var out=[];
+  base.forEach(function(w){ w=String(w).toLowerCase(); if(out.indexOf(w)<0) out.push(w);
+    var g=_sinGrupo(w); if(g>=0){ var s2=SINONIMOS[g].filter(function(y){ return _bst(y)!==_bst(w) && !/s$/.test(y); })[0]; if(s2 && out.indexOf(s2)<0) out.push(s2); } });
+  return out.slice(0,8);
+}
+/* ---- COMPLETITUD de algo nuevo: contexto (minimo 75%) + lo que falta segun Tarea o Dato ---- */
+function contextoPct(t){
+  var n=String(t.contexto||"").split(/\s+/).filter(function(w){ return w.length>1; }).length;
+  return Math.min(100, Math.round(n*75/CTX_MIN_PAL));
+}
+function completitud(t){
+  var tipo=tipoItem(t), pct=contextoPct(t), it=[];
+  if(tipo==="dato"){
+    var nomOk=!!String(t.nombre||"").trim() && !/^(whats\s?app:|recordatorio sin|sin nombre)/i.test(t.nombre) && !/^\+?\d[\d\s]+$/.test(t.nombre);
+    var deQ=t.de_quien||t.proyecto||""; if(!deQ){ try{ var cw=contactosWA(t); if(cw.length) deQ=cw[0].nombre; }catch(e){} }
+    var cif=(t.datos_corregidos||[]).some(function(d){ return /\d/.test(String((d&&d.t)||d||"")); });
+    it.push({k:"que", ok:nomOk, tx:nomOk?"Qué es: "+t.nombre:"Qué es"});
+    it.push({k:"de", ok:!!deQ, tx:deQ?"De: "+deQ:"De quién o de qué proyecto"});
+    it.push({k:"cifras", ok:cif, tx:cif?"Cifras guardadas":"Las cifras"});
+  } else {
+    var q=t.duenio && PERSONAS[t.duenio];
+    var fin=t.indefinida===true || esRecurrente(t) || !!(t.f_vigente && !t.falta_fecha);
+    var seg=(t.avisos||[]).some(function(a){ return a && a.fecha; }) || !!String(t.ritmo||"").trim() || esRecurrente(t) || (t.indefinida===true && !!t.f_vigente);
+    it.push({k:"quien", ok:!!q, tx:q?"Quién: "+(t.duenio===yo?"tú":PERSONAS[t.duenio].nombre):"Quién lo hace"});
+    it.push({k:"finiquito", ok:fin, tx:fin?(t.indefinida===true||esRecurrente(t)?"Finiquito: indefinida":"Finiquito: "+fechaMovCorta(t.f_vigente)):"Finiquito: ¿fecha o indefinida?"});
+    it.push({k:"seguimiento", ok:seg, tx:seg?"Próximo seguimiento listo":"Próximo seguimiento"});
+  }
+  var hechos=it.filter(function(x){ return x.ok; }).length;
+  return {tipo:tipo, ctxPct:pct, ctxOk:pct>=75, items:it, hechos:hechos, datosPct:Math.round(hechos*100/it.length),
+          completa:pct>=75 && hechos===it.length};
+}
+/* "falta finiquito" / "falta contexto": lo primero que falta, para el renglon de inicio */
+function faltaPrimero(c){
+  var f=c.items.filter(function(x){ return !x.ok; })[0];
+  if(f) return {txt:"falta "+({quien:"quién",finiquito:"finiquito",seguimiento:"seguimiento",que:"qué es",de:"de quién",cifras:"cifras"}[f.k]||f.k), col:"#4aa3ff"};
+  if(!c.ctxOk) return {txt:"falta contexto", col:"#30d158"};
+  return null;
+}
+/* ---- DESGLOSE de un dato guardado: Total, por mL y renglones con monto, del texto tal cual ---- */
+function _monto(s){ var m=String(s).match(/\$\s*([\d,]+(?:\.\d+)?)/); return m?Number(m[1].replace(/,/g,"")):null; }
+function _limpiaEtiqueta(lb){
+  var s=String(lb).replace(/\([^)]*\)/g," ").replace(/^.*?:\s*/,"").trim();
+  var mm=s.search(/\s\d+(?:[.,]\d+)?\s*(?:m|ml|cm|mts?|metros?)\b/i); if(mm>0) s=s.slice(0,mm);
+  return s.replace(/\s+/g," ").replace(/[\s,.;:-]+$/,"").trim();
+}
+function parseDesglose(txt){
+  var s=String(txt||""), r={total:null, porML:null, items:[]};
+  s.split(/\s*[·•;\n]\s*/).forEach(function(seg){
+    var mo=_monto(seg); if(mo==null) return;
+    if(/\btotal\b/i.test(seg) && !/promedio|por\s*m/i.test(seg)){ r.total=mo; return; }
+    if(/por\s*(?:m\b|ml\b|metro)/i.test(seg)){ r.porML=mo; return; }
+    var lb=_limpiaEtiqueta(seg.slice(0, seg.indexOf("$")));
+    if(lb) r.items.push({tx:lb, monto:mo});
+  });
+  if(r.total==null && r.items.length>1) r.total=null;   /* nunca se suma por nuestra cuenta: si no viene, no se pone */
+  return r;
+}
+function fmtMonto(n, dec){ if(n==null) return ""; var x=Number(n).toLocaleString("en-US",{minimumFractionDigits:dec?2:0, maximumFractionDigits:2}); return "$"+x; }
 function buscaPorSignificado(q, cb){
   /* build 194: tambien las cerradas (lo que se guardo "solo para la info") */
   var ab=tareas.filter(function(t){ return !t.es_recordatorio && !t.fusionada_en; })
@@ -4608,7 +4806,7 @@ function selloYSigue(t, o){
     if(s){ abierta=s.id; vista="hilo"; }
     else { abierta=null; vista="lista"; }
     render();
-    muestraDeshacer(o.tipo, o.tipo==="autorizada"?"Autorizada":null);
+    if(!o.sinDeshacer) muestraDeshacer(o.tipo, o.tipo==="autorizada"?"Autorizada":null);   /* build 195: completar lo nuevo no deja ventana */
   }, 620);
   setTimeout(function(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }, 1100);
 }
@@ -5588,9 +5786,11 @@ function faltaInfoRev(t){
 function tipoRevisar(t){
   if(!t || t.cierre || t.fusionada_en || t.estado==="fusionada" || estadoReal(t)==="cerrada") return null;
   if((meDetiene(t) && !t.pendiente_info) || (esDecisionSal(t) && PERSONAS[yo] && PERSONAS[yo].jefe)) return "espera";
-  if(faltaInfoRev(t) && (t.creada_por===yo || t.duenio===yo)) return "falta";
+  /* build 195: "Falta info" = lo nuevo o incompleto (antes "Falta información" y "Por autorizar").
+     Lo que ya tiene todo (contexto y datos) nunca sale aqui. */
+  var _nuevo=!t.autorizada_asi && (porAutorizar(t) || (faltaInfoRev(t) && (t.creada_por===yo || t.duenio===yo)));
+  if(_nuevo && !completitud(t).completa) return "falta";
   if(t.duenio===yo && !t.dup_resuelto && posibleDup(t).length) return "vincular";
-  if(porAutorizar(t)) return "autorizar";
   return null;
 }
 /* ===== build 192 (Salvador 2026-10-04 08:47): BORRAR SIN MOTIVO AL NACER + CENSO =====
@@ -5678,7 +5878,7 @@ function quienTeEspera(t){
 }
 function etiquetaRev(t,k){
   if(k==="espera") return (esDecisionSal(t)?"Te esperan":quienTeEspera(t)+" te espera");
-  if(k==="falta") return "Falta información";
+  if(k==="falta"){ var _fp=faltaPrimero(completitud(t)); return _fp?_fp.txt:"Falta info"; }
   if(k==="vincular") return "Posible vinculación";
   return "Por autorizar";
 }
@@ -5729,11 +5929,7 @@ function vTarjetaRev(t){
       (q?'<span class="rcq">'+esc(q.length>160?q.slice(0,159)+"…":q)+'</span>':'')+
       '<span class="rcp">Contéstale abajo.</span></div>';
   }
-  if(k==="falta"){
-    return '<div class="revc c-falta"><span class="rct">FALTA INFORMACIÓN</span><ul>'+
-      preguntasFalta(t).map(function(p){ return '<li>'+esc(p)+'</li>'; }).join("")+
-      '</ul><span class="rcp">Contéstame abajo, con voz o escrito.</span></div>';
-  }
+  if(k==="falta") return vFaltaInfo(t);   /* build 195: contexto + lo que falta, sin botones */
   if(k==="vincular"){
     /* build 192: se pide como el paquete de autorizar: "Este mensaje lo pienso vincular a X. ¿Autorizas?" */
     var _pd=posibleDup(t);
@@ -6118,15 +6314,52 @@ function respondeAuto(t, v, contacto, cita){
   toast("Se lo mando a "+contacto+" por WhatsApp");
 }
 /* contestar "falta informacion": Claude saca nombre, fecha, ritmo, avisos y contexto */
+/* build 195: "es dato" / "es tarea" (o "no, es información") */
+function tipoDicho(v){
+  var s=_nn(v);
+  if(/^(no,?\s+)?(es|era|esto es|eso es)\s+(un\s+)?(dato|informacion|info)\b/.test(s) || /^(es\s+)?solo\s+(dato|informacion)\b/.test(s)) return "dato";
+  if(/^(no,?\s+)?(es|era|esto es|eso es)\s+(una\s+)?tarea\b/.test(s)) return "tarea";
+  return "";
+}
+/* si ya tiene todo: queda autorizada, sale la misma palomita de siempre y brinca a la siguiente */
+function revisaCompleta(t){
+  if(t.autorizada || t.cierre) return false;
+  var c=completitud(t); if(!c.completa) return false;
+  t.autorizada=true; t.autorizada_ts=Date.now(); t.pendiente_info=""; t.pendiente_tipo=""; t.falta_fecha=false;
+  if(c.tipo==="dato") t.es_dato=true;
+  guarda(t);
+  if(vista==="hilo" && abierta===t.id) selloYSigue(t,{tipo:"autorizada", texto:t.nombre, restaurar:null, sinDeshacer:true});
+  return true;
+}
+/* build 195: con el ▾ abierto, lo dictado suma al contexto; si es claramente un mensaje, sigue() */
+function agregaContexto(t, v, sigue){
+  msg(t,"bo",v); var m=t.msgs[t.msgs.length-1]; m.de=yo; m.canal="priv:"+yo; m.nota_claude=1; guarda(t); render();
+  var sys="Eres el asistente de una app de tareas. El usuario tiene abierto el detalle de \""+(t.nombre||"")+"\" y dicto algo. "+
+    "Si es informacion o una instruccion sobre la tarea (de que se trata, para que, quien, datos), accion contexto: reescribe el contexto COMPLETO (lo que ya habia + lo nuevo) en 1 a 3 frases y hasta 5 palabras para encontrarla. "+
+    "Si claramente es un mensaje para otra persona, accion mensaje. No inventes fechas. Contesta SOLO JSON: {\"accion\":\"contexto|mensaje\",\"contexto\":\"\",\"palabras\":[]}";
+  preguntaAClaude([{role:"user",content:sys+"\n\nCONTEXTO ACTUAL: "+(t.contexto||"(nada)")+"\nDICTADO: "+v}],"rapido",function(txt,err){
+    var j={}; try{ var mm=String(txt||"").match(/\{[\s\S]*\}/); j=mm?JSON.parse(mm[0]):{}; }catch(e){ j={}; }
+    if(!err && j.accion==="mensaje"){
+      /* era un mensaje: se quita la nota y sigue el camino normal */
+      var i=(t.msgs||[]).indexOf(m); if(i>=0) t.msgs.splice(i,1); guarda(t); sigue(); return; }
+    if(err || !j.contexto){ t.contexto=((t.contexto?t.contexto+" ":"")+v).slice(0,600); }
+    else { t.contexto=String(j.contexto).trim().slice(0,600); if(Array.isArray(j.palabras) && j.palabras.length) t.palabras=j.palabras.map(function(w){ return String(w).toLowerCase().trim(); }).filter(Boolean).slice(0,6); }
+    t.notas_claude=(t.notas_claude||[]).concat([{t:"CONTEXTO: "+v, ts:Date.now()}]).slice(-30);
+    guarda(t); toast("Contexto actualizado"); if(!revisaCompleta(t) && vista==="hilo") render();
+  });
+}
 function completaRevision(t, v){
   msg(t,"bo",v); guarda(t); render();
   var qs=preguntasFalta(t);
   var sys="Eres el asistente de tareas. Te doy una tarea, las preguntas que le hice al usuario y su respuesta. "+
     "Saca SOLO lo que dijo, sin inventar. Fechas AAAA-MM-DD usando este calendario: "+calendarioProximo(40).join(", ")+". "+
     "periodicidad solo 'semanal', 'mensual' o null. recordar = avisos antes de terminar (fecha y hora HH:MM si la dijo). "+
-    "Si dice que ya se hizo, ya_hecha=true. Contesta SOLO JSON: "+
-    "{\"nombre\":null,\"fecha\":null,\"periodicidad\":null,\"recordar\":[],\"contexto\":null,\"ya_hecha\":false}";
-  preguntaAClaude([{role:"user",content:sys+"\n\nTAREA: "+(t.nombre||"")+"\nPREGUNTAS: "+qs.join(" | ")+"\nRESPUESTA: "+v}],"rapido",function(txt,err){
+    "Si dice que ya se hizo, ya_hecha=true. NUNCA inventes fecha de finiquito: fecha solo si la dijo; indefinida=true solo si dijo que no tiene fin. "+
+    "contexto = el contexto COMPLETO actualizado (lo que ya habia + lo nuevo), de que se trata, en 1 a 3 frases. "+
+    "palabras = hasta 5 palabras para encontrarla. de_quien = de quien o de que proyecto es (si lo dijo). cifras = montos o medidas que dijo, tal cual. "+
+    "Contesta SOLO JSON: "+
+    "{\"nombre\":null,\"fecha\":null,\"indefinida\":false,\"periodicidad\":null,\"recordar\":[],\"contexto\":null,\"palabras\":[],\"de_quien\":null,\"cifras\":null,\"ya_hecha\":false}";
+  preguntaAClaude([{role:"user",content:sys+"\n\nTIPO: "+tipoItem(t)+"\nTAREA: "+(t.nombre||"")+"\nCONTEXTO ACTUAL: "+(t.contexto||"(nada)")+"\nFALTA: "+completitud(t).items.filter(function(x){ return !x.ok; }).map(function(x){ return x.tx; }).join(" | ")+"\nPREGUNTAS: "+qs.join(" | ")+"\nRESPUESTA: "+v}],"rapido",function(txt,err){
     if(err){ if(t.pendiente_info) completaPendiente(t.id, v); else { msg(t,"bi","No pude leer tu respuesta ahorita; quedó anotada."); guarda(t); render(); } return; }
     var j={}; try{ var mm=String(txt).match(/\{[\s\S]*\}/); j=mm?JSON.parse(mm[0]):{}; }catch(e){ j={}; }
     if(j.ya_hecha){ t.pendiente_info=""; t.pendiente_tipo=""; t.falta_fecha=false; t.autorizada=true; cierraHecha(t); render(); return; }
@@ -6143,11 +6376,17 @@ function completaRevision(t, v){
     (Array.isArray(j.recordar)?j.recordar:[]).slice(0,6).forEach(function(r){
       if(r && _fReal(r.fecha) && !_dudaRev && (!_todasRev.length || _relRev || _todasRev.indexOf(r.fecha)>=0)){ nuevoAviso(t,{texto:t.nombre, fecha:r.fecha, hora:r.hora||"", dicho:v}); hecho.push("aviso "+fechaBonita(r.fecha)+(r.hora?" "+r.hora:"")); }
     });
-    if(j.contexto && String(j.contexto).trim()){ t.contexto=String(j.contexto).trim().slice(0,400); hecho.push("contexto"); }
-    if(t.f_vigente || t.periodicidad){ t.pendiente_info=""; t.pendiente_tipo=""; }
-    msg(t,"bi", hecho.length ? "Listo: "+hecho.join(" · ")+"." : (_dudaRev||"No pesqué datos nuevos; dímelo otra vez, en el orden de las preguntas."));
-    if(hecho.length && _dudaRev) msg(t,"bi",_dudaRev+" La fecha no la cambié.");
+    if(j.contexto && String(j.contexto).trim()){ t.contexto=String(j.contexto).trim().slice(0,600); hecho.push("contexto"); }
+    /* build 195: indefinida solo si lo dijo (nunca un finiquito inventado); palabras, de quien y cifras */
+    if(j.indefinida===true && /indefinid|sin\s+fecha|no\s+tiene\s+(fecha|fin)|sin\s+fin|permanente/i.test(v)){ t.indefinida=true; t.falta_fecha=false; hecho.push("indefinida"); }
+    if(Array.isArray(j.palabras) && j.palabras.length) t.palabras=j.palabras.map(function(w){ return String(w).toLowerCase().trim(); }).filter(Boolean).slice(0,6);
+    if(j.de_quien && String(j.de_quien).trim()){ t.de_quien=String(j.de_quien).trim().slice(0,60); hecho.push("de "+t.de_quien); }
+    if(j.cifras && String(j.cifras).trim() && /\d/.test(String(j.cifras))){ var _fr=fechasRaras(String(j.cifras), fechaDictada(v).todas);
+      if(!_fr.length){ t.datos_corregidos=(t.datos_corregidos||[]).concat([{t:String(j.cifras).trim().slice(0,600), ts:Date.now(), dicho:String(v).slice(0,300)}]).slice(-30); hecho.push("cifras"); } }
+    if(t.f_vigente || t.periodicidad || t.indefinida===true){ t.pendiente_info=""; t.pendiente_tipo=""; }
+    if(!hecho.length || _dudaRev) msg(t,"bi", hecho.length ? _dudaRev+" La fecha no la cambié." : (_dudaRev||"No pesqué datos nuevos; dímelo otra vez."));
     guarda(t); try{ sincronizaAvisos(t); }catch(e){}
+    if(revisaCompleta(t)) return;   /* build 195: las barras se llenan; completa -> palomita y a la siguiente */
     render();
   });
 }
@@ -6188,6 +6427,11 @@ var vertodo=false;
 function ico(n,px,gr){
   var s=px||18, w=gr||1.7, p={
     lupa:'<circle cx="10.5" cy="10.5" r="6.2"/><path d="M15.1 15.1 21 21"/>',
+    /* build 195 (maqueta "Fichas limpias"): calendario, recurrente, dato y checklist */
+    cal:'<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+    recur:'<path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.5M20 4v4.5h-4.5M20 12a8 8 0 0 1-13.7 5.6L4 15.5M4 20v-4.5h4.5"/>',
+    dato:'<path d="M14.5 3.5l6 6-3 1-4 4 .5 4.5-1.5 1.5-4.5-4.5L4 20.5M8 11l5 5M9.5 9.5l4-4 1-2"/>',
+    chk:'<path d="M7 3.5h8l4 4V19a1.5 1.5 0 0 1-1.5 1.5h-10.5A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5z"/><path d="M15 3.5V7.5h4M8.5 11.5l1.2 1.2 2-2.2M13.5 12h3M8.5 16h8"/>',
     mic :'<rect x="9" y="2.6" width="6" height="11.4" rx="3"/>'+
          '<path d="M5.6 11.4a6.4 6.4 0 0 0 12.8 0"/><path d="M12 17.8v3.4"/>',
     cam :'<path d="M3 8.4h3.3l1.5-2.2h8.4l1.5 2.2H21a1 1 0 0 1 1 1v8.2a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V9.4a1 1 0 0 1 1-1z"/>'+
@@ -6647,10 +6891,8 @@ function vHilo(){
       ? '<input id="enom" class="tin" value="" placeholder="'+esc(t.nombre)+'" autocapitalize="sentences" enterkeyhint="done">'
       : '<span class="t'+(t.cierre?" tach":"")+'">'+esc(t.nombre)+'</span>')+
     '</div><div class="d">'+
-    (t.duenio===yo?"Tuya":"De "+PERSONAS[t.duenio].nombre)+
-    /* build 143: la persona de fuera (contactos / WhatsApp / acuerdo): un toque = su ficha */
-    personasDe(t).slice(0,2).map(function(n){
-      return '<button class="pchip" data-persona="'+esc(n)+'">'+ico("pers",14,1.9)+'<span>'+esc(n)+'</span></button>'; }).join("")+
+    /* build 195: "Tuya · con X y Y" (dueño + quienes participan) / "Dato · de X" */
+    esc(subtituloTarea(t))+
     '</div></div>'+
     '<div class="grow"></div>'+
     (adj.length?'<button class="iconbtn" id="bgal" aria-label="Archivos de esta tarea">'+ico("clip",20,1.6)+
@@ -6707,14 +6949,12 @@ function vHilo(){
      ensuciar la pantalla. */
   if(t.creada_por && t.creada_por!==t.duenio && PERSONAS[t.creada_por])
     _fr("Asignada por", PERSONAS[t.creada_por].nombre);
-  if(fichaOpen){
-    h+='<button class="strip" id="bstrip"><span class="x">'+top+'</span><span class="scv">ver menos ▴</span></button>'+
-       '<div class="fbody on">'+(frows?'<dl>'+frows+'</dl>':'')+'</div>';
-  } else {
-    /* COLAPSADA por defecto: resumen de 2 renglones, un toque para ver todo */
-    h+='<button class="strip col" id="bstrip"><span class="rsm2">'+esc(resumenTarea(t))+'</span>'+
-       '<span class="scv">ver detalle ▾</span></button>';
-  }
+  /* build 195: un renglon: chip de fecha + ▾. Sin resumen debajo. El ▾ abre "Creada con" + Contexto. */
+  var _ch=chipEncabezado(t);
+  h+='<div class="hrow"><div class="hchip '+_ch.cls+'">'+ico(_ch.ico,18,1.9)+'<span>'+esc(_ch.txt)+'</span></div>'+
+     '<button class="hchev" id="bstrip" aria-expanded="'+(fichaOpen?"true":"false")+'" aria-label="Detalle">'+(fichaOpen?'▴':'▾')+'</button></div>';
+  if(fichaOpen) h+=vDetalle(t, frows);
+  else if(tipoRevisar(t)==="falta") h+=vTipoToggle(t);
 
   /* Si esta tarea es MI REVISION de algo que ejecuta otro, aqui va el acceso
      directo a su tarea: ahi vive su evidencia. Salvador 2026-09-04. */
@@ -6745,6 +6985,9 @@ function vHilo(){
   (t.msgs||[]).forEach(function(x,ix){
     if(x && x.ts) _evHasta(x.ts);
     if(x && x.k==="bi" && !x.wa_in && /^Foto guardada( con ubicaci[oó]n)?\.?$/.test(String(x.t||"").trim())) return;   /* build 186: paja */
+    /* build 195: "Resumen:", "Se cierra con:" y "La abriste dictando" ya no van en el chat: estan en el ▾ */
+    if(x && x.k==="bi" && !x.wa_in && !x.wa_c && /^(Resumen:|Se cierra con:|La abriste dictando:)/.test(String(x.t||"").trim())) return;
+    if(ix===0 && x && x.k==="bi" && x.hab) return;   /* el dictado largo con el que nacio (burbuja "Resumen:") tambien va en el ▾ */
     /* build 187 (Salvador 08:28): los avisos del programa de la Mac ("Sin confirmación de entrega… tras 2 intentos",
        "NO SALIÓ a…") no ensucian el chat; el estado va en las palomitas del mensaje */
     if(x && x.k==="bi" && /^(?:[^:\n]{1,40}:\s*)?(Sin confirmaci[oó]n de entrega a |NO SALI[OÓ] a )/.test(String(x.t||""))) return;
@@ -6853,7 +7096,7 @@ function vHilo(){
   } else if(t.estado==="espera"){
     var qa=quienAutoriza(yo);
     sug='<button class="op" disabled>Esperando a '+esc(PERSONAS[qa.quien].nombre)+'</button>';
-  } else if(!t.cierre && estadoReal(t)!=="cerrada" && t.duenio===yo){
+  } else if(!t.cierre && estadoReal(t)!=="cerrada" && t.duenio===yo && !esDato(t)){   /* build 195: datos sin campana/Ya está/bote */
     /* orden nuevo (Salvador 2026-09-18): relojito a la izq, "Ya está" a la derecha
        arriba del micrófono. Un recordatorio suelto no lleva "Estoy atorado". */
     var _est=_sal?"gris":estadoRelojito(t);
@@ -6878,7 +7121,7 @@ function vHilo(){
 
   var _pil=vPastilla(t), _cc=modoClaude(t)?CLAUDE_COL:canalActual(t).col, _conPill=!!(_pil && (_pil.indexOf('id="cnlpill"')>=0 || modoClaude(t)));
   var _pre179=""; try{ _pre179=vSupervisor(t)+vParaTi(t); }catch(e){ console.warn("paraTi",e); }
-  return h+vDatosTarea(t)+vVuelta(t)+vPasos(t)+bannerDecision(t)+_pil+_pre179+'<div class="scroll'+(_conPill?' cnl" style="--cc:'+_cc:'')+'"><div class="msgs">'+m+pre+'</div></div>'+vTarjetaRev(t)+
+  return h+(esDato(t)?vDatoCuerpo(t):vDatosTarea(t))+vVuelta(t)+vPasos(t)+bannerDecision(t)+_pil+_pre179+'<div class="scroll'+(_conPill?' cnl" style="--cc:'+_cc:'')+'"><div class="msgs">'+m+pre+'</div></div>'+vTarjetaRev(t)+
     /* LA MISMA BARRA DE TODAS LAS VISTAS — 2026-09-04. Antes el hilo tenia la
        camara a la IZQUIERDA y una flecha de enviar a la derecha, distinto de la
        caratula (camara a la DERECHA, sin flecha). Salvador lo cacho: "tiene que
@@ -8701,9 +8944,9 @@ function vPasos(t){
   var ab=!!((window.__pasosOpen||{})[t.id]);
   var h='<div class="pasosw"><div class="pasos'+(ab?' open':'')+'" id="pasos">'+
     '<button class="ph" id="bpasos" aria-expanded="'+(ab?"true":"false")+'">'+
-      '<span class="ttl">'+esc(act||"Pasos")+'</span>'+
-      '<span class="nx">'+(sig?'Sigue: '+esc(sig.tx):'Todo palomeado')+'</span>'+
-      '<span class="cn'+(n===tot?' full':'')+'">'+n+'/'+tot+'</span>'+
+      /* build 195: hojita verde + nombre de la lista + "N de M" + barrita */
+      '<span class="ttl pchk">'+ico("chk",18,1.9)+'<span>'+esc(act||"Pasos")+'</span></span>'+
+      '<span class="cn'+(n===tot?' full':'')+'">'+n+' de '+tot+'</span>'+
       (LS.length>1?'<span class="lmas">+'+(LS.length-1)+'</span>':'')+
       '<svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>'+
     '</button>'+
@@ -10825,6 +11068,7 @@ function bindHilo(){
 
   try{ bindDeslizar(t); }catch(e){ console.warn("deslizar",e); }
   var _cp=$("cnlpill"); if(_cp) _cp.onclick=function(){ if(modoClaude(t)){ window.__cnlClaude[t.id]=0; render(); return; } abreCanales(t); };
+  Array.prototype.forEach.call(document.querySelectorAll("[data-tipoi]"),function(b){ b.onclick=function(){ var k=b.getAttribute("data-tipoi"); t.tipo_item=k; t.es_dato=(k==="dato"); guarda(t); if(!revisaCompleta(t)) render(); }; });   /* build 195 */
   var _ccl=$("cnlclaude"); if(_ccl) _ccl.onclick=function(){ window.__cnlClaude=window.__cnlClaude||{}; window.__cnlClaude[t.id]=window.__cnlClaude[t.id]?0:1; render(); };   /* build 193 */
   Array.prototype.forEach.call(document.querySelectorAll("[data-ncexp]"),function(b){ b.onclick=function(){ window.__ncExp=window.__ncExp||{}; window.__ncExp[t.id]=1; render(); }; });
   var _ib=$("intbtn"); if(_ib) _ib.onclick=function(){ abreIntegrantes(t); };
@@ -10854,6 +11098,28 @@ function bindHilo(){
     if(typeof esNotaClaude==="function" && esNotaClaude(v)){ $("txt").value=""; marcaEnvio("tenv",""); notaClaude(t, v); return; }
     /* build 193: con el canal naranja "Claude" puesto, todo lo dictado es indicacion para Claude */
     if(modoClaude(t)){ $("txt").value=""; marcaEnvio("tenv",""); notaClaude(t, v); return; }
+    /* build 195: en un DATO, "¿de dónde sacaste esto?" abre el ▾ con la foto o el texto de origen */
+    if(esDato(t) && /\bde\s+d[oó]nde\s+(lo\s+|la\s+|los\s+)?(sacaste|sali[oó]|salieron|viene|vienen|tomaste)\b/i.test(v)){ $("txt").value=""; marcaEnvio("tenv",""); fichaOpen=true; render(); return; }
+    /* build 195: lo nuevo/incompleto ("Falta info") se llena dictando, ANTES de cualquier canal:
+       nunca se le manda por WhatsApp a quien lo origino. "es dato"/"es tarea" cambia el tipo;
+       "autorízala así" la autoriza y deja lo que falte pendiente. */
+    if(tipoRevisar(t)==="falta"){
+      var _tpv=tipoDicho(v);
+      if(_tpv){ $("txt").value=""; marcaEnvio("tenv",""); t.tipo_item=_tpv; if(_tpv==="dato") t.es_dato=true; else t.es_dato=false; guarda(t); revisaCompleta(t); render(); return; }
+      if(/^\s*(autor[ií]za(la|lo)?|aut[oó]rizal[ao])\s+(as[ií]|como\s+est[aá])\b/i.test(v)){ $("txt").value=""; marcaEnvio("tenv","");
+        t.autorizada=true; t.autorizada_ts=Date.now(); t.autorizada_asi=true;
+        t.pendiente_aut=completitud(t).items.filter(function(x){ return !x.ok; }).map(function(x){ return x.k; });
+        guarda(t); selloYSigue(t,{tipo:"autorizada", texto:t.nombre, restaurar:null, sinDeshacer:true}); return; }
+      if(!detectaLista(v) && listaNumerada(v).length<2){ $("txt").value=""; marcaEnvio("tenv",""); completaRevision(t, v); return; }
+    }
+    /* build 195: con el ▾ abierto, lo dictado es primero indicacion para el CONTEXTO; si Claude ve
+       que claramente es un mensaje, sigue el camino normal */
+    if(fichaOpen && !window.__ctxPasa){
+      $("txt").value=""; marcaEnvio("tenv","");
+      var _vC2=v;
+      agregaContexto(t, _vC2, function(){ fichaOpen=false; window.__ctxPasa=true; render(); try{ $("txt").value=_vC2; enviaHilo(); }finally{ window.__ctxPasa=false; } });
+      return;
+    }
     /* build 146: renombrar la tarea por voz o escrito, sin confirmar aparte */
     var _rn146=detectaRenombre(v);
     if(_rn146){
@@ -12008,7 +12274,9 @@ function vTeToca(items){
   var uno=items.filter(function(x){ return !x.sum; }), sums={};
   items.filter(function(x){ return x.sum; }).forEach(function(x){ (sums[x.sum]=sums[x.sum]||[]).push(x); });
   var h='<div class="tth"><b>Te toca</b><span class="ttn">'+items.length+'</span></div><div class="revl ttl">';
-  function fila(x){ return '<button class="revr ttr" data-id="'+esc(x.t.id)+'"><i style="background:'+x.col+'"></i><span class="ttx"><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span><small>'+esc(x.why)+'</small></span></button>'; }
+  var _nf=uno.filter(function(x){ return x.grp==="falta"; }).length, _puso=false;
+  function fila(x){ var pre=""; if(x.grp==="falta" && !_puso){ _puso=true; pre='<div class="ttgrp">Falta info · '+_nf+'</div>'; }
+    return pre+'<button class="revr ttr" data-id="'+esc(x.t.id)+'"><i style="background:'+x.col+'"></i><span class="ttx"><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span><small>'+esc(x.why)+'</small></span></button>'; }
   uno.forEach(function(x){ h+=fila(x); });
   [["venc","vencida","vencidas","#FF453A"],["hoy","para hoy","para hoy","#8e8e93"]].forEach(function(s){
     var l=sums[s[0]]; if(!l) return;
@@ -12026,7 +12294,7 @@ function armaTeToca(rev, det, venc, msgs, hoyYa){
   det.forEach(function(t){ pon(t, esDecisionSal(t)?"esperan tu decisión":"alguien te espera", "#ff9f0a"); });
   compartidasDe().concat(tareas.filter(function(t){ return t.duenio===yo && !t.cierre && estadoReal(t)!=="cerrada" && !t.es_recordatorio; }))
     .forEach(function(t){ var p=null; try{ p=preguntaParaMi(t); }catch(e){} if(p) pon(t, p.de+(p.todos?" pide opinión a todos":" te pregunta"), "#ff9f0a"); });
-  rev.filter(function(x){ return x.k==="falta"; }).forEach(function(x){ pon(x.t, "falta información", "#0a84ff"); });
+  rev.filter(function(x){ return x.k==="falta"; }).forEach(function(x){ var _fp=faltaPrimero(completitud(x.t))||{txt:"falta info",col:"#4aa3ff"}; pon(x.t, _fp.txt, _fp.col); out[out.length-1].grp="falta"; });   /* build 195 */
   tareas.forEach(function(t){ try{ if(entrevistaPendiente(t)) pon(t, "falta información · ¿cómo medimos a "+((PERSONAS[t.duenio]||{}).nombre||"")+"?", "#0a84ff"); }catch(e){} });
   rev.filter(function(x){ return x.k==="autorizar"||x.k==="vincular"; }).forEach(function(x){ pon(x.t, x.k==="vincular"?"posible vinculación":"por autorizar", x.k==="vincular"?"#bf5af2":"#30d158"); });
   venc.forEach(function(t){ pon(t, vencioTxt(t), "#FF453A", "venc"); });   /* build 191: recurrente = "tocaba X, sin confirmar" */
