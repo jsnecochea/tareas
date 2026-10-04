@@ -708,6 +708,18 @@ button{font:inherit;color:inherit}
 .bprog{border:1px solid #2f6fa8;background:var(--fi-bluebg,#10283f)!important}.bprog.cancel{opacity:.5;border-color:#3a3a3e}
 .bprog .pgh{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#4aa3ff}.bprog .pgt{display:block;margin-top:4px}
 .bprog .pgx{display:block;margin-top:4px;font-size:12px;color:var(--ink-3,#9a9aa2)}
+.ntf{padding:6px 14px 30px;display:flex;flex-direction:column}
+.ntf .presets{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:6px 0 4px}
+.ntf .presets button{font-size:13px;text-align:center;padding:9px 2px;border-radius:10px;background:var(--surface-2,#2a2a2d);color:var(--ink-3,#9a9aa2);border:1px solid transparent}
+.ntf .presets button.on{background:var(--fi-bluebg,#10283f);color:#4aa3ff;border-color:#2f6fa8}
+.ntf .ngrp{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3,#9a9aa2);margin:14px 0 2px}
+.ntf .nrow{display:flex;align-items:center;gap:10px;padding:11px 2px;border:0;border-bottom:1px solid #3a3a3e;background:none;color:var(--ink,#f2f2f4);text-align:left;font:inherit}
+.ntf .nrow svg{color:var(--ink-3,#9a9aa2);flex:none}
+.ntf .nrow .tx{flex:1;min-width:0;font-size:16px}.ntf .nrow .tx small{display:block;color:var(--ink-3,#9a9aa2);font-size:13px;margin-top:2px}
+.ntf .tg{width:46px;height:28px;border-radius:99px;background:#3a3a3e;position:relative;flex:none;transition:background .2s}
+.ntf .tg::after{content:"";position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .2s}
+.ntf .tg.on{background:#30d158}.ntf .tg.on::after{left:20px}
+@media (prefers-reduced-motion:reduce){.ntf .tg,.ntf .tg::after{transition:none}}
 .cmodo{display:flex;align-self:center;gap:2px;background:var(--surface-2,#2a2a2d);border-radius:10px;padding:2px;margin:2px auto 6px}
 .cmodo button{border:0;background:none;color:var(--ink-3,#9a9aa2);font-size:13px;font-weight:600;padding:5px 12px;border-radius:8px}
 .cmodo button.on{background:#3a3a3e;color:var(--ink,#f2f2f4)}
@@ -1158,7 +1170,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 199 · WhatsApp programados dentro de Doit (a las…, si no contesta…), se cancelan tocando la burbuja";
+var VERSION_APP = "build 200 · Notificaciones en ⋯ del inicio: atajos y un interruptor por tipo, guardadas en tu ficha";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -1176,8 +1188,90 @@ var VAPID_PUBLIC="BFnf9NwBioqZIXQ7jibjMPViaGHLDfB5aNLowJMco_u9PdaEZVRibceXV8mlG3
 /* build 150: la notificacion lleva la liga EXACTA a la tarea (?recordatorio=<id>),
    asi al tocarla abre ese hilo y no otro. */
 function urlTarea(id){ return "https://doit.ok-doit.com/?recordatorio="+encodeURIComponent(id); }
-function disparaPushInstantaneo(para, titulo, cuerpo, url) {
+/* ===== build 200 (Salvador 2026-10-04 16:39, maqueta "Fichas limpias" pantalla 7): NOTIFICACIONES =====
+   En ⋯ del inicio. Cada persona elige que hace sonar su celular. Se guarda en SU ficha
+   (bitacora_personas/<usuario>.notif = {v, preset, tipos:{clave:true/false}, ts}) para que el servidor
+   (push.php) tambien la lea. CATALOGO UNICO: para agregar un tipo de aviso nuevo se agrega UNA linea aqui
+   (k = clave que viaja en el aviso como "tipo"; nivel = en que atajo entra: urgente < normal < todas). ===== */
+var NOTIF_VERSION=1;
+var NOTIF_TIPOS=[
+  {k:"recordatorio", grupo:"Urgente",  nivel:"urgente", ico:"reloj",  tx:"Recordatorios y alarmas",            sub:"Cuando suena un recordatorio que te toca"},
+  {k:"espera",       grupo:"Urgente",  nivel:"urgente", ico:"pers",   tx:"Alguien te espera o está atorado",    sub:"Una persona espera tu respuesta o algo se detuvo"},
+  {k:"falla",        grupo:"Urgente",  nivel:"urgente", ico:"alerta", tx:"Falla del sistema",                   sub:"La Mac sin señal o un WhatsApp que no salió"},
+  {k:"falta_info",   grupo:"Trabajo",  nivel:"normal",  ico:"dato",   tx:"Nueva tarea o dato por completar",    sub:"Llega algo a “Falta info”"},
+  {k:"seguimiento",  grupo:"Trabajo",  nivel:"normal",  ico:"recur",  tx:"Seguimientos de Claude",              sub:"Vencidas y ritmos sin avance"},
+  {k:"asignado",     grupo:"Trabajo",  nivel:"normal",  ico:"chk",    tx:"Te asignaron o te mencionaron",       sub:"En una tarea compartida"},
+  {k:"wa_tarea",     grupo:"WhatsApp", nivel:"normal",  ico:"msj",    tx:"Mensaje de una persona de una tarea", sub:"Solo chats ligados a tus tareas"},
+  {k:"wa_todo",      grupo:"WhatsApp", nivel:"todas",   ico:"msj",    tx:"Cualquier WhatsApp",                  sub:"Incluye grupos y plática"}
+];
+var NOTIF_PRESETS=[{k:"ninguna",tx:"Ninguna",n:0},{k:"urgente",tx:"Solo urgente",n:1},{k:"normal",tx:"Normal",n:2},{k:"todas",tx:"Todas",n:3}];
+var NOTIF_NIVEL={urgente:1, normal:2, todas:3};
+var NOTIF_DEFECTO="urgente";   /* la maqueta: "Solo urgente" queda de inicio */
+function notifDePreset(pk){
+  var n=(NOTIF_PRESETS.filter(function(x){ return x.k===pk; })[0]||{n:1}).n, o={};
+  NOTIF_TIPOS.forEach(function(t){ o[t.k]=NOTIF_NIVEL[t.nivel]<=n; });
+  return o;
+}
+/* preferencias que valen para una persona: las guardadas (completadas con el defecto si falta algun tipo nuevo) o el defecto */
+function notifPrefs(k){
+  var p=(PERSONAS[k]||{}).notif, base=notifDePreset(NOTIF_DEFECTO), o={};
+  NOTIF_TIPOS.forEach(function(t){ o[t.k]=(p && p.tipos && typeof p.tipos[t.k]==="boolean")?p.tipos[t.k]:base[t.k]; });
+  return o;
+}
+function notifGuardadas(k){ var p=(PERSONAS[k]||{}).notif; return !!(p && p.v && p.tipos); }
+/* que atajo coincide con lo prendido ("" = personalizado) */
+function notifPresetDe(tipos){
+  for(var i=0;i<NOTIF_PRESETS.length;i++){ var o=notifDePreset(NOTIF_PRESETS[i].k);
+    if(NOTIF_TIPOS.every(function(t){ return !!tipos[t.k]===!!o[t.k]; })) return NOTIF_PRESETS[i].k; }
+  return "";
+}
+/* ¿le suena a k un aviso de este tipo? Tipo desconocido o persona que nunca eligio = como siempre (si suena) */
+function notifPermite(k, tipo){
+  if(!tipo || !NOTIF_TIPOS.some(function(t){ return t.k===tipo; })) return true;
+  if(!notifGuardadas(k)) return true;
+  return !!notifPrefs(k)[tipo];
+}
+/* el tipo de un aviso que manda la app, por su titulo (los que no se reconocen suenan como siempre) */
+function tipoDePush(titulo, cuerpo){
+  var s=_nn(String(titulo||"")+" | "+String(cuerpo||""));
+  if(/^urgente|requiere tu (accion|decision)|te espera|esperan tu decision|atorad/.test(s)) return "espera";
+  if(/atrasad|no ha cumplido|vencid|sin avance|tocaba/.test(s)) return "seguimiento";
+  if(/recordatorio|alarma/.test(s)) return "recordatorio";
+  if(/no salio|sin senal|fallo|falla/.test(s)) return "falla";
+  if(/falta info|por completar/.test(s)) return "falta_info";
+  if(/asignad|encargo|revision|comentari|respuesta a tu consulta|medida|nuevo mensaje|te menciono/.test(s)) return "asignado";
+  return "";
+}
+function guardaNotif(tipos){
+  var o={v:NOTIF_VERSION, preset:notifPresetDe(tipos)||"personalizado", tipos:tipos, ts:Date.now()};
+  PERSONAS[yo]=PERSONAS[yo]||{}; PERSONAS[yo].notif=o;
+  try{ if(db) db.collection(COLP).doc(yo).set({notif:o},{merge:true}).catch(function(){ toast("No se pudieron guardar tus notificaciones"); }); }catch(e){}
+  try{ localStorage.setItem("bit_notif_"+yo, JSON.stringify(o)); }catch(e){}
+  return o;
+}
+function vNotif(){
+  /* la primera vez se guarda lo que se ve (el defecto), para que lo que dice la pantalla sea lo que vale */
+  if(!notifGuardadas(yo)) guardaNotif(notifDePreset(NOTIF_DEFECTO));
+  var pr=notifPrefs(yo), pk=notifPresetDe(pr), h='<div class="top"><button class="iconbtn" id="bback">‹</button><div><div class="tnm"><span class="t">Notificaciones</span></div><div class="d">Qué hace sonar tu celular</div></div></div>';
+  h+='<div class="scroll"><div class="ntf"><div class="presets">'+NOTIF_PRESETS.map(function(x){ return '<button data-npre="'+x.k+'" class="'+(x.k===pk?'on':'')+'">'+esc(x.tx)+'</button>'; }).join("")+'</div>';
+  var g="";
+  NOTIF_TIPOS.forEach(function(t){
+    if(t.grupo!==g){ g=t.grupo; h+='<div class="ngrp">'+esc(tituloTarea(g))+'</div>'; }
+    h+='<button class="nrow" data-ntipo="'+t.k+'" role="switch" aria-checked="'+(pr[t.k]?"true":"false")+'">'+ico(t.ico,20,1.9)+
+       '<span class="tx">'+esc(tituloTarea(t.tx))+'<small>'+esc(t.sub)+'</small></span><span class="tg'+(pr[t.k]?' on':'')+'"></span></button>';
+  });
+  return h+'</div></div>';
+}
+function bindNotif(){
+  var bb=$("bback"); if(bb) bb.onclick=function(){ vista="lista"; render(); };
+  Array.prototype.forEach.call(document.querySelectorAll("[data-npre]"),function(b){ b.onclick=function(){ guardaNotif(notifDePreset(b.getAttribute("data-npre"))); render(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-ntipo]"),function(b){ b.onclick=function(){ var pr=notifPrefs(yo), k=b.getAttribute("data-ntipo"); pr[k]=!pr[k]; guardaNotif(pr); render(); }; });
+}
+function disparaPushInstantaneo(para, titulo, cuerpo, url, tipo) {
   if (!para || para === yo) return; // No auto-notificar si la acción la hace uno mismo
+  /* build 200: lo que esa persona apago en Notificaciones no se le manda; el tipo viaja al servidor */
+  tipo = tipo || tipoDePush(titulo, cuerpo);
+  if (!notifPermite(para, tipo)) return;
   
   fetch('/push.php?action=send', {
     method: 'POST',
@@ -1189,7 +1283,8 @@ function disparaPushInstantaneo(para, titulo, cuerpo, url) {
       usuario: para,
       title: titulo || 'Doit',
       body: cuerpo || 'Tienes una nueva notificación',
-      url: url || ''
+      url: url || '',
+      tipo: tipo || ''
     })
   }).then(function(r){ return r.json(); })
     .then(function(res){
@@ -3362,6 +3457,7 @@ function arranca(){
         p.mail_trabajo=o.mail_trabajo||"";
         p.mail_personal=o.mail_personal||"";
         if(o.reporta_a) p.reporta_a=o.reporta_a;            /* build 179: organigrama dictado */
+        if(o.notif && typeof o.notif==="object") p.notif=o.notif;   /* build 200: notificaciones de cada quien */
         if(Array.isArray(o.apodos)) p.apodos=o.apodos;
         if(o.nombre&&o.apellido) p.ini=iniciales(o.nombre,o.apellido);
       });
@@ -5401,6 +5497,7 @@ function render(){
   if(vista==="persona"){a.innerHTML=vPersona();bindPersona();return}   /* build 143 */
   if(vista==="admin"){a.innerHTML=vAdmin();bindAdmin();return}
   if(vista==="yo"){a.innerHTML=vYo();bindYo();return}
+  if(vista==="notif"){a.innerHTML=vNotif();bindNotif();return}   /* build 200 */
   if(vista==="encargo"){a.innerHTML=vEncargo();bindEncargo();return}
   if(vista==="encargar"){a.innerHTML=vEncargar();bindPedir(abierta);return}
   if(vista==="suelto"){a.innerHTML=vSuelto();bindPedir(null);return}
@@ -5543,6 +5640,7 @@ function vLista(){
   h='<div class="enc" id="enc">'+
     '<div class="r1">'+(consulta?'<button class="iconbtn" id="bback" aria-label="Volver">\u2039</button>':'')+'<div class="nom" id="byo" role="button">'+esc(PERSONAS[yo].nombre)+'</div>'+
     '<div class="grow"></div>'+
+    '<button class="iconbtn" id="bhmas" aria-label="Más opciones">⋯</button>'+   /* build 200: ⋯ del inicio */
     (esJefe?'<button class="eng" id="badm" aria-label="Ajustes">'+ico("eng",24,1.6)+'</button>':'')+'</div>'+
     '</div>';
 
@@ -6590,7 +6688,10 @@ function ico(n,px,gr){
   var s=px||18, w=gr||1.7, p={
     lupa:'<circle cx="10.5" cy="10.5" r="6.2"/><path d="M15.1 15.1 21 21"/>',
     /* build 195 (maqueta "Fichas limpias"): calendario, recurrente, dato y checklist */
-    reloj:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+    /* build 200: notificaciones */
+    campana:'<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
+    alerta:'<path d="M12 3.8 21 19.5H3z"/><path d="M12 10v4.2M12 17.2v.3"/>',
+    msj:'<path d="M4.5 5.5h15a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H10l-4.5 3.5v-3.5h-1a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z"/>',
     cal:'<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
     recur:'<path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.5M20 4v4.5h-4.5M20 12a8 8 0 0 1-13.7 5.6L4 15.5M4 20v-4.5h4.5"/>',
     dato:'<path d="M14.5 3.5l6 6-3 1-4 4 .5 4.5-1.5 1.5-4.5-4.5L4 20.5M8 11l5 5M9.5 9.5l4-4 1-2"/>',
@@ -10864,6 +10965,14 @@ function bindLista(){
   /* la pantalla de la foto reusa estos binds: su flecha suelta la foto */
   var bbk=$("bback"); if(bbk) bbk.onclick=function(){ fotoEnMano=null; vista="lista"; render() };
   var b=$("badm"); if(b) b.onclick=function(){vista="admin";render()};
+  var _hm=$("bhmas"); if(_hm) _hm.onclick=function(){   /* build 200 */
+    var v=document.createElement("div"); v.className="hoja-velo"; v.id="hojav";
+    v.innerHTML='<div class="hoja"><div class="grp"><button id="hmnotif">'+ico("campana",18,1.9)+' Notificaciones</button></div><button class="cancel" id="hojano">Cancelar</button></div>';
+    document.body.appendChild(v);
+    v.onclick=function(e){ if(e.target===v) cierraHoja(); };
+    $("hojano").onclick=cierraHoja;
+    $("hmnotif").onclick=function(){ cierraHoja(); vista="notif"; render(); };
+  };
   var by=$("byo");  if(by) by.onclick=function(){vista="yo";render()};
   bindBotonAvisos();
   var xn=$("xnudav"); if(xn) xn.onclick=function(){ window.__nudgeAvisos=false; render(); };
