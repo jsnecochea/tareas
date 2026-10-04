@@ -1114,7 +1114,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 191 · fechas: manda la fecha dictada (candado a Claude), dia+numero cuadran o se pregunta; indefinida/recurrente sin vencida por fecha";
+var VERSION_APP = "build 192 · bote sin motivo en recien nacidas (por autorizar / falta info / accidente); censo de descartes y vinculaciones";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -3686,7 +3686,10 @@ function buscaDuplicado(texto, quien, cb){
     "Contesta SOLO un JSON: {\"veredicto\":\"MISMA|ENRIQUECE|VECINA|NUEVA|DUDA\",\"id\":\"<id o null>\","+
     "\"que_agrega\":\"<si es ENRIQUECE o VECINA, qué trae de nuevo>\",\"por_que\":\"<una línea>\"}";
 
+  /* build 192: ejemplos reales de vinculaciones que Salvador ya hizo (aprender) */
+  var _cv=[]; try{ _cv=censoEjemplos().vinculaciones; }catch(e){}
   var msj=[{role:"user",content:
+    (_cv.length?"VINCULACIONES QUE YA SE HICIERON (de -> a, ejemplos reales):\n"+_cv.map(function(x){ return "- "+x.de+" -> "+x.a; }).join("\n")+"\n\n":"")+
     "TAREAS ABIERTAS:\n"+JSON.stringify(abiertas,null,1)+
     "\n\nLO QUE SE ACABA DE DICTAR:\n"+texto}];
 
@@ -4397,7 +4400,8 @@ function abreEnlazar(oid){
   setTimeout(function(){ try{ q.focus() }catch(e){} }, 60);
 }
 function corta40(s){ s=String(s||"").trim(); return s.length>40 ? s.slice(0,39)+"\u2026" : s; }
-function enlazaTareas(oid,did){
+function enlazaTareas(oid,did,propuso){
+  propuso=propuso||"a mano";   /* build 192: censo de vinculaciones */
   var o=tareas.filter(function(x){return x.id===oid})[0], d=tareas.filter(function(x){return x.id===did})[0];
   cierraEnlazar();
   if(!o||!d||o===d){ toast("No se pudo vincular"); render(); return; }
@@ -4434,10 +4438,11 @@ function enlazaTareas(oid,did){
   if(evN.length) d.evidencias=evN;
   if(wa.length) d.wa_contactos=wa;
   if(nMsg && ultO>=ultD && o.ultima) d.ultima=o.ultima;
-  d.enlazadas=(d.enlazadas||[]).concat([{id:o.id,nombre:o.nombre||"",ts:Date.now(),msgs:nMsg,archivos:nArch}]);
+  d.enlazadas=(d.enlazadas||[]).concat([{id:o.id,nombre:o.nombre||"",ts:Date.now(),msgs:nMsg,archivos:nArch,propuso:propuso,por:yo||"",texto:textoQueLaCreo(o).slice(0,300)}]);
   msg(d,"bi","Se pas\u00f3 aqu\u00ed todo lo de \u201c"+(o.nombre||"otra tarea")+"\u201d ("+nMsg+" mensaje"+(nMsg===1?"":"s")+(nArch?" y "+nArch+" archivo"+(nArch===1?"":"s"):"")+").");
   /* 3) la origen se aparta (no se borra) */
   o.estado="fusionada"; o.fusionada_en=d.id; o.fusionada_ts=Date.now();
+  o.censo_vinc={a:d.id, a_nombre:d.nombre||"", ts:Date.now(), por:yo||"", propuso:propuso, origen:origenTarea(o)};   /* build 192 */
   try{ sincronizaAvisos(o); }catch(e){}
   guarda(d); guarda(o);
   /* fuera de la memoria local de inmediato (el snapshot tambien la excluye) */
@@ -5475,6 +5480,76 @@ function tipoRevisar(t){
   if(porAutorizar(t)) return "autorizar";
   return null;
 }
+/* ===== build 192 (Salvador 2026-10-04 08:47): BORRAR SIN MOTIVO AL NACER + CENSO =====
+   Una tarea que sigue en su PRIMER estado se borra con el bote SIN preguntar motivo:
+   - "Por autorizar" (la creo WhatsApp/correo/trabajador y nadie la ha autorizado), o
+   - "Falta informacion" desde que nacio (nunca se completo ni se autorizo), o
+   - creada por accidente: la acabas de hacer tu (menos de 15 min), nadie mas ha escrito.
+   Si ya VIVIO (autorizada, movida, encargada, detenida, con vueltas, reabierta, con
+   vinculaciones o evidencias) se pregunta el motivo como siempre.
+   CENSO: cada descarte al nacer y cada vinculacion se queda ANOTADO en el documento de
+   la tarea (no se borra nada), para que Claude aprenda que creo mal el robot. */
+var ACCIDENTE_MS=15*60000;
+function vivioTarea(t){
+  return !!(t.autorizada || t.autorizada_ts || (t.movimientos||[]).length || (t.vueltas||[]).length ||
+    (t.reabierta||[]).length || (t.enlazadas||[]).length || (t.evidencias||[]).length ||
+    t.encargado || t.detenido || t.dup_resuelto);
+}
+function deOtrosEnTarea(t){
+  return (t.msgs||[]).some(function(x){ return x && (x.wa_in || (x.de && x.de!==yo)); });
+}
+/* -> "por_autorizar" | "falta_info" | "accidente" | "" (""= se pide motivo) */
+function borraSinMotivo(t, ahora){
+  if(!t || t.cierre || t.fusionada_en || t.estado==="fusionada" || t.es_recordatorio) return "";
+  if(esEjemplo(t) || estadoReal(t)==="cerrada" || vivioTarea(t)) return "";
+  if(porAutorizar(t)) return "por_autorizar";
+  var otros=deOtrosEnTarea(t);
+  if(faltaInfoRev(t) && !otros) return "falta_info";
+  var edad=(ahora||Date.now())-msCreacion(t);
+  var dichos=(t.msgs||[]).filter(function(x){ return x && x.k==="bo"; }).length;
+  if(t.creada_por===yo && msCreacion(t)>0 && edad>=0 && edad<ACCIDENTE_MS && !otros && dichos<=1) return "accidente";
+  return "";
+}
+function origenTarea(t){
+  if(t.origen) return String(t.origen);
+  var id=String(t.id||""), an=String((t.via||"")+" "+(t.fuente||"")+" "+(t.analisis||""));
+  if(/^(wa_|tWA_)/.test(id) || /whats\s?app/i.test(an)) return "WhatsApp";
+  if(/\b(correo|gmail|e-?mail)\b/i.test(an)) return "correo";
+  if(t.por_autorizar===true || /^t[A-Z]/.test(id)) return "trabajador";
+  if(t.creada_por===yo) return "dictado app";
+  if(t.creada_por && PERSONAS[t.creada_por]) return "app de "+PERSONAS[t.creada_por].nombre;
+  return "desconocido";
+}
+function textoQueLaCreo(t){
+  var m=(t.msgs||[]).filter(function(x){ return x && x.k!=="bi" && x.k!=="bal" && (x.tr||x.t); })[0] || (t.msgs||[])[0];
+  return String((m&&(m.tr||m.t))||t.dicho||t.nombre||"").slice(0,500);
+}
+function descartaAlNacer(t, porque){
+  var prev={estado:t.estado, cierre:t.cierre||null, n:(t.msgs||[]).length};
+  t.descartada_al_nacer=true; t.descartada_ts=Date.now(); t.descartada_por=yo||"";
+  t.descartada_como=porque||""; t.censo_origen=origenTarea(t); t.censo_texto=textoQueLaCreo(t);
+  t.censo_nombre=String(t.nombre||"");
+  t.estado="cerrada"; t.cierre={tipo:"cancelado", motivo:"al_nacer", f:hoy()};
+  t.pide_atoro=false; t.pide_tel=false; t.pide_fecha=false;
+  guarda(t); try{ sincronizaAvisos(t); }catch(e){}
+  selloYSigue(t,{tipo:"eliminada", texto:t.nombre, restaurar:function(){
+    t.estado=prev.estado||"abierta"; t.cierre=prev.cierre;
+    t.descartada_al_nacer=null; t.descartada_ts=null; t.descartada_por=null; t.descartada_como=null;
+    if(t.msgs && t.msgs.length>prev.n) t.msgs.length=prev.n;
+    guarda(t); sincronizaAvisos(t); }});
+}
+/* lo que se le pasa a Claude para que aprenda (cortito): ultimos 20 de cada uno */
+function censoEjemplos(){
+  var no=[], vin=[];
+  (typeof tareas!=="undefined"?tareas:[]).forEach(function(t){
+    if(t.descartada_al_nacer) no.push({ts:t.descartada_ts||0, nombre:String(t.censo_nombre||t.nombre||"").slice(0,60),
+      origen:t.censo_origen||"", texto:String(t.censo_texto||"").slice(0,120)});
+    (t.enlazadas||[]).forEach(function(e){ vin.push({ts:e.ts||0, de:String(e.nombre||"").slice(0,60), a:String(t.nombre||"").slice(0,60), propuso:e.propuso||""}); });
+    (t.censo_sumados||[]).forEach(function(e){ vin.push({ts:e.ts||0, de:String(e.texto||"").slice(0,60), a:String(t.nombre||"").slice(0,60), propuso:e.propuso||""}); });
+  });
+  function ult(a){ return a.sort(function(x,y){ return y.ts-x.ts; }).slice(0,20).map(function(x){ delete x.ts; return x; }); }
+  return {no_eran_tarea:ult(no), vinculaciones:ult(vin)};
+}
 function porRevisar(){
   var ord={espera:0,falta:1,vincular:2,autorizar:3};
   return tareas.map(function(t){ return {t:t,k:tipoRevisar(t)}; }).filter(function(x){ return x.k; })
@@ -5547,8 +5622,12 @@ function vTarjetaRev(t){
       '</ul><span class="rcp">Contéstame abajo, con voz o escrito.</span></div>';
   }
   if(k==="vincular"){
-    var h='<div class="revc c-vincular"><span class="rct">POSIBLE VINCULACIÓN · se parece a</span>';
-    posibleDup(t).slice(0,3).forEach(function(d){
+    /* build 192: se pide como el paquete de autorizar: "Este mensaje lo pienso vincular a X. ¿Autorizas?" */
+    var _pd=posibleDup(t);
+    var h='<div class="revc c-vincular"><span class="rct">POSIBLE VINCULACIÓN</span><span class="rcp">'+(_pd.length===1
+      ? 'Este mensaje lo pienso vincular a “'+esc(corta40(_pd[0].nombre))+'”. ¿Autorizas?'
+      : 'Este mensaje lo pienso vincular a una de estas. ¿Autorizas?')+'</span>';
+    _pd.slice(0,3).forEach(function(d){
       var quien=(d.duenio&&PERSONAS[d.duenio])?(d.duenio===yo?"Tuya":PERSONAS[d.duenio].nombre):"";
       var cu=d.f_vigente?fechaChip(d.f_vigente):"";
       h+='<div class="rvv"><span><b>'+esc(d.nombre)+'</b><small>'+esc([quien,cu].filter(Boolean).join(" · "))+'</small></span>'+
@@ -6770,6 +6849,7 @@ function contextoBarra(completo){
           calendario:calendarioProximo(16),
           cerradas_recientes:cerradas,
           cerradas_rango:(completo?"todo el historial":"ultimos 7 dias"),
+          censo:(function(){ try{ return censoEjemplos(); }catch(e){ return {}; } })(),   /* build 192 */
           gente:Object.keys(PERSONAS).map(function(k){
             return {clave:k, nombre:PERSONAS[k].nombre};
           }),
@@ -6779,6 +6859,7 @@ function contextoBarra(completo){
 var SYS_BARRA =
 "Eres el cerebro de Duet, una bitacora de tareas de una oficina chica en Mexico. "+
 "Alguien dicto o escribio en la barra. Decide QUE QUISO y contesta SOLO un JSON.\n"+
+"CENSO (build 192): en el contexto, 'censo.no_eran_tarea' son cosas que se crearon como tarea y Salvador borro al nacer (NO eran tarea): no vuelvas a crear algo asi sin preguntar. 'censo.vinculaciones' son cosas que se juntaron con una tarea que ya existia: si lo dictado se parece, propon esa tarea.\n"+
 "\n=== EL ARBOL. RECORRELO EN ESTE ORDEN, PARATE EN LA PRIMERA QUE PEGUE ===\n"+
 "0. ¿Dijo LITERALMENTE que abre o crea una tarea ('abre tarea', 'abreme una "+
 "tarea', 'creame una tarea', 'apuntame', 'nueva tarea', 'levanta una tarea')? -> "+
@@ -9761,6 +9842,7 @@ function bindBarra(){
         var dd=(b.pendiente&&b.pendiente.tarea)||null;
         if(v&&dd){
           msg(v,"bi","Se le sumó lo que dictaste: “"+(dd.dicho||dd.nombre)+"”.");
+          v.censo_sumados=(v.censo_sumados||[]).concat([{texto:String(dd.dicho||dd.nombre||"").slice(0,300), ts:Date.now(), por:yo||"", propuso:"Claude (filtro de repetidas)"}]).slice(-30);   /* build 192 */
           v.ultima=dd.nombre; guarda(v); toast("Sumado a “"+v.nombre+"”");
         }
         cancelaBarra(); return;
@@ -10429,11 +10511,14 @@ function bindHilo(){
   /* build 168: tarjeta POR REVISAR */
   var rva=$("rvautz"); if(rva) rva.onclick=function(){ t.autorizada=true; t.autorizada_ts=Date.now(); guarda(t);
     selloYSigue(t,{tipo:"autorizada", texto:t.nombre, restaurar:function(){ t.autorizada=false; t.autorizada_ts=null; guarda(t); }}); };
-  var rvn=$("rvnueva"); if(rvn) rvn.onclick=function(){ t.dup_resuelto=true; msg(t,"bi","Queda como tarea aparte."); guarda(t); render(); };
+  var rvn=$("rvnueva"); if(rvn) rvn.onclick=function(){ t.dup_resuelto=true;
+    /* build 192: censo — la vinculacion propuesta NO era */
+    t.censo_vinc_no={ts:Date.now(), por:yo||"", propuestas:posibleDup(t).slice(0,3).map(function(x){ return {id:x.id, nombre:x.nombre||""}; })};
+    msg(t,"bi","Queda como tarea aparte."); guarda(t); render(); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-rvinc]"),function(el){
     el.onclick=function(){ var did=el.getAttribute("data-rvinc"), d=tareas.filter(function(x){ return x.id===did; })[0]; if(!d) return;
       hojaConfirma({titulo:"Pasar todo a \u201c"+corta40(d.nombre)+"\u201d", sub:"Lo de \u201c"+corta40(t.nombre)+"\u201d se junta all\u00e1.",
-        accion:"Vincular", cb:function(){ d.autorizada=true; enlazaTareas(t.id, did); }}); };
+        accion:"Vincular", cb:function(){ d.autorizada=true; enlazaTareas(t.id, did, "trabajador (posible duplicado)"); }}); };
   });
   var bps=$("bpasos"); if(bps) bps.onclick=function(ev){ ev.stopPropagation();
     window.__pasosOpen=window.__pasosOpen||{}; window.__pasosOpen[t.id]=!window.__pasosOpen[t.id]; render(); };
@@ -10463,7 +10548,11 @@ function bindHilo(){
     } else render();
   };
   /* bote de basura (Salvador 2026-09-22) */
-  var btr=$("btrash"); if(btr) btr.onclick=function(){ vista="cerrarmotivo"; render(); };
+  var btr=$("btrash"); if(btr) btr.onclick=function(){
+    /* build 192: recien nacida (por autorizar / falta info / accidente) se borra sin motivo y queda en el censo */
+    var _bsm=""; try{ _bsm=borraSinMotivo(t); }catch(e){}
+    if(_bsm){ descartaAlNacer(t,_bsm); return; }
+    vista="cerrarmotivo"; render(); };
   /* Salvador 2026-09-25: sin hoja de confirmacion; se borra en el acto y
      sale el cintillo de Deshacer arriba de la barra. */
   var btrr=$("btrashrec"); if(btrr) btrr.onclick=function(){ borraRecordatorioYQuedate(t); };
