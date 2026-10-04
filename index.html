@@ -676,6 +676,9 @@ button{font:inherit;color:inherit}
 .cnlpill.cnlcl{padding:6px 12px;opacity:.55;box-shadow:none}.cnlpill.cnlcl.on{opacity:1;box-shadow:0 0 14px color-mix(in srgb,#D97757 55%,transparent)}
 .cnlpill.off{opacity:.45;box-shadow:none}
 .ncfold{color:#D97757}
+.datoc{margin:8px 14px 4px;padding:10px 12px;border-radius:14px;background:var(--surface-2,#2c2c2e);border-left:3px solid #64d2ff;font-size:15px;line-height:1.4}
+.datoc .dch{display:block;font-size:12px;font-weight:700;letter-spacing:.04em;color:#64d2ff;margin-bottom:4px}
+.datoc .dct+.dct{margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.08)}
 .b.ext{border-left:3px solid var(--xc)}
 .b .ctag{display:block;font-size:12.5px;color:var(--ink-3);margin-top:2px}
 .sigue-ov{position:fixed;inset:0;z-index:70;display:grid;place-items:center;pointer-events:none;background:rgba(0,0,0,0);backdrop-filter:blur(0);-webkit-backdrop-filter:blur(0);animation:sigueOv 1.05s ease forwards}
@@ -1118,7 +1121,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 193 · Indicación para Claude (menú, aviso de externo y canal naranja); notas a Claude plegadas; mismo formato de canales en todas las tareas";
+var VERSION_APP = "build 194 · abre/busca/el costo de X busca en todas (también cerradas) y en sus datos; varias = lista; tarjeta de datos";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -3633,12 +3636,118 @@ function claveCache(txt,quien){ return (quien||"")+"|"+String(txt).toLowerCase()
    Cuatro salidas, y una de ellas es no decidir solo. */
 /* build 167: busqueda por SIGNIFICADO (cuando las palabras no coinciden). Manda solo
    id y nombre de las abiertas; regresa hasta 5 ids de las que tratan de eso. */
+/* ===== build 194 (F37, Salvador 2026-10-04 09:25): "abre el costo de la barda" no encontraba
+   nada porque la busqueda de "abre" (build 167) solo miraba tareas ABIERTAS y solo su nombre;
+   la de la barda se cerro el 3-oct 23:14 ("no la requiero en la lista, solo la info"). Ahora
+   se busca en TODAS (abiertas, cerradas, canceladas) y en todo lo que guardan: nombre, datos
+   corregidos, analisis, notas a Claude, ritmo, listas y mensajes (con fotos transcritas).
+   Regla VARIAS COINCIDENCIAS = LISTA PARA ESCOGER: 1 clara -> se abre; varias -> lista con el
+   porque; ninguna -> "No lo encontré". Nunca crea tarea. ===== */
+var BUSCA_VACIAS=["abre","abreme","abrir","busca","buscame","buscar","muestrame","ensename","donde","esta","quedo",
+  "dame","dato","datos","info","informacion","tarea","tema","para","por","favor","del","las","los","una","uno","que",
+  "con","sin","mis","este","esta","ese","esa","esto","eso","sobre","cual","cuanto","cuanta","como","fue","hay","tengo","sus","nos"];
+function _bw(txt){
+  return String(txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9ñ]+/g," ").split(/\s+/).filter(function(w){ return w.length>=3; });
+}
+function _bst(w){ return w.length>4 ? w.replace(/(es|s)$/,"") : w; }
+function _bpega(a,b){ if(a===b) return true; var x=_bst(a), y=_bst(b); if(x===y) return true;
+  return x.length>=5 && y.length>=5 && x.slice(0,5)===y.slice(0,5); }
+function palabrasBusqueda(q){ return _bw(q).filter(function(w){ return BUSCA_VACIAS.indexOf(w)<0; }); }
+/* los campos de una tarea donde se busca, con su peso */
+function camposBusqueda(t){
+  var c=[["nombre",3,t.nombre||""]];
+  (t.datos_corregidos||[]).forEach(function(d){ c.push(["dato",2,(d&&d.t)||d||""]); });
+  [["analisis",1,t.analisis],["ritmo",1,t.ritmo],["revisar",1,t.revisar],["cierra",1,t.cierra],["contexto",1,t.contexto]].forEach(function(x){ if(x[2]) c.push(x); });
+  (t.notas_claude||[]).forEach(function(d){ c.push(["nota",1,(d&&d.t)||""]); });
+  (t.lista_pasos||[]).forEach(function(p){ c.push(["lista",1,(p&&p.tx)||""]); });
+  (t.msgs||[]).forEach(function(x){ if(!x) return; var tx=[x.tr||x.t||"", x.analisis||"", x.leido||""].join(" "); if(tx.trim()) c.push(["mensaje",1,tx.slice(0,1500)]); });
+  return c;
+}
+function _snip(txt, ws){
+  var s=String(txt||"").replace(/\s+/g," ").trim(), low=s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  var at=-1; ws.forEach(function(w){ var i=low.indexOf(_bst(w).slice(0,5)); if(i>=0 && (at<0 || i<at)) at=i; });
+  if(at<0) at=0; var a=Math.max(0,at-30);
+  return (a>0?"…":"")+s.slice(a, a+110).trim()+(s.length>a+110?"…":"");
+}
+/* -> [{t, n (palabras que pegan), score, porque}] ordenadas, la mejor primero */
+function buscaTodo(q, lista){
+  var ws=palabrasBusqueda(q); if(!ws.length) return [];
+  var need=ws.length<=2?ws.length:ws.length-1, out=[];
+  (lista||tareas).forEach(function(t){
+    if(!t || t.es_recordatorio || t.fusionada_en || t.estado==="fusionada" || (typeof esEjemplo==="function" && esEjemplo(t))) return;
+    var cs=camposBusqueda(t), toks=cs.map(function(c){ return _bw(c[2]); });
+    var n=0, sc=0, mejor=null, mejorP=-1, fuerte=0;
+    ws.forEach(function(w){
+      var best=0, bi=-1;
+      for(var i=0;i<cs.length;i++){ if(cs[i][1]<=best) continue; if(toks[i].some(function(x){ return _bpega(w,x); })){ best=cs[i][1]; bi=i; } }
+      if(best){ n++; sc+=best; if(best>=2) fuerte++; if(cs[bi][0]!=="nombre" && best>mejorP){ mejorP=best; mejor=cs[bi]; } }
+    });
+    if(n>=need){
+      var porque=mejor?({dato:"dato",analisis:"nota",nota:"nota a Claude",mensaje:"mensaje",lista:"lista",ritmo:"ritmo"}[mejor[0]]||mejor[0])+": "+_snip(mejor[2],ws):"por el nombre";
+      out.push({t:t, n:n, score:sc, porque:porque, fuerte:fuerte, todas:n===ws.length});
+    }
+  });
+  out.sort(function(a,b){ return (b.n-a.n) || (b.score-a.score) || ((b.t.tocada||0)-(a.t.tocada||0)); });
+  return out;
+}
+/* regla de Salvador VARIAS COINCIDENCIAS = LISTA PARA ESCOGER: solo se abre sola si pega UNA */
+function busquedaClara(res){ return res.length===1 ? res[0].t : null; }
+/* ¿lo dicho es una busqueda? -> el texto a buscar, o null */
+function pideBuscar(texto){
+  var s=String(texto||"").trim().replace(/^(?:oye\s+)?(?:claude|cloud|clod|claud|clau)\b[\s,:]*/i,"").replace(/^por\s+favor\s+/i,"");
+  var m=s.match(/^(?:[aá]bre(?:me)?|abrir|b[uú]sca(?:me)?|buscar|mu[eé]strame|ens[eé][nñ]ame|d[oó]nde\s+est[aá]n?|d[oó]nde\s+qued[oó]|dame)\s+(?:por\s+favor\s+)?(.{3,})$/i);
+  if(m) return m[1].replace(/[?.!]+$/,"").trim();
+  m=s.match(/^(?:(?:el|los)\s+)?(?:datos?|costos?|precios?|presupuestos?|cotizaci[oó]n(?:es)?)\s+(?:de\s+(?:la|el|los|las)?\s*|del\s+)?(.{3,})$/i);
+  if(m) return s.replace(/[?.!]+$/,"").trim();
+  m=s.match(/^(?:cu[aá]nto|qu[eé])\s+(?:cost[oó]|sali[oó]|fue|era)\s+(.{3,})$/i);
+  if(m) return s.replace(/[?.!]+$/,"").trim();
+  return null;
+}
+/* frase corta sin verbo de accion ("barda cumbres", "barda y porton"): se busca primero y
+   solo si NADA pega se manda a Claude como siempre */
+function fraseCortaDeBusqueda(texto){
+  var s=String(texto||"").trim(); if(!s || s.length>40 || /[?]/.test(s)) return false;
+  var ws=_bw(s); if(!ws.length || ws.length>4) return false;
+  if(/^(recu[eé]rda|av[ií]sa|apunta|anota|crea|haz|ponme|pon|dile|m[aá]nda|preg[uú]nta|llama|compra|paga|agenda|cierra|borra|elimina|mueve|cambia)/i.test(s)) return false;
+  if(typeof fechaDictada==="function" && fechaDictada(s).todas.length) return false;
+  return true;
+}
+/* build 194: tarjeta de DATOS arriba al abrir una cerrada o una que se abrio buscando */
+function vDatosTarea(t){
+  var ds=(t.datos_corregidos||[]).map(function(d){ return String((d&&d.t)||d||"").trim(); }).filter(Boolean);
+  if(!ds.length || !(t.cierre || t.solo_info || window.__porBusqueda===t.id)) return "";
+  return '<div class="datoc"><span class="dch">DATOS'+(t.cierre?' · tarea cerrada':'')+'</span>'+
+    ds.slice(-4).reverse().map(function(d){ return '<div class="dct">'+esc(d)+'</div>'; }).join("")+'</div>';
+}
+function abreBusqueda(q, dicho, res){
+  window.__busq=window.__busq||{};
+  function abre(t){ window.__porBusqueda=t.id; abierta=t.id; barraEstado=null; consulta=""; vista="hilo"; render(); }
+  function lista(rs){
+    var por={}; rs.forEach(function(x){ por[x.t.id]=x.porque; });
+    barraEstado={modo:"escoge", dicho:dicho, hist:[], foto:null, sv:{__abrir:true, texto:q, porque:por, sinNueva:true},
+      ops:rs.slice(0,6).map(function(x){ return x.t.id; }), pregunta:"Encontré "+rs.length+". ¿Cuál?"};
+    vista="barra"; render();
+  }
+  var cl=busquedaClara(res);
+  if(cl){ abre(cl); return; }
+  if(res.length){ lista(res); return; }
+  barraEstado={modo:"cargando", dicho:dicho, texto:"Busco “"+q+"”…"}; vista="barra"; render();
+  buscaPorSignificado(q, function(ids){
+    var ts=ids.map(function(id){ return tareas.filter(function(t){ return t.id===id; })[0]; }).filter(Boolean);
+    if(ts.length===1){ abre(ts[0]); return; }
+    if(ts.length){ lista(ts.map(function(t){ return {t:t, porque:"parecida por significado"}; })); return; }
+    barraEstado={modo:"respuesta", dicho:dicho, texto:"No lo encontré: “"+q+"”. No creé nada."}; vista="barra"; render();
+  });
+}
 function buscaPorSignificado(q, cb){
-  var ab=tareas.filter(function(t){ return !t.cierre && !t.es_recordatorio && estadoReal(t)!=="cerrada"; })
-    .slice(0,220).map(function(t){ return {id:t.id, nombre:t.nombre}; });
+  /* build 194: tambien las cerradas (lo que se guardo "solo para la info") */
+  var ab=tareas.filter(function(t){ return !t.es_recordatorio && !t.fusionada_en; })
+    .sort(function(a,b){ return (!!a.cierre-!!b.cierre) || ((b.tocada||0)-(a.tocada||0)); })
+    .slice(0,260).map(function(t){ return {id:t.id, nombre:t.nombre, cerrada:!!t.cierre}; });
   if(!ab.length){ cb([]); return; }
   var sys="Te doy las tareas abiertas (id y nombre) y lo que alguien busca con sus propias palabras. "+
-    "Nadie recuerda el nombre exacto: compara por SIGNIFICADO ('consejo cumbres' = 'mesa directiva cumbres'). "+
+    "Nadie recuerda el nombre exacto: compara por SIGNIFICADO ('consejo cumbres' = 'mesa directiva cumbres'). Incluye las cerradas. "+
     "Contesta SOLO un JSON: {\"ids\":[<hasta 5 ids, la mas probable primero; vacio si ninguna trata de eso>]}";
   preguntaAClaude([{role:"user",content:sys+"\n\nTAREAS:\n"+JSON.stringify(ab)+"\n\nBUSCA: "+q}],"rapido",function(txt,err){
     if(err){ cb([]); return; }
@@ -6769,7 +6878,7 @@ function vHilo(){
 
   var _pil=vPastilla(t), _cc=modoClaude(t)?CLAUDE_COL:canalActual(t).col, _conPill=!!(_pil && (_pil.indexOf('id="cnlpill"')>=0 || modoClaude(t)));
   var _pre179=""; try{ _pre179=vSupervisor(t)+vParaTi(t); }catch(e){ console.warn("paraTi",e); }
-  return h+vVuelta(t)+vPasos(t)+bannerDecision(t)+_pil+_pre179+'<div class="scroll'+(_conPill?' cnl" style="--cc:'+_cc:'')+'"><div class="msgs">'+m+pre+'</div></div>'+vTarjetaRev(t)+
+  return h+vDatosTarea(t)+vVuelta(t)+vPasos(t)+bannerDecision(t)+_pil+_pre179+'<div class="scroll'+(_conPill?' cnl" style="--cc:'+_cc:'')+'"><div class="msgs">'+m+pre+'</div></div>'+vTarjetaRev(t)+
     /* LA MISMA BARRA DE TODAS LAS VISTAS — 2026-09-04. Antes el hilo tenia la
        camara a la IZQUIERDA y una flecha de enviar a la derecha, distinto de la
        caratula (camara a la DERECHA, sin flecha). Salvador lo cacho: "tiene que
@@ -7282,23 +7391,16 @@ function barraEnviar(texto,completo){
      = quiere una tarea que YA EXISTE. Nunca se crea sola: se ensenan las que pegan
      (basta una palabra) y abajo "Ninguna · crear tarea nueva". Una sola: abre directo.
      Ninguna por palabras: Claude busca por significado. */
-  var _ab=String(texto).match(/^\s*(?:por\s+favor\s+)?(?:[aá]bre(?:me)?|abrir|b[uú]sca(?:me)?|buscar|mu[eé]strame|ens[eé][nñ]ame|ve\s+a|vete\s+a|ir\s+a|d[oó]nde\s+est[aá]|d[oó]nde\s+qued[oó]|dame)\s+(?:la\s+tarea\s+|mi\s+tarea\s+|la\s+de\s+|lo\s+de\s+|el\s+tema\s+|la\s+|el\s+|mi\s+)?(?:de\s+|del\s+)?(.{3,})$/i);
-  if(_ab && !detectaLista(texto)){
-    var _q=_ab[1].replace(/[?.!]+$/,"").trim();
-    var _ca=candidatas(_q,null,false).filter(function(t){ return !t.es_recordatorio; });
-    function _escoge(lista){
-      if(lista.length===1){ abierta=lista[0].id; barraEstado=null; consulta=""; vista="hilo"; render(); return; }
-      barraEstado={modo:"escoge", dicho:texto, hist:[], foto:fotoEnMano||null,
-        sv:{__abrir:true, texto:_q}, ops:lista.slice(0,6).map(function(t){return t.id}),
-        pregunta:lista.length?"¿Cuál de estas?":"No encontré ninguna parecida"};
-      vista="barra"; render();
-    }
-    if(_ca.length){ _escoge(_ca); return; }
-    barraEstado={modo:"cargando", dicho:texto, texto:"Busco “"+_q+"”…"}; vista="barra"; render();
-    buscaPorSignificado(_q, function(ids){
-      _escoge(ids.map(function(id){ return tareas.filter(function(t){ return t.id===id; })[0]; }).filter(Boolean));
-    });
-    return;
+  /* build 194 (F37): "abre / busca / muestrame / donde esta / el dato de / el costo de X" y
+     frases cortas ("barda cumbres") buscan en TODAS las tareas (abiertas y cerradas) y en sus
+     datos. Nunca va a Claude como CREAR. */
+  var _qB=detectaLista(texto)?null:pideBuscar(texto);
+  var _corta=!_qB && !detectaLista(texto) && fraseCortaDeBusqueda(texto);
+  if(_qB || _corta){
+    var _rB=buscaTodo(_qB||texto);
+    /* frase corta sin "abre": solo si alguna pega TODAS las palabras y al menos una en su nombre o sus datos */
+    if(_corta) _rB=_rB.filter(function(x){ return x.todas && x.fuerte; });
+    if(_rB.length || _qB){ abreBusqueda(_qB||texto, texto, _rB); return; }
   }
   /* build 166 (Salvador 2026-10-02): "en la tarea de la mesa directiva ponme un
      checklist de..." = la lista va DENTRO de esa tarea. Antes se iba a Claude y
@@ -9694,18 +9796,19 @@ function vBarraEscoge(b){
     var est=t.cierre ? "ya cerrada"
           : (t.f_vigente?("para el "+fechaBonita(t.f_vigente)):"");
     var sub=[quien, est].filter(function(v){return v}).join(" · ");
+    if(b.sv && b.sv.porque && b.sv.porque[id]) sub=b.sv.porque[id]+(est?" · "+est:"");   /* build 194: por que pego */
     h+='<li><button class="row" data-esc="'+id+'">'+
        '<span class="dot '+dotc(t)+'"></span><span>'+
        '<span class="nm">'+esc(t.nombre)+'</span>'+
        '<span class="ls">'+esc(sub)+'</span></span>'+
-       '<span class="meta"><span class="vinc">Vincular</span></span></button></li>';
+       '<span class="meta"><span class="vinc">'+((b.sv&&b.sv.__abrir)?'Abrir':'Vincular')+'</span></span></button></li>';
   });
   h+='</ul></div>'+
      /* MISMO PIE QUE LA PANTALLA DE CONFIRMAR: la acción a la izquierda y la
         tacha roja a su derecha, misma figura, mismo color, mismo lugar. */
      '<div class="cacc">'+
-       '<button class="cbtn dos escn" data-esc="nueva"><span class="g">Ninguna</span>'+
-       '<span class="c">crear tarea nueva</span></button>'+
+       ((b.sv&&b.sv.sinNueva)?'':'<button class="cbtn dos escn" data-esc="nueva"><span class="g">Ninguna</span>'+
+       '<span class="c">crear tarea nueva</span></button>')+
        '<button class="ccancel" id="ccancel">'+cruzRoja()+'</button>'+
      '</div>';
   return h;
@@ -9826,7 +9929,7 @@ function bindBarra(){
           var nn=creaTarea({nombre:conMayuscula(sv.texto.slice(0,60)), dicho:b.dicho||sv.texto});
           abierta=nn.id; barraEstado=null; consulta=""; vista="hilo"; render(); toast("Tarea nueva creada"); return;
         }
-        abierta=k; barraEstado=null; consulta=""; vista="hilo"; render(); return;
+        window.__porBusqueda=k; abierta=k; barraEstado=null; consulta=""; vista="hilo"; render(); return;
       }
       /* build 166: escoger en cual tarea va la lista */
       if(sv.__lista){
@@ -10746,6 +10849,8 @@ function bindHilo(){
     if(alarmaRoja(t)){ toast("Primero: Eliminar alarma o Posponer 1 hora"); render(); return; }
     var v=limpiaHoraDictada($("txt").value.trim()); if(!v)return;
     /* build 188 (Salvador 08:39): lo que le dices a Claude (correcciones, aclaraciones) nunca sale por WhatsApp */
+    /* build 194: "abre / busca / el costo de X" dentro de una tarea (aunque empiece con "Claude") = busqueda en todas */
+    var _qT=pideBuscar(v); if(_qT){ $("txt").value=""; marcaEnvio("tenv",""); abreBusqueda(_qT, v, buscaTodo(_qT)); return; }
     if(typeof esNotaClaude==="function" && esNotaClaude(v)){ $("txt").value=""; marcaEnvio("tenv",""); notaClaude(t, v); return; }
     /* build 193: con el canal naranja "Claude" puesto, todo lo dictado es indicacion para Claude */
     if(modoClaude(t)){ $("txt").value=""; marcaEnvio("tenv",""); notaClaude(t, v); return; }
