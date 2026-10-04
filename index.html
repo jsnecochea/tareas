@@ -705,6 +705,9 @@ button{font:inherit;color:inherit}
 .dtot{font-size:27px;font-weight:700;font-variant-numeric:tabular-nums}.dsub{color:var(--ink-3,#9a9aa2);font-size:14px}
 .dl{display:flex;flex-direction:column;font-size:15px;font-variant-numeric:tabular-nums}.dl div{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid #3a3a3e}.dl div:last-child{border-bottom:0}
 .ttgrp{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3,#9a9aa2);padding:8px 4px 2px}
+.cmodo{display:flex;align-self:center;gap:2px;background:var(--surface-2,#2a2a2d);border-radius:10px;padding:2px;margin:2px auto 6px}
+.cmodo button{border:0;background:none;color:var(--ink-3,#9a9aa2);font-size:13px;font-weight:600;padding:5px 12px;border-radius:8px}
+.cmodo button.on{background:#3a3a3e;color:var(--ink,#f2f2f4)}
 .pnom{border:0;background:none;color:inherit;font:inherit;padding:0;text-decoration:underline;text-decoration-color:rgba(255,255,255,.25);text-underline-offset:3px}
 .pchk{display:flex;align-items:center;gap:8px}.pasos .ph .pchk{flex:1;min-width:0}.pchk svg{color:#30d158;flex:none}
 .datoc{margin:8px 14px 4px;padding:10px 12px;border-radius:14px;background:var(--surface-2,#2c2c2e);border-left:3px solid #64d2ff;font-size:15px;line-height:1.4}
@@ -1152,7 +1155,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 196 · títulos con Mayúscula Inicial (menos conectores); avisos del sistema plegados; nombres del encabezado abren su ficha";
+var VERSION_APP = "build 197 · chat limpio: Importante | Todo, avisos del mismo tema se reemplazan, indicaciones visibles hasta que las ves y dicen qué hizo Claude";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -5246,6 +5249,7 @@ function bindFicha(primera){
 /* ============ RENDER ============ */
 function render(){
   cierraDudaHilo();
+  if(vista!=="hilo" && vista!=="galeria") window.__visitaDe=null;   /* build 197: salir de la tarea termina la visita */
   var a=$("app");
   /* LA PUERTA DE LA FICHA. Solo se cruza cuando Firestore ya contesto: si esta
      sin internet NO se le pide nada, porque no se podria guardar. */
@@ -6993,7 +6997,12 @@ function vHilo(){
   }
 
   var m="";
-  var _plg=avisosPlegados(t), _cn=canalActual(t), _pln=notasPlegadas(t, !!(window.__ncExp&&window.__ncExp[t.id])), _pls=avisosSistemaPlegados(t, !!(window.__sisExp&&window.__sisExp[t.id]));
+  /* build 197: Importante | Todo. En Todo se ve todo desplegado; en Importante los avisos viejos de un tema no salen */
+  if(window.__visitaDe!==t.id){ window.__visitaDe=t.id; window.__visitaIni=Date.now(); }
+  var _todo=modoChat(t)==="todo", _rmp=_todo?{set:{}}:avisosReemplazados(t), _vistoNuevo=false;
+  var _plg=_todo?{set:{},ult:-1,n:0}:avisosPlegados(t), _cn=canalActual(t),
+      _pln=notasPlegadas(t, _todo || !!(window.__ncExp&&window.__ncExp[t.id]), window.__visitaIni, Date.now()),
+      _pls=avisosSistemaPlegados(t, _todo || !!(window.__sisExp&&window.__sisExp[t.id]));
   /* build 186: cada foto subida desde la app va en SU lugar del chat (por hora), no amontonada al final */
   var _evs=(t.evidencias||[]).map(function(f){return f;}).sort(function(a,b){return (a.ts||0)-(b.ts||0)}), _evI=0;
   function _evHasta(ts){ while(_evI<_evs.length && (ts===Infinity || (_evs[_evI].ts||0)<=ts)){ var f=_evs[_evI++];
@@ -7013,6 +7022,8 @@ function vHilo(){
     if(_cx.indexOf("priv:")===0 && _cx!=="priv:"+yo) return;                 /* build 179: nota de Claude solo para quien contesto */
     if(_cx==="sup" && !soySupervisor(t) && x.de!==yo) return;                /* build 179: notas de supervisor, el dueño no las ve */
     if(!msgEnCanal(x,_cn.id,t)) return;
+    if(!esImportante(x, ix, _rmp)) return;   /* build 197: aviso reemplazado por uno mas nuevo del mismo tema */
+    if(x.nota_claude && x.k!=="bo" && !x.visto_ts && !_pln.set[ix]){ x.visto_ts=Date.now(); _vistoNuevo=true; }   /* build 197: ya la viste */
     /* build 193 (F36): las notas/indicaciones a Claude y sus respuestas se pliegan en un renglon */
     if(_pln.set[ix]){ if(_pln.cab[ix]) m+='<button class="avfold ncfold" data-ncexp="1">! '+_pln.cab[ix]+' indicaci'+(_pln.cab[ix]===1?'ón':'ones')+' a Claude · ver</button>'; return; }
     if(_pls.set[ix]){ if(_pls.cab[ix]) m+='<button class="avfold" data-sisexp="1">'+_pls.cab[ix]+' aviso'+(_pls.cab[ix]===1?'':'s')+' · ver</button>'; return; }   /* build 196 */
@@ -7139,6 +7150,9 @@ function vHilo(){
 
   var _pil=vPastilla(t), _cc=modoClaude(t)?CLAUDE_COL:canalActual(t).col, _conPill=!!(_pil && (_pil.indexOf('id="cnlpill"')>=0 || modoClaude(t)));
   var _pre179=""; try{ _pre179=vSupervisor(t)+vParaTi(t); }catch(e){ console.warn("paraTi",e); }
+  if(_vistoNuevo) setTimeout(function(){ try{ guarda(t); }catch(e){} }, 0);
+  var _tgl='<div class="cmodo"><button data-cmodo="importante" class="'+(_todo?'':'on')+'">Importante</button><button data-cmodo="todo" class="'+(_todo?'on':'')+'">Todo</button></div>';
+  m=_tgl+m;
   return h+(esDato(t)?vDatoCuerpo(t):vDatosTarea(t))+vVuelta(t)+vPasos(t)+bannerDecision(t)+_pil+_pre179+'<div class="scroll'+(_conPill?' cnl" style="--cc:'+_cc:'')+'"><div class="msgs">'+m+pre+'</div></div>'+vTarjetaRev(t)+
     /* LA MISMA BARRA DE TODAS LAS VISTAS — 2026-09-04. Antes el hilo tenia la
        camara a la IZQUIERDA y una flecha de enviar a la derecha, distinto de la
@@ -11105,6 +11119,7 @@ function bindHilo(){
   var _cp=$("cnlpill"); if(_cp) _cp.onclick=function(){ if(modoClaude(t)){ window.__cnlClaude[t.id]=0; render(); return; } abreCanales(t); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-tipoi]"),function(b){ b.onclick=function(){ var k=b.getAttribute("data-tipoi"); t.tipo_item=k; t.es_dato=(k==="dato"); guarda(t); if(!revisaCompleta(t)) render(); }; });   /* build 195 */
   var _ccl=$("cnlclaude"); if(_ccl) _ccl.onclick=function(){ window.__cnlClaude=window.__cnlClaude||{}; window.__cnlClaude[t.id]=window.__cnlClaude[t.id]?0:1; render(); };   /* build 193 */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-cmodo]"),function(b){ b.onclick=function(){ window.__chatModo=window.__chatModo||{}; window.__chatModo[t.id]=b.getAttribute("data-cmodo"); render(); }; });   /* build 197 */
   Array.prototype.forEach.call(document.querySelectorAll("[data-sisexp]"),function(b){ b.onclick=function(){ window.__sisExp=window.__sisExp||{}; window.__sisExp[t.id]=1; render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-ncexp]"),function(b){ b.onclick=function(){ window.__ncExp=window.__ncExp||{}; window.__ncExp[t.id]=1; render(); }; });
   var _ib=$("intbtn"); if(_ib) _ib.onclick=function(){ abreIntegrantes(t); };
@@ -13042,11 +13057,60 @@ function avisosSistemaPlegados(t, abiertos, ahora){
   }
   return r;
 }
-function notasPlegadas(t, abiertas){
+/* ===== build 197 (Salvador 2026-10-04 12:25): CHAT LIMPIO =====
+   1 AVISOS SE REEMPLAZAN: de cada TEMA solo se ve el ultimo aviso de Claude (vence en 4 -> en 3 ->
+     vencida hace 5: queda el ultimo). Los viejos siguen en los datos, ocultos en "Importante".
+   2 Importante | Todo arriba del chat (Importante por omision; se recuerda solo en esta sesion).
+   3 Indicaciones a Claude: la indicacion y lo que Claude HIZO se ven hasta que ya las viste y
+     regresas otra vez a la tarea; entonces se pliegan en "N indicaciones a Claude · ver". ===== */
+function _normAviso(tx){
+  return _nn(tx).replace(/\d+([.,:]\d+)*/g,"#").replace(/\b(lun|mar|mie|jue|vie|sab|dom)[a-z]*\b/g,"@")
+    .replace(/\b(ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic)[a-z]*\b/g,"@").replace(/[^a-z#@ ]+/g," ").replace(/\s+/g," ").trim();
+}
+/* tema de un aviso de Claude, o "" si el mensaje no es aviso de Claude (persona, WhatsApp, nota) */
+function temaAviso(x){
+  if(!x || x.nota_claude || x.wa_in===1 || x.wa_in===0 || x.wa_c || x.origen || x.hab || x.abre || x.entrevista || x.url) return "";
+  if(x.k!=="bi" && x.k!=="bal") return "";
+  if(x.de && x.de!==yo && PERSONAS[x.de] && !x.aviso) return "";
+  var tx=String(x.t||"").trim(); if(!tx) return "";
+  if(x.aviso===1 || AVISO_RX.test(tx) || /\b(vence|venci[oó]|vencid[ao]|atrasad[ao]|tocaba|no ha cumplido|ya le insist)/i.test(tx)) return "seguimiento";
+  var ms=tx.match(AVISO_SIS); if(ms) return "sis:"+_nn(ms[1]).replace(/[^a-z ]/g,"").trim();
+  if(/\?\s*$/.test(tx)) return "pregunta:"+_normAviso(tx);
+  return "txt:"+_normAviso(tx);
+}
+/* {set: indices de avisos viejos que ya fueron reemplazados por uno mas nuevo del mismo tema} */
+function avisosReemplazados(t){
+  var ms=t.msgs||[], ult={}, set={};
+  ms.forEach(function(x,i){ var k=temaAviso(x); if(!k) return; if(ult[k]!=null) set[ult[k]]=1; ult[k]=i; });
+  return {set:set};
+}
+/* Importante | Todo (solo pantalla, por sesion) */
+function modoChat(t){ var m=(window.__chatModo||{})[t&&t.id]; return m==="todo"?"todo":"importante"; }
+/* lo que sale en Importante: personas, WhatsApp, fotos/archivos, el ultimo aviso de cada tema, notas */
+function esImportante(x, ix, reempl){
+  if(!x) return false;
+  if(reempl && reempl.set[ix]) return false;
+  return true;
+}
+/* indicaciones: fresca hasta que la viste y volviste a entrar. Sin visto_ts y de hace mas de un dia = ya vista. */
+function indicacionVigente(ms, i, visitaIni, ahora){
+  var j=i; while(j+1<ms.length && ms[j+1] && ms[j+1].nota_claude) j++;
+  var resp=null; for(var k=j;k>=i;k--){ if(ms[k] && ms[k].k!=="bo"){ resp=ms[k]; break; } }
+  if(!resp) return true;                                   /* Claude no ha contestado: se ve */
+  var vis=resp.visto_ts || ((ahora-(resp.ts||0))>86400000 ? (resp.ts||1) : 0);
+  if(!vis) return true;                                    /* todavia no la ves */
+  return !(visitaIni && visitaIni>vis);                    /* ya la viste: se pliega en la siguiente visita */
+}
+function notasPlegadas(t, abiertas, visitaIni, ahora){
   var r={set:{}, cab:{}}; if(abiertas) return r;
-  var ms=t.msgs||[], ini=-1, n=0;
+  var ms=t.msgs||[], ini=-1, n=0, now=ahora||Date.now();
   for(var i=0;i<=ms.length;i++){
     var x=ms[i], es=!!(x && x.nota_claude && String(x.canal||"")==="priv:"+yo);
+    /* build 197: el tramo fresco (sin ver, o visto en esta misma visita) no se pliega */
+    if(es && ini<0 && visitaIni!==undefined && indicacionVigente(ms, i, visitaIni, now)){
+      while(i+1<ms.length && ms[i+1] && ms[i+1].nota_claude && String(ms[i+1].canal||"")==="priv:"+yo) i++;
+      continue;
+    }
     if(es){ if(ini<0){ ini=i; n=0; } r.set[i]=1; if(x.k==="bo") n++; }
     else if(ini>=0){ r.cab[ini]=Math.max(n,1); ini=-1; }
   }
@@ -13085,13 +13149,19 @@ function aplicaNotaClaude(t, v, j){
       : "No lo guardé: traía una fecha que no dictaste"+(fd.fecha?"; dictaste el "+fechaConDia(fd.fecha):"")+". Dímelo otra vez.";
     t.datos_corregidos=(t.datos_corregidos||[]).concat([{t:val, ts:Date.now()}]).slice(-30);
     t.notas_claude=(t.notas_claude||[]).concat([{t:"DATO CORREGIDO: "+val, ts:Date.now()}]).slice(-30);
-    return rOk||("Anotado: "+val);
+    return respuestaHecho("Guardé el dato: "+val.replace(/[.]+$/,"")+".", "");   /* build 197: dice que hizo */
   }
-  if(a==="nada" || !a) return rOk || fd.duda || (r?"No te entendí bien; dímelo otra vez.":"Anotado.");
+  if(a==="nada" || !a) return fd.duda || respuestaHecho("", rOk);
   return null;
 }
 /* build 189: Claude entiende lo que le pides en la nota y lo hace (renombrar, fecha, cerrar, eliminar,
    pasarla) o guarda el dato corregido. Contesta en UNA linea privada, solo para ti. */
+/* "Hice X. (Entendí: Y)". Las respuestas vagas ("Listo", "Ok") no cuentan como entender. */
+function respuestaHecho(hecho, entendi){
+  var e=String(entendi||"").trim(); if(traeFecha(e) || /^(listo|ok|okay|va|hecho|entendido|anotado|de acuerdo|claro)[.!]?$/i.test(e)) e="";
+  if(hecho) return e && _nn(e)!==_nn(hecho) ? hecho+" Entendí: "+e.replace(/[.]+$/,"")+"." : hecho;
+  return e ? "Entendí: "+e.replace(/[.]+$/,"")+". No cambié nada en la tarea." : "No cambié nada: no me quedó claro qué hacer. Dímelo otra vez.";
+}
 function ejecutaNotaClaude(t, v){
   var ls=[]; (t.msgs||[]).slice(-40).forEach(function(x,i){ if(!x||x.nota_claude) return; var q=x.wa_c||(x.de&&PERSONAS[x.de]&&PERSONAS[x.de].nombre)||(x.k==="bo"?"Salvador":"Sistema"); ls.push(q+": "+String(x.tr||x.t||"").slice(0,300)); });
   var hoyS=hoy();
@@ -13101,7 +13171,7 @@ function ejecutaNotaClaude(t, v){
   var p="Eres Claude dentro de la app de tareas Doit. "+((PERSONAS[yo]||{}).nombre||"El usuario")+" te escribe una nota privada sobre la tarea \""+(t.nombre||"")+"\" (fecha actual de la tarea: "+(t.f_vigente?t.f_vigente+" "+fechaBonita(t.f_vigente):"sin fecha")+"; hoy es "+fechaBonita(hoyS)+" "+hoyS+").\n"+
     "CALENDARIO (copia la fecha de aqui, NO calcules el dia de la semana): "+calendarioProximo(70).join(", ")+".\n"+
     "Si dice para cuando es la tarea o su proxima fecha, accion fecha. En respuesta NO escribas fechas ni dias (las escribe la app).\n"+
-    "Decide qué quiere y contesta SOLO JSON: {\"accion\":\"dato|renombrar|fecha|cerrar|eliminar|pasar|nada\",\"valor\":\"...\",\"respuesta\":\"una frase corta en español\"}.\n"+
+    "Decide qué quiere y contesta SOLO JSON: {\"accion\":\"dato|renombrar|fecha|cerrar|eliminar|pasar|nada\",\"valor\":\"...\",\"respuesta\":\"QUÉ ENTENDISTE, en una frase corta en español (nunca solo 'Listo' u 'Ok')\"}.\n"+
     "- dato: corrige o aclara información (precios, medidas, quién dijo qué). valor = el dato ya corregido, claro y completo.\n- renombrar: valor = nombre nuevo.\n- fecha: valor = AAAA-MM-DD.\n- cerrar: ya se hizo.\n- eliminar: ya no se va a hacer.\n- pasar: valor = nombre de la persona.\nNo inventes; si no entiendes, accion nada y pregunta en respuesta.\n\nNOTA: "+v+"\n\nULTIMOS MENSAJES:\n"+ls.join("\n");
   var nota=function(tx){ msg(t,"bi",tx); var m=t.msgs[t.msgs.length-1]; m.canal="priv:"+yo; m.nota_claude=1; guarda(t); if(vista==="hilo"&&abierta===t.id) render(); };
   try{
@@ -13113,12 +13183,13 @@ function ejecutaNotaClaude(t, v){
         /* build 190: fecha, dato y nada pasan por el CANDADO (aplicaNotaClaude) */
         var _tx=aplicaNotaClaude(t, v, j); if(_tx!=null){ nota(_tx); return; }
         if(traeFecha(r)) r="";   /* el texto de Claude con fechas no se muestra */
-        if(a==="renombrar" && val){ t.nombre=conMayuscula(val); nota(r||("Nombre: "+t.nombre)); return; }
-        if(a==="cerrar"){ var f=[]; try{ f=faltanParaCerrar(t)||[]; }catch(e){} if(f.length){ nota("No la puedo cerrar: "+f.join(" y ")+"."); return; } cierraHecha(t); nota(r||"Cerrada."); return; }
-        if(a==="eliminar"){ cierraSinEjecutar(t, "ya_no"); try{ sincronizaAvisos(t); }catch(e){} nota(r||"Eliminada."); return; }
-        if(a==="pasar" && val){ var k=duenioDicho("pasasela a "+val); var rs=k?transfiere(t,k,"nota a Claude"):{ok:false}; nota(rs.ok?(r||("Ahora la lleva "+PERSONAS[k].nombre)):("No encontré a "+val+".")); return; }
+        /* build 197: la respuesta dice QUE HIZO (lo arma la app) y, si sirve, que entendio */
+        if(a==="renombrar" && val){ var _vj=t.nombre; t.nombre=tituloTarea(conMayuscula(val)); guarda(t); nota(respuestaHecho("Cambié el nombre de “"+_vj+"” a “"+t.nombre+"”.", r)); return; }
+        if(a==="cerrar"){ var f=[]; try{ f=faltanParaCerrar(t)||[]; }catch(e){} if(f.length){ nota("No la cerré: "+f.join(" y ")+"."); return; } cierraHecha(t); nota(respuestaHecho(esRecurrente(t)?"Marqué esta vuelta como hecha y la pasé a la siguiente.":"La cerré como hecha.", r)); return; }
+        if(a==="eliminar"){ cierraSinEjecutar(t, "ya_no"); try{ sincronizaAvisos(t); }catch(e){} nota(respuestaHecho("La eliminé: ya no se va a hacer.", r)); return; }
+        if(a==="pasar" && val){ var k=duenioDicho("pasasela a "+val); var rs=k?transfiere(t,k,"nota a Claude"):{ok:false}; nota(rs.ok?respuestaHecho("Se la pasé a "+PERSONAS[k].nombre+".", r):("No encontré a "+val+"; no se la pasé a nadie.")); return; }
       }catch(e){ nota("No pude hacerlo: "+String(e&&e.message||e).slice(0,60)); return; }
-      nota(r||"Anotado.");
+      nota(respuestaHecho("", r));
     });
   }catch(e){ nota("Anotado."); }
 }

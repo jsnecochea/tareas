@@ -57,7 +57,7 @@ var FUNCS = ["iso", "dm", "dDif", "dmDe", "masMeses", "hoy", "fechaMovCorta", "f
   "esMovida", "soloFecha", "_nrm", "fechaEnTexto", "diaDicho", "diasDichos", "horaDicha",
   "limpiaHoraDictada", "horaValor", "cadaDicho", "relativoDicho", "horaCercana", "parteDelDia",
   "nowHM", "proximaFranja", "horaEnParte", "franjaVaga", "armaCuando", "normalizaCada",
-  "calendarioProximo", "mueveFecha", "aplicaNotaClaude",
+  "calendarioProximo", "mueveFecha", "aplicaNotaClaude", "respuestaHecho", "_nn",
   "estadoReal", "esRecurrente", "sinFinal", "fechaChip", "chipFechaTarea", "vencioTxt"];
 var VARS = ["NUMREL", "NUMHORA", "RANGO_PARTE", "DIAS_SEM", "DIAS_L", "MES_3"];
 var codigo = bloque("/* @@FECHAS-INICIO", "/* @@FECHAS-FIN */") + "\n" +
