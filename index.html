@@ -672,6 +672,10 @@ button{font:inherit;color:inherit}
 .extpop b{font-size:17.5px;display:block;margin-bottom:6px}.extpop p{margin:0 0 14px;color:#c7c7cc;font-size:15px;line-height:1.35}
 .extpop button{display:block;width:100%;border:0;border-radius:12px;padding:12px;font-weight:600;font-size:16px;margin-top:8px;color:#fff;background:#3a3a3c}
 .extpop button.si{background:#0a84ff}
+.extpop button.pcl{background:#D97757}
+.cnlpill.cnlcl{padding:6px 12px;opacity:.55;box-shadow:none}.cnlpill.cnlcl.on{opacity:1;box-shadow:0 0 14px color-mix(in srgb,#D97757 55%,transparent)}
+.cnlpill.off{opacity:.45;box-shadow:none}
+.ncfold{color:#D97757}
 .b.ext{border-left:3px solid var(--xc)}
 .b .ctag{display:block;font-size:12.5px;color:var(--ink-3);margin-top:2px}
 .sigue-ov{position:fixed;inset:0;z-index:70;display:grid;place-items:center;pointer-events:none;background:rgba(0,0,0,0);backdrop-filter:blur(0);-webkit-backdrop-filter:blur(0);animation:sigueOv 1.05s ease forwards}
@@ -1114,7 +1118,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 192 · bote sin motivo en recien nacidas (por autorizar / falta info / accidente); censo de descartes y vinculaciones";
+var VERSION_APP = "build 193 · Indicación para Claude (menú, aviso de externo y canal naranja); notas a Claude plegadas; mismo formato de canales en todas las tareas";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -5702,25 +5706,99 @@ var CNL_COL={todo:"#bf5af2",equipo:"#30d158",dm:"#64d2ff"};
 var CNL_EXT=["#0a84ff","#ff9f0a","#ff375f","#ffd60a","#5e5ce6","#66d4cf","#ac8e68"];
 function _nn(s){ return String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").trim(); }
 function esDelEquipo(nombre){ var n=_nn(nombre).split(" ")[0]; return !!n && Object.keys(PERSONAS).some(function(k){ return _nn(PERSONAS[k].nombre)===n || k===n; }); }
-function canalDe(x){
+/* ===== build 193 (F38, Salvador 2026-10-04 00:08/00:14): MISMO FORMATO EN TODAS =====
+   Una persona se reconoce por su TELEFONO/contacto cuando el mensaje lo trae, no por el
+   nombre escrito; los varios nombres de una misma persona ("Samuel Gamez ciper" y "Samuel
+   Gamez") cuentan como UNO. Alguien del equipo que platica por WhatsApp (Samuel) tiene su
+   canal "dm:<clave>" que sale por su WhatsApp; un externo, "ext:<nombre canonico>". Sirve
+   con tareas viejas (sin chat/origen/bandeja_id): solo usa wa_c / wa_auto / chat. */
+function _telDe(x){
+  var v=x&&(x.tel||x.wa_tel||x.telefono||x.numero||x.wa_num||x.jid||"");
+  if(!v && x && /^\+?\d[\d\s-]{7,}(@.*)?$/.test(String(x.chat||""))) v=x.chat;
+  var d=String(v||"").replace(/@.*$/,"").replace(/\D/g,"");
+  return d.length>=8 ? d.slice(-10) : "";
+}
+function _nomWA(x){ var c=x&&(x.wa_auto||x.wa_c||""); if(!c && x && x.chat && !_telDe({chat:x.chat}) && /^wa_/.test(x.origen||"")) c=x.chat; return String(c||"").trim(); }
+function esMsgWA(x){
+  if(!x || !_nomWA(x) || /^grupo\b/i.test(_nomWA(x))) return false;
+  return x.wa_in===1 || x.wa_in===0 || !!x.wa_auto || !!x.wa || /^wa_/.test(String(x.origen||""));
+}
+function miembroDeNombre(nombre){
+  var n=_nn(nombre).split(/\s+/)[0]; if(!n) return null;
+  var ks=Object.keys(PERSONAS).filter(function(k){ return _nn(PERSONAS[k].nombre).split(/\s+/)[0]===n || k===n; });
+  return ks.length===1?ks[0]:null;
+}
+/* identidades de WhatsApp de la tarea: [{id, nombre (canonico), alias:[...], eq:clave|null, n}] */
+var _cwMemo={};
+function contactosWA(t){
+  var ms=t.msgs||[], ul=ms[ms.length-1], mk=(t.id||"")+"|"+ms.length+"|"+((ul&&ul.ts)||"")+"|"+yo;
+  if(_cwMemo.k===mk && _cwMemo.t===t) return _cwMemo.v;
+  var v=_contactosWA(t); _cwMemo={k:mk, t:t, v:v}; return v;
+}
+function _contactosWA(t){
+  var g=[];
+  function tok(n){ return _nn(n).replace(/[^a-z0-9ñ ]+/g," ").split(/\s+/).filter(Boolean); }
+  function mismo(a,b){ var x=tok(a), y=tok(b); if(!x.length||!y.length) return false;
+    var c=x.length<=y.length?x:y, l=c===x?y:x; for(var i=0;i<c.length;i++) if(c[i]!==l[i]) return false;
+    return c.length>=2 || x.length===y.length; }
+  (t.msgs||[]).forEach(function(x){
+    if(!esMsgWA(x)) return;
+    var nom=_nomWA(x), tel=_telDe(x), eq=miembroDeNombre(nom), hit=null;
+    for(var i=0;i<g.length && !hit;i++){
+      var G=g[i];
+      if(tel && G.tels.indexOf(tel)>=0) hit=G;
+      else if(eq && G.eq===eq) hit=G;
+      else if(!(tel && G.tels.length) && G.alias.some(function(a){ return mismo(a,nom); })) hit=G;
+    }
+    if(!hit){ hit={id:"", nombre:nom, alias:[], tels:[], eq:eq, n:0, cuenta:{}}; g.push(hit); }
+    if(hit.alias.indexOf(nom)<0) hit.alias.push(nom);
+    if(tel && hit.tels.indexOf(tel)<0) hit.tels.push(tel);
+    hit.cuenta[nom]=(hit.cuenta[nom]||0)+1; hit.n++;
+  });
+  g.forEach(function(G){
+    G.nombre=G.alias.slice().sort(function(a,b){ return (G.cuenta[b]-G.cuenta[a]) || (b.length-a.length); })[0];
+    G.id=G.eq?"dm:"+G.eq:"ext:"+G.nombre; delete G.cuenta;
+  });
+  return g.filter(function(G){ return G.eq!==yo; });
+}
+function _contactoDeNombre(t, nom){
+  var l=contactosWA(t), n=_nn(nom);
+  for(var i=0;i<l.length;i++) if(l[i].alias.some(function(a){ return _nn(a)===n; })) return l[i];
+  return null;
+}
+function canalDe(x, t){
   if(!x) return "equipo";
-  if(x.canal) return x.canal;
-  var c=x.wa_auto||x.wa_c||"";
-  if((x.wa_in===1 || x.wa_auto || x.wa) && c && !/^grupo\b/i.test(c) && !esDelEquipo(c)) return "ext:"+c;
+  if(x.canal){
+    if(t && x.canal.indexOf("ext:")===0){ var C0=_contactoDeNombre(t, x.canal.slice(4)); if(C0) return C0.id; }
+    return x.canal;
+  }
+  if(esMsgWA(x)){
+    var nom=_nomWA(x);
+    if(t){ var C=_contactoDeNombre(t, nom); if(C) return C.id; }
+    var eq=miembroDeNombre(nom); if(eq) return eq===yo?"equipo":"dm:"+eq;
+    if(!esDelEquipo(nom)) return "ext:"+nom;
+  }
   return "equipo";
 }
 function externosDe(t){
-  var vistos={}, out=[];
-  (t.msgs||[]).forEach(function(x){ var c=canalDe(x); if(c.indexOf("ext:")===0){ var n=c.slice(4), k=_nn(n); if(!vistos[k]){ vistos[k]=1; out.push(n); } } });
-  return out;
+  return contactosWA(t).filter(function(G){ return !G.eq; }).map(function(G){ return G.nombre; });
 }
+/* nombre con el que el programa de la Mac encuentra a la persona en WhatsApp */
+function nombreWADe(t, cid){ var G=contactosWA(t).filter(function(x){ return x.id===cid; })[0]; return G?G.nombre:""; }
 function canalesDe(t){
   var l=[{id:"todo",nom:"Todo",sub:"todo junto, para leer",col:CNL_COL.todo}];
   var eq=[]; if(PERSONAS[yo]) eq.push("tú"); if(t.duenio && t.duenio!==yo && PERSONAS[t.duenio]) eq.push(PERSONAS[t.duenio].nombre);
   l.push({id:"equipo",nom:"Equipo",sub:(eq.length>1?eq.join(" y ")+" · ":"")+"con lo que mandan los externos",col:CNL_COL.equipo});
-  if(t.duenio && t.duenio!==yo && PERSONAS[t.duenio]) l.push({id:"dm:"+t.duenio,nom:PERSONAS[t.duenio].nombre,sub:"solo tú y "+PERSONAS[t.duenio].nombre,col:CNL_COL.dm});
+  /* build 193: un canal por persona del equipo involucrada (dueño, encargado o quien platica por
+     WhatsApp); si tiene WhatsApp en la tarea, lo que le escribes sale a su WhatsApp */
+  var _dmV={}, _cw=contactosWA(t);
+  function _dm(k){ if(!k || k===yo || !PERSONAS[k] || _dmV[k]) return; _dmV[k]=1;
+    var wa=_cw.filter(function(G){ return G.eq===k; })[0];
+    l.push({id:"dm:"+k,nom:PERSONAS[k].nombre,sub:wa?"su WhatsApp · solo tú y "+PERSONAS[k].nombre:"solo tú y "+PERSONAS[k].nombre,col:CNL_COL.dm,wa:wa?wa.nombre:""}); }
+  _dm(t.duenio); _dm(typeof t.encargado==="string"?t.encargado:(t.encargado&&t.encargado.a));
+  _cw.forEach(function(G){ if(G.eq) _dm(G.eq); });
   if(soySupervisor(t)) l.push({id:"sup",nom:"Supervisión",sub:"solo supervisores · "+((PERSONAS[t.duenio]||{}).nombre||"el dueño")+" no lo ve",col:"#ffd60a"});
-  externosDe(t).forEach(function(n,i){ l.push({id:"ext:"+n,nom:n,sub:"externo · por WhatsApp · solo ve lo suyo",col:CNL_EXT[i%CNL_EXT.length],ext:true}); });
+  externosDe(t).forEach(function(n,i){ l.push({id:"ext:"+n,nom:n,sub:"externo · por WhatsApp · solo ve lo suyo",col:CNL_EXT[i%CNL_EXT.length],ext:true,wa:n}); });
   return l;
 }
 function canalActual(t){
@@ -5729,17 +5807,16 @@ function canalActual(t){
   if(c && l.some(function(x){ return x.id===c; })) return l.filter(function(x){ return x.id===c; })[0];
   /* al abrir: si la tarea es la plática con UN solo externo (lo ultimo es suyo), su canal;
      asi contestarle sigue saliendo por WhatsApp como en el build 175 */
-  var ex=l.filter(function(x){ return x.ext; });
-  /* build 179: solo si la tarea es la platica con ese externo; si hay mas gente del equipo, se abre en Todo */
-  var _equipo=(t.duenio && t.duenio!==yo) || (t.msgs||[]).some(function(x){ return x && x.de && x.de!==yo && PERSONAS[x.de]; });
-  if(ex.length===1 && !_equipo){
-    var ms=t.msgs||[], u=null; for(var i=ms.length-1;i>=0;i--){ if(ms[i] && !(ms[i].k==="bi" && ms[i].wa_in!==1)){ u=ms[i]; break; } }
-    if(u && canalDe(u)===ex[0].id){ window.__cnl[t.id]=ex[0].id; return ex[0]; }
-  }
+  /* build 193 (F38): si la tarea es la platica con UNA persona por WhatsApp (externo o del
+     equipo, como Samuel), se abre en su canal: la pastilla y la caja dicen a quien le llega. */
+  var ex=l.filter(function(x){ return x.wa; });
+  var _equipo=(t.duenio && t.duenio!==yo && !ex.some(function(x){ return x.id==="dm:"+t.duenio; })) ||
+    (t.msgs||[]).some(function(x){ return x && x.de && x.de!==yo && PERSONAS[x.de] && !ex.some(function(c){ return c.id==="dm:"+x.de; }); });
+  if(ex.length===1 && !_equipo){ window.__cnl[t.id]=ex[0].id; return ex[0]; }
   window.__cnl[t.id]="todo"; return l[0];
 }
-function msgEnCanal(x, cid){
-  var c=canalDe(x);
+function msgEnCanal(x, cid, t){
+  var c=canalDe(x, t);
   if(cid==="sup") return c==="sup";
   if(cid==="todo") return c.indexOf("dm:")!==0 || c==="dm:"+yo || (x.de===yo) || cid===c || true;
   if(cid==="equipo") return c==="equipo" || (c.indexOf("ext:")===0 && (x.wa_in===1) && !!(x.url||x.tipo&&x.tipo!=="texto")) || (x.k!=="bo" && c==="equipo");
@@ -5749,9 +5826,11 @@ function colorExt(t, nombre){ var l=canalesDe(t).filter(function(x){ return x.id
 function vPastilla(t){
   var c=canalActual(t), ints=integrantesDe(t);
   var conPill=!(canalesDe(t).length<=2 && c.id==="todo");
-  var intB=ints.length>1?'<button class="intbtn" id="intbtn" aria-label="Integrantes">'+ints.slice(0,4).map(function(x){ return '<span class="av">'+esc(iniInt(x.k))+'</span>'; }).join("")+'<small>'+ints.length+'</small></button>':'';
-  if(!conPill && !intB) return "";
-  return '<div class="cnlwrap">'+(conPill?'<button class="cnlpill" id="cnlpill" style="--cc:'+c.col+'"><i></i>'+esc(c.nom+(c.ext?" · WhatsApp":""))+' ▾</button>':'')+intB+'</div>';
+  var intB=ints.some(function(x){ return x.k!==yo; })?'<button class="intbtn" id="intbtn" aria-label="Integrantes">'+ints.slice(0,4).map(function(x){ return '<span class="av">'+esc(iniInt(x.k))+'</span>'; }).join("")+'<small>'+ints.length+'</small></button>':'';
+  /* build 193: canal fijo naranja "Claude" junto a la pastilla: lo que dictes es indicacion para Claude */
+  var cl=modoClaude(t);
+  var clB='<button class="cnlpill cnlcl'+(cl?' on':'')+'" id="cnlclaude" style="--cc:'+CLAUDE_COL+'"><i></i>Claude</button>';
+  return '<div class="cnlwrap">'+(conPill?'<button class="cnlpill'+(cl?' off':'')+'" id="cnlpill" style="--cc:'+c.col+'"><i></i>'+esc(c.nom+(c.wa?" · WhatsApp":""))+' ▾</button>':'')+clB+intB+'</div>';
 }
 /* build 186 (Salvador 2026-10-03 08:17): en "Todo" sin nombrar a nadie, el mensaje es para el
    RESPONSABLE: si la tarea es mia y la esta haciendo un externo, ese externo (el ultimo que escribio
@@ -5761,15 +5840,16 @@ function responsableExt(t){
   var ex=externosDe(t); if(!ex.length) return null;
   if(ex.length===1) return ex[0];
   var ms=t.msgs||[];
-  for(var i=ms.length-1;i>=0;i--){ var c=canalDe(ms[i]||{}); if(c.indexOf("ext:")===0) return c.slice(4); }
+  for(var i=ms.length-1;i>=0;i--){ var c=canalDe(ms[i]||{}, t); if(c.indexOf("ext:")===0) return c.slice(4); }
   return null;
 }
 function phCanal(t){
   var c=canalActual(t);
+  if(modoClaude(t)) return "Indicación para Claude…";   /* build 193 */
   if(c.id==="todo"){ var _rx=responsableExt(t); if(_rx) return "Mensaje para "+_rx+" por WhatsApp…"; }
   if(c.id==="sup") return "Nota de supervisor…";
   if(c.ext) return "Mensaje a "+c.nom+" por WhatsApp…";
-  if(c.id.indexOf("dm:")===0) return "Mensaje solo a "+c.nom+"…";
+  if(c.id.indexOf("dm:")===0) return c.wa?"Mensaje a "+c.nom+" por WhatsApp…":"Mensaje solo a "+c.nom+"…";
   if(canalesDe(t).length<=2) return "";
   return "Mensaje al equipo…";
 }
@@ -5790,13 +5870,15 @@ function externoNombrado(t, v){
   externosDe(t).forEach(function(e){ var w=_nn(e).split(" ")[0]; if(!hit && w.length>=3 && n.indexOf(" "+w+" ")>=0) hit=e; });
   return hit;
 }
-function preguntaExterno(nombre, v, si, no){
+function preguntaExterno(nombre, v, si, no, paraClaude){
   var bg=document.createElement("div"); bg.className="cnlbg";
   var p=document.createElement("div"); p.className="extpop";
   p.innerHTML='<b>'+esc(nombre)+' es externo</b><p>“'+esc(v.length>120?v.slice(0,119)+"…":v)+'”<br>¿Se lo mando a él por WhatsApp?</p>'+
+    (paraClaude?'<button class="pcl">Para Claude</button>':'')+   /* build 193: primera opcion, naranja */
     '<button class="si">Sí, mandárselo a '+esc(nombre)+'</button><button class="no">No, solo al equipo</button><button class="cx">Cancelar</button>';
   function cierra(){ if(bg.parentNode) bg.parentNode.removeChild(bg); if(p.parentNode) p.parentNode.removeChild(p); }
   p.querySelector(".si").onclick=function(){ cierra(); si(); };
+  if(paraClaude) p.querySelector(".pcl").onclick=function(){ cierra(); paraClaude(); };
   p.querySelector(".no").onclick=function(){ cierra(); no(); };
   p.querySelector(".cx").onclick=function(){ cierra(); var ta=$("txt"); if(ta){ ta.value=v; try{ ta.dispatchEvent(new Event("input",{bubbles:true})); }catch(e){} ta.focus(); } };   /* build 188 */
   bg.onclick=function(){ p.querySelector(".cx").onclick(); };
@@ -5816,8 +5898,8 @@ function candadoExterno(t, destino, v, sigue){
   document.body.appendChild(bg); document.body.appendChild(p);
 }
 /* manda a un externo: se guarda en SU canal y sale por WhatsApp (programa de la Mac) */
-function mandaAExterno(t, nombre, v, cita){
-  msg(t,"bo",v); var m=t.msgs[t.msgs.length-1]; m.canal="ext:"+nombre; m.wa_auto=nombre; m.de=yo;
+function mandaAExterno(t, nombre, v, cita, canal){
+  msg(t,"bo",v); var m=t.msgs[t.msgs.length-1]; m.canal=canal||("ext:"+nombre); m.wa_auto=nombre; m.de=yo;
   if(cita) m.cita={ix:cita.ix, de:cita.de, t:String(cita.t).slice(0,300)};
   t.ultima=((PERSONAS[yo]||{}).nombre||"")+" → "+nombre+": "+v; guarda(t); render();
   var cpo={usuario:yo, tarea_id:t.id, contacto:nombre, texto:v, auto_respuesta:1, desde_ts:Date.now()};
@@ -5847,7 +5929,7 @@ function ponCita(t, ix){
   var x=(t.msgs||[])[ix]; if(!x) return;
   var p=partesMsg(x);
   window.__cita={tid:t.id, ix:ix, de:p.de, t:p.t, wa:(x.wa_in===1?(x.wa_c||p.de):"")};
-  var _cx2=canalDe(x); if(_cx2.indexOf("ext:")===0){ window.__cnl=window.__cnl||{}; if(window.__cnl[t.id]!==_cx2){ window.__cnl[t.id]=_cx2; render(); } }
+  var _cx2=canalDe(x, t); if(_cx2.indexOf("ext:")===0 || (_cx2.indexOf("dm:")===0 && nombreWADe(t,_cx2))){ window.__cnl=window.__cnl||{}; if(window.__cnl[t.id]!==_cx2){ window.__cnl[t.id]=_cx2; render(); } }
   try{ if(navigator.vibrate) navigator.vibrate(10); }catch(e){}
   pintaCitaBarra(t);
   var tx=$("txt"); if(tx) try{ tx.focus(); }catch(e){}
@@ -6545,7 +6627,7 @@ function vHilo(){
   }
 
   var m="";
-  var _plg=avisosPlegados(t), _cn=canalActual(t);
+  var _plg=avisosPlegados(t), _cn=canalActual(t), _pln=notasPlegadas(t, !!(window.__ncExp&&window.__ncExp[t.id]));
   /* build 186: cada foto subida desde la app va en SU lugar del chat (por hora), no amontonada al final */
   var _evs=(t.evidencias||[]).map(function(f){return f;}).sort(function(a,b){return (a.ts||0)-(b.ts||0)}), _evI=0;
   function _evHasta(ts){ while(_evI<_evs.length && (ts===Infinity || (_evs[_evI].ts||0)<=ts)){ var f=_evs[_evI++];
@@ -6557,11 +6639,13 @@ function vHilo(){
     /* build 187 (Salvador 08:28): los avisos del programa de la Mac ("Sin confirmación de entrega… tras 2 intentos",
        "NO SALIÓ a…") no ensucian el chat; el estado va en las palomitas del mensaje */
     if(x && x.k==="bi" && /^(?:[^:\n]{1,40}:\s*)?(Sin confirmaci[oó]n de entrega a |NO SALI[OÓ] a )/.test(String(x.t||""))) return;
-    var _cx=canalDe(x);
+    var _cx=canalDe(x, t);
     if(_cx.indexOf("dm:")===0 && _cx!=="dm:"+yo && x.de!==yo && !(PERSONAS[yo]&&PERSONAS[yo].jefe)) return;  /* lo privado de otros no se pinta */
     if(_cx.indexOf("priv:")===0 && _cx!=="priv:"+yo) return;                 /* build 179: nota de Claude solo para quien contesto */
     if(_cx==="sup" && !soySupervisor(t) && x.de!==yo) return;                /* build 179: notas de supervisor, el dueño no las ve */
-    if(!msgEnCanal(x,_cn.id)) return;
+    if(!msgEnCanal(x,_cn.id,t)) return;
+    /* build 193 (F36): las notas/indicaciones a Claude y sus respuestas se pliegan en un renglon */
+    if(_pln.set[ix]){ if(_pln.cab[ix]) m+='<button class="avfold ncfold" data-ncexp="1">! '+_pln.cab[ix]+' indicaci'+(_pln.cab[ix]===1?'ón':'ones')+' a Claude · ver</button>'; return; }
     if(_plg.set[ix]){ if(ix===_plg.ult) m+='<button class="avfold" data-avexp="1">'+_plg.n+' aviso'+(_plg.n===1?'':'s')+' de seguimiento · ver</button>'; return; }
     var q=autorMsg(x,t);
     if(x.hab){ m+=burbujaHablada(x, (q||""), t.id+"|"+ix); return; }
@@ -6591,7 +6675,7 @@ function vHilo(){
            (x.url?' · <a href="'+esc(x.url)+'" target="_blank" rel="noopener">abrir archivo</a>':'')+
            (x.analisis?'<br>'+esc(x.analisis):'')+'</div>';
       }
-      var _xc=(_cx.indexOf("ext:")===0)?colorExt(t,_cx.slice(4)):"";
+      var _xc=(_cx.indexOf("ext:")===0)?colorExt(t,_cx.slice(4)):((_cx.indexOf("dm:")===0 && nombreWADe(t,_cx))?CNL_COL.dm:"");
       m+='<div class="b bi bcomp'+(_xc?' ext" style="--xc:'+_xc:'')+'" data-mix="'+ix+'">'+cab+'<button class="mdot" data-an="'+ix+'" aria-label="Ver detalle del mensaje">·</button>'+dt+'</div>';
       return;
     }
@@ -6683,7 +6767,7 @@ function vHilo(){
   }
   var pre=t.pregunta&&t.duenio===yo?'<div class="b bi" style="margin:0 14px 8px">'+esc(t.pregunta)+'</div>':"";
 
-  var _pil=vPastilla(t), _cc=canalActual(t).col, _conPill=!!(_pil && _pil.indexOf("cnlpill")>=0);
+  var _pil=vPastilla(t), _cc=modoClaude(t)?CLAUDE_COL:canalActual(t).col, _conPill=!!(_pil && (_pil.indexOf('id="cnlpill"')>=0 || modoClaude(t)));
   var _pre179=""; try{ _pre179=vSupervisor(t)+vParaTi(t); }catch(e){ console.warn("paraTi",e); }
   return h+vVuelta(t)+vPasos(t)+bannerDecision(t)+_pil+_pre179+'<div class="scroll'+(_conPill?' cnl" style="--cc:'+_cc:'')+'"><div class="msgs">'+m+pre+'</div></div>'+vTarjetaRev(t)+
     /* LA MISMA BARRA DE TODAS LAS VISTAS — 2026-09-04. Antes el hilo tenia la
@@ -10637,7 +10721,9 @@ function bindHilo(){
   };
 
   try{ bindDeslizar(t); }catch(e){ console.warn("deslizar",e); }
-  var _cp=$("cnlpill"); if(_cp) _cp.onclick=function(){ abreCanales(t); };
+  var _cp=$("cnlpill"); if(_cp) _cp.onclick=function(){ if(modoClaude(t)){ window.__cnlClaude[t.id]=0; render(); return; } abreCanales(t); };
+  var _ccl=$("cnlclaude"); if(_ccl) _ccl.onclick=function(){ window.__cnlClaude=window.__cnlClaude||{}; window.__cnlClaude[t.id]=window.__cnlClaude[t.id]?0:1; render(); };   /* build 193 */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-ncexp]"),function(b){ b.onclick=function(){ window.__ncExp=window.__ncExp||{}; window.__ncExp[t.id]=1; render(); }; });
   var _ib=$("intbtn"); if(_ib) _ib.onclick=function(){ abreIntegrantes(t); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-ptab]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); window.__ptAb=window.__ptAb||{}; window.__ptAb[t.id]=b.getAttribute("data-ptab")==="1"; render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll(".ptcard [data-irmsg]"),function(q){ q.onclick=function(ev){ ev.stopPropagation();
@@ -10661,6 +10747,8 @@ function bindHilo(){
     var v=limpiaHoraDictada($("txt").value.trim()); if(!v)return;
     /* build 188 (Salvador 08:39): lo que le dices a Claude (correcciones, aclaraciones) nunca sale por WhatsApp */
     if(typeof esNotaClaude==="function" && esNotaClaude(v)){ $("txt").value=""; marcaEnvio("tenv",""); notaClaude(t, v); return; }
+    /* build 193: con el canal naranja "Claude" puesto, todo lo dictado es indicacion para Claude */
+    if(modoClaude(t)){ $("txt").value=""; marcaEnvio("tenv",""); notaClaude(t, v); return; }
     /* build 146: renombrar la tarea por voz o escrito, sin confirmar aparte */
     var _rn146=detectaRenombre(v);
     if(_rn146){
@@ -10701,6 +10789,13 @@ function bindHilo(){
       candadoExterno(t, _dest, _vE, function(){ mandaAExterno(t, _dest, _vE, _cita); });
       return;
     }
+    /* build 193 (F38): alguien del equipo con WhatsApp en la tarea (Samuel): sale a su WhatsApp */
+    if(_cnA.id.indexOf("dm:")===0 && _cnA.wa && !_esOrden){
+      $("txt").value=""; marcaEnvio("tenv","");
+      var _dW=_cnA.wa, _vW=v, _cW=_cnA.id;
+      candadoExterno(t, _dW, _vW, function(){ mandaAExterno(t, _dW, _vW, _cita, _cW); });
+      return;
+    }
     if(_cnA.id.indexOf("dm:")===0 && !_esOrden){
       $("txt").value=""; marcaEnvio("tenv","");
       mandaDM(t, _cnA.id.slice(3), v); if(_cita){ var _vD=v; setTimeout(function(){ pegaCita(t,_vD,_cita); },0); } return;
@@ -10710,7 +10805,8 @@ function bindHilo(){
       $("txt").value=""; marcaEnvio("tenv","");
       var _vN=v;
       preguntaExterno(_exN, _vN, function(){ candadoExterno(t, _exN, _vN, function(){ mandaAExterno(t, _exN, _vN, _cita); }); },
-        function(){ msg(t,"bo",_vN); var mm=t.msgs[t.msgs.length-1]; mm.canal="equipo"; mm.de=yo; guarda(t); render(); });
+        function(){ msg(t,"bo",_vN); var mm=t.msgs[t.msgs.length-1]; mm.canal="equipo"; mm.de=yo; guarda(t); render(); },
+        function(){ notaClaude(t, _vN); });
       return;
     }
     /* build 188: si le estas contestando a lo ultimo que te mando un externo, sale directo a el (con 30 s para deshacer) */
@@ -10726,7 +10822,8 @@ function bindHilo(){
       $("txt").value=""; marcaEnvio("tenv","");
       var _vR=v;
       preguntaExterno(_rx186, _vR, function(){ candadoExterno(t, _rx186, _vR, function(){ mandaAExterno(t, _rx186, _vR, null); }); },
-        function(){ msg(t,"bo",_vR); var mm=t.msgs[t.msgs.length-1]; mm.canal="equipo"; mm.de=yo; guarda(t); render(); });
+        function(){ msg(t,"bo",_vR); var mm=t.msgs[t.msgs.length-1]; mm.canal="equipo"; mm.de=yo; guarda(t); render(); },
+        function(){ notaClaude(t, _vR); });
       return;
     }
     if(_cita){ var _vC=v; setTimeout(function(){ pegaCita(t, _vC, _cita); }, 0); }
@@ -11518,7 +11615,12 @@ function integrantesDe(t){
   if(t.creada_por && PERSONAS[t.creada_por]) pon(t.creada_por,"opina");
   (t.integrantes||[]).forEach(function(k){ pon(k, String(k).indexOf("ext:")===0?"externo":"opina"); });
   (t.msgs||[]).forEach(function(x){ if(x && x.de && PERSONAS[x.de]) pon(x.de,"opina"); });
-  try{ externosDe(t).forEach(function(n){ pon("ext:"+n,"externo"); }); }catch(e){}
+  /* build 193 (F38): tambien el encargado, quien platica por WhatsApp (una persona = uno,
+     aunque tenga varios nombres) y el externo que revisa */
+  var _enc=typeof t.encargado==="string"?t.encargado:(t.encargado&&t.encargado.a);
+  if(_enc && PERSONAS[_enc]) pon(_enc,"hace");
+  try{ contactosWA(t).forEach(function(G){ pon(G.eq?G.eq:"ext:"+G.nombre, G.eq?"opina":"externo"); }); }catch(e){}
+  if(t.revisa_ext) pon("ext:"+String(t.revisa_ext),"externo");
   return out.filter(function(x){ return !(t.integrantes_fuera||[]).some(function(f){ return f===x.k; }) || x.rol==="hace"; });
 }
 function nombreInt(k){ return String(k).indexOf("ext:")===0 ? String(k).slice(4) : ((PERSONAS[k]&&PERSONAS[k].nombre)||k); }
@@ -11999,11 +12101,11 @@ function limpiaHabla(s){
 function _leeVisible(x,t){
   if(!x) return false;
   try{ if(esAvisoClaude(x) || x.aviso) return false; }catch(e){}
-  var cx=canalDe(x);
+  var cx=canalDe(x, t);
   if(cx.indexOf("dm:")===0 && cx!=="dm:"+yo && x.de!==yo && !(PERSONAS[yo]&&PERSONAS[yo].jefe)) return false;
   if(cx.indexOf("priv:")===0 && cx!=="priv:"+yo) return false;
   if(cx==="sup" && !soySupervisor(t) && x.de!==yo) return false;
-  try{ if(!msgEnCanal(x, canalActual(t).id)) return false; }catch(e){}
+  try{ if(!msgEnCanal(x, canalActual(t).id, t)) return false; }catch(e){}
   return true;
 }
 /* un mensaje -> {quien, tx} o null si es paja */
@@ -12190,8 +12292,11 @@ function leeOpcionesDe(el){
   var b=el.closest(".msgs [data-mix], .msgs [data-hab]"); if(!b) return null;
   var ix=b.hasAttribute("data-mix")?+b.getAttribute("data-mix"):+String(b.getAttribute("data-hab")).split("|").pop();
   if(isNaN(ix)) return null;
-  return [["Leer desde aquí",function(){ leeDesde(t, ix); }], actual,
+  var _ops=[["Leer desde aquí",function(){ leeDesde(t, ix); }], actual,
     ["Copiar",function(){ var x=t.msgs[ix]; _leeCopia((x&&(x.tr||x.t))||""); }]];
+  /* build 193: ultima opcion "Indicación": ese mensaje es para Claude (lo ejecuta y se pliega) */
+  if(puedeSerIndicacion(t.msgs[ix], t)) _ops.push(["Indicación",function(){ convierteEnIndicacion(t, ix); }]);
+  return _ops;
 }
 (function(){
   var tm=null, x0=0, y0=0, el0=null;
@@ -12478,6 +12583,44 @@ function esNotaClaude(v){
   return /^(oye\s+)?(claude|cloud|clod|claud|klaud|clau)\b/.test(s) || /^(ia\b|nota para (claude|cloud|ti)|nota:|para (claude|cloud)|ojo (claude|cloud)|aclaracion|correccion|corrige)/.test(s) ||
     /\bpara que (puedas|sepas|tengas|corrijas|lo ajustes|los ajustes)\b/.test(s) ||
     /\b(el|los|ese|esos) (mensaje|numero|numeros|precio|precios) (de|que (pone|puso|mando|dice|dijo))\b/.test(s) && /\b(son|eran|significa|quiere decir|es)\b/.test(s);
+}
+/* ===== build 193: INDICACION PARA CLAUDE sin tener que decir "Claude" (Salvador 2026-10-04 00:24/00:29) =====
+   (a) dejar picado un mensaje que no va dirigido a nadie -> ultima opcion "Indicación";
+   (b) "Para Claude" (naranja) primera opcion del aviso "X es externo";
+   (c) canal fijo naranja "Claude" junto a la pastilla. Las tres van por notaClaude/ejecutaNotaClaude
+   (builds 188/189): nunca salen por WhatsApp, quedan privadas (priv:<yo>) y se pliegan. */
+var CLAUDE_COL="#D97757";
+function modoClaude(t){ return !!(t && window.__cnlClaude && window.__cnlClaude[t.id]); }
+/* ¿este mensaje puede volverse indicacion? Lo escribiste tu y no va dirigido a nadie
+   (ni por WhatsApp, ni privado a alguien, ni ya es nota de Claude). */
+function puedeSerIndicacion(x, t){
+  if(!x || x.nota_claude || x.k!=="bo") return false;
+  if(x.de && x.de!==yo) return false;
+  if(x.wa_auto || x.wa || x.wa_in===1 || x.wa_in===0) return false;
+  var c=String(x.canal||"equipo");
+  if(c.indexOf("ext:")===0 || c.indexOf("dm:")===0 || c.indexOf("priv:")===0 || c==="sup") return false;
+  return !!String(x.tr||x.t||"").trim();
+}
+function convierteEnIndicacion(t, ix){
+  var x=(t.msgs||[])[ix]; if(!puedeSerIndicacion(x, t)) return false;
+  var v=String(x.tr||x.t||"").trim();
+  x.canal_antes=x.canal||"equipo"; x.canal="priv:"+yo; x.nota_claude=1; x.indicacion_ts=Date.now();
+  t.notas_claude=(t.notas_claude||[]).concat([{t:v, ts:Date.now()}]).slice(-30);
+  guarda(t); try{ render(); }catch(e){}
+  ejecutaNotaClaude(t, v);
+  return true;
+}
+/* F36: las notas a Claude (nota_claude) y sus respuestas se pliegan: cada tramo seguido de
+   notas visibles es UN renglon "! N indicaciones a Claude · ver" (nada se borra). */
+function notasPlegadas(t, abiertas){
+  var r={set:{}, cab:{}}; if(abiertas) return r;
+  var ms=t.msgs||[], ini=-1, n=0;
+  for(var i=0;i<=ms.length;i++){
+    var x=ms[i], es=!!(x && x.nota_claude && String(x.canal||"")==="priv:"+yo);
+    if(es){ if(ini<0){ ini=i; n=0; } r.set[i]=1; if(x.k==="bo") n++; }
+    else if(ini>=0){ r.cab[ini]=Math.max(n,1); ini=-1; }
+  }
+  return r;
 }
 function notaClaude(t, v){
   msg(t,"bo",v); var m=t.msgs[t.msgs.length-1]; m.de=yo; m.canal="priv:"+yo; m.nota_claude=1;
