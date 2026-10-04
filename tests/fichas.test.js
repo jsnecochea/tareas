@@ -24,7 +24,7 @@ function saca(tipo, nombre) {
 var FUNCS = ["iso", "dDif", "hoy", "fechaMovCorta", "esRecurrente", "msCreacion", "_bw", "_bst", "_bpega", "palabrasBusqueda",
   "camposBusqueda", "_snip", "buscaTodo", "_sinGrupo", "mismoSentido", "esDato", "tipoItem", "_primerNombre", "juntaNombres",
   "subtituloTarea", "chipEncabezado", "creadaCon", "palabrasClave", "contextoPct", "completitud", "faltaPrimero", "_monto",
-  "_limpiaEtiqueta", "parseDesglose", "fmtMonto", "tipoDicho", "_nn"];
+  "_limpiaEtiqueta", "parseDesglose", "fmtMonto", "tipoDicho", "_nn", "contextoDe", "fechaPuestaSola", "_diaCreacion", "_fechaDeId"];
 var VARS = ["BUSCA_VACIAS", "CTX_MIN_PAL", "SINONIMOS"];
 var codigo = VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" + FUNCS.map(function (f) { return saca("function", f); }).join("\n");
 

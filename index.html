@@ -1170,7 +1170,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 200 · Notificaciones en ⋯ del inicio: atajos y un interruptor por tipo, guardadas en tu ficha";
+var VERSION_APP = "build 201 · Falta info también para tareas viejas: fecha que nadie dictó, sin contexto o vencida sin ritmo";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -1576,6 +1576,7 @@ function colorReal(t){
 function mueveFecha(t,nueva,razon){
   if(t.periodicidad&&t.dia_fijo)
     return {ok:false,msg:"Esta es recurrente con día fijo. NO SE MUEVE. Si no se hizo hoy, el día se perdió."};
+  t.fecha_dictada=true;   /* build 201: la movio una persona */
   var de=t.f_vigente||"";
   if(nueva===de) return {ok:false,msg:"Ya está para el "+fechaBonita(nueva)+"."};
   var prev={f:de, movidas:t.movidas||0, n:(t.movimientos||[]).length, estado:t.estado,
@@ -3992,7 +3993,7 @@ function vDetalle(t, frows){
   var h='<div class="dsec"><h4>Creada con</h4>'+(cc.foto?'<img class="dfoto" src="'+esc(cc.foto)+'" alt="foto con la que se creó">':'')+
     '<div class="dquote">“'+esc(cc.texto.length>600?cc.texto.slice(0,599)+"…":cc.texto)+'”</div>'+
     '<small>'+esc([cc.quien,cuando].filter(Boolean).join(" · "))+'</small></div>';
-  var ctx=String(t.contexto||"").trim(), kw=palabrasClave(t);
+  var ctx=contextoDe(t), kw=palabrasClave(t);
   h+='<div class="dctx"><h4>Contexto</h4>'+(ctx?'<p>'+esc(ctx)+'</p>':'<p class="vac">Todavía no tengo contexto. Díctalo abajo y lo sumo aquí.</p>')+
      (kw.length?'<div class="kw">'+kw.map(function(w){ return '<span>'+esc(w)+'</span>'; }).join("")+'</div>':'')+'</div>';
   if(frows) h+='<div class="dsec"><dl>'+frows+'</dl></div>';
@@ -4005,7 +4006,7 @@ function vTipoToggle(t){
 }
 /* build 195: tarjetas de lo nuevo/incompleto: Contexto (rayita 75%) + lo que falta */
 function vFaltaInfo(t){
-  var c=completitud(t), ctx=String(t.contexto||"").trim(), kw=palabrasClave(t);
+  var c=completitud(t), ctx=contextoDe(t), kw=palabrasClave(t);
   var h='<div class="fic ctx"><div class="meter"><div class="lb"><span class="ok">Contexto'+(c.ctxOk?' ✓':'')+'</span><span class="pend">'+(c.ctxOk?'listo':'mínimo en la rayita')+'</span></div>'+
     '<div class="bar g"><i style="width:'+c.ctxPct+'%"></i></div></div>'+
     (ctx?'<p>'+esc(ctx)+'</p>':'<p class="vac">Dime de qué se trata.</p>')+
@@ -4142,8 +4143,20 @@ function palabrasClave(t){
   return out.slice(0,8);
 }
 /* ---- COMPLETITUD de algo nuevo: contexto (minimo 75%) + lo que falta segun Tarea o Dato ---- */
+/* build 201: el contexto que ya hay: el dictado/guardado, o la descripcion larga con la que nacio (campo "tarea") */
+function contextoDe(t){
+  function pal(x){ return String(x||"").split(/\s+/).filter(function(w){ return w.length>1; }).length; }
+  var c=String(t.contexto||"").trim(); if(c) return c;
+  var d=String(t.tarea||"").trim();
+  if(d && _nn(d)!==_nn(t.nombre||"") && pal(d)>=6) return d;
+  /* lo que ya se sabe aunque nadie lo haya escrito en "contexto": el analisis, el ritmo, el mensaje con que nacio */
+  var an=String(t.analisis||"").trim(); if(pal(an)>=8) return (an.indexOf(". ")>0?an.slice(0,an.indexOf(". ")+1):an).slice(0,400);
+  var ri=String(t.ritmo||"").trim(); if(pal(ri)>=8) return ri.slice(0,400);
+  try{ var cc=creadaCon(t); var tx=String(cc.texto||"").replace(/^\[(audio|foto)\]\s*/i,"").trim(); if(pal(tx)>=8 && _nn(tx)!==_nn(t.nombre||"")) return tx.slice(0,400); }catch(e){}
+  return "";
+}
 function contextoPct(t){
-  var n=String(t.contexto||"").split(/\s+/).filter(function(w){ return w.length>1; }).length;
+  var n=String(contextoDe(t)).split(/\s+/).filter(function(w){ return w.length>1; }).length;
   return Math.min(100, Math.round(n*75/CTX_MIN_PAL));
 }
 function completitud(t){
@@ -4157,7 +4170,7 @@ function completitud(t){
     it.push({k:"cifras", ok:cif, tx:cif?"Cifras guardadas":"Las cifras"});
   } else {
     var q=t.duenio && PERSONAS[t.duenio];
-    var fin=t.indefinida===true || esRecurrente(t) || !!(t.f_vigente && !t.falta_fecha);
+    var fin=t.indefinida===true || esRecurrente(t) || !!(t.f_vigente && !t.falta_fecha && !fechaPuestaSola(t));   /* build 201: la fecha que puso el sistema no cuenta */
     var seg=(t.avisos||[]).some(function(a){ return a && a.fecha; }) || !!String(t.ritmo||"").trim() || esRecurrente(t) || (t.indefinida===true && !!t.f_vigente);
     it.push({k:"quien", ok:!!q, tx:q?"Quién: "+(t.duenio===yo?"tú":PERSONAS[t.duenio].nombre):"Quién lo hace"});
     it.push({k:"finiquito", ok:fin, tx:fin?(t.indefinida===true||esRecurrente(t)?"Finiquito: indefinida":"Finiquito: "+fechaMovCorta(t.f_vigente)):"Finiquito: ¿fecha o indefinida?"});
@@ -6018,7 +6031,10 @@ function esDecisionSal(t){
    "Por autorizar" = la creo el sistema (WhatsApp, correo, trabajador), no Salvador
    dictando; vale para lo creado desde el 2-oct (no inunda con lo viejo). */
 var REV_DESDE=Date.UTC(2026,9,2,6,0,0);
-function _fechaDeId(id){ var m=String(id||"").match(/_(\d{2})(\d{2})(\d{2})$/); return m?Date.UTC(2000+(+m[3]),(+m[2])-1,+m[1],12):0; }
+function _fechaDeId(id){
+  /* build 201: tambien ids que terminan en _AAAAMMDD (los crea Claude/trabajador: CONSEJO_CUMBRES_REUNION_20260927) */
+  var s=String(id||""), m=s.match(/_(20\d{2})(\d{2})(\d{2})$/); if(m) return Date.UTC(+m[1],(+m[2])-1,+m[3],12);
+  m=s.match(/_(\d{2})(\d{2})(\d{2})$/); return m?Date.UTC(2000+(+m[3]),(+m[2])-1,+m[1],12):0; }
 function creadaPorSistema(t){
   if(t.por_autorizar===true) return true;
   if(t.creada_por && t.creada_por!==yo) return true;
@@ -6043,6 +6059,32 @@ function faltaInfoRev(t){
   if(t.pendiente_info && !esDecisionSal(t)) return true;
   return porAutorizar(t) && !t.f_vigente && !t.periodicidad;
 }
+/* ===== build 201 (Salvador 2026-10-04 16:42): "Falta info" TAMBIEN para tareas VIEJAS abiertas =====
+   Antes solo contaba lo nuevo (creado por el sistema desde el 2-oct) o lo que traia pendiente_info, asi que
+   "Agendar Reunión Consejo Colonia Cumbres" y "José Mijares - Barda Terreno Cumbres" (las creo Claude el
+   27-sep con la fecha de ese mismo dia, sin que nadie la dictara) nunca salian. Regla SIN FECHA DICTADA =
+   SIN FINIQUITO, Y SE PREGUNTA. Una tarea vieja abierta (tuya) sale en "Falta info" si:
+     a) no tiene fecha, o su fecha la puso el sistema sola (creada por Claude/trabajador con la fecha de su
+        propio dia de creacion, y nadie la ha movido ni dictado);
+     b) no tiene NADA de contexto (ni el dictado, ni la descripcion con que nacio);
+     c) su finiquito ya vencio y no tiene ritmo, ni recordatorio por delante, ni es indefinida/recurrente.
+   Sale de ahi en cuanto se dicta fecha (queda fecha_dictada), contexto o ritmo/recordatorio. */
+function _diaCreacion(t){ var ms=msCreacion(t)||_fechaDeId(t.id); if(!ms) return ""; var d=new Date(ms); return d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0")+"-"+String(d.getUTCDate()).padStart(2,"0"); }
+function fechaPuestaSola(t){
+  if(!t || !t.f_vigente || t.fecha_dictada===true || (t.movimientos||[]).length) return false;
+  if(t.creada_por && PERSONAS[t.creada_por]) return false;          /* la dicto una persona al crearla */
+  var dc=_diaCreacion(t); return !!dc && t.f_vigente===dc;   /* si alguien la cambio despues, ya no es la puesta sola */
+}
+function faltaVieja(t){
+  if(!t || t.cierre || t.es_recordatorio || esDato(t) || t.autorizada_asi || estadoReal(t)==="cerrada") return "";
+  if(!(t.duenio===yo || t.creada_por===yo)) return "";
+  var sinFin=t.indefinida===true || esRecurrente(t) || t.tipo==="recurrente";
+  if(!sinFin && (!t.f_vigente || fechaPuestaSola(t))) return "finiquito";
+  if(!contextoDe(t)) return "contexto";
+  var H=hoy(), aviso=(t.avisos||[]).some(function(a){ return a && a.fecha && a.fecha>=H; });
+  if(!sinFin && t.f_vigente && t.f_vigente<H && !String(t.ritmo||"").trim() && !aviso) return "seguimiento";
+  return "";
+}
 function tipoRevisar(t){
   if(!t || t.cierre || t.fusionada_en || t.estado==="fusionada" || estadoReal(t)==="cerrada") return null;
   if((meDetiene(t) && !t.pendiente_info) || (esDecisionSal(t) && PERSONAS[yo] && PERSONAS[yo].jefe)) return "espera";
@@ -6050,6 +6092,7 @@ function tipoRevisar(t){
      Lo que ya tiene todo (contexto y datos) nunca sale aqui. */
   var _nuevo=!t.autorizada_asi && (porAutorizar(t) || (faltaInfoRev(t) && (t.creada_por===yo || t.duenio===yo)));
   if(_nuevo && !completitud(t).completa) return "falta";
+  if(faltaVieja(t)) return "falta";   /* build 201: tambien lo viejo abierto al que le falta algo */
   if(t.duenio===yo && !t.dup_resuelto && posibleDup(t).length) return "vincular";
   return null;
 }
@@ -6628,7 +6671,7 @@ function completaRevision(t, v){
     /* build 190: CANDADO — la fecha de Claude solo entra si cuadra con lo dictado; si lo
        dictado trae fecha, MANDA la dictada; si esta en duda, no se guarda y se pregunta. */
     var _cf=candadoFecha(v, j.fecha), _dudaRev=_cf.duda;
-    if(_cf.ok && _cf.fecha){ t.f_original=_cf.fecha; t.f_vigente=_cf.fecha; t.falta_fecha=false; hecho.push("termina el "+fechaBonita(_cf.fecha)); }
+    if(_cf.ok && _cf.fecha){ t.fecha_dictada=!!_cf.dictada; t.f_original=_cf.fecha; t.f_vigente=_cf.fecha; t.falta_fecha=false; hecho.push("termina el "+fechaBonita(_cf.fecha)); }
     if(j.periodicidad==="semanal"||j.periodicidad==="mensual"){ t.periodicidad=j.periodicidad; hecho.push(j.periodicidad==="semanal"?"cada semana":"cada mes"); }
     /* build 190: avisos de Claude con candado: si dictaste fechas, el aviso tiene que caer
        en una de ellas (salvo "un dia antes"/"despues", que no traen fecha propia). */
