@@ -1114,7 +1114,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 190 · fechas: manda la fecha dictada (candado a Claude), dia+numero tienen que cuadrar o se pregunta";
+var VERSION_APP = "build 191 · fechas: manda la fecha dictada (candado a Claude), dia+numero cuadran o se pregunta; indefinida/recurrente sin vencida por fecha";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -1396,7 +1396,25 @@ function estadoReal(t){
   var d=dDif(t.f_vigente,hoy());
   if(d<0) return "por_ejecutar";
   if(d===0) return "hoy";
+  /* build 191 (Salvador 2026-10-04): una tarea INDEFINIDA (t.indefinida, puesta a mano)
+     no tiene finiquito: su fecha es solo el proximo ritmo. Nunca sale "vencida" por fecha;
+     si el ritmo ya paso, queda en "hoy" (toca atenderla y darle su siguiente fecha).
+     Las RECURRENTES si salen vencida, pero solo si la vuelta paso SIN confirmar
+     (confirmar = siguienteVuelta, que corre la fecha); el texto va en tono positivo. */
+  if(t.indefinida===true) return "hoy";
   return "vencida";
+}
+function sinFinal(t){ return !!(t && (t.indefinida===true || t.tipo==="recurrente" || esRecurrente(t))); }
+/* el chip de fecha de la fila: indefinida = "Indefinida · próximo: lunes" (nunca "vence") */
+function chipFechaTarea(t){
+  var c=fechaChip(t&&t.f_vigente);
+  if(t && t.indefinida===true) return "Indefinida"+(c?" · próximo: "+c:"");
+  return c;
+}
+/* texto corto de una tarea cuya fecha ya paso (lista "Te toca", voz) */
+function vencioTxt(t){
+  var c=fechaChip(t.f_vigente)||"";
+  return sinFinal(t) ? "tocaba "+c+", sin confirmar" : "venció "+c;
 }
 function colorReal(t){
   var e=estadoReal(t);
@@ -3826,6 +3844,9 @@ function empujon(t, dicho){
     txt = r.va_a_fallar
       ? "Vas "+r.atraso+" día"+(r.atraso===1?"":"s")+" atrás en “"+r.paso+"”. Todavía no vence, pero con lo que queda ya no alcanza. ¿Qué necesitas para destrabarlo hoy?"
       : "Te falta “"+r.paso+"”, que debía estar hace "+r.atraso+" día"+(r.atraso===1?"":"s")+". ¿Lo sacas hoy?";
+  } else if(n===0 && sinFinal(t)){
+    /* build 191: recurrente/indefinida no tiene finiquito: se pide el avance, en positivo */
+    txt="Tocaba “"+t.nombre+"” el "+fechaBonita(t.f_vigente)+". ¿Ya quedó? Si sí, dímelo y la paso a la siguiente.";
   } else if(n===0){
     txt="Ya venció “"+t.nombre+"”. ¿Por qué no la terminaste, y para cuándo la acabas?";
   } else if(n===1){
@@ -5337,7 +5358,7 @@ function fila(t, mudo, secClass){
                 ? '<span class="paso">→ '+esc(t.pasos[t.paso||0].t)+'</span>'
                 : '<span class="ls">'+esc(t.ultima||"")+'</span>')))+'</span>'+
       '<span class="meta">'+(_pz&&toca&&camp.c!=="roja"&&/a las (\S+ [ap]m)/.test(camp.txt)?'<span class="fdate pcamp c-'+camp.c+'">'+ico("bell",13,1.9)+esc(camp.txt.match(/a las (\S+ [ap]m)/)[1])+'</span>':'')+
-      ((mudo||toca?"":fechaChip(t.f_vigente))?'<span class="fdate">'+esc(fechaChip(t.f_vigente))+'</span>':'')+
+      ((mudo||toca?"":chipFechaTarea(t))?'<span class="fdate">'+esc(chipFechaTarea(t))+'</span>':'')+
       (t.ia_wa?'<span class="iatag" title="Creada por IA desde WhatsApp">IA·WA</span>':'')+
       '<span class="tm">'+((t.duenio&&t.duenio!==yo&&PERSONAS[t.duenio])?PERSONAS[t.duenio].ini:"")+'</span>'+
       (b?(b.ico?'<span class="bico">'+b.ico+'</span>':'<span class="bdg">'+b.n+'</span>'):'')+'</span></button></li>';
@@ -11662,13 +11683,13 @@ function revisaMiRespuesta(t, v, p){
 function soySupervisor(t){ return !!(t && t.duenio && t.duenio!==yo && (jefeDe(yo,t.duenio) || (t.revisores||[]).indexOf(yo)>=0)); }
 function vSupervisor(t){
   if(!soySupervisor(t) || t.cierre) return "";
-  var e=estadoReal(t), en=(e==="vencida")?["Atrasada","#FF453A"]:((t.f_vigente&&dDif(t.f_vigente,hoy())===0)?["Vence hoy","#ff9f0a"]:["En tiempo","#30d158"]);
+  var e=estadoReal(t), _sf=sinFinal(t), en=(e==="vencida")?[_sf?"Sin confirmar":"Atrasada","#FF453A"]:((t.f_vigente&&dDif(t.f_vigente,hoy())===0)?[_sf?"Toca hoy":"Vence hoy","#ff9f0a"]:["En tiempo","#30d158"]);
   var _atr=(t.lista_pasos||[]).filter(function(p){ return p.hito && !p.hecho && p.fecha && p.fecha<hoy(); })[0];
   if(_atr){ var _d=-dDif(hoy(),_atr.fecha); en=["Atrasado "+Math.abs(dDif(_atr.fecha,hoy()))+" día"+(Math.abs(dDif(_atr.fecha,hoy()))===1?"":"s")+" · "+_atr.tx,"#FF453A"]; }
   var pasos=(t.lista_pasos||[]), hechos=pasos.filter(function(p){ return p.hecho; }).length;
   var fotos=(t.evidencias||[]).length+((t.adjuntos||[]).length||0);
   var h='<div class="supcard"><span class="sph">SUPERVISAS · '+esc((PERSONAS[t.duenio]||{}).nombre||"")+'</span>'+
-    '<span class="spsem" style="--sc:'+en[1]+'"><i></i>'+en[0]+(t.f_vigente?' · entrega '+esc(fechaChip(t.f_vigente)):'')+'</span>';
+    '<span class="spsem" style="--sc:'+en[1]+'"><i></i>'+en[0]+(t.f_vigente?(_sf?' · próximo ':' · entrega ')+esc(fechaChip(t.f_vigente)):'')+'</span>';
   if(pasos.length){
     h+='<span class="spl">'+(pasos.some(function(p){ return p.hito; })?'Entregas':'Revisar')+' · '+hechos+'/'+pasos.length+'</span><ul class="splist">'+pasos.slice(0,8).map(function(p){ return '<li class="'+(p.hecho?"ok":"")+'">'+(p.fecha?'<span class="spf">'+esc(fechaChip(p.fecha))+'</span>':'')+(p.hecho?"✓ ":"○ ")+esc(p.tx||"")+'</li>'; }).join("")+'</ul>';
   }
@@ -11712,7 +11733,7 @@ function armaTeToca(rev, det, venc, msgs, hoyYa){
   rev.filter(function(x){ return x.k==="falta"; }).forEach(function(x){ pon(x.t, "falta información", "#0a84ff"); });
   tareas.forEach(function(t){ try{ if(entrevistaPendiente(t)) pon(t, "falta información · ¿cómo medimos a "+((PERSONAS[t.duenio]||{}).nombre||"")+"?", "#0a84ff"); }catch(e){} });
   rev.filter(function(x){ return x.k==="autorizar"||x.k==="vincular"; }).forEach(function(x){ pon(x.t, x.k==="vincular"?"posible vinculación":"por autorizar", x.k==="vincular"?"#bf5af2":"#30d158"); });
-  venc.forEach(function(t){ pon(t, "venció "+(fechaChip(t.f_vigente)||""), "#FF453A", "venc"); });
+  venc.forEach(function(t){ pon(t, vencioTxt(t), "#FF453A", "venc"); });   /* build 191: recurrente = "tocaba X, sin confirmar" */
   hoyYa.forEach(function(t){ pon(t, "hoy", "#8e8e93", "hoy"); });
   return out;
 }
@@ -11930,7 +11951,8 @@ function _leeEntrada(t){
   var s=_punto("Tarea: "+limpiaHabla(t.nombre||"sin nombre"))+" ";
   var d=t.duenio===yo?"La llevas tú":"La lleva "+((PERSONAS[t.duenio]&&PERSONAS[t.duenio].nombre)||"otra persona");
   if(t.f_vigente){ var e=estadoReal(t);
-    d+=(e==="hoy"?", vence hoy":(e==="vencida"?", venció el "+fechaBonita(t.f_vigente):", para el "+fechaBonita(t.f_vigente))); }
+    if(sinFinal(t)) d+=(t.indefinida===true?", indefinida":"")+(e==="hoy"?", le toca hoy":(e==="vencida"?", tocaba el "+fechaBonita(t.f_vigente)+" y no se ha confirmado":", próximo el "+fechaBonita(t.f_vigente)));   /* build 191 */
+    else d+=(e==="hoy"?", vence hoy":(e==="vencida"?", venció el "+fechaBonita(t.f_vigente):", para el "+fechaBonita(t.f_vigente))); }
   return {tx:s+d+"."};
 }
 function _punto(s){ s=String(s||"").trim(); return /[.?!…:]$/.test(s)?s:s+"."; }

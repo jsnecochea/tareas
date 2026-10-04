@@ -57,8 +57,9 @@ var FUNCS = ["iso", "dm", "dDif", "dmDe", "masMeses", "hoy", "fechaMovCorta", "f
   "esMovida", "soloFecha", "_nrm", "fechaEnTexto", "diaDicho", "diasDichos", "horaDicha",
   "limpiaHoraDictada", "horaValor", "cadaDicho", "relativoDicho", "horaCercana", "parteDelDia",
   "nowHM", "proximaFranja", "horaEnParte", "franjaVaga", "armaCuando", "normalizaCada",
-  "calendarioProximo", "mueveFecha", "aplicaNotaClaude"];
-var VARS = ["NUMREL", "NUMHORA", "RANGO_PARTE", "DIAS_SEM"];
+  "calendarioProximo", "mueveFecha", "aplicaNotaClaude",
+  "estadoReal", "esRecurrente", "sinFinal", "fechaChip", "chipFechaTarea", "vencioTxt"];
+var VARS = ["NUMREL", "NUMHORA", "RANGO_PARTE", "DIAS_SEM", "DIAS_L", "MES_3"];
 var codigo = bloque("/* @@FECHAS-INICIO", "/* @@FECHAS-FIN */") + "\n" +
   VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" +
   FUNCS.map(function (f) { return saca("function", f); }).join("\n");
@@ -371,6 +372,28 @@ Object.keys(AHORAS).forEach(function (k) {
   t = { id: "f", nombre: "x", f_vigente: "2026-10-03", msgs: [] };
   tx = c.aplicaNotaClaude(t, "Claude ya no se hace", { accion: "nada", valor: "", respuesta: "¿La muevo al jueves 9?" });
   si("nota: respuesta de Claude con fecha no se muestra tal cual", !/jueves 9/.test(tx));
+})();
+
+/* build 191 PUNTO 4: recurrente / indefinida nunca "vencida" por un finiquito que nadie dicto */
+(function () {
+  var c = contexto(2026, 10, 4, 0, 53), t;
+  var a = c.armaCuando("todos los miércoles me tengo que poner la inyección, confirmar cada miércoles");
+  eq("inyeccion: cada miercoles -> proxima 7-oct, semanal", [a.fecha, a.cada], ["2026-10-07", "semanal"]);
+  t = { tipo: "recurrente", periodicidad: "semanal", f_vigente: "2026-10-07" };
+  eq("recurrente antes de su dia: por_ejecutar", c.estadoReal(t), "por_ejecutar");
+  var c8 = contexto(2026, 10, 8, 9, 0);
+  eq("recurrente pasada SIN confirmar: vencida", c8.estadoReal(t), "vencida");
+  eq("recurrente pasada: texto positivo", c8.vencioTxt(t), "tocaba ayer, sin confirmar");
+  t = { tipo: "unica", f_vigente: "2026-10-07" };
+  eq("unica pasada: venció", c8.vencioTxt(t), "venció ayer");
+  t = { tipo: "unica", indefinida: true, f_vigente: "2026-10-05" };
+  eq("indefinida antes: por_ejecutar", c.estadoReal(t), "por_ejecutar");
+  eq("indefinida chip", c.chipFechaTarea(t), "Indefinida · próximo: mañana");
+  eq("indefinida pasada: nunca vencida", c8.estadoReal(t), "hoy");
+  t = { tipo: "unica", indefinida: true };
+  eq("indefinida sin fecha: chip", c.chipFechaTarea(t), "Indefinida");
+  t = { tipo: "unica", f_vigente: "2026-10-07" };
+  eq("normal chip igual que antes", c.chipFechaTarea(t), "miércoles");
 })();
 
 console.log((fallas.length ? "\n" + fallas.map(function (f) { return "  X " + f; }).join("\n") + "\n" : "") +
