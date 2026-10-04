@@ -1155,7 +1155,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 197 · chat limpio: Importante | Todo, avisos del mismo tema se reemplazan, indicaciones visibles hasta que las ves y dicen qué hizo Claude";
+var VERSION_APP = "build 198 · chat limpio: lo oculto ya no deja renglones; solo sale en Todo";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -6999,7 +6999,7 @@ function vHilo(){
   var m="";
   /* build 197: Importante | Todo. En Todo se ve todo desplegado; en Importante los avisos viejos de un tema no salen */
   if(window.__visitaDe!==t.id){ window.__visitaDe=t.id; window.__visitaIni=Date.now(); }
-  var _todo=modoChat(t)==="todo", _rmp=_todo?{set:{}}:avisosReemplazados(t), _vistoNuevo=false;
+  var _todo=modoChat(t)==="todo", _rmp=_todo?{set:{}}:avisosReemplazados(t), _vistoNuevo=false, _ocultos=0, _visibles=0;
   var _plg=_todo?{set:{},ult:-1,n:0}:avisosPlegados(t), _cn=canalActual(t),
       _pln=notasPlegadas(t, _todo || !!(window.__ncExp&&window.__ncExp[t.id]), window.__visitaIni, Date.now()),
       _pls=avisosSistemaPlegados(t, _todo || !!(window.__sisExp&&window.__sisExp[t.id]));
@@ -7022,12 +7022,13 @@ function vHilo(){
     if(_cx.indexOf("priv:")===0 && _cx!=="priv:"+yo) return;                 /* build 179: nota de Claude solo para quien contesto */
     if(_cx==="sup" && !soySupervisor(t) && x.de!==yo) return;                /* build 179: notas de supervisor, el dueño no las ve */
     if(!msgEnCanal(x,_cn.id,t)) return;
-    if(!esImportante(x, ix, _rmp)) return;   /* build 197: aviso reemplazado por uno mas nuevo del mismo tema */
+    if(!esImportante(x, ix, _rmp)){ _ocultos++; return; }   /* build 197: aviso reemplazado por uno mas nuevo del mismo tema */
     if(x.nota_claude && x.k!=="bo" && !x.visto_ts && !_pln.set[ix]){ x.visto_ts=Date.now(); _vistoNuevo=true; }   /* build 197: ya la viste */
     /* build 193 (F36): las notas/indicaciones a Claude y sus respuestas se pliegan en un renglon */
-    if(_pln.set[ix]){ if(_pln.cab[ix]) m+='<button class="avfold ncfold" data-ncexp="1">! '+_pln.cab[ix]+' indicaci'+(_pln.cab[ix]===1?'ón':'ones')+' a Claude · ver</button>'; return; }
-    if(_pls.set[ix]){ if(_pls.cab[ix]) m+='<button class="avfold" data-sisexp="1">'+_pls.cab[ix]+' aviso'+(_pls.cab[ix]===1?'':'s')+' · ver</button>'; return; }   /* build 196 */
-    if(_plg.set[ix]){ if(ix===_plg.ult) m+='<button class="avfold" data-avexp="1">'+_plg.n+' aviso'+(_plg.n===1?'':'s')+' de seguimiento · ver</button>'; return; }
+    /* build 198 (Salvador 12:55): lo que se oculta NO deja renglon "N … · ver": en Importante simplemente
+       no sale (indicaciones viejas, avisos del sistema, avisos de seguimiento atendidos); en Todo sale todo */
+    if(_pln.set[ix] || _pls.set[ix] || _plg.set[ix]){ _ocultos++; return; }
+    _visibles++;
     var q=autorMsg(x,t);
     if(x.hab){ m+=burbujaHablada(x, (q||""), t.id+"|"+ix); return; }
     var meta=(q?esc(q)+" · ":"")+esc(x.h)+(x.wa_auto?" · → "+esc(String(x.wa_auto).split(" ")[0])+" por WhatsApp":"")+(_cx.indexOf("dm:")===0?" · privado":"");
@@ -7152,6 +7153,8 @@ function vHilo(){
   var _pre179=""; try{ _pre179=vSupervisor(t)+vParaTi(t); }catch(e){ console.warn("paraTi",e); }
   if(_vistoNuevo) setTimeout(function(){ try{ guarda(t); }catch(e){} }, 0);
   var _tgl='<div class="cmodo"><button data-cmodo="importante" class="'+(_todo?'':'on')+'">Importante</button><button data-cmodo="todo" class="'+(_todo?'on':'')+'">Todo</button></div>';
+  /* build 198: si en Importante el chat queda vacio, una pista chiquita para que no parezca roto */
+  if(!_todo && !_visibles && _ocultos && !(t.evidencias||[]).length) m+='<button class="avfold" data-cmodo="todo">Hay '+_ocultos+' mensaje'+(_ocultos===1?'':'s')+' oculto'+(_ocultos===1?'':'s')+' · Todo</button>';
   m=_tgl+m;
   return h+(esDato(t)?vDatoCuerpo(t):vDatosTarea(t))+vVuelta(t)+vPasos(t)+bannerDecision(t)+_pil+_pre179+'<div class="scroll'+(_conPill?' cnl" style="--cc:'+_cc:'')+'"><div class="msgs">'+m+pre+'</div></div>'+vTarjetaRev(t)+
     /* LA MISMA BARRA DE TODAS LAS VISTAS — 2026-09-04. Antes el hilo tenia la

@@ -161,7 +161,7 @@ function manuel() {
   eq("abiertas = nada plegado", Object.keys(c.notasPlegadas(t, true).set).length, 0);
   c.yo = "samuel"; vm.runInContext("yo='samuel'", c);
   eq("las de otro no las pliego (ni las ve)", Object.keys(c.notasPlegadas(t, false).set).length, 0);
-  si("el render usa el plegado", /if\(_pln\.set\[ix\]\)/.test(html) && /data-ncexp/.test(html));
+  si("build 198: las indicaciones viejas se OCULTAN sin renglon (solo salen en Todo)", /if\(_pln\.set\[ix\] \|\| _pls\.set\[ix\] \|\| _plg\.set\[ix\]\)\{ _ocultos\+\+; return; \}/.test(html) && !/indicaci'\+\(_pln\.cab/.test(html));
 })();
 
 /* ---------- 1b: "Para Claude" primera opcion del aviso de externo ---------- */

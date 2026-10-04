@@ -69,6 +69,8 @@ var vis = t1.msgs.map(function (x, i) { return c.esImportante(x, i, R); });
 eq("Importante: sin los avisos viejos", vis.filter(Boolean).length, 7);
 eq("Todo: todo", t1.msgs.map(function (x, i) { return c.esImportante(x, i, { set: {} }); }).filter(Boolean).length, 12);
 si("en Todo no se pliega nada (avisos, sistema, indicaciones)", /_todo\?\{set:\{\},ult:-1,n:0\}:avisosPlegados\(t\)/.test(html) && /notasPlegadas\(t, _todo \|\|/.test(html) && /avisosSistemaPlegados\(t, _todo \|\|/.test(html));
+si("build 198: ningun renglon 'N … · ver' en el chat", !/data-ncexp="1"/.test(html) && !/data-sisexp="1"/.test(html) && !/data-avexp="1"/.test(html));
+si("build 198: chat vacio en Importante -> pista 'Hay N mensajes ocultos · Todo' que cambia a Todo", /Hay '\+_ocultos\+' mensaje/.test(html) && /data-cmodo="todo">Hay /.test(html));
 si("boton Importante | Todo en el chat", /data-cmodo="importante"/.test(html) && /data-cmodo="todo"/.test(html));
 
 /* ---------- 3 indicaciones: fresca -> vista -> plegada en la siguiente visita ---------- */

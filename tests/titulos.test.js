@@ -77,7 +77,7 @@ eq("abiertos = nada plegado", Object.keys(c.avisosSistemaPlegados(t, true, NOW).
 si("nota a Claude no es aviso del sistema (ya tiene su plegado)", !c.esAvisoSistema({ k: "bi", t: "Movida al lunes", nota_claude: 1 }));
 si("mensaje de una persona no", !c.esAvisoSistema({ k: "bi", de: "samuel", t: "Listo, ya quedó" }));
 si("bal que pregunta no", !c.esAvisoSistema({ k: "bal", t: "Para medir a Samuel: ¿qué te entrega?" }));
-si("el render usa el plegado", /data-sisexp="1"/.test(html) && /_pls\.set\[ix\]/.test(html));
+si("build 198: avisos del sistema ocultos sin renglon 'N avisos · ver'", /_pls\.set\[ix\]/.test(html) && !/data-sisexp="1"/.test(html));
 
 /* ---------- 2c nombres del encabezado ---------- */
 var hS = c.subtituloHTML({ duenio: "salvador", _ints: [{ k: "salvador" }, { k: "ext:Chuy Cumbres Zatarain" }, { k: "samuel" }] });
