@@ -705,6 +705,7 @@ button{font:inherit;color:inherit}
 .dtot{font-size:27px;font-weight:700;font-variant-numeric:tabular-nums}.dsub{color:var(--ink-3,#9a9aa2);font-size:14px}
 .dl{display:flex;flex-direction:column;font-size:15px;font-variant-numeric:tabular-nums}.dl div{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid #3a3a3e}.dl div:last-child{border-bottom:0}
 .ttgrp{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3,#9a9aa2);padding:8px 4px 2px}
+.pnom{border:0;background:none;color:inherit;font:inherit;padding:0;text-decoration:underline;text-decoration-color:rgba(255,255,255,.25);text-underline-offset:3px}
 .pchk{display:flex;align-items:center;gap:8px}.pasos .ph .pchk{flex:1;min-width:0}.pchk svg{color:#30d158;flex:none}
 .datoc{margin:8px 14px 4px;padding:10px 12px;border-radius:14px;background:var(--surface-2,#2c2c2e);border-left:3px solid #64d2ff;font-size:15px;line-height:1.4}
 .datoc .dch{display:block;font-size:12px;font-weight:700;letter-spacing:.04em;color:#64d2ff;margin-bottom:4px}
@@ -1151,7 +1152,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 195 · fichas limpias: encabezado con chip de fecha y ▾ (Creada con + Contexto), Falta info con Tarea|Dato y barras, datos con Total y Desglose, checklist compacto, sinónimos";
+var VERSION_APP = "build 196 · títulos con Mayúscula Inicial (menos conectores); avisos del sistema plegados; nombres del encabezado abren su ficha";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -3236,6 +3237,7 @@ function arranca(){
            `nombre` se leen con ese nombre. */
         if(o.estado==="fusionada" || o.fusionada_en) return;
         if(!o.nombre && o.tarea) o.nombre=String(o.tarea);
+        if(o.nombre && !o.es_recordatorio) o.nombre=tituloTarea(o.nombre);   /* build 196: se ve ya normalizado; se guarda asi la proxima vez */
         tareas.push(o)});
       /* LOS EJEMPLOS NO SE SIEMBRAN EN LA BASE — corregido 2026-09-04, el día
          que Josué abrió las reglas. Antes, con la base vacía, se subían las ~15
@@ -3338,6 +3340,7 @@ function esEjemplo(t){
 
 function guarda(t){
   t.tocada=Date.now();
+  if(t && t.nombre && !t.es_recordatorio) t.nombre=tituloTarea(t.nombre);   /* build 196: titulos con mayuscula inicial */
   /* CANDADO: un ejemplo se ve, pero NUNCA sube a la base que comparte el
      equipo. Y se dice, para que nadie crea que quedó guardado. */
   if(esEjemplo(t)){ toast("Es una tarea de ejemplo: no se guarda"); render(); return }
@@ -3849,6 +3852,19 @@ function subtituloTarea(t){
   var dueno=t.duenio===yo?"Tuya":"De "+((PERSONAS[t.duenio]||{}).nombre||t.duenio||"");
   return dueno+(otros.length?" · con "+juntaNombres(otros):"");
 }
+/* build 196: lo mismo, pero los nombres se tocan y abren la ficha de la persona (como build 143) */
+function subtituloHTML(t){
+  var txt=subtituloTarea(t), ints=[]; try{ ints=integrantesDe(t); }catch(e){}
+  var nom={}; ints.forEach(function(x){ var n=nombreInt(x.k); nom[_primerNombre(n)]=nom[_primerNombre(n)]||n; });
+  if(t.de_quien) nom[t.de_quien]=t.de_quien;
+  var partes=txt.split(/( · con | · de |, | y )/), out="";
+  partes.forEach(function(p, i){
+    if(i===0 || /^( · con | · de |, | y )$/.test(p)){ out+=esc(p); return; }
+    var full=nom[p]||nom[_primerNombre(p)]||"";
+    out+= full ? '<button class="pnom" data-persona="'+esc(full)+'">'+esc(p)+'</button>' : esc(p);
+  });
+  return out;
+}
 /* el chip del encabezado -> {cls, ico, txt} */
 function chipEncabezado(t){
   if(esDato(t)){
@@ -4124,13 +4140,14 @@ function subeAlJefe(t){
   var toques=(t.empujones||[]).length;
 
   /* acantilado: se avisa ANTES de la fecha */
-  if(f==="acantilado"){
+  /* build 196 (TONO DE LOS SEGUIMIENTOS): positivo, sin "vence"; una indefinida/recurrente no tiene finiquito */
+  if(f==="acantilado" && !sinFinal(t)){
     var faltan=t.f_vigente?dDif(hoy(),t.f_vigente):99;
+    var _q=(t.duenio&&PERSONAS[t.duenio])?PERSONAS[t.duenio].nombre:"";
     if(faltan<=cfg.avisa_antes)
       return {por:"acantilado_cerca",
-        texto:"“"+t.nombre+"” vence "+(faltan<=0?"hoy":"en "+faltan+" día"+(faltan===1?"":"s"))+
-              " y pasada la fecha ya no sirve de nada. "+(t.duenio?PERSONAS[t.duenio].nombre:"")+
-              " todavía no la cierra."};
+        texto:"“"+t.nombre+"” tiene su fecha "+(faltan<=0?"hoy":"en "+faltan+" día"+(faltan===1?"":"s"))+
+              " y después ya no sirve. "+(_q?"Un empujón a "+_q+" para cerrarla a tiempo puede hacer la diferencia.":"Vale la pena cerrarla a tiempo.")};
   }
   if(!cfg.escala) return null;
   var acum=danioAcumulado(t);
@@ -6892,7 +6909,7 @@ function vHilo(){
       : '<span class="t'+(t.cierre?" tach":"")+'">'+esc(t.nombre)+'</span>')+
     '</div><div class="d">'+
     /* build 195: "Tuya · con X y Y" (dueño + quienes participan) / "Dato · de X" */
-    esc(subtituloTarea(t))+
+    subtituloHTML(t)+
     '</div></div>'+
     '<div class="grow"></div>'+
     (adj.length?'<button class="iconbtn" id="bgal" aria-label="Archivos de esta tarea">'+ico("clip",20,1.6)+
@@ -6976,7 +6993,7 @@ function vHilo(){
   }
 
   var m="";
-  var _plg=avisosPlegados(t), _cn=canalActual(t), _pln=notasPlegadas(t, !!(window.__ncExp&&window.__ncExp[t.id]));
+  var _plg=avisosPlegados(t), _cn=canalActual(t), _pln=notasPlegadas(t, !!(window.__ncExp&&window.__ncExp[t.id])), _pls=avisosSistemaPlegados(t, !!(window.__sisExp&&window.__sisExp[t.id]));
   /* build 186: cada foto subida desde la app va en SU lugar del chat (por hora), no amontonada al final */
   var _evs=(t.evidencias||[]).map(function(f){return f;}).sort(function(a,b){return (a.ts||0)-(b.ts||0)}), _evI=0;
   function _evHasta(ts){ while(_evI<_evs.length && (ts===Infinity || (_evs[_evI].ts||0)<=ts)){ var f=_evs[_evI++];
@@ -6998,6 +7015,7 @@ function vHilo(){
     if(!msgEnCanal(x,_cn.id,t)) return;
     /* build 193 (F36): las notas/indicaciones a Claude y sus respuestas se pliegan en un renglon */
     if(_pln.set[ix]){ if(_pln.cab[ix]) m+='<button class="avfold ncfold" data-ncexp="1">! '+_pln.cab[ix]+' indicaci'+(_pln.cab[ix]===1?'ón':'ones')+' a Claude · ver</button>'; return; }
+    if(_pls.set[ix]){ if(_pls.cab[ix]) m+='<button class="avfold" data-sisexp="1">'+_pls.cab[ix]+' aviso'+(_pls.cab[ix]===1?'':'s')+' · ver</button>'; return; }   /* build 196 */
     if(_plg.set[ix]){ if(ix===_plg.ult) m+='<button class="avfold" data-avexp="1">'+_plg.n+' aviso'+(_plg.n===1?'':'s')+' de seguimiento · ver</button>'; return; }
     var q=autorMsg(x,t);
     if(x.hab){ m+=burbujaHablada(x, (q||""), t.id+"|"+ix); return; }
@@ -8082,6 +8100,23 @@ function sinLaFecha(txt){
 function conMayuscula(t){
   t=String(t||"").trim();
   return t ? t.charAt(0).toUpperCase()+t.slice(1) : t;
+}
+/* build 196 (Salvador 2026-10-04 11:43): TITULOS con mayuscula inicial en cada palabra, menos
+   conectores (de, la, con, para...). La primera palabra siempre con mayuscula. Siglas (BBVA, PTR,
+   CFE) y marcas con mayusculas por dentro (iPhone, McAllen) se quedan como estan; numeros igual. */
+var TITULO_CONECTORES=["de","del","la","las","el","los","y","e","o","u","a","al","en","con","por","para","sin","sobre","entre","que","un","una","unos","unas","se","su","sus","lo"];
+function tituloTarea(txt){
+  var s=String(txt==null?"":txt).replace(/\s+/g," ").trim(); if(!s) return s;
+  var primera=true;
+  return s.split(" ").map(function(w){
+    var i=w.search(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/); if(i<0){ return w; }
+    var letras=w.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/g,""), base=letras.toLowerCase();
+    var esPrimera=primera; primera=false;
+    if(letras.length>=2 && letras===letras.toUpperCase() && /[A-ZÁÉÍÓÚÜÑ]/.test(letras) && TITULO_CONECTORES.indexOf(base)<0) return w;   /* sigla */
+    if(/[A-ZÁÉÍÓÚÜÑ]/.test(letras.slice(1)) && letras!==letras.toUpperCase()) return w;                                            /* marca: iPhone, McAllen */
+    if(!esPrimera && TITULO_CONECTORES.indexOf(base)>=0 && letras.length===w.length) return w.toLowerCase();
+    return w.slice(0,i)+w.charAt(i).toUpperCase()+w.slice(i+1);
+  }).join(" ");
 }
 function nombreDeLoDicho(dicho){
   var t=String(dicho||"").trim();
@@ -11070,6 +11105,7 @@ function bindHilo(){
   var _cp=$("cnlpill"); if(_cp) _cp.onclick=function(){ if(modoClaude(t)){ window.__cnlClaude[t.id]=0; render(); return; } abreCanales(t); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-tipoi]"),function(b){ b.onclick=function(){ var k=b.getAttribute("data-tipoi"); t.tipo_item=k; t.es_dato=(k==="dato"); guarda(t); if(!revisaCompleta(t)) render(); }; });   /* build 195 */
   var _ccl=$("cnlclaude"); if(_ccl) _ccl.onclick=function(){ window.__cnlClaude=window.__cnlClaude||{}; window.__cnlClaude[t.id]=window.__cnlClaude[t.id]?0:1; render(); };   /* build 193 */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-sisexp]"),function(b){ b.onclick=function(){ window.__sisExp=window.__sisExp||{}; window.__sisExp[t.id]=1; render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-ncexp]"),function(b){ b.onclick=function(){ window.__ncExp=window.__ncExp||{}; window.__ncExp[t.id]=1; render(); }; });
   var _ib=$("intbtn"); if(_ib) _ib.onclick=function(){ abreIntegrantes(t); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-ptab]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); window.__ptAb=window.__ptAb||{}; window.__ptAb[t.id]=b.getAttribute("data-ptab")==="1"; render(); }; });
@@ -12985,6 +13021,27 @@ function convierteEnIndicacion(t, ix){
 }
 /* F36: las notas a Claude (nota_claude) y sus respuestas se pliegan: cada tramo seguido de
    notas visibles es UN renglon "! N indicaciones a Claude · ver" (nada se borra). */
+/* build 196: los avisos del sistema ("Movida al…", "Te aviso…", "Cerrada sin hacerse…") se pliegan en
+   un renglon gris "N avisos · ver", igual que las indicaciones. Nada se borra. El ultimo mensaje del
+   chat, si es un aviso de hace menos de 10 min, se deja a la vista (es la respuesta a lo que acabas de hacer). */
+var AVISO_SIS=/^(Movida |Regresada al |Te aviso|Fecha: |Listo[:,.]|Cambié el nombre|Cerrada|Reabierta|Revisión pospuesta|Se pasó aquí|Se le sumó|Queda como tarea aparte|Va, para el|Sigue guardado|Recordatorio agregado|Pasado a|Ahora es de|Ya es de|Ya está para el|Anotado)/;
+function esAvisoSistema(x){
+  if(!x || x.nota_claude || x.wa_in===1 || x.wa_c || x.origen || x.hab || x.abre || x.entrevista || x.de) return false;
+  var tx=String(x.t||"").trim(); if(!tx) return false;
+  if(x.k==="bal") return !/\?\s*$/.test(tx);
+  return x.k==="bi" && AVISO_SIS.test(tx);
+}
+function avisosSistemaPlegados(t, abiertos, ahora){
+  var r={set:{}, cab:{}}; if(abiertos) return r;
+  var ms=t.msgs||[], ini=-1, n=0, ult=ms.length-1, now=ahora||Date.now();
+  var dejar=(ult>=0 && esAvisoSistema(ms[ult]) && ms[ult].ts && now-ms[ult].ts<10*60000)?ult:-1;
+  for(var i=0;i<=ms.length;i++){
+    var es=i<ms.length && i!==dejar && esAvisoSistema(ms[i]);
+    if(es){ if(ini<0){ ini=i; n=0; } r.set[i]=1; n++; }
+    else if(ini>=0){ r.cab[ini]=n; ini=-1; }
+  }
+  return r;
+}
 function notasPlegadas(t, abiertas){
   var r={set:{}, cab:{}}; if(abiertas) return r;
   var ms=t.msgs||[], ini=-1, n=0;
