@@ -705,6 +705,9 @@ button{font:inherit;color:inherit}
 .dtot{font-size:27px;font-weight:700;font-variant-numeric:tabular-nums}.dsub{color:var(--ink-3,#9a9aa2);font-size:14px}
 .dl{display:flex;flex-direction:column;font-size:15px;font-variant-numeric:tabular-nums}.dl div{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid #3a3a3e}.dl div:last-child{border-bottom:0}
 .ttgrp{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3,#9a9aa2);padding:8px 4px 2px}
+.bprog{border:1px solid #2f6fa8;background:var(--fi-bluebg,#10283f)!important}.bprog.cancel{opacity:.5;border-color:#3a3a3e}
+.bprog .pgh{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#4aa3ff}.bprog .pgt{display:block;margin-top:4px}
+.bprog .pgx{display:block;margin-top:4px;font-size:12px;color:var(--ink-3,#9a9aa2)}
 .cmodo{display:flex;align-self:center;gap:2px;background:var(--surface-2,#2a2a2d);border-radius:10px;padding:2px;margin:2px auto 6px}
 .cmodo button{border:0;background:none;color:var(--ink-3,#9a9aa2);font-size:13px;font-weight:600;padding:5px 12px;border-radius:8px}
 .cmodo button.on{background:#3a3a3e;color:var(--ink,#f2f2f4)}
@@ -1155,7 +1158,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 198 · chat limpio: lo oculto ya no deja renglones; solo sale en Todo";
+var VERSION_APP = "build 199 · WhatsApp programados dentro de Doit (a las…, si no contesta…), se cancelan tocando la burbuja";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -3104,6 +3107,10 @@ function enviaWhatsAppYa(b){
   var t=wp.tareaId ? tareas.filter(function(x){ return x.id===wp.tareaId })[0] : null;
   if(!t && wp.nueva) t=creaTarea({nombre:wp.nueva, duenio:yo, dicho:b.dicho||wp.nueva});
   if(!t){ toast("No encontré la tarea para ese WhatsApp"); return; }
+  /* build 199: programado (con hora y/o "si no contesta"): se deja en la cola con etiquetas y burbuja con reloj */
+  if(wp.programa){ var _pg=Object.assign({}, wp.programa, {contacto:contactoDeTarea(t, wp.contacto)});
+    mandaProgramado(t, _pg, null);
+    barraEstado=null; consulta=""; fotoEnMano=null; abierta=t.id; vista="hilo"; render(); return; }
   t.wa_contactos=t.wa_contactos||[];
   if(!t.wa_contactos.some(function(c){ return String(c.nombre||c).toLowerCase()===String(wp.contacto).toLowerCase() }))
     t.wa_contactos.push({nombre:wp.contacto, desde:Date.now()});
@@ -3178,6 +3185,140 @@ window.addEventListener("pageshow", function(){ try{ avisaVisto(); }catch(e){} }
 /* build 136: deja el pedido de WhatsApp en la cola del servidor (wa_pedido).
    Claude, desde la computadora del que lo pide, lo manda por SU WhatsApp y la
    respuesta cae en el hilo de la tarea (wa_respuesta). Devuelve promesa. */
+/* ===== build 199 (Salvador 2026-10-04 16:11): MENSAJES PROGRAMADOS DENTRO DE DOIT =====
+   El servidor no tiene campo de horario; el programa de la Mac (v16) entiende ETIQUETAS al inicio
+   del texto y las QUITA antes de mandar:
+     [A LAS AAAA-MM-DD HH:MM]                 -> no sale antes de esa hora (Monterrey)
+     [SI NO CONTESTA DESDE AAAA-MM-DD HH:MM]  -> solo sale si la persona no escribio despues de esa hora
+   "mándale a Carlos mañana a las 8 que…", "dile a Josué el lunes a las 9 que…", "a las 12 si no ha
+   contestado recuérdale a Carlos que…", "…y si no contesta, insístele a las 5". La fecha la pone el
+   telefono con el candado de fechas (manda la dictada; dia+numero tienen que cuadrar o se pregunta).
+   Las etiquetas NUNCA se ven: el chat guarda el texto limpio. ===== */
+var WA_VERBO="(?:m[aá]nd(?:a|ale|arle|ales)|env[ií](?:a|ale|arle)|escr[ií]b(?:e|ele|irle)|av[ií]s(?:a|ale|arle)|com[eé]nt(?:a|ale|arle)|d[ií]le|d[ií]gale|recu[eé]rd(?:ale|arle)|ins[ií]st(?:e|ele|irle)|preg[uú]nt(?:a|ale|arle)|p[ií]d(?:e|ele|irle))";
+var WA_DIA="(?:hoy|pasado\\s+ma[nñ]ana|ma[nñ]ana(?!\\s+(?:de|por)\\s+la)|(?:el\\s+)?(?:pr[oó]ximo\\s+)?(?:lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)(?:\\s+\\d{1,2}(?!\\s*(?::|am|pm|hrs?|horas)))?(?:\\s+que\\s+viene)?|(?:el\\s+)?\\d{1,2}\\s+de\\s+(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre))";
+var WA_HORA="(?:a\\s+las?\\s+(?:\\d{1,2}(?::\\d{2})?|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce)(?:\\s+y\\s+media)?(?:\\s*(?:am|pm|a\\.\\s?m\\.?|p\\.\\s?m\\.?|hrs?|horas)\\b|\\s+de\\s+la\\s+(?:ma[nñ]ana|tarde|noche))?|a\\s+mediod[ií]a|al\\s+mediod[ií]a)";
+var WA_TIEMPO="(?:"+WA_DIA+"(?:\\s*,?\\s*"+WA_HORA+")?|"+WA_HORA+"(?:\\s+(?:del?\\s+)?"+WA_DIA+")?)";
+var WA_SINO=/(?:[,.;]\s*)?(?:y\s+)?si\s+no\s+(?:me\s+|te\s+|le\s+|nos\s+)?(?:ha\s+)?(?:contesta(?:do)?|responde|respondido|contest[oó]|respondi[oó])\b\s*,?\s*/i;
+function _hm(d){ return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+function _tsDe(f,h){ return new Date(f+"T"+h+":00").getTime(); }
+/* las frases de tiempo de un pedazo: {frases:[...], resto} */
+function _sacaFrases(z){
+  var fr=[], re=new RegExp("(?:^|\\s|,)("+WA_TIEMPO+")(?=$|[\\s,.;:!?])","ig"), resto=String(z||"");
+  resto=resto.replace(re,function(all,f){ fr.push(f); return all.charAt(0)===","?",":" "; }).replace(/\s{2,}/g," ");
+  return {frases:fr, resto:resto};
+}
+/* fecha y hora de unas frases de tiempo -> {fecha,hora} | {duda} | null. base = {fecha,hora} para "a las 5" de un seguimiento */
+function cuandoDe(frases, ahora, base){
+  var z=frases.join(" "); if(!z.trim()) return null;
+  var fd=fechaDictada(z); if(fd.duda) return {duda:fd.duda};
+  var hv=horaDicha(z)?horaValor(z):"", f=fd.fecha||"", now=new Date(ahora);
+  if(!f && !hv) return null;
+  if(!hv) return {fecha:f, hora:"09:00"};
+  var parte=(typeof parteDelDia==="function" && parteDelDia(" "+_nn(z)+" ")) || /\b(0\d|1[3-9]|2[0-3]):\d{2}\b/.test(z) || /\b(am|pm|a\.\s?m|p\.\s?m)\b/i.test(z);
+  var h=parseInt(hv.slice(0,2),10), mm=hv.slice(3);
+  var cands=[hv]; if(!parte && h>=1 && h<=11) cands.push(String(h+12).padStart(2,"0")+":"+mm);
+  var desde=base?_tsDe(base.fecha,base.hora):ahora;
+  if(f){
+    var ok=cands.filter(function(c){ return _tsDe(f,c)>desde; });
+    if(!ok.length) return {duda:"Esa hora ya pasó ("+fechaMovCorta(f)+" "+hv+"). ¿A qué hora lo mando?"};
+    /* sin decir parte del dia: de 1 a 5 = tarde (regla de build 141), de 6 a 11 = mañana si aun no pasa */
+    var pref=(!parte && h>=1 && h<=5 && cands[1] && _tsDe(f,cands[1])>desde)?cands[1]:ok[0];
+    return {fecha:f, hora:pref};
+  }
+  var dia=base?base.fecha:iso(now);
+  for(var k=0;k<3;k++){
+    var fx=k?dmDe(dia,k):dia, ok2=cands.filter(function(c){ return _tsDe(fx,c)>desde; });
+    if(!parte && h>=1 && h<=5 && cands[1] && ok2.indexOf(cands[1])>=0) return {fecha:fx, hora:cands[1]};
+    if(ok2.length) return {fecha:fx, hora:ok2[0]};
+  }
+  return null;
+}
+/* lo dictado -> el (o los) WhatsApp programados, o null si no es un mensaje programado */
+function programaWA(texto, ahora){
+  ahora=ahora||Date.now();
+  var s=String(texto||"").trim().replace(/^(?:oye\s+)?(?:claude|cloud|clod|claud|clau)\b[\s,:]*/i,"");
+  var rv=new RegExp("\\b"+WA_VERBO+"\\b","i"), v=s.match(rv); if(!v) return null;
+  var sn=s.match(WA_SINO), main=s, seg="", condicional=false;
+  if(sn){
+    if(sn.index>v.index){ main=s.slice(0,sn.index); seg=s.slice(sn.index+sn[0].length); }
+    else { condicional=true; main=(s.slice(0,sn.index)+" "+s.slice(sn.index+sn[0].length)).replace(/\s{2,}/g," ").trim(); }
+  }
+  var vm=main.match(rv); if(!vm) return null;
+  var pre=main.slice(0,vm.index), after=main.slice(vm.index+vm[0].length);
+  var qi=after.search(/\s(?:para\s+)?que\s|\sdiciendo(?:le)?\s|:\s|\s(?=si\s)/i);   /* "pregúntale a Manuel mañana a las 9 si ya…" */
+  var cz=qi>=0?after.slice(0,qi):after, body=qi>=0?after.slice(qi):"";
+  var P=_sacaFrases(pre), C=_sacaFrases(cz), T={frases:[], resto:body};
+  var tr=body.match(/,\s*([^,]+?)\s*[.!]?\s*$/);
+  if(tr && new RegExp("^"+WA_TIEMPO+"$","i").test(tr[1].trim())){ T.frases.push(tr[1].trim()); T.resto=body.slice(0,tr.index); }
+  var frases=P.frases.concat(C.frases, T.frases);
+  if(!frases.length && !condicional && !seg) return null;   /* no hay nada que programar: sigue el camino de siempre */
+  var contacto=C.resto.replace(/^\s*(?:un\s+)?(?:(?:whats?\s?app|whats|wasap|guasap|mensaje|aviso)\s+)?(?:a|al)\s+/i,"").replace(/[\s,.:;]+$/,"").trim();
+  var msj=T.resto.replace(/^\s*,?\s*(?:(?:para\s+)?que(?:\s+(?:le\s+)?(?:dig(?:as|a)|dice|dijera))?|diciendo(?:le)?|:)\s*:?\s*(?:que\s+)?/i,"").replace(/[\s,]+$/,"").trim();
+  if(qi<0){ var me=contacto.match(/^(.+?)\s+(esto|eso|lo\s+(?:anterior|de\s+arriba|siguiente))\b\s*:?\s*(.*)$/i);
+    if(me){ contacto=me[1].trim(); msj=me[3].trim()||"__ESTO__"; } }
+  var out={programado:true, contacto:contacto, texto:msj?msj.charAt(0).toUpperCase()+msj.slice(1):"", a_las:null, sino_desde:null, seguimiento:null, duda:""};
+  if(!contacto) out.duda="¿A quién se lo mando?";
+  else if(!msj) out.duda="¿Qué le mando a "+contacto+"?";
+  var cu=cuandoDe(frases, ahora, null);
+  if(cu && cu.duda) out.duda=out.duda||cu.duda; else if(cu) out.a_las=cu;
+  if(condicional){ var d0=new Date(ahora); out.sino_desde={fecha:iso(d0), hora:_hm(d0)}; if(!out.a_las) out.duda=out.duda||"¿A qué hora se lo mando si no contesta?"; }
+  if(seg){
+    var sq=seg.search(/\s(?:para\s+)?que\s|:\s/i), sz=sq>=0?seg.slice(0,sq):seg, sb=sq>=0?seg.slice(sq):"";
+    var S=_sacaFrases(sz), txs=sb.replace(/^\s*(?:(?:para\s+)?que|:)\s*:?\s*/i,"").replace(/[\s,.]+$/,"").trim();
+    var base=out.a_las || (function(){ var d1=new Date(ahora); return {fecha:iso(d1), hora:_hm(d1)}; })();
+    var cs=cuandoDe(S.frases, ahora, base);
+    if(!cs) out.duda=out.duda||"¿A qué hora le insisto si no contesta?";
+    else if(cs.duda) out.duda=out.duda||cs.duda;
+    else out.seguimiento={a_las:cs, sino_desde:base, texto:txs?txs.charAt(0).toUpperCase()+txs.slice(1):""};
+  }
+  return out;
+}
+/* las etiquetas que entiende la Mac (v16) */
+function etiquetasWA(a_las, sino){
+  return (a_las?"[A LAS "+a_las.fecha+" "+a_las.hora+"] ":"")+(sino?"[SI NO CONTESTA DESDE "+sino.fecha+" "+sino.hora+"] ":"");
+}
+/* nunca se ven: se quitan de cualquier texto que se pinte */
+function quitaEtiquetasWA(tx){
+  var t=String(tx==null?"":tx), m, cambio=true;
+  while(cambio){ cambio=false; m=t.match(/^\s*\[(?:A LAS|SI NO CONTESTA DESDE) \d{4}-\d{2}-\d{2} \d{1,2}:\d{2}\]\s*/i); if(m){ t=t.slice(m[0].length); cambio=true; } }
+  return t.replace(/\[(?:A LAS|SI NO CONTESTA DESDE) \d{4}-\d{2}-\d{2} \d{1,2}:\d{2}\]\s*/gi,"");
+}
+function horaCorta(h){ var x=parseInt(h,10), mm=String(h).slice(3); return x+":"+mm; }
+function textoProgramado(a_las, contacto, sino){
+  return "Programado · "+(a_las?fechaMovCorta(a_las.fecha)+" "+horaCorta(a_las.hora):"ahora")+" → "+contacto+(sino?" · solo si no contesta":"");
+}
+/* deja en la cola los pedidos de un programado (y su seguimiento). t = tarea donde se anota. */
+function mandaProgramado(t, pg, tid){
+  var hechos=[];
+  function uno(a_las, sino, texto, esSeg){
+    msg(t,"bi",textoProgramado(a_las, pg.contacto, sino)+": “"+_corto(texto)+"”");
+    var m=t.msgs[t.msgs.length-1]; m.wa=1; m.wa_c=pg.contacto; m.prog={a_las:a_las, sino:sino||null, contacto:pg.contacto, texto:texto, seg:!!esSeg};
+    pideWhatsApp({usuario:yo, tarea_id:tid||t.id, contacto:pg.contacto, texto:etiquetasWA(a_las, sino)+texto})
+      .then(function(j){ var pid=(j&&(j.id||j.pedido_id))||null; if(pid){ m.wa_pid=pid; if(m.prog.cancelar){ llamaPush("wa_marca",{id:pid, estado:"cerrado"}); m.prog.cancelado=true; } guarda(t); if(vista==="hilo"&&abierta===t.id) render(); } })
+      .catch(function(e){ m.prog.error=String((e&&e.message)||e).slice(0,60); msg(t,"bi","No se pudo dejar programado el WhatsApp a "+pg.contacto+" ("+m.prog.error+"). Díctalo otra vez."); guarda(t); if(vista==="hilo") render(); });
+    hechos.push(m);
+  }
+  uno(pg.a_las, pg.sino_desde, pg.texto, false);
+  if(pg.seguimiento) uno(pg.seguimiento.a_las, pg.seguimiento.sino_desde, pg.seguimiento.texto||("Te lo recuerdo: "+pg.texto), true);
+  t.wa_contactos=t.wa_contactos||[];
+  if(!t.wa_contactos.some(function(c){ return String(c.nombre||c).toLowerCase()===String(pg.contacto).toLowerCase(); })) t.wa_contactos.push({nombre:pg.contacto, desde:Date.now()});
+  t.ultima=textoProgramado(pg.a_las, pg.contacto, pg.sino_desde); guarda(t);
+  return hechos;
+}
+function cancelaProgramado(t, m){
+  if(!m || !m.prog || m.prog.cancelado) return;
+  if(m.wa_pid) llamaPush("wa_marca",{id:m.wa_pid, estado:"cerrado"}); else m.prog.cancelar=true;
+  m.prog.cancelado=true; guarda(t); if(vista==="hilo") render(); toast("Cancelado: no sale");
+}
+/* contacto dicho -> el nombre con que la tarea ya lo conoce (mismo primer nombre) */
+function contactoDeTarea(t, c){
+  if(!t || !c) return c;
+  var pn=_nn(c).split(/\s+/)[0], l=[];
+  try{ l=contactosWA(t).map(function(G){ return G.nombre; }); }catch(e){}
+  (t.wa_contactos||[]).forEach(function(x){ l.push(String(x.nombre||x)); });
+  var hit=l.filter(function(n){ return _nn(n).split(/\s+/)[0]===pn; })[0];
+  return hit||c;
+}
 function pideWhatsApp(cuerpo){
   /* build 171 (Salvador 2-oct): lo que se pide desde la app lo pidio una persona en ese momento:
      va como "urgente" y el programa de la Mac lo manda antes que la fila automatica */
@@ -6449,6 +6590,7 @@ function ico(n,px,gr){
   var s=px||18, w=gr||1.7, p={
     lupa:'<circle cx="10.5" cy="10.5" r="6.2"/><path d="M15.1 15.1 21 21"/>',
     /* build 195 (maqueta "Fichas limpias"): calendario, recurrente, dato y checklist */
+    reloj:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
     cal:'<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
     recur:'<path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.5M20 4v4.5h-4.5M20 12a8 8 0 0 1-13.7 5.6L4 15.5M4 20v-4.5h4.5"/>',
     dato:'<path d="M14.5 3.5l6 6-3 1-4 4 .5 4.5-1.5 1.5-4.5-4.5L4 20.5M8 11l5 5M9.5 9.5l4-4 1-2"/>',
@@ -7043,10 +7185,18 @@ function vHilo(){
        traen un iconito ⓘ; al picarlo despliega ese análisis SIN ensuciar el mensaje
        normal. Si no hay x.analisis, no aparece nada — cero cambio visual de por sí. */
     var tieneAn=(x.k==="bi" && x.analisis);
+    /* build 199: mensaje PROGRAMADO: reloj + "Programado · lun 5 oct 8:00 → Carlos"; tocar = Cancelar (antes de que salga) */
+    if(x.prog){
+      var _pc=x.prog, _pend=!_pc.cancelado && !_pc.error && (!_pc.a_las || _tsDe(_pc.a_las.fecha,_pc.a_las.hora)>Date.now());
+      m+='<div class="b bi bprog'+(_pc.cancelado?' cancel':'')+'" data-mix="'+ix+'"'+(_pend?' data-progc="'+ix+'"':'')+'><span class="pgh">'+ico("reloj",15,1.9)+
+        esc(_pc.cancelado?"Cancelado · no salió":textoProgramado(_pc.a_las,_pc.contacto,_pc.sino))+'</span>'+
+        '<span class="pgt">'+esc(quitaEtiquetasWA(_pc.texto))+'</span>'+(_pend?'<span class="pgx">Tocar para cancelar</span>':'')+'</div>';
+      return;
+    }
     /* build 158 (Salvador 2026-09-30): mensaje de WhatsApp capturado = súper compacto:
        solo "Nombre: texto" y un puntito tenue que despliega el detalle. */
     if(x.k==="bi" && (x.wa_in||x.wa_c||x.origen||x.tipo)){
-      var tx=String(x.t||""), mm=tx.match(/^([^:\n]{1,24}):\s*([\s\S]*)$/);
+      var tx=quitaEtiquetasWA(String(x.t||"")), mm=tx.match(/^([^:\n]{1,24}):\s*([\s\S]*)$/);
       var cab=mm?'<b class="cn">'+esc(mm[1])+':</b> '+esc(mm[2]):esc(tx);
       var dt="";
       if(msgAn[ix]){
@@ -7061,7 +7211,7 @@ function vHilo(){
       m+='<div class="b bi bcomp'+(_xc?' ext" style="--xc:'+_xc:'')+'" data-mix="'+ix+'">'+cab+'<button class="mdot" data-an="'+ix+'" aria-label="Ver detalle del mensaje">·</button>'+dt+'</div>';
       return;
     }
-    m+='<div class="b '+(x.k==="bal"?"bal":(x.k==="bo"?"bo":"bi"))+(x.abre?' liga" data-abre="'+esc(x.abre):'')+'" data-mix="'+ix+'">'+citaHTML(x)+esc(x.t)+
+    m+='<div class="b '+(x.k==="bal"?"bal":(x.k==="bo"?"bo":"bi"))+(x.abre?' liga" data-abre="'+esc(x.abre):'')+'" data-mix="'+ix+'">'+citaHTML(x)+esc(quitaEtiquetasWA(x.t))+
        (x.abre?'<span class="abre">Abrir ›</span>':'')+'<span class="st">'+meta+
        (tieneAn?'<button class="mdel" data-an="'+ix+'" aria-label="Ver cómo se decidió este mensaje">'+ico("info",15,1.8)+'</button>':'')+
        (waCan?'<button class="mdel" data-wacan="'+ix+'" aria-label="Cancelar este WhatsApp">'+ico("trash",15,1.8)+'</button>':'')+
@@ -7680,6 +7830,12 @@ function barraEnviar(texto,completo){
     if(_corta) _rB=_rB.filter(function(x){ return x.todas && x.fuerte; });
     if(_rB.length || _qB){ abreBusqueda(_qB||texto, texto, _rB); return; }
   }
+  /* build 199: "mándale a X mañana a las 8 que…" -> WhatsApp programado, sin pasar por Claude */
+  var _pgB=null; try{ _pgB=programaWA(texto); }catch(e){}
+  if(_pgB){
+    if(_pgB.duda || _pgB.texto==="__ESTO__"){ barraEstado={modo:"respuesta", dicho:texto, texto:_pgB.duda||("¿Qué le mando a "+_pgB.contacto+"?")}; vista="barra"; render(); return; }
+    aplicaIntencion({intencion:"WHATSAPP", whatsapp:{contacto:_pgB.contacto, texto:_pgB.texto, tarea:"", programa:_pgB}}, texto, [], fotoEnMano||null); return;
+  }
   /* build 166 (Salvador 2026-10-02): "en la tarea de la mesa directiva ponme un
      checklist de..." = la lista va DENTRO de esa tarea. Antes se iba a Claude y
      nacia una tarea nueva con el nombre de la lista. Se resuelve aqui, sin tokens. */
@@ -8189,7 +8345,7 @@ function aplicaIntencion(j, dicho, hist, foto){
   try{
     var _dW=String(dicho||"").replace(/\b(a|para|con)\s+(gris|sinthia|cinthia|cintia|sintia|zinthia)\b/ig,function(m,a){ return a+" Cynthia" });
     var _mW=_dW.match(/\b(?:m[aá]nda(?:r|le|me)?|env[ií]a(?:r|le)?|escr[ií]be(?:le)?|av[ií]sa(?:le|r)?|com[eé]nta(?:le|r)?|d[ií]le|d[ií]game|p[oó]n(?:le|gale)?)\s+(?:un\s+)?(?:(whats?\s?app|whats|wasap|guasap|mensaje|aviso)\s+)?(?:a|al)\s+(.+?)\s*,?\s+(?:(?:para\s+)?que(?:\s+(?:le\s+)?(?:dig(?:as|a)|dice|dijera))?|diciendo(?:le)?|con\s+el\s+(?:texto|mensaje))\s*:?\s*(?:que\s+)?(.+)$/i);
-    if(_mW){
+    if(_mW && !(j.whatsapp && j.whatsapp.programa)){
       var _cW=_mW[2].trim(), _tW=_mW[3].trim().replace(/[.\s]+$/,"");
       var _mio=/^(mi|m[ií])\s+(cel|celular|m[oó]vil|whats(app)?|tel[eé]fono)$/i.test(_cW);
       if(_mio) _cW="Salvador Necochea (Tú)";
@@ -8709,7 +8865,7 @@ function aplicaIntencion(j, dicho, hist, foto){
        proveedores. Sale siempre directo; Claude confirma el destinatario. */
     enviaWhatsAppYa({dicho:dicho, foto:foto,
       pendiente:{whatsapp:{tareaId:tw?tw.id:null, nueva:_nueva, contacto:w.contacto, texto:w.texto,
-                           canal:w.canal||"whatsapp", asunto:w.asunto||"", archivo:w.archivo||"", archivo2:w.archivo2||""}}});
+                           canal:w.canal||"whatsapp", asunto:w.asunto||"", archivo:w.archivo||"", archivo2:w.archivo2||"", programa:w.programa||null}}});
     return;
     barraEstado={modo:"confirmar", accion:"whatsapp", dicho:dicho, para:yo, foto:foto,
       renglones:[{k:"m",v:w.texto},{k:"d",v:"Ojo: trae montos o nombres de otros · revísalo antes de mandar"},{k:"d",v:"WhatsApp a "+w.contacto+" · desde tu número"},
@@ -11122,6 +11278,8 @@ function bindHilo(){
   var _cp=$("cnlpill"); if(_cp) _cp.onclick=function(){ if(modoClaude(t)){ window.__cnlClaude[t.id]=0; render(); return; } abreCanales(t); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-tipoi]"),function(b){ b.onclick=function(){ var k=b.getAttribute("data-tipoi"); t.tipo_item=k; t.es_dato=(k==="dato"); guarda(t); if(!revisaCompleta(t)) render(); }; });   /* build 195 */
   var _ccl=$("cnlclaude"); if(_ccl) _ccl.onclick=function(){ window.__cnlClaude=window.__cnlClaude||{}; window.__cnlClaude[t.id]=window.__cnlClaude[t.id]?0:1; render(); };   /* build 193 */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-progc]"),function(b){ b.onclick=function(){ var mx=(t.msgs||[])[+b.getAttribute("data-progc")]; if(!mx||!mx.prog) return;
+    hojaConfirma({titulo:"Mensaje programado a "+mx.prog.contacto, sub:"“"+_corto(mx.prog.texto)+"”", accion:"Cancelar el mensaje", rojo:true, cb:function(){ cancelaProgramado(t, mx); }}); }; });   /* build 199 */
   Array.prototype.forEach.call(document.querySelectorAll("[data-cmodo]"),function(b){ b.onclick=function(){ window.__chatModo=window.__chatModo||{}; window.__chatModo[t.id]=b.getAttribute("data-cmodo"); render(); }; });   /* build 197 */
   Array.prototype.forEach.call(document.querySelectorAll("[data-sisexp]"),function(b){ b.onclick=function(){ window.__sisExp=window.__sisExp||{}; window.__sisExp[t.id]=1; render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-ncexp]"),function(b){ b.onclick=function(){ window.__ncExp=window.__ncExp||{}; window.__ncExp[t.id]=1; render(); }; });
@@ -11152,6 +11310,13 @@ function bindHilo(){
     if(typeof esNotaClaude==="function" && esNotaClaude(v)){ $("txt").value=""; marcaEnvio("tenv",""); notaClaude(t, v); return; }
     /* build 193: con el canal naranja "Claude" puesto, todo lo dictado es indicacion para Claude */
     if(modoClaude(t)){ $("txt").value=""; marcaEnvio("tenv",""); notaClaude(t, v); return; }
+    /* build 199: "dile a Josué el lunes a las 9 que…" / "…y si no contesta, insístele a las 5" = WhatsApp programado */
+    var _pgH=null; try{ if(!esNotaClaude(v)) _pgH=programaWA(v); }catch(e){}
+    if(_pgH){ $("txt").value=""; marcaEnvio("tenv","");
+      if(_pgH.texto==="__ESTO__"){ var _ct=(window.__cita&&window.__cita.tid===t.id&&window.__cita.t)||((t.msgs||[]).filter(function(x){ return x && x.k==="bo" && (!x.de||x.de===yo) && !x.nota_claude; }).slice(-1)[0]||{}).t||""; if(_ct) _pgH.texto=_ct; else _pgH.duda="¿Qué le mando a "+_pgH.contacto+"?"; }
+      msg(t,"bo",v); t.msgs[t.msgs.length-1].de=yo;
+      if(_pgH.duda){ msg(t,"bi",_pgH.duda+" No programé nada."); guarda(t); render(); return; }
+      _pgH.contacto=contactoDeTarea(t,_pgH.contacto); mandaProgramado(t,_pgH,null); render(); return; }
     /* build 195: en un DATO, "¿de dónde sacaste esto?" abre el ▾ con la foto o el texto de origen */
     if(esDato(t) && /\bde\s+d[oó]nde\s+(lo\s+|la\s+|los\s+)?(sacaste|sali[oó]|salieron|viene|vienen|tomaste)\b/i.test(v)){ $("txt").value=""; marcaEnvio("tenv",""); fichaOpen=true; render(); return; }
     /* build 195: lo nuevo/incompleto ("Falta info") se llena dictando, ANTES de cualquier canal:
@@ -13121,6 +13286,15 @@ function notasPlegadas(t, abiertas, visitaIni, ahora){
 }
 function notaClaude(t, v){
   msg(t,"bo",v); var m=t.msgs[t.msgs.length-1]; m.de=yo; m.canal="priv:"+yo; m.nota_claude=1;
+  /* build 199 (F40): "Claude, mándale/recuérdale a X a las … " -> se deja PROGRAMADO de verdad, nunca "estaré pendiente" */
+  var _pgN=null; try{ _pgN=programaWA(v); }catch(e){}
+  if(_pgN){
+    var _rn=function(tx){ msg(t,"bi",tx); var r=t.msgs[t.msgs.length-1]; r.canal="priv:"+yo; r.nota_claude=1; guarda(t); render(); };
+    if(_pgN.duda || _pgN.texto==="__ESTO__"){ _rn((_pgN.duda||("¿Qué le mando a "+_pgN.contacto+"?"))+" No programé nada."); return; }
+    _pgN.contacto=contactoDeTarea(t,_pgN.contacto); mandaProgramado(t,_pgN,null);
+    _rn("Programé el WhatsApp a "+_pgN.contacto+(_pgN.a_las?" para el "+fechaMovCorta(_pgN.a_las.fecha)+" a las "+horaCorta(_pgN.a_las.hora):" ahora")+(_pgN.sino_desde?", solo si no contesta":"")+(_pgN.seguimiento?"; si no contesta, le insisto el "+fechaMovCorta(_pgN.seguimiento.a_las.fecha)+" a las "+horaCorta(_pgN.seguimiento.a_las.hora):"")+".");
+    return;
+  }
   t.notas_claude=(t.notas_claude||[]).concat([{t:v, ts:Date.now()}]).slice(-30);
   guarda(t); render();
   ejecutaNotaClaude(t, v);
@@ -13162,6 +13336,8 @@ function aplicaNotaClaude(t, v, j){
 /* "Hice X. (Entendí: Y)". Las respuestas vagas ("Listo", "Ok") no cuentan como entender. */
 function respuestaHecho(hecho, entendi){
   var e=String(entendi||"").trim(); if(traeFecha(e) || /^(listo|ok|okay|va|hecho|entendido|anotado|de acuerdo|claro)[.!]?$/i.test(e)) e="";
+  /* build 199 (F40): nunca prometer vigilar sin dejar nada montado */
+  if(/\b(estar[eé]\s+pendiente|te\s+aviso|lo\s+vigilo|voy\s+a\s+estar\s+(al\s+)?pendiente|le\s+doy\s+seguimiento)\b/i.test(e)){ e=""; if(!hecho) return "No dejé nada programado. Dime a quién y a qué hora (\"dile a Carlos mañana a las 9 que…\") y lo programo."; }
   if(hecho) return e && _nn(e)!==_nn(hecho) ? hecho+" Entendí: "+e.replace(/[.]+$/,"")+"." : hecho;
   return e ? "Entendí: "+e.replace(/[.]+$/,"")+". No cambié nada en la tarea." : "No cambié nada: no me quedó claro qué hacer. Dímelo otra vez.";
 }
@@ -13174,6 +13350,7 @@ function ejecutaNotaClaude(t, v){
   var p="Eres Claude dentro de la app de tareas Doit. "+((PERSONAS[yo]||{}).nombre||"El usuario")+" te escribe una nota privada sobre la tarea \""+(t.nombre||"")+"\" (fecha actual de la tarea: "+(t.f_vigente?t.f_vigente+" "+fechaBonita(t.f_vigente):"sin fecha")+"; hoy es "+fechaBonita(hoyS)+" "+hoyS+").\n"+
     "CALENDARIO (copia la fecha de aqui, NO calcules el dia de la semana): "+calendarioProximo(70).join(", ")+".\n"+
     "Si dice para cuando es la tarea o su proxima fecha, accion fecha. En respuesta NO escribas fechas ni dias (las escribe la app).\n"+
+    "NUNCA contestes 'estaré pendiente' o 'te aviso': si pide mandar o recordar algo a alguien despues, la app ya lo programa sola; si no la entendiste, accion nada y pregunta a quien y a que hora.\n"+
     "Decide qué quiere y contesta SOLO JSON: {\"accion\":\"dato|renombrar|fecha|cerrar|eliminar|pasar|nada\",\"valor\":\"...\",\"respuesta\":\"QUÉ ENTENDISTE, en una frase corta en español (nunca solo 'Listo' u 'Ok')\"}.\n"+
     "- dato: corrige o aclara información (precios, medidas, quién dijo qué). valor = el dato ya corregido, claro y completo.\n- renombrar: valor = nombre nuevo.\n- fecha: valor = AAAA-MM-DD.\n- cerrar: ya se hizo.\n- eliminar: ya no se va a hacer.\n- pasar: valor = nombre de la persona.\nNo inventes; si no entiendes, accion nada y pregunta en respuesta.\n\nNOTA: "+v+"\n\nULTIMOS MENSAJES:\n"+ls.join("\n");
   var nota=function(tx){ msg(t,"bi",tx); var m=t.msgs[t.msgs.length-1]; m.canal="priv:"+yo; m.nota_claude=1; guarda(t); if(vista==="hilo"&&abierta===t.id) render(); };
