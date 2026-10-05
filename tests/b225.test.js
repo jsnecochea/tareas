@@ -22,7 +22,7 @@ var F_VARS = eval(ft.match(/var VARS = (\[[\s\S]*?\]);/)[1]);
 var B221 = eval(t221.match(/var FUNCS = F_FUNCS\.concat\((\[[\s\S]*?\])\)/)[1]), F_FUNCS = eval(ft.match(/var FUNCS = (\[[\s\S]*?\]);/)[1]);
 var NUEVAS = ["min225", "togMin225", "_txMsg", "msgVisible225", "metasEnCurso", "palMeta", "metaDeMsg", "resumenVivo", "cosasParaTi", "personas225", "chipsTarea", "vResumenVivo", "filtroMeta", "vFiltroMeta",
   "evidenciaMeta225", "vFichaMeta", "vDetalles225", "vPersonas225", "hoja225", "abreHoja225", "vHoja225", "tareasParaMover", "mueveMensaje", "vDudaTarea", "_nmz", "mezclaDicho", "tareaNombrada", "mensajesMezclados", "arreglaMezcla",
-  "chipEncabezado", "integrantesDe", "nombreInt", "quitaEtiquetasWA", "dDif", "soloMeFalta", "completitud", "contextoDe", "contextoPct", "esRecurrente", "fechaCorta", "lineaOrigen", "origenDe", "vChecklist", "tieneChecklist",
+  "censoAcomodo", "acomodoOk", "soloPlatica", "nombreSugerido", "nuevaDesdeMsg", "opcionesMover", "inicialesDe", "nombreLimpio", "sinEmojiUI", "ico", "chipEncabezado", "integrantesDe", "nombreInt", "quitaEtiquetasWA", "dDif", "soloMeFalta", "completitud", "contextoDe", "contextoPct", "esRecurrente", "fechaCorta", "lineaOrigen", "origenDe", "vChecklist", "tieneChecklist",
   "_notaPriv", "mensajeDicho", "_minus1", "armaMensaje", "resuelveDestino", "borradorMensaje", "pideMensaje", "msjEnCurso", "vBorradorMsj", "srJunta", "srCorte", "srArranca", "vQuienDudas", "_nn"];
 var FUNCS = F_FUNCS.concat(B221).concat(NUEVAS).filter(function (x, i, a) { return a.indexOf(x) === i; });
 var VARS = F_VARS.concat(["SEG_HORA_DEFECTO", "ESCALA_DIAS", "AVISO_INM_RE", "CHK_EST", "AGENDA_HORA_TODO_DIA", "PALOMEO_MS", "TITULO_CONECTORES", "RITMO_RE", "CITA_RE", "CTX_MIN_PAL", "SINONIMOS", "BUSCA_VACIAS", "REV_DESDE",
@@ -68,14 +68,14 @@ eq("Casa Lerdo con en_revision y por_autorizar=false: ya NO sale como 'falta' (n
 var L2 = LERDO(); delete L2.por_autorizar; eq("sin por_autorizar (como antes) sigue esperando Autorizar", c.tipoRevisar(L2), "falta");
 /* ---------- 1 chips ---------- */
 var ch = c.chipsTarea(L);
-var chips = []; ch.replace(/data-chip="(\w+)">([^<]*)</g, function (_, k, tx) { chips.push([k, tx]); });
-eq("chips en una línea: ↻ Indefinida · Metas 2 · 👥 3 · ⓘ Detalles", chips, [["detalles", "↻ Indefinida"], ["metas", "Metas 2"], ["personas", "👥 3"], ["detalles", "ⓘ Detalles"]]);
+var chips = []; ch.replace(/data-chip="(\w+)"[^>]*>([\s\S]*?)<\/button>/g, function (_, k, tx) { chips.push([k, tx.replace(/<[^>]+>/g, "")]); });
+eq("chips en una línea (226: iconos de línea, sin emojis): Indefinida · Metas 2 · 3 · Detalles", chips, [["detalles", "Indefinida"], ["metas", "Metas 2"], ["personas", "3"], ["detalles", "Detalles"]]);
 var F = { id: "fiesta1", nombre: "Fiesta Cumpleaños Papá", duenio: "salvador", f_vigente: "2026-11-13", fecha_dictada: true, estado: "abierta", msgs: [], ritmo: "cada semana", agendado: true,
   contexto: "Comida de cumpleaños de mi papá el 13 de noviembre a partir de las dos de la tarde con la familia y los amigos de siempre en la casa",
   checklist: { titulo: "Invitados", items: [{ id: "1", tx: "Lore y Javier", estado: 2 }, { id: "2", tx: "Néstor", estado: 2 }, { id: "3", tx: "Sada", estado: 1 }, { id: "4", tx: "Lalo", estado: 1 }, { id: "5", tx: "Pollo", estado: 0 }, { id: "6", tx: "Pily", estado: 0 }, { id: "7", tx: "Braña", estado: 0 }, { id: "8", tx: "Vecino", estado: 0 }, { id: "9", tx: "Arq", estado: 0 }] } };
 c.fechaMovCorta = function (f) { return { "2026-11-13": "vie 13 nov", "2026-10-09": "vie 9 oct", "2026-10-16": "vie 16 oct" }[f] || f; };
-chips = []; c.chipsTarea(F).replace(/data-chip="(\w+)">([^<]*)</g, function (_, k, tx) { chips.push([k, tx]); });
-eq("con lista: 📅 fecha · Lista 4/9 · ⓘ Detalles", chips, [["detalles", "📅 vie 13 nov"], ["lista", "Lista 4/9"], ["detalles", "ⓘ Detalles"]]);
+chips = []; c.chipsTarea(F).replace(/data-chip="(\w+)"[^>]*>([\s\S]*?)<\/button>/g, function (_, k, tx) { chips.push([k, tx.replace(/<[^>]+>/g, "")]); });
+eq("con lista: 📅 fecha · Lista 4/9 · ⓘ Detalles", chips, [["detalles", "vie 13 nov"], ["lista", "Lista 4/9"], ["detalles", "Detalles"]]);
 var FA = { id: "tFA", nombre: "Fiesta", duenio: "salvador", creada_por: "claude", por_autorizar: true, estado: "abierta", msgs: [] };
 si("le falta algo: primer chip azul 'Falta N ›'", /^<div class="chips225"><button class="chip225 falta" data-chip="falta">Falta \d ›<\/button>/.test(c.chipsTarea(FA)));
 /* ---------- 2 resumen vivo ---------- */
@@ -118,7 +118,7 @@ si("pastilla discreta en el encabezado", /<div class="paraTi225">1 cosa para ti<
 si("vFaltaInfo ya no trae el botón verde gigante", !/class="autbtn"/.test(html.slice(html.indexOf("function vFaltaInfo("), html.indexOf("function vDatoCuerpo("))));
 /* ---------- 7 mensaje mal acomodado ---------- */
 var bd = c.vDudaTarea(L, L.msgs[4], 4);
-si("burbuja: ¿Es de Casa Lerdo o de Comedor Nuevo? con dos botones", /¿Es de <b>Casa Lerdo<\/b> o de <b>Comedor Nuevo<\/b>\?/.test(bd) && /data-dudaok="4">Casa Lerdo</.test(bd) && /data-dudaotra="4">Comedor Nuevo</.test(bd));
+si("burbuja con duda (226): OK · Mover · Nueva, sin pregunta", /data-acok="4">OK</.test(bd) && /data-acmov="4">Mover</.test(bd) && /data-acnueva="4">Nueva</.test(bd) && !/¿Es de/.test(bd));
 var LM = LERDO(), CM = COMEDOR(); c.tareas = [LM, CM, { id: "tOtra", nombre: "Fideicomiso", duenio: "salvador", msgs: [] }];
 eq("Mover: primero las del mismo contacto", c.tareasParaMover(LM, LM.msgs[4]).map(function (o) { return [o.d.id, o.mismo]; }), [["tCOMEDOR_NUEVO_300926", true], ["tOtra", false]]);
 GUARDADAS.length = 0; r = c.mueveMensaje(LM, 4, "tCOMEDOR_NUEVO_300926");
@@ -171,7 +171,7 @@ si("hoja Metas (supervisor): un renglón por meta, se toca para abrir su ficha",
 c.abreHoja225(F, "lista"); var hl = c.vHoja225(F);
 si("hoja Lista a media altura, ampliable a completa, con la lista abierta", /class="h225 media"/.test(hl) && /data-h225alto="completa"/.test(hl) && /class="plst"/.test(hl));
 c.window.__hoja225.alto = "min"; si("hoja minimizada: una barrita", /^<button class="h225bar" data-h225alto="media">Invitados ▴<\/button>$/.test(c.vHoja225(F)));
-si("versión 225", /var VERSION_APP = "build 225/.test(html));
+si("versión 225 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || [])[1] || 0) >= 225);
 /* ---------- render real en el navegador ---------- */
 (async function () {
   var pw = require("/opt/node22/lib/node_modules/playwright"), b = await pw.chromium.launch(), p = await b.newPage({ viewport: { width: 390, height: 844 } }), errs = [];
