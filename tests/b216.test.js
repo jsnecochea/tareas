@@ -14,7 +14,7 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
 function si(nom, v) { eq(nom, !!v, true); }
 si("VERSION_APP build 216 o posterior", +((html.match(/var VERSION_APP = "build (\d+)/) || [])[1] || 0) >= 216);
 si("los dos lugares que preguntan pasan 'Para mí' y 'Solo al equipo' solo si hay equipo",
-  (html.match(/hayEquipo\(t\)\?function\(\)\{ msg\(t,"bo",_v[NR]\);[^\n]*:null,\n\s*function\(\)\{ notaClaude\(t, _v[NR]\); \}, function\(\)\{ notaParaMi\(t, _v[NR]\); \}\);/g) || []).length === 2);
+  (html.match(/hayEquipo\(t\)\?function\(\)\{ (msg\(t,"bo",_v[NR]\);|mandaAlEquipo\(t, _v[NR],)[^\n]*:null,\n\s*function\(\)\{ notaClaude\(t, _v[NR]\); \}, function\(\)\{ notaParaMi\(t, _v[NR]\); \}\);/g) || []).length === 2);   /* build 217: Solo al equipo = mandaAlEquipo */
 si("la nota no se vuelve indicacion para Claude (los canales priv: no se convierten)", /c\.indexOf\("priv:"\)===0 \|\| c==="sup"\) return false;/.test(html));
 si("en el chat se ve marcada 'nota para ti'", /\(x\.nota_mia\?" · nota para ti":""\)/.test(html));
 si("las notas privadas de otros no se pintan (canal priv:<otro>)", /if\(_cx\.indexOf\("priv:"\)===0 && _cx!=="priv:"\+yo\) return;/.test(html));

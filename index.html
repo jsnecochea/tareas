@@ -904,6 +904,8 @@ button{font:inherit;color:inherit}
 .aco.acl .aci{background:rgba(217,119,87,.16);color:#D97757}.aco.acl b{color:#D97757}
 .aco.awa .aci{background:rgba(48,209,88,.14);color:#30D158}.aco.awa b{color:#30D158}
 .aco.ami .aci{background:rgba(10,132,255,.14);color:#0A84FF}.aco.ami b{color:var(--ink)}   /* build 216 */
+/* build 217: palomitas como WhatsApp a la derecha del mensaje que salio por WhatsApp */
+.wtk{display:inline-flex;vertical-align:-3px;margin-left:5px;color:var(--ink-3)}.wtk svg{display:block}.wtk.w3{color:#53BDEB}
 .acmin{width:100%;background:none;border:0;padding:13px;font:inherit;font-size:16px;color:#0A84FF}
 .acx{display:block;width:100%;margin-top:8px;height:54px;border:0;border-radius:16px;background:rgba(44,44,46,.96);color:#0A84FF;font:inherit;font-size:18px;font-weight:600}
 .gsb{display:inline-flex;align-items:center;gap:6px;border:1px solid #3a3a3e;background:var(--surface-2,#2a2a2d);color:var(--ink,#f2f2f4);border-radius:12px;padding:9px 12px;font-size:15px}
@@ -1251,7 +1253,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 216 · Opción Para mí (nota privada) en la hoja ¿Para quién es?";
+var VERSION_APP = "build 217 · Solo al equipo también por WhatsApp; palomitas como WhatsApp";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -3411,7 +3413,7 @@ function enviaWhatsAppYa(b){
   if(b.foto) pegaFotoA(t,b.foto);
   t.ultima="→ "+wp.contacto+": "+wp.texto; guarda(t);
   var _estado={id:null, cancelado:false};
-  pideWhatsApp({usuario:yo, tarea_id:_tid, contacto:wp.contacto, texto:_txPed})
+  pideWhatsApp({usuario:yo, tarea_id:_tid, contacto:wp.contacto, texto:conIA(_txPed)})
     .then(function(j){ _estado.id=(j&&(j.id||j.pedido_id))||null;
       if(_estado.id && !_estado.cancelado){ _m.wa_pid=_estado.id; guarda(t); }
       if(_estado.cancelado && _estado.id) llamaPush("wa_marca",{id:_estado.id, estado:"cerrado"}); })
@@ -3560,7 +3562,7 @@ function mandaProgramado(t, pg, tid){
   function uno(a_las, sino, texto, esSeg){
     msg(t,"bi",textoProgramado(a_las, pg.contacto, sino)+": “"+_corto(texto)+"”");
     var m=t.msgs[t.msgs.length-1]; m.wa=1; m.wa_c=pg.contacto; m.prog={a_las:a_las, sino:sino||null, contacto:pg.contacto, texto:texto, seg:!!esSeg};
-    pideWhatsApp({usuario:yo, tarea_id:tid||t.id, contacto:pg.contacto, texto:etiquetasWA(a_las, sino)+texto})
+    pideWhatsApp({usuario:yo, tarea_id:tid||t.id, contacto:pg.contacto, texto:conIA(etiquetasWA(a_las, sino)+texto)})
       .then(function(j){ var pid=(j&&(j.id||j.pedido_id))||null; if(pid){ m.wa_pid=pid; if(m.prog.cancelar){ llamaPush("wa_marca",{id:pid, estado:"cerrado"}); m.prog.cancelado=true; } guarda(t); if(vista==="hilo"&&abierta===t.id) render(); } })
       .catch(function(e){ m.prog.error=String((e&&e.message)||e).slice(0,60); msg(t,"bi","No se pudo dejar programado el WhatsApp a "+pg.contacto+" ("+m.prog.error+"). Díctalo otra vez."); guarda(t); if(vista==="hilo") render(); });
     hechos.push(m);
@@ -3586,6 +3588,10 @@ function contactoDeTarea(t, c){
   var hit=l.filter(function(n){ return _nn(n).split(/\s+/)[0]===pn; })[0];
   return hit||c;
 }
+/* build 217: la Mac (v18k) ya no pone "IA: ". Lo que redacto Claude lo lleva desde aqui; lo escrito a mano, no. */
+function conIA(tx){ var s=String(tx==null?"":tx); if(/^\s*\[(CORREO|ARCHIVO)\]/i.test(s)) return s; var e="", m;
+  while((m=s.match(/^\s*\[(?:A LAS|SI NO CONTESTA DESDE) \d{4}-\d{2}-\d{2} \d{1,2}:\d{2}\]\s*/i))){ e+=m[0]; s=s.slice(m[0].length); }
+  return /^IA:/i.test(s.trim()) ? e+s : e+"IA: "+s.replace(/^\s+/,""); }
 function pideWhatsApp(cuerpo){
   /* build 171 (Salvador 2-oct): lo que se pide desde la app lo pidio una persona en ese momento:
      va como "urgente" y el programa de la Mac lo manda antes que la fila automatica */
@@ -6916,10 +6922,112 @@ function mandaAExterno(t, nombre, v, cita, canal){
   t.ultima=((PERSONAS[yo]||{}).nombre||"")+" → "+nombre+": "+v; guarda(t); render();
   var cpo={usuario:yo, tarea_id:t.id, contacto:nombre, texto:v, auto_respuesta:1, desde_ts:Date.now()};
   if(cita && cita.t) cpo.cita_texto=String(cita.t).slice(0,300);
-  pideWhatsApp(cpo).then(function(j){ var pid=(j&&(j.id||j.pedido_id))||null; if(pid){ m.wa_pid=pid; guarda(t); } })
+  pideWhatsApp(cpo).then(function(j){ var pid=(j&&(j.id||j.pedido_id))||null; if(pid){ m.wa_pid=pid; guarda(t); if(vista==="hilo"&&abierta===t.id) render(); setTimeout(function(){ consultaEstadosWA(t); }, 15000); } })
     .catch(function(e){ msg(t,"bi","No se pudo mandar a "+nombre+" por WhatsApp ("+String((e&&e.message)||e).slice(0,60)+")."); guarda(t); if(vista==="hilo") render(); });
   toast("A "+nombre+" por WhatsApp");
 }
+/* ===== build 217 (Salvador 2026-10-05 9:20 y 9:23): "todos los avisos iguales, por WhatsApp" =====
+   "Solo al equipo": queda en el canal equipo Y sale por WhatsApp a cada integrante de Doit de la tarea que
+   tenga su WhatsApp en la tarea (nunca a Salvador ni a quien escribe). Misma cola que "Mandar a": un pedido
+   por persona, con los 30 s para deshacer. Lo que escribe a mano sale SIN "IA:". */
+function equipoConWA(t){
+  var cw=[], out=[], vis={};
+  try{ cw=contactosWA(t); }catch(e){}
+  integrantesDe(t).forEach(function(x){ var k=x.k;
+    if(!k || k===yo || k==="salvador" || !PERSONAS[k] || vis[k]) return;
+    var G=cw.filter(function(g){ return g.eq===k; })[0]; if(!G || !G.nombre) return;
+    vis[k]=1; out.push({k:k, c:G.nombre}); });
+  return out;
+}
+function mandaAlEquipo(t, v, cita){
+  msg(t,"bo",v); var m=t.msgs[t.msgs.length-1]; m.canal="equipo"; m.de=yo;
+  if(cita) m.cita={ix:cita.ix, de:cita.de, t:String(cita.t).slice(0,300)};
+  var l=equipoConWA(t);
+  if(l.length){ m.wa_eq=l.map(function(p){ return p.c; }); m.wa_pids={}; }
+  guarda(t); render();
+  l.forEach(function(p){
+    var cpo={usuario:yo, tarea_id:t.id, contacto:p.c, texto:v, auto_respuesta:1, desde_ts:Date.now()};
+    pideWhatsApp(cpo).then(function(j){ var pid=(j&&(j.id||j.pedido_id))||null;
+        if(pid){ m.wa_pids[p.c]=pid; guarda(t); if(vista==="hilo"&&abierta===t.id) render(); setTimeout(function(){ consultaEstadosWA(t); }, 15000); } })
+      .catch(function(e){ msg(t,"bi","No se pudo mandar a "+p.c+" por WhatsApp ("+String((e&&e.message)||e).slice(0,60)+")."); guarda(t); if(vista==="hilo") render(); });
+  });
+  if(l.length) toast("Al equipo · por WhatsApp a "+l.map(function(p){ return String(p.c).split(" ")[0]; }).join(" y "));
+  return m;
+}
+/* PALOMITAS (como WhatsApp): reloj = en cola · ✓ = enviado · ✓✓ gris = entregado · ✓✓ azul = leido.
+   El estado es el del PEDIDO en la cola del servidor (estado, enviado_en, entregado_en, leido_en), ligado al
+   mensaje por wa_pid (Mandar a) o wa_pids (Solo al equipo: una palomita = la del que va mas atras, como un grupo).
+   "Para mí (nota)", "Para Claude" y lo que no salio por WhatsApp NO llevan palomitas. Nunca se inventa: si el
+   servidor no contesta, se queda en lo ultimo que se supo (al crear el pedido: en cola). */
+var WA_EST={};
+function nivelWA(e){
+  if(!e) return 0;
+  if(typeof e.n==="number") return e.n;
+  var st=String(e.estado||"").toLowerCase();
+  if(e.leido_en || st==="leido" || st==="leído" || st==="respondido") return 3;
+  if(e.entregado_en || st==="entregado") return 2;
+  if(e.enviado_en || st==="enviado") return 1;
+  if(st==="cerrado") return -1;
+  return 0;
+}
+function llevaPalomitas(x){
+  if(!x || x.nota_mia || x.nota_claude || x.prog || x.wa_can || x.wa_in===1) return false;
+  return !!(x.wa_auto || x.wa_pid || (x.wa_eq && x.wa_eq.length));
+}
+function pidsWA(x){
+  if(!x) return [];
+  if(x.wa_eq && x.wa_eq.length) return x.wa_eq.map(function(c){ return (x.wa_pids||{})[c]||null; });
+  return [x.wa_pid||null];
+}
+function nivelMsgWA(x){
+  var ns=pidsWA(x).map(function(p){ return p ? nivelWA(WA_EST[p]||(x.wa_st||{})[p]) : 0; });
+  var vivos=ns.filter(function(n){ return n>=0; });
+  if(!vivos.length) return -1;
+  return Math.min.apply(null, vivos);
+}
+var SVG_WA_RELOJ='<svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M8 4.8V8l2.2 1.4"/></svg>';
+var SVG_WA_1='<svg viewBox="0 0 16 16" width="16" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.6l3 3L13 4.6"/></svg>';
+var SVG_WA_2='<svg viewBox="0 0 20 16" width="20" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 8.6l3 3L11.5 4.6"/><path d="M8.6 11.2l.4.4L16 4.6"/></svg>';
+function palomitasHTML(x){
+  if(!llevaPalomitas(x)) return "";
+  var n=nivelMsgWA(x);
+  if(n<0) return "";
+  var nom=["En cola","Enviado","Entregado","Leído"][n];
+  return '<span class="wtk w'+n+'" data-wtk="'+n+'" role="img" aria-label="'+nom+'">'+(n===0?SVG_WA_RELOJ:(n===1?SVG_WA_1:SVG_WA_2))+'</span>';
+}
+/* lee del servidor el estado de los pedidos de la tarea abierta. Accion pedida a Carlos: wa_estado
+   (POST {ids:[...]} -> {pedidos:[{id, estado, enviado_en, entregado_en, leido_en}]}). Si el servidor no la
+   tiene todavia, se deja de preguntar en esta sesion (sin avisos de falla) y las palomitas se quedan como estaban. */
+function _estadosDe(j){
+  if(!j || j.error) return null;
+  var l=j.pedidos||j.estados||j.lista||j.items||(Array.isArray(j)?j:null);
+  if(l && !Array.isArray(l) && typeof l==="object") l=Object.keys(l).map(function(k){ return Object.assign({id:k}, l[k]); });
+  return Array.isArray(l)?l:null;
+}
+function aplicaEstadosWA(t, l){
+  var cambio=false;
+  (l||[]).forEach(function(e){ if(!e || e.id==null) return; var id=String(e.id); WA_EST[id]=e; });
+  (t.msgs||[]).forEach(function(x){ if(!llevaPalomitas(x)) return;
+    pidsWA(x).forEach(function(p){ if(!p || !WA_EST[p]) return; var n=nivelWA(WA_EST[p]);
+      x.wa_st=x.wa_st||{}; var a=x.wa_st[p];
+      if(!a || a.n!==n){ x.wa_st[p]={n:n, e:String(WA_EST[p].estado||"")}; cambio=true; } }); });
+  return cambio;
+}
+function consultaEstadosWA(t){
+  if(!t || window.__waEstNo) return Promise.resolve(false);
+  if(typeof APP_TOKEN==="undefined" || String(APP_TOKEN).indexOf("__")===0) return Promise.resolve(false);
+  var ids=[];
+  (t.msgs||[]).forEach(function(x){ if(!llevaPalomitas(x)) return; if(x.ts && Date.now()-x.ts>7*24*3600*1000) return;
+    pidsWA(x).forEach(function(p){ if(!p) return; var n=nivelWA(WA_EST[p]||(x.wa_st||{})[p]); if(n>=0 && n<3 && ids.indexOf(p)<0) ids.push(p); }); });
+  if(!ids.length) return Promise.resolve(false);
+  return fetch(PUSH+"?action=wa_estado",{method:"POST",
+      headers:{"content-type":"application/json","x-app-token":APP_TOKEN}, body:JSON.stringify({usuario:yo, ids:ids})})
+    .then(function(r){ return r.json().catch(function(){ return {error:"HTTP "+r.status}; }); })
+    .then(function(j){ var l=_estadosDe(j); if(!l){ window.__waEstNo=1; return false; }
+      if(aplicaEstadosWA(t, l)){ guarda(t); if(vista==="hilo" && abierta===t.id) render(); return true; } return false; })
+    .catch(function(){ return false; });
+}
+setInterval(function(){ try{ if(vista==="hilo" && abierta){ var t=tareas.filter(function(x){ return x.id===abierta; })[0]; if(t) consultaEstadosWA(t); } }catch(e){} }, 20000);
 function mandaDM(t, k, v){
   msg(t,"bo",v); var m=t.msgs[t.msgs.length-1]; m.canal="dm:"+k; m.de=yo;
   t.ultima=((PERSONAS[yo]||{}).nombre||"")+": "+v; guarda(t);
@@ -7927,7 +8035,7 @@ function vHilo(){
     _visibles++;
     var q=autorMsg(x,t);
     if(x.hab){ m+=burbujaHablada(x, (q||""), t.id+"|"+ix); return; }
-    var meta=(q?esc(q)+" · ":"")+esc(x.h)+(x.wa_auto?" · → "+esc(String(x.wa_auto).split(" ")[0])+" por WhatsApp":"")+(_cx.indexOf("dm:")===0?" · privado":"")+(x.nota_mia?" · nota para ti":"");   /* build 216 */
+    var meta=(q?esc(q)+" · ":"")+esc(x.h)+(x.wa_auto?" · → "+esc(String(x.wa_auto).split(" ")[0])+" por WhatsApp":"")+(_cx.indexOf("dm:")===0?" · privado":"")+(x.nota_mia?" · nota para ti":"")+(x.wa_eq&&x.wa_eq.length?" · por WhatsApp a "+esc(x.wa_eq.map(function(c){ return String(c).split(" ")[0]; }).join(" y ")):"");   /* build 216/217 */
     /* Salvador 2026-09-22: el ULTIMO mensaje mio trae un botecito 5 minutos,
        por si se subio mal y era otra cosa. Se borra sin preguntar. */
     var undo=(x.k==="bo" && ix===(t.msgs.length-1) && x.ts && (Date.now()-x.ts)<5*60000 && (!x.de||x.de===yo));
@@ -7962,7 +8070,7 @@ function vHilo(){
            (x.analisis?'<br>'+esc(x.analisis):'')+'</div>';
       }
       var _xc=(_cx.indexOf("ext:")===0)?colorExt(t,_cx.slice(4)):((_cx.indexOf("dm:")===0 && nombreWADe(t,_cx))?CNL_COL.dm:"");
-      m+='<div class="b bi bcomp'+(_xc?' ext" style="--xc:'+_xc:'')+'" data-mix="'+ix+'">'+cab+'<button class="mdot" data-an="'+ix+'" aria-label="Ver detalle del mensaje">·</button>'+dt+'</div>';
+      m+='<div class="b bi bcomp'+(_xc?' ext" style="--xc:'+_xc:'')+'" data-mix="'+ix+'">'+cab+palomitasHTML(x)+'<button class="mdot" data-an="'+ix+'" aria-label="Ver detalle del mensaje">·</button>'+dt+'</div>';
       return;
     }
     m+='<div class="b '+(x.k==="bal"?"bal":(x.k==="bo"?"bo":"bi"))+(x.abre?' liga" data-abre="'+esc(x.abre):'')+'" data-mix="'+ix+'">'+citaHTML(x)+esc(quitaEtiquetasWA(x.t))+
@@ -7970,7 +8078,7 @@ function vHilo(){
        (tieneAn?'<button class="mdel" data-an="'+ix+'" aria-label="Ver cómo se decidió este mensaje">'+ico("info",15,1.8)+'</button>':'')+
        (waCan?'<button class="mdel" data-wacan="'+ix+'" aria-label="Cancelar este WhatsApp">'+ico("trash",15,1.8)+'</button>':'')+
        (undo?'<button class="mdel" data-mdel="'+ix+'" aria-label="Borrar este mensaje">'+ico("trash",15,1.8)+'</button>':'')+
-       '</span>'+(tieneAn&&msgAn[ix]?'<div class="dt">'+esc(x.analisis)+'</div>':'')+'</div>';
+       palomitasHTML(x)+'</span>'+(tieneAn&&msgAn[ix]?'<div class="dt">'+esc(x.analisis)+'</div>':'')+'</div>';
   });
   if(t.puntos){
     var mk=t.marcados||{}, ft=t.fotos||{}, n=Object.keys(mk).length;
@@ -11421,7 +11529,7 @@ function confirmaAccion(b){
       msg(tw2,"bi","WhatsApp a "+wp.contacto+": “"+_corto(wp.texto)+"” · en cola");
       if(b.foto) pegaFotoA(tw2,b.foto);
       tw2.ultima="WhatsApp a "+wp.contacto+": "+wp.texto; guarda(tw2);
-      pideWhatsApp({usuario:yo, tarea_id:tw2.id, contacto:wp.contacto, texto:wp.texto})
+      pideWhatsApp({usuario:yo, tarea_id:tw2.id, contacto:wp.contacto, texto:conIA(wp.texto)})
         .then(function(){ toast("WhatsApp en cola para "+wp.contacto); })
         .catch(function(e){
           msg(tw2,"bi","No se pudo dejar el WhatsApp en el servidor ("+String((e&&e.message)||e).slice(0,60)+"). Dictalo otra vez.");
@@ -12284,7 +12392,7 @@ function bindHilo(){
       $("txt").value=""; marcaEnvio("tenv","");
       var _vN=v;
       preguntaExterno(_exN, _vN, function(){ candadoExterno(t, _exN, _vN, function(){ mandaAExterno(t, _exN, _vN, _cita); }); },
-        hayEquipo(t)?function(){ msg(t,"bo",_vN); var mm=t.msgs[t.msgs.length-1]; mm.canal="equipo"; mm.de=yo; guarda(t); render(); }:null,
+        hayEquipo(t)?function(){ mandaAlEquipo(t, _vN, _cita); }:null,
         function(){ notaClaude(t, _vN); }, function(){ notaParaMi(t, _vN); });
       return;
     }
@@ -12301,7 +12409,7 @@ function bindHilo(){
       $("txt").value=""; marcaEnvio("tenv","");
       var _vR=v;
       preguntaExterno(_rx186, _vR, function(){ candadoExterno(t, _rx186, _vR, function(){ mandaAExterno(t, _rx186, _vR, null); }); },
-        hayEquipo(t)?function(){ msg(t,"bo",_vR); var mm=t.msgs[t.msgs.length-1]; mm.canal="equipo"; mm.de=yo; guarda(t); render(); }:null,
+        hayEquipo(t)?function(){ mandaAlEquipo(t, _vR, null); }:null,
         function(){ notaClaude(t, _vR); }, function(){ notaParaMi(t, _vR); });
       return;
     }

@@ -23,7 +23,7 @@ function saca(tipo, nombre) {
 function bloque(a, b) { var i = html.indexOf(a), j = html.indexOf(b); return html.slice(i, j + b.length); }
 var FUNCS = ["iso", "dm", "dDif", "dmDe", "masMeses", "hoy", "fechaMovCorta", "fechaBonita", "_nn", "horaDicha", "limpiaHoraDictada", "horaValor",
   "parteDelDia", "nowHM", "_hm", "_tsDe", "_sacaFrases", "cuandoDe", "programaWA", "etiquetasWA", "quitaEtiquetasWA", "horaCorta",
-  "textoProgramado", "mandaProgramado", "cancelaProgramado", "_corto"];
+  "textoProgramado", "mandaProgramado", "cancelaProgramado", "_corto", "conIA"];
 var VARS = ["NUMREL", "NUMHORA", "RANGO_PARTE", "WA_VERBO", "WA_DIA", "WA_HORA", "WA_TIEMPO", "WA_SINO"];
 var codigo = bloque("/* @@FECHAS-INICIO", "/* @@FECHAS-FIN */") + "\n" + VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" + FUNCS.map(function (f) { return saca("function", f); }).join("\n");
 
@@ -79,8 +79,8 @@ si("el render quita etiquetas en las burbujas", (html.match(/quitaEtiquetasWA\(/
 /* ---------- par condicional en la cola + chat sin etiquetas ---------- */
 var t = { id: "tX", msgs: [] }, pg = c.programaWA("mándale a Carlos que me pase el precio del portón, mañana a las 8, y si no contesta, insístele a las 5", NOW);
 c.mandaProgramado(t, pg, null);
-eq("dos pedidos en la cola, al instante", pedidos.map(function (p) { return p.texto; }),
-  ["[A LAS 2026-10-05 08:00] Me pase el precio del portón", "[A LAS 2026-10-05 17:00] [SI NO CONTESTA DESDE 2026-10-05 08:00] Te lo recuerdo: Me pase el precio del portón"]);
+eq("dos pedidos en la cola, al instante (build 217: lo redactado por Claude lleva IA: tras las etiquetas)", pedidos.map(function (p) { return p.texto; }),
+  ["[A LAS 2026-10-05 08:00] IA: Me pase el precio del portón", "[A LAS 2026-10-05 17:00] [SI NO CONTESTA DESDE 2026-10-05 08:00] IA: Te lo recuerdo: Me pase el precio del portón"]);
 eq("burbujas: reloj, sin etiquetas", t.msgs.map(function (m) { return m.t; }),
   ["Programado · lun 5 oct 8:00 → Carlos: “Me pase el precio del portón”", "Programado · lun 5 oct 17:00 → Carlos · solo si no contesta: “Te lo recuerdo: Me pase el precio del portón”"]);
 si("ningun texto guardado en la tarea trae etiquetas", !JSON.stringify(t).match(/\[A LAS|\[SI NO CONTESTA/));
