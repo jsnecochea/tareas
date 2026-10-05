@@ -1284,7 +1284,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 222 · Metas en tareas continuas; Claude supervisa al ejecutor y solo te llegan decisiones armadas";
+var VERSION_APP = "build 223 · Respuesta no clara: Claude repregunta concreto (o espera si ya repreguntaste) y te arma la decisión";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -6229,7 +6229,7 @@ function vLista(){
   /* ===== build 179 (Salvador 20:29): "TE TOCA" — una sola lista arriba con todo lo que te pide
      algo (primero lo de Por revisar: te espera/atorados, falta informacion, vinculacion, por
      autorizar; luego vencidas, mensajes nuevos y hoy). Abajo Proximas y "Compartidas · N". ===== */
-  try{ if(!window.__hitoChk || Date.now()-window.__hitoChk>60000){ window.__hitoChk=Date.now(); chequeoHitos(); try{ chequeoMetas(); }catch(e2){ console.warn("metas",e2); } } }catch(e){ console.warn("hitos",e); }   /* build 222: metas */
+  try{ if(!window.__hitoChk || Date.now()-window.__hitoChk>60000){ window.__hitoChk=Date.now(); chequeoHitos(); try{ chequeoMetas(); }catch(e2){ console.warn("metas",e2); } try{ revisaClaridadTodas(); }catch(e3){ console.warn("claridad",e3); } } }catch(e){ console.warn("hitos",e); }   /* build 222: metas */
   var _tt=armaTeToca(_rev, det, mias_venc, msgs, hoyYa);
   h+=vTeToca(_tt)+hMis;
 
@@ -8236,7 +8236,7 @@ function vHilo(){
   h+='<div class="hrow"><div class="hchip '+_ch.cls+'">'+ico(_ch.ico,18,1.9)+'<span>'+esc(_ch.txt)+'</span></div>'+
      '<button class="hchev" id="bstrip" aria-expanded="'+(fichaOpen?"true":"false")+'" aria-label="Detalle">'+(fichaOpen?'▴':'▾')+'</button></div>';
   h+=lineaAgenda(t);   /* build 203: "Agendado ✓ · Calendario: en camino" / "Calendario ✓" */
-  h+=vDecisionMeta(t)+vQuienDudas(t)+vCompartir(t);   /* build 221; 222: decisión de meta atrasada */
+  h+=vDecisionMeta(t)+vDecisionDato(t)+vQuienDudas(t)+vCompartir(t);   /* build 221; 222: decisión de meta atrasada */
   if(fichaOpen) h+=vDetalle(t, frows);
   else if(tipoRevisar(t)==="falta") h+=vTipoToggle(t);
 
@@ -10295,6 +10295,114 @@ function aplicaChecklistClaude(t, j){
   return nuevo?"lista “"+t.checklist.titulo+"” ("+t.checklist.items.length+")":(n?"lista ("+n+" cambios)":"");
 }
 function checklistTexto(t){ return tieneChecklist(t)?t.checklist.items.map(function(x){ return x.tx+" "+CHK_EST[x.estado||0]; }).join(" | "):"(no hay)"; }
+/* ===== build 223 (Salvador 11:23; caso Manuel 10:48 "no se alcanza a apreciar panal por todo el ramerío" ante "¿sí es panal?") =====
+   Cuando el Claude de la app lee las respuestas del hilo: si la IA o Salvador le hicieron a alguien una pregunta CONCRETA
+   (sí/no, dato, foto, costo, fecha) y la respuesta no la contesta claro (evasiva, cambia de tema, promete sin dato):
+   1) nota "📝 Nota IA: respuesta no clara a «…» — falta: …" (privada); 2) repregunta por la cola, positiva pero firme, máx 1
+   cada 4 h por el mismo dato; 3) si Salvador ya repreguntó (mensaje suyo después, audio incluido) solo se anota y se espera;
+   4) tras 2 repreguntas sin dato claro, tarjeta de decisión para Salvador con todo el contexto.
+   La Mac (v18m) hace lo mismo al instante; la app espera 10 min y no actúa si la Mac ya lo anotó (nunca doble repregunta). ===== */
+var CLARIDAD_ESPERA_MS=10*60000, REPREG_CADA_MS=4*3600*1000;
+function _quienMsg(x){ return String((x&&(x.wa_c||x.wa_auto))||"").trim(); }
+function _esPreguntaA(x, c){
+  if(!x) return false; var tx=String(x.tr||x.t||"").replace(/^→\s*[^:]{1,40}:\s*/,"");
+  if(!/[?¿]/.test(tx)) return false;
+  var mio=x.k==="bo" && (!x.de || x.de===yo), ia=x.k==="bi" && (x.wa===1 || /^IA:/i.test(tx) || /^→/.test(String(x.t||"")));
+  if(!(mio||ia)) return false;
+  var d=_quienMsg(x) || (String(x.canal||"").indexOf("ext:")===0?String(x.canal).slice(4):"");
+  return !d || _nn(d).split(/\s+/)[0]===_nn(c).split(/\s+/)[0];
+}
+/* la ultima respuesta de alguien que sigue a una pregunta concreta suya, sin revisar, con 10 min de reposo */
+function candidatoClaridad(t, ahora){
+  var ms=t.msgs||[]; ahora=ahora||Date.now();
+  for(var i=ms.length-1;i>=0 && i>=ms.length-25;i--){
+    var x=ms[i]; if(!x || x.wa_in!==1) continue;
+    if(x.claridad || ahora-(x.ts||0)<CLARIDAD_ESPERA_MS || ahora-(x.ts||0)>48*3600*1000) return null;
+    var c=_quienMsg(x); if(!c) return null;
+    for(var j=i-1;j>=0 && j>=i-15;j--){ var y=ms[j]; if(!y) continue;
+      if(y.wa_in===1 && _nn(_quienMsg(y)).split(/\s+/)[0]===_nn(c).split(/\s+/)[0]) continue;   /* sus mensajes seguidos */
+      if(y.nota_ia || y.priv || y.nota_claude || y.nota_mia || (y.k==="bi" && y.wa_in!==1 && !y.wa && !/^(IA:|→)/i.test(String(y.t||""))) || y.k==="bal") continue;   /* notas y avisos internos no cortan la plática */
+      if(_esPreguntaA(y, c)) return {ix:i, qix:j, contacto:c, pregunta:String(y.tr||y.t||"").replace(/^→\s*[^:]{1,40}:\s*/,"").replace(/^IA:\s*/i,"").replace(/[“”]/g,"").slice(0,300), respuesta:String(x.tr||x.t||"").replace(/^[^:\n]{1,40}:\s*/,"").slice(0,500)};
+      return null; }
+    return null;
+  }
+  return null;
+}
+function _raizDato(s){ return _nn(s).replace(/[^a-z0-9ñ ]+/g," ").split(/\s+/).filter(function(w){ return w.length>=5; }).map(function(w){ return w.slice(0,6); }); }
+/* aplica el criterio con lo que dijo Claude: info {clara, pregunta, falta, texto} */
+function aplicaNoClara(t, cand, info, ahora){
+  ahora=ahora||Date.now(); var x=(t.msgs||[])[cand.ix]; if(!x) return "";
+  if(!info || info.clara!==false){ x.claridad="ok"; return "clara"; }
+  x.claridad="no";
+  var preg=String(info.pregunta||cand.pregunta).replace(/\s+/g," ").trim().slice(0,200), falta=String(info.falta||"el dato concreto").replace(/\s+/g," ").trim().slice(0,160);
+  var nota=function(tx){ msg(t,"bi","📝 Nota IA: "+tx); var m=t.msgs[t.msgs.length-1]; m.canal="priv:"+yo; m.nota_ia=1; m.priv=1; };
+  /* la Mac ya lo anotó: no se duplica nada */
+  if((t.msgs||[]).slice(cand.ix+1).some(function(m){ return m && /respuesta no clara a «/.test(String(m.t||"")); })){ x.claridad="mac"; return "mac"; }
+  nota("respuesta no clara a «"+preg+"» — falta: "+falta);
+  var salvYa=(t.msgs||[]).slice(cand.ix+1).some(function(m){ return m && m.k==="bo" && (!m.de || m.de===yo) && !m.nota_mia && !m.nota_claude && !m.completa_info; });
+  if(salvYa){ nota("ya le repreguntaste a "+nombreCorto(cand.contacto)+"; no repregunto, espero su respuesta."); return "espera"; }
+  t.repreg=t.repreg||[]; var rz=_raizDato(falta+" "+preg);
+  var r=t.repreg.filter(function(q){ return q.contacto===cand.contacto && _raizDato(q.falta+" "+q.pregunta).some(function(w){ return rz.indexOf(w)>=0; }); })[0];
+  if(!r){ r={contacto:cand.contacto, pregunta:preg, falta:falta, n:0, ts:0, resp:[]}; t.repreg.push(r); }
+  r.resp=(r.resp||[]).concat([cand.respuesta]).slice(-4);
+  if(r.yo_hablo || r.cerrado) return "pausa";   /* "Hablo yo con él" / "Ya no hace falta" */
+  if(r.n>=2){
+    if(r.escalado) return "ya escalado";
+    r.escalado=ahora;
+    var d={id:"dd"+ahora.toString(36), contacto:cand.contacto, pregunta:preg, falta:falta, resp:r.resp.slice(), n:r.n, ts:ahora};
+    t.decision_dato=(t.decision_dato||[]).concat([d]);
+    if(!t.pendiente_info || t.pendiente_dato){ t.pendiente_tipo="decision_salvador"; t.pendiente_dato=d.id; t.pendiente_info=nombreCorto(cand.contacto)+" no da el dato: "+falta; }
+    try{ if(yo!=="salvador" && PERSONAS.salvador) disparaPushInstantaneo("salvador", tareaCorta(t), "Decide: "+nombreCorto(cand.contacto)+" no da «"+falta+"»", urlTarea(t.id), "espera"); }catch(e){}
+    return "escalado";
+  }
+  if(r.ts && ahora-r.ts<REPREG_CADA_MS) return "esperando";
+  var tx=String(info.texto||"").replace(/\s+/g," ").trim() || ("IA: Gracias, "+nombreCorto(cand.contacto).split(" ")[0]+". Para poder decidir necesito el dato concreto: "+(/[?¿]/.test(preg)?preg:"¿"+preg+"?"));
+  if(!/^IA:/i.test(tx)) tx="IA: "+tx;
+  msg(t,"bi","→ "+nombreCorto(cand.contacto)+": “"+tx.replace(/^IA:\s*/,"")+"” · en cola"); var mw=t.msgs[t.msgs.length-1]; mw.wa=1; mw.wa_c=cand.contacto;
+  pideWhatsApp({usuario:yo, tarea_id:t.id, contacto:cand.contacto, texto:tx, sin_espera:1})
+    .then(function(j){ var pid=(j&&(j.id||j.pedido_id))||null; if(pid){ mw.wa_pid=pid; guarda(t); } }).catch(function(){});
+  r.n++; r.ts=ahora; return "repregunto";
+}
+function promptClaridad(cand){
+  return "Eres Claude dentro de la app Doit. Se le hizo a "+cand.contacto+" esta pregunta: «"+cand.pregunta+"». Contestó: «"+cand.respuesta+"».\n"+
+    "¿La respuesta contesta la pregunta de forma CLARA y concreta (sí/no, el dato, la foto, el costo o la fecha que se pidió)? Es NO clara si es evasiva "+
+    "(\"no se alcanza a apreciar\", \"creo que\", \"ahorita lo checo\"), cambia de tema o promete sin dar el dato. Si la pregunta no era concreta, cuenta como clara.\n"+
+    "Contesta SOLO JSON: {\"clara\":true|false,\"pregunta\":\"la pregunta concreta, corta\",\"falta\":\"el dato concreto que falta, corto\",\"texto\":\"IA: Gracias, <nombre>. Para poder decidir necesito el dato concreto: <una sola pregunta concreta>\"}";
+}
+function revisaClaridadTodas(ahora){
+  ahora=ahora||Date.now(); if(window.__clarPend) return; var n=0;
+  tareas.forEach(function(t){
+    if(n>=2 || t.cierre || estadoReal(t)==="cerrada") return;
+    var cand=candidatoClaridad(t, ahora); if(!cand) return; n++;
+    window.__clarPend=(window.__clarPend||0)+1;
+    try{ preguntaAClaude([{role:"user",content:promptClaridad(cand)}],"rapido",function(txt,err){
+      window.__clarPend=Math.max(0,(window.__clarPend||1)-1);
+      if(err) return; var j=null; try{ var mm=String(txt||"").match(/\{[\s\S]*\}/); j=mm?JSON.parse(mm[0]):null; }catch(e){}
+      if(!j) return; var x=(t.msgs||[])[cand.ix]; if(!x || x.claridad) return;
+      aplicaNoClara(t, cand, j, Date.now()); guarda(t); if(vista==="hilo" && abierta===t.id) render(); }); }catch(e){ window.__clarPend=0; }
+  });
+}
+function decideDato(t, did, accion){
+  var d=(t.decision_dato||[]).filter(function(x){ return x.id===did; })[0]; if(!d) return "";
+  t.decision_dato=t.decision_dato.filter(function(x){ return x.id!==did; });
+  if(t.pendiente_dato===did){ t.pendiente_info=""; t.pendiente_tipo=""; delete t.pendiente_dato; }
+  var r=(t.repreg||[]).filter(function(q){ return q.contacto===d.contacto && _n179(q.falta)===_n179(d.falta); })[0], tx="";
+  if(accion==="hablo"){ if(r) r.yo_hablo=true; tx="Tú hablas con "+nombreCorto(d.contacto)+"; ya no le repregunto."; }
+  else if(accion==="otra"){ if(r){ r.n=1; r.escalado=null; r.ts=0; } tx="Le repregunto una vez más a "+nombreCorto(d.contacto)+" en cuanto conteste."; }
+  else { if(r) r.cerrado=true; tx="Listo: ya no hace falta «"+d.falta+"»."; }
+  msg(t,"bi",tx); guarda(t); return tx;
+}
+function vDecisionDato(t){
+  return (t.decision_dato||[]).map(function(d){
+    return '<div class="revc c-decmeta" data-dd="'+esc(d.id)+'"><span class="rct">DECIDE · SIN DATO CLARO</span>'+
+      '<span class="rcq">'+esc(nombreCorto(d.contacto))+' no contesta: «'+esc(d.pregunta)+'»</span>'+
+      '<span class="rcp">Falta: '+esc(d.falta)+' · '+d.n+' repreguntas</span>'+
+      '<div class="dmr"><b>Contestó:</b> '+d.resp.map(function(x){ return '“'+esc(x)+'”'; }).join(" · ")+'</div>'+
+      '<div class="dmb"><button class="dmk si" data-ddact="hablo" data-ddid="'+esc(d.id)+'">Hablo yo con él</button>'+
+      '<button class="dmk" data-ddact="otra" data-ddid="'+esc(d.id)+'">Repregúntale otra vez</button>'+
+      '<button class="dmk" data-ddact="ya" data-ddid="'+esc(d.id)+'">Ya no hace falta</button></div></div>';
+  }).join("");
+}
 /* ===== build 222 (Salvador, tareas continuas con METAS; caso "Mantenimiento Casa Lerdo/Eloísa") =====
    Una tarea indefinida no tiene finiquito: lo que tiene fecha son sus METAS. Viven en el checklist con titulo "Metas":
    items {id, tx, fecha, estado 0 pendiente | 1 en curso | 2 cumplida, quien, foto, cumplida, fuente, seguimiento|seg}.
@@ -12624,6 +12732,7 @@ function bindHilo(){
         accion:"Vincular", cb:function(){ d.autorizada=true; enlazaTareas(t.id, did, "trabajador (posible duplicado)"); }}); };
   });
   /* build 222: metas — palomear, foto de comprobante, historial; decisión de meta atrasada en un toque */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-ddact]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var tx=decideDato(t, el.getAttribute("data-ddid"), el.getAttribute("data-ddact")); if(tx) toast(tx); render(); }; });   /* build 223 */
   Array.prototype.forEach.call(document.querySelectorAll("[data-dmact]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var tx=decideMeta(t, el.getAttribute("data-dmid"), el.getAttribute("data-dmact")); if(tx) toast(tx); render(); }; });
   var _bmh=$("bmetahist"); if(_bmh) _bmh.onclick=function(ev){ ev.stopPropagation(); window.__metaHist=window.__metaHist||{}; window.__metaHist[t.id]=!window.__metaHist[t.id]; render(); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-metaok]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var mid=el.getAttribute("data-metaok"), m=metasDe(t).filter(function(x){ return x.id===mid; })[0]; if(!m) return;

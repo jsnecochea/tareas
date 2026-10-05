@@ -109,7 +109,7 @@ t = T({ revisa_ext: "Manuel Parra", compartir_con: [{ id: "ext:María Eloísa Al
   quien_dudas: [{ id: "q1", dicho: "Manuel", rol: "responsable", cands: [{ id: "ext:Manuel López", nombre: "Manuel López", sub: "agenda de WhatsApp" }, { id: "ext:Manuel Parra", nombre: "Manuel Parra", sub: "en esta tarea" }] }, { id: "q2", dicho: "Fulanito", rol: "compartir", cands: [] }] });
 var fr = c.fichaRevision(t);
 si("ficha: Quién = Manuel Parra · tú supervisas; Seguimiento; Se comparte con (completos)", /Manuel Parra · tú supervisas/.test(fr) && /Manuel Parra · lunes, miércoles y viernes · 10:00 \(por defecto\)/.test(fr) && /María Eloísa Albores de la Peña · Luis Mario Necochea/.test(fr));
-si("arriba de la tarea siempre: ¿Quién es X? y Se comparte con", /h\+=(vDecisionMeta\(t\)\+)?vQuienDudas\(t\)\+vCompartir\(t\);/.test(html));
+si("arriba de la tarea siempre: ¿Quién es X? y Se comparte con", /h\+=(vDecisionMeta\(t\)\+)?(vDecisionDato\(t\)\+)?vQuienDudas\(t\)\+vCompartir\(t\);/.test(html));
 si("la ficha ▾ trae Lo hace / Seguimiento a / Se comparte con", /_fr\("Lo hace"/.test(html) && /_fr\("Seguimiento a"/.test(html) && /_fr\("Se comparte con"/.test(html));
 si("botones: escoger, Otro / nuevo y Listo", /\[data-qdpick\]/.test(html) && /\[data-qdotro\]/.test(html) && /\[data-qdnuevo\]/.test(html));
 var css = (html.match(/<style[^>]*>([\s\S]*?)<\/style>/) || [])[1] || "";
