@@ -677,7 +677,8 @@ button{font:inherit;color:inherit}
 .extpop button{display:block;width:100%;border:0;border-radius:12px;padding:12px;font-weight:600;font-size:16px;margin-top:8px;color:#fff;background:#3a3a3c}
 .extpop button.si{background:#0a84ff}
 .extpop button.pcl{background:#D97757}
-.cnlpill.cnlcl{padding:6px 12px;opacity:.55;box-shadow:none}.cnlpill.cnlcl.on{opacity:1;box-shadow:0 0 14px color-mix(in srgb,#D97757 55%,transparent)}
+.cnlpill.cnlcl{padding:6px 12px;opacity:1;box-shadow:none;color:#D97757;border-color:#D97757;background:rgba(217,119,87,.10)}   /* build 215: naranja vivo, nunca descolorido */
+.cnlpill.cnlcl.on{background:#D97757;color:#1f0e06;box-shadow:0 0 14px color-mix(in srgb,#D97757 55%,transparent)}.cnlpill.cnlcl.on i{background:#1f0e06}
 .cnlpill.off{opacity:.45;box-shadow:none}
 .ncfold{color:#D97757}
 /* build 195: fichas limpias */
@@ -883,6 +884,27 @@ button{font:inherit;color:inherit}
 .galsel{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px;position:sticky;top:0;background:var(--bg,#1c1c1e);padding:6px 0;z-index:2}
 .galsel b{flex:1;font-size:17px}
 .gsx{width:36px;height:36px;border-radius:50%;border:0;background:var(--surface-2,#2a2a2d);color:var(--ink-3,#9a9aa2);font-size:16px}
+.gsb.rojo{color:#FF453A;border-color:#5a2a27}.gsb.rojo svg{color:#FF453A}   /* build 215 */
+/* build 215: hoja de confirmacion estilo Apple (velo con desenfoque, tarjeta redondeada, Cancelar / Eliminar) */
+.mveil{position:fixed;inset:0;z-index:96;background:rgba(0,0,0,.38);-webkit-backdrop-filter:blur(14px) saturate(140%);backdrop-filter:blur(14px) saturate(140%);display:flex;align-items:center;justify-content:center;padding:24px;animation:veloIn .18s ease}
+.mcard{width:100%;max-width:320px;background:rgba(44,44,46,.92);border-radius:18px;padding:20px 18px 16px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.55);animation:hojaIn .22s cubic-bezier(.2,.8,.2,1)}
+.mcard .mico{width:46px;height:46px;border-radius:50%;margin:0 auto 10px;display:grid;place-items:center;background:rgba(255,69,58,.16);color:#FF453A}
+.mcard b{display:block;font-size:17.5px;margin-bottom:4px}.mcard p{margin:0 0 16px;font-size:14.5px;color:#aeaeb2;line-height:1.35}
+.mcard .mbts{display:flex;gap:10px}.mcard .mbts button{flex:1;height:44px;border-radius:12px;border:0;font:inherit;font-size:16px;font-weight:600}
+.mcard .mno{background:rgba(120,120,128,.32);color:var(--ink)}.mcard .msi{background:#FF453A;color:#fff}
+/* build 215: hoja de accion inferior "¿Para quien es?" */
+.acveil{position:fixed;inset:0;z-index:96;background:rgba(0,0,0,.34);-webkit-backdrop-filter:blur(12px) saturate(140%);backdrop-filter:blur(12px) saturate(140%);animation:veloIn .18s ease}
+.acsheet{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:97;animation:hojaIn .24s cubic-bezier(.2,.8,.2,1);max-width:480px;margin:0 auto}
+.acg{background:rgba(44,44,46,.94);border-radius:16px;overflow:hidden}
+.act{padding:14px 18px 12px;text-align:center;border-bottom:1px solid rgba(255,255,255,.08)}.act b{display:block;font-size:14px;color:#aeaeb2;font-weight:600}
+.act span{display:block;margin-top:4px;font-size:14px;color:#8e8e93;line-height:1.3}
+.aco{display:flex;align-items:center;gap:14px;width:100%;background:none;border:0;border-bottom:1px solid rgba(255,255,255,.08);padding:15px 18px;font:inherit;text-align:left;color:var(--ink);cursor:pointer}
+.aco:active{background:rgba(255,255,255,.06)}.aco b{display:block;font-size:18px}.aco small{display:block;font-size:13.5px;color:#8e8e93;margin-top:2px}
+.aco .aci{flex:none;width:40px;height:40px;border-radius:11px;display:grid;place-items:center}
+.aco.acl .aci{background:rgba(217,119,87,.16);color:#D97757}.aco.acl b{color:#D97757}
+.aco.awa .aci{background:rgba(48,209,88,.14);color:#30D158}.aco.awa b{color:#30D158}
+.acmin{width:100%;background:none;border:0;padding:13px;font:inherit;font-size:16px;color:#0A84FF}
+.acx{display:block;width:100%;margin-top:8px;height:54px;border:0;border-radius:16px;background:rgba(44,44,46,.96);color:#0A84FF;font:inherit;font-size:18px;font-weight:600}
 .gsb{display:inline-flex;align-items:center;gap:6px;border:1px solid #3a3a3e;background:var(--surface-2,#2a2a2d);color:var(--ink,#f2f2f4);border-radius:12px;padding:9px 12px;font-size:15px}
 .gsb:disabled{opacity:.4}
 .gchk{display:none;position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.35);color:transparent;font-size:14px;line-height:20px;text-align:center}
@@ -1228,7 +1250,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 214 · Checklist de 3 estados (○ pendiente · ✓ invitado · ✓✓ confirmado), por voz, tocando o con Claude";
+var VERSION_APP = "build 215 · Eliminar archivos elegidos (hoja de confirmación) y hoja ¿Para Claude o mandar? estilo Apple";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -2843,15 +2865,15 @@ var db=null, yo=null, tareas=[], vista="lista", abierta=null, fichaOpen=false,
 function adjuntos(t){
   var out=[];
   /* build 204: cada archivo sabe de donde viene (ref) para poder apartarlo o copiarlo; lo apartado no sale (nada se borra) */
-  (t.evidencias||[]).forEach(function(e,i){ if(e && !e.apartado) out.push({data:e.data,ts:e.ts,lat:e.lat,lon:e.lon,de:e.de||"evidencia",ref:"ev:"+i}) });
+  (t.evidencias||[]).forEach(function(e,i){ if(e && !e.apartado && !e.eliminado) out.push({data:e.data,ts:e.ts,lat:e.lat,lon:e.lon,de:e.de||"evidencia",ref:"ev:"+i}) });
   var ft=t.fotos||{};
   Object.keys(ft).forEach(function(k){
-    var f=ft[k]; if(!f || f.apartado) return; var p=(t.puntos&&t.puntos[k])?t.puntos[k].t:"punto "+k;
+    var f=ft[k]; if(!f || f.apartado || f.eliminado) return; var p=(t.puntos&&t.puntos[k])?t.puntos[k].t:"punto "+k;
     out.push({data:f.data,ts:f.ts,lat:f.lat,lon:f.lon,de:p,ref:"fo:"+k});
   });
   /* build 186 (Salvador 2026-10-03 08:17): el clip junta TODO: tambien fotos y documentos que llegaron por WhatsApp */
   (t.msgs||[]).forEach(function(x,mi){
-    if(!x || !x.url || x.apartado) return;
+    if(!x || !x.url || x.apartado || x.eliminado) return;
     var u=String(x.url), tp=String(x.tipo||"").toLowerCase();
     var esImg=/imagen|foto|sticker/.test(tp) || /\.(jpe?g|png|webp|gif|heic)(\?|$)/i.test(u);
     var esAud=/audio/.test(tp) || /\.(ogg|opus|mp3|m4a|wav)(\?|$)/i.test(u);
@@ -2877,6 +2899,47 @@ function apartaAdjuntos(t, refs){
   if(n){ msg(t,"bi","Aparté "+n+" archivo"+(n===1?"":"s")+" de esta tarea (no se borra"+(n===1?"":"n")+": quedan guardados)."); guarda(t); }
   return n;
 }
+/* ===== build 215 (Salvador 8:52): ELIMINAR archivos que el elige a mano (excepcion aprobada a "nada se borra") =====
+   Fotos guardadas dentro de la tarea (evidencias, fotos de puntos): se borran sus bytes ya. Archivos del servidor (url):
+   push.php?action=borrar_archivo {tarea_id, url}; si esa accion aun no existe (falta Carlos), quedan eliminado:true (ocultos
+   en todos lados) y en t.eliminar_pendiente, que se reintenta al abrir la app hasta que el servidor los borre. */
+function eliminaAdjuntos(t, refs){
+  var n=0, urls=[], ahora=Date.now();
+  (refs||[]).forEach(function(r){ var f=fuenteAdj(t,r); if(!f || f.eliminado) return;
+    f.eliminado=true; f.eliminado_ts=ahora; f.eliminado_por=yo||""; n++;
+    if(String(r).split(":")[0]==="ms"){ if(f.url) urls.push(String(f.url)); }
+    else { if(f.data && !/^https?:/.test(String(f.data))) f.data=""; else if(f.data) urls.push(String(f.data)); } });
+  if(urls.length){ t.eliminar_pendiente=(t.eliminar_pendiente||[]).concat(urls.map(function(u){ return {url:u, ts:ahora}; })); }
+  if(n){ guarda(t); }
+  return {n:n, urls:urls};
+}
+function borraEnServidor(tid, url){
+  if(typeof APP_TOKEN==="undefined" || String(APP_TOKEN).indexOf("__")===0) return Promise.resolve(false);
+  try{ return fetch(PUSH+"?action=borrar_archivo",{method:"POST", headers:{"content-type":"application/json","x-app-token":APP_TOKEN}, body:JSON.stringify({tarea_id:tid, url:url})})
+    .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){ return !!(r.ok && j && (j.ok||j.success||j.borrado) && !j.error); }); })
+    .catch(function(){ return false; }); }catch(e){ return Promise.resolve(false); }
+}
+/* intenta borrar en el servidor lo pendiente de una tarea; lo que si se borro sale de la cola */
+function procesaEliminar(t){
+  var cola=(t.eliminar_pendiente||[]).slice(); if(!cola.length) return Promise.resolve(0);
+  return Promise.all(cola.map(function(x){ return borraEnServidor(t.id, x.url).then(function(ok){ return ok?x.url:null; }); })).then(function(hechos){
+    var ok=hechos.filter(Boolean); if(!ok.length) return 0;
+    t.eliminar_pendiente=(t.eliminar_pendiente||[]).filter(function(x){ return ok.indexOf(x.url)<0; });
+    (t.msgs||[]).forEach(function(m){ if(m && m.eliminado && ok.indexOf(String(m.url))>=0) m.borrado_servidor=Date.now(); });
+    guarda(t); return ok.length; });
+}
+function hojaEliminar(n, cb){
+  var v=document.createElement("div"); v.className="mveil"; v.id="mveil";
+  v.innerHTML='<div class="mcard" role="alertdialog" aria-labelledby="mvt"><div class="mico">'+svgBasura()+'</div><b id="mvt">¿Eliminar '+n+' archivo'+(n===1?'':'s')+'?</b><p>No se podrán recuperar.</p>'+
+    '<div class="mbts"><button class="mno" id="mvno">Cancelar</button><button class="msi" id="mvsi">Eliminar</button></div></div>';
+  document.body.appendChild(v);
+  var cierra=function(){ if(v.parentNode) v.parentNode.removeChild(v); };
+  v.onclick=function(e){ if(e.target===v) cierra(); };
+  document.getElementById("mvno").onclick=cierra;
+  document.getElementById("mvsi").onclick=function(){ cierra(); if(cb) cb(); };
+}
+(function(){ var k=setInterval(function(){ if(typeof listo!=="undefined" && listo && typeof tareas!=="undefined"){ clearInterval(k);
+  setTimeout(function(){ try{ tareas.forEach(function(t){ if(t && (t.eliminar_pendiente||[]).length) procesaEliminar(t); }); }catch(e){} }, 4000); } }, 2000); })();
 function copiaAdjuntos(t, refs, d){
   if(!t || !d || t.id===d.id) return 0;
   var n=0, ahora=Date.now(); d.msgs=d.msgs||[];
@@ -6796,18 +6859,26 @@ function externoNombrado(t, v){
   externosDe(t).forEach(function(e){ var w=_nn(e).split(" ")[0]; if(!hit && w.length>=3 && n.indexOf(" "+w+" ")>=0) hit=e; });
   return hit;
 }
+/* build 215 (Salvador 8:52: "muy triste"): hoja de accion inferior estilo Apple, con desenfoque. "Para Claude" con un
+   destello propio en el naranja de Claude (#D97757; no es el logo) y "Mandar a <nombre>" con un globo de mensaje generico
+   de linea en verde. "Solo al equipo" queda chico (era la opcion de antes) y "Cancelar" abajo. */
+var SVG_DESTELLO='<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M12 2.5c.5 4.9 2.6 7 7.5 7.5v.1c-4.9.5-7 2.6-7.5 7.5h-.1c-.5-4.9-2.6-7-7.4-7.5V10c4.8-.5 6.9-2.6 7.4-7.5z"/><path d="M19 15.5c.25 2 1.1 2.85 3 3.05v.05c-1.9.2-2.75 1.05-3 3h-.05c-.2-1.95-1.05-2.8-2.95-3v-.05c1.9-.2 2.75-1.05 2.95-3.05z"/></svg>';
+var SVG_CHAT='<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.2 3.6c-.3.3-.8 0-.8-.4V16h0A2.5 2.5 0 0 1 4 13.5z"/><path d="M8.5 9.5h7M8.5 12.5h4"/></svg>';
 function preguntaExterno(nombre, v, si, no, paraClaude){
-  var bg=document.createElement("div"); bg.className="cnlbg";
-  var p=document.createElement("div"); p.className="extpop";
-  p.innerHTML='<b>'+esc(nombre)+' es externo</b><p>“'+esc(v.length>120?v.slice(0,119)+"…":v)+'”<br>¿Se lo mando a él por WhatsApp?</p>'+
-    (paraClaude?'<button class="pcl">Para Claude</button>':'')+   /* build 193: primera opcion, naranja */
-    '<button class="si">Sí, mandárselo a '+esc(nombre)+'</button><button class="no">No, solo al equipo</button><button class="cx">Cancelar</button>';
+  var bg=document.createElement("div"); bg.className="acveil";
+  var p=document.createElement("div"); p.className="acsheet"; p.setAttribute("role","dialog");
+  p.innerHTML='<div class="acg"><div class="act"><b>¿Para quién es?</b><span>“'+esc(v.length>110?v.slice(0,109)+"…":v)+'”</span></div>'+
+    (paraClaude?'<button class="aco acl" data-ac="claude"><span class="aci">'+SVG_DESTELLO+'</span><span><b>Para Claude</b><small>Lo aplica en la tarea</small></span></button>':'')+
+    '<button class="aco awa" data-ac="wa"><span class="aci">'+SVG_CHAT+'</span><span><b>Mandar a '+esc(nombre)+'</b><small>Por WhatsApp</small></span></button>'+
+    '<button class="acmin" data-ac="equipo">Solo al equipo</button></div>'+
+    '<button class="acx" data-ac="cancel">Cancelar</button>';
   function cierra(){ if(bg.parentNode) bg.parentNode.removeChild(bg); if(p.parentNode) p.parentNode.removeChild(p); }
-  p.querySelector(".si").onclick=function(){ cierra(); si(); };
-  if(paraClaude) p.querySelector(".pcl").onclick=function(){ cierra(); paraClaude(); };
-  p.querySelector(".no").onclick=function(){ cierra(); no(); };
-  p.querySelector(".cx").onclick=function(){ cierra(); var ta=$("txt"); if(ta){ ta.value=v; try{ ta.dispatchEvent(new Event("input",{bubbles:true})); }catch(e){} ta.focus(); } };   /* build 188 */
-  bg.onclick=function(){ p.querySelector(".cx").onclick(); };
+  var cancela=function(){ cierra(); var ta=$("txt"); if(ta){ ta.value=v; try{ ta.dispatchEvent(new Event("input",{bubbles:true})); }catch(e){} ta.focus(); } };   /* build 188 */
+  p.querySelector('[data-ac="wa"]').onclick=function(){ cierra(); si(); };
+  if(paraClaude) p.querySelector('[data-ac="claude"]').onclick=function(){ cierra(); paraClaude(); };
+  p.querySelector('[data-ac="equipo"]').onclick=function(){ cierra(); no(); };
+  p.querySelector('[data-ac="cancel"]').onclick=cancela;
+  bg.onclick=cancela;
   document.body.appendChild(bg); document.body.appendChild(p);
 }
 /* candado: lo que va a un externo no debe nombrar a OTRO externo (precios, comparativas) */
@@ -7664,8 +7735,9 @@ function vRevision(t,org){
     m+='<div class="b '+(x.k==="bal"?"bal":(x.k==="bo"?"bo":"bi"))+'">'+esc(x.t)+
        '<span class="st">'+meta+'</span></div>';
   });
-  if(org.evidencias&&org.evidencias.length)
-    m+='<div class="fot">'+org.evidencias.map(function(f){
+  var _orgEv=(org.evidencias||[]).filter(function(f){ return f && !f.eliminado; });   /* build 215 */
+  if(_orgEv.length)
+    m+='<div class="fot">'+_orgEv.map(function(f){
          return '<img src="'+f.data+'" alt="evidencia">' }).join("")+'</div>';
 
   /* SUS botones, no los del que ejecuta */
@@ -7742,7 +7814,8 @@ function vHilo(){
     var _gs=(window.__galSel && window.__galSel.tid===t.id)?window.__galSel:null, _ns=_gs?Object.keys(_gs.sel).length:0;
     var _gh=_gs?'<div class="galsel"><button class="gsx" id="gsx" aria-label="Cancelar">✕</button><b>'+_ns+' seleccionado'+(_ns===1?'':'s')+'</b>'+
         '<button class="gsb" id="gsapa"'+(_ns?'':' disabled')+'>'+ico("caja",18,1.7)+'Apartar</button>'+
-        '<button class="gsb" id="gscop"'+(_ns?'':' disabled')+'>'+ico("copia",18,1.7)+'Copiar a otra tarea</button></div>'
+        '<button class="gsb" id="gscop"'+(_ns?'':' disabled')+'>'+ico("copia",18,1.7)+'Copiar a otra tarea</button>'+
+        '<button class="gsb rojo" id="gsdel"'+(_ns?'':' disabled')+'>'+svgBasura()+'Eliminar</button></div>'
       :'<h2>Archivos de esta tarea · '+adj.length+'</h2><p class="galtip">Deja presionado uno para seleccionar varios.</p>';
     return h+'<div class="scroll"><div class="gal'+(_gs?' selmodo':'')+'">'+_gh+'<div class="galgrid">'+
       orden.map(function(i){var f=adj[i], _on=_gs&&_gs.sel[f.ref]?' sel':'', _gk=' data-gk="'+esc(f.ref||"")+'"';
@@ -7811,7 +7884,7 @@ function vHilo(){
       _pln=notasPlegadas(t, _todo || !!(window.__ncExp&&window.__ncExp[t.id]), window.__visitaIni, Date.now()),
       _pls=avisosSistemaPlegados(t, _todo || !!(window.__sisExp&&window.__sisExp[t.id]));
   /* build 186: cada foto subida desde la app va en SU lugar del chat (por hora), no amontonada al final */
-  var _evs=(t.evidencias||[]).map(function(f){return f;}).sort(function(a,b){return (a.ts||0)-(b.ts||0)}), _evI=0;
+  var _evs=(t.evidencias||[]).filter(function(f){ return f && !f.eliminado; }).sort(function(a,b){return (a.ts||0)-(b.ts||0)}), _evI=0;
   function _evHasta(ts){ while(_evI<_evs.length && (ts===Infinity || (_evs[_evI].ts||0)<=ts)){ var f=_evs[_evI++];
     var _hh=""; try{ _hh=f.ts?hhmm(new Date(f.ts)):""; }catch(e){}
     m+='<div class="fot fotin"><img src="'+f.data+'" alt="evidencia"><span class="fh">'+esc(((f.de&&PERSONAS[f.de])?PERSONAS[f.de].nombre+" · ":"")+_hh)+'</span></div>'; } }
@@ -7829,6 +7902,7 @@ function vHilo(){
     if(_cx.indexOf("priv:")===0 && _cx!=="priv:"+yo) return;                 /* build 179: nota de Claude solo para quien contesto */
     if(_cx==="sup" && !soySupervisor(t) && x.de!==yo) return;                /* build 179: notas de supervisor, el dueño no las ve */
     if(!msgEnCanal(x,_cn.id,t)) return;
+    if(x && x.eliminado) return;   /* build 215: archivo eliminado: no sale en ningun lado */
     if(!esImportante(x, ix, _rmp)){ _ocultos++; return; }   /* build 197: aviso reemplazado por uno mas nuevo del mismo tema */
     if(x.nota_claude && x.k!=="bo" && !x.visto_ts && !_pln.set[ix]){ x.visto_ts=Date.now(); _vistoNuevo=true; }   /* build 197: ya la viste */
     /* build 193 (F36): las notas/indicaciones a Claude y sus respuestas se pliegan en un renglon */
@@ -7896,7 +7970,7 @@ function vHilo(){
     m+='<div class="chk'+(chkCerrado[t.id]?" cl":"")+'"><button class="ch" id="bchk">'+
        '<span class="tt">Rondín</span><span class="cn'+(n===t.puntos.length?" full":"")+'">'+n+' de '+t.puntos.length+'</span>'+
        '<span class="cv">'+(chkCerrado[t.id]?"▼":"▲")+'</span></button><ul>'+items+'</ul></div>';
-    var fotosArr=Object.keys(ft).map(function(k){return ft[k]});
+    var fotosArr=Object.keys(ft).map(function(k){return ft[k]}).filter(function(f){ return f && !f.eliminado; });   /* build 215 */
     if(fotosArr.length){
       m+='<div class="fot">'+fotosArr.map(function(f){return '<img src="'+f.data+'" alt="evidencia">'}).join("")+'</div>';
     }
@@ -11831,6 +11905,10 @@ function bindHilo(){
     hojaConfirma({titulo:"Apartar "+refs.length+" archivo"+(refs.length===1?"":"s"), sub:"Dejan de salir aquí. No se borra nada: quedan guardados.", accion:"Apartar",
       cb:function(){ var n=apartaAdjuntos(t, refs); window.__galSel=null; toast("Aparté "+n); render(); }}); };
   var gsc=$("gscop"); if(gsc) gsc.onclick=function(){ var refs=Object.keys((window.__galSel||{}).sel||{}); if(refs.length) abreCopiarA(t, refs); };
+  var gsd=$("gsdel"); if(gsd) gsd.onclick=function(){ var refs=Object.keys((window.__galSel||{}).sel||{}); if(!refs.length) return;   /* build 215 */
+    hojaEliminar(refs.length, function(){ var r=eliminaAdjuntos(t, refs); window.__galSel=null; render();
+      if(!r.urls.length){ toast("Eliminé "+r.n); return; }
+      procesaEliminar(t).then(function(ok){ if(ok>=r.urls.length) toast("Eliminé "+r.n); else toast("Eliminé "+r.n+". Se borrarán del servidor en cuanto esté listo."); render(); }); }); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-ai]"),function(el){
     el.onclick=function(){abreVisor(adj,+el.getAttribute("data-ai"))};
   });
@@ -13263,7 +13341,7 @@ function vSupervisor(t){
   var _atr=(t.lista_pasos||[]).filter(function(p){ return p.hito && !p.hecho && p.fecha && p.fecha<hoy(); })[0];
   if(_atr){ var _d=-dDif(hoy(),_atr.fecha); en=["Atrasado "+Math.abs(dDif(_atr.fecha,hoy()))+" día"+(Math.abs(dDif(_atr.fecha,hoy()))===1?"":"s")+" · "+_atr.tx,"#FF453A"]; }
   var pasos=(t.lista_pasos||[]), hechos=pasos.filter(function(p){ return p.hecho; }).length;
-  var fotos=(t.evidencias||[]).length+((t.adjuntos||[]).length||0);
+  var fotos=(t.evidencias||[]).filter(function(f){ return f && !f.eliminado; }).length+((t.adjuntos||[]).length||0);   /* build 215 */
   var h='<div class="supcard"><span class="sph">SUPERVISAS · '+esc((PERSONAS[t.duenio]||{}).nombre||"")+'</span>'+
     '<span class="spsem" style="--sc:'+en[1]+'"><i></i>'+en[0]+(t.f_vigente?(_sf?' · próximo ':' · entrega ')+esc(fechaChip(t.f_vigente)):'')+'</span>';
   if(pasos.length){

@@ -26,7 +26,7 @@ var FUNCS = ["_nn", "esDelEquipo", "_telDe", "_nomWA", "esMsgWA", "miembroDeNomb
   "_contactoDeNombre", "canalDe", "externosDe", "nombreWADe", "canalesDe", "canalActual", "msgEnCanal", "integrantesDe",
   "responsableExt", "phCanal", "vPastilla", "modoClaude", "puedeSerIndicacion", "convierteEnIndicacion", "notasPlegadas",
   "notaClaude", "preguntaExterno", "nombreInt", "iniInt"];
-var VARS = ["CNL_COL", "CNL_EXT", "CLAUDE_COL", "_cwMemo"];
+var VARS = ["CNL_COL", "CNL_EXT", "CLAUDE_COL", "_cwMemo", "SVG_DESTELLO", "SVG_CHAT"];
 var codigo = VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" +
   FUNCS.map(function (f) { return saca("function", f); }).join("\n");
 
@@ -48,8 +48,8 @@ function ctx() {
 function fakeDoc() {
   return { body: { appendChild: function (el) { this.ultimo = el; } },
     createElement: function () {
-      var el = { innerHTML: "", parentNode: null, _btn: {},
-        querySelector: function (sel) { var k = sel.replace(".", ""); if (!this._btn[k]) this._btn[k] = { onclick: null }; return this._btn[k]; } };
+      var el = { innerHTML: "", parentNode: null, _btn: {}, setAttribute: function () {},
+        querySelector: function (sel) { var k = sel.replace(/^\[data-ac="(\w+)"\]$/, "$1").replace(".", ""); if (!this._btn[k]) this._btn[k] = { onclick: null }; return this._btn[k]; } };
       return el;
     } };
 }
@@ -169,10 +169,11 @@ function manuel() {
   var c = ctx(), llam = [];
   c.preguntaExterno("Chuy Cumbres Zatarain", "nota para mi", function () { llam.push("si"); }, function () { llam.push("no"); }, function () { llam.push("claude"); });
   var pop = c.document.body.ultimo;
-  var orden = (pop.innerHTML.match(/<button class="(\w+)"/g) || []).map(function (s) { return s.replace(/.*class="(\w+)"/, "$1"); });
-  eq("aviso: Para Claude es la PRIMERA", orden, ["pcl", "si", "no", "cx"]);
+  /* build 215: hoja de accion inferior; las opciones se reconocen por data-ac */
+  var orden = (pop.innerHTML.match(/data-ac="(\w+)"/g) || []).map(function (s) { return s.replace(/.*data-ac="(\w+)"/, "$1"); });
+  eq("aviso: Para Claude es la PRIMERA", orden, ["claude", "wa", "equipo", "cancel"]);
   si("aviso: dice 'Para Claude'", /Para Claude/.test(pop.innerHTML));
-  pop._btn.pcl.onclick();
+  pop._btn.claude.onclick();
   eq("aviso: Para Claude llama a Claude, no a WhatsApp", llam, ["claude"]);
   si("en el hilo los dos avisos pasan notaClaude", (html.match(/function\(\)\{ notaClaude\(t, _v[NR]\); \}\);/g) || []).length === 2);
 })();
