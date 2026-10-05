@@ -167,7 +167,7 @@ eq("al escoger: borrador para confirmar", [FID.msj_borrador && FID.msj_borrador.
 si("la tarjeta trae Mandar / Cambiar / No mandar", /data-mbact="manda">Mandar<\/button><button class="dmk" data-mbact="cambia">Cambiar<\/button><button class="dmk" data-mbact="no">No mandar/.test(c.vBorradorMsj(FID)));
 /* ---------- hojas ---------- */
 c.window.__hoja225 = null; c.abreHoja225(L, "metas"); var hm = c.vHoja225(L);
-si("hoja Metas (supervisor): un renglón por meta, se toca para abrir su ficha", /data-fmeta="a"><span>Azotea<\/span><span class="">vie 9 oct ›/.test(hm) && /Cumplidas \(historial\)/.test(hm));
+si("hoja Metas (232): Todo + un renglón por meta que filtra el chat (› abre su ficha) + Otro", /data-mfil="">.*Todo/.test(hm) && /data-mfil="a"><span>Azotea<\/span><small class="">vie 9 oct<\/small>/.test(hm) && /data-fmeta="a"/.test(hm) && /data-mfil="otro"/.test(hm) && /Cumplidas \(historial\)/.test(hm));
 c.abreHoja225(F, "lista"); var hl = c.vHoja225(F);
 si("hoja Lista a media altura, ampliable a completa, con la lista abierta", /class="h225 media"/.test(hl) && /data-h225alto="completa"/.test(hl) && /class="plst"/.test(hl));
 c.window.__hoja225.alto = "min"; si("hoja minimizada: una barrita", /^<button class="h225bar" data-h225alto="media">Invitados ▴<\/button>$/.test(c.vHoja225(F)));
