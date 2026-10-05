@@ -18,11 +18,11 @@ function saca(tipo, nombre) {
 function bloque(a, b) { var i = html.indexOf(a), j = html.indexOf(b); return html.slice(i, j + b.length); }
 var ft = fs.readFileSync(path.join(__dirname, "fechas.test.js"), "utf8");
 var F_FUNCS = eval(ft.match(/var FUNCS = (\[[\s\S]*?\]);/)[1]), F_VARS = eval(ft.match(/var VARS = (\[[\s\S]*?\]);/)[1]);
-var FUNCS = F_FUNCS.concat(["checklistTexto", "aplicaChecklistClaude", "aplicaResponsable", "aplicaSeguimientoA", "_dichoNombre", "nombreCorto", "tieneChecklist", "chkNuevo", "chkPon", "_nv", "checklistDicho", "respChecklist", "_chkTok", "chkBusca", "hhmmAhora", "esConfirmacion", "juntaY", "tienePasos", "esNotaClaude", "ordenClaraClaude", "sinPrefijoClaude", "ritmoDicho", "extraeLocal", "soloMeFalta", "completaRevision", "completitud", "contextoPct", "contextoDe", "tipoItem",
+var FUNCS = F_FUNCS.concat(["checklistTexto", "aplicaChecklistClaude", "aplicaResponsable", "_tokPer", "nombresEnTexto", "_compartirLista", "candidatosPersona", "resuelvePersona", "nuevaDudaPersona", "asignaResponsable", "agregaCompartir", "fechasDeCada", "programaSeguimiento", "resuelveDudaPersona", "_n179", "nombreInt", "agregaIntegrante", "aplicaSeguimientoA", "_dichoNombre", "nombreCorto", "tieneChecklist", "chkNuevo", "chkPon", "_nv", "checklistDicho", "respChecklist", "_chkTok", "chkBusca", "hhmmAhora", "esConfirmacion", "juntaY", "tienePasos", "esNotaClaude", "ordenClaraClaude", "sinPrefijoClaude", "ritmoDicho", "extraeLocal", "soloMeFalta", "completaRevision", "completitud", "contextoPct", "contextoDe", "tipoItem",
   "esDato", "creadaCon", "msCreacion", "_fechaDeId", "_diaCreacion", "fechaPuestaSola", "eventoDe", "revisaCompleta", "preguntasFalta", "fechasRaras", "conMayuscula", "vFaltaInfo", "palabrasClave",
   "palabrasBusqueda", "_sinGrupo", "_bst", "_bw", "vAgenda", "eventoPendiente", "faltaVieja", "tipoRevisar", "porAutorizar", "creadaPorSistema", "faltaInfoRev", "esDecisionSal", "meDetiene", "diaMonterrey", "aplicaCamposNota", "autorizaRevision", "juntaNota", "ejecutaNotaClaude", "aplicaNotaClaude", "respuestaHecho", "traeFecha", "fechaConDia", "calendarioProximo", "fechaBonita"])
   .filter(function (x, i, a) { return a.indexOf(x) === i; });
-var VARS = F_VARS.concat(["CHK_EST", "RITMO_RE", "CITA_RE", "CTX_MIN_PAL", "SINONIMOS", "BUSCA_VACIAS", "REV_DESDE"]);
+var VARS = F_VARS.concat(["SEG_HORA_DEFECTO", "CHK_EST", "RITMO_RE", "CITA_RE", "CTX_MIN_PAL", "SINONIMOS", "BUSCA_VACIAS", "REV_DESDE"]);
 var codigo = bloque("/* @@FECHAS-INICIO", "/* @@FECHAS-FIN */") + "\n" + VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" + FUNCS.map(function (f) { return saca("function", f); }).join("\n");
 var RealDate = Date, NOW = new RealDate(2026, 9, 4, 21, 14, 0).getTime();
 function FakeDate() { var a = Array.prototype.slice.call(arguments); if (!(this instanceof FakeDate)) return new RealDate(NOW).toString();
@@ -57,7 +57,7 @@ var T1 = CONSEJO(); T1.autorizada = true; c.abierta = T1.id; var r1 = nota(T1, D
 eq("CONSEJO (respuesta vieja de la IA): aplica indefinida y ritmo aunque la IA dijo 'nada'", [T1.indefinida, T1.ritmo], [true, "Una vez al mes"]);
 si("contesta 'Anoté: …' y ya no 'No cambié nada'", /^Anoté: indefinida, ritmo: una vez al mes(, contexto nuevo)?\./.test(r1) && !/No cambié nada/.test(r1));
 si("la respuesta es nota privada de Claude", ult(T1).nota_claude === 1 && ult(T1).canal === "priv:salvador");
-si("el prompt ya ofrece contexto, ritmo, indefinida, recurrente, fecha y pregunta", /\\"contexto\\":null,\\"contexto_modo\\":\\"sumar\|reemplazar\\",\\"ritmo\\":null,\\"indefinida\\":false,\\"recurrente\\":null,\\"fecha\\":null,(\\"checklist\\":null,)?\\"pregunta\\":null/.test(html));
+si("el prompt ya ofrece contexto, ritmo, indefinida, recurrente, fecha y pregunta", /\\"contexto\\":null,\\"contexto_modo\\":\\"sumar\|reemplazar\\",\\"ritmo\\":null,\\"indefinida\\":false,\\"recurrente\\":null,\\"fecha\\":null,(\\"checklist\\":null,)?(\\"responsable\\":null,\\"yo_superviso\\":false,\\"seguimiento_a\\":null,\\"compartir_con\\":\[\],)?\\"pregunta\\":null/.test(html));
 
 /* 2 el caso real con la IA nueva: contexto reemplazado + ritmo + indefinida */
 IA.resp = { accion: "contexto", contexto: "Tarea maestra de proyectos de la colonia Cumbres: Salvador presidente, Mario Castillo secretario, Adolfo Rodríguez tesorero, Enrique Martínez vocal; se reúnen dos veces al año.", contexto_modo: "reemplazar", ritmo: "una vez al mes", indefinida: true, respuesta: "Es la tarea maestra del consejo." };

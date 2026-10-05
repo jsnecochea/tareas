@@ -21,11 +21,11 @@ function saca(tipo, nombre) {
 function bloque(a, b) { var i = html.indexOf(a), j = html.indexOf(b); return html.slice(i, j + b.length); }
 var ft = fs.readFileSync(path.join(__dirname, "fechas.test.js"), "utf8");
 var F_FUNCS = eval(ft.match(/var FUNCS = (\[[\s\S]*?\]);/)[1]), F_VARS = eval(ft.match(/var VARS = (\[[\s\S]*?\]);/)[1]);
-var FUNCS = F_FUNCS.concat(["checklistTexto", "aplicaChecklistClaude", "aplicaResponsable", "aplicaSeguimientoA", "_dichoNombre", "nombreCorto", "tieneChecklist", "chkNuevo", "chkPon", "_nv", "checklistDicho", "respChecklist", "_chkTok", "chkBusca", "hhmmAhora", "esConfirmacion", "juntaY", "tienePasos", "esNotaClaude", "ordenClaraClaude", "sinPrefijoClaude", "ritmoDicho", "extraeLocal", "soloMeFalta", "completaRevision", "completitud", "contextoPct", "contextoDe", "tipoItem",
+var FUNCS = F_FUNCS.concat(["checklistTexto", "aplicaChecklistClaude", "aplicaResponsable", "_tokPer", "nombresEnTexto", "_compartirLista", "candidatosPersona", "resuelvePersona", "nuevaDudaPersona", "asignaResponsable", "agregaCompartir", "fechasDeCada", "programaSeguimiento", "resuelveDudaPersona", "_n179", "nombreInt", "agregaIntegrante", "aplicaSeguimientoA", "_dichoNombre", "nombreCorto", "tieneChecklist", "chkNuevo", "chkPon", "_nv", "checklistDicho", "respChecklist", "_chkTok", "chkBusca", "hhmmAhora", "esConfirmacion", "juntaY", "tienePasos", "esNotaClaude", "ordenClaraClaude", "sinPrefijoClaude", "ritmoDicho", "extraeLocal", "soloMeFalta", "completaRevision", "completitud", "contextoPct", "contextoDe", "tipoItem",
   "esDato", "creadaCon", "msCreacion", "_fechaDeId", "_diaCreacion", "fechaPuestaSola", "eventoDe", "revisaCompleta", "preguntasFalta", "fechasRaras", "conMayuscula", "vFaltaInfo", "palabrasClave",
   "palabrasBusqueda", "_sinGrupo", "_bst", "_bw", "vAgenda", "eventoPendiente", "faltaVieja", "tipoRevisar", "porAutorizar", "creadaPorSistema", "faltaInfoRev", "esDecisionSal", "meDetiene", "diaMonterrey", "okDeRevision", "palomeaEnOrden", "autorizaRevision", "fichaRevision", "rangoHora", "descartaVinculos", "agendaEvento", "urlGoogleCal", "_gcalUtc", "mtyAUtcMs", "horaBonita", "fmt24", "nuevoAviso", "abiertasParaVincular", "estadoParaClaude", "promptRevision", "aplicaRevisionClaude", "tituloTarea", "traeFecha", "transfiere", "posibleDup", "contactoDeTarea", "miembroDeNombre", "_tsDe", "_fsa"])
   .filter(function (x, i, a) { return a.indexOf(x) === i; });
-var VARS = F_VARS.concat(["CHK_EST", "AGENDA_HORA_TODO_DIA", "PALOMEO_MS", "TITULO_CONECTORES", "RITMO_RE", "CITA_RE", "CTX_MIN_PAL", "SINONIMOS", "BUSCA_VACIAS", "REV_DESDE"]);
+var VARS = F_VARS.concat(["SEG_HORA_DEFECTO", "CHK_EST", "AGENDA_HORA_TODO_DIA", "PALOMEO_MS", "TITULO_CONECTORES", "RITMO_RE", "CITA_RE", "CTX_MIN_PAL", "SINONIMOS", "BUSCA_VACIAS", "REV_DESDE"]);
 var codigo = bloque("/* @@FECHAS-INICIO", "/* @@FECHAS-FIN */") + "\n" + VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" + FUNCS.map(function (f) { return saca("function", f); }).join("\n");
 var RealDate = Date, NOW = new RealDate(2026, 9, 4, 21, 14, 0).getTime();
 function FakeDate() { var a = Array.prototype.slice.call(arguments); if (!(this instanceof FakeDate)) return new RealDate(NOW).toString();
@@ -48,7 +48,7 @@ si("VERSION_APP build 219 o posterior", +((html.match(/var VERSION_APP = "build 
 /* ---------- 3) responsable y seguimiento (caso real Casa Lerdo/Eloísa) ---------- */
 var D1 = "Para Claus fíjate que tengo en Lerdo una propiedad de una casa que le desollemos llamar casa Eloísa o casa Lerdo esa casa está sin uso pero la podemos mantener al 100% … entonces este son los que pueden estar aquí es en esta tarea y que a veces les les mando también avisos para que sepan lo que se está haciendo entonces por lo pronto ahorita con el panel de abeja quiero que tú le des seguimiento a a Manuel Parra para ver este que quede solucionado esta semana Ya le dije que revise primero que efectivamente hay para que nos mande la evidencia";
 var D2 = "La otra también mencionó que el ejecutor responsable de tener al 100% siempre esta tarea es Manuel Parra y yo sólo soy el supervisor en este caso tú me vas a estar ayudando a supervisar para yo para yo no estar distrayéndome tanto";
-function T(o) { return Object.assign({ id: "tX", nombre: "Mantenimiento Casa Lerdo/Eloísa", duenio: "salvador", indefinida: true, msgs: [] }, o || {}); }
+function T(o) { return Object.assign({ id: "tX", nombre: "Mantenimiento Casa Lerdo/Eloísa", duenio: "salvador", indefinida: true, msgs: [], wa_contactos: [{ nombre: "Manuel Parra" }] }, o || {}); }   /* como la tarea real (build 221: las personas se buscan en la tarea) */
 var PR = c.promptRevision(T(), D2, []);
 si("el prompt pide responsable, yo_superviso y seguimiento_a", /- responsable: /.test(PR) && /- seguimiento_a: /.test(PR) && /"seguimiento_a":null/.test(PR) && /"yo_superviso":false/.test(PR));
 var t = T({ duenio: "manuel_parra", encargado: "manuel_parra" });
@@ -80,8 +80,8 @@ r = c.aplicaRevisionClaude(t, D3, { seguimiento_a: { quien: "Manuel Parra", cada
 eq("dictarlo otra vez no duplica lo ya programado", c.PROG.map(function (p) { return p.a_las.fecha; }), ["2026-10-12"]);
 c.PROG.length = 0; t = T();
 r = c.aplicaRevisionClaude(t, "dale seguimiento a Manuel Parra cada lunes", { seguimiento_a: { quien: "Manuel Parra", cada: "cada lunes", fechas: ["2026-10-12"], hora: "09:00" } }, []);
-eq("frecuencia sin hora: no inventa la hora, pregunta", [c.PROG.length, r.dudas], [0, ["¿A qué hora le escribo a Manuel Parra?"]]);
-t = T(); r = c.aplicaRevisionClaude(t, "hay que revisar el techo", { seguimiento_a: { quien: "Manuel Parra", cada: "diario", fechas: ["2026-10-06"], hora: "09:00" } }, []);
+eq("(build 221) frecuencia sin hora: 10:00 por defecto y lo dice", [c.PROG.map(function (p) { return p.a_las.fecha + " " + p.a_las.hora; }), r.dudas, /a las 10:00 porque no dijiste hora/.test(r.hecho.join(" "))], [["2026-10-12 10:00"], [], true]);
+c.PROG.length = 0; t = T(); r = c.aplicaRevisionClaude(t, "hay que revisar el techo", { seguimiento_a: { quien: "Manuel Parra", cada: "diario", fechas: ["2026-10-06"], hora: "09:00" } }, []);
 eq("candado: sin pedir seguimiento ni nombrarlo, nada", [!!t.seg_a, c.PROG.length], [false, 0]);
 t = T(); c.aplicaRevisionClaude(t, "x", { de_quien: "María Eloísa Albores de la Peña (propietaria), coordinación de Manuel Parra, ejecutor: Manuel Parra" }, []);
 si("de_quien ya no se corta a media palabra ('ejecutor: Man.')", !/Man\.$/.test(t.de_quien) && t.de_quien.indexOf("ejecutor: Manuel Parra") > 0);
