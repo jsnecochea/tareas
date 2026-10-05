@@ -12,7 +12,7 @@ function saca(n) { var re = new RegExp("^(function " + n.replace(/\$/g, "\\$") +
   if (i < 0) throw new Error("no encontre " + n); var o = [L[i]]; for (var k = i + 1; k < L.length; k++) { var x = L[k]; if (x.length && !/^[\s}\]]/.test(x)) break; o.push(x); if (/^}/.test(x)) break; } return o.join("\n"); }
 var F = ["_nn", "_telDe", "_nomWA", "esMsgWA", "miembroDeNombre", "_cwMemo", "contactosWA", "_contactosWA", "integrantesDe", "msg",
   "equipoConWA", "mandaAlEquipo", "WA_EST", "nivelWA", "llevaPalomitas", "pidsWA", "nivelMsgWA", "SVG_WA_RELOJ", "SVG_WA_1", "SVG_WA_2",
-  "palomitasHTML", "_estadosDe", "aplicaEstadosWA", "consultaEstadosWA", "conIA"];
+  "palomitasHTML", "_estadosDe", "aplicaEstadosWA", "WA_EST_TOPE", "consultaEstadosWA", "conIA"];
 var css = (html.match(/<style[^>]*>([\s\S]*?)<\/style>/) || [])[1] || "";
 var ok = 0, n = 0, malas = [];
 function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
@@ -120,7 +120,7 @@ var tmp = path.join(os.tmpdir(), "b217-" + process.pid + ".html"); fs.writeFileS
     var c2 = await consultaEstadosWA(t); var c3 = await consultaEstadosWA(t);
     o.sinAccion = [c2, c3, FETCH.length, !!window.__waEstNo, palomitasHTML(t.msgs[0]).match(/data-wtk="(\d)"/)[1]];
     return o; });
-  eq("pregunta a push.php?action=wa_estado solo por los que no van en azul (ni notas)", [r.pide, r.ids], ["push.php?action=wa_estado", ["a1", "s1"]]);
+  eq("pregunta a push.php?action=wa_estados (build 220) solo por los que no van en azul (ni notas)", [r.pide, r.ids], ["push.php?action=wa_estados", ["a1", "s1"]]);
   eq("aplica lo que dice el servidor y lo guarda en el mensaje", [r.c1, r.st, r.st2, r.g > 0, r.r > 0], [true, { a1: { n: 2, e: "enviado" } }, { s1: { n: 0, e: "pendiente" } }, true, true]);
   eq("✓✓ gris al estar entregado", r.pal, "2");
   eq("si el servidor no tiene la acción: deja de preguntar sin avisos y no cambia nada", r.sinAccion, [false, false, 1, true, "2"]);

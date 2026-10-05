@@ -1260,7 +1260,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 219 · Buscador al agregar integrantes; nombres cortos en la franja; responsable y seguimiento dictados";
+var VERSION_APP = "build 220 · Palomitas leen wa_estados (Carlos)";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -7018,17 +7018,23 @@ function palomitasHTML(x){
   var nom=["En cola","Enviado","Entregado","Leído"][n];
   return '<span class="wtk w'+n+'" data-wtk="'+n+'" role="img" aria-label="'+nom+'">'+(n===0?SVG_WA_RELOJ:(n===1?SVG_WA_1:SVG_WA_2))+'</span>';
 }
-/* lee del servidor el estado de los pedidos de la tarea abierta. Accion pedida a Carlos: wa_estado
-   (POST {ids:[...]} -> {pedidos:[{id, estado, enviado_en, entregado_en, leido_en}]}). Si el servidor no la
-   tiene todavia, se deja de preguntar en esta sesion (sin avisos de falla) y las palomitas se quedan como estaban. */
+/* lee del servidor el estado de los pedidos de la tarea abierta. build 220 (Carlos 10:12): LECTURA = wa_estados (plural)
+   POST {usuario, ids:[...]} (tope 200) -> {pedidos:[{id, estado, enviado_en, entregado_en, leido_en, tarea_id, contacto}],
+   no_encontrados:[...]}; horas vacias = null. (wa_estado, singular, es la de ESCRITURA de la Mac: no se usa aqui.)
+   Los no_encontrados se dejan de pedir (quedan marcados en el mensaje). Si el servidor dice que la accion no existe,
+   se deja de preguntar en esta sesion; cualquier otra falla solo salta esa vuelta. Sin avisos de falla. */
+var WA_EST_TOPE=200;
 function _estadosDe(j){
   if(!j || j.error) return null;
   var l=j.pedidos||j.estados||j.lista||j.items||(Array.isArray(j)?j:null);
   if(l && !Array.isArray(l) && typeof l==="object") l=Object.keys(l).map(function(k){ return Object.assign({id:k}, l[k]); });
-  return Array.isArray(l)?l:null;
+  return Array.isArray(l)?l:(Array.isArray(j.no_encontrados)?[]:null);
 }
-function aplicaEstadosWA(t, l){
+function aplicaEstadosWA(t, l, noEnc){
   var cambio=false;
+  (noEnc||[]).forEach(function(id){ id=String(id); (t.msgs||[]).forEach(function(x){ if(!llevaPalomitas(x)) return;
+    if(pidsWA(x).indexOf(id)<0) return; x.wa_st=x.wa_st||{}; var a=x.wa_st[id]||{n:nivelWA(WA_EST[id])};
+    if(!a.ne){ x.wa_st[id]={n:a.n||0, e:a.e||"", ne:1}; cambio=true; } }); });
   (l||[]).forEach(function(e){ if(!e || e.id==null) return; var id=String(e.id); WA_EST[id]=e; });
   (t.msgs||[]).forEach(function(x){ if(!llevaPalomitas(x)) return;
     pidsWA(x).forEach(function(p){ if(!p || !WA_EST[p]) return; var n=nivelWA(WA_EST[p]);
@@ -7041,13 +7047,15 @@ function consultaEstadosWA(t){
   if(typeof APP_TOKEN==="undefined" || String(APP_TOKEN).indexOf("__")===0) return Promise.resolve(false);
   var ids=[];
   (t.msgs||[]).forEach(function(x){ if(!llevaPalomitas(x)) return; if(x.ts && Date.now()-x.ts>7*24*3600*1000) return;
-    pidsWA(x).forEach(function(p){ if(!p) return; var n=nivelWA(WA_EST[p]||(x.wa_st||{})[p]); if(n>=0 && n<3 && ids.indexOf(p)<0) ids.push(p); }); });
+    pidsWA(x).forEach(function(p){ if(!p) return; var g=(x.wa_st||{})[p]; if(g && g.ne) return; var n=nivelWA(WA_EST[p]||g); if(n>=0 && n<3 && ids.indexOf(p)<0) ids.push(p); }); });
   if(!ids.length) return Promise.resolve(false);
-  return fetch(PUSH+"?action=wa_estado",{method:"POST",
+  ids=ids.slice(-WA_EST_TOPE);   /* tope del servidor: los mas recientes */
+  return fetch(PUSH+"?action=wa_estados",{method:"POST",
       headers:{"content-type":"application/json","x-app-token":APP_TOKEN}, body:JSON.stringify({usuario:yo, ids:ids})})
     .then(function(r){ return r.json().catch(function(){ return {error:"HTTP "+r.status}; }); })
-    .then(function(j){ var l=_estadosDe(j); if(!l){ window.__waEstNo=1; return false; }
-      if(aplicaEstadosWA(t, l)){ guarda(t); if(vista==="hilo" && abierta===t.id) render(); return true; } return false; })
+    .then(function(j){ var l=_estadosDe(j);
+      if(!l){ if(/desconocid|no existe|unknown|invalid action|accion no|HTTP 404/i.test(String((j&&(j.error||j.message))||""))) window.__waEstNo=1; return false; }
+      if(aplicaEstadosWA(t, l, Array.isArray(j.no_encontrados)?j.no_encontrados:[])){ guarda(t); if(vista==="hilo" && abierta===t.id) render(); return true; } return false; })
     .catch(function(){ return false; });
 }
 setInterval(function(){ try{ if(vista==="hilo" && abierta){ var t=tareas.filter(function(x){ return x.id===abierta; })[0]; if(t) consultaEstadosWA(t); } }catch(e){} }, 20000);
