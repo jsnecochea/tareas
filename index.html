@@ -1201,7 +1201,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 206 · Claude dentro de la tarea anota contexto, ritmo, indefinida/recurrente y fecha dictada";
+var VERSION_APP = "build 207 · Falta info: todo lo dictado va primero a Claude (una llamada: nombre, contexto, fechas, ritmo, quién, tipo, etiquetas y vínculos propuestos)";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -4106,6 +4106,10 @@ function vFaltaInfo(t){
   var c=completitud(t), ctx=contextoDe(t), kw=palabrasClave(t);
   /* build 205: arriba "Solo me falta: …"; lo ya completo se pone tenue y plegado */
   var _sf=soloMeFalta(t), h=_sf.length?'<div class="solofalta"><b>Solo me falta:</b> '+esc(_sf.join(" · "))+'</div>':'';
+  if(t._leyendo && Date.now()-t._leyendo<60000) h='<div class="solofalta leyendo">Claude está leyendo lo que dictaste…</div>'+h;   /* build 207 */
+  var _pd207=t.dup_resuelto?[]:posibleDup(t);   /* build 207: vinculos que propuso Claude, solo propuestos */
+  if(_pd207.length) h+='<div class="revc c-vincular"><span class="rct">POSIBLE VINCULACIÓN</span><span class="rcp">Propuesta de Claude; no la vinculé.</span>'+
+    _pd207.slice(0,3).map(function(d){ return '<div class="rvv"><span><b>'+esc(d.nombre)+'</b></span><button class="rvb" data-rvinc="'+esc(d.id)+'">Vincular</button></div>'; }).join("")+'</div>';
   if(c.ctxOk) h+='<div class="fic ctx hecho"><span class="ok">✓ Contexto</span><span class="ctxc">'+esc(ctx.length>90?ctx.slice(0,89)+"…":ctx)+'</span></div>';
   else h+='<div class="fic ctx"><div class="meter"><div class="lb"><span class="ok">Contexto'+(c.ctxOk?' ✓':'')+'</span><span class="pend">'+(c.ctxOk?'listo':'mínimo en la rayita')+'</span></div>'+
     '<div class="bar g"><i style="width:'+c.ctxPct+'%"></i></div></div>'+
@@ -6910,55 +6914,120 @@ function soloMeFalta(t){
   if(!c.ctxOk) f.unshift("un poco más de contexto");
   return f;
 }
+/* ===== build 207 (Salvador 21:46): en "Falta info" TODO lo dictado va PRIMERO a Claude, en UNA llamada que regresa
+   todos los campos (nombre, tipo, contexto, fechas dictadas, ritmo/seguimiento, indefinida/recurrente, quien, etiquetas
+   y sinonimos, y vinculos PROPUESTOS con tareas abiertas parecidas). La extraccion sin IA del 205 queda SOLO de respaldo
+   sin red. Candados (nada inventado): fecha por candadoFecha; indefinida, recurrente y ritmo solo si se dijeron; quien
+   solo si se nombro; vinculos solo ids de la lista que se le paso, y solo se proponen (franja), nunca se aplican. ===== */
+/* lista corta de tareas abiertas para proponer vinculos: primero las que comparten palabras con lo dictado */
+function abiertasParaVincular(t, v, max){
+  var base=palabrasBusqueda([v, t.nombre, t.contexto].join(" "));
+  return (tareas||[]).filter(function(x){ return x && x.id!==t.id && !x.cierre && !x.fusionada_en && !x.es_recordatorio && estadoReal(x)!=="cerrada"; })
+    .map(function(x, i){ var w=palabrasBusqueda([x.nombre, x.contexto, (x.palabras||[]).join(" ")].join(" ")), n=0;
+      base.forEach(function(b){ if(w.indexOf(b)>=0) n++; }); return {t:x, n:n, i:i}; })
+    .sort(function(a,b){ return (b.n-a.n) || (a.i-b.i); }).slice(0, max||30).map(function(x){ return x.t; });
+}
+/* lo que se le pasa a Claude: el estado actual de la tarea */
+function estadoParaClaude(t){
+  var q=t.duenio&&PERSONAS[t.duenio]?PERSONAS[t.duenio].nombre:"(nadie)", av=(t.avisos||[]).filter(function(a){ return a&&a.fecha; }).map(function(a){ return a.fecha+(a.hora?" "+a.hora:""); });
+  var cif=(t.datos_corregidos||[]).slice(-1).map(function(d){ return String((d&&d.t)||d||""); })[0]||"";
+  return ["NOMBRE: "+(t.nombre||"(sin nombre)"), "TIPO: "+tipoItem(t), "QUIÉN LA HACE: "+q,
+    "FECHA: "+(t.f_vigente?(t.f_vigente+(t.fecha_dictada?" (dictada)":(fechaPuestaSola(t)?" (la puso el sistema, no cuenta)":""))):"(sin fecha)"),
+    "INDEFINIDA: "+(t.indefinida===true?"sí":"no"), "RECURRENTE: "+(t.periodicidad||"no"), "RITMO: "+(t.ritmo||"(ninguno)"), "AVISOS: "+(av.join(", ")||"(ninguno)"),
+    "CONTEXTO: "+(contextoDe(t)||"(nada)"), "ETIQUETAS: "+((t.palabras||[]).join(", ")||"(ninguna)"), "DE QUIÉN/PROYECTO: "+(t.de_quien||"(nada)"), "CIFRAS: "+(cif||"(ninguna)")].join("\n");
+}
+function promptRevision(t, v, abiertas){
+  var gente=Object.keys(PERSONAS).map(function(k){ return PERSONAS[k].nombre; }).join(", ");
+  return "Eres Claude dentro de la app de tareas Doit. "+((PERSONAS[yo]||{}).nombre||"El usuario")+" está completando esta tarea y te dicta TODO de una vez. "+
+    "Entiende el concepto completo y saca SOLO lo que dijo, sin inventar. Fechas AAAA-MM-DD copiadas de este calendario (NO calcules el día): "+calendarioProximo(60).join(", ")+".\n"+
+    "- nombre: un nombre corto y bueno (máx 60 letras) si el actual no sirve o lo pide; si el actual está bien, null.\n"+
+    "- tipo: 'tarea' si alguien tiene que hacer algo; 'dato' si es información para consultar (precios, medidas, teléfonos); null si no se sabe.\n"+
+    "- contexto: el contexto COMPLETO actualizado (lo que ya había + lo nuevo): de qué se trata, quiénes, para qué, en 1 a 3 frases. contexto_modo 'reemplazar' (default) o 'sumar'.\n"+
+    "- fecha: fecha de finiquito SOLO si la dictó. indefinida=true solo si dijo que no tiene fin. periodicidad 'semanal'/'mensual' solo si dijo que se repite.\n"+
+    "- ritmo: cada cuánto quiere que le recuerde o revise (ej. 'una vez al mes'), solo si lo dijo. recordar: avisos que pidió [{fecha, hora HH:MM}].\n"+
+    "- quien: quién la hace, SOLO si lo dijo, con el nombre tal cual de esta lista: "+gente+".\n"+
+    "- palabras: hasta 5 etiquetas para encontrarla; sinonimos: hasta 5 sinónimos o formas en que la podría buscar.\n"+
+    "- vinculos: ids (de TAREAS ABIERTAS) que traten de LO MISMO, máx 3; solo se proponen. Si ninguna, [].\n"+
+    "- de_quien y cifras: para datos (de quién o qué proyecto; montos o medidas tal cual). ya_hecha=true solo si dice que ya se hizo.\n"+
+    "- pregunta: SOLO lo que de verdad quedó ambiguo, en una pregunta corta; lo demás llénalo igual. Si todo quedó claro, null.\n"+
+    "Contesta SOLO JSON: {\"nombre\":null,\"tipo\":null,\"contexto\":null,\"contexto_modo\":\"reemplazar\",\"fecha\":null,\"indefinida\":false,\"periodicidad\":null,\"ritmo\":null,\"recordar\":[],\"quien\":null,\"palabras\":[],\"sinonimos\":[],\"vinculos\":[],\"de_quien\":null,\"cifras\":null,\"ya_hecha\":false,\"pregunta\":null}\n\n"+
+    "ESTADO ACTUAL DE LA TAREA:\n"+estadoParaClaude(t)+"\n\nLO QUE FALTA: "+(soloMeFalta(t).join(" | ")||"(nada)")+"\nPREGUNTAS QUE LE HICE: "+(preguntasFalta(t).join(" | ")||"(ninguna)")+
+    "\n\nTAREAS ABIERTAS (id | nombre):\n"+(abiertas.map(function(x){ return x.id+" | "+(x.nombre||""); }).join("\n")||"(ninguna)")+
+    "\n\nLO QUE DICTÓ: "+v;
+}
+/* aplica lo que regreso Claude, con candados. Regresa {hecho, dudas, vinc, yaHecha} */
+function aplicaRevisionClaude(t, v, j, abiertas){
+  j=j||{}; var s=_fsa(v), hecho=[], dudas=[], vinc=[];
+  if(j.ya_hecha===true) return {hecho:hecho, dudas:dudas, vinc:vinc, yaHecha:true};
+  var tp=String(j.tipo||"").toLowerCase();
+  if((tp==="tarea"||tp==="dato") && tipoItem(t)!==tp){ t.tipo_item=tp; t.es_dato=(tp==="dato"); hecho.push(tp==="dato"?"es dato":"es tarea"); }
+  else if(tp==="tarea"||tp==="dato"){ t.tipo_item=tp; t.es_dato=(tp==="dato"); }
+  if(j.nombre && String(j.nombre).trim().length>=2){ var nn=tituloTarea(conMayuscula(String(j.nombre).replace(/\s+/g," ").trim().slice(0,60)));
+    if(nn!==t.nombre){ t.nombre=nn; hecho.push("nombre “"+nn+"”"); } }
+  var cx=String(j.contexto||"").replace(/\s+/g," ").trim();
+  if(cx && !fechasRaras(cx, fechaDictada(v).todas.concat([t.f_vigente,t.f_original].filter(Boolean))).length){
+    var _pw=function(x){ return String(x||"").split(/\s+/).filter(function(w){ return w.length>1; }).length; }, ant=String(contextoDe(t)||"").trim();
+    var reemp=String(j.contexto_modo||"reemplazar").toLowerCase()!=="sumar" && _pw(cx)>=Math.min(CTX_MIN_PAL, _pw(ant));
+    var nuevo=(reemp || !ant) ? cx : (ant+" "+cx);
+    /* si el resumen de Claude queda corto (bajo la rayita) y lo dictado traia mas, no se pierde lo dictado */
+    if(_pw(nuevo)<CTX_MIN_PAL && _pw(v)>_pw(nuevo)) nuevo=(ant && _pw(ant)<CTX_MIN_PAL ? ant+" " : "")+String(v).replace(/\s+/g," ").trim();
+    if(_nn(nuevo)!==_nn(ant)){ t.contexto=nuevo.slice(0,600); hecho.push("contexto"); } }
+  if(j.indefinida===true && t.indefinida!==true && /indefinid|sin\s+fecha|no\s+tiene\s+(fecha|fin)|sin\s+fin|permanente/.test(s)){ t.indefinida=true; t.falta_fecha=false; hecho.push("indefinida"); }
+  var per=String(j.periodicidad||"").toLowerCase();
+  if((per==="semanal"||per==="mensual") && /recurrente|se\s+repite|repetir|cada\s+(semana|mes)|semanal|mensual|todas\s+las\s+semanas|todos\s+los\s+meses/.test(s) && t.periodicidad!==per){ t.periodicidad=per; t.tipo="recurrente"; hecho.push(per==="semanal"?"recurrente cada semana":"recurrente cada mes"); }
+  if(j.ritmo && String(j.ritmo).trim() && RITMO_RE.test(s)){ var rt=String(j.ritmo).trim().slice(0,80); if(_nn(rt)!==_nn(t.ritmo||"")){ t.ritmo=conMayuscula(rt); hecho.push("ritmo: "+rt.toLowerCase()); } }
+  /* fecha SOLO si Claude la vio como fecha de la tarea Y se dicto (el candado manda la dictada); sin fecha dictada, ninguna */
+  var _fdv=fechaDictada(v), _cf=(j.fecha && _fdv.todas.length) ? candadoFecha(v, j.fecha) : {ok:false, fecha:null, duda:_fdv.duda||""};
+  if(_cf.ok && _cf.corregida && _fdv.todas.length>1){ _cf={ok:false, fecha:null, duda:"¿Cuál de las fechas que dijiste es la de la tarea?"}; }
+  if(_cf.duda) dudas.push(_cf.duda+" La fecha no la cambié.");
+  else if(_cf.ok && _cf.fecha && _cf.fecha!==t.f_vigente){ t.fecha_dictada=!!_cf.dictada; t.f_original=_cf.fecha; t.f_vigente=_cf.fecha; t.falta_fecha=false; hecho.push("termina el "+fechaBonita(_cf.fecha)); }
+  else if(_cf.ok && _cf.fecha){ t.fecha_dictada=!!_cf.dictada; t.falta_fecha=false; }
+  var _todas=fechaDictada(v).todas, _rel=/\b(antes|despues|previo|previa)\b/.test(s);
+  (Array.isArray(j.recordar)?j.recordar:[]).slice(0,6).forEach(function(r){
+    if(r && _fReal(r.fecha) && !_cf.duda && (!_todas.length || _rel || _todas.indexOf(r.fecha)>=0)){ nuevoAviso(t,{texto:t.nombre, fecha:r.fecha, hora:r.hora||"", dicho:v}); hecho.push("aviso "+fechaBonita(r.fecha)+(r.hora?" "+r.hora:"")); } });
+  if(j.quien && String(j.quien).trim()){ var qn=_nn(String(j.quien).trim()), k=Object.keys(PERSONAS).filter(function(x){ var pn=_nn(PERSONAS[x].nombre); return pn===qn || pn.split(" ")[0]===qn.split(" ")[0]; })[0];
+    var dicho=k && (s.indexOf(_nn(PERSONAS[k].nombre).split(" ")[0])>=0 || (k===yo && /\b(yo|mia|mio|me toca|la hago|lo hago)\b/.test(s)));
+    if(dicho && k!==t.duenio){ if(!t.duenio) t.duenio=k; else transfiere(t, k, "lo dijo "+((PERSONAS[yo]||{}).nombre||"")+" al completarla"); hecho.push("quién: "+(k===yo?"tú":PERSONAS[k].nombre)); } }
+  var pal=(Array.isArray(j.palabras)?j.palabras:[]).concat(Array.isArray(j.sinonimos)?j.sinonimos:[]).map(function(w){ return String(w).toLowerCase().trim(); }).filter(Boolean);
+  pal=pal.filter(function(w,i){ return pal.indexOf(w)===i; });
+  if(pal.length){ t.palabras=pal.slice(0,10); if(Array.isArray(j.sinonimos)) t.sinonimos=j.sinonimos.map(function(w){ return String(w).toLowerCase().trim(); }).filter(Boolean).slice(0,6); hecho.push("etiquetas"); }
+  if(j.de_quien && String(j.de_quien).trim() && _nn(j.de_quien)!==_nn(t.de_quien||"")){ t.de_quien=String(j.de_quien).trim().slice(0,60); hecho.push("de "+t.de_quien); }
+  if(j.cifras && String(j.cifras).trim() && /\d/.test(String(j.cifras))){ var _fr=fechasRaras(String(j.cifras), _todas);
+    if(!_fr.length){ t.datos_corregidos=(t.datos_corregidos||[]).concat([{t:String(j.cifras).trim().slice(0,600), ts:Date.now(), dicho:String(v).slice(0,300)}]).slice(-30); hecho.push("cifras"); } }
+  var ids=(abiertas||[]).map(function(x){ return x.id; });
+  (Array.isArray(j.vinculos)?j.vinculos:[]).forEach(function(id){ id=String(id||"").trim(); if(id && id!==t.id && ids.indexOf(id)>=0 && vinc.indexOf(id)<0 && vinc.length<3) vinc.push(id); });
+  if(vinc.length && !t.dup_resuelto){ t.posible_dup=(t.posible_dup||[]).concat(vinc).filter(function(x,i,a){ return a.indexOf(x)===i; }); }   /* solo se PROPONE (franja) */
+  if(t.f_vigente || t.periodicidad || t.indefinida===true){ t.pendiente_info=""; t.pendiente_tipo=""; }
+  /* la pregunta puede nombrar dias o meses SOLO si los dijo el ("¿jueves o viernes?"); fechas sueltas del modelo, no */
+  var pq=String(j.pregunta||"").trim();
+  if(pq){ var _dm=_fsa(pq).match(new RegExp("\\b("+_DIARE+"|"+_MESRE+")\\b","g"))||[];
+    var _pqOk=!/\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}\s*[-/]\s*\d{1,2}\b/.test(pq) && _dm.every(function(w){ return new RegExp("\\b"+w+"\\b").test(s); });
+    if(_pqOk) dudas.push(pq); }
+  return {hecho:hecho, dudas:dudas, vinc:vinc, yaHecha:false};
+}
 function completaRevision(t, v){
   msg(t,"bo",v); var _m0=t.msgs[t.msgs.length-1]; _m0.de=yo; _m0.completa_info=1;
-  var _loc=extraeLocal(t, v);                      /* build 205: las barras se llenan YA, antes de la IA */
-  guarda(t); render();
-  var _avisa=function(hecho){ if(revisaCompleta(t)) return true;
-    var f=soloMeFalta(t); msg(t,"bi",(hecho.length?"Anoté: "+hecho.join(", ")+". ":"")+(f.length?"Solo me falta: "+f.join(", ")+".":"")); guarda(t); render(); return false; };
-  var qs=preguntasFalta(t);
-  var sys="Eres el asistente de tareas. Te doy una tarea, las preguntas que le hice al usuario y su respuesta. "+
-    "Saca SOLO lo que dijo, sin inventar. Fechas AAAA-MM-DD usando este calendario: "+calendarioProximo(40).join(", ")+". "+
-    "periodicidad solo 'semanal', 'mensual' o null. recordar = avisos antes de terminar (fecha y hora HH:MM si la dijo). "+
-    "Si dice que ya se hizo, ya_hecha=true. NUNCA inventes fecha de finiquito: fecha solo si la dijo; indefinida=true solo si dijo que no tiene fin. "+
-    "contexto = el contexto COMPLETO actualizado (lo que ya habia + lo nuevo), de que se trata, en 1 a 3 frases. "+
-    "palabras = hasta 5 palabras para encontrarla. de_quien = de quien o de que proyecto es (si lo dijo). cifras = montos o medidas que dijo, tal cual. "+
-    "ritmo = cada cuanto quiere que le recuerde o revise (ej. 'una vez al mes'), solo si lo dijo. "+
-    "Contesta SOLO JSON: "+
-    "{\"nombre\":null,\"fecha\":null,\"indefinida\":false,\"periodicidad\":null,\"recordar\":[],\"contexto\":null,\"palabras\":[],\"de_quien\":null,\"cifras\":null,\"ritmo\":null,\"ya_hecha\":false}";
-  preguntaAClaude([{role:"user",content:sys+"\n\nTIPO: "+tipoItem(t)+"\nTAREA: "+(t.nombre||"")+"\nCONTEXTO ACTUAL: "+(t.contexto||"(nada)")+"\nFALTA: "+completitud(t).items.filter(function(x){ return !x.ok; }).map(function(x){ return x.tx; }).join(" | ")+"\nPREGUNTAS: "+qs.join(" | ")+"\nRESPUESTA: "+v}],"rapido",function(txt,err){
-    if(err){ if(t.pendiente_info && !_loc.length) completaPendiente(t.id, v); else { if(!_avisa(_loc)) {} } return; }   /* build 205: lo local ya quedó */
-    var j={}; try{ var mm=String(txt).match(/\{[\s\S]*\}/); j=mm?JSON.parse(mm[0]):{}; }catch(e){ j={}; }
-    if(j.ya_hecha){ t.pendiente_info=""; t.pendiente_tipo=""; t.falta_fecha=false; t.autorizada=true; cierraHecha(t); render(); return; }
-    var hecho=_loc.slice();
-    if(j.ritmo && String(j.ritmo).trim() && RITMO_RE.test(_fsa(v)) && !String(t.ritmo||"").trim()){ t.ritmo=conMayuscula(String(j.ritmo).trim().slice(0,80)); hecho.push("ritmo: "+t.ritmo); }
-    if(j.nombre && String(j.nombre).trim().length>=2){ t.nombre=conMayuscula(String(j.nombre).trim().slice(0,60)); hecho.push("nombre “"+t.nombre+"”"); }
-    /* build 190: CANDADO — la fecha de Claude solo entra si cuadra con lo dictado; si lo
-       dictado trae fecha, MANDA la dictada; si esta en duda, no se guarda y se pregunta. */
-    var _cf=candadoFecha(v, j.fecha), _dudaRev=_cf.duda;
-    if(_cf.ok && _cf.fecha){ t.fecha_dictada=!!_cf.dictada; t.f_original=_cf.fecha; t.f_vigente=_cf.fecha; t.falta_fecha=false; hecho.push("termina el "+fechaBonita(_cf.fecha)); }
-    if(j.periodicidad==="semanal"||j.periodicidad==="mensual"){ t.periodicidad=j.periodicidad; hecho.push(j.periodicidad==="semanal"?"cada semana":"cada mes"); }
-    /* build 190: avisos de Claude con candado: si dictaste fechas, el aviso tiene que caer
-       en una de ellas (salvo "un dia antes"/"despues", que no traen fecha propia). */
-    var _todasRev=fechaDictada(v).todas, _relRev=/\b(antes|despues|previo|previa)\b/.test(_fsa(v));
-    (Array.isArray(j.recordar)?j.recordar:[]).slice(0,6).forEach(function(r){
-      if(r && _fReal(r.fecha) && !_dudaRev && (!_todasRev.length || _relRev || _todasRev.indexOf(r.fecha)>=0)){ nuevoAviso(t,{texto:t.nombre, fecha:r.fecha, hora:r.hora||"", dicho:v}); hecho.push("aviso "+fechaBonita(r.fecha)+(r.hora?" "+r.hora:"")); }
+  t._leyendo=Date.now(); guarda(t); render();   /* la tarjeta dice "Claude está leyendo…" */
+  var _fin=function(hecho, dudas, vinc){ delete t._leyendo; guarda(t); try{ sincronizaAvisos(t); }catch(e){}
+    var _pv=(vinc||[]).map(function(id){ var d=tareas.filter(function(x){ return x.id===id; })[0]; return d?"“"+d.nombre+"”":""; }).filter(Boolean);
+    var _vx=_pv.length?" Posible vínculo con "+_pv.join(" o ")+": te lo dejo propuesto, no lo vinculé.":"";
+    if(!(dudas||[]).length && revisaCompleta(t)){ if(_vx){ msg(t,"bi",(hecho.length?"Anoté: "+hecho.join(", ")+".":"")+_vx); guarda(t); } return; }
+    var f=soloMeFalta(t), tx=[hecho.length?"Anoté: "+hecho.join(", ")+".":"", (dudas||[]).join(" "), f.length?"Solo me falta: "+f.join(", ")+".":""].filter(Boolean).join(" ")+_vx;
+    if(!tx){ if(revisaCompleta(t)) return; tx="No pesqué datos nuevos; dímelo otra vez."; }
+    msg(t,"bi",tx.trim()); guarda(t); render(); };
+  /* respaldo SIN red (o respuesta ilegible): la extraccion local del 205 */
+  var _respaldo=function(){ var loc=extraeLocal(t, v); if(t.pendiente_info && !loc.length){ delete t._leyendo; completaPendiente(t.id, v); return; } _fin(loc, [], []); };
+  var _ab=abiertasParaVincular(t, v, 30);
+  try{
+    preguntaAClaude([{role:"user",content:promptRevision(t, v, _ab)}],"rapido",function(txt,err){
+      if(err){ _respaldo(); return; }
+      var j=null; try{ var mm=String(txt||"").match(/\{[\s\S]*\}/); j=mm?JSON.parse(mm[0]):null; }catch(e){ j=null; }
+      if(!j){ _respaldo(); return; }
+      var r=aplicaRevisionClaude(t, v, j, _ab);
+      if(r.yaHecha){ delete t._leyendo; t.pendiente_info=""; t.pendiente_tipo=""; t.falta_fecha=false; t.autorizada=true; cierraHecha(t); render(); return; }
+      _fin(r.hecho, r.dudas, r.vinc);
     });
-    /* build 205: el contexto de la IA entra si no deja la rayita peor que lo que ya habia (no se pierde lo dictado) */
-    if(j.contexto && String(j.contexto).trim()){ var _pw=function(x){ return String(x||"").split(/\s+/).filter(function(w){ return w.length>1; }).length; };
-      if(_pw(j.contexto)>=Math.min(CTX_MIN_PAL, _pw(contextoDe(t)))){ t.contexto=String(j.contexto).trim().slice(0,600); if(hecho.indexOf("contexto")<0) hecho.push("contexto"); } }
-    /* build 195: indefinida solo si lo dijo (nunca un finiquito inventado); palabras, de quien y cifras */
-    if(j.indefinida===true && t.indefinida!==true && /indefinid|sin\s+fecha|no\s+tiene\s+(fecha|fin)|sin\s+fin|permanente/i.test(v)){ t.indefinida=true; t.falta_fecha=false; hecho.push("indefinida"); }
-    if(Array.isArray(j.palabras) && j.palabras.length) t.palabras=j.palabras.map(function(w){ return String(w).toLowerCase().trim(); }).filter(Boolean).slice(0,6);
-    if(j.de_quien && String(j.de_quien).trim()){ t.de_quien=String(j.de_quien).trim().slice(0,60); hecho.push("de "+t.de_quien); }
-    if(j.cifras && String(j.cifras).trim() && /\d/.test(String(j.cifras))){ var _fr=fechasRaras(String(j.cifras), fechaDictada(v).todas);
-      if(!_fr.length){ t.datos_corregidos=(t.datos_corregidos||[]).concat([{t:String(j.cifras).trim().slice(0,600), ts:Date.now(), dicho:String(v).slice(0,300)}]).slice(-30); hecho.push("cifras"); } }
-    if(t.f_vigente || t.periodicidad || t.indefinida===true){ t.pendiente_info=""; t.pendiente_tipo=""; }
-    if(_dudaRev) msg(t,"bi", _dudaRev+" La fecha no la cambié.");
-    guarda(t); try{ sincronizaAvisos(t); }catch(e){}
-    if(!hecho.length && !_dudaRev){ msg(t,"bi","No pesqué datos nuevos; dímelo otra vez."); guarda(t); render(); return; }
-    _avisa(hecho);   /* build 195/205: completa -> palomita y a la siguiente; si no, "Solo me falta: …" */
-  });
+  }catch(e){ _respaldo(); }
 }
 function loQueDetengo(){
   var a=tareas.filter(function(t){ return meDetiene(t) && !t.pendiente_info && !esDecisionSal(t) });
@@ -11763,7 +11832,7 @@ function bindHilo(){
        aunque suene a nota para Claude ("…es para que sepas el contexto" caia en esNotaClaude -> notaClaude -> "No cambié nada").
        Solo las ordenes claras (eliminar, pasarla, encargarla) siguen yendo a Claude. */
     var _corto205=String(v).split(/\s+/).filter(Boolean).length<=6;   /* "es dato" / "es tarea" solos siguen su camino de abajo */
-    if(tipoRevisar(t)==="falta" && !ordenClaraClaude(v) && !detectaLista(v) && listaNumerada(v).length<2 && !(tipoDicho(v) && _corto205) &&
+    if(tipoRevisar(t)==="falta" && !ordenClaraClaude(v) && (tipoItem(t)==="dato" || (!detectaLista(v) && listaNumerada(v).length<2)) && !(tipoDicho(v) && _corto205) &&
        !/^\s*(autor[ií]za(la|lo)?|aut[oó]rizal[ao])\s+(as[ií]|como\s+est[aá])\b/i.test(v)){
       $("txt").value=""; marcaEnvio("tenv","");
       var _tp205=tipoDicho(v); if(_tp205){ t.tipo_item=_tp205; t.es_dato=(_tp205==="dato"); }   /* "Esto es una tarea en contexto…" tambien fija el tipo */

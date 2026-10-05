@@ -109,6 +109,6 @@ si("respuesta junta las dos", /^Anoté: ritmo: una vez al mes\. Cambié el nombr
 IA.resp = { accion: "contexto", contexto: "Tarea maestra de proyectos de la colonia Cumbres con el consejo: presidente, secretario, tesorero y vocal; reuniones dos veces al año.", contexto_modo: "reemplazar", ritmo: "una vez al mes", indefinida: true, respuesta: "ok" };
 sellos.length = 0; var T10 = CONSEJO(); c.abierta = T10.id; nota(T10, DICTADO);
 eq("en Falta info y completa con la nota: palomita estándar", [T10.autorizada, sellos], [true, ["autorizada"]]);
-si("VERSION_APP build 206", /var VERSION_APP = "build 206/.test(html));
+si("VERSION_APP build 206+", /var VERSION_APP = "build 20[6-9]/.test(html));
 console.log((malas.length ? malas.map(function (x) { return "  X " + x; }).join("\n") + "\n" : "") + "RESULTADO " + ok + "/" + n);
 process.exit(malas.length ? 1 : 0);
