@@ -22,11 +22,11 @@ var F_VARS = eval(ft.match(/var VARS = (\[[\s\S]*?\]);/)[1]);
 var B221 = eval(t221.match(/var FUNCS = F_FUNCS\.concat\((\[[\s\S]*?\])\)/)[1]), F_FUNCS = eval(ft.match(/var FUNCS = (\[[\s\S]*?\]);/)[1]);
 var NUEVAS = ["min225", "togMin225", "_txMsg", "msgVisible225", "metasEnCurso", "palMeta", "metaDeMsg", "resumenVivo", "cosasParaTi", "personas225", "chipsTarea", "vResumenVivo", "filtroMeta", "vFiltroMeta",
   "evidenciaMeta225", "vFichaMeta", "vDetalles225", "vPersonas225", "hoja225", "abreHoja225", "vHoja225", "tareasParaMover", "mueveMensaje", "vDudaTarea", "_nmz", "mezclaDicho", "tareaNombrada", "mensajesMezclados", "arreglaMezcla",
-  "censoAcomodo", "acomodoOk", "soloPlatica", "nombreSugerido", "nuevaDesdeMsg", "opcionesMover", "inicialesDe", "nombreLimpio", "sinEmojiUI", "ico", "chipEncabezado", "integrantesDe", "nombreInt", "quitaEtiquetasWA", "dDif", "soloMeFalta", "completitud", "contextoDe", "contextoPct", "esRecurrente", "fechaCorta", "lineaOrigen", "origenDe", "vChecklist", "tieneChecklist",
+  "estadoAgenda228", "vAgenda228", "vPastilla", "canalActual", "modoClaude", "canalesDe", "externosDe", "censoAcomodo", "acomodoOk", "soloPlatica", "nombreSugerido", "nuevaDesdeMsg", "opcionesMover", "inicialesDe", "nombreLimpio", "sinEmojiUI", "ico", "chipEncabezado", "integrantesDe", "nombreInt", "quitaEtiquetasWA", "dDif", "soloMeFalta", "completitud", "contextoDe", "contextoPct", "esRecurrente", "fechaCorta", "lineaOrigen", "origenDe", "vChecklist", "tieneChecklist",
   "_notaPriv", "mensajeDicho", "_minus1", "armaMensaje", "resuelveDestino", "borradorMensaje", "pideMensaje", "msjEnCurso", "vBorradorMsj", "srJunta", "srCorte", "srArranca", "vQuienDudas", "_nn"];
 var FUNCS = F_FUNCS.concat(B221).concat(NUEVAS).filter(function (x, i, a) { return a.indexOf(x) === i; });
 var VARS = F_VARS.concat(["SEG_HORA_DEFECTO", "ESCALA_DIAS", "AVISO_INM_RE", "CHK_EST", "AGENDA_HORA_TODO_DIA", "PALOMEO_MS", "TITULO_CONECTORES", "RITMO_RE", "CITA_RE", "CTX_MIN_PAL", "SINONIMOS", "BUSCA_VACIAS", "REV_DESDE",
-  "MIN225_KEY", "META_VACIAS", "MEZCLA_RE", "MEZCLA_DE_RE", "MSJ_RE", "MSJ_CORTE"]).filter(function (x, i, a) { return a.indexOf(x) === i; });
+  "CNL_COL", "CNL_EXT", "CLAUDE_COL", "MIN225_KEY", "META_VACIAS", "MEZCLA_RE", "MEZCLA_DE_RE", "MSJ_RE", "MSJ_CORTE"]).filter(function (x, i, a) { return a.indexOf(x) === i; });
 var codigo = bloque("/* @@FECHAS-INICIO", "/* @@FECHAS-FIN */") + "\n" + VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" + FUNCS.map(function (f) { return saca("function", f); }).join("\n");
 var RealDate = Date, NOW = new RealDate(2026, 9, 5, 13, 30, 0).getTime();
 function FakeDate() { var a = Array.prototype.slice.call(arguments); if (!(this instanceof FakeDate)) return new RealDate(NOW).toString();
@@ -38,7 +38,7 @@ var c = { Date: FakeDate, console: console, Math: Math, JSON: JSON, String: Stri
   esc: function (s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }, ico: function () { return ""; },
   msg: function (t, k, tx) { (t.msgs = t.msgs || []).push({ k: k, t: tx, h: "13:30", ts: NOW }); }, guarda: function (t) { GUARDADAS.push(t.id); }, render: function () {},
   localStorage: { getItem: function (k) { return ALMACEN[k] || null; }, setItem: function (k, v) { ALMACEN[k] = String(v); } },
-  setTimeout: function (f) { f(); }, esEjemplo: function () { return false; }, contactosWA: function () { return []; }, posibleDup: function () { return []; },
+  setTimeout: function (f) { f(); }, esEjemplo: function () { return false; }, contactosWA: function () { return []; }, soySupervisor: function () { return false; }, hayEquipo: function () { return false; }, posibleDup: function () { return []; },
   estadoReal: function (t) { return t.estado || "abierta"; }, todosLosContactos: function () { return c.CONTACTOS; }, CONTACTOS: [], cargaAgendaWA: function () {}, sincronizaAvisos: function () {},
   hhmm: function () { return "13:30"; }, toast: function () {}, eventoDe: function () { return null; } };
 vm.createContext(c); vm.runInContext(codigo, c);
@@ -69,13 +69,13 @@ var L2 = LERDO(); delete L2.por_autorizar; eq("sin por_autorizar (como antes) si
 /* ---------- 1 chips ---------- */
 var ch = c.chipsTarea(L);
 var chips = []; ch.replace(/data-chip="(\w+)"[^>]*>([\s\S]*?)<\/button>/g, function (_, k, tx) { chips.push([k, tx.replace(/<[^>]+>/g, "")]); });
-eq("chips en una línea (226: iconos de línea, sin emojis): Indefinida · Metas 2 · 3 · Detalles", chips, [["detalles", "Indefinida"], ["metas", "Metas 2"], ["personas", "3"], ["detalles", "Detalles"]]);
+eq("chips en una línea (226: iconos de línea, sin emojis): Indefinida · Metas 2 · 3 · Detalles", chips, [["detalles", "Indefinida"], ["metas", "Metas 2"], ["personas", "3"], ["resumen", "Resumen"], ["detalles", "Detalles"]]);
 var F = { id: "fiesta1", nombre: "Fiesta Cumpleaños Papá", duenio: "salvador", f_vigente: "2026-11-13", fecha_dictada: true, estado: "abierta", msgs: [], ritmo: "cada semana", agendado: true,
   contexto: "Comida de cumpleaños de mi papá el 13 de noviembre a partir de las dos de la tarde con la familia y los amigos de siempre en la casa",
   checklist: { titulo: "Invitados", items: [{ id: "1", tx: "Lore y Javier", estado: 2 }, { id: "2", tx: "Néstor", estado: 2 }, { id: "3", tx: "Sada", estado: 1 }, { id: "4", tx: "Lalo", estado: 1 }, { id: "5", tx: "Pollo", estado: 0 }, { id: "6", tx: "Pily", estado: 0 }, { id: "7", tx: "Braña", estado: 0 }, { id: "8", tx: "Vecino", estado: 0 }, { id: "9", tx: "Arq", estado: 0 }] } };
 c.fechaMovCorta = function (f) { return { "2026-11-13": "vie 13 nov", "2026-10-09": "vie 9 oct", "2026-10-16": "vie 16 oct" }[f] || f; };
 chips = []; c.chipsTarea(F).replace(/data-chip="(\w+)"[^>]*>([\s\S]*?)<\/button>/g, function (_, k, tx) { chips.push([k, tx.replace(/<[^>]+>/g, "")]); });
-eq("con lista: 📅 fecha · Lista 4/9 · ⓘ Detalles", chips, [["detalles", "vie 13 nov"], ["lista", "Lista 4/9"], ["detalles", "Detalles"]]);
+eq("con lista: 📅 fecha · Lista 4/9 · ⓘ Detalles", chips, [["detalles", "vie 13 nov"], ["lista", "Lista 4/9"], ["agenda", "Falta calendario"], ["resumen", "Resumen"], ["detalles", "Detalles"]]);
 var FA = { id: "tFA", nombre: "Fiesta", duenio: "salvador", creada_por: "claude", por_autorizar: true, estado: "abierta", msgs: [] };
 si("le falta algo: primer chip azul 'Falta N ›'", /^<div class="chips225"><button class="chip225 falta" data-chip="falta">Falta \d ›<\/button>/.test(c.chipsTarea(FA)));
 /* ---------- 2 resumen vivo ---------- */
@@ -84,10 +84,10 @@ r = c.resumenVivo(L);
 eq("resumen vivo: lo que sigue, a quién se espera y lo último (solo con lo que hay)", r.una,
   "Sigue: Azotea · vie 9 oct · Se espera de Manuel Parra · Último: Manuel 11:51 «Tema 2… Mesa Comedor Alt Brillo. Maribel Gonzál…»");
 eq("sin nada que decir, no se muestra", c.resumenVivo({ id: "x", nombre: "x", duenio: "salvador", indefinida: true, contexto: "algo que ya tiene contexto suficiente", msgs: [] }).una, "");
-var hv = c.vResumenVivo(L); si("resumen visible con su etiqueta", /Resumen vivo · Claude/.test(hv));
-c.togMin225(L.id, "rv"); eq("minimizado: queda un puntito y se recuerda (localStorage)", [c.vResumenVivo(L), JSON.parse(ALMACEN.doit_min225)],
-  ['<button class="rv225 min" data-min225="rv" aria-expanded="false" aria-label="Ver resumen"><span class="rvk">Resumen<svg class="icx" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span></button>', { "tIAMUVF22TRJF|rv": 1 }]);
-c.togMin225(L.id, "rv");
+eq("build 228: el resumen está plegado en su ficha (no hay bloque fijo)", c.vResumenVivo(L), "");
+c.togMin225(L.id, "rvab"); var hv = c.vResumenVivo(L); si("al tocar la ficha 'Resumen' se despliega debajo de las fichas", /^<div class="rv228">/.test(hv) && /Sigue: Azotea/.test(hv) && /aria-expanded="true"/.test(c.chipsTarea(L)));
+eq("y se recuerda (localStorage)", JSON.parse(ALMACEN.doit_min225), { "tIAMUVF22TRJF|rvab": 1 });
+c.togMin225(L.id, "rvab");
 var LA = LERDO(); LA.checklist.items[0].fecha = "2026-10-02";
 eq("meta atrasada: en rojo en el resumen", c.resumenVivo(LA).partes.filter(function (p) { return p.rojo; }).map(function (p) { return p.tx; }), ["Azotea: atrasada 3 días"]);
 /* ---------- 3 filtro por meta ---------- */
@@ -114,7 +114,7 @@ var tit2 = []; c.vDetalles225(FA).replace(/<h4><i>\d+<\/i>([^<]*)<\/h4>/g, funct
 si("Falta por poner sale en azul con botón Dictar cuando falta algo", tit2.indexOf("Falta por poner") >= 0 && /class="d225dic" data-chip="falta">Dictar/.test(c.vDetalles225(FA)));
 /* ---------- 6 sin botón verde gigante ---------- */
 eq("cosas para ti: la duda de tarea del 11:51", c.cosasParaTi(L), 1);
-si("pastilla discreta en el encabezado", /<div class="paraTi225">1 cosa para ti<\/div>/.test(c.chipsTarea(L)));
+si("build 228: sin la pastilla '1 cosa para ti'; la ficha Todo va en la fila", !/paraTi225/.test(c.chipsTarea(L)) && /id="cnlpill"/.test(c.chipsTarea(L)));
 si("vFaltaInfo ya no trae el botón verde gigante", !/class="autbtn"/.test(html.slice(html.indexOf("function vFaltaInfo("), html.indexOf("function vDatoCuerpo("))));
 /* ---------- 7 mensaje mal acomodado ---------- */
 var bd = c.vDudaTarea(L, L.msgs[4], 4);
@@ -180,10 +180,10 @@ si("versión 225 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
   var tmp = path.join(os.tmpdir(), "b225-" + process.pid + ".html");
   fs.writeFileSync(tmp, '<!doctype html><meta charset="utf-8"><style>' + css + '</style><body style="background:#000;color:#f5f5f7;font-family:-apple-system,sans-serif;margin:0;width:390px"><div id="m"></div></body>');
   try { await p.goto("file://" + tmp);
-    var hh = c.chipsTarea(LERDO()) + c.vResumenVivo(LERDO()) + c.vFiltroMeta(LERDO());
+    c.togMin225("tIAMUVF22TRJF", "rvab"); var hh = c.chipsTarea(LERDO()) + c.vResumenVivo(LERDO()) + c.vFiltroMeta(LERDO()); c.togMin225("tIAMUVF22TRJF", "rvab");
     var o = await p.evaluate(function (h) { var m = document.getElementById("m"); m.innerHTML = '<div style="display:flex;flex-direction:column">' + h + '</div>';
       var ch = m.querySelectorAll(".chip225"), tops = Array.prototype.map.call(ch, function (x) { return Math.round(x.getBoundingClientRect().top); });
-      return { unaLinea: tops.every(function (y) { return y === tops[0]; }), rv: !!m.querySelector(".rv225 .rvt"), fm: m.querySelectorAll(".fm225 .fmb").length }; }, hh);
+      return { unaLinea: tops.every(function (y) { return y === tops[0]; }), rv: !!m.querySelector(".rv228 .rvt"), fm: m.querySelectorAll(".fm225 .fmb").length }; }, hh);
     eq("en pantalla: chips en una sola línea, resumen y filtro", o, { unaLinea: true, rv: true, fm: 4 });
     c.window.__hoja225 = null; c.abreHoja225(LERDO(), "detalles");
     await p.evaluate(function (h) { document.getElementById("m").innerHTML = h; }, c.chipsTarea(LERDO()) + c.vHoja225(LERDO()));

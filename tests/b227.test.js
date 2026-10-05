@@ -8,7 +8,7 @@ var fs = require("fs"), path = require("path");
 var ok = 0, n = 0, malas = [];
 function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
 var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
-eq("versión 227", /var VERSION_APP = "build 227/.test(html), true);
+eq("versión 227 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || [])[1] || 0) >= 227, true);
 (async function () {
   var pw = require("/opt/node22/lib/node_modules/playwright"), b = await pw.chromium.launch(), p = await b.newPage({ viewport: { width: 390, height: 844 } }), errs = [];
   p.on("pageerror", function (e) { if (!/firebase is not defined/.test(e.message)) errs.push(e.message); });
@@ -36,7 +36,7 @@ eq("versión 227", /var VERSION_APP = "build 227/.test(html), true);
       o.titulo = [cs.whiteSpace, tt.scrollWidth > tt.clientWidth, Math.round(tt.getBoundingClientRect().height) < 40, !document.querySelector(".top .d")];
       tt.click(); var t2 = document.querySelector(".top .t"); o.tituloFull = [getComputedStyle(t2).whiteSpace, t2.textContent];
       t2.click();
-      var row = document.querySelector(".rvrow227"); o.pastilla = [document.querySelectorAll("#cnlpill").length, document.getElementById("cnlpill").textContent, !!row.querySelector("#cnlpill"), !!row.querySelector(".rv225"), document.querySelectorAll(".cnlwrap,#cnlclaude,#intbtn").length];
+      var row = document.querySelector(".chips225"); o.pastilla = [document.querySelectorAll("#cnlpill").length, document.getElementById("cnlpill").textContent, !!row.querySelector("#cnlpill"), !!row.querySelector('[data-chip="resumen"]'), document.querySelectorAll(".cnlwrap,#cnlclaude,#intbtn").length];
       document.getElementById("cnlpill").click(); var sh = document.querySelector(".fil227h");
       o.hoja = [].map.call(sh.querySelectorAll("[data-fil]"), function (x) { return x.getAttribute("data-fil"); });
       o.hojaAv = [].map.call(sh.querySelectorAll(".av227"), function (x) { return x.textContent; });
@@ -55,13 +55,13 @@ eq("versión 227", /var VERSION_APP = "build 227/.test(html), true);
       tareas = [FIESTA(), { id: "tPADEL", nombre: "Pádel miércoles", duenio: "salvador", estado: "abierta", msgs: [] }]; render();
       document.querySelector(".ptcard [data-acnueva]").click(); o.nuevaSale = [!!document.querySelector(".ptcard"), tareas.length];
       /* resumen plegable */
-      tareas = [FIESTA()]; render(); var rv = document.querySelector(".rv225"); o.rvAbierto = [rv.getAttribute("aria-expanded"), !!rv.querySelector(".rvk svg")];
-      rv.click(); var rv2 = document.querySelector(".rv225"); o.rvMin = [rv2.getAttribute("aria-expanded"), rv2.textContent, !!rv2.querySelector("svg"), rv2.textContent.indexOf("•") < 0];
-      o.sinEmoji = !/[\u{1F300}-\u{1FAFF}]/u.test(document.querySelector(".top").textContent + document.querySelector(".rvrow227").textContent);
+      tareas = [FIESTA()]; render(); var rv = document.querySelector('[data-chip="resumen"]'); o.rvAbierto = [rv.getAttribute("aria-expanded"), !!rv.querySelector("svg"), !!document.querySelector(".rv228")];
+      rv.click(); var rv2 = document.querySelector('[data-chip="resumen"]'); o.rvMin = [rv2.getAttribute("aria-expanded"), rv2.textContent, !!rv2.querySelector("svg"), !!document.querySelector(".rv228")];
+      o.sinEmoji = !/[\u{1F300}-\u{1FAFF}]/u.test(document.querySelector(".top").textContent + document.querySelector(".chips225").textContent);
       return o; });
     eq("título en UNA línea con …, sin el renglón de personas", r.titulo, ["nowrap", true, true, true]);
     eq("al tocar el título sale completo", r.tituloFull, ["normal", "Fiesta Cumpleaños Papá con comida en casa de Lerdo para toda la familia"]);
-    eq("UNA sola pastilla 'Todo' en el renglón del Resumen (sin Claude ni avatares aparte)", r.pastilla, [1, "Todo", true, true, 0]);
+    eq("UNA sola ficha 'Todo' en la fila de fichas, junto a Resumen (build 228)", r.pastilla, [1, "Todo", true, true, 0]);
     eq("hoja: Todo · Claude · cada integrante (con avatar) · integrantes", [r.hoja, r.hojaAv], [["todo", "claude", "ext:Arturo Tijerina", "ext:Javier Fernández", "ext:Eduardo Madero", "__int"], ["AT", "JF", "EM"]]);
     eq("lo elegido reemplaza el texto: Eduardo / Claude / Todo", [r.eligeEduardo, r.eligeClaude, r.eligeTodo], [["Eduardo", "ext:Eduardo Madero"], ["Claude", true], "Todo"]);
     eq("Te pregunta con OK · Mover · Nueva (y no repetidos en la burbuja)", r.pt, [true, ["OK", "Mover", "Nueva"], 0]);
@@ -71,7 +71,7 @@ eq("versión 227", /var VERSION_APP = "build 227/.test(html), true);
     eq("OK: desaparecen los botones, la tarjeta sigue", r.ptOk, [true, 0, "esta"]);
     eq("Mover: hoja '¿A dónde va?' (mismo flujo del 226) y la tarjeta sale de la tarea", [r.mover, r.moverSale], ["Pádel miércolesmás probable", [false, true, 1]]);
     eq("Nueva: la tarjeta sale y hay tarea nueva", r.nuevaSale, [false, 3]);
-    eq("Resumen: encabezado plegable con chevron (sin viñeta)", [r.rvAbierto, r.rvMin], [["true", true], ["false", "Resumen", true, true]]);
+    eq("Resumen (228): ficha con chevron; al tocarla se despliega debajo de las fichas", [r.rvAbierto, r.rvMin], [["false", true, false], ["true", "Resumen", true, true]]);
     eq("sin emojis en el encabezado", r.sinEmoji, true);
     eq("sin errores de página", errs, []);
   } finally { await b.close(); }

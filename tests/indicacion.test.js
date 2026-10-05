@@ -182,7 +182,7 @@ function manuel() {
   eq("sin Claude: caja normal", c.phCanal(t), "Mensaje a Samuel por WhatsApp…");
   c.window.__cnlClaude = {}; c.window.__cnlClaude[t.id] = 1;
   eq("con Claude: caja", c.phCanal(t), "Indicación para Claude…");
-  si("con Claude: pastilla 'Claude' encendida", /class="fil227 on"[^>]*>Claude<svg/.test(c.vPastilla(t)));
+  si("con Claude: pastilla 'Claude' encendida", /class="chip225 fil227 on"[^>]*>Claude<svg/.test(c.vPastilla(t)));
   si("con Claude: el envio va a notaClaude antes que cualquier canal",
     /if\(modoClaude\(t\)\)\{ \$\("txt"\)\.value=""; marcaEnvio\("tenv",""\); notaClaude\(t, v\); return; \}/.test(html) &&
     html.indexOf("if(modoClaude(t)){ $(\"txt\").value") < html.indexOf("var _cnA=canalActual(t)"));

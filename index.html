@@ -759,7 +759,7 @@ button{font:inherit;color:inherit}
 .acol{background:var(--surface);border-radius:14px;margin-top:6px;overflow:hidden}.acoli{display:flex;justify-content:space-between;gap:10px;width:100%;border:0;border-bottom:1px solid var(--line);background:none;font:inherit;font-size:14.5px;color:var(--ink);padding:10px 14px;text-align:left}
 .acoli span:last-child{color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ttl227{flex:1;min-width:0}.ttl227+.grow{display:none}
-.top .t.uno227{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}.top .t.uno227.full{white-space:normal}
+.top .t.uno227{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;font-size:19px}.top .t.uno227.full{white-space:normal}
 .ttl227 .tnm{min-width:0}
 .rvrow227{display:flex;align-items:flex-start;gap:8px;padding:0 12px 6px;flex:none}.rvrow227 .rv225{margin:0;flex:1;min-width:0;width:auto}
 .rvrow227 .rv225.min{flex:1;text-align:left}.rvrow227 .fil227{margin-left:auto}
@@ -773,6 +773,13 @@ button{font:inherit;color:inherit}
 .pth{display:flex;align-items:center;justify-content:space-between;gap:8px}.ptmin227{border:0;background:none;color:var(--ink-3);padding:0 2px;display:flex}
 .ptmini227{display:flex;align-items:center;gap:6px;margin:6px 12px 2px;padding:5px 12px;border:0;border-left:3px solid #0a84ff;border-radius:10px;background:var(--surface);color:#7cc0ff;font:inherit;font-size:13.5px;font-weight:600;flex:none;align-self:flex-start}
 .ac226.pt227{margin:2px 0 0}
+.chip225.verde{color:#30d158}.chip225.on228{color:var(--ink);background:#3a3a3c}.chip225.fil227{border:0;font-weight:400;font-size:14px;padding:6px 11px}.chip225.fil227.on{color:#7cc0ff}
+.rv228{flex:none;margin:0 12px 6px;padding:8px 12px;border-radius:12px;background:var(--surface);font-size:14.5px;line-height:1.45;color:var(--ink-2)}.rv228 .red{color:#ff453a;font-weight:700}
+.mf225 .v.verde{color:#30d158}
+.top:has(.ttl227){gap:6px;padding-left:10px;padding-right:8px}
+.top:has(.ttl227) .iconbtn:not(#bback){width:33px;height:33px;border:0;background:transparent;color:var(--ink-2)}
+.top:has(.ttl227) .iconbtn:not(#bback) svg{width:21px;height:21px}
+.top:has(.ttl227) #bback{width:34px;height:34px}
 .autpill{display:block;margin:10px auto 6px;border:0;border-radius:16px;background:rgba(48,209,88,.16);color:#30d158;font:inherit;font-size:15px;font-weight:700;padding:7px 16px}
 .hchip{flex:1;display:flex;align-items:center;gap:8px;background:var(--surface-2,#2a2a2d);border-radius:12px;padding:9px 12px;font-size:15px;color:var(--ink,#f2f2f4);min-width:0}
 .hchip span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1388,7 +1395,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 227 · Encabezado limpio: título en una línea, una sola pastilla de filtro, Te pregunta minimizable con OK · Mover · Nueva";
+var VERSION_APP = "build 228 · Encabezado compacto: una fila de fichas (fecha · lista · personas · Agendado · Resumen · Todo · Detalles)";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -6979,7 +6986,7 @@ function vPastilla(t){
      Lo elegido reemplaza el texto ("Claude ▾", "Eduardo ▾"). Va en el renglon del Resumen. */
   var c=canalActual(t), cl=modoClaude(t);
   var tx=cl?"Claude":(c.id==="todo"?"Todo":nombreCorto(c.nom).split(" ")[0]);
-  return '<button class="fil227'+(cl||c.id!=="todo"?' on':'')+'" id="cnlpill" data-fil227="1" aria-label="Ver: '+esc(tx)+'">'+esc(tx)+ico("down",13)+'</button>';
+  return '<button class="chip225 fil227'+(cl||c.id!=="todo"?' on':'')+'" id="cnlpill" data-fil227="1" aria-label="Ver: '+esc(tx)+'">'+esc(tx)+ico("down",13)+'</button>';   /* build 228: ficha igual a las demas */
 }
 function abreFiltro227(t){
   var c=canalActual(t), cl=modoClaude(t);
@@ -8496,15 +8503,38 @@ function chipsTarea(t){
     h+='<button class="chip225'+(rj?' red':'')+'" data-chip="metas">'+ico("list",15)+'Metas '+pe.length+'</button>'; }
   else if(tieneChecklist(t)){ var L=t.checklist.items; h+='<button class="chip225" data-chip="lista">'+ico("list",15)+'Lista '+L.filter(function(x){ return (+x.estado||0)>=1; }).length+'/'+L.length+'</button>'; }
   var pp=personas225(t); if(pp.n) h+='<button class="chip225" data-chip="personas" aria-label="Personas">'+ico("people",15)+pp.n+'</button>';
+  /* build 228 (Salvador 16:33): UNA fila de fichas iguales: fecha · Lista · personas · Agendado · Resumen · Todo ⌄ · Detalles.
+     Sin "1 cosa para ti", sin el renglon "Agendado ✓ · Calendario…" y sin el bloque grande del Resumen. */
+  var ag=estadoAgenda228(t); if(ag) h+='<button class="chip225'+(ag.ok?' verde':'')+'" data-chip="agenda">'+ico("cal",15)+esc(ag.txt)+'</button>';
+  if(resumenVivo(t).una){ var rab=min225(t.id,"rvab"); h+='<button class="chip225'+(rab?' on228':'')+'" data-chip="resumen" aria-expanded="'+(rab?'true':'false')+'">Resumen'+ico(rab?"down":"der",13)+'</button>'; }
+  h+=vPastilla(t);
   h+='<button class="chip225" data-chip="detalles">'+ico("info",15)+'Detalles</button></div>';
-  var n=cosasParaTi(t); if(n) h+='<div class="paraTi225">'+n+' cosa'+(n===1?'':'s')+' para ti</div>';
+  return h;
+}
+/* build 228: agendado = alerta de Doit Y evento en Google Calendar. Solo sale si es evento o ya se agendo algo. */
+function estadoAgenda228(t){
+  var ev=null; try{ ev=eventoDe(t); }catch(e){}
+  var alerta=t.agendado===true, cal=!!t.gcal_id;
+  if(!alerta && !cal && !ev) return null;
+  if(!alerta && !cal && t.agendar===false) return null;   /* dijo que no se agenda */
+  var txt=alerta&&cal?"Agendado":(!alerta&&!cal?"Sin agendar":(alerta?"Falta calendario":"Falta alerta"));
+  return {ok:alerta&&cal, alerta:alerta, cal:cal, gcalPend:t.gcal==="pendiente", txt:txt, ev:ev};
+}
+function vAgenda228(t){
+  var a=estadoAgenda228(t); if(!a) return '<p class="h225v0">Esta tarea no tiene nada que agendar.</p>';
+  var av=(t.avisos||[]).filter(function(x){ return x && x.fecha; }).sort(function(x,y){ return String(x.fecha+(x.hora||"")).localeCompare(String(y.fecha+(y.hora||""))); })[0];
+  var r=function(ok, k, v){ return '<div class="mfr"><span class="k">'+esc(k)+'</span><span class="v'+(ok?' verde':'')+'">'+esc(v)+'</span></div>'; };
+  var h='<div class="mf225">'+
+    r(a.alerta, "Alerta de Doit", a.alerta?("Lista"+(av?" · "+(typeof fechaMovCorta==="function"?fechaMovCorta(av.fecha):av.fecha)+(av.hora?" "+av.hora:""):"")):"Falta")+
+    r(a.cal, "Google Calendar", a.cal?"Evento creado":(a.gcalPend?"Falta · en camino (lo crea el trabajador de Calendar)":"Falta"))+
+    (a.ev && (a.ev.fecha||a.ev.hora||a.ev.lugar)?r(false, "Evento", [a.ev.fecha?(typeof fechaMovCorta==="function"?fechaMovCorta(a.ev.fecha):a.ev.fecha):"", a.ev.hora||"", a.ev.lugar||""].filter(Boolean).join(" · ")):"")+
+    '</div><p class="h225v0">'+esc(a.ok?"Tiene las dos cosas: la alerta de Doit y el evento en tu Google Calendar.":"Para quedar agendado necesita las dos: la alerta de Doit y el evento en Google Calendar.")+'</p>';
   return h;
 }
 function vResumenVivo(t){
-  var r=resumenVivo(t); if(!r.una) return "";
-  if(min225(t.id,"rv")) return '<button class="rv225 min" data-min225="rv" aria-expanded="false" aria-label="Ver resumen"><span class="rvk">Resumen'+ico("der",13)+'</span></button>';   /* build 227 */
-  return '<button class="rv225" data-min225="rv" aria-expanded="true"><span class="rvk">Resumen vivo · Claude'+ico("down",13)+'</span><span class="rvt">'+
-    r.partes.map(function(p){ return '<span'+(p.rojo?' class="red"':'')+'>'+esc(p.tx)+'</span>'; }).join(' · ')+'</span></button>';
+  /* build 228: ya no es bloque fijo: la ficha "Resumen" lo despliega debajo de las fichas y lo pliega al volver a tocarla */
+  var r=resumenVivo(t); if(!r.una || !min225(t.id,"rvab")) return "";
+  return '<div class="rv228"><span class="rvt">'+r.partes.map(function(p){ return '<span'+(p.rojo?' class="red"':'')+'>'+esc(p.tx)+'</span>'; }).join('<br>')+'</span></div>';
 }
 /* filtro del chat por meta */
 function filtroMeta(t){ var f=(window.__mfil225||{})[t.id]||""; if(f && f!=="otro" && !metasDe(t).some(function(m){ return m.id===f; })) f=""; return f; }
@@ -8587,6 +8617,7 @@ function vHoja225(t){
   } else if(H.k==="meta"){ var m=metasDe(t).filter(function(x){ return x.id===H.mid; })[0]; tit=m?metaCorta(m):"Meta"; sub="Meta de "+tareaCorta(t)+(m&&quienMeta(t,m)?" · la hace "+quienMeta(t,m):""); cuerpo=vFichaMeta(t,H.mid); }
   else if(H.k==="lista"){ tit=(t.checklist&&t.checklist.titulo)||"Lista"; window.__chkOpen=window.__chkOpen||{}; var _ab=window.__chkOpen[t.id]; window.__chkOpen[t.id]=true; cuerpo=vChecklist(t); window.__chkOpen[t.id]=_ab; }
   else if(H.k==="personas"){ tit="Personas"; cuerpo=vPersonas225(t); }
+  else if(H.k==="agenda"){ var _a228=estadoAgenda228(t); tit=_a228?_a228.txt:"Agenda"; cuerpo=vAgenda228(t); }   /* build 228 */
   else { tit="Detalles"; cuerpo=vDetalles225(t); }
   if(H.alto==="min") return '<button class="h225bar" data-h225alto="media">'+esc(tit)+' ▴</button>';
   return '<div class="h225v" data-h225x="1"></div><div class="h225 '+esc(H.alto)+'" role="dialog" aria-label="'+esc(tit)+'"><div class="h225g"></div>'+
@@ -8879,9 +8910,8 @@ function vHilo(){
   /* build 195: un renglon: chip de fecha + ▾. Sin resumen debajo. El ▾ abre "Creada con" + Contexto. */
   var _ch=chipEncabezado(t);
   /* build 225: chips en una linea (cada uno abre su hoja) + "Resumen vivo · Claude". El ▾ y su detalle viven en ⓘ Detalles */
-  var _pil=vPastilla(t);   /* build 227: la pastilla va en el renglon del Resumen */
-  h+=chipsTarea(t)+'<div class="rvrow227">'+vResumenVivo(t)+_pil+'</div>';
-  h+=lineaAgenda(t);   /* build 203: "Agendado ✓ · Calendario: en camino" / "Calendario ✓" */
+  h+=chipsTarea(t)+vResumenVivo(t);   /* build 228: una sola fila de fichas; el resumen se despliega desde su ficha */
+  /* build 228: el renglon "Agendado ✓ · Calendario…" ahora es la ficha "Agendado" (lineaAgenda queda para otras vistas) */
   h+=vDecisionMeta(t)+vDecisionDato(t)+vQuienDudas(t)+vBorradorMsj(t);   /* build 225: mensaje por confirmar; "Se comparte con" va en 👥 */   /* build 221; 222: decisión de meta atrasada */
   if(tipoRevisar(t)==="falta" && !vistaSup(t)) h+=vTipoToggle(t);   /* build 224: el supervisor no ve Tarea|Dato */
 
@@ -13463,6 +13493,7 @@ function bindHilo(){
     var k=el.getAttribute("data-chip");
     if(k==="falta"){ window.__hoja225=null; var f=[]; try{ f=soloMeFalta(t); }catch(e){} render();
       setTimeout(function(){ var mc=$("tmic"); if(mc) mc.click(); if(f.length) toast("Dímelo y lo completo: "+f.join(" · ")); }, 60); return; }
+    if(k==="resumen"){ togMin225(t.id,"rvab"); render(); return; }   /* build 228 */
     abreHoja225(t, k); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-min225]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); togMin225(t.id, el.getAttribute("data-min225")); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-mfil]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); window.__mfil225=window.__mfil225||{}; window.__mfil225[t.id]=el.getAttribute("data-mfil"); render(); }; });
@@ -15371,7 +15402,7 @@ function leeOpcionesDe(el){
     return h;
   };
 })();
-function _icoAudif(){ return '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="6.5" rx="1.6"/><rect x="16.5" y="14" width="4.5" height="6.5" rx="1.6"/></svg>'; }
+function _icoAudif(){ return '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="6.5" rx="1.6"/><rect x="16.5" y="14" width="4.5" height="6.5" rx="1.6"/></svg>'; }
 function leeExtras(){
   leeRepinta(false); leeBarra();
   if(vista==="hilo" && abierta){
