@@ -24,8 +24,8 @@ function saca(tipo, nombre) {
 var FUNCS = ["iso", "dDif", "hoy", "fechaMovCorta", "esRecurrente", "msCreacion", "_bw", "_bst", "_bpega", "palabrasBusqueda",
   "camposBusqueda", "_snip", "buscaTodo", "_sinGrupo", "mismoSentido", "esDato", "tipoItem", "_primerNombre", "juntaNombres",
   "subtituloTarea", "chipEncabezado", "creadaCon", "palabrasClave", "contextoPct", "completitud", "faltaPrimero", "_monto",
-  "_limpiaEtiqueta", "parseDesglose", "fmtMonto", "tipoDicho", "_nn", "contextoDe", "fechaPuestaSola", "_diaCreacion", "_fechaDeId"];
-var VARS = ["BUSCA_VACIAS", "CTX_MIN_PAL", "SINONIMOS"];
+  "_limpiaEtiqueta", "parseDesglose", "fmtMonto", "tipoDicho", "_nn", "contextoDe", "fechaPuestaSola", "_diaCreacion", "_fechaDeId", "eventoDe", "_esExacta"];   /* build 202 */
+var VARS = ["BUSCA_VACIAS", "CTX_MIN_PAL", "SINONIMOS", "CITA_RE"];
 var codigo = VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" + FUNCS.map(function (f) { return saca("function", f); }).join("\n");
 
 var c = { console: console, JSON: JSON, String: String, Number: Number, Math: Math, Date: Date, Array: Array, Object: Object, RegExp: RegExp,
@@ -33,6 +33,7 @@ var c = { console: console, JSON: JSON, String: String, Number: Number, Math: Ma
   contactosWA: function (t) { return t._cw || []; },
   integrantesDe: function (t) { return t._ints || [{ k: t.duenio }]; },
   nombreInt: function (k) { return String(k).indexOf("ext:") === 0 ? String(k).slice(4) : ((c.PERSONAS[k] || {}).nombre || k); },
+  fechasDichas: function () { return { lista: [], dudas: [] }; }, horaValor: function () { return ""; },   /* build 202: el nucleo de fechas se prueba en agenda.test.js */
   tareas: [] };
 vm.createContext(c); vm.runInContext(codigo, c);
 var ok = 0, n = 0, malas = [];

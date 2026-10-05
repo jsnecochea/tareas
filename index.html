@@ -700,6 +700,16 @@ button{font:inherit;color:inherit}
 @media (prefers-reduced-motion:reduce){.bar i{transition:none}}
 .chk{list-style:none;margin:0;padding:0;font-size:15px;line-height:1.6}
 .typep{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 14px}
+/* build 202: ¿Te lo agendo? */
+.fic.agenda{background:var(--fi-bluebg);border:1px solid #2f6fa8}
+.aghd{display:flex;align-items:center;gap:8px;color:var(--fi-blue);font-size:17px}
+.fic .agev{font-weight:600}.fic .agcu{color:var(--ink-3,#9a9aa2);font-size:14px}.fic .agq{color:#ffd60a}
+.agbt{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.agbt button{font-size:20px;font-weight:700;border-radius:14px;padding:16px 8px;border:1px solid #3a3a3e;background:var(--surface-2,#2a2a2d);color:var(--ink,#f2f2f4)}
+.agbt .si{background:#1a5c33;border-color:#30d158;color:#fff}
+.agin{display:flex;gap:8px}.agin input{flex:1;min-width:0;font-size:17px;padding:10px;border-radius:10px;border:1px solid #3a3a3e;background:#1c1c1e;color:var(--ink,#f2f2f4)}
+.agok{font-size:17px;font-weight:600;padding:13px;border-radius:12px;border:0;background:var(--fi-blue);color:#fff}
+.agcam{background:none;border:0;color:var(--fi-blue);font-size:14px;padding:4px 0;align-self:flex-start}
 .typep button{font-size:17px;font-weight:600;border-radius:14px;padding:12px 8px;background:var(--surface-2,#2a2a2d);color:var(--ink-3,#9a9aa2);border:1px solid #3a3a3e}
 .typep button.on{background:var(--fi-bluebg);color:var(--fi-blue);border-color:#2f6fa8}
 .dtot{font-size:27px;font-weight:700;font-variant-numeric:tabular-nums}.dsub{color:var(--ink-3,#9a9aa2);font-size:14px}
@@ -1170,7 +1180,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 201 · Falta info también para tareas viejas: fecha que nadie dictó, sin contexto o vencida sin ritmo";
+var VERSION_APP = "build 202 · ¿Te lo agendo? en Falta info: recordatorio de Doit + Google Calendar para invitaciones y citas";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -4014,6 +4024,7 @@ function vFaltaInfo(t){
   h+='<div class="fic info"><div class="meter"><div class="lb"><span style="color:var(--fi-blue)">'+(c.tipo==="dato"?'Datos del dato':'Datos de la tarea')+'</span><span class="pend">'+c.hechos+' de '+c.items.length+'</span></div>'+
     '<div class="bar b"><i style="width:'+c.datosPct+'%"></i></div></div><ul class="chk">'+
     c.items.map(function(x){ return '<li class="'+(x.ok?'ok':'pend')+'">'+(x.ok?'✓ ':'○ ')+esc(x.tx)+'</li>'; }).join("")+'</ul></div>';
+  h+=vAgenda(t);   /* build 202 */
   return h;
 }
 /* build 195: cuerpo de un DATO: Total + Desglose (lo mas nuevo arriba, lo anterior se queda como "anterior") */
@@ -4176,6 +4187,11 @@ function completitud(t){
     it.push({k:"finiquito", ok:fin, tx:fin?(t.indefinida===true||esRecurrente(t)?"Finiquito: indefinida":"Finiquito: "+fechaMovCorta(t.f_vigente)):"Finiquito: ¿fecha o indefinida?"});
     it.push({k:"seguimiento", ok:seg, tx:seg?"Próximo seguimiento listo":"Próximo seguimiento"});
   }
+  /* build 202: invitacion, cita o evento -> ultimo paso "¿Te lo agendo?" (antes de quedar completa/autorizada) */
+  var _ev=eventoDe(t);
+  if(_ev){ var _pas=!!(_ev.fecha && _ev.fecha<hoy());
+    it.push({k:"agenda", ok:t.agendado===true || t.agendar===false || _pas,
+      tx:t.agendado===true?"Agendado":(t.agendar===false?"Sin agendar":(_pas?"El evento ya pasó":(_ev.fecha?"¿Te lo agendo?":"¿Qué día es? (para agendarlo)")))}); }
   var hechos=it.filter(function(x){ return x.ok; }).length;
   return {tipo:tipo, ctxPct:pct, ctxOk:pct>=75, items:it, hechos:hechos, datosPct:Math.round(hechos*100/it.length),
           completa:pct>=75 && hechos===it.length};
@@ -4183,10 +4199,95 @@ function completitud(t){
 /* "falta finiquito" / "falta contexto": lo primero que falta, para el renglon de inicio */
 function faltaPrimero(c){
   var f=c.items.filter(function(x){ return !x.ok; })[0];
-  if(f) return {txt:"falta "+({quien:"quién",finiquito:"finiquito",seguimiento:"seguimiento",que:"qué es",de:"de quién",cifras:"cifras"}[f.k]||f.k), col:"#4aa3ff"};
+  if(f) return {txt:"falta "+({quien:"quién",finiquito:"finiquito",seguimiento:"seguimiento",que:"qué es",de:"de quién",cifras:"cifras",agenda:"agendar"}[f.k]||f.k), col:"#4aa3ff"};
   if(!c.ctxOk) return {txt:"falta contexto", col:"#30d158"};
   return null;
 }
+/* ===================== build 202 (Salvador 2026-10-04 19:14): ¿TE LO AGENDO? =====================
+   Una tarea o dato con campo evento (la Mac 18f lo llena con invitaciones, citas o eventos, tal como vienen)
+   o con una cita que se detecta (palabra de cita + fecha exacta u hora en su nombre/contexto/mensaje con que nacio)
+   lleva en "Falta info" un ultimo paso "¿Te lo agendo?" con Si / No grandes. Si: recordatorio de Doit (nuevoAviso,
+   el mismo de siempre) + Google Calendar abierto con el evento lleno (hora de Monterrey convertida a UTC) +
+   agendado:true. No: agendar:false. Sin fecha: primero se pide el dia (SIN FECHA DICTADA = SIN FINIQUITO, Y SE PREGUNTA);
+   la fecha detectada nunca se completa sola: solo se toma una fecha EXACTA (con numero); si no, se pregunta. */
+var CITA_RE=/\b(citas?|juntas?|reunion(es)?|boda|invitacion(es)?|invitan|invitados?|eventos?|fiesta|cumpleanos|comida|cena|desayuno|misa|graduacion|bautizo|comunion|xv|conferencia|congreso|torneo|partido|consulta|webinar|sesion|ceremonia|velorio|funeral|inauguracion)\b/;
+function eventoDe(t){
+  if(!t) return null;
+  var _f=function(v){ v=String(v||"").trim(); return /^\d{4}-\d{2}-\d{2}$/.test(v)?v:""; };
+  var _h=function(v){ v=String(v||"").trim(); return /^\d{2}:\d{2}$/.test(v)?v:""; };
+  if(t.evento && typeof t.evento==="object")
+    return {titulo:String(t.evento.titulo||t.nombre||"").trim(), fecha:_f(t.evento.fecha), hora:_h(t.evento.hora),
+            lugar:String(t.evento.lugar||"").trim(), notas:String(t.evento.notas||"").trim(), origen:"campo"};
+  if(t.es_recordatorio) return null;                      /* un recordatorio ya es alarma */
+  var cc={texto:""}; try{ cc=creadaCon(t); }catch(e){}
+  var tx=[t.nombre, t.contexto, t.tarea, cc.texto].filter(Boolean).join(" · ");
+  if(!CITA_RE.test(_nn(tx))) return null;
+  var fd={lista:[],dudas:[]}; try{ fd=fechasDichas(tx); }catch(e){}
+  var ex=(fd.dudas&&fd.dudas.length)?[]:(fd.lista||[]).filter(_esExacta);
+  var hr=""; try{ hr=horaValor(tx)||""; }catch(e){}
+  if(!ex.length && !hr) return null;                      /* sin fecha ni hora de cita: no se detecta nada */
+  return {titulo:String(t.nombre||"").trim(), fecha:ex.length?ex[0].f:"", hora:_h(hr), lugar:"", notas:"", origen:"detectado"};
+}
+function eventoPendiente(t){
+  if(!t || t.cierre || t.fusionada_en || estadoReal(t)==="cerrada") return false;
+  if(t.agendado===true || t.agendar===false) return false;
+  var ev=eventoDe(t); if(!ev) return false;
+  return !(ev.fecha && ev.fecha<hoy());                   /* lo que ya paso no se agenda */
+}
+/* AAAA-MM-DD + HH:MM en Monterrey -> ms UTC (sin suponer el desfase: se mide con Intl) */
+function mtyAUtcMs(fecha, hora){
+  var p=fecha.split("-").map(Number), h=String(hora||"00:00").split(":").map(Number);
+  var guess=Date.UTC(p[0],p[1]-1,p[2],h[0],h[1]);
+  var fmt=new Intl.DateTimeFormat("en-US",{timeZone:"America/Monterrey",hourCycle:"h23",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+  function off(ms){ var o={}; fmt.formatToParts(new Date(ms)).forEach(function(x){ o[x.type]=x.value; });
+    return Date.UTC(+o.year,+o.month-1,+o.day,(+o.hour)%24,+o.minute)-ms; }
+  var ms=guess-off(guess); return guess-off(ms);
+}
+function _gcalUtc(ms){ return new Date(ms).toISOString().replace(/[-:]/g,"").replace(/\.\d{3}/,""); }
+function urlGoogleCal(ev, t){
+  var dates;
+  if(ev.hora){ var a=mtyAUtcMs(ev.fecha, ev.hora); dates=_gcalUtc(a)+"/"+_gcalUtc(a+60*60*1000); }   /* 1 hora */
+  else { var p=ev.fecha.split("-").map(Number), sig=new Date(Date.UTC(p[0],p[1]-1,p[2]+1)).toISOString().slice(0,10);
+    dates=ev.fecha.replace(/-/g,"")+"/"+sig.replace(/-/g,""); }                                            /* todo el dia */
+  var det=[ev.notas, (t&&contextoDe(t))||"", t?"Desde Doit: "+t.nombre:""].filter(Boolean).join("\n");
+  return "https://calendar.google.com/calendar/render?action=TEMPLATE"+
+    "&text="+encodeURIComponent(ev.titulo||(t&&t.nombre)||"Evento")+"&dates="+dates+
+    "&details="+encodeURIComponent(det)+(ev.lugar?"&location="+encodeURIComponent(ev.lugar):"")+"&ctz=America%2FMonterrey";
+}
+function vAgenda(t){
+  if(!eventoPendiente(t)) return "";
+  var ev=eventoDe(t), edit=!ev.fecha || !!(window.__agEdit && window.__agEdit[t.id]);
+  var h='<div class="fic agenda"><div class="aghd">'+ico("cal",19)+'<b>¿Te Lo Agendo?</b></div>'+
+    '<p class="agev">'+esc(ev.titulo||t.nombre)+'</p>'+
+    '<p class="agcu">'+esc([ev.fecha?fechaBonita(ev.fecha):"Sin fecha", ev.hora?"a las "+horaBonita(ev.hora):"", ev.lugar].filter(Boolean).join(" · "))+'</p>';
+  if(edit) h+=(!ev.fecha?'<p class="agq">¿Qué día es? Sin fecha no lo agendo.</p>':'')+
+    '<div class="agin"><input type="date" id="agf" value="'+esc(ev.fecha)+'" aria-label="Día"><input type="time" id="agh" value="'+esc(ev.hora)+'" aria-label="Hora"></div>'+
+    '<button class="agok" data-agguarda="1">Guardar Fecha</button>';
+  else h+='<div class="agbt"><button class="si" data-agenda="si">Sí</button><button class="no" data-agenda="no">No</button></div>'+
+    '<button class="agcam" data-agcambia="1">Cambiar Fecha u Hora</button>';
+  return h+'</div>';
+}
+function guardaFechaEvento(t, f, h){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(f||"")){ toast("Pon el día"); return false; }
+  var ev=eventoDe(t)||{titulo:t.nombre, lugar:"", notas:""};
+  t.evento={titulo:ev.titulo||t.nombre, fecha:f, hora:/^\d{2}:\d{2}$/.test(h||"")?h:"", lugar:ev.lugar||"", notas:ev.notas||"", fecha_dictada:true};
+  window.__agEdit=window.__agEdit||{}; window.__agEdit[t.id]=0; guarda(t); return true;
+}
+function agendaEvento(t){
+  var ev=eventoDe(t);
+  if(!ev || !ev.fecha){ window.__agEdit=window.__agEdit||{}; window.__agEdit[t.id]=1; toast("Primero el día"); render(); return null; }
+  var url=urlGoogleCal(ev, t), w=null;
+  try{ w=window.open(url,"_blank"); }catch(e){}            /* dentro del toque, para que el navegador no lo bloquee */
+  var av=nuevoAviso(t, {texto:ev.titulo||t.nombre, fecha:ev.fecha, hora:ev.hora||"", dicho:""});
+  t.evento={titulo:ev.titulo, fecha:ev.fecha, hora:ev.hora, lugar:ev.lugar, notas:ev.notas, agendado_ts:Date.now(), aviso_ts:av.ts};
+  t.agendado=true; t.agendar=true;
+  msg(t,"bi","Agendado: “"+(ev.titulo||t.nombre)+"” · "+textoCuando(av)+(ev.lugar?" · "+ev.lugar:"")+". Quedó tu recordatorio en Doit y abrí Google Calendar para que lo guardes.");
+  guarda(t); sincronizaAvisos(t);
+  if(!w){ try{ location.href=url; }catch(e){} }
+  if(!revisaCompleta(t)) render();
+  return url;
+}
+function noAgendar(t){ t.agendar=false; guarda(t); if(!revisaCompleta(t)) render(); }
 /* ---- DESGLOSE de un dato guardado: Total, por mL y renglones con monto, del texto tal cual ---- */
 function _monto(s){ var m=String(s).match(/\$\s*([\d,]+(?:\.\d+)?)/); return m?Number(m[1].replace(/,/g,"")):null; }
 function _limpiaEtiqueta(lb){
@@ -6093,6 +6194,7 @@ function tipoRevisar(t){
   var _nuevo=!t.autorizada_asi && (porAutorizar(t) || (faltaInfoRev(t) && (t.creada_por===yo || t.duenio===yo)));
   if(_nuevo && !completitud(t).completa) return "falta";
   if(faltaVieja(t)) return "falta";   /* build 201: tambien lo viejo abierto al que le falta algo */
+  if(eventoPendiente(t) && (t.duenio===yo || t.creada_por===yo) && !t.autorizada_asi) return "falta";   /* build 202: ¿te lo agendo? */
   if(t.duenio===yo && !t.dup_resuelto && posibleDup(t).length) return "vincular";
   return null;
 }
@@ -11429,6 +11531,9 @@ function bindHilo(){
   try{ bindDeslizar(t); }catch(e){ console.warn("deslizar",e); }
   var _cp=$("cnlpill"); if(_cp) _cp.onclick=function(){ if(modoClaude(t)){ window.__cnlClaude[t.id]=0; render(); return; } abreCanales(t); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-tipoi]"),function(b){ b.onclick=function(){ var k=b.getAttribute("data-tipoi"); t.tipo_item=k; t.es_dato=(k==="dato"); guarda(t); if(!revisaCompleta(t)) render(); }; });   /* build 195 */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-agenda]"),function(b){ b.onclick=function(){ if(b.getAttribute("data-agenda")==="si") agendaEvento(t); else noAgendar(t); }; });   /* build 202 */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-agcambia]"),function(b){ b.onclick=function(){ window.__agEdit=window.__agEdit||{}; window.__agEdit[t.id]=1; render(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-agguarda]"),function(b){ b.onclick=function(){ var f=$("agf"), h=$("agh"); if(guardaFechaEvento(t, f&&f.value, h&&h.value)) render(); }; });
   var _ccl=$("cnlclaude"); if(_ccl) _ccl.onclick=function(){ window.__cnlClaude=window.__cnlClaude||{}; window.__cnlClaude[t.id]=window.__cnlClaude[t.id]?0:1; render(); };   /* build 193 */
   Array.prototype.forEach.call(document.querySelectorAll("[data-progc]"),function(b){ b.onclick=function(){ var mx=(t.msgs||[])[+b.getAttribute("data-progc")]; if(!mx||!mx.prog) return;
     hojaConfirma({titulo:"Mensaje programado a "+mx.prog.contacto, sub:"“"+_corto(mx.prog.texto)+"”", accion:"Cancelar el mensaje", rojo:true, cb:function(){ cancelaProgramado(t, mx); }}); }; });   /* build 199 */

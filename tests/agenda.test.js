@@ -1,0 +1,118 @@
+#!/usr/bin/env node
+/* PRUEBAS build 202: "¿Te lo agendo?" en Falta info. Tareas o datos con campo evento (Mac 18f) o con una cita
+   detectada (palabra de cita + fecha exacta u hora) llevan como ULTIMO paso del checklist la pregunta Si / No;
+   Si = recordatorio de Doit (nuevoAviso) + Google Calendar con el evento lleno (hora de Monterrey -> UTC) +
+   agendado:true; No = agendar:false; sin fecha se pide el dia antes. Usa el nucleo de fechas REAL.
+   Reloj fijo: domingo 4-oct-2026 19:30 Monterrey. Correr: TZ=America/Monterrey node tests/agenda.test.js */
+"use strict";
+var fs = require("fs"), path = require("path"), vm = require("vm");
+var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+var lineas = html.split("\n");
+function saca(tipo, nombre) {
+  var re = tipo === "function" ? new RegExp("^function " + nombre.replace(/\$/g, "\\$") + "\\(") : new RegExp("^var " + nombre + "\\s*=");
+  var ini = -1;
+  for (var i = 0; i < lineas.length; i++) if (re.test(lineas[i])) ini = i;
+  if (ini < 0) throw new Error("no encontre " + tipo + " " + nombre);
+  var out = [lineas[ini]];
+  for (var k = ini + 1; k < lineas.length; k++) {
+    var L = lineas[k];
+    if (L.length && !/^[\s}\]]/.test(L)) break;
+    out.push(L);
+    if (/^}/.test(L)) break;
+  }
+  return out.join("\n");
+}
+function bloque(a, b) { var i = html.indexOf(a), j = html.indexOf(b); return html.slice(i, j + b.length); }
+/* el nucleo de fechas, igual que tests/fechas.test.js */
+var ft = fs.readFileSync(path.join(__dirname, "fechas.test.js"), "utf8");
+var F_FUNCS = eval(ft.match(/var FUNCS = (\[[\s\S]*?\]);/)[1]), F_VARS = eval(ft.match(/var VARS = (\[[\s\S]*?\]);/)[1]);
+var FUNCS = F_FUNCS.concat(["eventoDe", "eventoPendiente", "mtyAUtcMs", "_gcalUtc", "urlGoogleCal", "vAgenda", "guardaFechaEvento", "agendaEvento", "noAgendar",
+  "completitud", "contextoPct", "contextoDe", "tipoItem", "esDato", "creadaCon", "msCreacion", "_fechaDeId", "_diaCreacion", "fechaPuestaSola", "faltaPrimero",
+  "revisaCompleta", "nuevoAviso", "textoCuando", "horaBonita", "conMayuscula", "tipoRevisar", "porAutorizar", "creadaPorSistema", "faltaInfoRev",
+  "esDecisionSal", "meDetiene", "faltaVieja", "diaMonterrey"]).filter(function (x, i, a) { return a.indexOf(x) === i; });
+var VARS = F_VARS.concat(["CITA_RE", "CTX_MIN_PAL", "REV_DESDE"]);
+var codigo = bloque("/* @@FECHAS-INICIO", "/* @@FECHAS-FIN */") + "\n" + VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" +
+  FUNCS.map(function (f) { return saca("function", f); }).join("\n");
+
+var RealDate = Date, NOW = new RealDate(2026, 9, 4, 19, 30, 0).getTime();
+function FakeDate() { var a = Array.prototype.slice.call(arguments); if (!(this instanceof FakeDate)) return new RealDate(NOW).toString();
+  return a.length ? new (Function.prototype.bind.apply(RealDate, [null].concat(a)))() : new RealDate(NOW); }
+FakeDate.prototype = RealDate.prototype; FakeDate.now = function () { return NOW; }; FakeDate.UTC = RealDate.UTC; FakeDate.parse = RealDate.parse;
+var abiertos = [], toasts = [], renders = 0, sincr = 0;
+var c = { Date: FakeDate, console: console, Math: Math, JSON: JSON, String: String, Number: Number, RegExp: RegExp, Array: Array, Object: Object, Intl: Intl,
+  isNaN: isNaN, parseInt: parseInt, encodeURIComponent: encodeURIComponent,
+  yo: "salvador", PERSONAS: { salvador: { nombre: "Salvador", jefe: true } }, tareas: [], vista: "lista", abierta: null,
+  window: { open: function (u) { abiertos.push(u); return {}; } }, location: {},
+  esc: function (s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); },
+  ico: function (n) { return "<svg data-ico=\"" + n + "\"></svg>"; }, fmt24: function () { return false; },
+  toast: function (x) { toasts.push(x); }, render: function () { renders++; }, guarda: function () {}, sincronizaAvisos: function () { sincr++; },
+  selloYSigue: function () {}, esEjemplo: function () { return false; }, contactosWA: function () { return []; }, posibleDup: function () { return []; },
+  msg: function (t, k, tx) { (t.msgs = t.msgs || []).push({ k: k, t: tx }); } };
+vm.createContext(c); vm.runInContext(codigo, c);
+var ok = 0, n = 0, malas = [];
+function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
+function si(nom, v) { eq(nom, !!v, true); }
+function T(x) { var b = { id: "tIAPRUEBA", nombre: "Boda de Ana y Luis", duenio: "salvador", creada_por: "ia_revisor", por_autorizar: true, estado: "abierta", tipo: "unica",
+  f_vigente: "", contexto: "Invitación que mandó Karina por WhatsApp a la boda de Ana y Luis en el Jardín Los Álamos, etiqueta formal, hay que confirmar", msgs: [], creada: NOW - 60000 };
+  for (var k in x) b[k] = x[k]; return b; }
+
+/* 1 de donde sale el evento */
+var BODA = T({ tipo_item: "dato", es_dato: true, de_quien: "Karina", datos_corregidos: [{ t: "Mesa 12" }], evento: { titulo: "Boda Ana y Luis", fecha: "2026-11-07", hora: "19:30", lugar: "Jardín Los Álamos", notas: "Etiqueta formal" } });
+eq("campo evento (Mac 18f)", c.eventoDe(BODA), { titulo: "Boda Ana y Luis", fecha: "2026-11-07", hora: "19:30", lugar: "Jardín Los Álamos", notas: "Etiqueta formal", origen: "campo" });
+eq("campo con fecha/hora mal formadas: vacías, nada se completa", c.eventoDe(T({ evento: { titulo: "Cita", fecha: "7 nov", hora: "7pm" } })).fecha + "|" + c.eventoDe(T({ evento: { titulo: "Cita", fecha: "7 nov", hora: "7pm" } })).hora, "|");
+var DENT = T({ id: "tDENT", nombre: "Cita con el dentista", creada_por: "salvador", por_autorizar: false, contexto: "", msgs: [{ k: "bo", t: "La abriste dictando: “cita con el dentista el 12 de octubre a las 5 de la tarde”", ts: NOW - 1000 }] });
+eq("detectada: palabra de cita + fecha exacta y hora (núcleo de fechas real)", c.eventoDe(DENT), { titulo: "Cita con el dentista", fecha: "2026-10-12", hora: "17:00", lugar: "", notas: "", origen: "detectado" });
+eq("detectada con día de la semana sin número: la fecha NO se pone sola (se pregunta)", c.eventoDe(T({ evento: null, nombre: "Junta con socios", contexto: "", msgs: [{ k: "bo", t: "La abriste dictando: “junta con socios el jueves a las 10”" }] })).fecha, "");
+eq("palabra de cita sin fecha ni hora: no es evento", c.eventoDe(T({ evento: null, nombre: "Agendar Reunión Consejo Colonia Cumbres", contexto: "de preferencia jueves a cenar o viernes a comer", msgs: [] })), null);
+eq("sin palabra de cita: no es evento aunque tenga fecha", c.eventoDe(T({ evento: null, nombre: "Pagar predial", contexto: "el 12 de octubre", msgs: [] })), null);
+eq("un recordatorio ya es alarma: no se detecta", c.eventoDe(T({ evento: null, es_recordatorio: true, nombre: "Cita dentista 12 de octubre" })), null);
+
+/* 2 el checklist: ultimo paso */
+var cb = c.completitud(BODA), ult = cb.items[cb.items.length - 1];
+eq("último paso del checklist = ¿Te lo agendo?", [ult.k, ult.ok, ult.tx], ["agenda", false, "¿Te lo agendo?"]);
+eq("y mientras no se decide NO queda completa", cb.completa, false);
+eq("en el renglón de inicio: 'falta agendar' cuando es lo único", c.faltaPrimero(c.completitud(T({ tipo_item: "dato", es_dato: true, de_quien: "Karina", datos_corregidos: [{ t: "Mesa 12" }], evento: BODA.evento }))).txt, "falta agendar");
+var SINF = T({ evento: { titulo: "Cena Mori", fecha: "", hora: "21:00", lugar: "", notas: "" } });
+eq("sin fecha: el paso pide el día primero", c.completitud(SINF).items.slice(-1)[0].tx, "¿Qué día es? (para agendarlo)");
+eq("evento que ya pasó: no se pregunta", [c.eventoPendiente(T({ evento: { titulo: "x", fecha: "2026-10-01", hora: "" } })), c.completitud(T({ evento: { titulo: "x", fecha: "2026-10-01" } })).items.slice(-1)[0].tx], [false, "El evento ya pasó"]);
+eq("tarea hecha a mano con cita detectada sale en Falta info", c.tipoRevisar(DENT), "falta");
+eq("ya decidida (agendado o agendar:false): sale de Falta info por este motivo", [c.eventoPendiente(T({ evento: BODA.evento, agendado: true })), c.eventoPendiente(T({ evento: BODA.evento, agendar: false }))], [false, false]);
+
+/* 3 la tarjeta */
+var h1 = c.vAgenda(BODA);
+si("tarjeta con título con mayúscula, ícono de línea y botones grandes Sí / No", /¿Te Lo Agendo\?/.test(h1) && /data-ico="cal"/.test(h1) && /data-agenda="si">Sí</.test(h1) && /data-agenda="no">No</.test(h1));
+si("muestra el evento: título, día, hora y lugar", /Boda Ana y Luis/.test(h1) && /sábado 7 de noviembre/.test(h1) && /a las 7:30 PM/.test(h1) && /Jardín Los Álamos/.test(h1));
+var h2 = c.vAgenda(SINF);
+si("sin fecha: pide el día (fecha y hora) y NO enseña Sí / No", /¿Qué día es\? Sin fecha no lo agendo\./.test(h2) && /type="date"/.test(h2) && /type="time" id="agh" value="21:00"/.test(h2) && !/data-agenda=/.test(h2) && /Guardar Fecha/.test(h2));
+eq("Guardar Fecha sin día: no guarda", [c.guardaFechaEvento(SINF, "", "21:00"), toasts.slice(-1)[0]], [false, "Pon el día"]);
+si("Guardar Fecha con día: queda en el evento como fecha dictada y ya aparece Sí / No", c.guardaFechaEvento(SINF, "2026-10-09", "21:00") && SINF.evento.fecha === "2026-10-09" && SINF.evento.fecha_dictada === true && /data-agenda="si"/.test(c.vAgenda(SINF)));
+
+/* 4 Si */
+abiertos.length = 0; sincr = 0;
+var B2 = JSON.parse(JSON.stringify(BODA)); var url = c.agendaEvento(B2);
+eq("Sí: abre Google Calendar (una vez)", abiertos.length, 1);
+si("enlace TEMPLATE con texto, detalles y lugar", /^https:\/\/calendar\.google\.com\/calendar\/render\?action=TEMPLATE&text=Boda%20Ana%20y%20Luis&dates=/.test(url) && /&details=Etiqueta%20formal%0A/.test(url) && /&location=Jard%C3%ADn%20Los%20%C3%81lamos/.test(url));
+eq("hora de Monterrey convertida: sáb 7-nov 19:30 MTY = 8-nov 01:30 UTC (1 hora)", url.match(/dates=([^&]+)/)[1], "20261108T013000Z/20261108T023000Z");
+eq("Sí: recordatorio de Doit con el mecanismo de siempre (avisos + sincroniza)", [B2.avisos.length, B2.avisos[0].fecha, B2.avisos[0].hora, B2.avisos[0].texto, sincr], [1, "2026-11-07", "19:30", "Boda Ana y Luis", 1]);
+eq("Sí: agendado:true y el evento guarda cuándo", [B2.agendado, B2.agendar, !!B2.evento.agendado_ts, B2.evento.aviso_ts === B2.avisos[0].ts], [true, true, true, true]);
+si("queda la nota en el hilo", /^Agendado: “Boda Ana y Luis” · sábado 7 de noviembre · a las 7:30 PM · Jardín Los Álamos\./.test(B2.msgs.slice(-1)[0].t));
+eq("y con todo lo demás completo queda autorizada (sale de Falta info)", [B2.autorizada, B2.pendiente_info || ""], [true, ""]);
+var SF2 = T({ evento: { titulo: "Cena", fecha: "", hora: "" } }); abiertos.length = 0;
+eq("Sí sin fecha: no agenda, pide el día", [c.agendaEvento(SF2), abiertos.length, !!SF2.agendado, toasts.slice(-1)[0]], [null, 0, false, "Primero el día"]);
+var TD = T({ evento: { titulo: "Graduación", fecha: "2026-12-05", hora: "", lugar: "" } }); var u2 = c.agendaEvento(TD);
+eq("sin hora: evento de todo el día en Calendar", u2.match(/dates=([^&]+)/)[1], "20261205/20261206");
+eq("fin de mes: el día siguiente cambia de mes", c.urlGoogleCal({ titulo: "x", fecha: "2026-12-31", hora: "" }, null).match(/dates=([^&]+)/)[1], "20261231/20270101");
+eq("hora de la mañana: 9:00 MTY = 15:00 UTC", c.urlGoogleCal({ titulo: "x", fecha: "2026-10-12", hora: "09:00" }, null).match(/dates=([^&]+)/)[1], "20261012T150000Z/20261012T160000Z");
+
+/* 5 No */
+var B3 = JSON.parse(JSON.stringify(BODA)); abiertos.length = 0; c.noAgendar(B3);
+eq("No: agendar:false, sin calendario ni recordatorio, y sigue (se autoriza si ya estaba todo)", [B3.agendar, !!B3.agendado, abiertos.length, (B3.avisos || []).length, B3.autorizada], [false, false, 0, 0, true]);
+eq("y el paso dice 'Sin agendar'", c.completitud(B3).items.slice(-1)[0].tx, "Sin agendar");
+
+/* 6 en el codigo */
+si("el paso va dentro de vFaltaInfo y los botones están cableados", /h\+=vAgenda\(t\);/.test(html) && /data-agenda\]"\),function\(b\)\{ b\.onclick=function\(\)\{ if\(b\.getAttribute\("data-agenda"\)==="si"\) agendaEvento\(t\); else noAgendar\(t\);/.test(html));
+si("Calendar se abre dentro del toque (antes de cualquier espera)", /var url=urlGoogleCal\(ev, t\), w=null;\s*try\{ w=window\.open\(url,"_blank"\); \}/.test(html));
+si("VERSION_APP build 202", /var VERSION_APP = "build 202/.test(html));
+
+console.log((malas.length ? malas.map(function (x) { return "  X " + x; }).join("\n") + "\n" : "") + "RESULTADO " + ok + "/" + n);
+process.exit(malas.length ? 1 : 0);

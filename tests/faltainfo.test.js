@@ -23,14 +23,15 @@ function saca(tipo, nombre) {
 }
 var FUNCS = ["iso", "dDif", "dmDe", "hoy", "fechaMovCorta", "esRecurrente", "estadoReal", "esDecisionSal", "meDetiene", "creadaPorSistema",
   "porAutorizar", "faltaInfoRev", "msCreacion", "_fechaDeId", "diaMonterrey", "tipoRevisar", "completitud", "contextoPct", "contextoDe",
-  "tipoItem", "esDato", "_nn", "_diaCreacion", "fechaPuestaSola", "faltaVieja", "creadaCon", "faltaPrimero"];
-var codigo = ["REV_DESDE", "CTX_MIN_PAL"].map(function (v) { return saca("var", v); }).join("\n") + "\n" + FUNCS.map(function (f) { return saca("function", f); }).join("\n");
+  "tipoItem", "esDato", "_nn", "_diaCreacion", "fechaPuestaSola", "faltaVieja", "creadaCon", "faltaPrimero", "eventoDe", "_esExacta", "eventoPendiente"];   /* build 202 */
+var codigo = ["REV_DESDE", "CTX_MIN_PAL", "CITA_RE"].map(function (v) { return saca("var", v); }).join("\n") + "\n" + FUNCS.map(function (f) { return saca("function", f); }).join("\n");
 var RealDate = Date, NOW = new RealDate(2026, 9, 4, 17, 0, 0).getTime();
 function FakeDate() { var a = Array.prototype.slice.call(arguments); return a.length ? new (Function.prototype.bind.apply(RealDate, [null].concat(a)))() : new RealDate(NOW); }
 FakeDate.prototype = RealDate.prototype; FakeDate.now = function () { return NOW; }; FakeDate.UTC = RealDate.UTC; FakeDate.parse = RealDate.parse;
 var c = { Date: FakeDate, console: console, JSON: JSON, Math: Math, String: String, Object: Object, Array: Array, RegExp: RegExp, Number: Number, Intl: Intl,
   yo: "salvador", PERSONAS: { salvador: { nombre: "Salvador", jefe: true }, samuel: { nombre: "Samuel" } },
-  esEjemplo: function () { return false; }, contactosWA: function () { return []; }, posibleDup: function () { return []; }, tareas: [] };
+  esEjemplo: function () { return false; }, contactosWA: function () { return []; }, posibleDup: function () { return []; }, tareas: [],
+  fechasDichas: function () { return { lista: [], dudas: [] }; }, horaValor: function () { return ""; } };   /* build 202 */
 vm.createContext(c); vm.runInContext(codigo, c);
 var ok = 0, n = 0, malas = [];
 function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
