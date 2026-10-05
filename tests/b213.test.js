@@ -9,7 +9,7 @@ var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8"), L 
 function saca(n) { var re = new RegExp("^(function " + n.replace(/\$/g, "\\$") + "\\(|var " + n + "\\s*=)"), i = -1; L.forEach(function (l, k) { if (re.test(l)) i = k; });
   if (i < 0) throw new Error("no encontre " + n); var o = [L[i]]; for (var k = i + 1; k < L.length; k++) { var x = L[k]; if (x.length && !/^[\s}\]]/.test(x)) break; o.push(x); if (/^}/.test(x)) break; } return o.join("\n"); }
 var F = ["barritasAudio", "abreDictado", "svgBasura", "pintaDictado", "cierraDictado", "marcaVivo", "paraVigia", "reaccionaFrio", "pausaDictado", "_dictaTexto", "guardaBorrador", "leeBorrador",
-  "borraBorrador", "srLogD", "pintaPausa", "sigueDictado", "ofreceBorrador", "enlazaRec", "paraDictadoHilo"];
+  "borraBorrador", "srLogD", "pintaPausa", "sigueDictado", "ofreceBorrador", "enlazaRec", "paraDictadoHilo", "srJunta", "srCorte", "srArranca"];
 var _iv = html.indexOf('document.addEventListener("visibilitychange", function(){\n  if(document.visibilityState==="hidden"){ guardaBorrador();'), _fv = html.indexOf("\n", html.indexOf('window.addEventListener("pagehide"', _iv));
 if (_iv < 0 || _fv < 0) throw new Error("no encontre el oyente de visibilitychange/pagehide");
 var codigo = F.map(saca).join("\n") + "\n" + html.slice(_iv, _fv);   /* los oyentes REALES de llamada / cambio de app */

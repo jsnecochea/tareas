@@ -80,7 +80,7 @@ c.window.__chkOpen = { tIAMUUK9ZCWJW: true }; var h = c.vChecklist(T);
 si("sección arriba, desplegable, con conteo ✓ y ✓✓", /<div class="pasos chkl open" id="chkl"><button class="ph" id="bchkl"/.test(h) && /✓ 3 · ✓✓ 1 de 10/.test(h));
 si("cada renglón con su estado a la derecha y tocable", /<button class="cit e2" data-chk="[^"]+" aria-label="Lore y Javier: confirmado"><span class="ctx2">Lore y Javier<\/span><span class="cst">✓✓<\/span><\/button>/.test(h) && /<span class="ctx2">Pollo y Karina<\/span><span class="cst">○<\/span>/.test(h));
 si("tocar: ○ -> ✓ -> ✓✓ -> ○", /it\.estado=\(\(it\.estado\|\|0\)\+1\)%3;/.test(html));
-si("va arriba del chat, junto a Pasos", /vPasos\(t\)\+(\(vistaSup\(t\)\?vEntregas\(t\)\+vSupSecciones\(t\):vChecklist\(t\)\)|vChecklist\(t\))\+bannerDecision\(t\)/.test(html));
+si("va arriba del chat, junto a Pasos", /vPasos\(t\)\+(vEntregas\(t\)|\(vistaSup\(t\)\?vEntregas\(t\)\+vSupSecciones\(t\):vChecklist\(t\)\)|vChecklist\(t\))\+bannerDecision\(t\)/.test(html));
 si("en el chat, lo dicho de la lista va ANTES que todo (incluida Falta info)", html.indexOf("var _ck=checklistDicho(t, v);") > 0 && html.indexOf("var _ck=checklistDicho(t, v);") < html.indexOf('if(tipoRevisar(t)==="falta" && !ordenClaraClaude(v)'));
 si("en audífonos también", /function leeAClaude\(t, v\)\{\n  var _ck=checklistDicho\(t, v\);/.test(html));
 /* 4 Importante: las confirmaciones siempre se ven */

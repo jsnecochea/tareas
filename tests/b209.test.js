@@ -65,7 +65,7 @@ si("ficha: quién", /<span class="ffl">Quién<\/span><span class="ffv">Tú<\/spa
 si("ficha: etiquetas", /<span class="ffl">Etiquetas<\/span><span class="ffv">cumbres · consejo · fraccionamiento<\/span>/.test(v));
 si("ficha: vínculo propuesto (no vinculado)", /<span class="ffl">Vínculo propuesto<\/span><span class="ffv">Junta Consejo Cumbres septiembre \(no vinculado\)<\/span>/.test(v));
 si("cada campo se toca para corregirlo", (v.match(/data-fedit="/g) || []).length === 8);
-si("abajo, botón grande Autorizar HABILITADO", /<button class="autbtn" id="autrev">Autorizar<\/button>$/.test(v));
+si("abajo, Autorizar HABILITADO como pastilla discreta (build 225: sin botón verde gigante)", /<button class="autpill" id="autrev">1 cosa para ti · Autorizar<\/button>$/.test(v));
 si("sin 'Solo me falta'", !/Solo me falta/.test(v));
 eq("le dice que revise y autorice", ult(T).t, "Anoté: nombre “Consejo de la Colonia Cumbres: Proyectos”, contexto, indefinida, ritmo: una vez al mes, etiquetas. Posible vínculo con “Junta Consejo Cumbres septiembre”: te lo dejo propuesto, no lo vinculé. Revisa la ficha y pica Autorizar.");
 /* 2 corrección dictada: Claude la aplica, la ficha se refresca y el botón sigue */
@@ -73,7 +73,7 @@ IA.resp = { ritmo: "cada semana" };
 c.completaRevision(T, "no, el ritmo es cada semana");
 eq("corrección aplicada, sigue sin autorizar", [T.ritmo, !!T.autorizada, c.tipoRevisar(T)], ["Cada semana", false, "falta"]);
 var v2 = c.vFaltaInfo(T);
-si("ficha refrescada con el botón otra vez abajo", /<span class="ffv">Cada semana<\/span>/.test(v2) && /<button class="autbtn" id="autrev">Autorizar<\/button>$/.test(v2));
+si("ficha refrescada con el botón otra vez abajo", /<span class="ffv">Cada semana<\/span>/.test(v2) && /<button class="autpill" id="autrev">1 cosa para ti · Autorizar<\/button>$/.test(v2));
 /* 3 Autorizar: palomita estándar y sale de Falta info */
 eq("Autorizar -> palomita estándar y sale de Falta info", [c.autorizaRevision(T), T.autorizada, sellos, T.en_revision, c.tipoRevisar(T) !== "falta"], [true, true, ["autorizada"], undefined, true]);
 /* 4 incompleta: Solo me falta + botón deshabilitado */
@@ -81,7 +81,7 @@ IA.resp = { contexto: "Barda del terreno baldío de la esquina que pidió revisa
 var T2 = { id: "tB", nombre: "Barda terreno", duenio: "salvador", creada_por: "claude", estado: "abierta", msgs: [] }; c.abierta = T2.id;
 c.completaRevision(T2, "es la barda del terreno baldío de la esquina que nos pidió el consejo revisar con Manuel y el arquitecto");
 var v4 = c.vFaltaInfo(T2);
-si("incompleta: 'Solo me falta' y botón DESHABILITADO", /Solo me falta:/.test(v4) && /<button class="autbtn" id="autrev" disabled>Autorizar<\/button>$/.test(v4) && !/class="ffin"/.test(v4));
+si("incompleta: 'Solo me falta' y SIN botón (build 225)", /Solo me falta:/.test(v4) && !/id="autrev"/.test(v4) && !/class="ffin"/.test(v4));
 eq("incompleta: Autorizar no hace nada", [c.autorizaRevision(T2), !!T2.autorizada], [false, false]);
 /* 5 dato */
 IA.resp = { nombre: "cotización barandal terraza herrería lópez", tipo: "dato", contexto: "Cotización de Herrería López para el barandal de la terraza de acero negro, 6.5 metros lineales, para decidir después si se hace.",
@@ -89,7 +89,7 @@ IA.resp = { nombre: "cotización barandal terraza herrería lópez", tipo: "dato
 var D = { id: "WA_HERRERIA_1", nombre: "WhatsApp: Herrería López", creada_por: "claude", duenio: "salvador", estado: "abierta", msgs: [] }; c.abierta = D.id;
 c.completaRevision(D, "Esto es un dato: la cotización de Herrería López para el barandal de la terraza, acero negro, 6.5 metros lineales a 2,800 pesos el metro, total 18,200 más IVA");
 var vd = c.vFaltaInfo(D);
-si("dato: ficha con Es Dato, De y Cifras, y Autorizar habilitado", /<span class="ffv">Dato<\/span>/.test(vd) && /<span class="ffl">De<\/span><span class="ffv">Herrería López<\/span>/.test(vd) && /<span class="ffl">Cifras<\/span><span class="ffv">6.5 m lineales a \$2,800 el metro; total \$18,200 más IVA<\/span>/.test(vd) && /id="autrev">Autorizar<\/button>$/.test(vd) && !D.autorizada);
+si("dato: ficha con Es Dato, De y Cifras, y Autorizar habilitado", /<span class="ffv">Dato<\/span>/.test(vd) && /<span class="ffl">De<\/span><span class="ffv">Herrería López<\/span>/.test(vd) && /<span class="ffl">Cifras<\/span><span class="ffv">6.5 m lineales a \$2,800 el metro; total \$18,200 más IVA<\/span>/.test(vd) && /id="autrev">1 cosa para ti · Autorizar<\/button>$/.test(vd) && !D.autorizada);
 si("botón y campos conectados en la pantalla", /var _ar=\$\("autrev"\); if\(_ar\) _ar\.onclick=function\(\)\{ if\(!autorizaRevision\(t\)\) render\(\); \};/.test(html) && /querySelectorAll\("\[data-fedit\]"\)/.test(html));
 si("VERSION_APP build 209 o posterior", +((html.match(/var VERSION_APP = "build (\d+)/) || [])[1] || 0) >= 209);
 console.log((malas.length ? malas.map(function (x) { return "  X " + x; }).join("\n") + "\n" : "") + "RESULTADO " + ok + "/" + n);

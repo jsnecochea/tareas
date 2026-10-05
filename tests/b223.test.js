@@ -76,6 +76,6 @@ c.WA.length = 0; c.LLAMADAS = 0; c.IA = NOCLARA; c.tareas = [LERDO()];
 c.revisaClaridadTodas(H(11, 0));
 eq("ciclo: una llamada a Claude con pregunta y respuesta, y aplica", [c.LLAMADAS, /«¿Sí es panal\? Mándame foto»/.test(c.PROMPT), /no se alcanza a apreciar panal/.test(c.PROMPT), c.WA.length], [1, true, true, 1]);
 si("corre junto a hitos y metas", /try\{ revisaClaridadTodas\(\); \}catch\(e3\)/.test(html));
-si("la tarjeta sale arriba de la tarea", /h\+=vDecisionMeta\(t\)\+vDecisionDato\(t\)\+vQuienDudas\(t\)\+vCompartir\(t\);/.test(html));
+si("la tarjeta sale arriba de la tarea", /h\+=vDecisionMeta\(t\)\+vDecisionDato\(t\)\+vQuienDudas\(t\)(\+vBorradorMsj\(t\))?(\+vCompartir\(t\))?;/.test(html));
 console.log((malas.length ? malas.map(function (x) { return "  X " + x; }).join("\n") + "\n" : "") + "RESULTADO " + ok + "/" + n);
 process.exit(malas.length ? 1 : 0);
