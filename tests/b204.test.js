@@ -88,6 +88,6 @@ si("el original se queda donde estaba", c.adjuntos(T1).length === 2);
 eq("copiar a la misma tarea: nada", c.copiaAdjuntos(T1, ["ms:0"], T1), 0);
 si("presión larga (0.5 s) activa la selección; Apartar y Copiar a otra tarea con íconos de línea", /setTimeout\(function\(\)\{ larga=true; window\.__galSel=\{tid:t\.id, sel:\{\}\}/.test(html) && /ico\("caja",18,1\.7\)\+'Apartar</.test(html) && /ico\("copia",18,1\.7\)\+'Copiar a otra tarea</.test(html) && /abreCopiarA\(t, refs\)/.test(html));
 si("Apartar pide confirmación y dice que no se borra nada", /No se borra nada: quedan guardados\./.test(html));
-si("VERSION_APP build 204", /var VERSION_APP = "build 204/.test(html));
+si("VERSION_APP build 204 o posterior", /var VERSION_APP = "build 20[4-9]/.test(html));
 console.log((malas.length ? malas.map(function (x) { return "  X " + x; }).join("\n") + "\n" : "") + "RESULTADO " + ok + "/" + n);
 process.exit(malas.length ? 1 : 0);
