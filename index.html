@@ -1201,7 +1201,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 205 · Falta info se llena al dictar: contexto, fecha, ritmo e indefinida al instante y \"Solo me falta\"";
+var VERSION_APP = "build 206 · Claude dentro de la tarea anota contexto, ritmo, indefinida/recurrente y fecha dictada";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -13792,6 +13792,38 @@ function aplicaNotaClaude(t, v, j){
   if(a==="nada" || !a) return fd.duda || respuestaHecho("", rOk);
   return null;
 }
+/* build 206 (Salvador 21:14, Consejo Cumbres): Claude dentro de la tarea ya no solo renombra/mueve/cierra/guarda dato:
+   tambien escribe contexto (sumar o reemplazar), ritmo, indefinida/recurrente y fecha dictada. Lo que entiende lo aplica;
+   lo dudoso lo pregunta SIN tirar lo demas. Indefinida y ritmo tambien se sacan del texto aunque la IA no los diga. */
+function aplicaCamposNota(t, v, j){
+  j=j||{}; var a=String(j.accion||"").toLowerCase(), hecho=[], dudas=[], s=_fsa(v);
+  if(/indefinid|sin\s+fecha\s+de\s+(fin|termino)|no\s+tiene\s+(fecha|fin)|sin\s+fin|permanente/.test(s) && t.indefinida!==true){ t.indefinida=true; t.falta_fecha=false; hecho.push("indefinida"); }
+  var per=String(j.recurrente||j.periodicidad||"").toLowerCase();
+  if((per==="semanal"||per==="mensual") && /recurrente|se\s+repite|repetir|cada\s+(semana|mes)|semanal|mensual/.test(s) && t.periodicidad!==per){ t.periodicidad=per; t.tipo="recurrente"; hecho.push(per==="semanal"?"recurrente cada semana":"recurrente cada mes"); }
+  var rt=(j.ritmo && String(j.ritmo).trim() && RITMO_RE.test(s)) ? String(j.ritmo).trim().slice(0,80) : ritmoDicho(v);
+  if(rt && _nn(rt)!==_nn(t.ritmo||"")){ t.ritmo=conMayuscula(rt); hecho.push("ritmo: "+rt.toLowerCase()); }
+  var cx=String(j.contexto||"").replace(/\s+/g," ").trim();
+  if(cx && !traeFecha(cx)){ var modo=String(j.contexto_modo||"").toLowerCase();
+    t.contexto=(modo==="reemplazar" || !String(t.contexto||"").trim()) ? cx.slice(0,600) : (String(t.contexto).trim()+" "+cx).slice(0,600);
+    if(Array.isArray(j.palabras) && j.palabras.length) t.palabras=j.palabras.map(function(w){ return String(w).toLowerCase().trim(); }).filter(Boolean).slice(0,6);
+    hecho.push(modo==="reemplazar"?"contexto nuevo":"contexto"); }
+  if(a!=="fecha" && j.fecha){ var fd=fechaDictada(v);
+    if(fd.todas.length){ var cf=candadoFecha(v, j.fecha);
+      if(cf.duda) dudas.push(cf.duda);
+      else if(cf.fecha && cf.fecha!==t.f_vigente){ var rr=mueveFecha(t, cf.fecha, "lo dijo "+((PERSONAS[yo]||{}).nombre||"")+" en nota a Claude"); if(!(rr && rr.ok===false)){ t.fecha_dictada=true; t.falta_fecha=false; hecho.push("fecha: "+fechaConDia(cf.fecha)); } } } }
+  if(hecho.length && (t.indefinida===true || t.f_vigente || t.periodicidad)){ t.pendiente_info=""; t.pendiente_tipo=""; }
+  var pq=String(j.pregunta||"").trim(), rr2=String(j.respuesta||"").trim();
+  if(!pq && j.pregunta===undefined && !hecho.length && /\?/.test(rr2)) pq=rr2.replace(/^\s*(no\s+entend[ií]\s+bien|no\s+me\s+qued[oó]\s+claro)[:,.]?\s*/i,"");
+  if(pq && !traeFecha(pq)) dudas.push(pq);
+  return {hecho:hecho, dudas:dudas};
+}
+/* junta lo anotado con lo que hizo la accion y lo que falta preguntar ("No cambié nada" ya no aplica si se anotó algo) */
+function juntaNota(c, tx){
+  var pre=c.hecho.length?"Anoté: "+c.hecho.join(", ")+".":"", dud=c.dudas.length?c.dudas.join(" "):"";
+  var vacio=!tx || /no cambi[eé] nada/i.test(tx);
+  var out=[pre, vacio?"":tx, dud].filter(Boolean).join(" ");
+  return out || tx || "No cambié nada: no me quedó claro qué hacer. Dímelo otra vez.";
+}
 /* build 189: Claude entiende lo que le pides en la nota y lo hace (renombrar, fecha, cerrar, eliminar,
    pasarla) o guarda el dato corregido. Contesta en UNA linea privada, solo para ti. */
 /* "Hice X. (Entendí: Y)". Las respuestas vagas ("Listo", "Ok") no cuentan como entender. */
@@ -13812,13 +13844,25 @@ function ejecutaNotaClaude(t, v){
     "CALENDARIO (copia la fecha de aqui, NO calcules el dia de la semana): "+calendarioProximo(70).join(", ")+".\n"+
     "Si dice para cuando es la tarea o su proxima fecha, accion fecha. En respuesta NO escribas fechas ni dias (las escribe la app).\n"+
     "NUNCA contestes 'estaré pendiente' o 'te aviso': si pide mandar o recordar algo a alguien despues, la app ya lo programa sola; si no la entendiste, accion nada y pregunta a quien y a que hora.\n"+
-    "Decide qué quiere y contesta SOLO JSON: {\"accion\":\"dato|renombrar|fecha|cerrar|eliminar|pasar|nada\",\"valor\":\"...\",\"respuesta\":\"QUÉ ENTENDISTE, en una frase corta en español (nunca solo 'Listo' u 'Ok')\"}.\n"+
+    "Decide qué quiere y contesta SOLO JSON: {\"accion\":\"dato|renombrar|fecha|cerrar|eliminar|pasar|contexto|nada\",\"valor\":\"...\",\"respuesta\":\"QUÉ ENTENDISTE, en una frase corta en español (nunca solo 'Listo' u 'Ok')\","+
+      "\"contexto\":null,\"contexto_modo\":\"sumar|reemplazar\",\"ritmo\":null,\"indefinida\":false,\"recurrente\":null,\"fecha\":null,\"pregunta\":null}.\n"+
+    "ADEMÁS de la accion, llena TODO lo que la nota diga (puede ser varias cosas a la vez; nada inventado):\n"+
+    "- contexto: de qué se trata la tarea, quiénes, para qué (1 a 3 frases); contexto_modo 'reemplazar' si lo cuenta completo o pide cambiarlo, 'sumar' si agrega algo.\n"+
+    "- ritmo: cada cuánto quiere que le recuerde o revise (ej. 'una vez al mes'). - indefinida: true solo si dice que no tiene fin.\n"+
+    "- recurrente: 'semanal' o 'mensual' solo si dice que la tarea se repite. - fecha: AAAA-MM-DD solo si dicta una fecha.\n"+
+    "- pregunta: SOLO lo que de verdad no quedó claro, en una pregunta corta; lo demás se aplica igual.\n"+
     "- dato: corrige o aclara información (precios, medidas, quién dijo qué). valor = el dato ya corregido, claro y completo.\n- renombrar: valor = nombre nuevo.\n- fecha: valor = AAAA-MM-DD.\n- cerrar: ya se hizo.\n- eliminar: ya no se va a hacer.\n- pasar: valor = nombre de la persona.\nNo inventes; si no entiendes, accion nada y pregunta en respuesta.\n\nNOTA: "+v+"\n\nULTIMOS MENSAJES:\n"+ls.join("\n");
-  var nota=function(tx){ msg(t,"bi",tx); var m=t.msgs[t.msgs.length-1]; m.canal="priv:"+yo; m.nota_claude=1; guarda(t); if(vista==="hilo"&&abierta===t.id) render(); };
+  var _c206={hecho:[], dudas:[]}, _falta206=false; try{ _falta206=(tipoRevisar(t)==="falta"); }catch(e){}
+  var nota=function(tx){ tx=juntaNota(_c206, tx); msg(t,"bi",tx); var m=t.msgs[t.msgs.length-1]; m.canal="priv:"+yo; m.nota_claude=1; guarda(t);
+    try{ if(_c206.hecho.length && _falta206 && revisaCompleta(t)) return; }catch(e){}
+    if(vista==="hilo"&&abierta===t.id) render(); };
   try{
     preguntaAClaude([{role:"user",content:p}],"rapido",function(txt,err){
       var j=null; try{ var mm=String(txt||"").match(/\{[\s\S]*\}/); if(mm) j=JSON.parse(mm[0]); }catch(e){}
-      if(!j){ nota("Anotado."); return; }
+      /* build 206: primero se aplica todo lo que dijo (contexto, ritmo, indefinida/recurrente, fecha); sin IA, lo local */
+      try{ _c206=aplicaCamposNota(t, v, j||{}); if(_c206.hecho.length){ guarda(t); try{ sincronizaAvisos(t); }catch(e){} } }catch(e){ _c206={hecho:[], dudas:[]}; }
+      if(!j){ nota(_c206.hecho.length?"":"Anotado."); return; }
+      if(String(j.accion||"").toLowerCase()==="contexto"){ nota(""); return; }
       var a=j.accion, val=String(j.valor||"").trim(), r=String(j.respuesta||"").trim();
       try{
         /* build 190: fecha, dato y nada pasan por el CANDADO (aplicaNotaClaude) */
