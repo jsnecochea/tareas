@@ -175,7 +175,7 @@ function manuel() {
   si("aviso: dice 'Para Claude'", /Para Claude/.test(pop.innerHTML));
   pop._btn.claude.onclick();
   eq("aviso: Para Claude llama a Claude, no a WhatsApp", llam, ["claude"]);
-  si("en el hilo los dos avisos pasan notaClaude", (html.match(/function\(\)\{ notaClaude\(t, _v[NR]\); \}\);/g) || []).length === 2);
+  si("en el hilo los dos avisos pasan notaClaude", (html.match(/function\(\)\{ notaClaude\(t, _v[NR]\); \}(, function\(\)\{ notaParaMi\(t, _v[NR]\); \})?\);/g) || []).length === 2);
 })();
 
 /* ---------- 1c: canal naranja Claude ---------- */

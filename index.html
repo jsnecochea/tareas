@@ -903,6 +903,7 @@ button{font:inherit;color:inherit}
 .aco .aci{flex:none;width:40px;height:40px;border-radius:11px;display:grid;place-items:center}
 .aco.acl .aci{background:rgba(217,119,87,.16);color:#D97757}.aco.acl b{color:#D97757}
 .aco.awa .aci{background:rgba(48,209,88,.14);color:#30D158}.aco.awa b{color:#30D158}
+.aco.ami .aci{background:rgba(10,132,255,.14);color:#0A84FF}.aco.ami b{color:var(--ink)}   /* build 216 */
 .acmin{width:100%;background:none;border:0;padding:13px;font:inherit;font-size:16px;color:#0A84FF}
 .acx{display:block;width:100%;margin-top:8px;height:54px;border:0;border-radius:16px;background:rgba(44,44,46,.96);color:#0A84FF;font:inherit;font-size:18px;font-weight:600}
 .gsb{display:inline-flex;align-items:center;gap:6px;border:1px solid #3a3a3e;background:var(--surface-2,#2a2a2d);color:var(--ink,#f2f2f4);border-radius:12px;padding:9px 12px;font-size:15px}
@@ -1250,7 +1251,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 215 · Eliminar archivos elegidos (hoja de confirmación) y hoja ¿Para Claude o mandar? estilo Apple";
+var VERSION_APP = "build 216 · Opción Para mí (nota privada) en la hoja ¿Para quién es?";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -4105,7 +4106,9 @@ function camposBusqueda(t){
   [["analisis",1,t.analisis],["ritmo",1,t.ritmo],["revisar",1,t.revisar],["cierra",1,t.cierra],["contexto",1,t.contexto]].forEach(function(x){ if(x[2]) c.push(x); });
   (t.notas_claude||[]).forEach(function(d){ c.push(["nota",1,(d&&d.t)||""]); });
   (t.lista_pasos||[]).forEach(function(p){ c.push(["lista",1,(p&&p.tx)||""]); });
-  (t.msgs||[]).forEach(function(x){ if(!x) return; var tx=[x.tr||x.t||"", x.analisis||"", x.leido||""].join(" "); if(tx.trim()) c.push(["mensaje",1,tx.slice(0,1500)]); });
+  (t.msgs||[]).forEach(function(x){ if(!x || x.eliminado) return;
+    if(x.nota_mia){ if(x.de===yo && String(x.t||"").trim()) c.push(["mia",2,String(x.t).slice(0,1500)]); return; }   /* build 216: tu nota pesa como dato; la de otro no sale */
+    var tx=[x.tr||x.t||"", x.analisis||"", x.leido||""].join(" "); if(tx.trim()) c.push(["mensaje",1,tx.slice(0,1500)]); });
   return c;
 }
 function _snip(txt, ws){
@@ -4128,7 +4131,7 @@ function buscaTodo(q, lista){
       if(best){ n++; sc+=best; if(best>=2) fuerte++; if(cs[bi][0]!=="nombre" && best>mejorP){ mejorP=best; mejor=cs[bi]; } }
     });
     if(n>=need){
-      var porque=mejor?({dato:"dato",analisis:"nota",nota:"nota a Claude",mensaje:"mensaje",lista:"lista",ritmo:"ritmo"}[mejor[0]]||mejor[0])+": "+_snip(mejor[2],ws):"por el nombre";
+      var porque=mejor?({dato:"dato",mia:"tu nota",analisis:"nota",nota:"nota a Claude",mensaje:"mensaje",lista:"lista",ritmo:"ritmo"}[mejor[0]]||mejor[0])+": "+_snip(mejor[2],ws):"por el nombre";
       out.push({t:t, n:n, score:sc, porque:porque, fuerte:fuerte, todas:n===ws.length});
     }
   });
@@ -6864,19 +6867,31 @@ function externoNombrado(t, v){
    de linea en verde. "Solo al equipo" queda chico (era la opcion de antes) y "Cancelar" abajo. */
 var SVG_DESTELLO='<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M12 2.5c.5 4.9 2.6 7 7.5 7.5v.1c-4.9.5-7 2.6-7.5 7.5h-.1c-.5-4.9-2.6-7-7.4-7.5V10c4.8-.5 6.9-2.6 7.4-7.5z"/><path d="M19 15.5c.25 2 1.1 2.85 3 3.05v.05c-1.9.2-2.75 1.05-3 3h-.05c-.2-1.95-1.05-2.8-2.95-3v-.05c1.9-.2 2.75-1.05 2.95-3.05z"/></svg>';
 var SVG_CHAT='<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.2 3.6c-.3.3-.8 0-.8-.4V16h0A2.5 2.5 0 0 1 4 13.5z"/><path d="M8.5 9.5h7M8.5 12.5h4"/></svg>';
-function preguntaExterno(nombre, v, si, no, paraClaude){
+/* build 216 (Salvador): "Para mí (nota)": dato o avance que solo ve el; no sale por WhatsApp, no avisa a nadie,
+   Claude no la toma como orden pero si la lee como contexto y entra en la busqueda. "Solo al equipo" sale solo
+   si hay otra persona de Doit en la tarea (no=null si no). Orden: Claude, Mandar a, Solo al equipo, Para mí, Cancelar. */
+var SVG_LAPIZ='<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17v3z"/><path d="M14.5 7.5l3 3"/><path d="M13 20h7"/></svg>';
+function hayEquipo(t){ return integrantesDe(t).some(function(x){ return x.k!==yo && !!PERSONAS[x.k]; }); }
+function notaParaMi(t, v){
+  msg(t,"bo",v); var m=t.msgs[t.msgs.length-1]; m.de=yo; m.canal="priv:"+yo; m.nota_mia=1;
+  guarda(t); render(); try{ toast("Nota guardada · solo tú la ves"); }catch(e){}
+  return m;
+}
+function preguntaExterno(nombre, v, si, no, paraClaude, paraMi){
   var bg=document.createElement("div"); bg.className="acveil";
   var p=document.createElement("div"); p.className="acsheet"; p.setAttribute("role","dialog");
   p.innerHTML='<div class="acg"><div class="act"><b>¿Para quién es?</b><span>“'+esc(v.length>110?v.slice(0,109)+"…":v)+'”</span></div>'+
     (paraClaude?'<button class="aco acl" data-ac="claude"><span class="aci">'+SVG_DESTELLO+'</span><span><b>Para Claude</b><small>Lo aplica en la tarea</small></span></button>':'')+
     '<button class="aco awa" data-ac="wa"><span class="aci">'+SVG_CHAT+'</span><span><b>Mandar a '+esc(nombre)+'</b><small>Por WhatsApp</small></span></button>'+
-    '<button class="acmin" data-ac="equipo">Solo al equipo</button></div>'+
+    (no?'<button class="acmin" data-ac="equipo">Solo al equipo</button>':'')+
+    (paraMi?'<button class="aco ami" data-ac="mia"><span class="aci">'+SVG_LAPIZ+'</span><span><b>Para mí (nota)</b><small>Solo tú la ves · no se manda</small></span></button>':'')+'</div>'+
     '<button class="acx" data-ac="cancel">Cancelar</button>';
   function cierra(){ if(bg.parentNode) bg.parentNode.removeChild(bg); if(p.parentNode) p.parentNode.removeChild(p); }
   var cancela=function(){ cierra(); var ta=$("txt"); if(ta){ ta.value=v; try{ ta.dispatchEvent(new Event("input",{bubbles:true})); }catch(e){} ta.focus(); } };   /* build 188 */
   p.querySelector('[data-ac="wa"]').onclick=function(){ cierra(); si(); };
   if(paraClaude) p.querySelector('[data-ac="claude"]').onclick=function(){ cierra(); paraClaude(); };
-  p.querySelector('[data-ac="equipo"]').onclick=function(){ cierra(); no(); };
+  if(no) p.querySelector('[data-ac="equipo"]').onclick=function(){ cierra(); no(); };
+  if(paraMi) p.querySelector('[data-ac="mia"]').onclick=function(){ cierra(); paraMi(); };   /* build 216 */
   p.querySelector('[data-ac="cancel"]').onclick=cancela;
   bg.onclick=cancela;
   document.body.appendChild(bg); document.body.appendChild(p);
@@ -7912,7 +7927,7 @@ function vHilo(){
     _visibles++;
     var q=autorMsg(x,t);
     if(x.hab){ m+=burbujaHablada(x, (q||""), t.id+"|"+ix); return; }
-    var meta=(q?esc(q)+" · ":"")+esc(x.h)+(x.wa_auto?" · → "+esc(String(x.wa_auto).split(" ")[0])+" por WhatsApp":"")+(_cx.indexOf("dm:")===0?" · privado":"");
+    var meta=(q?esc(q)+" · ":"")+esc(x.h)+(x.wa_auto?" · → "+esc(String(x.wa_auto).split(" ")[0])+" por WhatsApp":"")+(_cx.indexOf("dm:")===0?" · privado":"")+(x.nota_mia?" · nota para ti":"");   /* build 216 */
     /* Salvador 2026-09-22: el ULTIMO mensaje mio trae un botecito 5 minutos,
        por si se subio mal y era otra cosa. Se borra sin preguntar. */
     var undo=(x.k==="bo" && ix===(t.msgs.length-1) && x.ts && (Date.now()-x.ts)<5*60000 && (!x.de||x.de===yo));
@@ -8165,7 +8180,10 @@ function detalleTarea(t, ancho){
      direccion del hotel, el monto del presupuesto), no solo las ultimas.
      Salvador 2026-09-04. */
   if(t.msgs && t.msgs.length)
-    d.notas=(ancho ? t.msgs.slice(-25) : t.msgs.slice(-4)).map(function(m){return m.t});
+    d.notas=(ancho ? t.msgs.slice(-25) : t.msgs.slice(-4)).filter(function(m){ return m && !m.eliminado && !(m.nota_mia && m.de!==yo); }).map(function(m){return m.t});
+  /* build 216: tus notas "Para mí" van siempre (aunque sean viejas): son contexto, nunca ordenes */
+  var _mias=(t.msgs||[]).filter(function(m){ return m && m.nota_mia && m.de===yo && !m.eliminado; });
+  if(_mias.length) d.notas_mias_contexto_no_ordenes=_mias.slice(-10).map(function(m){ return (m.ts?fechaCorta(new Date(m.ts))+": ":"")+m.t; });
   /* Los DOCUMENTOS que trae pegados, por nombre y fecha: asi Claude puede decir
      "el ultimo presupuesto que subio" y señalar cual es. */
   if(ancho){
@@ -12266,8 +12284,8 @@ function bindHilo(){
       $("txt").value=""; marcaEnvio("tenv","");
       var _vN=v;
       preguntaExterno(_exN, _vN, function(){ candadoExterno(t, _exN, _vN, function(){ mandaAExterno(t, _exN, _vN, _cita); }); },
-        function(){ msg(t,"bo",_vN); var mm=t.msgs[t.msgs.length-1]; mm.canal="equipo"; mm.de=yo; guarda(t); render(); },
-        function(){ notaClaude(t, _vN); });
+        hayEquipo(t)?function(){ msg(t,"bo",_vN); var mm=t.msgs[t.msgs.length-1]; mm.canal="equipo"; mm.de=yo; guarda(t); render(); }:null,
+        function(){ notaClaude(t, _vN); }, function(){ notaParaMi(t, _vN); });
       return;
     }
     /* build 188: si le estas contestando a lo ultimo que te mando un externo, sale directo a el (con 30 s para deshacer) */
@@ -12283,8 +12301,8 @@ function bindHilo(){
       $("txt").value=""; marcaEnvio("tenv","");
       var _vR=v;
       preguntaExterno(_rx186, _vR, function(){ candadoExterno(t, _rx186, _vR, function(){ mandaAExterno(t, _rx186, _vR, null); }); },
-        function(){ msg(t,"bo",_vR); var mm=t.msgs[t.msgs.length-1]; mm.canal="equipo"; mm.de=yo; guarda(t); render(); },
-        function(){ notaClaude(t, _vR); });
+        hayEquipo(t)?function(){ msg(t,"bo",_vR); var mm=t.msgs[t.msgs.length-1]; mm.canal="equipo"; mm.de=yo; guarda(t); render(); }:null,
+        function(){ notaClaude(t, _vR); }, function(){ notaParaMi(t, _vR); });
       return;
     }
     if(_cita){ var _vC=v; setTimeout(function(){ pegaCita(t, _vC, _cita); }, 0); }
@@ -13581,7 +13599,7 @@ function leible(x,t){
   if(x.k==="bi" && !esWa && !x.de) return null;                   /* mensajes del sistema */
   var quien="", raw=String(x.hab?(x.t||x.tr||""):(x.t||""));
   if(esWa){ var mm=raw.match(/^([^:\n]{1,24}):\s*([\s\S]*)$/); if(mm){ quien=mm[1].trim(); raw=mm[2]; } else quien=x.wa_c?String(x.wa_c).split(" ")[0]:""; }
-  else if(x.k==="bo" && (!x.de || x.de===yo)) quien="Tú";
+  else if(x.k==="bo" && (!x.de || x.de===yo)) quien=x.nota_mia?"Tú (nota)":"Tú";   /* build 216 */
   else { try{ quien=autorMsg(x,t)||""; }catch(e){} }
   if(quien==="Claude") return null;
   if(/^(Sin confirmaci[oó]n de entrega a |NO SALI[OÓ] a )/.test(raw)) return null;
@@ -13598,7 +13616,7 @@ function _leeMsgs(t, desde, hasta){
     if(r.foto){ var prev=out[out.length-1];
       if(prev && prev.fotoDe===r.quien){ prev.nf++; prev.tx=(r.quien==="Tú"?"Mandaste ":r.quien+" mandó ")+prev.nf+(/video/.test(r.foto)?" videos":(/doc/.test(r.foto)?" documentos":" fotos"))+"."; prev.ix=i; continue; }
       out.push({ix:i, quien:r.quien, fotoDe:r.quien, nf:1, tx:(r.quien==="Tú"?"Mandaste ":(r.quien||"Alguien")+" mandó ")+r.foto+"."}); ult=""; continue; }
-    var pre=(r.quien && r.quien!==ult)?(r.quien==="Tú"?"Tú: ":r.quien+" dice: "):"";
+    var pre=(r.quien && r.quien!==ult)?(r.quien==="Tú"?"Tú: ":(r.quien==="Tú (nota)"?"Tu nota: ":r.quien+" dice: ")):"";
     out.push({ix:i, quien:r.quien, tx:_punto(pre+r.tx)}); ult=r.quien;
   }
   return out;
@@ -14336,7 +14354,8 @@ function respuestaHecho(hecho, entendi){
   return e ? "Entendí: "+e.replace(/[.]+$/,"")+". No cambié nada en la tarea." : "No cambié nada: no me quedó claro qué hacer. Dímelo otra vez.";
 }
 function ejecutaNotaClaude(t, v){
-  var ls=[]; (t.msgs||[]).slice(-40).forEach(function(x,i){ if(!x||x.nota_claude) return; var q=x.wa_c||(x.de&&PERSONAS[x.de]&&PERSONAS[x.de].nombre)||(x.k==="bo"?"Salvador":"Sistema"); ls.push(q+": "+String(x.tr||x.t||"").slice(0,300)); });
+  var ls=[]; (t.msgs||[]).slice(-40).forEach(function(x,i){ if(!x||x.nota_claude||x.eliminado||(x.nota_mia&&x.de!==yo)) return; var q=x.wa_c||(x.de&&PERSONAS[x.de]&&PERSONAS[x.de].nombre)||(x.k==="bo"?"Salvador":"Sistema"); ls.push(q+(x.nota_mia?" (nota suya, contexto)":"")+": "+String(x.tr||x.t||"").slice(0,300)); });
+  (t.msgs||[]).slice(0,-40).forEach(function(x){ if(x && x.nota_mia && x.de===yo && !x.eliminado) ls.unshift(((PERSONAS[yo]||{}).nombre||"Salvador")+" (nota suya, contexto): "+String(x.t||"").slice(0,300)); });   /* build 216 */
   var hoyS=hoy();
   /* build 190: antes solo iba "hoy es AAAA-MM-DD" y Claude sacaba el dia de la semana a ojo
      ("el lunes" lo puso 7-oct, que es miercoles). Ahora va el calendario hecho; y de todos
