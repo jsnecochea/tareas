@@ -1056,6 +1056,26 @@ button{font:inherit;color:inherit}
 .metas .mtf{width:46px;height:46px;border-radius:8px;object-fit:cover}.metas .mtv{color:var(--ink-3);font-size:14px;padding:6px 0}
 .metas .mthist{display:block;width:100%;margin-top:6px;border:0;background:none;color:var(--ink-3);font-size:14px;text-align:left;padding:8px 0}
 .metas .mthl{display:flex;flex-direction:column;gap:8px}.metas .mth1{display:flex;gap:10px;align-items:center;opacity:.8}.metas .mtnf{width:46px;font-size:11px;color:var(--ink-3);text-align:center}
+/* build 224: vista supervisor */
+.cnlwrap{flex:none}   /* la franja nunca se aplasta ni se enciman las pastillas */
+.supsec{margin:2px 12px 6px;display:flex;flex-direction:column;gap:6px;flex:none}
+.ssec{background:var(--surface-2,#1c1c1e);border-radius:14px;overflow:hidden}
+.ssh{display:flex;align-items:center;gap:8px;width:100%;border:0;background:none;color:var(--ink);font:inherit;font-size:17px;font-weight:600;padding:11px 14px;text-align:left}
+.ssh .r{margin-left:auto;font-size:14px;font-weight:500;color:var(--ink-3)}.ssh .r.red{color:#ff453a;font-weight:700}.ssh .chev{color:var(--ink-3);font-size:12px}
+.sone{padding:0 14px 11px;margin-top:-5px;font-size:15px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sfull{padding:0 14px 12px;font-size:15px;color:var(--ink-2,#c7c7cc);line-height:1.4}.sfull p{margin:0}.sdl{margin:3px 0}.sdl b{color:var(--ink-3);font-weight:500}
+.smeta{display:flex;align-items:baseline;gap:10px;padding:9px 14px;border-top:1px solid #2c2c2e;font-size:16px}
+.smeta .t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.smeta .t.vac{color:var(--ink-3)}
+.smeta .f{flex:none;font-size:14px;color:var(--ink-3)}.smeta.atr .f{color:#ff453a;font-weight:700}.smeta.pa .f{color:#4aa3ff}
+.shist{padding:8px 14px 11px;border-top:1px solid #2c2c2e;font-size:14px;color:var(--ink-3)}
+.entc{margin:2px 12px 8px;background:#10283f;border:1px solid #2f6fa8;border-radius:18px;padding:13px 14px;display:flex;flex-direction:column;gap:6px;flex:none}
+.entc .ek{font-size:13px;font-weight:700;letter-spacing:.04em;color:#9cc9ff}.entc .eq{font-size:19px;font-weight:700}.entc .es{font-size:14.5px;color:#c7c7cc}
+.entc .eth{display:flex;gap:8px;overflow-x:auto}.entc .eth img{width:84px;height:84px;border-radius:12px;object-fit:cover;flex:none}
+.entc .ebt{display:flex;gap:8px;margin-top:4px}.entc .ebk{flex:1;border:0;border-radius:14px;padding:12px 8px;font-size:16px;font-weight:700;background:#2c2c2e;color:var(--ink)}.entc .ebk.pri{background:#0a84ff;color:#fff}
+.entc .enx{font-size:14px;color:var(--ink-3)}
+.suptodo{width:100%;text-align:center;font-size:14.5px;color:var(--ink-3);padding:6px 0}.suptodo:not(.vac){color:#4aa3ff;font-weight:600}
+.metas .mtpa{font-size:14px;color:#4aa3ff;font-weight:600}
+.bnota{border:1px dashed #3a3a3c}.bnota.priv{background:#1a1a2a}
 .revc.c-decmeta{background:#3a0d12;border:1px solid #ff453a}.revc.c-decmeta .rct{color:#ff8a80}.revc.c-decmeta .rcp{color:#ffb3ad}
 .revc .dmr{font-size:14.5px;line-height:1.35;color:var(--ink)}.revc .dmr .vac{color:var(--ink-3)}.revc .dmf{display:flex;gap:6px;overflow-x:auto}.revc .dmf img{width:64px;height:64px;border-radius:10px;object-fit:cover;flex:none}
 .revc .dmb{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}.revc .dmk{border:0;border-radius:12px;padding:10px 14px;font-weight:700;font-size:15px;background:#2c2c2e;color:var(--ink)}.revc .dmk.si{background:#0a84ff;color:#fff}
@@ -1284,7 +1304,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 223 · Respuesta no clara: Claude repregunta concreto (o espera si ya repreguntaste) y te arma la decisión";
+var VERSION_APP = "build 224 · Vista supervisor: limpia, secciones plegables, aprobar entregas en un toque";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -6655,7 +6675,7 @@ function vTarjetaRev(t){
       (q?'<span class="rcq">'+esc(q.length>160?q.slice(0,159)+"…":q)+'</span>':'')+
       '<span class="rcp">Contéstale abajo.</span></div>';
   }
-  if(k==="falta") return vFaltaInfo(t);   /* build 195: contexto + lo que falta, sin botones */
+  if(k==="falta") return vistaSup(t)?"":vFaltaInfo(t);   /* build 195; 224: en la vista supervisor lo que le toca va abajo (sugSup) */
   if(k==="vincular"){
     /* build 192: se pide como el paquete de autorizar: "Este mensaje lo pienso vincular a X. ¿Autorizas?" */
     var _pd=posibleDup(t);
@@ -8164,7 +8184,7 @@ function vHilo(){
       : '<span class="t'+(t.cierre?" tach":"")+'">'+esc(t.nombre)+'</span>')+
     '</div><div class="d">'+
     /* build 195: "Tuya · con X y Y" (dueño + quienes participan) / "Dato · de X" */
-    subtituloHTML(t)+
+    (vistaSup(t)?subSupHTML(t):subtituloHTML(t))+   /* build 224 */
     '</div></div>'+
     '<div class="grow"></div>'+
     '<button class="iconbtn'+(adj.length?' clipon':'')+'" id="bgal" aria-label="Archivos de esta tarea">'+ico("clip",20,1.6)+   /* build 204: verde si hay archivos */
@@ -8238,11 +8258,11 @@ function vHilo(){
   h+=lineaAgenda(t);   /* build 203: "Agendado ✓ · Calendario: en camino" / "Calendario ✓" */
   h+=vDecisionMeta(t)+vDecisionDato(t)+vQuienDudas(t)+vCompartir(t);   /* build 221; 222: decisión de meta atrasada */
   if(fichaOpen) h+=vDetalle(t, frows);
-  else if(tipoRevisar(t)==="falta") h+=vTipoToggle(t);
+  else if(tipoRevisar(t)==="falta" && !vistaSup(t)) h+=vTipoToggle(t);   /* build 224: el supervisor no ve Tarea|Dato */
 
   /* Si esta tarea es MI REVISION de algo que ejecuta otro, aqui va el acceso
      directo a su tarea: ahi vive su evidencia. Salvador 2026-09-04. */
-  if(t.revisa_a || t.revisa_ext){
+  if(t.revisa_a || (t.revisa_ext && !vistaSup(t))){   /* build 224: en la vista supervisor "Lo hace X" va en el encabezado */
     var org=t.revisa_a ? tareas.filter(function(x){return x.id===t.revisa_a})[0] : null;
     if(org){
       var qn2=PERSONAS[org.duenio]?PERSONAS[org.duenio].nombre:"";
@@ -8271,8 +8291,12 @@ function vHilo(){
   function _evHasta(ts){ while(_evI<_evs.length && (ts===Infinity || (_evs[_evI].ts||0)<=ts)){ var f=_evs[_evI++];
     var _hh=""; try{ _hh=f.ts?hhmm(new Date(f.ts)):""; }catch(e){}
     m+='<div class="fot fotin"><img src="'+f.data+'" alt="evidencia"><span class="fh">'+esc(((f.de&&PERSONAS[f.de])?PERSONAS[f.de].nombre+" · ":"")+_hh)+'</span></div>'; } }
+  /* build 224: notas del campo "notas" (nota_privada del conector/Mac): en su lugar por hora; las privadas solo para Salvador */
+  var _nts=(Array.isArray(t.notas)?t.notas:[]).filter(function(n){ return n && String(n.t||"").trim() && !n.oculto && (!n.privado || yo==="salvador"); }).sort(function(a,b){ return (a.ts||0)-(b.ts||0); }), _ntI=0;
+  function _ntHasta(ts){ while(_ntI<_nts.length && (ts===Infinity || (_nts[_ntI].ts||0)<=ts)){ var n=_nts[_ntI++];
+    m+='<div class="b bi bnota'+(n.privado?' priv':'')+'">'+esc(n.t)+'<span class="st">'+esc((n.h||"")+(n.privado?" · solo tú":""))+'</span></div>'; } }
   (t.msgs||[]).forEach(function(x,ix){
-    if(x && x.ts) _evHasta(x.ts);
+    if(x && x.ts){ _evHasta(x.ts); _ntHasta(x.ts); }
     if(x && x.k==="bi" && !x.wa_in && /^Foto guardada( con ubicaci[oó]n)?\.?$/.test(String(x.t||"").trim())) return;   /* build 186: paja */
     /* build 195: "Resumen:", "Se cierra con:" y "La abriste dictando" ya no van en el chat: estan en el ▾ */
     if(x && x.k==="bi" && !x.wa_in && !x.wa_c && /^(Resumen:|Se cierra con:|La abriste dictando:)/.test(String(x.t||"").trim())) return;
@@ -8358,7 +8382,7 @@ function vHilo(){
       m+='<div class="fot">'+fotosArr.map(function(f){return '<img src="'+f.data+'" alt="evidencia">'}).join("")+'</div>';
     }
   }
-  _evHasta(Infinity);
+  _evHasta(Infinity); _ntHasta(Infinity);
   if(t.evidencias&&t.evidencias.length){
     /* build 183 (Salvador 22:09): sin burbuja de coordenadas/hora; la ubicacion queda guardada en la foto */
   }
@@ -8419,16 +8443,17 @@ function vHilo(){
       sug=_rel+_ya+_tr;
     }
   }
+  if(vistaSup(t)) sug=sugSup(t);   /* build 224: solo lo que le toca; si nada, "Nada pendiente para ti" */
   var pre=t.pregunta&&t.duenio===yo?'<div class="b bi" style="margin:0 14px 8px">'+esc(t.pregunta)+'</div>':"";
 
   var _pil=vPastilla(t), _cc=modoClaude(t)?CLAUDE_COL:canalActual(t).col, _conPill=!!(_pil && (_pil.indexOf('id="cnlpill"')>=0 || modoClaude(t)));
-  var _pre179=""; try{ _pre179=vSupervisor(t)+vParaTi(t); }catch(e){ console.warn("paraTi",e); }
+  var _pre179=""; try{ _pre179=(vistaSup(t)?"":vSupervisor(t))+vParaTi(t); }catch(e){ console.warn("paraTi",e); }
   if(_vistoNuevo) setTimeout(function(){ try{ guarda(t); }catch(e){} }, 0);
   var _tgl='<div class="cmodo"><button data-cmodo="importante" class="'+(_todo?'':'on')+'">Importante</button><button data-cmodo="todo" class="'+(_todo?'on':'')+'">Todo</button></div>';
   /* build 198: si en Importante el chat queda vacio, una pista chiquita para que no parezca roto */
   if(!_todo && !_visibles && _ocultos && !(t.evidencias||[]).length) m+='<button class="avfold" data-cmodo="todo">Hay '+_ocultos+' mensaje'+(_ocultos===1?'':'s')+' oculto'+(_ocultos===1?'':'s')+' · Todo</button>';
   m=_tgl+m;
-  return h+(esDato(t)?vDatoCuerpo(t):vDatosTarea(t))+vVuelta(t)+vPasos(t)+vChecklist(t)+bannerDecision(t)+_pil+_pre179+'<div class="scroll'+(_conPill?' cnl" style="--cc:'+_cc:'')+'"><div class="msgs">'+m+pre+'</div></div>'+vTarjetaRev(t)+
+  return h+(esDato(t)?vDatoCuerpo(t):vDatosTarea(t))+vVuelta(t)+vPasos(t)+(vistaSup(t)?vEntregas(t)+vSupSecciones(t):vChecklist(t))+bannerDecision(t)+_pil+_pre179+'<div class="scroll'+(_conPill?' cnl" style="--cc:'+_cc:'')+'"><div class="msgs">'+m+pre+'</div></div>'+vTarjetaRev(t)+
     /* LA MISMA BARRA DE TODAS LAS VISTAS — 2026-09-04. Antes el hilo tenia la
        camara a la IZQUIERDA y una flecha de enviar a la derecha, distinto de la
        caratula (camara a la DERECHA, sin flecha). Salvador lo cacho: "tiene que
@@ -10295,6 +10320,102 @@ function aplicaChecklistClaude(t, j){
   return nuevo?"lista “"+t.checklist.titulo+"” ("+t.checklist.items.length+")":(n?"lista ("+n+" cambios)":"");
 }
 function checklistTexto(t){ return tieneChecklist(t)?t.checklist.items.map(function(x){ return x.tx+" "+CHK_EST[x.estado||0]; }).join(" | "):"(no hay)"; }
+/* ===== build 224 (maqueta "supervisor" aprobada por Salvador 12:03: "mucho más limpio y muy bien el diseño") =====
+   VISTA SUPERVISOR de una tarea donde otro ejecuta (externo por WhatsApp, o alguien de Doit con metas):
+   - encabezado "Lo hace X · supervisas tú"; secciones plegables Metas (abierta, 1 renglón por meta, ROJO solo si atrasada),
+     Contexto y Datos (plegadas, 1 línea de resumen); sin Cumplida/Foto para el supervisor;
+   - tarjeta "X terminó <meta> · evidencia" con Aprobar / Pedir corrección (y la siguiente meta);
+   - abajo SOLO lo que le toca; si no hay nada: "Nada pendiente para ti" (sin botón gigante).
+   El ejecutor de Doit ve Cumplida + Foto; si la tarea tiene supervisor, su "Cumplida" queda POR APROBAR (estado 1). ===== */
+function ejecutorNombre(t){ if(t.revisa_ext) return String(t.revisa_ext); if(t.duenio && t.duenio!==yo && PERSONAS[t.duenio]) return PERSONAS[t.duenio].nombre; return ""; }
+function vistaSup(t){
+  if(!t || t.cierre || esDato(t)) return false;
+  if(t.revisa_ext && (t.duenio===yo || !t.duenio)) return true;
+  try{ return soySupervisor(t) && esMetas(t); }catch(e){ return false; }
+}
+function necesitaAprobacion(t){ return (t.revisores||[]).some(function(k){ return k && k!==yo; }) || (t.duenio===yo && !!t.supervisa && t.supervisa!==yo); }
+function subSupHTML(t){ return 'Lo hace <b>'+esc(nombreCorto(ejecutorNombre(t))||"—")+'</b> · supervisas tú'; }
+function _supAb(t, k, def){ var o=window.__supAb=window.__supAb||{}, kk=t.id+"|"+k; return (kk in o)?!!o[kk]:def; }
+function porAprobar(t){ return metasDe(t).filter(function(m){ return (+m.estado||0)===1; }); }
+function resumenDatos(t){
+  var p=[];
+  if(t.seg_a && t.seg_a.contacto) p.push(("Seguimiento "+(t.seg_a.cada||"")+(t.seg_a.hora?" "+t.seg_a.hora:"")).replace(/\s+/g," ").trim());
+  else if(String(t.ritmo||"").trim()) p.push(String(t.ritmo).split(/[.(]/)[0].trim().slice(0,60));
+  var cp=0; try{ cp=_compartirLista(t).length; }catch(e){}
+  if(cp) p.push("se comparte con "+cp);
+  return p.join(" · ")||"Sin datos extra";
+}
+function vMetasSup(t){
+  var L=metasDe(t), H=hoy(), pend=L.filter(function(m){ return !metaCumplida(m); }), hech=L.filter(metaCumplida);
+  pend.sort(function(a,b){ return String(a.fecha||"9999").localeCompare(String(b.fecha||"9999")); });
+  var rojo=pend.filter(function(m){ return (+m.estado||0)===0 && semaforoMeta(m,H).k==="rojo"; }).length, pa=pend.filter(function(m){ return (+m.estado||0)===1; }).length;
+  var ab=_supAb(t,"metas",true);
+  var r=rojo?'<span class="r red">'+rojo+' atrasada'+(rojo===1?'':'s')+' · '+pend.length+'</span>':'<span class="r">'+(pa?pa+' por aprobar · ':'')+pend.length+' en curso</span>';
+  var h='<div class="ssec" data-ssec="metas"><button class="ssh" data-supab="metas">Metas'+r+'<span class="chev">'+(ab?'▴':'▾')+'</span></button>';
+  if(ab){
+    h+=pend.map(function(m){ var sf=semaforoMeta(m,H), e=+m.estado||0, atr=e===0 && sf.k==="rojo";
+      var f=e===1?"por aprobar":(atr?"atrasada · "+(-dDif(H,m.fecha))+" día"+(dDif(H,m.fecha)===-1?"":"s"):(m.fecha?fechaMovCorta(m.fecha):"sin fecha"));
+      return '<div class="smeta'+(atr?' atr':'')+(e===1?' pa':'')+'"><span class="t">'+esc(metaCorta(m))+'</span><span class="f">'+esc(f)+'</span></div>'; }).join("");
+    if(!pend.length) h+='<div class="smeta"><span class="t vac">Sin metas en curso</span></div>';
+    if(hech.length) h+='<div class="shist">Historial · '+hech.length+' cumplida'+(hech.length===1?'':'s')+'</div>';
+  }
+  return h+'</div>';
+}
+function vSecSup(t, k, titulo, linea){
+  var ab=_supAb(t,k,false);
+  return '<div class="ssec" data-ssec="'+k+'"><button class="ssh" data-supab="'+k+'">'+esc(titulo)+'<span class="r"></span><span class="chev">'+(ab?'▴':'▾')+'</span></button>'+
+    (ab?'<div class="sfull">'+linea.full+'</div>':'<div class="sone">'+esc(linea.una)+'</div>')+'</div>';
+}
+function vSupSecciones(t){
+  var ctx=contextoDe(t)||"";
+  var full=[["Finiquito", t.indefinida===true?"Indefinida":(t.f_vigente?fechaConDia(t.f_vigente):"")], ["Lo hace", ejecutorNombre(t)],
+    ["Seguimiento", t.seg_a&&t.seg_a.contacto?t.seg_a.contacto+(t.seg_a.cada?" · "+t.seg_a.cada:"")+(t.seg_a.hora?" · "+t.seg_a.hora:""):""], ["Ritmo", t.ritmo||""],
+    ["Se comparte con", (function(){ try{ return _compartirLista(t).map(function(c){ return c.nombre; }).join(" · "); }catch(e){ return ""; } })()]]
+    .filter(function(x){ return String(x[1]||"").trim(); }).map(function(x){ return '<div class="sdl"><b>'+esc(x[0])+'</b> '+esc(x[1])+'</div>'; }).join("");
+  return '<div class="supsec">'+(esMetas(t)?vMetasSup(t):'')+
+    vSecSup(t,"ctx","Contexto",{una:ctx?ctx.replace(/\s+/g," ").slice(0,90):"Sin contexto", full:'<p>'+esc(ctx||"Sin contexto")+'</p>'})+
+    vSecSup(t,"datos","Datos",{una:resumenDatos(t), full:full||'<p>Sin datos</p>'})+'</div>';
+}
+/* tarjeta: el ejecutor entregó una meta (Claude ya revisó la evidencia) */
+function vEntregas(t){
+  var pa=porAprobar(t); if(!pa.length || !vistaSup(t)) return "";
+  var sig=metasDe(t).filter(function(m){ return (+m.estado||0)===0; }).sort(function(a,b){ return String(a.fecha||"9999").localeCompare(String(b.fecha||"9999")); })[0];
+  return pa.map(function(m){ var e=m.entrega||{}, fotos=(e.fotos||[]).concat(m.foto&&!(e.fotos||[]).length?[m.foto]:[]), quien=nombreCorto(e.por_nombre||ejecutorNombre(t)||"");
+    return '<div class="entc" data-ent="'+esc(m.id)+'"><span class="ek">PARA TI · APROBAR</span><span class="eq">'+esc((quien?quien.split(" ")[0]+" terminó ":"Terminaron ")+metaCorta(m))+'</span>'+
+      '<span class="es">'+esc(e.resumen?("Claude revisó la evidencia: "+(fotos.length?fotos.length+" foto"+(fotos.length===1?"":"s")+" · ":"")+e.resumen):(fotos.length?fotos.length+" foto"+(fotos.length===1?"":"s")+" de evidencia":"Sin fotos de evidencia"))+'</span>'+
+      (fotos.length?'<div class="eth">'+fotos.slice(0,4).map(function(u){ return '<img src="'+esc(u)+'" alt="evidencia">'; }).join("")+'</div>':'')+
+      '<div class="ebt"><button class="ebk pri" data-entok="'+esc(m.id)+'">Aprobar</button><button class="ebk" data-entcor="'+esc(m.id)+'">Pedir corrección</button></div>'+
+      (sig?'<span class="enx">Sigue: '+esc(metaCorta(sig))+(sig.fecha?' · '+esc(fechaMovCorta(sig.fecha)):'')+'</span>':'')+'</div>'; }).join("");
+}
+function apruebaMeta(t, mid){
+  var m=metasDe(t).filter(function(x){ return x.id===mid; })[0]; if(!m) return "";
+  var e=m.entrega||{}; m.estado=2; m.cumplida=hoy(); m.cumplida_ts=Date.now(); m.aprobada_por=yo; m.fuente="aprobó "+((PERSONAS[yo]||{}).nombre||"");
+  if(!m.foto && (e.fotos||[]).length) m.foto=e.fotos[0];
+  var ej=ejecutorNombre(t);
+  if(t.revisa_ext && ej) pideWhatsApp({usuario:yo, tarea_id:t.id, contacto:ej, texto:"IA: ¡Gracias, "+nombreCorto(ej).split(" ")[0]+"! "+((PERSONAS[yo]||{}).nombre||"Salvador")+" aprobó “"+metaCorta(m)+"”.", sin_espera:1}).catch(function(){});
+  else if(t.duenio && t.duenio!==yo){ try{ disparaPushInstantaneo(t.duenio, tareaCorta(t), "Aprobada: “"+metaCorta(m)+"”", urlTarea(t.id)); }catch(e2){} }
+  var tx="Aprobada: “"+metaCorta(m)+"”. Queda en el historial."; msg(t,"bi",tx); guarda(t); return tx;
+}
+function pideCorreccion(t, mid){
+  var m=metasDe(t).filter(function(x){ return x.id===mid; })[0]; if(!m) return "";
+  m.estado=0; m.correccion_ts=Date.now(); m.correcciones=(m.correcciones||0)+1; guarda(t);
+  var ej=ejecutorNombre(t);
+  if(t.revisa_ext && ej){ window.__cnl=window.__cnl||{}; window.__cnl[t.id]="ext:"+ej; }
+  else if(t.duenio && t.duenio!==yo){ window.__cnl=window.__cnl||{}; window.__cnl[t.id]="dm:"+t.duenio; }
+  window.__prefill={tid:t.id, tx:"Para cerrar “"+metaCorta(m)+"” falta: "};
+  return "Dicta qué falta en “"+metaCorta(m)+"”";
+}
+/* abajo, en la vista supervisor: SOLO lo que le toca */
+function sugSup(t){
+  var pa=porAprobar(t).length, dec=(t.decision_meta||[]).length+(t.decision_dato||[]).length+((t.quien_dudas||[]).length);
+  if(pa || dec) return '<div class="suptodo">'+(pa+dec)+' cosa'+((pa+dec)===1?'':'s')+' para ti arriba</div>';
+  if(tipoRevisar(t)==="falta"){
+    var f=[]; try{ f=soloMeFalta(t); }catch(e){}
+    if(f.length) return '<div class="suptodo">Falta: '+esc(f.join(" · "))+'</div>';
+    try{ if(completitud(t).completa) return '<button class="op k supaut" id="autrev">Autorizar</button>'; }catch(e){}
+  }
+  return '<div class="suptodo vac">Nada pendiente para ti</div>';
+}
 /* ===== build 223 (Salvador 11:23; caso Manuel 10:48 "no se alcanza a apreciar panal por todo el ramerío" ante "¿sí es panal?") =====
    Cuando el Claude de la app lee las respuestas del hilo: si la IA o Salvador le hicieron a alguien una pregunta CONCRETA
    (sí/no, dato, foto, costo, fecha) y la respuesta no la contesta claro (evasiva, cambia de tema, promete sin dato):
@@ -10450,8 +10571,13 @@ function metaParecidaCumplida(t, tx){
 /* palomear (cumplida) y foto de comprobante */
 function cumpleMeta(t, mid, foto){
   var m=metasDe(t).filter(function(x){ return x.id===mid; })[0]; if(!m) return null;
-  m.estado=2; m.cumplida=hoy(); m.cumplida_ts=Date.now(); m.fuente="palomeó "+((PERSONAS[yo]||{}).nombre||"");
   if(foto){ m.foto=foto; m.foto_ts=Date.now(); }
+  if(necesitaAprobacion(t)){   /* build 224: hay supervisor -> queda POR APROBAR con su evidencia */
+    m.estado=1; m.entrega={ts:Date.now(), por:yo, por_nombre:(PERSONAS[yo]||{}).nombre||"", fotos:m.foto?[m.foto]:[]};
+    msg(t,"bi","Entregaste “"+metaCorta(m)+"”"+(m.foto?" con foto":" sin foto")+". Falta que la apruebe tu supervisor.");
+    (t.revisores||[]).forEach(function(k){ if(k!==yo){ try{ disparaPushInstantaneo(k, tareaCorta(t), "Por aprobar: “"+metaCorta(m)+"”", urlTarea(t.id), "asignado"); }catch(e){} } });
+    guarda(t); return m; }
+  m.estado=2; m.cumplida=hoy(); m.cumplida_ts=Date.now(); m.fuente="palomeó "+((PERSONAS[yo]||{}).nombre||"");
   msg(t,"bi","Meta cumplida: “"+metaCorta(m)+"” ("+fechaMeta(m.cumplida)+(m.foto?", con foto":", sin foto")+"). Queda en el historial.");
   guarda(t); return m;
 }
@@ -10566,7 +10692,7 @@ function chequeoMetas(ahoraMs){
     if(t.cierre || estadoReal(t)==="cerrada" || !esMetas(t)) return;
     var imp=importanciaDe(t), cambio=false;
     metasDe(t).forEach(function(m){
-      if(metaCumplida(m) || !/^\d{4}-\d{2}-\d{2}$/.test(m.fecha||"") || m.fecha>=H || m.escalada===m.fecha) return;
+      if(metaCumplida(m) || (+m.estado||0)===1 || !/^\d{4}-\d{2}-\d{2}$/.test(m.fecha||"") || m.fecha>=H || m.escalada===m.fecha) return;   /* 224: entregada = no atrasada */
       var atraso=dDif(m.fecha, H), ej=ejecutorMeta(t, m), desde=new Date(m.fecha+"T23:59:59").getTime();
       m.empuje=(m.empuje && m.empuje.fecha===m.fecha)?m.empuje:{fecha:m.fecha, n:0, ult:"", ts:[]};
       var resp=ej?respuestasEjecutor(t, ej, desde):[], ultResp=resp.length?Math.max.apply(null, resp.map(function(x){ return x.ts||0; })):0;
@@ -10617,9 +10743,10 @@ function vMetas(t){
     return '<div class="mt s-'+sf.k+'" data-meta="'+esc(m.id)+'"><span class="mts" aria-hidden="true"></span><div class="mtb"><div class="mtx">'+esc(m.tx)+'</div>'+
       '<div class="mtm">'+(m.fecha?'<b>Meta: '+esc(fechaMovCorta(m.fecha))+'</b> · ':'')+'<span class="mtsf">'+esc(sf.tx)+'</span>'+(q?' · '+esc(q):'')+'</div>'+
       (sg?'<div class="mtg">Seguimiento: '+esc(sg)+'</div>':'')+
+      ((+m.estado||0)===1?'<div class="mta"><span class="mtpa">Entregada · por aprobar</span></div>':
       '<div class="mta">'+(m.foto?'<img class="mtf" src="'+esc(m.foto)+'" alt="comprobante">':'')+
       '<button class="mtfoto" data-metafoto="'+esc(m.id)+'">'+ico("cam",16,1.8)+(m.foto?'Cambiar foto':'Foto')+'</button>'+
-      '<button class="mtok" data-metaok="'+esc(m.id)+'">✓ Cumplida</button></div></div></div>'; }).join("");
+      '<button class="mtok" data-metaok="'+esc(m.id)+'">✓ Cumplida</button></div>')+'</div></div>'; }).join("");
   if(!pend.length) h+='<div class="mtv">Sin metas pendientes.</div>';
   if(hech.length){ var ab=!!((window.__metaHist||{})[t.id]);
     h+='<button class="mthist" id="bmetahist" aria-expanded="'+(ab?"true":"false")+'">Historial de metas ('+hech.length+') '+(ab?'▴':'▾')+'</button>';
@@ -12731,6 +12858,11 @@ function bindHilo(){
       hojaConfirma({titulo:"Pasar todo a \u201c"+corta40(d.nombre)+"\u201d", sub:"Lo de \u201c"+corta40(t.nombre)+"\u201d se junta all\u00e1.",
         accion:"Vincular", cb:function(){ d.autorizada=true; enlazaTareas(t.id, did, "trabajador (posible duplicado)"); }}); };
   });
+  /* build 224: vista supervisor — secciones plegables, aprobar / pedir corrección, texto listo para dictar */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-supab]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var k=el.getAttribute("data-supab"); window.__supAb=window.__supAb||{}; window.__supAb[t.id+"|"+k]=!_supAb(t,k,k==="metas"); render(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-entok]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var tx=apruebaMeta(t, el.getAttribute("data-entok")); if(tx) toast(tx); render(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-entcor]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var tx=pideCorreccion(t, el.getAttribute("data-entcor")); render(); if(tx) toast(tx); }; });
+  if(window.__prefill && window.__prefill.tid===t.id){ var _pf=window.__prefill, _tx=$("txt"); window.__prefill=null; if(_tx){ _tx.value=_pf.tx; try{ _tx.dispatchEvent(new Event("input",{bubbles:true})); _tx.focus(); }catch(e){} } }
   /* build 222: metas — palomear, foto de comprobante, historial; decisión de meta atrasada en un toque */
   Array.prototype.forEach.call(document.querySelectorAll("[data-ddact]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var tx=decideDato(t, el.getAttribute("data-ddid"), el.getAttribute("data-ddact")); if(tx) toast(tx); render(); }; });   /* build 223 */
   Array.prototype.forEach.call(document.querySelectorAll("[data-dmact]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var tx=decideMeta(t, el.getAttribute("data-dmid"), el.getAttribute("data-dmact")); if(tx) toast(tx); render(); }; });
