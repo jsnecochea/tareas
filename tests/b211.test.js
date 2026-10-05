@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* PRUEBAS build 206 (base del arnés de 205) (Salvador 2026-10-04 21:14, "Agendar Reunión Consejo Colonia Cumbres"): lo dictado dentro de una tarea
+/* PRUEBAS build 211 (arnés de 205/206): nota a Claude con contexto que trae fechas dictadas (Fiesta Navideña 07:46) (Salvador 2026-10-04 21:14, "Agendar Reunión Consejo Colonia Cumbres"): lo dictado dentro de una tarea
    en "Falta info" la completa aunque suene a nota para Claude ("…es para que sepas el contexto" caía en esNotaClaude ->
    "No cambié nada en la tarea"). Al instante, sin IA: indefinida, ritmo, fecha y contexto; luego la IA afina; barras y
    renglones en vivo; "Solo me falta: …"; completa -> palomita. Núcleo de fechas REAL. Correr: TZ=America/Monterrey node tests/b205.test.js */
@@ -50,65 +50,33 @@ var DICTADO = "Esto es una tarea en contexto de donde meto todo lo que quiero ha
 
 var ult = function (t) { return t.msgs.slice(-1)[0]; };
 function nota(t, v) { var a = t.msgs.length; c.ejecutaNotaClaude(t, v); return t.msgs.length > a ? ult(t).t : null; }
+/* "Fiesta Navideña" (tmuuqah2egllq0) ANTES de la nota de las 07:46 (leída con el conector): contexto = lo cortado de las 07:38 */
+var C38 = "Pero esto es de Clau esto es para que pongas el contexto tengas la fecha y me des seguimiento por favor mañana y el jueves para allá definir este todo lo de la fecha";
+function FIESTA() { return { id: "tmuuqah2egllq0", nombre: "Fiesta Navideña", creada_por: "salvador", duenio: "salvador", tipo: "unica", tipo_item: "tarea", estado: "abierta", autorizada: true,
+  f_original: "2026-10-04", f_vigente: "2026-10-04", falta_fecha: true, contexto: C38, ritmo: "", msgs: [],
+  avisos: [{ ts: 1, fecha: "2026-10-06", texto: "Fiesta Navideña", hora: "", cada: "" }, { ts: 2, fecha: "2026-10-08", texto: "Fiesta Navideña", hora: "", cada: "" }] }; }
+/* la nota real de las 07:46, tal cual llegó */
+var N46 = "Oye Clau a ver déjame te doy el contexto de esta tarea este es una fiesta que tengo que hacer para la colonia Cumbres la organiza la mesa directiva que yo soy el presidente como ya sabes Y este la tengo que hacer antes del 15 de diciembre Yo creo que se me antojaré hacerlo un jueves ando indeciso de hacerla con niños o puro adulto la del verano le hice puros adultos y tengo que definir primero la fecha segundo el menú tercero la temática y para medio decorar padre hacer algún algo de convivió alguna dinámica a ver qué me sugieres sobre todo yo creo que sí va a ser más pendiente a los niños Este lo mejor este que sea así más informal con un chocolatito caliente café buñuelos churros a lo mejor tamales para que sea tipo mexicana Este no sé si ponerme esas sillas dos parados Este alrededor del kiosco del de la plaza central pero pues todos parados no sé cómo vamos a convivir Este entonces tengo todo eso por definir este quiero ponerme a pensar en eso mañana y a más tardar el jueves por eso te pedí esos dos recordatorios entonces es la fecha finiquito de esta tarea es antes del 15 de diciembre tiene que quedar ejecutar la fiesta";
+var CTX = "Fiesta para la colonia Cumbres que organiza la mesa directiva (Salvador es presidente). Se tiene que hacer antes del 15 de diciembre, quizá un jueves; falta definir fecha, menú, temática, decoración y dinámica; informal tipo mexicana (chocolate, café, buñuelos, churros, tamales), alrededor del kiosco de la plaza central.";
 
-/* 1 el caso real: lo que contestó la IA ese día (accion nada + pregunta) ya no tira lo dicho */
-IA.resp = { accion: "nada", respuesta: "No entendí bien: ¿quieres agendar la reunión para una fecha específica, o quieres que te recuerde una vez al mes?" };
-var T1 = CONSEJO(); T1.autorizada = true; c.abierta = T1.id; var r1 = nota(T1, DICTADO);
-eq("CONSEJO (respuesta vieja de la IA): aplica indefinida y ritmo aunque la IA dijo 'nada'", [T1.indefinida, T1.ritmo], [true, "Una vez al mes"]);
-si("contesta 'Anoté: …' y ya no 'No cambié nada'", /^Anoté: indefinida, ritmo: una vez al mes(, contexto nuevo)?\./.test(r1) && !/No cambié nada/.test(r1));
-si("la respuesta es nota privada de Claude", ult(T1).nota_claude === 1 && ult(T1).canal === "priv:salvador");
-si("el prompt ya ofrece contexto, ritmo, indefinida, recurrente, fecha y pregunta", /\\"contexto\\":null,\\"contexto_modo\\":\\"sumar\|reemplazar\\",\\"ritmo\\":null,\\"indefinida\\":false,\\"recurrente\\":null,\\"fecha\\":null,\\"pregunta\\":null/.test(html));
-
-/* 2 el caso real con la IA nueva: contexto reemplazado + ritmo + indefinida */
-IA.resp = { accion: "contexto", contexto: "Tarea maestra de proyectos de la colonia Cumbres: Salvador presidente, Mario Castillo secretario, Adolfo Rodríguez tesorero, Enrique Martínez vocal; se reúnen dos veces al año.", contexto_modo: "reemplazar", ritmo: "una vez al mes", indefinida: true, respuesta: "Es la tarea maestra del consejo." };
-var T2 = CONSEJO(); T2.autorizada = true; T2.contexto = "viejo"; var r2 = nota(T2, DICTADO);
-eq("CONSEJO (IA nueva): indefinida, ritmo y contexto nuevo", [T2.indefinida, T2.ritmo, /^Tarea maestra/.test(T2.contexto)], [true, "Una vez al mes", true]);
-eq("respuesta", r2, "Anoté: indefinida, ritmo: una vez al mes, contexto nuevo.");
-
-/* 3 sumar contexto */
-IA.resp = { accion: "contexto", contexto: "Luis Mario también participa.", contexto_modo: "sumar", respuesta: "Agregué a Luis Mario." };
-var T3 = CONSEJO(); T3.autorizada = true; T3.contexto = "Consejo de la colonia."; var r3 = nota(T3, "Claude, agrégale que Luis Mario también participa");
-eq("sumar contexto: se agrega al final", T3.contexto, "Consejo de la colonia. Luis Mario también participa.");
-eq("respuesta sumar", r3, "Anoté: contexto.");
-
-/* 4 recurrente: solo si lo dice */
-IA.resp = { accion: "nada", recurrente: "mensual", respuesta: "Se repite cada mes." };
-var T4 = CONSEJO(); T4.autorizada = true; nota(T4, "Claude, esta tarea es recurrente, se repite cada mes");
-eq("recurrente cada mes", [T4.tipo, T4.periodicidad], ["recurrente", "mensual"]);
-IA.resp = { accion: "nada", recurrente: "mensual", respuesta: "x" };
-var T4b = CONSEJO(); T4b.autorizada = true; nota(T4b, "Claude, el contexto es la junta del consejo");
-eq("recurrente inventado por la IA no se aplica", [T4b.tipo, T4b.periodicidad], ["unica", undefined]);
-
-/* 5 fecha dictada junto con otra cosa + candado */
-IA.resp = { accion: "contexto", contexto: "Junta con el consejo para revisar vigilancia.", contexto_modo: "sumar", fecha: "2026-10-09", respuesta: "ok" };
-var T5 = CONSEJO(); T5.autorizada = true; var r5 = nota(T5, "Claude, es la junta con el consejo para revisar vigilancia, que sea el viernes 9 de octubre");
-eq("fecha dictada además del contexto", [T5.f_vigente, T5.fecha_dictada], ["2026-10-09", true]);
-si("respuesta lista contexto y fecha", /^Anoté: contexto, fecha: .*9.*\.$/.test(r5));
-IA.resp = { accion: "contexto", contexto: "Junta.", fecha: "2026-10-15", respuesta: "ok" };
-var T5b = CONSEJO(); T5b.autorizada = true; nota(T5b, "Claude, es la junta del consejo, sin fecha dicha");
-eq("fecha que no dictó: no se mueve", T5b.f_vigente, "2026-09-27");
-
-/* 6 ambiguo: pregunta SOLO eso y aplica lo demás */
-IA.resp = { accion: "nada", ritmo: "cada semana", pregunta: "¿Con quién la agendo, con Mario o con Adolfo?", respuesta: "Revisar cada semana." };
-var T6 = CONSEJO(); T6.autorizada = true; var r6 = nota(T6, "Claude, revísala cada semana y agéndala con uno de ellos");
-eq("ambiguo: aplica el ritmo y pregunta solo lo dudoso", [T6.ritmo, r6], ["Cada semana", "Anoté: ritmo: cada semana. ¿Con quién la agendo, con Mario o con Adolfo?"]);
-
-/* 7 sin IA (sin red): lo local se aplica igual */
-IA.err = "sin red"; var T7 = CONSEJO(); T7.autorizada = true; var r7 = nota(T7, DICTADO); IA.err = null;
-eq("sin red: indefinida + ritmo y 'Anoté'", [T7.indefinida, T7.ritmo, /^Anoté: indefinida, ritmo: una vez al mes(, contexto nuevo)?\.$/.test(r7)], [true, "Una vez al mes", true]);
-
-/* 8 lo de antes sigue */
+/* 1 lo que pasó: la IA regresa contexto CON fechas dictadas -> antes se tiraba */
+IA.resp = { accion: "contexto", contexto: CTX, contexto_modo: "reemplazar", fecha: "2026-12-15", respuesta: "Te anoté el contexto y la fecha." };
+var T = FIESTA(); var r = nota(T, N46);
+eq("el contexto con '15 de diciembre' y 'un jueves' (dictados) ahora SÍ entra", T.contexto, CTX);
+eq("y la fecha queda el 15 de diciembre", [T.f_vigente, T.fecha_dictada, T.falta_fecha], ["2026-12-15", true, false]);
+si("la respuesta dice las dos cosas", /^Anoté: contexto nuevo, fecha: .*15 de diciembre\./.test(r));
+/* 2 contexto con una fecha que NO se dictó: se rechaza (candado) */
+IA.resp = { accion: "contexto", contexto: "Fiesta de la colonia Cumbres el 20 de diciembre en el kiosco.", contexto_modo: "reemplazar" };
+var T2 = FIESTA(); nota(T2, N46);
+si("contexto con una fecha inventada (20 de diciembre): no entra", T2.contexto !== "Fiesta de la colonia Cumbres el 20 de diciembre en el kiosco.");
+/* 3 pidió contexto ("te doy el contexto") y la IA no lo regresó: entra lo dictado, completo */
+IA.resp = { accion: "fecha", valor: "2026-12-15", respuesta: "ok" };
+var T3 = FIESTA(); nota(T3, N46);
+eq("sin contexto de la IA: entra lo dictado completo (sin cortar a 600)", [T3.contexto.length > 1000, /tiene que quedar ejecutar la fiesta$/.test(T3.contexto), /^a ver déjame te doy el contexto|^Oye Clau/.test(T3.contexto) || /fiesta que tengo que hacer para la colonia Cumbres/.test(T3.contexto)], [true, true, true]);
+eq("…y la fecha se movió", T3.f_vigente, "2026-12-15");
+/* 4 lo de antes sigue: una nota sin contexto no inventa contexto */
 IA.resp = { accion: "nada", respuesta: "No sé qué quieres." };
-var T8 = CONSEJO(); T8.autorizada = true; eq("nada de nada: sigue diciendo que no cambió nada", nota(T8, "Claude, hmm"), "Entendí: No sé qué quieres. No cambié nada en la tarea.");
-IA.resp = { accion: "renombrar", valor: "Consejo Cumbres", ritmo: "una vez al mes", respuesta: "Le cambié el nombre." };
-var T9 = CONSEJO(); T9.autorizada = true; var r9 = nota(T9, "Claude, ponle Consejo Cumbres y recuérdamela una vez al mes");
-eq("renombrar + ritmo juntos", [T9.nombre, T9.ritmo], ["Consejo Cumbres", "Una vez al mes"]);
-si("respuesta junta las dos", /^Anoté: ritmo: una vez al mes\. Cambié el nombre/.test(r9));
-
-/* 9 en Falta info: si con eso queda completa, se autoriza */
-IA.resp = { accion: "contexto", contexto: "Tarea maestra de proyectos de la colonia Cumbres con el consejo: presidente, secretario, tesorero y vocal; reuniones dos veces al año.", contexto_modo: "reemplazar", ritmo: "una vez al mes", indefinida: true, respuesta: "ok" };
-sellos.length = 0; var T10 = CONSEJO(); c.abierta = T10.id; nota(T10, DICTADO);
-eq("en Falta info y completa con la nota: lista para Autorizar (build 209: no sola)", [!!T10.autorizada, T10.en_revision, sellos], [false, true, []]);
-si("VERSION_APP build 206 o posterior", +((html.match(/var VERSION_APP = "build (\d+)/) || [])[1] || 0) >= 206);
+var T4 = FIESTA(); nota(T4, "Claude, hmm"); eq("nota sin contexto: el contexto no cambia", T4.contexto, C38);
+si("VERSION_APP build 211 o posterior", +((html.match(/var VERSION_APP = "build (\d+)/) || [])[1] || 0) >= 211);
 console.log((malas.length ? malas.map(function (x) { return "  X " + x; }).join("\n") + "\n" : "") + "RESULTADO " + ok + "/" + n);
 process.exit(malas.length ? 1 : 0);

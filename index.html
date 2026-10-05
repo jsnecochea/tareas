@@ -1212,7 +1212,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 210 · Audífonos: escucha continua (corta a ~3.5 s de silencio), todo lo dictado va a Claude y te dice qué anotó";
+var VERSION_APP = "build 211 · Nota a Claude: el contexto con fechas dictadas ya no se tira";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -7029,7 +7029,7 @@ function aplicaRevisionClaude(t, v, j, abiertas){
     var nuevo=(reemp || !ant) ? cx : (ant+" "+cx);
     /* si el resumen de Claude queda corto (bajo la rayita) y lo dictado traia mas, no se pierde lo dictado */
     if(_pw(nuevo)<CTX_MIN_PAL && _pw(v)>_pw(nuevo)) nuevo=(ant && _pw(ant)<CTX_MIN_PAL ? ant+" " : "")+String(v).replace(/\s+/g," ").trim();
-    if(_nn(nuevo)!==_nn(ant)){ t.contexto=nuevo.slice(0,600); hecho.push("contexto"); } }
+    if(_nn(nuevo)!==_nn(ant)){ t.contexto=nuevo.slice(0,1500); hecho.push("contexto"); } }
   if(j.indefinida===true && t.indefinida!==true && /indefinid|sin\s+fecha|no\s+tiene\s+(fecha|fin)|sin\s+fin|permanente/.test(s)){ t.indefinida=true; t.falta_fecha=false; hecho.push("indefinida"); }
   var per=String(j.periodicidad||"").toLowerCase();
   if((per==="semanal"||per==="mensual") && /recurrente|se\s+repite|repetir|cada\s+(semana|mes)|semanal|mensual|todas\s+las\s+semanas|todos\s+los\s+meses/.test(s) && t.periodicidad!==per){ t.periodicidad=per; t.tipo="recurrente"; hecho.push(per==="semanal"?"recurrente cada semana":"recurrente cada mes"); }
@@ -14042,8 +14042,14 @@ function aplicaCamposNota(t, v, j){
   var rt=(j.ritmo && String(j.ritmo).trim() && RITMO_RE.test(s)) ? String(j.ritmo).trim().slice(0,80) : ritmoDicho(v);
   if(rt && _nn(rt)!==_nn(t.ritmo||"")){ t.ritmo=conMayuscula(rt); hecho.push("ritmo: "+rt.toLowerCase()); }
   var cx=String(j.contexto||"").replace(/\s+/g," ").trim();
-  if(cx && !traeFecha(cx)){ var modo=String(j.contexto_modo||"").toLowerCase();
-    t.contexto=(modo==="reemplazar" || !String(t.contexto||"").trim()) ? cx.slice(0,600) : (String(t.contexto).trim()+" "+cx).slice(0,600);
+  /* build 211 (Fiesta Navideña 07:46): antes un contexto con CUALQUIER dia o mes ("antes del 15 de diciembre", "un jueves")
+     se tiraba completo (traeFecha) y la nota solo movia la fecha. Ahora solo se rechaza si trae una fecha que no se dicto. */
+  var _permC=fechaDictada(v).todas.concat([t.f_vigente, t.f_original, j.fecha].filter(function(x){ return _fReal(x); }));
+  if(!cx && /\b(contexto|de que se trata|te explico)\b/.test(s) && String(v).split(/\s+/).length>=CTX_MIN_PAL &&
+     (!String(t.contexto||"").trim() || /\b(te doy el contexto|el contexto es|este es el contexto|ponle (el )?contexto|para que (tengas|sepas) el contexto)\b/.test(s))){
+    cx=sinPrefijoClaude(v).replace(/\s+/g," ").trim(); j.contexto_modo="reemplazar"; }   /* pidio poner contexto y la IA no lo regreso: va lo dictado */
+  if(cx && !fechasRaras(cx, _permC).length){ var modo=String(j.contexto_modo||"").toLowerCase();
+    t.contexto=(modo==="reemplazar" || !String(t.contexto||"").trim()) ? cx.slice(0,1500) : (String(t.contexto).trim()+" "+cx).slice(0,1500);   /* build 211: 600 cortaba lo dictado */
     if(Array.isArray(j.palabras) && j.palabras.length) t.palabras=j.palabras.map(function(w){ return String(w).toLowerCase().trim(); }).filter(Boolean).slice(0,6);
     hecho.push(modo==="reemplazar"?"contexto nuevo":"contexto"); }
   if(a!=="fecha" && j.fecha){ var fd=fechaDictada(v);
