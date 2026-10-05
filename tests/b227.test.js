@@ -56,13 +56,13 @@ eq("versión 227 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
       document.querySelector(".ptcard [data-acnueva]").click(); o.nuevaSale = [!!document.querySelector(".ptcard"), tareas.length];
       /* resumen plegable */
       tareas = [FIESTA()]; render(); var rv = document.querySelector('[data-chip="resumen"]'); o.rvAbierto = [rv.getAttribute("aria-expanded"), !!rv.querySelector("svg"), !!document.querySelector(".rv228")];
-      rv.click(); var rv2 = document.querySelector('[data-chip="resumen"]'); o.rvMin = [rv2.getAttribute("aria-expanded"), rv2.textContent, !!rv2.querySelector("svg"), !!document.querySelector(".rv228")];
+      rv.click(); var rv2 = document.querySelector('[data-chip="resumen"]'); o.rvMin = [rv2.getAttribute("aria-expanded"), rv2.textContent, !!rv2.querySelector("svg"), !!document.querySelector(".res230")];
       o.sinEmoji = !/[\u{1F300}-\u{1FAFF}]/u.test(document.querySelector(".top").textContent + document.querySelector(".chips225").textContent);
       return o; });
     eq("título en UNA línea con …, sin el renglón de personas", r.titulo, ["nowrap", true, true, true]);
     eq("al tocar el título sale completo", r.tituloFull, ["normal", "Fiesta Cumpleaños Papá con comida en casa de Lerdo para toda la familia"]);
     eq("UNA sola ficha 'Todo' en la fila de fichas, junto a Resumen (build 228)", r.pastilla, [1, "Todo", true, true, 0]);
-    eq("hoja: Todo · Claude · cada integrante (con avatar) · integrantes", [r.hoja, r.hojaAv], [["todo", "claude", "ext:Arturo Tijerina", "ext:Javier Fernández", "ext:Eduardo Madero", "__int"], ["AT", "JF", "EM"]]);
+    eq("hoja: Todo · Claude · cada integrante (con avatar) · integrantes", [r.hoja, r.hojaAv], [["todo", "imp", "claude", "ext:Arturo Tijerina", "ext:Javier Fernández", "ext:Eduardo Madero", "__int"], ["AT", "JF", "EM"]]);
     eq("lo elegido reemplaza el texto: Eduardo / Claude / Todo", [r.eligeEduardo, r.eligeClaude, r.eligeTodo], [["Eduardo", "ext:Eduardo Madero"], ["Claude", true], "Todo"]);
     eq("Te pregunta con OK · Mover · Nueva (y no repetidos en la burbuja)", r.pt, [true, ["OK", "Mover", "Nueva"], 0]);
     eq("minimizar: una línea 'Te pregunta · Eduardo' y los botones vuelven a la burbuja", r.ptMin, [false, "Te pregunta · Eduardo", 1]);
@@ -71,7 +71,7 @@ eq("versión 227 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
     eq("OK: desaparecen los botones, la tarjeta sigue", r.ptOk, [true, 0, "esta"]);
     eq("Mover: hoja '¿A dónde va?' (mismo flujo del 226) y la tarjeta sale de la tarea", [r.mover, r.moverSale], ["Pádel miércolesmás probable", [false, true, 1]]);
     eq("Nueva: la tarjeta sale y hay tarea nueva", r.nuevaSale, [false, 3]);
-    eq("Resumen (228): ficha con chevron; al tocarla se despliega debajo de las fichas", [r.rvAbierto, r.rvMin], [["false", true, false], ["true", "Resumen", true, true]]);
+    eq("Resumen (228/230): ficha con chevron; al tocarla abre la vista Importante con su tarjeta", [r.rvAbierto, r.rvMin], [["false", true, false], ["true", "Resumen", true, true]]);
     eq("sin emojis en el encabezado", r.sinEmoji, true);
     eq("sin errores de página", errs, []);
   } finally { await b.close(); }

@@ -94,12 +94,12 @@ si("y 'quién la hace' ya no falta", !/quién la hace/.test(ult));
 /* ---------- 2) nombres cortos ---------- */
 eq("nombreCorto", ["Eduardo Madero \"Lalo\" (padel Verde) LNN", "Eduardo Madero “Lalo” 🎾 (padel)", "Manuel Parra", "Samuel Gamez ciper", "Juan de la Garza López", "😀 Rogelio Sada 🇲🇽", "Lalo LNN", "Equipo", "+52 871 123 4567", "Dr. Arturo Ramírez"].map(c.nombreCorto),
   ["Eduardo Madero", "Eduardo Madero", "Manuel Parra", "Samuel Gamez", "Juan de la Garza", "Rogelio Sada", "Lalo", "Equipo", "+52 871 123 4567", "Arturo Ramírez"]);
-si("la pastilla usa el nombre corto; el menú sigue con el completo", /nombreCorto\(c\.nom\)\.split\(" "\)\[0\]/.test(html) && /esc\(o\.nom\)\+'<small>'/.test(html));
+si("la pastilla usa el nombre corto; el menú sigue con el completo", /nombreCorto\((nombreVisible230\()?c\.nom(, t\))?\)\.split\(" "\)\[0\]/.test(html) && /esc\(o\.nom\)\+'<small>'/.test(html));
 si("la hoja de agregar trae lupa y busca en todos", /placeholder="Buscar en todos tus contactos"/.test(html) && /buscaContactos\(q, ya\)/.test(html));
 
 /* ---------- UI en Chromium: franja en un renglon y buscador ---------- */
 var css = (html.match(/<style[^>]*>([\s\S]*?)<\/style>/) || [])[1] || "";
-var UF = ["_n179", "claveDe", "contactosConocidos", "haceCuanto", "_agendaDe", "cargaAgendaWA", "todosLosContactos", "buscaContactos", "nombreInt", "iniInt", "puedeQuitar", "agregaIntegrante", "abreIntegrantes", "nombreCorto", "vPastilla"];
+var UF = ["_n179", "claveDe", "contactosConocidos", "haceCuanto", "_agendaDe", "cargaAgendaWA", "todosLosContactos", "buscaContactos", "nombreInt", "iniInt", "puedeQuitar", "agregaIntegrante", "abreIntegrantes", "nombreCorto", "vPastilla", "vista230", "nombreVisible230", "_nomWA", "_telDe"];
 var os = require("os");
 var pagina = '<!doctype html><meta charset="utf-8"><style>' + css + '</style><body style="background:#111;color:#f5f5f7;font-family:-apple-system,sans-serif;margin:0"><div id="strip" style="width:390px"></div><div id="toast"></div><script>' +
   'var yo="salvador", vista="lista", PUSH="push.php", APP_TOKEN="tok", PERSONAS={salvador:{nombre:"Salvador",jefe:true}, samuel:{nombre:"Samuel",apellido:"Gámez"}, cynthia:{nombre:"Cynthia"}}, CLAUDE_COL="#D97757", FETCH=0, AG=null;' +

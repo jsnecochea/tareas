@@ -22,7 +22,7 @@ var F_VARS = eval(ft.match(/var VARS = (\[[\s\S]*?\]);/)[1]);
 var B221 = eval(t221.match(/var FUNCS = F_FUNCS\.concat\((\[[\s\S]*?\])\)/)[1]), F_FUNCS = eval(ft.match(/var FUNCS = (\[[\s\S]*?\]);/)[1]);
 var NUEVAS = ["min225", "togMin225", "_txMsg", "msgVisible225", "metasEnCurso", "palMeta", "metaDeMsg", "resumenVivo", "cosasParaTi", "personas225", "chipsTarea", "vResumenVivo", "filtroMeta", "vFiltroMeta",
   "evidenciaMeta225", "vFichaMeta", "vDetalles225", "vPersonas225", "hoja225", "abreHoja225", "vHoja225", "tareasParaMover", "mueveMensaje", "vDudaTarea", "_nmz", "mezclaDicho", "tareaNombrada", "mensajesMezclados", "arreglaMezcla",
-  "estadoAgenda228", "vAgenda228", "vClipEvid", "evidenciaDe", "vPastilla", "canalActual", "modoClaude", "canalesDe", "externosDe", "censoAcomodo", "acomodoOk", "soloPlatica", "nombreSugerido", "nuevaDesdeMsg", "opcionesMover", "inicialesDe", "nombreLimpio", "sinEmojiUI", "ico", "chipEncabezado", "integrantesDe", "nombreInt", "quitaEtiquetasWA", "dDif", "soloMeFalta", "completitud", "contextoDe", "contextoPct", "esRecurrente", "fechaCorta", "lineaOrigen", "origenDe", "vChecklist", "tieneChecklist",
+  "estadoAgenda228", "vAgenda228", "vClipEvid", "evidenciaDe", "vista230", "nombreVisible230", "_nomWA", "_telDe", "vPastilla", "canalActual", "modoClaude", "canalesDe", "externosDe", "censoAcomodo", "acomodoOk", "soloPlatica", "nombreSugerido", "nuevaDesdeMsg", "opcionesMover", "inicialesDe", "nombreLimpio", "sinEmojiUI", "ico", "chipEncabezado", "integrantesDe", "nombreInt", "quitaEtiquetasWA", "dDif", "soloMeFalta", "completitud", "contextoDe", "contextoPct", "esRecurrente", "fechaCorta", "lineaOrigen", "origenDe", "vChecklist", "tieneChecklist",
   "_notaPriv", "mensajeDicho", "_minus1", "armaMensaje", "resuelveDestino", "borradorMensaje", "pideMensaje", "msjEnCurso", "vBorradorMsj", "srJunta", "srCorte", "srArranca", "vQuienDudas", "_nn"];
 var FUNCS = F_FUNCS.concat(B221).concat(NUEVAS).filter(function (x, i, a) { return a.indexOf(x) === i; });
 var VARS = F_VARS.concat(["SEG_HORA_DEFECTO", "ESCALA_DIAS", "AVISO_INM_RE", "CHK_EST", "AGENDA_HORA_TODO_DIA", "PALOMEO_MS", "TITULO_CONECTORES", "RITMO_RE", "CITA_RE", "MESES229", "CTX_MIN_PAL", "SINONIMOS", "BUSCA_VACIAS", "REV_DESDE",
@@ -85,7 +85,7 @@ eq("resumen vivo: lo que sigue, a quién se espera y lo último (solo con lo que
   "Sigue: Azotea · vie 9 oct · Se espera de Manuel Parra · Último: Manuel 11:51 «Tema 2… Mesa Comedor Alt Brillo. Maribel Gonzál…»");
 eq("sin nada que decir, no se muestra", c.resumenVivo({ id: "x", nombre: "x", duenio: "salvador", indefinida: true, contexto: "algo que ya tiene contexto suficiente", msgs: [] }).una, "");
 eq("build 228: el resumen está plegado en su ficha (no hay bloque fijo)", c.vResumenVivo(L), "");
-c.togMin225(L.id, "rvab"); var hv = c.vResumenVivo(L); si("al tocar la ficha 'Resumen' se despliega debajo de las fichas", /^<div class="rv228">/.test(hv) && /Sigue: Azotea/.test(hv) && /aria-expanded="true"/.test(c.chipsTarea(L)));
+c.togMin225(L.id, "rvab"); c.window.__vf230 = { tIAMUVF22TRJF: "imp" }; si("build 230: la ficha 'Resumen' abre la vista Importante (un solo resumen)", /data-chip="resumen" aria-expanded="true"/.test(c.chipsTarea(L))); c.window.__vf230 = {};
 eq("y se recuerda (localStorage)", JSON.parse(ALMACEN.doit_min225), { "tIAMUVF22TRJF|rvab": 1 });
 c.togMin225(L.id, "rvab");
 var LA = LERDO(); LA.checklist.items[0].fecha = "2026-10-02";

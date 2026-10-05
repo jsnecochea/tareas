@@ -795,6 +795,13 @@ button{font:inherit;color:inherit}
 .evt{flex:1;min-width:0;display:flex;flex-direction:column}.evt span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.evt small{font-size:13px;color:var(--ink-3)}
 .evtx{padding:8px 2px}.evtx b{display:block;font-size:16px}.evtx small{display:block;color:var(--ink-3);font-size:13px;margin:2px 0 8px}.evtx p{margin:0;font-size:15px;line-height:1.45;white-space:pre-wrap}
 .enlsim{display:inline-block;margin-left:8px;font-size:12px;color:#7cc0ff;font-weight:600}.enlnueva .enln{display:flex;align-items:center;gap:6px}
+.res230{margin:4px 2px 10px;padding:12px 14px;border-radius:16px;background:var(--surface-2);display:flex;flex-direction:column;gap:6px}
+.res230>b{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3)}.res230 .rtx{margin:0;font-size:15.5px;line-height:1.4;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.res230 .racu{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}.res230 .racu li{display:flex;align-items:flex-start;gap:6px;font-size:14.5px;line-height:1.35}
+.res230 .racu li svg{color:#30d158;flex:none;margin-top:2px}.res230 .racu li span{flex:1}.res230 .racu small{color:var(--ink-3);font-size:12.5px;flex:none}
+.res230 .rfal{font-size:14px;color:var(--ink-2)}.res230 .rfal b{color:var(--ink)}.res230 .ract{align-self:flex-end;font-size:11.5px;color:var(--ink-3)}
+.res230.vacio span{color:var(--ink-3);font-size:14.5px}
+.vac230{text-align:center;color:var(--ink-3);font-size:14px;padding:24px 16px}
 .autpill{display:block;margin:10px auto 6px;border:0;border-radius:16px;background:rgba(48,209,88,.16);color:#30d158;font:inherit;font-size:15px;font-weight:700;padding:7px 16px}
 .hchip{flex:1;display:flex;align-items:center;gap:8px;background:var(--surface-2,#2a2a2d);border-radius:12px;padding:9px 12px;font-size:15px;color:var(--ink,#f2f2f4);min-width:0}
 .hchip span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1410,7 +1417,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 229 · Tarea · Dato · Vincular en una fila · franja Agendar compacta con evidencia";
+var VERSION_APP = "build 230 · Filtro: Todo · Importante (con Resumen) · Claude · integrantes";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -7072,18 +7079,19 @@ function nombreCorto(n){
 function vPastilla(t){
   /* build 227 (Salvador 16:24): UNA sola pastilla chica "Todo ▾"; la hoja trae Todo · Claude · cada integrante.
      Lo elegido reemplaza el texto ("Claude ▾", "Eduardo ▾"). Va en el renglon del Resumen. */
-  var c=canalActual(t), cl=modoClaude(t);
-  var tx=cl?"Claude":(c.id==="todo"?"Todo":nombreCorto(c.nom).split(" ")[0]);
-  return '<button class="chip225 fil227'+(cl||c.id!=="todo"?' on':'')+'" id="cnlpill" data-fil227="1" aria-label="Ver: '+esc(tx)+'">'+esc(tx)+ico("down",13)+'</button>';   /* build 228: ficha igual a las demas */
+  var c=canalActual(t), cl=modoClaude(t), v=vista230(t);
+  var tx=v==="imp"?"Importante":(cl||v==="claude"?"Claude":(c.id==="todo"?"Todo":nombreCorto(nombreVisible230(c.nom, t)).split(" ")[0]));   /* build 230 */
+  return '<button class="chip225 fil227'+(cl||v||c.id!=="todo"?' on':'')+'" id="cnlpill" data-fil227="1" aria-label="Ver: '+esc(tx)+'">'+esc(tx)+ico("down",13)+'</button>';   /* build 228: ficha igual a las demas */
 }
 function abreFiltro227(t){
-  var c=canalActual(t), cl=modoClaude(t);
-  var ops=[{id:"todo",nom:"Todo",sub:"todo junto",on:!cl&&c.id==="todo"},{id:"claude",nom:"Claude",sub:"lo que le dices a Claude",on:cl}];
-  canalesDe(t).forEach(function(x){ if(x.id==="todo" || (x.id==="equipo" && !hayEquipo(t))) return; ops.push({id:x.id,nom:x.nom,sub:x.sub,on:!cl&&x.id===c.id,av:x.id.indexOf("dm:")===0||x.id.indexOf("ext:")===0}); });
+  var c=canalActual(t), cl=modoClaude(t), vv=vista230(t);
+  /* build 230: Todo · Importante · Claude · integrantes · agregar o quitar */
+  var ops=[{id:"todo",nom:"Todo",sub:"todo junto",on:!cl&&!vv&&c.id==="todo"},{id:"imp",nom:"Importante",sub:"acuerdos y conclusiones",on:vv==="imp"},{id:"claude",nom:"Claude",sub:"lo que le pediste y lo que contestó",on:cl||vv==="claude"}];
+  canalesDe(t).forEach(function(x){ if(x.id==="todo" || (x.id==="equipo" && !hayEquipo(t))) return; var nv=nombreVisible230(x.nom, t); ops.push({id:x.id,nom:nv,sub:/^Contacto sin nombre/.test(nv)?"no está en tu agenda":x.sub,on:!cl&&!vv&&x.id===c.id,av:x.id.indexOf("dm:")===0||x.id.indexOf("ext:")===0}); });
   var bg=document.createElement("div"); bg.className="cnlbg";
   var sh=document.createElement("div"); sh.className="cnlsheet fil227h";
   sh.innerHTML='<div class="hh"></div>'+ops.map(function(o){
-    var ic=o.id==="todo"?ico("bubble",20):(o.id==="claude"?ico("info",20):(o.av?'<span class="av227">'+esc(inicialesDe(o.nom))+'</span>':ico("people",20)));
+    var ic=o.id==="todo"?ico("bubble",20):(o.id==="imp"?ico("check",20):o.id==="claude"?ico("info",20):(o.av?'<span class="av227">'+esc(inicialesDe(o.nom))+'</span>':ico("people",20)));
     return '<button class="cnlop227'+(o.on?' on':'')+'" data-fil="'+esc(o.id)+'">'+ic+'<span>'+esc(o.nom)+'<small>'+esc(o.sub||"")+'</small></span>'+(o.on?ico("check",18):'')+'</button>'; }).join("")+
     '<button class="cnlop227 tenue" data-fil="__int">'+ico("plus",20)+'<span>Integrantes<small>agregar o quitar</small></span></button>';
   function cierra(){ if(bg.parentNode) bg.parentNode.removeChild(bg); if(sh.parentNode) sh.parentNode.removeChild(sh); }
@@ -7091,8 +7099,8 @@ function abreFiltro227(t){
   Array.prototype.forEach.call(sh.querySelectorAll("[data-fil]"),function(b){ b.onclick=function(){ var id=b.getAttribute("data-fil"); cierra();
     if(id==="__int"){ abreIntegrantes(t); return; }
     window.__cnlClaude=window.__cnlClaude||{}; window.__cnl=window.__cnl||{};
-    if(id==="claude"){ window.__cnlClaude[t.id]=1; }
-    else { window.__cnlClaude[t.id]=0; window.__cnl[t.id]=id; }
+    if(id==="claude" || id==="imp"){ poneVista230(t, id); window.__cnl[t.id]="todo"; }   /* build 230 */
+    else { poneVista230(t, ""); window.__cnl[t.id]=id; }
     render(); }; });
   document.body.appendChild(bg); document.body.appendChild(sh);
 }
@@ -8594,7 +8602,7 @@ function chipsTarea(t){
   /* build 228 (Salvador 16:33): UNA fila de fichas iguales: fecha · Lista · personas · Agendado · Resumen · Todo ⌄ · Detalles.
      Sin "1 cosa para ti", sin el renglon "Agendado ✓ · Calendario…" y sin el bloque grande del Resumen. */
   var ag=estadoAgenda228(t); if(ag) h+='<button class="chip225'+(ag.ok?' verde':'')+'" data-chip="agenda">'+ico("cal",15)+esc(ag.txt)+'</button>';
-  if(resumenVivo(t).una){ var rab=min225(t.id,"rvab"); h+='<button class="chip225'+(rab?' on228':'')+'" data-chip="resumen" aria-expanded="'+(rab?'true':'false')+'">Resumen'+ico(rab?"down":"der",13)+'</button>'; }
+  var rab=vista230(t)==="imp"; h+='<button class="chip225'+(rab?' on228':'')+'" data-chip="resumen" aria-expanded="'+(rab?'true':'false')+'">Resumen'+ico(rab?"down":"der",13)+'</button>';   /* build 230: siempre; abre la vista Importante */
   h+=vPastilla(t);
   h+='<button class="chip225" data-chip="detalles">'+ico("info",15)+'Detalles</button></div>';
   return h;
@@ -8907,6 +8915,59 @@ function bindAcomodoInicio(){
 }
 /* sin emojis en la interfaz: los avisos del sistema ("📝 Nota IA", "✉️ Enviado", "🎙️ Audio enviado") se pintan sin el dibujito */
 function sinEmojiUI(s){ return String(s==null?"":s).replace(/^(\s*(?:[☀-➿⭐️‍]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uD83E[\uDC00-\uDFFF])+\s*)+/,""); }
+/* ===================== build 230 (Salvador 16:42, "Inversiones BBVA": el filtro no distinguía nada) =====================
+   Hoja "Todo ⌄": Todo · Importante ("acuerdos y conclusiones") · Claude ("lo que le pediste y lo que contestó") · integrantes ·
+   "Integrantes · agregar o quitar". IMPORTANTE: arriba la tarjeta "Resumen" (campo resumen = {texto, acuerdos[{t,fecha,de,msg_id}],
+   pendientes[{t,de}], actualizado}); debajo SOLO lo importante: msg_imp[id]=1; sin clasificar, regla de respaldo (se oculta lo de
+   menos de 60 letras sin cifra, fecha, archivo ni pregunta). La ficha "Resumen" abre esta vista (un solo resumen). CLAUDE: solo lo
+   que le pediste a Claude y lo que contestó; las "Nota IA" automaticas no. Integrantes con nombre de puro numero: se busca en la
+   agenda o en otro mensaje del mismo numero; si no, "Contacto sin nombre ·1884" (nunca el numero completo). */
+function vista230(t){ var v=(window.__vf230||{})[t&&t.id]||""; return v==="imp"||v==="claude"?v:""; }
+function poneVista230(t, v){ window.__vf230=window.__vf230||{}; window.__vf230[t.id]=v||""; window.__cnlClaude=window.__cnlClaude||{}; window.__cnlClaude[t.id]=(v==="claude")?1:0; }
+function msgId230(x){ return String((x&&(x.id||x.msg_id||x.wa_id||x.nid))||((x&&x.ts)?"ts"+x.ts:"")); }
+/* ¿es importante? 1/0 si Claude ya lo clasificó en msg_imp; si no, la regla de respaldo */
+function esImp230(t, x){
+  var mi=(t && t.msg_imp && typeof t.msg_imp==="object")?t.msg_imp:{}, k=msgId230(x);
+  if(k && Object.prototype.hasOwnProperty.call(mi,k)) return +mi[k]===1;
+  if(x.nota_ia || /^\s*(📝\s*)?Nota IA\b/i.test(String(x.t||""))) return false;   /* las notas automaticas solo si Claude las marcó */
+  if(x.nota_claude || x.indicacion_ts) return false;   /* la platica con Claude vive en la vista Claude (salvo que la marque importante) */
+  var tx=String(x.tr||x.t||"").replace(/^[^:\n]{1,40}:\s*/,"").trim();
+  if(x.url || x.tipo==="foto" || x.tipo==="documento" || x.img || x.data) return true;
+  if(tx.length>=60) return true;
+  if(/\d/.test(tx) || /\?/.test(tx)) return true;
+  if(/\b(lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo|hoy|ma[ñn]ana|enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\b/i.test(tx)) return true;
+  return false;
+}
+/* ¿va en la vista Claude? lo que se le pidió a Claude y lo que contestó (no las notas automaticas de seguimiento) */
+function esClaude230(x){
+  if(!x) return false;
+  if(x.nota_ia || /^\s*(📝\s*)?Nota IA\b/i.test(String(x.t||""))) return false;
+  if(x.k==="bo") return !!(x.nota_claude || x.indicacion_ts);
+  return !!(x.nota_claude && !x.wa_in && !x.wa_c);
+}
+function vResumen230(t){
+  var r=(t.resumen && typeof t.resumen==="object")?t.resumen:null;
+  if(!r || !(String(r.texto||"").trim() || (r.acuerdos||[]).length || (r.pendientes||[]).length))
+    return '<div class="res230 vacio"><b>Resumen</b><span>Claude está preparando el resumen</span></div>';
+  var fc=function(f){ return /^\d{4}-\d{2}-\d{2}/.test(f||"")?fechaMovCorta(String(f).slice(0,10)):String(f||""); };
+  var hm=""; try{ var d=new Date(typeof r.actualizado==="number"?r.actualizado:Date.parse(r.actualizado)); if(!isNaN(d)) hm=hhmm(d); }catch(e){}
+  return '<div class="res230"><b>Resumen</b>'+(String(r.texto||"").trim()?'<p class="rtx">'+esc(r.texto)+'</p>':'')+
+    ((r.acuerdos||[]).length?'<ul class="racu">'+r.acuerdos.map(function(a){ return '<li>'+ico("check",14)+'<span>'+esc(a.t||a.texto||"")+'</span>'+(a.fecha?'<small>'+esc(fc(a.fecha))+'</small>':'')+'</li>'; }).join("")+'</ul>':'')+
+    ((r.pendientes||[]).length?'<div class="rfal"><b>Falta:</b> '+r.pendientes.map(function(p){ return esc((p.t||p.texto||"")+(p.de?" ("+p.de+")":"")); }).join(" · ")+'</div>':'')+
+    (hm?'<small class="ract">act. '+esc(hm)+'</small>':'')+'</div>';
+}
+/* nombre que se puede mostrar: un "nombre" de puro numero se busca en la agenda o en otro mensaje del mismo numero */
+function nombreVisible230(nom, t){
+  var s=String(nom||"").trim(), d=s.replace(/\D/g,"");
+  if(!(d.length>=8 && /^[\s+\d()-]+$/.test(s))) return s;
+  var fin=function(x){ return String(x||"").replace(/@.*$/,"").replace(/\D/g,""); }, igual=function(a){ return a && (a===d || (a.length>=10 && d.length>=10 && a.slice(-10)===d.slice(-10))); };
+  var ag=(window.AGENDA_WA||[]).filter(function(a){ return a && a.nombre && (igual(fin(a.jid)) || igual(fin(a.numero)) || igual(fin(a.tel))); })[0];
+  if(ag) return ag.nombre;
+  var m=((t&&t.msgs)||[]).filter(function(x){ var nm=_nomWA(x); return nm && !/^[\s+\d()-]+$/.test(nm) && (igual(fin(x.jid)) || igual(fin(x.tel)) || igual(fin(x.wa_tel)) || igual(_telDe(x))); })[0];
+  if(m) return _nomWA(m);
+  if(!window.AGENDA_WA && !window.__agendaNo){ try{ cargaAgendaWA(function(){ if(vista==="hilo") render(); }); }catch(e){} }
+  return "Contacto sin nombre ·"+d.slice(-4);
+}
 function vHilo(){
   var t=tareas.filter(function(x){return x.id===abierta})[0];
   if(!t){vista="lista";return vLista()}
@@ -8998,7 +9059,7 @@ function vHilo(){
   /* build 195: un renglon: chip de fecha + ▾. Sin resumen debajo. El ▾ abre "Creada con" + Contexto. */
   var _ch=chipEncabezado(t);
   /* build 225: chips en una linea (cada uno abre su hoja) + "Resumen vivo · Claude". El ▾ y su detalle viven en ⓘ Detalles */
-  h+=chipsTarea(t)+vResumenVivo(t);   /* build 228: una sola fila de fichas; el resumen se despliega desde su ficha */
+  h+=chipsTarea(t);   /* build 228/230: una fila de fichas; el resumen vive en la vista Importante */
   /* build 228: el renglon "Agendado ✓ · Calendario…" ahora es la ficha "Agendado" (lineaAgenda queda para otras vistas) */
   h+=vDecisionMeta(t)+vDecisionDato(t)+vQuienDudas(t)+vBorradorMsj(t);   /* build 225: mensaje por confirmar; "Se comparte con" va en 👥 */   /* build 221; 222: decisión de meta atrasada */
   if(tipoRevisar(t)==="falta" && !vistaSup(t)) h+=vTipoToggle(t);   /* build 224: el supervisor no ve Tarea|Dato */
@@ -9027,6 +9088,7 @@ function vHilo(){
   if(window.__visitaDe!==t.id){ window.__visitaDe=t.id; window.__visitaIni=Date.now(); }
   var _mf225=filtroMeta(t);
   var _pq227=-1; try{ var _pp227=preguntaParaMi(t); if(_pp227 && !min225(t.id,"pt")) _pq227=_pp227.ix; }catch(e){}   /* build 227: OK·Mover·Nueva van en la tarjeta */
+  var _v230=vista230(t);   /* build 230: Importante / Claude */
   var _todo=modoChat(t)==="todo", _rmp=_todo?{set:{}}:avisosReemplazados(t), _vistoNuevo=false, _ocultos=0, _visibles=0;
   var _plg=_todo?{set:{},ult:-1,n:0}:avisosPlegados(t), _cn=canalActual(t),
       _pln=notasPlegadas(t, _todo || !!(window.__ncExp&&window.__ncExp[t.id]), window.__visitaIni, Date.now()),
@@ -9035,10 +9097,12 @@ function vHilo(){
   var _evs=(t.evidencias||[]).filter(function(f){ return f && !f.eliminado; }).sort(function(a,b){return (a.ts||0)-(b.ts||0)}), _evI=0;
   function _evHasta(ts){ while(_evI<_evs.length && (ts===Infinity || (_evs[_evI].ts||0)<=ts)){ var f=_evs[_evI++];
     var _hh=""; try{ _hh=f.ts?hhmm(new Date(f.ts)):""; }catch(e){}
+    if(_v230==="claude") continue;
     m+='<div class="fot fotin"><img src="'+f.data+'" alt="evidencia"><span class="fh">'+esc(((f.de&&PERSONAS[f.de])?PERSONAS[f.de].nombre+" · ":"")+_hh)+'</span></div>'; } }
   /* build 224: notas del campo "notas" (nota_privada del conector/Mac): en su lugar por hora; las privadas solo para Salvador */
   var _nts=(Array.isArray(t.notas)?t.notas:[]).filter(function(n){ return n && String(n.t||"").trim() && !n.oculto && (!n.privado || yo==="salvador"); }).sort(function(a,b){ return (a.ts||0)-(b.ts||0); }), _ntI=0;
   function _ntHasta(ts){ while(_ntI<_nts.length && (ts===Infinity || (_nts[_ntI].ts||0)<=ts)){ var n=_nts[_ntI++];
+    if(_v230==="claude" || (_v230==="imp" && !esImp230(t, {id:n.id||n.nid, ts:n.ts, t:n.t, nota_ia:1}))) continue;   /* 230: las notas automaticas no van en Claude; en Importante solo si estan en msg_imp */
     m+='<div class="b bi bnota'+(n.privado?' priv':'')+'">'+esc(sinEmojiUI(n.t))+'<span class="st">'+esc((n.h||"")+(n.privado?" · solo tú":""))+'</span></div>'; } }
   (t.msgs||[]).forEach(function(x,ix){
     if(x && x.ts){ _evHasta(x.ts); _ntHasta(x.ts); }
@@ -9057,12 +9121,14 @@ function vHilo(){
     if(x && x.eliminado) return;   /* build 215: archivo eliminado: no sale en ningun lado */
     if(x && x.oculto) return;      /* build 225: oculto (movido a otra tarea u ocultado): no se pinta, sigue en los datos */
     if(_mf225 && metaDeMsg(t,x)!==_mf225) return;   /* build 225: filtro por meta */
-    if(!esImportante(x, ix, _rmp)){ _ocultos++; return; }   /* build 197: aviso reemplazado por uno mas nuevo del mismo tema */
+    if(_v230==="imp" && !esImp230(t,x)) return;        /* build 230: solo lo importante */
+    if(_v230==="claude" && !esClaude230(x)) return;    /* build 230: solo lo que le pediste a Claude y lo que contesto */
+    if(!_v230 && !esImportante(x, ix, _rmp)){ _ocultos++; return; }   /* build 197: aviso reemplazado por uno mas nuevo del mismo tema */
     if(x.nota_claude && x.k!=="bo" && !x.visto_ts && !_pln.set[ix]){ x.visto_ts=Date.now(); _vistoNuevo=true; }   /* build 197: ya la viste */
     /* build 193 (F36): las notas/indicaciones a Claude y sus respuestas se pliegan en un renglon */
     /* build 198 (Salvador 12:55): lo que se oculta NO deja renglon "N … · ver": en Importante simplemente
        no sale (indicaciones viejas, avisos del sistema, avisos de seguimiento atendidos); en Todo sale todo */
-    if(_pln.set[ix] || _pls.set[ix] || _plg.set[ix]){ _ocultos++; return; }
+    if(!_v230 && (_pln.set[ix] || _pls.set[ix] || _plg.set[ix])){ _ocultos++; return; }
     _visibles++;
     var q=autorMsg(x,t);
     if(x.hab){ m+=burbujaHablada(x, (q||""), t.id+"|"+ix); return; }
@@ -9090,7 +9156,7 @@ function vHilo(){
        solo "Nombre: texto" y un puntito tenue que despliega el detalle. */
     if(x.k==="bi" && (x.wa_in||x.wa_c||x.origen||x.tipo)){
       var tx=sinEmojiUI(quitaEtiquetasWA(String(x.t||""))), mm=tx.match(/^([^:\n]{1,40}):\s*([\s\S]*)$/);   /* 226: sin emojis */
-      var cab=mm?'<b class="cn">'+esc(nombreLimpio(mm[1]))+':</b> '+esc(sinEmojiUI(mm[2])):esc(tx);
+      var cab=mm?'<b class="cn">'+esc(nombreVisible230(nombreLimpio(mm[1]), t))+':</b> '+esc(sinEmojiUI(mm[2])):esc(tx);
       var dt="";
       if(msgAn[ix]){
         var fd=x.ts?new Date(x.ts).toLocaleString("es-MX",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):(x.h||"");
@@ -9198,8 +9264,9 @@ function vHilo(){
   if(_vistoNuevo) setTimeout(function(){ try{ guarda(t); }catch(e){} }, 0);
   var _tgl='<div class="cmodo"><button data-cmodo="importante" class="'+(_todo?'':'on')+'">Importante</button><button data-cmodo="todo" class="'+(_todo?'on':'')+'">Todo</button></div>';
   /* build 198: si en Importante el chat queda vacio, una pista chiquita para que no parezca roto */
-  if(!_todo && !_visibles && _ocultos && !(t.evidencias||[]).length) m+='<button class="avfold" data-cmodo="todo">Hay '+_ocultos+' mensaje'+(_ocultos===1?'':'s')+' oculto'+(_ocultos===1?'':'s')+' · Todo</button>';
-  m=_tgl+m;
+  if(_v230==="claude" && !_visibles) m+='<div class="vac230">Aquí sale lo que le pidas a Claude y lo que te conteste.</div>';
+  if(!_v230 && !_todo && !_visibles && _ocultos && !(t.evidencias||[]).length) m+='<button class="avfold" data-cmodo="todo">Hay '+_ocultos+' mensaje'+(_ocultos===1?'':'s')+' oculto'+(_ocultos===1?'':'s')+' · Todo</button>';
+  m=_v230==='imp'?vResumen230(t)+m:(_v230?m:_tgl+m);   /* build 230: Importante arriba con su Resumen; sin el Importante|Todo viejo */
   return h+(esDato(t)?vDatoCuerpo(t):vDatosTarea(t))+vVuelta(t)+vPasos(t)+vEntregas(t)+bannerDecision(t)+_pre179+vFiltroMeta(t)+'<div class="scroll'+(_conPill?' cnl" style="--cc:'+_cc:'')+'"><div class="msgs">'+m+pre+'</div></div>'+vTarjetaRev(t)+
     /* LA MISMA BARRA DE TODAS LAS VISTAS — 2026-09-04. Antes el hilo tenia la
        camara a la IZQUIERDA y una flecha de enviar a la derecha, distinto de la
@@ -13581,7 +13648,7 @@ function bindHilo(){
     var k=el.getAttribute("data-chip");
     if(k==="falta"){ window.__hoja225=null; var f=[]; try{ f=soloMeFalta(t); }catch(e){} render();
       setTimeout(function(){ var mc=$("tmic"); if(mc) mc.click(); if(f.length) toast("Dímelo y lo completo: "+f.join(" · ")); }, 60); return; }
-    if(k==="resumen"){ togMin225(t.id,"rvab"); render(); return; }   /* build 228 */
+    if(k==="resumen"){ var _imp=vista230(t)==="imp"; poneVista230(t, _imp?"":"imp"); if(!_imp){ window.__cnl=window.__cnl||{}; window.__cnl[t.id]="todo"; } render(); return; }   /* build 230: un solo resumen = la vista Importante */
     abreHoja225(t, k); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-min225]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); togMin225(t.id, el.getAttribute("data-min225")); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-mfil]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); window.__mfil225=window.__mfil225||{}; window.__mfil225[t.id]=el.getAttribute("data-mfil"); render(); }; });
@@ -14109,7 +14176,7 @@ function bindHilo(){
     var sc=document.querySelector(".scroll");
     if(sc) sc.scrollTop=sc.scrollHeight;
   }
-  alFondo();
+  if(vista230(t)==="imp"){ var _sc230=document.querySelector(".scroll"); if(_sc230) _sc230.scrollTop=0; } else alFondo();   /* build 230: en Importante se ve el Resumen arriba */
   ta.onfocus=function(){ setTimeout(alFondo,120); setTimeout(alFondo,420) };
   if(window.visualViewport) window.visualViewport.addEventListener("resize",alFondo);
 }
@@ -14761,7 +14828,7 @@ function _agendaDe(j){
   var l=j.contactos||j.agenda||j.lista||j.items||(Array.isArray(j)?j:null);
   if(l && !Array.isArray(l) && typeof l==="object") l=Object.keys(l).map(function(k){ var v=l[k]; return typeof v==="object"&&v?Object.assign({nombre:k},v):{nombre:k, jid:v}; });
   if(!Array.isArray(l)) return null;
-  return l.map(function(a){ return typeof a==="string"?{nombre:a}:{nombre:String((a&&(a.nombre||a.name||a.n))||"").trim(), alias:String((a&&(a.alias||a.apodo||a.notify))||"")}; })
+  return l.map(function(a){ return typeof a==="string"?{nombre:a}:{nombre:String((a&&(a.nombre||a.name||a.n))||"").trim(), alias:String((a&&(a.alias||a.apodo||a.notify))||""), jid:String((a&&a.jid)||""), numero:String((a&&(a.numero||a.tel||a.telefono))||"")}; })   /* 230: con numero/jid para nombrar ids sueltos */
     .filter(function(a){ return a.nombre && !/^\+?\d[\d\s-]+$/.test(a.nombre); });
 }
 function cargaAgendaWA(alLlegar){

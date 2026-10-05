@@ -24,7 +24,7 @@ function saca(tipo, nombre) {
 }
 var FUNCS = ["_nn", "esDelEquipo", "_telDe", "_nomWA", "esMsgWA", "miembroDeNombre", "contactosWA", "_contactosWA",
   "_contactoDeNombre", "canalDe", "externosDe", "nombreWADe", "canalesDe", "canalActual", "msgEnCanal", "integrantesDe",
-  "responsableExt", "phCanal", "vPastilla", "ico", "nombreCorto", "modoClaude", "puedeSerIndicacion", "convierteEnIndicacion", "notasPlegadas",
+  "responsableExt", "phCanal", "vPastilla", "vista230", "nombreVisible230", "ico", "nombreCorto", "modoClaude", "puedeSerIndicacion", "convierteEnIndicacion", "notasPlegadas",
   "notaClaude", "preguntaExterno", "nombreInt", "iniInt"];
 var VARS = ["CNL_COL", "CNL_EXT", "CLAUDE_COL", "_cwMemo", "SVG_DESTELLO", "SVG_CHAT"];
 var codigo = VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" +
@@ -159,7 +159,7 @@ function manuel() {
   eq("abiertas = nada plegado", Object.keys(c.notasPlegadas(t, true).set).length, 0);
   c.yo = "samuel"; vm.runInContext("yo='samuel'", c);
   eq("las de otro no las pliego (ni las ve)", Object.keys(c.notasPlegadas(t, false).set).length, 0);
-  si("build 198: las indicaciones viejas se OCULTAN sin renglon (solo salen en Todo)", /if\(_pln\.set\[ix\] \|\| _pls\.set\[ix\] \|\| _plg\.set\[ix\]\)\{ _ocultos\+\+; return; \}/.test(html) && !/indicaci'\+\(_pln\.cab/.test(html));
+  si("build 198: las indicaciones viejas se OCULTAN sin renglon (solo salen en Todo)", /if\((!_v230 && \()?_pln\.set\[ix\] \|\| _pls\.set\[ix\] \|\| _plg\.set\[ix\]\)?\)\{ _ocultos\+\+; return; \}/.test(html) && !/indicaci'\+\(_pln\.cab/.test(html));
 })();
 
 /* ---------- 1b: "Para Claude" primera opcion del aviso de externo ---------- */

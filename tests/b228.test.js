@@ -50,8 +50,8 @@ eq("versión 228 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
       abre(FIESTA(false, false)); o.sinAgendar = fichas().filter(function (x) { return /agend|calendario/i.test(x); })[0];
       var sin = FIESTA(false, false); delete sin.evento; sin.nombre = "Revisar bomba"; delete sin.checklist; sin.contexto = "Revisar la bomba de agua del jardín porque hace ruido y no sube bien la presión al tinaco"; sin.msgs = sin.msgs.slice(0, 1); abre(sin); o.sinEvento = fichas().some(function (x) { return /agend|calendario/i.test(x); });
       abre(FIESTA(true, true));
-      document.querySelector('[data-chip="resumen"]').click(); o.resAbre = [!!document.querySelector(".rv228"), document.querySelector('[data-chip="resumen"]').getAttribute("aria-expanded"), document.querySelector(".chips225").nextElementSibling.className];
-      document.querySelector('[data-chip="resumen"]').click(); o.resCierra = !!document.querySelector(".rv228");
+      document.querySelector('[data-chip="resumen"]').click(); o.resAbre = [!!document.querySelector(".msgs .res230"), document.querySelector('[data-chip="resumen"]').getAttribute("aria-expanded"), document.getElementById("cnlpill").textContent];
+      document.querySelector('[data-chip="resumen"]').click(); o.resCierra = !!document.querySelector(".res230");
       document.getElementById("cnlpill").click(); o.todoHoja = !!document.querySelector(".fil227h"); document.querySelector('.fil227h [data-fil="claude"]').click(); o.todoTx = document.getElementById("cnlpill").textContent;
       o.pregunta = [!!document.querySelector(".ptcard .ac226"), !!document.querySelector(".ptmin227")];
       o.mic = getComputedStyle(document.getElementById("tmic")).backgroundColor;
@@ -64,7 +64,7 @@ eq("versión 228 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
     eq("Agendado completo: hoja con lo que hay", r.hojaCompleto, ["Agendado", ["Alerta de Doit: Lista · vie 13 nov 14:00", "Google Calendar: Evento creado", "Evento: vie 13 nov · 14:00 · Casa"]]);
     eq("alerta sin evento de Calendar: gris 'Falta calendario' y la hoja dice qué falta", [r.faltaCal, r.hojaFalta.slice(0, 2)], ["Falta calendario", ["Alerta de Doit: Lista · vie 13 nov 14:00", "Google Calendar: Falta · en camino (lo crea el trabajador de Calendar)"]]);
     eq("evento sin nada agendado: gris 'Sin agendar'; sin evento no hay ficha", [r.sinAgendar, r.sinEvento], ["Sin agendar", false]);
-    eq("Resumen: se despliega debajo de las fichas y se pliega", [r.resAbre, r.resCierra], [[true, "true", "rv228"], false]);
+    eq("Resumen (230): abre la vista Importante con su tarjeta y se cierra al volver a tocar", [r.resAbre, r.resCierra], [[true, "true", "Importante"], false]);
     eq("Todo ⌄ abre la hoja del filtro (227) y lo elegido reemplaza el texto", [r.todoHoja, r.todoTx], [true, "Claude"]);
     eq("se quedan: Te pregunta con OK · Mover · Nueva y minimizar", r.pregunta, [true, true]);
     eq("micrófono verde", r.mic, "rgb(48, 209, 88)");
