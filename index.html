@@ -1149,6 +1149,15 @@ button{font:inherit;color:inherit}
 .dsigue{display:none;width:36px;height:36px;flex:none;border:0;border-radius:50%;background:none;
   color:var(--ink);place-items:center;cursor:pointer;-webkit-appearance:none;-webkit-tap-highlight-color:transparent}
 .dictacapa.pausa .dbars{display:none}
+.dpbtns{display:flex;gap:10px;padding:8px 14px 4px}   /* build 213 */
+.dpbtns button{flex:1;height:48px;border-radius:13px;font:inherit;font-size:16.5px;font-weight:600;cursor:pointer}
+.dpbtns .dpsigue{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.dpbtns .dpmanda{background:#30d158;border:0;color:#04120a}
+.dpmsg{padding:6px 14px 0;font-size:14.5px;color:#ffd60a;line-height:1.35}
+#borrador{position:fixed;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:95;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;box-shadow:0 10px 40px rgba(0,0,0,.45)}
+#borrador b{display:block;font-size:15px;margin-bottom:4px}
+#borrador .brt{font-size:15px;color:var(--ink-2);max-height:96px;overflow:auto;line-height:1.35}
+#borrador .brx{position:absolute;top:6px;right:6px;width:32px;height:32px;border:0;background:none;color:var(--ink-3);font-size:17px}
 .dictacapa.pausa .dsigue{display:grid}
 .dictacapa.pausa .dtime{color:var(--ink-3)}
 #leebar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 86px);z-index:900;max-width:calc(100% - 24px);display:flex;align-items:center;gap:8px;background:#16161c;border:1.5px solid #30d158;border-radius:999px;padding:5px 6px 5px 14px;box-shadow:0 6px 22px rgba(0,0,0,.5)}
@@ -1215,7 +1224,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 212 · Posible vinculación: botones invertidos y ✕ para descartar; rango de hora (de 3 a 8 PM) agenda a la hora de inicio";
+var VERSION_APP = "build 213 · Dictado: lo dicho nunca se pierde (llamada, cambio de app, bloqueo); al volver, Seguir dictando o Mandar así";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -7291,11 +7300,14 @@ function abreDictado(onListo,onCancel){
       '<button class="dok" id="dictaok" aria-label="Enviar">'+ico("sube",21,2.2)+'</button>'+
     '</div>';
   document.body.appendChild(el);
+  /* build 213: el borrador se borra SOLO al mandar o al tirar a la basura; nunca porque el motor se cayo */
+  window.__dictaListo=function(){ borraBorrador(); if(typeof onListo==="function") onListo(); };
+  window.__dictaCancel=function(){ borraBorrador(); if(typeof onCancel==="function") onCancel(); else cierraDictado(); };
+  window.__noReabre=false;
   var bo=document.getElementById("dictaok");
-  if(bo) bo.onclick=function(){ if(typeof onListo==="function") onListo(); };
+  if(bo) bo.onclick=function(){ window.__dictaListo(); };
   var bx=document.getElementById("dictax");
-  if(bx) bx.onclick=function(){ if(typeof onCancel==="function") onCancel();
-                                else cierraDictado(); };
+  if(bx) bx.onclick=function(){ window.__dictaCancel(); };
   window.__pausado=false; window.__enPausa=false; window.__recPausa=null;
   var bsg=document.getElementById("dictasigue");
   if(bsg) bsg.onclick=function(){ sigueDictado(); };
@@ -7315,6 +7327,7 @@ function svgBasura(){ return '<svg viewBox="0 0 24 24" width="23" height="23" fi
 /* se llama en cada onresult: repinta y se va SOLO hasta abajo, para que el
    ultimo renglon dictado quede siempre a la vista */
 function pintaDictado(){
+  guardaBorrador();   /* build 213: en CADA resultado, lo dicho queda en el telefono */
   var c=document.getElementById("dictatxt"); if(!c) return;
   var firme=(window.__dicho||""), par=(window.__parcial||"");
   if(!firme.trim() && !par.trim()){ c.className="dtxt vacio"; c.textContent=window.__enPausa?"En pausa":"Te escucho…"; return }
@@ -7367,7 +7380,8 @@ function reaccionaFrio(){
   var ahora=Date.now(), ult=0;
   try{ ult=+sessionStorage.getItem("bit_micReset")||0 }catch(e){}
   var bq=document.getElementById("bq");
-  var hayTexto=bq && String(bq.textContent||"").trim();
+  var _ta=document.getElementById("txt");
+  var hayTexto=(bq && String(bq.textContent||"").trim()) || (_ta && String(_ta.value||"").trim()) || leeBorrador();   /* build 213: tampoco con texto en la tarea */
   var primero=(window.__micIntentos||0) <= 1;
   if(!primero && !hayTexto && ahora-ult > 15000){
     try{ sessionStorage.setItem("bit_micReset", String(ahora)) }catch(e){}
@@ -7392,38 +7406,82 @@ function pausaDictado(r, stopFn){
   window.__parcial="";
   window.__enPausa=true; window.__recPausa={r:r, stopFn:stopFn};
   capa.classList.remove("vivo"); capa.classList.add("pausa");
-  pintaDictado();
+  pintaDictado(); srLogD({ev:"pausa", motivo:window.__motivoPausa||"", letras:_dictaTexto().texto.length}); window.__motivoPausa="";
+  pintaPausa(window.__noReabre?"No pude volver a abrir el micrófono. Lo que llevas está guardado: mándalo así o inténtalo otra vez.":"");   /* build 213 */
+}
+/* ===== build 213 (Salvador 7:56: entro una llamada dictando; al colgar estaba en pausa, le pico y no siguio ni mando) =====
+   Causa: "seguir" hacia start() sobre el MISMO motor ya abortado (en iPhone no truena pero no oye); el vigia de arranque
+   en frio, a los 3.2 s sin audio, llamaba al cierre del dictado (que vacia lo dictado) y a reaccionaFrio, que RECARGA la
+   pagina si la barra de inicio esta vacia (no miraba la caja de la tarea). Ahora: lo dicho se guarda en cada resultado
+   (localStorage doit_dictado); seguir SIEMPRE abre un motor nuevo y pega; si no oye, vuelve a la pausa diciendolo (no
+   cierra ni recarga); en pausa: "Seguir dictando" y "Mandar así"; si la app se cerro, al volver se ofrece lo guardado. */
+function _dictaTexto(){
+  var ta=document.getElementById("txt"), bq=document.getElementById("bq");
+  if(vista==="hilo" && ta && String(ta.value||"").trim()) return {texto:String(ta.value).trim(), campo:"txt"};
+  if(bq && String(bq.value||bq.textContent||"").trim()) return {texto:String(bq.value||bq.textContent).trim(), campo:"bq"};
+  return {texto:((window.__dicho||"")+" "+(window.__parcial||"")).replace(/\s+/g," ").trim(), campo:vista==="hilo"?"txt":"bq"};
+}
+function guardaBorrador(){
+  if(!(window.__oyendo || window.__enPausa || document.getElementById("dictacapa"))) return;   /* solo lo DICTADO, no lo que se escribe */
+  try{ var d=_dictaTexto(); if(!d.texto) return;
+    localStorage.setItem("doit_dictado", JSON.stringify({texto:d.texto, campo:d.campo, tid:(vista==="hilo"?abierta:"")||"", ts:Date.now()})); }catch(e){}
+}
+function leeBorrador(){ try{ var b=JSON.parse(localStorage.getItem("doit_dictado")||"null"); if(b && b.texto && Date.now()-(b.ts||0)<48*3600000) return b; }catch(e){} return null; }
+function borraBorrador(){ try{ localStorage.removeItem("doit_dictado"); }catch(e){} var x=document.getElementById("borrador"); if(x) x.remove(); }
+function srLogD(o){ try{ o.ts=Date.now(); o.d=1; var l=JSON.parse(localStorage.getItem("doit_sr_log")||"[]"); l.push(o); if(l.length>40) l=l.slice(-40); localStorage.setItem("doit_sr_log", JSON.stringify(l)); }catch(e){} }
+function pintaPausa(msgTx){
+  var capa=document.getElementById("dictacapa"); if(!capa) return;
+  var x=capa.querySelector(".dpwrap"); if(x) x.remove();
+  var w=document.createElement("div"); w.className="dpwrap";
+  w.innerHTML=(msgTx?'<div class="dpmsg">'+esc(msgTx)+'</div>':'')+'<div class="dpbtns"><button class="dpsigue" id="dpsigue">Seguir dictando</button><button class="dpmanda" id="dpmanda">Mandar así</button></div>';
+  capa.insertBefore(w, capa.querySelector(".dfila"));
+  var a=document.getElementById("dpsigue"); if(a) a.onclick=function(){ sigueDictado(); };
+  var b=document.getElementById("dpmanda"); if(b) b.onclick=function(){ if(window.__dictaListo) window.__dictaListo(); };
 }
 function sigueDictado(){
   var p=window.__recPausa, capa=document.getElementById("dictacapa");
   if(!p || !capa) return;
-  var r=p.r;
-  function arranca(x){ try{ x.start(); return true; }catch(e){ return false; } }
-  if(!arranca(r)){
-    var SR=window.SpeechRecognition||window.webkitSpeechRecognition, n=null;
-    try{ n=new SR(); }catch(e){}
-    if(!n){ toast("No se pudo abrir el micrófono"); return; }
-    n.lang=r.lang||"es-MX"; n.continuous=true; n.interimResults=true;
-    n.onresult=r.onresult; n.onerror=r.onerror;
-    if(!arranca(n)){ toast("No se pudo abrir el micrófono"); return; }
-    r=n;
-  }
-  window.__rec=r; window.__oyendo=true; window.__pausado=false;
-  window.__enPausa=false; window.__recPausa=null;
-  capa.classList.remove("pausa");
+  var r=p.r, SR=window.SpeechRecognition||window.webkitSpeechRecognition, n=null;
+  try{ n=new SR(); }catch(e){}   /* SIEMPRE un motor nuevo: el viejo, abortado, en iPhone "arranca" pero ya no oye */
+  if(n){ n.lang=(r&&r.lang)||"es-MX"; n.continuous=true; n.interimResults=true; n.onresult=r&&r.onresult; n.onerror=r&&r.onerror;
+    try{ n.start(); }catch(e){ n=null; } }
+  srLogD({ev:"seguir", ok:!!n});
+  if(!n){ window.__noReabre=true; pintaPausa("No pude volver a abrir el micrófono. Lo que llevas está guardado: mándalo así o inténtalo otra vez."); return; }
+  window.__rec=n; window.__oyendo=true; window.__pausado=false;
+  window.__enPausa=false; window.__recPausa=null; window.__reanuda=true;
+  capa.classList.remove("pausa"); var x=capa.querySelector(".dpwrap"); if(x) x.remove();
   pintaDictado();
-  enlazaRec(r, p.stopFn);
+  enlazaRec(n, p.stopFn);
 }
+/* al volver (o si la app se cerro): lo dictado sin mandar se ofrece con "Seguir dictando" y "Mandar así" */
+function ofreceBorrador(){
+  var b=leeBorrador(); if(!b || window.__oyendo || document.getElementById("dictacapa") || document.getElementById("borrador")) return;
+  var tt=b.tid?tareas.filter(function(x){ return x.id===b.tid; })[0]:null;
+  var el=document.createElement("div"); el.id="borrador";
+  el.innerHTML='<button class="brx" id="brx" aria-label="Descartar">✕</button><b>Tienes un dictado sin mandar'+(tt?' en “'+esc(tt.nombre)+'”':'')+'</b>'+
+    '<div class="brt">'+esc(b.texto)+'</div><div class="dpbtns"><button class="dpsigue" id="brsigue">Seguir dictando</button><button class="dpmanda" id="brmanda">Mandar así</button></div>';
+  document.body.appendChild(el);
+  var pon=function(){ el.remove();
+    if(b.campo==="txt" && tt){ abierta=tt.id; vista="hilo"; render(); var ta=document.getElementById("txt"); if(ta){ ta.value=b.texto; try{ marcaEnvio("tenv", ta.value); }catch(e){} } return "txt"; }
+    vista="lista"; render(); var bq=document.getElementById("bq"); if(bq){ bq.textContent=b.texto; try{ bq.value=b.texto; bq.classList.remove("vacia"); marcaEnvio("benv", b.texto); }catch(e){} } return "bq"; };
+  document.getElementById("brx").onclick=function(){ borraBorrador(); };
+  document.getElementById("brsigue").onclick=function(){ var c=pon(); srLogD({ev:"recupera", como:"seguir"}); var m=document.getElementById(c==="txt"?"tmic":"bmic"); if(m) m.click(); };
+  document.getElementById("brmanda").onclick=function(){ var c=pon(); srLogD({ev:"recupera", como:"mandar"}); var e=document.getElementById(c==="txt"?"tenv":"benv"); if(e){ e.click(); borraBorrador(); } };
+}
+(function(){ var k=setInterval(function(){ if(typeof listo!=="undefined" && listo){ clearInterval(k); setTimeout(function(){ try{ ofreceBorrador(); }catch(e){} }, 800); } }, 1500); })();
 /* si la app se va a segundo plano (entra una llamada) mientras se dicta: pausa */
 document.addEventListener("visibilitychange", function(){
-  if(document.visibilityState==="hidden" && window.__oyendo && window.__rec)
-    pausaDictado(window.__rec, window.__recStop);
+  if(document.visibilityState==="hidden"){ guardaBorrador(); if(window.__oyendo && window.__rec){ window.__motivoPausa="app oculta (llamada, otra app o bloqueo)"; pausaDictado(window.__rec, window.__recStop); } }
+  else { srLogD({ev:"vuelve", enPausa:!!window.__enPausa}); setTimeout(function(){ try{ ofreceBorrador(); }catch(e){} }, 600); }   /* build 213 */
 });
+window.addEventListener("pagehide", function(){ guardaBorrador(); srLogD({ev:"pagehide"}); });
 function enlazaRec(r, stopFn){
   window.__recStop=stopFn;
   window.__micIntentos=(window.__micIntentos||0)+1;
   window.__audioAbrio=false; window.__inicioRec=Date.now();
-  r.onaudiostart=marcaVivo; r.onspeechstart=marcaVivo; r.onsoundstart=marcaVivo;
+  /* build 213: un motor viejo (ya abortado) que avisa tarde NO cuenta como que el nuevo esta oyendo */
+  r.onaudiostart=function(){ if(window.__rec!==r) return; marcaVivo(); window.__reanuda=false; window.__noReabre=false; };
+  r.onspeechstart=function(){ if(window.__rec===r) marcaVivo(); }; r.onsoundstart=function(){ if(window.__rec===r) marcaVivo(); };
   r.onend=function(){
     if(!window.__oyendo || window.__rec!==r) return;
     setTimeout(function(){
@@ -7433,7 +7491,7 @@ function enlazaRec(r, stopFn){
         setTimeout(function(){
           if(!window.__oyendo || window.__rec!==r) return;
           try{ r.start(); }
-          catch(e2){ pausaDictado(r, stopFn); }   /* build 165: pausa, no cierra */
+          catch(e2){ window.__motivoPausa="el motor se cerró y no reabrió"; pausaDictado(r, stopFn); }   /* build 165: pausa, no cierra */
         }, 500);
       }
     }, 250);
@@ -7445,10 +7503,12 @@ function enlazaRec(r, stopFn){
     if(window.__pausado){ window.__ultOye=Date.now(); window.__inicioRec=Date.now(); return; }
     var ahora=Date.now();
     if(!window.__audioAbrio && ahora-window.__inicioRec > 3200){
+      /* build 213: si ya habia algo dictado (o venia de una pausa), NUNCA se cierra ni se recarga: vuelve a la pausa diciendolo */
+      if(window.__reanuda || _dictaTexto().texto){ window.__noReabre=true; window.__reanuda=false; window.__motivoPausa="al seguir, el micrófono no oyó"; pausaDictado(r, stopFn); return; }
       paraVigia(); if(stopFn) stopFn(); reaccionaFrio(); return;
     }
     if(window.__audioAbrio && ahora-(window.__ultOye||0) > 9000){
-      pausaDictado(r, stopFn);   /* build 165: pausa con lo dicho, no cierra */
+      window.__motivoPausa="9 s sin oír nada"; pausaDictado(r, stopFn);   /* build 165: pausa con lo dicho, no cierra */
     }
   }, 1200);
 }
