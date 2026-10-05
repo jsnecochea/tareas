@@ -1043,6 +1043,20 @@ button{font:inherit;color:inherit}
 .revc ul{margin:2px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:16px;line-height:1.3;color:var(--ink)}
 .revc.c-espera{background:#2E1E05;border:1px solid #FF9F0A}.revc.c-espera .rct,.revc.c-espera .rcp{color:#FFC266}
 .revc.c-falta{background:#0A2540;border:1px solid #0A84FF}.revc.c-falta .rct,.revc.c-falta .rcp{color:#8EB8E6}
+/* build 222: metas */
+.metas{margin:4px 12px 8px;border-radius:16px;padding:10px 12px;background:var(--surface-2,#1c1c1e);border:1px solid #2c2c2e;flex:none}
+.metas .mth{display:flex;align-items:center;gap:8px;font-size:16px}.metas .mth b{flex:1}.metas .mtc{font-size:13px;color:var(--ink-3)}.metas .mtc.rojo{color:#ff453a;font-weight:700}
+.metas .mt{display:flex;gap:10px;padding:10px 0;border-top:1px solid #2c2c2e}.metas .mt:first-of-type{border-top:0}
+.metas .mts{width:12px;height:12px;border-radius:50%;margin-top:5px;flex:none;background:#8e8e93}
+.metas .s-verde .mts{background:#30d158}.metas .s-ambar .mts{background:#ff9f0a}.metas .s-rojo .mts{background:#ff453a;box-shadow:0 0 8px #ff453a}
+.metas .s-rojo .mtsf{color:#ff453a;font-weight:700}.metas .s-ambar .mtsf{color:#ff9f0a;font-weight:600}.metas .s-verde .mtsf{color:#30d158}
+.metas .mtb{flex:1;min-width:0}.metas .mtx{font-size:16px;line-height:1.3}.metas .mtm,.metas .mtg{font-size:13px;color:var(--ink-3);margin-top:3px}
+.metas .mta{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+.metas .mtfoto,.metas .mtok{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:12px;padding:7px 12px;font-size:14px;font-weight:600}
+.metas .mtfoto{background:#2c2c2e;color:var(--ink)}.metas .mtok{background:#30d158;color:#04210d}
+.metas .mtf{width:46px;height:46px;border-radius:8px;object-fit:cover}.metas .mtv{color:var(--ink-3);font-size:14px;padding:6px 0}
+.metas .mthist{display:block;width:100%;margin-top:6px;border:0;background:none;color:var(--ink-3);font-size:14px;text-align:left;padding:8px 0}
+.metas .mthl{display:flex;flex-direction:column;gap:8px}.metas .mth1{display:flex;gap:10px;align-items:center;opacity:.8}.metas .mtnf{width:46px;font-size:11px;color:var(--ink-3);text-align:center}
 .revc.c-quien{background:#10283f;border:1px solid #4aa3ff}.revc.c-quien .rct,.revc.c-quien .rcp{color:#9cc9ff}   /* build 221 */
 .qdl{display:flex;flex-direction:column;gap:6px;max-height:46vh;overflow:auto}
 .qdb{display:flex;flex-direction:column;align-items:flex-start;width:100%;border:0;border-radius:12px;padding:9px 12px;background:#1c3a5a;color:var(--ink);text-align:left;font-size:16px}
@@ -1268,7 +1282,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 221 · Claude resuelve a cada persona; ¿Quién es X? con opciones; seguimiento por días; se comparte con";
+var VERSION_APP = "build 222 · Tareas continuas con Metas: semáforo, foto, historial, seguimiento por meta y aviso de atraso";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -6213,7 +6227,7 @@ function vLista(){
   /* ===== build 179 (Salvador 20:29): "TE TOCA" — una sola lista arriba con todo lo que te pide
      algo (primero lo de Por revisar: te espera/atorados, falta informacion, vinculacion, por
      autorizar; luego vencidas, mensajes nuevos y hoy). Abajo Proximas y "Compartidas · N". ===== */
-  try{ if(!window.__hitoChk || Date.now()-window.__hitoChk>60000){ window.__hitoChk=Date.now(); chequeoHitos(); } }catch(e){ console.warn("hitos",e); }
+  try{ if(!window.__hitoChk || Date.now()-window.__hitoChk>60000){ window.__hitoChk=Date.now(); chequeoHitos(); try{ chequeoMetas(); }catch(e2){ console.warn("metas",e2); } } }catch(e){ console.warn("hitos",e); }   /* build 222: metas */
   var _tt=armaTeToca(_rev, det, mias_venc, msgs, hoyYa);
   h+=vTeToca(_tt)+hMis;
 
@@ -7284,13 +7298,14 @@ function promptRevision(t, v, abiertas){
     "- seguimiento_a: SOLO si te pidió que TÚ le des seguimiento a alguien (\"dale seguimiento a X\", \"pregúntale a X cada…\"): {\"quien\":\"nombre tal cual\",\"meta\":\"qué tiene que quedar, con sus palabras\",\"cada\":\"la frecuencia TAL CUAL la dijo, o null\",\"fechas\":[AAAA-MM-DD copiadas del calendario, SOLO los días que salen de esa frecuencia, máx 10, hasta 3 semanas],\"hora\":\"HH:MM solo si la dijo, o null\",\"texto\":\"el WhatsApp corto y amable que le mandarías, empezando con 'IA: '\"}; si no, null.\n"+
     "- compartir_con: si dijo con quién se comparte la tarea o a quién se le avisa (\"la comparto con mi madre María…\"): los nombres COMPLETOS tal cual los dijo, sin cortarlos; si no, [].\n"+
     "- Los nombres de personas SIEMPRE completos, tal cual los dijo; nunca abreviados ni cortados.\n"+
+    "- metas: SOLO si la tarea es INDEFINIDA/continua (o dice que no tiene fin): cada cosa que debe quedar con su fecha (\"que quede el 9\", \"impermeabilizar en 3 meses\") es una META [{\"tx\":\"qué debe quedar, con sus palabras\",\"fecha\":\"AAAA-MM-DD del calendario o null\",\"quien\":\"quién la ejecuta tal cual o null\",\"seguimiento\":{\"quien\":\"…\",\"cada\":\"…\",\"hora\":\"HH:MM o null\"} o null}]; en una tarea continua NUNCA pongas esa fecha en \"fecha\". Si no, [].\n"+
     "- palabras: hasta 5 etiquetas para encontrarla; sinonimos: hasta 5 sinónimos o formas en que la podría buscar.\n"+
     "- vinculos: ids (de TAREAS ABIERTAS) que traten de LO MISMO, máx 3; solo se proponen. Si ninguna, [].\n"+
     "- de_quien y cifras: para datos (de quién o qué proyecto; montos o medidas tal cual). ya_hecha=true solo si dice que ya se hizo.\n"+
     "- pregunta: SOLO lo que de verdad quedó ambiguo, en una pregunta corta; lo demás llénalo igual. Si todo quedó claro, null.\n"+
     "- checklist: si pide una lista o checklist: {\"titulo\":\"…\",\"items\":[{\"tx\":\"renglón tal cual\",\"estado\":0}]} (0 pendiente, 1 invitado/hecho, 2 confirmado, solo si se dijo); si no, null. CHECKLIST ACTUAL: "+checklistTexto(t)+".\n"+
-    "Contesta SOLO JSON: {\"checklist\":null,\"nombre\":null,\"tipo\":null,\"contexto\":null,\"contexto_modo\":\"reemplazar\",\"fecha\":null,\"indefinida\":false,\"periodicidad\":null,\"ritmo\":null,\"recordar\":[],\"quien\":null,\"responsable\":null,\"yo_superviso\":false,\"seguimiento_a\":null,\"compartir_con\":[],\"palabras\":[],\"sinonimos\":[],\"vinculos\":[],\"de_quien\":null,\"cifras\":null,\"ya_hecha\":false,\"pregunta\":null}\n\n"+
-    "ESTADO ACTUAL DE LA TAREA:\n"+estadoParaClaude(t)+"\n\nLO QUE FALTA: "+(soloMeFalta(t).join(" | ")||"(nada)")+"\nPREGUNTAS QUE LE HICE: "+(preguntasFalta(t).join(" | ")||"(ninguna)")+
+    "Contesta SOLO JSON: {\"checklist\":null,\"nombre\":null,\"tipo\":null,\"contexto\":null,\"contexto_modo\":\"reemplazar\",\"fecha\":null,\"indefinida\":false,\"periodicidad\":null,\"ritmo\":null,\"recordar\":[],\"quien\":null,\"responsable\":null,\"yo_superviso\":false,\"seguimiento_a\":null,\"compartir_con\":[],\"metas\":[],\"palabras\":[],\"sinonimos\":[],\"vinculos\":[],\"de_quien\":null,\"cifras\":null,\"ya_hecha\":false,\"pregunta\":null}\n\n"+
+    "ESTADO ACTUAL DE LA TAREA:\n"+estadoParaClaude(t)+(esMetas(t)?"\nMETAS: "+metasDe(t).map(function(m){ return m.tx+(m.fecha?" ("+m.fecha+")":"")+(metaCumplida(m)?" CUMPLIDA "+(m.cumplida||""):""); }).join(" | "):"")+"\n\nLO QUE FALTA: "+(soloMeFalta(t).join(" | ")||"(nada)")+"\nPREGUNTAS QUE LE HICE: "+(preguntasFalta(t).join(" | ")||"(ninguna)")+
     "\n\nTAREAS ABIERTAS (id | nombre):\n"+(abiertas.map(function(x){ return x.id+" | "+(x.nombre||""); }).join("\n")||"(ninguna)")+
     "\n\nLO QUE DICTÓ: "+v;
 }
@@ -7455,6 +7470,9 @@ function resuelveDudaPersona(t, did, persona){
   if(d.rol==="responsable") h=asignaResponsable(t, persona, !!(d.extra&&d.extra.sup));
   else if(d.rol==="compartir") h=agregaCompartir(t, persona);
   else if(d.rol==="seguimiento"){ var r=programaSeguimiento(t, persona, d.extra||{}); h=r.hecho||""; du=r.duda||""; }
+  else if(d.rol==="quien_meta" || d.rol==="seguimiento_meta"){ var mm=metasDe(t).filter(function(x){ return x.id===(d.extra||{}).metaId; })[0];   /* build 222 */
+    if(mm && d.rol==="quien_meta"){ mm.quien=String(persona.nombre).trim(); h="“"+metaCorta(mm)+"” la hace "+mm.quien; }
+    else if(mm) h=programaSegMeta(t, mm, persona, d.extra||{}); }
   var tx=[h?"Anoté: "+h+".":"Listo: "+String(persona.nombre).trim()+".", du].filter(Boolean).join(" ");
   msg(t,"bi",tx); guarda(t);
   try{ if(d.rol==="seguimiento") sincronizaAvisos(t); }catch(e){}
@@ -7499,6 +7517,7 @@ function aplicaRevisionClaude(t, v, j, abiertas){
   if(j.ritmo && String(j.ritmo).trim() && RITMO_RE.test(s)){ var rt=String(j.ritmo).trim().slice(0,80); if(_nn(rt)!==_nn(t.ritmo||"")){ t.ritmo=conMayuscula(rt); hecho.push("ritmo: "+rt.toLowerCase()); } }
   /* fecha SOLO si Claude la vio como fecha de la tarea Y se dicto (el candado manda la dictada); sin fecha dictada, ninguna */
   var _fdv=fechaDictada(v), _cf=(j.fecha && _fdv.todas.length) ? candadoFecha(v, j.fecha) : {ok:false, fecha:null, duda:_fdv.duda||""};
+  if(t.indefinida===true){ _cf={ok:false, fecha:null, duda:""}; }   /* build 222: continua -> lo que tiene fecha es META, nunca finiquito */
   if(_cf.ok && _cf.corregida && _fdv.todas.length>1){ _cf={ok:false, fecha:null, duda:"¿Cuál de las fechas que dijiste es la de la tarea?"}; }
   if(_cf.duda) dudas.push(_cf.duda+" La fecha no la cambié.");
   else if(_cf.ok && _cf.fecha && _cf.fecha!==t.f_vigente){ t.fecha_dictada=!!_cf.dictada; t.f_original=_cf.fecha; t.f_vigente=_cf.fecha; t.falta_fecha=false; hecho.push("termina el "+fechaBonita(_cf.fecha)); }
@@ -7520,7 +7539,9 @@ function aplicaRevisionClaude(t, v, j, abiertas){
   if(vinc.length && !t.dup_resuelto){ t.posible_dup=(t.posible_dup||[]).concat(vinc).filter(function(x,i,a){ return a.indexOf(x)===i; }); }   /* solo se PROPONE (franja) */
   if(t.f_vigente || t.periodicidad || t.indefinida===true){ t.pendiente_info=""; t.pendiente_tipo=""; }
   /* la pregunta puede nombrar dias o meses SOLO si los dijo el ("¿jueves o viernes?"); fechas sueltas del modelo, no */
-  var _ck7=aplicaChecklistClaude(t, j); if(_ck7) hecho.push(_ck7);   /* build 214 */
+  var _mt2=aplicaMetasClaude(t, v, j); hecho=hecho.concat(_mt2.hecho); dudas=dudas.concat(_mt2.dudas);   /* build 222 */
+  if(t.indefinida===true && j.fecha && !(_mt2.hecho.length) && _fdv.todas.length && !esMetas(t)) dudas.push("Es continua: esa fecha la tomo como meta. ¿Meta de qué?");
+  var _ck7=(esMetas(t) && !(j.checklist && /^metas?$/i.test(String(j.checklist.titulo||""))))?"":aplicaChecklistClaude(t, j); if(_ck7) hecho.push(_ck7);   /* build 214 */
   var _rs9=aplicaResponsable(t, v, j); if(_rs9) hecho.push(_rs9);   /* build 219 */
   if(t.__dudas221){ dudas=dudas.concat(t.__dudas221); delete t.__dudas221; }   /* build 221: ¿Quién es X? */
   var _sg9=aplicaSeguimientoA(t, v, j); if(_sg9.hecho) hecho.push(_sg9.hecho); if(_sg9.duda) dudas.push(_sg9.duda);
@@ -10270,7 +10291,137 @@ function aplicaChecklistClaude(t, j){
   return nuevo?"lista “"+t.checklist.titulo+"” ("+t.checklist.items.length+")":(n?"lista ("+n+" cambios)":"");
 }
 function checklistTexto(t){ return tieneChecklist(t)?t.checklist.items.map(function(x){ return x.tx+" "+CHK_EST[x.estado||0]; }).join(" | "):"(no hay)"; }
+/* ===== build 222 (Salvador, tareas continuas con METAS; caso "Mantenimiento Casa Lerdo/Eloísa") =====
+   Una tarea indefinida no tiene finiquito: lo que tiene fecha son sus METAS. Viven en el checklist con titulo "Metas":
+   items {id, tx, fecha, estado 0 pendiente | 1 en curso | 2 cumplida, quien, foto, cumplida, fuente, seguimiento|seg}.
+   - En la tarea: bloque "Metas" (texto, fecha meta, quién, semáforo a tiempo / vence hoy / atrasada, foto y palomear).
+   - Las cumplidas NO se borran: "Historial de metas" plegado, con fecha de cumplido y foto.
+   - Claude: en una tarea indefinida toda fecha dictada ("que quede el 9", "en 3 meses") entra como META, nunca como
+     finiquito; si se parece a una del historial lo dice ("Se cumplió “Azotea” el 9-oct; ¿duró poco?").
+   - Seguimiento por meta (contacto, días, hora) programado por la cola con [A LAS …].
+   - Meta vencida sin palomear: aviso a Salvador "Atraso en Casa Lerdo: meta Azotea (9-oct)". ===== */
+function esMetas(t){ return !!(t && t.checklist && /^metas?$/i.test(String(t.checklist.titulo||"").trim())); }
+function metasDe(t){ return esMetas(t) ? (t.checklist.items||[]) : []; }
+function metaCumplida(m){ return !!m && (+m.estado||0)>=2; }
+function metaCorta(m){ var s=String((m&&m.tx)||"").trim(), i=s.indexOf(":"); if(i>1 && i<=30) return s.slice(0,i).trim();
+  return s.split(/\s+/).slice(0,4).join(" ").replace(/[.,;:]+$/,""); }
+function tareaCorta(t){ var s=String((t&&t.nombre)||"").replace(/^(mantenimiento|seguimiento|revisi[oó]n|tarea)\s+(de\s+)?/i,"").split("/")[0].trim(); return s||String((t&&t.nombre)||""); }
+function fechaMeta(f){ if(!/^\d{4}-\d{2}-\d{2}$/.test(f||"")) return ""; var d=new Date(f+"T00:00:00"); return d.getDate()+"-"+["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"][d.getMonth()]; }
+/* semáforo: a tiempo (verde) / vence hoy (ámbar) / atrasada (rojo) / sin fecha */
+function semaforoMeta(m, H){
+  H=H||hoy(); if(metaCumplida(m)) return {k:"ok", tx:"Cumplida"};
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(m.fecha||"")) return {k:"sin", tx:"Sin fecha"};
+  var d=dDif(H, m.fecha);
+  if(d>0) return {k:"verde", tx:"A tiempo · faltan "+d+" día"+(d===1?"":"s")};
+  if(d===0) return {k:"ambar", tx:"Vence hoy"};
+  return {k:"rojo", tx:"Atrasada · "+(-d)+" día"+(d===-1?"":"s")};
+}
+function quienMeta(t, m){ return String((m&&m.quien)||t.revisa_ext||((PERSONAS[t.duenio]||{}).nombre)||"").trim(); }
+function segMetaTx(m){ var g=m&&m.seg; if(g && g.contacto) return nombreCorto(g.contacto)+(g.cada?" · "+g.cada:"")+(g.hora?" · "+g.hora:""); return typeof (m&&m.seguimiento)==="string"?m.seguimiento:""; }
+function metaNueva(t, o){
+  if(!esMetas(t)){ if(tieneChecklist(t)) return null; t.checklist={titulo:"Metas", items:[]}; }   /* otra lista con renglones: no se pisa */
+  var m={id:"m"+Date.now().toString(36)+Math.random().toString(36).slice(2,5), tx:conMayuscula(String(o.tx||"").replace(/\s+/g," ").trim()).slice(0,160),
+    fecha:/^\d{4}-\d{2}-\d{2}$/.test(o.fecha||"")?o.fecha:"", estado:0, ts:Date.now(), fuente:o.fuente||""};
+  if(o.quien) m.quien=String(o.quien).trim();
+  t.checklist.items.push(m); return m;
+}
+/* palabras de peso para comparar metas ("impermeabilizar" ~ "impermeabilizado") */
+function _raizMeta(tx){ return _nn(tx).replace(/[^a-z0-9ñ ]+/g," ").split(/\s+/).filter(function(w){ return w.length>=5 && ["techo","quede","quedar","limpio","limpia","listo","lista","hacer","antes","despues","todos","todas"].indexOf(w)<0; }).map(function(w){ return w.slice(0,7); }); }
+function metaParecidaCumplida(t, tx){
+  var r=_raizMeta(tx); if(!r.length) return null;
+  var c=metasDe(t).filter(metaCumplida).filter(function(m){ var q=_raizMeta(m.tx); return r.some(function(w){ return q.indexOf(w)>=0; }); });
+  return c.length ? c.sort(function(a,b){ return String(b.cumplida||"").localeCompare(String(a.cumplida||"")); })[0] : null;
+}
+/* palomear (cumplida) y foto de comprobante */
+function cumpleMeta(t, mid, foto){
+  var m=metasDe(t).filter(function(x){ return x.id===mid; })[0]; if(!m) return null;
+  m.estado=2; m.cumplida=hoy(); m.cumplida_ts=Date.now(); m.fuente="palomeó "+((PERSONAS[yo]||{}).nombre||"");
+  if(foto){ m.foto=foto; m.foto_ts=Date.now(); }
+  msg(t,"bi","Meta cumplida: “"+metaCorta(m)+"” ("+fechaMeta(m.cumplida)+(m.foto?", con foto":", sin foto")+"). Queda en el historial.");
+  guarda(t); return m;
+}
+function fotoMeta(t, mid, data){ var m=metasDe(t).filter(function(x){ return x.id===mid; })[0]; if(!m || !data) return null; m.foto=data; m.foto_ts=Date.now(); guarda(t); return m; }
+/* seguimiento de UNA meta por la cola: días dichos hasta la fecha de la meta, hora dicha o 10:00 */
+function programaSegMeta(t, m, persona, pl){
+  var k=persona.id.indexOf("ext:")===0?null:persona.id, canon=String(persona.nombre).trim();
+  if(k && PERSONAS[k]){ var G=null; try{ G=contactosWA(t).filter(function(g){ return g.eq===k; })[0]; }catch(e){} canon=G?G.nombre:PERSONAS[k].nombre; }
+  var hora=pl.hora||SEG_HORA_DEFECTO, corto=nombreCorto(canon);
+  m.seg={contacto:canon, cada:String(pl.cada||"").trim().slice(0,80), hora:hora, hora_defecto:!pl.hora, programados:[]};
+  t.wa_contactos=t.wa_contactos||[];
+  if(!t.wa_contactos.some(function(c){ return _nn(String((c&&c.nombre)||c))===_nn(canon); })) t.wa_contactos.push({nombre:canon, desde:Date.now()});
+  var ahora=Date.now(), fs=(pl.local||[]).filter(function(f){ return _tsDe(f,hora)>ahora && (!m.fecha || f<=m.fecha); }).slice(0,10);
+  var ya=(t.msgs||[]).filter(function(x){ return x && x.prog && !x.prog.cancelado && _nn(x.prog.contacto||"")===_nn(canon); }).map(function(x){ return x.prog.a_las?x.prog.a_las.fecha+" "+x.prog.a_las.hora:""; });
+  var texto="IA: Hola "+corto.split(" ")[0]+", ¿cómo vas con "+metaCorta(m).toLowerCase()+"?"+(m.fecha?" Quedamos para el "+fechaMeta(m.fecha)+".":"");
+  fs.forEach(function(f){ if(ya.indexOf(f+" "+hora)<0) mandaProgramado(t, {contacto:canon, a_las:{fecha:f, hora:hora}, sino_desde:null, texto:texto}, null); m.seg.programados.push(f+" "+hora); });
+  return "seguimiento de “"+metaCorta(m)+"” a "+corto+": "+fs.length+" WhatsApp ("+(fs.map(fechaMovCorta).join(", ")||"sin días antes de la meta")+" "+hora+")"+(pl.hora?"":" · a las "+hora+" porque no dijiste hora");
+}
+/* lo que regresa Claude: metas:[{tx, fecha, quien, seguimiento:{quien, cada, hora}}]. Solo en tareas indefinidas. */
+function aplicaMetasClaude(t, v, j){
+  var out={hecho:[], dudas:[]}; if(!j || !Array.isArray(j.metas) || !j.metas.length || t.indefinida!==true) return out;
+  var s=_fsa(v), fd=fechaDictada(v), todas=fd.todas||[];
+  j.metas.slice(0,8).forEach(function(x){
+    var tx=String((x&&x.tx)||"").replace(/\s+/g," ").trim(); if(tx.length<3) return;
+    var f=String((x&&x.fecha)||""), fecha="";
+    if(_fReal(f) && todas.indexOf(f)>=0) fecha=f; else if(todas.length===1 && !fd.duda) fecha=todas[0];
+    var ya=metasDe(t).filter(function(m){ return !metaCumplida(m) && _nn(m.tx)===_nn(tx); })[0];
+    if(ya){ if(fecha && ya.fecha!==fecha){ ya.fecha=fecha; out.hecho.push("meta “"+metaCorta(ya)+"” para el "+fechaMeta(fecha)); } return; }
+    var par=metaParecidaCumplida(t, tx);
+    var m=metaNueva(t, {tx:tx, fecha:fecha, fuente:"dictado "+hhmmAhora()});
+    if(!m){ out.dudas.push("Esta tarea ya tiene la lista “"+t.checklist.titulo+"”; no puse la meta “"+tx+"”."); return; }
+    if(x.quien && _dichoNombre(v, x.quien)){ var rq=resuelvePersona(t, x.quien); if(rq.estado==="uno") m.quien=rq.persona.nombre; else out.dudas.push(nuevaDudaPersona(t, x.quien, "quien_meta", rq.cands, {metaId:m.id})); }
+    out.hecho.push("meta “"+metaCorta(m)+"”"+(fecha?" para el "+fechaMeta(fecha):""));
+    if(!fecha) out.dudas.push("¿Para cuándo queda “"+metaCorta(m)+"”?");
+    if(par) out.dudas.push("Se cumplió “"+metaCorta(par)+"” el "+fechaMeta(par.cumplida)+"; ¿duró poco?");
+    var sg=x.seguimiento;
+    if(sg && typeof sg==="object" && sg.quien && _dichoNombre(v, sg.quien) && /\b(seguimiento|segu[ií]r(le|lo|la)|preg[uú]nt(ale|arle)|recu[eé]rd(ale|arle)|checa con)\b/.test(s)){
+      var cadaOk=RITMO_RE.test(s) || new RegExp("\\b("+_DIARE+")s?\\b").test(s) || /\b(diario|diariamente|todos los dias)\b/.test(s);
+      var hh=String(sg.hora||""), mh=hh.match(/^(\d{1,2}):(\d{2})$/), pl={cada:String(sg.cada||""), hora:(mh && horaDicha(v))?String(+mh[1]).padStart(2,"0")+":"+mh[2]:"", local:cadaOk?fechasDeCada(s):[]};
+      if(!cadaOk){ out.dudas.push("¿Cada cuándo le doy seguimiento a "+nombreCorto(sg.quien)+" para “"+metaCorta(m)+"”?"); return; }
+      var rp=resuelvePersona(t, sg.quien);
+      if(rp.estado==="uno") out.hecho.push(programaSegMeta(t, m, rp.persona, pl));
+      else out.dudas.push(nuevaDudaPersona(t, sg.quien, "seguimiento_meta", rp.cands, Object.assign({metaId:m.id}, pl)));
+    }
+  });
+  return out;
+}
+/* metas vencidas sin palomear: UN aviso por meta y fecha a Salvador (en la tarea y, si quien usa la app no es él, push) */
+function chequeoMetas(){
+  var H=hoy();
+  tareas.forEach(function(t){
+    if(t.cierre || estadoReal(t)==="cerrada" || !esMetas(t)) return;
+    metasDe(t).forEach(function(m){
+      if(metaCumplida(m) || !/^\d{4}-\d{2}-\d{2}$/.test(m.fecha||"") || m.fecha>=H || m.aviso_atraso===m.fecha) return;
+      m.aviso_atraso=m.fecha;
+      var tx="Atraso en "+tareaCorta(t)+": meta "+metaCorta(m)+" ("+fechaMeta(m.fecha)+")";
+      msg(t,"bal",tx); var mm=t.msgs[t.msgs.length-1]; mm.aviso=1; mm.meta_id=m.id; mm.canal="equipo";
+      guarda(t);
+      try{ if(yo!=="salvador" && PERSONAS.salvador) disparaPushInstantaneo("salvador", tareaCorta(t), tx, urlTarea(t.id), "seguimiento"); }catch(e){}
+    });
+  });
+}
+function vMetas(t){
+  var L=metasDe(t), H=hoy(), pend=L.filter(function(m){ return !metaCumplida(m); }), hech=L.filter(metaCumplida);
+  pend.sort(function(a,b){ return String(a.fecha||"9999").localeCompare(String(b.fecha||"9999")); });
+  var rojo=pend.filter(function(m){ return semaforoMeta(m,H).k==="rojo"; }).length;
+  var h='<div class="metas" id="metas"><div class="mth">'+ico("chk",18,1.9)+'<b>Metas</b><span class="mtc'+(rojo?' rojo':'')+'">'+(rojo?rojo+" atrasada"+(rojo===1?"":"s")+" · ":"")+pend.length+" pendiente"+(pend.length===1?"":"s")+'</span></div>';
+  h+=pend.map(function(m){ var sf=semaforoMeta(m,H), q=quienMeta(t,m), sg=segMetaTx(m);
+    return '<div class="mt s-'+sf.k+'" data-meta="'+esc(m.id)+'"><span class="mts" aria-hidden="true"></span><div class="mtb"><div class="mtx">'+esc(m.tx)+'</div>'+
+      '<div class="mtm">'+(m.fecha?'<b>Meta: '+esc(fechaMovCorta(m.fecha))+'</b> · ':'')+'<span class="mtsf">'+esc(sf.tx)+'</span>'+(q?' · '+esc(q):'')+'</div>'+
+      (sg?'<div class="mtg">Seguimiento: '+esc(sg)+'</div>':'')+
+      '<div class="mta">'+(m.foto?'<img class="mtf" src="'+esc(m.foto)+'" alt="comprobante">':'')+
+      '<button class="mtfoto" data-metafoto="'+esc(m.id)+'">'+ico("cam",16,1.8)+(m.foto?'Cambiar foto':'Foto')+'</button>'+
+      '<button class="mtok" data-metaok="'+esc(m.id)+'">✓ Cumplida</button></div></div></div>'; }).join("");
+  if(!pend.length) h+='<div class="mtv">Sin metas pendientes.</div>';
+  if(hech.length){ var ab=!!((window.__metaHist||{})[t.id]);
+    h+='<button class="mthist" id="bmetahist" aria-expanded="'+(ab?"true":"false")+'">Historial de metas ('+hech.length+') '+(ab?'▴':'▾')+'</button>';
+    if(ab) h+='<div class="mthl">'+hech.slice().sort(function(a,b){ return String(b.cumplida||"").localeCompare(String(a.cumplida||"")); }).map(function(m){
+      return '<div class="mth1">'+(m.foto?'<img class="mtf" src="'+esc(m.foto)+'" alt="comprobante">':'<span class="mtnf">sin foto</span>')+'<div><div class="mtx">'+esc(m.tx)+'</div>'+
+        '<div class="mtm">Cumplida '+esc(fechaMeta(m.cumplida)||"")+(m.fecha?' · meta '+esc(fechaMeta(m.fecha)):'')+'</div></div></div>'; }).join("")+'</div>';
+  }
+  return h+'<input type="file" id="metain" accept="image/*" capture="environment" hidden></div>';
+}
 function vChecklist(t){
+  if(esMetas(t)) return vMetas(t);   /* build 222 */
   if(!tieneChecklist(t)) return "";
   var L=t.checklist.items, inv=L.filter(function(x){ return x.estado>=1; }).length, conf=L.filter(function(x){ return x.estado===2; }).length;
   var ab=!!((window.__chkOpen||{})[t.id]);
@@ -12371,6 +12522,12 @@ function bindHilo(){
       hojaConfirma({titulo:"Pasar todo a \u201c"+corta40(d.nombre)+"\u201d", sub:"Lo de \u201c"+corta40(t.nombre)+"\u201d se junta all\u00e1.",
         accion:"Vincular", cb:function(){ d.autorizada=true; enlazaTareas(t.id, did, "trabajador (posible duplicado)"); }}); };
   });
+  /* build 222: metas — palomear, foto de comprobante, historial */
+  var _bmh=$("bmetahist"); if(_bmh) _bmh.onclick=function(ev){ ev.stopPropagation(); window.__metaHist=window.__metaHist||{}; window.__metaHist[t.id]=!window.__metaHist[t.id]; render(); };
+  Array.prototype.forEach.call(document.querySelectorAll("[data-metaok]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var mid=el.getAttribute("data-metaok"), m=metasDe(t).filter(function(x){ return x.id===mid; })[0]; if(!m) return;
+    hojaConfirma({titulo:"¿Se cumplió “"+metaCorta(m)+"”?", sub:m.foto?"Con su foto de comprobante. Se va al historial.":"Sin foto de comprobante. Se va al historial.", accion:"Cumplida", cb:function(){ cumpleMeta(t, mid); render(); }}); }; });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-metafoto]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var inp=$("metain"); if(!inp) return; var mid=el.getAttribute("data-metafoto");
+    inp.value=""; inp.onchange=function(){ var f=inp.files&&inp.files[0]; if(!f) return; comprime(f, function(data){ if(!data){ toast("No pude leer la foto"); return; } fotoMeta(t, mid, data); toast("Foto guardada en la meta"); render(); }); }; inp.click(); }; });
   var bck=$("bchkl"); if(bck) bck.onclick=function(ev){ ev.stopPropagation(); window.__chkOpen=window.__chkOpen||{}; window.__chkOpen[t.id]=!window.__chkOpen[t.id]; render(); };   /* build 214 */
   Array.prototype.forEach.call(document.querySelectorAll("[data-chk]"),function(el){ el.onclick=function(ev){ ev.stopPropagation();
     var it=(t.checklist.items||[]).filter(function(x){ return x.id===el.getAttribute("data-chk"); })[0]; if(!it) return;
@@ -14728,7 +14885,7 @@ function aplicaCamposNota(t, v, j){
     t.contexto=(modo==="reemplazar" || !String(t.contexto||"").trim()) ? cx.slice(0,1500) : (String(t.contexto).trim()+" "+cx).slice(0,1500);   /* build 211: 600 cortaba lo dictado */
     if(Array.isArray(j.palabras) && j.palabras.length) t.palabras=j.palabras.map(function(w){ return String(w).toLowerCase().trim(); }).filter(Boolean).slice(0,6);
     hecho.push(modo==="reemplazar"?"contexto nuevo":"contexto"); }
-  if(a!=="fecha" && j.fecha){ var fd=fechaDictada(v);
+  if(a!=="fecha" && j.fecha && t.indefinida!==true){ var fd=fechaDictada(v);   /* build 222: en una continua la fecha es meta */
     if(fd.todas.length){ var cf=candadoFecha(v, j.fecha);
       if(cf.duda) dudas.push(cf.duda);
       else if(cf.fecha && cf.fecha!==t.f_vigente){ var rr=mueveFecha(t, cf.fecha, "lo dijo "+((PERSONAS[yo]||{}).nombre||"")+" en nota a Claude"); if(!(rr && rr.ok===false)){ t.fecha_dictada=true; t.falta_fecha=false; hecho.push("fecha: "+fechaConDia(cf.fecha)); } } } }
@@ -14771,6 +14928,7 @@ function ejecutaNotaClaude(t, v){
     "- responsable: si dice que la tarea es de alguien / alguien es el responsable / él solo supervisa: el nombre COMPLETO tal cual (puede ser de fuera); yo_superviso=true solo si lo dijo.\n"+
     "- seguimiento_a: SOLO si te pide que TÚ le des seguimiento a alguien: {\"quien\":\"nombre completo tal cual\",\"meta\":\"qué tiene que quedar\",\"cada\":\"frecuencia tal cual o null\",\"fechas\":[AAAA-MM-DD del calendario que salen de esa frecuencia, máx 10],\"hora\":\"HH:MM solo si la dijo\",\"texto\":\"WhatsApp corto y amable empezando con 'IA: '\"}.\n"+
     "- compartir_con: nombres COMPLETOS de con quién dice que se comparte o a quién se avisa; si no, [].\n"+
+    "- metas: SOLO si la tarea es continua (indefinida): [{\"tx\":\"qué debe quedar\",\"fecha\":\"AAAA-MM-DD o null\",\"quien\":null,\"seguimiento\":{\"quien\":\"…\",\"cada\":\"…\",\"hora\":null} o null}]; en ese caso NUNCA uses accion fecha.\n"+
     "- checklist: si pide una lista o checklist (invitados, pendientes) o cambia una: {\"titulo\":\"Invitados\",\"items\":[{\"tx\":\"renglón tal cual viene en los mensajes\",\"estado\":0}]}; estado 0 pendiente, 1 invitado/mandado, 2 confirmado, SOLO si está dicho en los mensajes. NUNCA contestes con preguntas en vez de hacer la lista: hazla con lo que hay. CHECKLIST ACTUAL: "+checklistTexto(t)+".\n"+
     "ADEMÁS de la accion, llena TODO lo que la nota diga (puede ser varias cosas a la vez; nada inventado):\n"+
     "- contexto: de qué se trata la tarea, quiénes, para qué (1 a 3 frases); contexto_modo 'reemplazar' si lo cuenta completo o pide cambiarlo, 'sumar' si agrega algo.\n"+
@@ -14786,7 +14944,9 @@ function ejecutaNotaClaude(t, v){
     preguntaAClaude([{role:"user",content:p}],"rapido",function(txt,err){
       var j=null; try{ var mm=String(txt||"").match(/\{[\s\S]*\}/); if(mm) j=JSON.parse(mm[0]); }catch(e){}
       /* build 206: primero se aplica todo lo que dijo (contexto, ritmo, indefinida/recurrente, fecha); sin IA, lo local */
-      try{ _c206=aplicaCamposNota(t, v, j||{}); var _pr221=aplicaResponsable(t, v, j||{}); if(_pr221) _c206.hecho.push(_pr221); if(t.__dudas221){ _c206.dudas=_c206.dudas.concat(t.__dudas221); delete t.__dudas221; }   /* build 221 */
+      try{ _c206=aplicaCamposNota(t, v, j||{}); if(t.indefinida===true && j && String(j.accion||"").toLowerCase()==="fecha"){ j.accion="nada"; j.fecha=null; }   /* build 222: continua: la fecha es meta */
+        var _mt222=aplicaMetasClaude(t, v, j||{}); _c206.hecho=_c206.hecho.concat(_mt222.hecho); _c206.dudas=_c206.dudas.concat(_mt222.dudas);
+        var _pr221=aplicaResponsable(t, v, j||{}); if(_pr221) _c206.hecho.push(_pr221); if(t.__dudas221){ _c206.dudas=_c206.dudas.concat(t.__dudas221); delete t.__dudas221; }   /* build 221 */
         var _sg221=aplicaSeguimientoA(t, v, j||{}); if(_sg221.hecho) _c206.hecho.push(_sg221.hecho); if(_sg221.duda) _c206.dudas.push(_sg221.duda);
         var _ckc=aplicaChecklistClaude(t, j||{}); if(_ckc){ _c206.hecho.push(_ckc); window.__chkOpen=window.__chkOpen||{}; window.__chkOpen[t.id]=true; }   /* build 214 */
         if(_c206.hecho.length){ guarda(t); try{ sincronizaAvisos(t); }catch(e){} } }catch(e){ _c206={hecho:[], dudas:[]}; }
