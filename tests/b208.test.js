@@ -78,6 +78,6 @@ while (corre()) {}
 eq("al final: 'Anoté… Solo me falta…' y lo hecho tenue", T2.msgs.slice(-1)[0].t, "Anoté: contexto. Solo me falta: la fecha de finiquito (o si es indefinida), el próximo seguimiento.");
 si("ya sin animación: contexto tenue", /class="fic ctx hecho"><span class="ok">/.test(c.vFaltaInfo(T2)) && /Solo me falta/.test(c.vFaltaInfo(T2)));
 si("CSS: animación palomita (palPop) y respeta reducir movimiento", /@keyframes palPop/.test(html) && /prefers-reduced-motion:reduce\)\{\.chk li\.palomea/.test(html));
-si("VERSION_APP build 208+", /var VERSION_APP = "build 20[89]/.test(html));
+si("VERSION_APP build 208 o posterior", +((html.match(/var VERSION_APP = "build (\d+)/) || [])[1] || 0) >= 208);
 console.log((malas.length ? malas.map(function (x) { return "  X " + x; }).join("\n") + "\n" : "") + "RESULTADO " + ok + "/" + n);
 process.exit(malas.length ? 1 : 0);

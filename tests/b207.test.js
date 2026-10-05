@@ -127,6 +127,6 @@ var T8 = CONSEJO(); T8._leyendo = Date.now(); T8.posible_dup = ["JUNTA_CUMBRES_S
 var v8 = c.vFaltaInfo(T8);
 si("tarjeta: 'Claude está leyendo…' mientras contesta", /Claude está leyendo lo que dictaste…/.test(v8));
 si("tarjeta: la franja con el vínculo propuesto y su botón (no aplicado)", /POSIBLE VINCULACIÓN<\/span><span class="rcp">Propuesta de Claude; no la vinculé\.<\/span><div class="rvv"><span><b>Junta Consejo Cumbres septiembre<\/b><\/span><button class="rvb" data-rvinc="JUNTA_CUMBRES_SEP">Vincular/.test(v8));
-si("VERSION_APP build 207+", /var VERSION_APP = "build 20[7-9]/.test(html));
+si("VERSION_APP build 207 o posterior", +((html.match(/var VERSION_APP = "build (\d+)/) || [])[1] || 0) >= 207);
 console.log((malas.length ? malas.map(function (x) { return "  X " + x; }).join("\n") + "\n" : "") + "RESULTADO " + ok + "/" + n);
 process.exit(malas.length ? 1 : 0);

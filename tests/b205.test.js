@@ -86,6 +86,6 @@ var v6 = c.vFaltaInfo(T6);
 si("arriba: 'Solo me falta: …'", /<div class="solofalta"><b>Solo me falta:<\/b> la fecha de finiquito \(o si es indefinida\) · el próximo seguimiento<\/div>/.test(v6));
 si("el contexto ya completo se pone tenue y plegado", /class="fic ctx hecho"><span class="ok">✓ Contexto<\/span>/.test(v6));
 si("lo que ya está va tenue en un renglón; lo que falta, cada uno", /<li class="pend">○ Finiquito: ¿fecha o indefinida\?<\/li>/.test(v6) && /<li class="ok tenue">✓ Quién: tú<\/li>/.test(v6));
-si("VERSION_APP build 205+", /var VERSION_APP = "build 20[5-9]/.test(html));
+si("VERSION_APP build 205 o posterior", +((html.match(/var VERSION_APP = "build (\d+)/) || [])[1] || 0) >= 205);
 console.log((malas.length ? malas.map(function (x) { return "  X " + x; }).join("\n") + "\n" : "") + "RESULTADO " + ok + "/" + n);
 process.exit(malas.length ? 1 : 0);

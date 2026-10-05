@@ -91,6 +91,6 @@ c.completaRevision(D, "Esto es un dato: la cotización de Herrería López para 
 var vd = c.vFaltaInfo(D);
 si("dato: ficha con Es Dato, De y Cifras, y Autorizar habilitado", /<span class="ffv">Dato<\/span>/.test(vd) && /<span class="ffl">De<\/span><span class="ffv">Herrería López<\/span>/.test(vd) && /<span class="ffl">Cifras<\/span><span class="ffv">6.5 m lineales a \$2,800 el metro; total \$18,200 más IVA<\/span>/.test(vd) && /id="autrev">Autorizar<\/button>$/.test(vd) && !D.autorizada);
 si("botón y campos conectados en la pantalla", /var _ar=\$\("autrev"\); if\(_ar\) _ar\.onclick=function\(\)\{ if\(!autorizaRevision\(t\)\) render\(\); \};/.test(html) && /querySelectorAll\("\[data-fedit\]"\)/.test(html));
-si("VERSION_APP build 209", /var VERSION_APP = "build 209/.test(html));
+si("VERSION_APP build 209 o posterior", +((html.match(/var VERSION_APP = "build (\d+)/) || [])[1] || 0) >= 209);
 console.log((malas.length ? malas.map(function (x) { return "  X " + x; }).join("\n") + "\n" : "") + "RESULTADO " + ok + "/" + n);
 process.exit(malas.length ? 1 : 0);

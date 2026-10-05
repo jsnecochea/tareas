@@ -125,7 +125,7 @@ eq("y el paso dice 'Sin agendar'", c.completitud(B3).items.slice(-1)[0].tx, "Sin
 si("el paso va dentro de vFaltaInfo y los botones están cableados", /h\+=vAgenda\(t\);/.test(html) && /data-agenda\]"\),function\(b\)\{ b\.onclick=function\(\)\{ if\(b\.getAttribute\("data-agenda"\)==="si"\)\{ var _hr=\$\("aghr"\); agendaEvento\(t, _hr&&_hr\.value, !!\(window\.__agTodoDia&&window\.__agTodoDia\[t\.id\]\)\); \} else noAgendar\(t\);/.test(html) && /data-agtododia\]"\)/.test(html));
 si("build 203: agendar ya NO abre Calendar ni navega", !/w=window\.open\(url/.test(html) && !/location\.href=url/.test(html));
 si("build 203: la línea va debajo del encabezado de la ficha", /h\+=lineaAgenda\(t\);/.test(html));
-si("VERSION_APP build 203 o posterior", /var VERSION_APP = "build 20[3-9]/.test(html));
+si("VERSION_APP build 203 o posterior", +((html.match(/var VERSION_APP = "build (\d+)/) || [])[1] || 0) >= 203);
 
 console.log((malas.length ? malas.map(function (x) { return "  X " + x; }).join("\n") + "\n" : "") + "RESULTADO " + ok + "/" + n);
 process.exit(malas.length ? 1 : 0);

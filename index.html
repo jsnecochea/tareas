@@ -1212,7 +1212,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 209 · Falta info: ya no se autoriza sola; ficha completa para revisar y botón Autorizar";
+var VERSION_APP = "build 210 · Audífonos: escucha continua (corta a ~3.5 s de silencio), todo lo dictado va a Claude y te dice qué anotó";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -5181,6 +5181,11 @@ function asuntoRecordatorio(v, t){
      .replace(/^(una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|y\s+(media|cuarto)|en\s+punto)\s+/i,"")
      .replace(/^[,.\s]+|[,.\s]+$/g,"").trim();
   if(s.length<3) return t.nombre||"Recordatorio";
+  /* build 210 ("Este recuérdame el martes y el jueves" -> "Este el y el"): muletillas y conectores no son asunto */
+  s=s.replace(/^(este|pues|eh+|mm+|bueno|o sea|oye|entonces|ok|okay)\b[,.\s]*/i,"").trim();
+  for(var _k=0;_k<4;_k++) s=s.replace(/[,\s]+(el|la|los|las|y|e|de|del|a|al|en|para|que|o)$/i,"").trim();
+  var _util=_nn(s).replace(/[^a-z0-9ñ ]+/g," ").split(/\s+/).filter(function(w){ return w.length>=3 && ["este","esta","pues","bueno","oye","entonces","okay","que","para","por","los","las","del","con","una","uno","eso","esto"].indexOf(w)<0; });
+  if(!_util.length) return t.nombre||"Recordatorio";
   return s;
 }
 function nombreCortoTarea(t){
@@ -7037,7 +7042,7 @@ function aplicaRevisionClaude(t, v, j, abiertas){
   else if(_cf.ok && _cf.fecha){ t.fecha_dictada=!!_cf.dictada; t.falta_fecha=false; }
   var _todas=fechaDictada(v).todas, _rel=/\b(antes|despues|previo|previa)\b/.test(s);
   (Array.isArray(j.recordar)?j.recordar:[]).slice(0,6).forEach(function(r){
-    if(r && _fReal(r.fecha) && !_cf.duda && (!_todas.length || _rel || _todas.indexOf(r.fecha)>=0)){ nuevoAviso(t,{texto:t.nombre, fecha:r.fecha, hora:r.hora||"", dicho:v}); hecho.push("aviso "+fechaBonita(r.fecha)+(r.hora?" "+r.hora:"")); } });
+    if(r && _fReal(r.fecha) && !_cf.duda && (!_todas.length || _rel || _todas.indexOf(r.fecha)>=0) && !avisoMismoDia(t, r.fecha)){ nuevoAviso(t,{texto:t.nombre, fecha:r.fecha, hora:r.hora||"", dicho:v}); hecho.push("aviso "+fechaBonita(r.fecha)+(r.hora?" "+r.hora:"")); } });
   if(j.quien && String(j.quien).trim()){ var qn=_nn(String(j.quien).trim()), k=Object.keys(PERSONAS).filter(function(x){ var pn=_nn(PERSONAS[x].nombre); return pn===qn || pn.split(" ")[0]===qn.split(" ")[0]; })[0];
     var dicho=k && (s.indexOf(_nn(PERSONAS[k].nombre).split(" ")[0])>=0 || (k===yo && /\b(yo|mia|mio|me toca|la hago|lo hago)\b/.test(s)));
     if(dicho && k!==t.duenio){ if(!t.duenio) t.duenio=k; else transfiere(t, k, "lo dijo "+((PERSONAS[yo]||{}).nombre||"")+" al completarla"); hecho.push("quién: "+(k===yo?"tú":PERSONAS[k].nombre)); } }
@@ -7074,8 +7079,9 @@ function palomeaEnOrden(t, antes, alFinal){
     setTimeout(paso, PALOMEO_MS); };
   setTimeout(paso, PALOMEO_MS);
 }
-function completaRevision(t, v){
-  t.en_revision=true;   /* build 209: ya la esta completando: no sale de "Falta info" hasta "Autorizar" */
+function completaRevision(t, v, op){
+  op=op||{};   /* build 210: {alTerminar(r), sinRevision}: audifonos (respuesta hablada; en una tarea ya autorizada no la regresa a Falta info) */
+  if(!op.sinRevision) t.en_revision=true;   /* build 209: ya la esta completando: no sale de "Falta info" hasta "Autorizar" */
   var _antes208=okDeRevision(t);   /* build 208: lo que ya estaba palomeado ANTES de dictar (el dictado mismo cuenta en contextoDe) */
   msg(t,"bo",v); var _m0=t.msgs[t.msgs.length-1]; _m0.de=yo; _m0.completa_info=1;
   t._leyendo=Date.now(); guarda(t); render();   /* la tarjeta dice "Claude está leyendo…" */
@@ -7084,14 +7090,15 @@ function completaRevision(t, v){
   var _cierre=function(hecho, dudas, vinc){
     var _pv=(vinc||[]).map(function(id){ var d=tareas.filter(function(x){ return x.id===id; })[0]; return d?"“"+d.nombre+"”":""; }).filter(Boolean);
     var _vx=_pv.length?" Posible vínculo con "+_pv.join(" o ")+": te lo dejo propuesto, no lo vinculé.":"";
-    revisaCompleta(t);
-    var f=soloMeFalta(t), _lista=!f.length && completitud(t).completa;
+    if(!op.sinRevision) revisaCompleta(t);
+    var f=op.sinRevision?[]:soloMeFalta(t), _lista=!op.sinRevision && !f.length && completitud(t).completa;
     var tx=[hecho.length?"Anoté: "+hecho.join(", ")+".":"", (dudas||[]).join(" "), f.length?"Solo me falta: "+f.join(", ")+".":""].filter(Boolean).join(" ")+_vx;
     if(!hecho.length && !(dudas||[]).length && !_vx) tx=_lista?"":"No pesqué datos nuevos; dímelo otra vez.";
     if(_lista) tx=(tx?tx+" ":"")+"Revisa la ficha y pica Autorizar.";
-    msg(t,"bi",tx.trim()); guarda(t); render(); };
+    msg(t,"bi",tx.trim()); guarda(t); render();
+    if(op.alTerminar) try{ op.alTerminar({hecho:hecho||[], dudas:dudas||[], vinc:vinc||[], falta:f}); }catch(e){} };
   /* respaldo SIN red (o respuesta ilegible): la extraccion local del 205 */
-  var _respaldo=function(){ var loc=extraeLocal(t, v); if(t.pendiente_info && !loc.length){ delete t._leyendo; completaPendiente(t.id, v); return; } _fin(loc, [], []); };
+  var _respaldo=function(){ var loc=extraeLocal(t, v); if(t.pendiente_info && !loc.length){ delete t._leyendo; completaPendiente(t.id, v); if(op.alTerminar) try{ op.alTerminar({hecho:[], dudas:[], vinc:[], falta:soloMeFalta(t)}); }catch(e){} return; } _fin(loc, [], []); };
   var _ab=abiertasParaVincular(t, v, 30);
   try{
     preguntaAClaude([{role:"user",content:promptRevision(t, v, _ab)}],"rapido",function(txt,err){
@@ -7099,7 +7106,7 @@ function completaRevision(t, v){
       var j=null; try{ var mm=String(txt||"").match(/\{[\s\S]*\}/); j=mm?JSON.parse(mm[0]):null; }catch(e){ j=null; }
       if(!j){ _respaldo(); return; }
       var r=aplicaRevisionClaude(t, v, j, _ab);
-      if(r.yaHecha){ delete t._leyendo; t.pendiente_info=""; t.pendiente_tipo=""; t.falta_fecha=false; t.autorizada=true; cierraHecha(t); render(); return; }
+      if(r.yaHecha){ delete t._leyendo; t.pendiente_info=""; t.pendiente_tipo=""; t.falta_fecha=false; t.autorizada=true; cierraHecha(t); render(); if(op.alTerminar) try{ op.alTerminar({hecho:["la cerré como hecha"], dudas:[], vinc:[], falta:[], cerrada:true}); }catch(e){} return; }
       _fin(r.hecho, r.dudas, r.vinc);
     });
   }catch(e){ _respaldo(); }
@@ -10440,6 +10447,8 @@ function posponeAvisoDe(t, id){
 }
 /* crea el aviso dentro de la tarea y lo devuelve. NO navega, NO pinta fichita:
    sirve para insertar de una (loss-proof) y luego, si hace falta, preguntar. */
+/* build 210: el aviso del MISMO dia (sin "cada") ya existe -> se reusa, no se duplica */
+function avisoMismoDia(t, fecha){ return (t.avisos||[]).filter(function(a){ return a && a.fecha===fecha && !a.cada && !a.avisado_en; })[0]||null; }
 function nuevoAviso(t, r){
   t.avisos=t.avisos||[];
   var ts=Date.now();
@@ -12103,7 +12112,9 @@ function bindHilo(){
       if(_dias.length>1){
         var _hr=horaDicha(v)?horaValor(v):"", _as=sinHoraEnTitulo(asuntoRecordatorio(v,t)), _avs=[];
         if(/^((el|la|los|las|y|e|de|para|a|,)\s*)+$/i.test(_as+" ")) _as=t.nombre||"Recordatorio";
-        _dias.forEach(function(f){ _avs.push(nuevoAviso(t, {texto:_as, dicho:v, fecha:f, hora:(_hr?horaCercana(f,_hr,v):"09:00")})); });
+        _dias.forEach(function(f){ var _ya=avisoMismoDia(t, f);   /* build 210: no duplicar el del mismo dia */
+          if(_ya){ if(!_ya.hora) _ya.hora=(_hr?horaCercana(f,_hr,v):"09:00"); _avs.push(_ya); return; }
+          _avs.push(nuevoAviso(t, {texto:_as, dicho:v, fecha:f, hora:(_hr?horaCercana(f,_hr,v):"09:00")})); });
         msg(t,"bo",v);
         msg(t,"bi","Anotado. Te aviso "+_avs.map(textoCuando).join(" y ")+": "+_avs[0].texto+".");
         preguntaAmPm(t, _avs.map(function(a){ return String(a.ts); }), v);
@@ -13579,20 +13590,42 @@ function leeDi(txt, done){
     setTimeout(function(){ if(tok===LEE.tok) speechSynthesis.speak(u); }, 60);
   }catch(e){ fin(); }
 }
+/* build 210 (Salvador 07:3x, "me corta mientras hablo"): escucha CONTINUA. Motor: Web Speech API del navegador
+   (webkitSpeechRecognition; en iPhone es el dictado de Apple a traves de Safari/WebKit). Antes era continuous=false: se
+   cerraba en la primera pausa. Ahora: continuous=true, cierra solo tras LEE_SILENCIO ms sin palabras nuevas (o
+   LEE_ESPERA_HABLA si no ha dicho nada); si el motor se cae solo (iOS lo hace), se reabre sin perder lo ya dictado; tope
+   LEE_MAX. Cada sesion del motor queda en localStorage "doit_sr_log" (cuanto duro y por que cerro) para medir el limite real. */
+var LEE_SILENCIO=3500, LEE_ESPERA_HABLA=8000, LEE_MAX=120000;
+function srLog(o){ try{ var l=JSON.parse(localStorage.getItem("doit_sr_log")||"[]"); l.push(o); if(l.length>40) l=l.slice(-40); localStorage.setItem("doit_sr_log", JSON.stringify(l)); }catch(e){} }
 function leeEscucha(cb){
-  var SR=window.SpeechRecognition||window.webkitSpeechRecognition, r=null;
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   LEE.espera=false;
-  try{ r=new SR(); }catch(e){}
-  if(!r){ LEE.espera=true; leeBarra(); return; }
-  r.lang="es-MX"; r.continuous=false; r.interimResults=true;
-  var fin="", par="", hecho=false;
-  r.onresult=function(e){ par=""; for(var i=e.resultIndex;i<e.results.length;i++){ if(e.results[i].isFinal) fin+=e.results[i][0].transcript+" "; else par+=e.results[i][0].transcript; } LEE.oido=(fin+par).trim(); leeBarra(); };
-  var acaba=function(){ if(hecho) return; hecho=true; LEE.oye=false; clearTimeout(LEE.swd); var v=(fin+par).trim();
+  if(!SR){ LEE.espera=true; leeBarra(); return; }
+  var fin="", par="", hecho=false, cerrando=false, t0=Date.now(), r=null, sesT0=0, reinicios=0, motivo="";
+  var acaba=function(){ if(hecho) return; hecho=true; LEE.oye=false; clearTimeout(LEE.swd); clearTimeout(LEE.swdMax);
+    var v=(fin+" "+par).replace(/\s+/g," ").trim();
+    srLog({ts:Date.now(), total:Date.now()-t0, reinicios:reinicios, motivo:motivo||"fin", letras:v.length});
     if(!LEE.charla) return; if(!v){ LEE.espera=true; leeBarra(); return; } cb(v); };
-  r.onend=acaba; r.onerror=function(){ acaba(); };
-  try{ r.start(); }catch(e){ LEE.espera=true; leeBarra(); return; }
-  LEE.rec=r; LEE.oye=true; LEE.oido=""; leeBarra();
-  LEE.swd=setTimeout(function(){ try{ r.stop(); }catch(e){} }, 15000);
+  var cierra=function(m){ if(hecho) return; cerrando=true; motivo=motivo||m; try{ r&&r.stop(); }catch(e){} clearTimeout(LEE.swdFb); LEE.swdFb=setTimeout(acaba, 800); };
+  var reloj=function(ms){ clearTimeout(LEE.swd); LEE.swd=setTimeout(function(){ cierra(fin||par?"silencio":"no hablo"); }, ms); };
+  var abre=function(){
+    r=null; try{ r=new SR(); }catch(e){}
+    if(!r){ if(fin||par){ motivo="no se pudo reabrir"; return acaba(); } LEE.espera=true; LEE.oye=false; leeBarra(); return; }
+    r.lang="es-MX"; r.continuous=true; r.interimResults=true; sesT0=Date.now();
+    r.onresult=function(e){ par=""; for(var i=e.resultIndex;i<e.results.length;i++){ if(e.results[i].isFinal) fin+=e.results[i][0].transcript+" "; else par+=e.results[i][0].transcript; }
+      LEE.oido=(fin+par).trim(); leeBarra(); reloj(LEE_SILENCIO); };
+    r.onerror=function(ev){ var er=(ev&&ev.error)||""; if(er==="not-allowed"||er==="service-not-allowed"||er==="audio-capture"){ motivo="error "+er; cerrando=true; } };
+    r.onend=function(){ srLog({ts:Date.now(), sesion:Date.now()-sesT0, cerro:cerrando?"nosotros":"motor"});
+      if(hecho) return;
+      if(cerrando || !LEE.charla || Date.now()-t0>LEE_MAX){ return acaba(); }
+      if(par){ fin+=par+" "; par=""; }            /* lo que iba a medias no se pierde */
+      reinicios++; setTimeout(function(){ if(!hecho && LEE.charla) abre(); }, 200); };
+    try{ r.start(); }catch(e){ if(fin||par){ motivo="no se pudo reabrir"; return acaba(); } LEE.espera=true; LEE.oye=false; leeBarra(); return; }
+    LEE.rec=r;
+  };
+  LEE.oye=true; LEE.oido=""; leeBarra();
+  abre(); reloj(LEE_ESPERA_HABLA);
+  clearTimeout(LEE.swdMax); LEE.swdMax=setTimeout(function(){ cierra("tope"); }, LEE_MAX);
 }
 function leePregunta(txt){
   LEE.act=true; LEE.charla=true; LEE.fin=true; LEE.pensando=false;
@@ -13617,12 +13650,22 @@ function leeComando(v){
     if(SI.test(s) || /siguiente|seguimos|sigue/.test(s)) return leeSiguienteTarea();
     if(NO.test(s) && nw<=3){ leeDi("Va.", function(){ leePara(); }); return; }
   }
+  if(c && c.tipo==="destino"){   /* build 210: "¿Es para Claude o se lo mando a X?" */
+    if(/\b(claude|clau|cloud|para ti|anotalo|anotala|es para ti|apuntalo|la tarea)\b/.test(s)) return leeAClaude(t, c.v);
+    if(/\b(mandaselo|mandaselos|mandale|mandalo|enviaselo|enviale|a el|a ella|si mandalo|mandar)\b/.test(s) || (c.wa && s.indexOf(_nv(c.wa).split(" ")[0])>=0)) return leeManda(t, c.v);
+    if(!c.n){ LEE.confirma={tipo:"destino", v:c.v, wa:c.wa, n:1}; return leePregunta("No te entendí. ¿Es para Claude o se lo mando a "+c.wa+"?"); }
+    return leeAClaude(t, c.v);
+  }
   if(c && c.tipo==="motivo") return leeMotivo(t, s, c.n||0);
   if(c && c.tipo==="aquien") return leeAQuien(t, v, s);
   if(/\b(eliminala|borrala|desechala|tirala|cancelala|a la basura|ya no (va a )?servir|ya no sirve|ya no se va a hacer|ya no hace falta|eliminar esta)\b/.test(s)) return leePideMotivo(t);
   if(/\b(ya (la |lo )?(hice|termine|terminamos|terminaron|hicieron|quedo)|ya esta (hecha|terminada|lista)|ya se hizo|marcala (como )?hecha|cierrala|ya esta$)/.test(s)) return leeHecha(t);
   if(nw<=4 && /^(para|alto|detente|callate|basta|es todo|termina|apaga|ya no|ya estuvo|gracias)\b/.test(s)){ leeDi("Va.", function(){ leePara(); }); return; }
   if(nw<=6 && /\b(siguiente|seguimos|sigamos|la que sigue|otra tarea|pasa a la otra|adelante|sigue)\b/.test(s)) return leeSiguienteTarea();
+  if(nw<=5 && /\b(autorizala|autorizalo|autoriza|autorizar|autorizada)\b/.test(s)) return leeAutoriza(t);   /* build 210 */
+  if(c && c.tipo==="agenda" && (horaDicha(v) || /todo el dia/.test(s))) return leeAgenda(t, v, s);
+  if(nw<=10 && /\b(no (lo |la )?agendes|sin agendar|no lo pongas en el calendario|no hace falta agendar)\b/.test(s)){ try{ noAgendar(t); }catch(e){} return leePregunta(leeDiceAnote(t, {hecho:["sin agendar"], falta:soloMeFalta(t)}, tipoRevisar(t)==="falta")); }
+  if(nw<=10 && /^(si\s+)?(agendalo|agendala|agendamelo|agendamela|ponlo en el calendario|ponla en el calendario)\b/.test(s)) return leeAgenda(t, v, s);
   if(/\bresumen\b/.test(s)) return leeResumenIA(t);
   if(/\b(todo el (chat|historial|whatsapp)|toda la (tarea|conversacion|platica)|desde el (principio|inicio)|el historial|todo$)/.test(s)) return leeTarea(t);
   if(/\b(lo actual|lo de hoy|lo ultimo)\b/.test(s)) return leeActual(t);
@@ -13630,8 +13673,55 @@ function leeComando(v){
   var esPreg=/^(tengo (una )?duda|duda|una pregunta|pregunta|oye)\b/.test(s) || /^(cuando|cuanto|cuantos|cuantas|quien|quienes|como|donde|por que|cual|cuales)\b/.test(s) ||
     /^que (dijo|dijeron|paso|falta|onda|precio|fecha|tal|hay|es|era|quedo|dice|opina|opinan|respondio|contesto)\b/.test(s) || /\?\s*$/.test(String(v));
   if(esPreg) return leeDuda(t, v);
-  LEE.confirma={tipo:"manda", v:v};
-  leePregunta("Voy a escribir en la tarea: "+v+". ¿Lo mando?");
+  /* build 210: en audifonos TODO lo dictado es para Claude (contexto, fechas, ritmo, avisos, vinculos). Solo si la tarea
+     tiene contacto de WhatsApp y suena a mensaje para esa persona, se pregunta a quien va. */
+  var wa=leeContactoWA(t);
+  if(wa && leeSuenaMensaje(v, wa)){ LEE.confirma={tipo:"destino", v:v, wa:wa}; return leePregunta("¿Es para Claude o se lo mando a "+wa+"?"); }
+  return leeAClaude(t, v);
+}
+function leeContactoWA(t){ try{ var c=(contactosWA(t)||[])[0]; return c&&c.nombre?String(c.nombre):""; }catch(e){ return ""; } }
+function leeSuenaMensaje(v, wa){
+  var s=_nv(v), n=_nv(wa).split(" ")[0];
+  if(/^(dile|digale|dile que|preguntale|preguntales|avisale|mandale|contestale|respondele|escribele|comentale|recuerdale)\b/.test(s)) return true;
+  if(n && n.length>=3 && new RegExp("^(oye\\s+)?"+n+"\\b").test(s)) return true;    /* le habla directo: "Rogelio, ..." */
+  try{ return !!sonaraWhatsApp(v); }catch(e){ return false; }
+}
+/* lo dictado va a Claude (una llamada); al terminar, la voz dice corto que anoto y que falta */
+function leeAClaude(t, v){
+  leeAseguraHilo(t); LEE.pensando=true; leeBarra();
+  var falta=tipoRevisar(t)==="falta";
+  completaRevision(t, v, {sinRevision:!falta, alTerminar:function(r){
+    LEE.pensando=false; LEE.t=tareas.filter(function(x){ return x.id===t.id; })[0]||t;
+    if(r && r.cerrada){ LEE.confirma={tipo:"seguir"}; return leePregunta("Listo, la marqué como hecha. ¿Seguimos con la siguiente?"); }
+    leePregunta(leeDiceAnote(LEE.t, r||{}, falta)); }});
+}
+function leeDiceAnote(t, r, falta){
+  var h=r.hecho||[], av=[], otros=[];
+  h.forEach(function(x){ var m=String(x).match(/^aviso (.+?)(\s\d{1,2}:\d{2})?$/); if(m) av.push(m[1]); else otros.push(String(x).replace(/^termina el /,"fecha ").replace(/^nombre “(.+)”$/,"el nombre $1").replace(/^ritmo: /,"ritmo ")); });
+  if(av.length) otros.push((av.length>1?"avisos ":"aviso ")+juntaY(av));
+  var p=[];
+  if(otros.length) p.push("Anoté "+juntaY(otros)+".");
+  if((r.dudas||[]).length) p.push(r.dudas.join(" "));
+  if(!otros.length && !(r.dudas||[]).length) p.push("No pesqué nada nuevo.");
+  if((r.vinc||[]).length) p.push("Te dejé propuesto un vínculo, no lo vinculé.");
+  var f=r.falta||[];
+  if(falta){ if(f.length) p.push("Solo falta "+juntaY(f)+"."); else if(completitud(t).completa) p.push("Ya está completa. Di autorízala, o siguiente."); }
+  else p.push("¿Algo más, o siguiente?");
+  return limpiaHabla(p.join(" "));
+}
+/* build 210: "¿Te lo agendo?" por voz: con hora o "todo el día" se agenda; sin eso, se pregunta */
+function leeAgenda(t, v, s){
+  var hr=horaDicha(v)?horaValor(v):"", td=/todo el dia/.test(s);
+  if(!hr && !td){ LEE.confirma={tipo:"agenda"}; return leePregunta("¿A qué hora lo agendo, o todo el día?"); }
+  try{ agendaEvento(t, hr, td); }catch(e){ return leePregunta("No lo pude agendar. ¿Algo más, o siguiente?"); }
+  leePregunta(leeDiceAnote(t, {hecho:[td?"agendado todo el día":"agendado a las "+hr], falta:soloMeFalta(t)}, tipoRevisar(t)==="falta"||!!t.en_revision));
+}
+function leeAutoriza(t){
+  if(tipoRevisar(t)!=="falta"){ LEE.confirma={tipo:"seguir"}; return leePregunta("Esta ya está autorizada. ¿Seguimos con la siguiente?"); }
+  if(!completitud(t).completa){ var f=soloMeFalta(t); return leePregunta("Todavía no la puedo autorizar: falta "+juntaY(f)+". Dímelo y la completo."); }
+  var _ab=abierta; abierta=null; try{ autorizaRevision(t); }finally{ abierta=_ab; }   /* la siguiente la abre la lectura, no el sello */
+  try{ render(); }catch(e){}
+  leeDi("Autorizada.", function(){ leeSiguienteTarea(); });
 }
 function leeManda(t, v){
   leeAseguraHilo(t);
