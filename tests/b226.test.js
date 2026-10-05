@@ -11,7 +11,7 @@ var ok = 0, n = 0, malas = [];
 function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
 function si(nom, v) { eq(nom, !!v, true); }
 var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
-si("versión 226", /var VERSION_APP = "build 226/.test(html));
+si("versión 226 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || [])[1] || 0) >= 226);
 si("iconos: trazo 1.5 fijo", /var s=px\|\|18, w=1\.5, p=\{/.test(html));
 (async function () {
   var pw = require("/opt/node22/lib/node_modules/playwright"), b = await pw.chromium.launch(), p = await b.newPage({ viewport: { width: 390, height: 844 } }), errs = [];

@@ -86,7 +86,7 @@ eq("resumen vivo: lo que sigue, a quién se espera y lo último (solo con lo que
 eq("sin nada que decir, no se muestra", c.resumenVivo({ id: "x", nombre: "x", duenio: "salvador", indefinida: true, contexto: "algo que ya tiene contexto suficiente", msgs: [] }).una, "");
 var hv = c.vResumenVivo(L); si("resumen visible con su etiqueta", /Resumen vivo · Claude/.test(hv));
 c.togMin225(L.id, "rv"); eq("minimizado: queda un puntito y se recuerda (localStorage)", [c.vResumenVivo(L), JSON.parse(ALMACEN.doit_min225)],
-  ['<button class="rv225 min" data-min225="rv" aria-label="Ver resumen">• Resumen</button>', { "tIAMUVF22TRJF|rv": 1 }]);
+  ['<button class="rv225 min" data-min225="rv" aria-expanded="false" aria-label="Ver resumen"><span class="rvk">Resumen<svg class="icx" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span></button>', { "tIAMUVF22TRJF|rv": 1 }]);
 c.togMin225(L.id, "rv");
 var LA = LERDO(); LA.checklist.items[0].fecha = "2026-10-02";
 eq("meta atrasada: en rojo en el resumen", c.resumenVivo(LA).partes.filter(function (p) { return p.rojo; }).map(function (p) { return p.tx; }), ["Azotea: atrasada 3 días"]);

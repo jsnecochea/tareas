@@ -24,7 +24,7 @@ function saca(tipo, nombre) {
 }
 var FUNCS = ["_nn", "esDelEquipo", "_telDe", "_nomWA", "esMsgWA", "miembroDeNombre", "contactosWA", "_contactosWA",
   "_contactoDeNombre", "canalDe", "externosDe", "nombreWADe", "canalesDe", "canalActual", "msgEnCanal", "integrantesDe",
-  "responsableExt", "phCanal", "vPastilla", "nombreCorto", "modoClaude", "puedeSerIndicacion", "convierteEnIndicacion", "notasPlegadas",
+  "responsableExt", "phCanal", "vPastilla", "ico", "nombreCorto", "modoClaude", "puedeSerIndicacion", "convierteEnIndicacion", "notasPlegadas",
   "notaClaude", "preguntaExterno", "nombreInt", "iniInt"];
 var VARS = ["CNL_COL", "CNL_EXT", "CLAUDE_COL", "_cwMemo", "SVG_DESTELLO", "SVG_CHAT"];
 var codigo = VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" +
@@ -96,9 +96,7 @@ function manuel() {
   eq("Samuel: abre en su canal por WhatsApp", [ca.id, ca.wa], ["dm:samuel", "Samuel Gamez ciper"]);
   eq("Samuel: caja", c.phCanal(t), "Mensaje a Samuel por WhatsApp…");
   var p = c.vPastilla(t);
-  si("Samuel: pastilla 'Samuel · WhatsApp'", /id="cnlpill"[^>]*>.*Samuel · WhatsApp/.test(p));
-  si("Samuel: caritas de integrantes", /intbtn/.test(p) && /SM/.test(p));
-  si("Samuel: canal naranja Claude", /id="cnlclaude"/.test(p));
+  si("Samuel: UNA pastilla 'Samuel ▾' (build 227: Claude y las caritas van en su hoja)", /id="cnlpill"[^>]*>Samuel<svg/.test(p) && !/intbtn|cnlclaude/.test(p));
   eq("Samuel: integrantes", c.integrantesDe(t).map(function (x) { return x.k; }), ["salvador", "samuel"]);
   eq("Samuel: no hay externos (es del equipo)", c.externosDe(t), []);
 })();
@@ -109,7 +107,7 @@ function manuel() {
   eq("Manuel: el del otro nombre tambien", c.canalDe(t.msgs[2], t), "ext:Manuel Parra");
   eq("Manuel: externos", c.externosDe(t), ["Manuel Parra"]);
   eq("Manuel: abre en su canal", c.canalActual(t).id, "ext:Manuel Parra");
-  si("Manuel: pastilla", /Manuel Parra · WhatsApp/.test(c.vPastilla(t)));
+  si("Manuel: pastilla", />Manuel<svg/.test(c.vPastilla(t)));
   eq("Manuel: caja", c.phCanal(t), "Mensaje a Manuel Parra por WhatsApp…");
   eq("Manuel: integrantes", c.integrantesDe(t).map(function (x) { return x.k; }), ["salvador", "ext:Manuel Parra"]);
 })();
@@ -123,9 +121,9 @@ function manuel() {
   eq("una sola palabra igual NO une (puede ser otro Juan)", c.externosDe(t2).length, 2);
   var t3 = { id: "x3", duenio: "samuel", encargado: "cynthia", msgs: [{ k: "bo", de: "salvador", t: "hola", ts: 1 }] };
   eq("tarea sin WhatsApp con involucrados: integrantes", c.integrantesDe(t3).map(function (x) { return x.k; }), ["samuel", "salvador", "cynthia"]);
-  si("tarea sin WhatsApp con involucrados: pastilla y caritas", /cnlpill/.test(c.vPastilla(t3)) && /intbtn/.test(c.vPastilla(t3)));
+  si("tarea sin WhatsApp con involucrados: una sola pastilla", /cnlpill/.test(c.vPastilla(t3)) && !/intbtn/.test(c.vPastilla(t3)));
   var t4 = { id: "x4", duenio: "salvador", msgs: [{ k: "bo", de: "salvador", t: "nota", ts: 1 }] };
-  si("tarea solo mia: sin caritas, pero con canal Claude", !/intbtn/.test(c.vPastilla(t4)) && /cnlclaude/.test(c.vPastilla(t4)));
+  si("tarea solo mia: una sola pastilla 'Todo'", />Todo<svg/.test(c.vPastilla(t4)) && !/intbtn|cnlclaude/.test(c.vPastilla(t4)));
 })();
 
 /* ---------- 1a: menu "Indicación" ---------- */
@@ -184,7 +182,7 @@ function manuel() {
   eq("sin Claude: caja normal", c.phCanal(t), "Mensaje a Samuel por WhatsApp…");
   c.window.__cnlClaude = {}; c.window.__cnlClaude[t.id] = 1;
   eq("con Claude: caja", c.phCanal(t), "Indicación para Claude…");
-  si("con Claude: pastilla encendida", /cnlcl on/.test(c.vPastilla(t)));
+  si("con Claude: pastilla 'Claude' encendida", /class="fil227 on"[^>]*>Claude<svg/.test(c.vPastilla(t)));
   si("con Claude: el envio va a notaClaude antes que cualquier canal",
     /if\(modoClaude\(t\)\)\{ \$\("txt"\)\.value=""; marcaEnvio\("tenv",""\); notaClaude\(t, v\); return; \}/.test(html) &&
     html.indexOf("if(modoClaude(t)){ $(\"txt\").value") < html.indexOf("var _cnA=canalActual(t)"));

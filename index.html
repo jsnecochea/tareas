@@ -758,6 +758,21 @@ button{font:inherit;color:inherit}
 .acof svg{color:var(--ink-3)}.acof .r{margin-left:auto;color:var(--ink-3);font-size:14.5px}
 .acol{background:var(--surface);border-radius:14px;margin-top:6px;overflow:hidden}.acoli{display:flex;justify-content:space-between;gap:10px;width:100%;border:0;border-bottom:1px solid var(--line);background:none;font:inherit;font-size:14.5px;color:var(--ink);padding:10px 14px;text-align:left}
 .acoli span:last-child{color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ttl227{flex:1;min-width:0}.ttl227+.grow{display:none}
+.top .t.uno227{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}.top .t.uno227.full{white-space:normal}
+.ttl227 .tnm{min-width:0}
+.rvrow227{display:flex;align-items:flex-start;gap:8px;padding:0 12px 6px;flex:none}.rvrow227 .rv225{margin:0;flex:1;min-width:0;width:auto}
+.rvrow227 .rv225.min{flex:1;text-align:left}.rvrow227 .fil227{margin-left:auto}
+.rv225 .rvk{display:flex;align-items:center;gap:4px}.rv225 .rvk svg{color:var(--ink-3)}
+.rv225.min{display:flex;align-items:center;padding:4px 2px;background:none;border:0}.rv225.min .rvk{margin:0;font-size:12.5px}
+.fil227{flex:none;display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font:inherit;font-size:13.5px;font-weight:600;border-radius:14px;padding:4px 9px 4px 11px;white-space:nowrap}
+.fil227.on{color:#7cc0ff;border-color:rgba(10,132,255,.5)}
+.cnlop227{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;color:var(--ink);font:inherit;font-size:17px;padding:11px 16px;text-align:left}
+.cnlop227>span:not(.av227){flex:1;min-width:0;display:flex;flex-direction:column}.cnlop227 small{font-size:13px;color:var(--ink-3)}.cnlop227 svg{color:var(--ink-2);flex:none}.cnlop227.on svg:last-child{color:#0a84ff}.cnlop227.tenue{color:var(--ink-2)}
+.av227{width:30px;height:30px;border-radius:50%;background:var(--surface-2);border:1px solid #444;display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.pth{display:flex;align-items:center;justify-content:space-between;gap:8px}.ptmin227{border:0;background:none;color:var(--ink-3);padding:0 2px;display:flex}
+.ptmini227{display:flex;align-items:center;gap:6px;margin:6px 12px 2px;padding:5px 12px;border:0;border-left:3px solid #0a84ff;border-radius:10px;background:var(--surface);color:#7cc0ff;font:inherit;font-size:13.5px;font-weight:600;flex:none;align-self:flex-start}
+.ac226.pt227{margin:2px 0 0}
 .autpill{display:block;margin:10px auto 6px;border:0;border-radius:16px;background:rgba(48,209,88,.16);color:#30d158;font:inherit;font-size:15px;font-weight:700;padding:7px 16px}
 .hchip{flex:1;display:flex;align-items:center;gap:8px;background:var(--surface-2,#2a2a2d);border-radius:12px;padding:9px 12px;font-size:15px;color:var(--ink,#f2f2f4);min-width:0}
 .hchip span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1373,7 +1388,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 226 · Acomodo de mensajes (OK · Mover · Nueva) e Inicio con Acomodo · iconos de línea sin emojis";
+var VERSION_APP = "build 227 · Encabezado limpio: título en una línea, una sola pastilla de filtro, Te pregunta minimizable con OK · Mover · Nueva";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -6960,13 +6975,31 @@ function nombreCorto(n){
   return o.join(" ");
 }
 function vPastilla(t){
-  var c=canalActual(t), ints=integrantesDe(t);
-  var conPill=!(canalesDe(t).length<=2 && c.id==="todo");
-  var intB=ints.some(function(x){ return x.k!==yo; })?'<button class="intbtn" id="intbtn" aria-label="Integrantes">'+ints.slice(0,4).map(function(x){ return '<span class="av">'+esc(iniInt(x.k))+'</span>'; }).join("")+'<small>'+ints.length+'</small></button>':'';
-  /* build 193: canal fijo naranja "Claude" junto a la pastilla: lo que dictes es indicacion para Claude */
-  var cl=modoClaude(t);
-  var clB='<button class="cnlpill cnlcl'+(cl?' on':'')+'" id="cnlclaude" style="--cc:'+CLAUDE_COL+'"><i></i>Claude</button>';
-  return '<div class="cnlwrap">'+(conPill?'<button class="cnlpill'+(cl?' off':'')+'" id="cnlpill" style="--cc:'+c.col+'"><i></i>'+esc(nombreCorto(c.nom)+(c.wa?" · WhatsApp":""))+' ▾</button>':'')+clB+intB+'</div>';
+  /* build 227 (Salvador 16:24): UNA sola pastilla chica "Todo ▾"; la hoja trae Todo · Claude · cada integrante.
+     Lo elegido reemplaza el texto ("Claude ▾", "Eduardo ▾"). Va en el renglon del Resumen. */
+  var c=canalActual(t), cl=modoClaude(t);
+  var tx=cl?"Claude":(c.id==="todo"?"Todo":nombreCorto(c.nom).split(" ")[0]);
+  return '<button class="fil227'+(cl||c.id!=="todo"?' on':'')+'" id="cnlpill" data-fil227="1" aria-label="Ver: '+esc(tx)+'">'+esc(tx)+ico("down",13)+'</button>';
+}
+function abreFiltro227(t){
+  var c=canalActual(t), cl=modoClaude(t);
+  var ops=[{id:"todo",nom:"Todo",sub:"todo junto",on:!cl&&c.id==="todo"},{id:"claude",nom:"Claude",sub:"lo que le dices a Claude",on:cl}];
+  canalesDe(t).forEach(function(x){ if(x.id==="todo" || (x.id==="equipo" && !hayEquipo(t))) return; ops.push({id:x.id,nom:x.nom,sub:x.sub,on:!cl&&x.id===c.id,av:x.id.indexOf("dm:")===0||x.id.indexOf("ext:")===0}); });
+  var bg=document.createElement("div"); bg.className="cnlbg";
+  var sh=document.createElement("div"); sh.className="cnlsheet fil227h";
+  sh.innerHTML='<div class="hh"></div>'+ops.map(function(o){
+    var ic=o.id==="todo"?ico("bubble",20):(o.id==="claude"?ico("info",20):(o.av?'<span class="av227">'+esc(inicialesDe(o.nom))+'</span>':ico("people",20)));
+    return '<button class="cnlop227'+(o.on?' on':'')+'" data-fil="'+esc(o.id)+'">'+ic+'<span>'+esc(o.nom)+'<small>'+esc(o.sub||"")+'</small></span>'+(o.on?ico("check",18):'')+'</button>'; }).join("")+
+    '<button class="cnlop227 tenue" data-fil="__int">'+ico("plus",20)+'<span>Integrantes<small>agregar o quitar</small></span></button>';
+  function cierra(){ if(bg.parentNode) bg.parentNode.removeChild(bg); if(sh.parentNode) sh.parentNode.removeChild(sh); }
+  bg.onclick=cierra;
+  Array.prototype.forEach.call(sh.querySelectorAll("[data-fil]"),function(b){ b.onclick=function(){ var id=b.getAttribute("data-fil"); cierra();
+    if(id==="__int"){ abreIntegrantes(t); return; }
+    window.__cnlClaude=window.__cnlClaude||{}; window.__cnl=window.__cnl||{};
+    if(id==="claude"){ window.__cnlClaude[t.id]=1; }
+    else { window.__cnlClaude[t.id]=0; window.__cnl[t.id]=id; }
+    render(); }; });
+  document.body.appendChild(bg); document.body.appendChild(sh);
 }
 /* build 186 (Salvador 2026-10-03 08:17): en "Todo" sin nombrar a nadie, el mensaje es para el
    RESPONSABLE: si la tarea es mia y la esta haciendo un externo, ese externo (el ultimo que escribio
@@ -7831,7 +7864,7 @@ function ico(n,px,gr){
     list:'<path d="M4 7l1.6 1.6L8.5 5.7M4 16.5l1.6 1.6 2.9-2.9M11.5 7.5h9M11.5 17h9"/>',
     audio:'<path d="M4 15v-3a8 8 0 0116 0v3"/><rect x="3.5" y="14" width="4.5" height="6.5" rx="1.6"/><rect x="16" y="14" width="4.5" height="6.5" rx="1.6"/>',
     more:'<circle cx="5.5" cy="12" r="1.1" fill="currentColor"/><circle cx="12" cy="12" r="1.1" fill="currentColor"/><circle cx="18.5" cy="12" r="1.1" fill="currentColor"/>',
-    move:'<path d="M4 12h15M14 7l5 5-5 5"/>', plus:'<path d="M12 5v14M5 12h14"/>', down:'<path d="M5 9l7 7 7-7"/>', x:'<path d="M6 6l12 12M18 6L6 18"/>',
+    move:'<path d="M4 12h15M14 7l5 5-5 5"/>', der:'<path d="M9 5l7 7-7 7"/>', plus:'<path d="M12 5v14M5 12h14"/>', down:'<path d="M5 9l7 7 7-7"/>', x:'<path d="M6 6l12 12M18 6L6 18"/>',
     folder:'<path d="M3.5 7.5a2 2 0 012-2h4l2 2h7a2 2 0 012 2v8a2 2 0 01-2 2h-13a2 2 0 01-2-2z"/>',
     bubble:'<path d="M5.5 4.5h13a2 2 0 012 2v8.5a2 2 0 01-2 2H10l-4.5 3.5V17h0a2 2 0 01-2-2V6.5a2 2 0 012-2z"/>',
     lupa:'<circle cx="10.5" cy="10.5" r="6.2"/><path d="M15.1 15.1 21 21"/>',
@@ -8469,8 +8502,8 @@ function chipsTarea(t){
 }
 function vResumenVivo(t){
   var r=resumenVivo(t); if(!r.una) return "";
-  if(min225(t.id,"rv")) return '<button class="rv225 min" data-min225="rv" aria-label="Ver resumen">• Resumen</button>';
-  return '<button class="rv225" data-min225="rv"><span class="rvk">Resumen vivo · Claude</span><span class="rvt">'+
+  if(min225(t.id,"rv")) return '<button class="rv225 min" data-min225="rv" aria-expanded="false" aria-label="Ver resumen"><span class="rvk">Resumen'+ico("der",13)+'</span></button>';   /* build 227 */
+  return '<button class="rv225" data-min225="rv" aria-expanded="true"><span class="rvk">Resumen vivo · Claude'+ico("down",13)+'</span><span class="rvt">'+
     r.partes.map(function(p){ return '<span'+(p.rojo?' class="red"':'')+'>'+esc(p.tx)+'</span>'; }).join(' · ')+'</span></button>';
 }
 /* filtro del chat por meta */
@@ -8536,7 +8569,7 @@ function vPersonas225(t){
   var pp=personas225(t), h="";
   if(pp.compartir.length) h+='<div class="d225b"><h4>Se comparte con</h4><p>'+pp.compartir.map(function(c){ return esc(c.nombre); }).join('<br>')+'</p></div>';
   if(pp.ints.length) h+='<div class="d225b"><h4>Participan</h4><p>'+pp.ints.map(function(x){ return esc(nombreInt(x.k))+' <span class="tenue">· '+esc({hace:"lo hace",revisa:"revisa",opina:"opina",externo:"externo"}[x.rol]||x.rol)+'</span>'; }).join('<br>')+'</p></div>';
-  return h||'<p class="h225v0">Nadie más en esta tarea.</p>';
+  return (h||'<p class="h225v0">Nadie más en esta tarea.</p>')+'<button class="d225m" data-int227="1"><span>Agregar o quitar integrantes</span><span>'+ico("chev",14)+'</span></button>';   /* build 227 */
 }
 /* la hoja de abajo (una a la vez) */
 function hoja225(t){ var H=window.__hoja225; return (H && H.tid===t.id)?H:null; }
@@ -8771,13 +8804,13 @@ function vHilo(){
   window.__saltoActivo=_sal; window.__saltoCierre=_sal && window.__salto.tipo!=="alarma";
   var adj=adjuntos(t);
   var h='<div class="top"><button class="iconbtn" id="bback">‹</button>'+
-    '<div><div class="tnm">'+(editaNombre===t.id
+    '<div class="ttl227"><div class="tnm">'+(editaNombre===t.id
       ? '<input id="enom" class="tin" value="" placeholder="'+esc(t.nombre)+'" autocapitalize="sentences" enterkeyhint="done">'
-      : '<span class="t'+(t.cierre?" tach":"")+'">'+esc(t.nombre)+'</span>')+
-    '</div><div class="d">'+
-    /* build 195: "Tuya · con X y Y" (dueño + quienes participan) / "Dato · de X" */
-    (vistaSup(t)?subSupHTML(t):subtituloHTML(t))+   /* build 224 */
-    '</div></div>'+
+      : '<span class="t uno227'+(t.cierre?" tach":"")+((window.__tit227||{})[t.id]?' full':'')+'" id="tit227" role="button">'+esc(t.nombre)+'</span>')+   /* build 227: una linea; tocar = completo */
+    '</div>'+
+    /* build 227 (Salvador 16:24): sin el renglon "Tuya · con X, Y +1": lo dice el chip de personas. En la vista supervisor queda "Lo hace X". */
+    (vistaSup(t)?'<div class="d">'+subSupHTML(t)+'</div>':'')+   /* build 224 */
+    '</div>'+
     '<div class="grow"></div>'+
     '<button class="iconbtn'+(adj.length?' clipon':'')+'" id="bgal" aria-label="Archivos de esta tarea">'+ico("clip",20,1.6)+   /* build 204: verde si hay archivos */
        (nuevos(t)?'<span class="cnt">'+nuevos(t)+'</span>':'')+'</button>'+
@@ -8846,7 +8879,8 @@ function vHilo(){
   /* build 195: un renglon: chip de fecha + ▾. Sin resumen debajo. El ▾ abre "Creada con" + Contexto. */
   var _ch=chipEncabezado(t);
   /* build 225: chips en una linea (cada uno abre su hoja) + "Resumen vivo · Claude". El ▾ y su detalle viven en ⓘ Detalles */
-  h+=chipsTarea(t)+vResumenVivo(t);
+  var _pil=vPastilla(t);   /* build 227: la pastilla va en el renglon del Resumen */
+  h+=chipsTarea(t)+'<div class="rvrow227">'+vResumenVivo(t)+_pil+'</div>';
   h+=lineaAgenda(t);   /* build 203: "Agendado ✓ · Calendario: en camino" / "Calendario ✓" */
   h+=vDecisionMeta(t)+vDecisionDato(t)+vQuienDudas(t)+vBorradorMsj(t);   /* build 225: mensaje por confirmar; "Se comparte con" va en 👥 */   /* build 221; 222: decisión de meta atrasada */
   if(tipoRevisar(t)==="falta" && !vistaSup(t)) h+=vTipoToggle(t);   /* build 224: el supervisor no ve Tarea|Dato */
@@ -8874,6 +8908,7 @@ function vHilo(){
   /* build 197: Importante | Todo. En Todo se ve todo desplegado; en Importante los avisos viejos de un tema no salen */
   if(window.__visitaDe!==t.id){ window.__visitaDe=t.id; window.__visitaIni=Date.now(); }
   var _mf225=filtroMeta(t);
+  var _pq227=-1; try{ var _pp227=preguntaParaMi(t); if(_pp227 && !min225(t.id,"pt")) _pq227=_pp227.ix; }catch(e){}   /* build 227: OK·Mover·Nueva van en la tarjeta */
   var _todo=modoChat(t)==="todo", _rmp=_todo?{set:{}}:avisosReemplazados(t), _vistoNuevo=false, _ocultos=0, _visibles=0;
   var _plg=_todo?{set:{},ult:-1,n:0}:avisosPlegados(t), _cn=canalActual(t),
       _pln=notasPlegadas(t, _todo || !!(window.__ncExp&&window.__ncExp[t.id]), window.__visitaIni, Date.now()),
@@ -8948,7 +8983,7 @@ function vHilo(){
            (x.analisis?'<br>'+esc(x.analisis):'')+'</div>';
       }
       var _xc=(_cx.indexOf("ext:")===0)?colorExt(t,_cx.slice(4)):((_cx.indexOf("dm:")===0 && nombreWADe(t,_cx))?CNL_COL.dm:"");
-      m+='<div class="b bi bcomp'+(_xc?' ext" style="--xc:'+_xc:'')+'" data-mix="'+ix+'">'+(x.movido_de?'<span class="mvnuevo">NUEVO · movido desde '+esc(tareaCorta({nombre:x.movido_de.nombre||""}))+'</span>':'')+cab+palomitasHTML(x)+'<button class="mdot" data-an="'+ix+'" aria-label="Ver detalle del mensaje">·</button>'+dt+'</div>'+vDudaTarea(t,x,ix);   /* build 226: OK · Mover · Nueva abajo */
+      m+='<div class="b bi bcomp'+(_xc?' ext" style="--xc:'+_xc:'')+'" data-mix="'+ix+'">'+(x.movido_de?'<span class="mvnuevo">NUEVO · movido desde '+esc(tareaCorta({nombre:x.movido_de.nombre||""}))+'</span>':'')+cab+palomitasHTML(x)+'<button class="mdot" data-an="'+ix+'" aria-label="Ver detalle del mensaje">·</button>'+dt+'</div>'+(_pq227===ix?'':vDudaTarea(t,x,ix));   /* build 226: OK · Mover · Nueva abajo */
       return;
     }
     m+='<div class="b '+(x.k==="bal"?"bal":(x.k==="bo"?"bo":"bi"))+(x.abre?' liga" data-abre="'+esc(x.abre):'')+'" data-mix="'+ix+'">'+(x.movido_de?'<span class="mvnuevo">NUEVO · movido desde '+esc(tareaCorta({nombre:x.movido_de.nombre||""}))+'</span>':'')+citaHTML(x)+esc(sinEmojiUI(quitaEtiquetasWA(x.t)))+
@@ -8956,7 +8991,7 @@ function vHilo(){
        (tieneAn?'<button class="mdel" data-an="'+ix+'" aria-label="Ver cómo se decidió este mensaje">'+ico("info",15,1.8)+'</button>':'')+
        (waCan?'<button class="mdel" data-wacan="'+ix+'" aria-label="Cancelar este WhatsApp">'+ico("trash",15,1.8)+'</button>':'')+
        (undo?'<button class="mdel" data-mdel="'+ix+'" aria-label="Borrar este mensaje">'+ico("trash",15,1.8)+'</button>':'')+
-       palomitasHTML(x)+'</span>'+(tieneAn&&msgAn[ix]?'<div class="dt">'+esc(x.analisis)+'</div>':'')+'</div>'+vDudaTarea(t,x,ix);
+       palomitasHTML(x)+'</span>'+(tieneAn&&msgAn[ix]?'<div class="dt">'+esc(x.analisis)+'</div>':'')+'</div>'+(_pq227===ix?'':vDudaTarea(t,x,ix));
   });
   if(t.puntos){
     var mk=t.marcados||{}, ft=t.fotos||{}, n=Object.keys(mk).length;
@@ -9040,14 +9075,14 @@ function vHilo(){
   if(vistaSup(t)) sug=sugSup(t);   /* build 224: solo lo que le toca; si nada, "Nada pendiente para ti" */
   var pre=t.pregunta&&t.duenio===yo?'<div class="b bi" style="margin:0 14px 8px">'+esc(t.pregunta)+'</div>':"";
 
-  var _pil=vPastilla(t), _cc=modoClaude(t)?CLAUDE_COL:canalActual(t).col, _conPill=!!(_pil && (_pil.indexOf('id="cnlpill"')>=0 || modoClaude(t)));
+  var _cc=modoClaude(t)?CLAUDE_COL:canalActual(t).col, _conPill=!!(modoClaude(t) || canalActual(t).id!=="todo");
   var _pre179=""; try{ _pre179=(vistaSup(t)?"":vSupervisor(t))+vParaTi(t); }catch(e){ console.warn("paraTi",e); }
   if(_vistoNuevo) setTimeout(function(){ try{ guarda(t); }catch(e){} }, 0);
   var _tgl='<div class="cmodo"><button data-cmodo="importante" class="'+(_todo?'':'on')+'">Importante</button><button data-cmodo="todo" class="'+(_todo?'on':'')+'">Todo</button></div>';
   /* build 198: si en Importante el chat queda vacio, una pista chiquita para que no parezca roto */
   if(!_todo && !_visibles && _ocultos && !(t.evidencias||[]).length) m+='<button class="avfold" data-cmodo="todo">Hay '+_ocultos+' mensaje'+(_ocultos===1?'':'s')+' oculto'+(_ocultos===1?'':'s')+' · Todo</button>';
   m=_tgl+m;
-  return h+(esDato(t)?vDatoCuerpo(t):vDatosTarea(t))+vVuelta(t)+vPasos(t)+vEntregas(t)+bannerDecision(t)+_pil+_pre179+vFiltroMeta(t)+'<div class="scroll'+(_conPill?' cnl" style="--cc:'+_cc:'')+'"><div class="msgs">'+m+pre+'</div></div>'+vTarjetaRev(t)+
+  return h+(esDato(t)?vDatoCuerpo(t):vDatosTarea(t))+vVuelta(t)+vPasos(t)+vEntregas(t)+bannerDecision(t)+_pre179+vFiltroMeta(t)+'<div class="scroll'+(_conPill?' cnl" style="--cc:'+_cc:'')+'"><div class="msgs">'+m+pre+'</div></div>'+vTarjetaRev(t)+
     /* LA MISMA BARRA DE TODAS LAS VISTAS — 2026-09-04. Antes el hilo tenia la
        camara a la IZQUIERDA y una flecha de enviar a la derecha, distinto de la
        caratula (camara a la DERECHA, sin flecha). Salvador lo cacho: "tiene que
@@ -13436,7 +13471,8 @@ function bindHilo(){
   Array.prototype.forEach.call(document.querySelectorAll("[data-fmeta]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); abreHoja225(t, "meta", el.getAttribute("data-fmeta")); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll(".h225 .mt[data-meta] .mtx"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var r=el.closest("[data-meta]"); abreHoja225(t, "meta", r.getAttribute("data-meta")); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-orig225]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); window.__orig225=window.__orig225||{}; window.__orig225[t.id]=!window.__orig225[t.id]; render(); }; });
-  try{ var _ms226=document.querySelector(".msgs"); if(_ms226) bindAcomodo(_ms226, function(){ return t; }); }catch(e){}   /* build 226: OK · Mover · Nueva */
+  try{ var _ms226=document.querySelector(".msgs"); if(_ms226) bindAcomodo(_ms226, function(){ return t; }); var _pt227=document.querySelector(".ptcard"); if(_pt227) bindAcomodo(_pt227, function(){ return t; }); }catch(e){}   /* build 226: OK · Mover · Nueva */
+  var _ib227=document.querySelector("[data-int227]"); if(_ib227) _ib227.onclick=function(ev){ ev.stopPropagation(); window.__hoja225=null; render(); abreIntegrantes(t); };   /* build 227 */
   /* build 225: el mensaje armado: Mandar / Cambiar / No mandar */
   Array.prototype.forEach.call(document.querySelectorAll("[data-mbact]"),function(el){ el.onclick=function(ev){ ev.stopPropagation();
     var a=el.getAttribute("data-mbact"), b=t.msj_borrador; if(!b) return;
@@ -13593,7 +13629,8 @@ function bindHilo(){
   };
 
   try{ bindDeslizar(t); }catch(e){ console.warn("deslizar",e); }
-  var _cp=$("cnlpill"); if(_cp) _cp.onclick=function(){ if(modoClaude(t)){ window.__cnlClaude[t.id]=0; render(); return; } abreCanales(t); };
+  var _cp=$("cnlpill"); if(_cp) _cp.onclick=function(ev){ if(ev) ev.stopPropagation(); abreFiltro227(t); };   /* build 227: una sola pastilla */
+  var _t227=$("tit227"); if(_t227) _t227.onclick=function(){ window.__tit227=window.__tit227||{}; window.__tit227[t.id]=!window.__tit227[t.id]; render(); };
   var _ar=$("autrev"); if(_ar) _ar.onclick=function(){ if(!autorizaRevision(t)) render(); };   /* build 209 */
   Array.prototype.forEach.call(document.querySelectorAll("[data-fedit]"),function(b){ b.onclick=function(){ var tx=$("txt"); if(!tx) return;   /* build 209: tocar un campo = corregirlo dictando */
     var k=b.getAttribute("data-fedit"), et={nombre:"El nombre es",tipo:"Es",contexto:"El contexto es",fecha:"La fecha es",ritmo:"El ritmo es",quien:"La hace",etiquetas:"Las etiquetas son",vinculo:"El vínculo es con",de:"Es de",cifras:"Las cifras son"}[k]||"";
@@ -14766,7 +14803,7 @@ function preguntaParaMi(t){
   var ms=t.msgs||[], nombres=misNombres();
   var iUlt=-1; for(var i=ms.length-1;i>=0;i--){ var x=ms[i]; if(x && x.k==="bo" && (x.de===yo || (!x.de && t.duenio===yo)) && !x.vaga){ if(x.compromiso && x.compromiso.hasta>Date.now()) return null; iUlt=i; break; } }
   for(var j=ms.length-1;j>iUlt;j--){
-    var y=ms[j]; if(!y || y.de===yo) continue;
+    var y=ms[j]; if(!y || y.de===yo || y.oculto || y.eliminado) continue;   /* build 227: lo movido/oculto ya no pregunta aqui */
     var deOtro=(y.wa_in===1) || (y.k==="bo" && y.de && y.de!==yo); if(!deOtro) continue;
     var tx=_n179((y.tr||y.t||"")), mm=String(y.t||"").match(/^([^:\n]{1,24}):\s*/), quien=y.wa_c||(y.de&&PERSONAS[y.de]&&PERSONAS[y.de].nombre)||(mm?mm[1]:"Alguien");
     var pide=PIDE_RXf().test(" "+tx+" ") || /\?/.test(String(y.t||""));
@@ -14792,7 +14829,11 @@ function vParaTi(t){
   if(!r && !window.__paraTiPidiendo){ setTimeout(function(){ pideParaTi(t,p,key); },30); }
   function fuente(ix){ return (typeof ix==="number" && t.msgs && t.msgs[ix])?' <span class="ptsrc" data-irmsg="'+ix+'">·</span>':''; }
   window.__ptAb=window.__ptAb||{}; var _ab=!!window.__ptAb[t.id];
-  var h='<div class="ptcard'+(_ab?' ab':'')+'"><span class="pth">'+esc((p.todos?"PIDEN A TODOS · ":"TE PREGUNTA · ")+p.de)+'</span><span class="ptq" data-irmsg="'+p.ix+'">“'+esc(p.t)+'”</span>';
+  /* build 227: se minimiza a una linea delgada (se recuerda por tarea); si el mensaje no tiene acomodo confirmado, OK · Mover · Nueva aqui */
+  var _tit=(p.todos?"Piden a todos · ":"Te pregunta · ")+p.de;
+  if(min225(t.id,"pt")) return '<button class="ptmini227" data-min225="pt" aria-expanded="false">'+esc(_tit)+ico("der",13)+'</button>';
+  var _x=(t.msgs||[])[p.ix], _ac=(_x && _x.duda_tarea && !_x.duda_resuelta && !_x.oculto)?'<div class="ac226 pt227"><button data-acok="'+p.ix+'">OK</button><span>·</span><button data-acmov="'+p.ix+'">Mover</button><span>·</span><button data-acnueva="'+p.ix+'">Nueva</button></div>':'';
+  var h='<div class="ptcard'+(_ab?' ab':'')+'"><span class="pth">'+esc((p.todos?"PIDEN A TODOS · ":"TE PREGUNTA · ")+p.de)+'<button class="ptmin227" data-min225="pt" aria-label="Minimizar">'+ico("down",15)+'</button></span><span class="ptq" data-irmsg="'+p.ix+'">“'+esc(p.t)+'”</span>'+_ac;
   if(!_ab) return h+'<button class="ptmas" data-ptab="1">ver todo ▾</button></div>';
   if(r && !r.err){
     (r.posturas||[]).slice(0,3).forEach(function(x){ if(typeof x.ix==="number"&&t.msgs[x.ix]) h+='<span class="ptl"><b>'+esc(x.postura||"")+':</b> '+esc((x.quienes||[]).join(", "))+fuente(x.ix)+'</span>'; });

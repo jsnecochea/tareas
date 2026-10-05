@@ -94,7 +94,7 @@ si("y 'quién la hace' ya no falta", !/quién la hace/.test(ult));
 /* ---------- 2) nombres cortos ---------- */
 eq("nombreCorto", ["Eduardo Madero \"Lalo\" (padel Verde) LNN", "Eduardo Madero “Lalo” 🎾 (padel)", "Manuel Parra", "Samuel Gamez ciper", "Juan de la Garza López", "😀 Rogelio Sada 🇲🇽", "Lalo LNN", "Equipo", "+52 871 123 4567", "Dr. Arturo Ramírez"].map(c.nombreCorto),
   ["Eduardo Madero", "Eduardo Madero", "Manuel Parra", "Samuel Gamez", "Juan de la Garza", "Rogelio Sada", "Lalo", "Equipo", "+52 871 123 4567", "Arturo Ramírez"]);
-si("la pastilla usa el nombre corto; el menú sigue con el completo", /esc\(nombreCorto\(c\.nom\)\+\(c\.wa\?" · WhatsApp":""\)\)/.test(html) && /esc\(x\.nom\)\+'<small>'/.test(html));
+si("la pastilla usa el nombre corto; el menú sigue con el completo", /nombreCorto\(c\.nom\)\.split\(" "\)\[0\]/.test(html) && /esc\(o\.nom\)\+'<small>'/.test(html));
 si("la hoja de agregar trae lupa y busca en todos", /placeholder="Buscar en todos tus contactos"/.test(html) && /buscaContactos\(q, ya\)/.test(html));
 
 /* ---------- UI en Chromium: franja en un renglon y buscador ---------- */
@@ -116,16 +116,11 @@ var tmp = path.join(os.tmpdir(), "b219-" + process.pid + ".html"); fs.writeFileS
     var st = await p.evaluate(function () {
       INTS = [{ k: "salvador" }, { k: "samuel" }, { k: "cynthia" }, { k: "ext:Eduardo Madero" }];
       var el = document.getElementById("strip"); el.innerHTML = vPastilla({ id: "a" });
-      var w = el.querySelector(".cnlwrap"), kids = Array.prototype.slice.call(w.children), tops = kids.map(function (k) { var r = k.getBoundingClientRect(); return Math.round((r.top + r.bottom) / 2 / 4); });
-      return { tx: el.querySelector("#cnlpill").textContent, unRenglon: tops.every(function (x) { return x === tops[0]; }), ov: getComputedStyle(w).overflowX, wrap: getComputedStyle(w).flexWrap, nw: getComputedStyle(kids[0]).whiteSpace };
+      return { tx: el.querySelector("#cnlpill").textContent, n: el.children.length, nw: getComputedStyle(el.querySelector("#cnlpill")).whiteSpace };
     });
-    eq("pastilla: 'Eduardo Madero · WhatsApp ▾'", st.tx, "Eduardo Madero · WhatsApp ▾");
-    eq("franja en un renglón, se desliza de lado si no cabe", [st.unRenglon, st.ov, st.wrap, st.nw], [true, "auto", "nowrap", "nowrap"]);
-    var lg = await p.evaluate(function () {
-      CNL.nom = "Alejandro Fernández de la Garza Villarreal"; var el = document.getElementById("strip"); el.style.width = "300px"; el.innerHTML = vPastilla({ id: "a" });
-      var w = el.querySelector(".cnlwrap"), kids = Array.prototype.slice.call(w.children), tops = kids.map(function (k) { var r = k.getBoundingClientRect(); return Math.round((r.top + r.bottom) / 2 / 4); });
-      return { tx: el.querySelector("#cnlpill").textContent, uno: tops.every(function (x) { return x === tops[0]; }), desliza: w.scrollWidth > w.clientWidth, ini: Math.round(kids[0].getBoundingClientRect().left) }; });
-    eq("aunque no quepa: sigue en un renglón, se desliza y no se corta el inicio", [lg.tx, lg.uno, lg.desliza, lg.ini >= 0], ["Alejandro Fernández · WhatsApp ▾", true, true, true]);
+    eq("build 227: UNA sola pastilla chica con el nombre corto ('Eduardo ▾')", [st.tx, st.n], ["Eduardo", 1]);
+    var lg = await p.evaluate(function () { CNL.nom = "Alejandro Fernández de la Garza Villarreal"; var el = document.getElementById("strip"); el.innerHTML = vPastilla({ id: "a" }); return el.querySelector("#cnlpill").textContent; });
+    eq("nombre largo: solo el primer nombre", lg, "Alejandro");
     await p.screenshot({ path: path.join(os.tmpdir(), "b219-franja.png"), clip: { x: 0, y: 0, width: 390, height: 70 } });
     await p.evaluate(function () { INTS = [{ k: "salvador", rol: "hace" }]; AG = { contactos: [{ nombre: "María Eloísa Albores de la Peña" }, { nombre: "Arturo Ramírez (control de plagas)" }, { nombre: "Ángel Núñez" }, { nombre: "+52 871 000 0000" }, { nombre: "Rogelio Sada" }] }; abreIntegrantes({ id: "a", nombre: "Casa Lerdo", duenio: "salvador" }); document.querySelector(".itadd").click(); });
     var h0 = await p.evaluate(function () { return { lupa: !!document.querySelector(".itbus svg"), inp: !!document.querySelector("#itq"), n: document.querySelectorAll(".itlst [data-ak]").length, foco: document.activeElement && document.activeElement.id }; });
