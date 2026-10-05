@@ -27,7 +27,7 @@ function bloque(a, b) { var i = html.indexOf(a), j = html.indexOf(b); return htm
 /* el nucleo de fechas, igual que tests/fechas.test.js */
 var ft = fs.readFileSync(path.join(__dirname, "fechas.test.js"), "utf8");
 var F_FUNCS = eval(ft.match(/var FUNCS = (\[[\s\S]*?\]);/)[1]), F_VARS = eval(ft.match(/var VARS = (\[[\s\S]*?\]);/)[1]);
-var FUNCS = F_FUNCS.concat(["eventoDe", "eventoPendiente", "mtyAUtcMs", "_gcalUtc", "urlGoogleCal", "vAgenda", "guardaFechaEvento", "agendaEvento", "noAgendar", "lineaAgenda",
+var FUNCS = F_FUNCS.concat(["rangoHora", "eventoDe", "eventoPendiente", "mtyAUtcMs", "_gcalUtc", "urlGoogleCal", "vAgenda", "guardaFechaEvento", "agendaEvento", "noAgendar", "lineaAgenda",
   "completitud", "contextoPct", "contextoDe", "tipoItem", "esDato", "creadaCon", "msCreacion", "_fechaDeId", "_diaCreacion", "fechaPuestaSola", "faltaPrimero",
   "revisaCompleta", "nuevoAviso", "textoCuando", "horaBonita", "conMayuscula", "tipoRevisar", "porAutorizar", "creadaPorSistema", "faltaInfoRev",
   "esDecisionSal", "meDetiene", "faltaVieja", "diaMonterrey"]).filter(function (x, i, a) { return a.indexOf(x) === i; });
@@ -59,10 +59,10 @@ function T(x) { var b = { id: "tIAPRUEBA", nombre: "Boda de Ana y Luis", duenio:
 
 /* 1 de donde sale el evento */
 var BODA = T({ tipo_item: "dato", es_dato: true, de_quien: "Karina", datos_corregidos: [{ t: "Mesa 12" }], evento: { titulo: "Boda Ana y Luis", fecha: "2026-11-07", hora: "19:30", lugar: "Jardín Los Álamos", notas: "Etiqueta formal" } });
-eq("campo evento (Mac 18f)", c.eventoDe(BODA), { titulo: "Boda Ana y Luis", fecha: "2026-11-07", hora: "19:30", lugar: "Jardín Los Álamos", notas: "Etiqueta formal", todo_dia: false, origen: "campo" });
+eq("campo evento (Mac 18f)", c.eventoDe(BODA), { titulo: "Boda Ana y Luis", fecha: "2026-11-07", hora: "19:30", lugar: "Jardín Los Álamos", notas: "Etiqueta formal", todo_dia: false, origen: "campo", hora_fin: "" });
 eq("campo con fecha/hora mal formadas: vacías, nada se completa", c.eventoDe(T({ evento: { titulo: "Cita", fecha: "7 nov", hora: "7pm" } })).fecha + "|" + c.eventoDe(T({ evento: { titulo: "Cita", fecha: "7 nov", hora: "7pm" } })).hora, "|");
 var DENT = T({ id: "tDENT", nombre: "Cita con el dentista", creada_por: "salvador", por_autorizar: false, contexto: "", msgs: [{ k: "bo", t: "La abriste dictando: “cita con el dentista el 12 de octubre a las 5 de la tarde”", ts: NOW - 1000 }] });
-eq("detectada: palabra de cita + fecha exacta y hora (núcleo de fechas real)", c.eventoDe(DENT), { titulo: "Cita con el dentista", fecha: "2026-10-12", hora: "17:00", lugar: "", notas: "", todo_dia: false, origen: "detectado" });
+eq("detectada: palabra de cita + fecha exacta y hora (núcleo de fechas real)", c.eventoDe(DENT), { titulo: "Cita con el dentista", fecha: "2026-10-12", hora: "17:00", lugar: "", notas: "", todo_dia: false, origen: "detectado", hora_fin: "" });
 eq("detectada con día de la semana sin número: la fecha NO se pone sola (se pregunta)", c.eventoDe(T({ evento: null, nombre: "Junta con socios", contexto: "", msgs: [{ k: "bo", t: "La abriste dictando: “junta con socios el jueves a las 10”" }] })).fecha, "");
 eq("palabra de cita sin fecha ni hora: no es evento", c.eventoDe(T({ evento: null, nombre: "Agendar Reunión Consejo Colonia Cumbres", contexto: "de preferencia jueves a cenar o viernes a comer", msgs: [] })), null);
 eq("sin palabra de cita: no es evento aunque tenga fecha", c.eventoDe(T({ evento: null, nombre: "Pagar predial", contexto: "el 12 de octubre", msgs: [] })), null);

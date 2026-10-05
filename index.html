@@ -1007,15 +1007,18 @@ button{font:inherit;color:inherit}
 .revc ul{margin:2px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:16px;line-height:1.3;color:var(--ink)}
 .revc.c-espera{background:#2E1E05;border:1px solid #FF9F0A}.revc.c-espera .rct,.revc.c-espera .rcp{color:#FFC266}
 .revc.c-falta{background:#0A2540;border:1px solid #0A84FF}.revc.c-falta .rct,.revc.c-falta .rcp{color:#8EB8E6}
-.revc.c-vincular{background:#241933;border:1px solid #BF5AF2}.revc.c-vincular .rct{color:#D9B3FF}
+.revc.c-vincular{background:#241933;border:1px solid #BF5AF2;position:relative}   /* build 212: ✕ arriba a la derecha */
+.revc .rvx{position:absolute;top:6px;right:6px;width:34px;height:34px;border:0;background:none;color:#D9B3FF;font-size:18px;line-height:1;cursor:pointer;border-radius:50%}
+.revc .rvx:active{background:#33244A}
+.revc.c-vincular .rct{padding-right:34px}.revc.c-vincular .rct{color:#D9B3FF}
 .revc.c-autorizar{background:#0D2A16;border:1px solid #30D158;flex-direction:row;align-items:center;gap:12px}
 .revc.c-autorizar .rct,.revc.c-autorizar .rcp{color:#7FE39A}
 .revc .rvv{display:flex;align-items:center;gap:10px;background:#33244A;border-radius:12px;padding:9px 12px}
 .revc .rvv span{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .revc .rvv b{font-size:15.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .revc .rvv small{font-size:12.5px;color:#B9A3D6}
-.revc .rvb{background:#BF5AF2;border:0;border-radius:10px;padding:8px 12px;color:#1C0B2B;font:inherit;font-size:14px;font-weight:600;flex:none;cursor:pointer}
-.revc .rvn{height:42px;border-radius:12px;background:transparent;border:1px solid #BF5AF2;color:#D9B3FF;font:inherit;font-size:15px;font-weight:600;cursor:pointer}
+.revc .rvb{background:transparent;border:1px solid #BF5AF2;border-radius:10px;padding:8px 12px;color:#D9B3FF;font:inherit;font-size:14px;font-weight:600;flex:none;cursor:pointer}
+.revc .rvn{height:42px;border-radius:12px;background:#BF5AF2;border:0;color:#1C0B2B;font:inherit;font-size:15px;font-weight:600;cursor:pointer}
 .revc .rva{height:40px;border-radius:10px;background:#30D158;border:0;padding:0 16px;color:#06340f;font:inherit;font-size:15px;font-weight:600;flex:none;cursor:pointer}
 .pendrow{cursor:pointer;display:flex;align-items:center;gap:12px;
   background:linear-gradient(180deg,rgba(255,159,10,.07),var(--surface));
@@ -1212,7 +1215,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 211 · Nota a Claude: el contexto con fechas dictadas ya no se tira";
+var VERSION_APP = "build 212 · Posible vinculación: botones invertidos y ✕ para descartar; rango de hora (de 3 a 8 PM) agenda a la hora de inicio";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -4143,7 +4146,7 @@ function vFaltaInfo(t){
   var _sf=_P?[]:soloMeFalta(t), h=_sf.length?'<div class="solofalta"><b>Solo me falta:</b> '+esc(_sf.join(" · "))+'</div>':'';
   if(t._leyendo && Date.now()-t._leyendo<60000) h='<div class="solofalta leyendo">Claude está leyendo lo que dictaste…</div>'+h;   /* build 207 */
   var _pd207=t.dup_resuelto?[]:posibleDup(t);   /* build 207: vinculos que propuso Claude, solo propuestos */
-  if(_pd207.length) h+='<div class="revc c-vincular"><span class="rct">POSIBLE VINCULACIÓN</span><span class="rcp">Propuesta de Claude; no la vinculé.</span>'+
+  if(_pd207.length) h+='<div class="revc c-vincular"><button class="rvx" data-rvx="1" aria-label="Cerrar sugerencia">✕</button><span class="rct">POSIBLE VINCULACIÓN</span><span class="rcp">Propuesta de Claude; no la vinculé.</span>'+
     _pd207.slice(0,3).map(function(d){ return '<div class="rvv"><span><b>'+esc(d.nombre)+'</b></span><button class="rvb" data-rvinc="'+esc(d.id)+'">Vincular</button></div>'; }).join("")+'</div>';
   if(c.ctxOk) h+='<div class="fic ctx hecho'+(_P&&_P.hechos.indexOf("ctx")>=0?' palomea':'')+'"><span class="ok">✓ Contexto</span><span class="ctxc">'+esc(ctx.length>90?ctx.slice(0,89)+"…":ctx)+'</span></div>';
   else h+='<div class="fic ctx"><div class="meter"><div class="lb"><span class="ok">Contexto'+(c.ctxOk?' ✓':'')+'</span><span class="pend">'+(c.ctxOk?'listo':'mínimo en la rayita')+'</span></div>'+
@@ -4352,20 +4355,36 @@ function faltaPrimero(c){
    agendado:true. No: agendar:false. Sin fecha: primero se pide el dia (SIN FECHA DICTADA = SIN FINIQUITO, Y SE PREGUNTA);
    la fecha detectada nunca se completa sola: solo se toma una fecha EXACTA (con numero); si no, se pregunta. */
 var CITA_RE=/\b(citas?|juntas?|reunion(es)?|boda|invitacion(es)?|invitan|invitados?|eventos?|fiesta|cumpleanos|comida|cena|desayuno|misa|graduacion|bautizo|comunion|xv|conferencia|congreso|torneo|partido|consulta|webinar|sesion|ceremonia|velorio|funeral|inauguracion)\b/;
+/* build 212 ("Fiesta Cumpleaños Papá": "de 3:00 a 8:00 PM" se agendaba a las 8 PM): en un rango, la hora es la de INICIO
+   y la de fin queda para la duracion. Si el inicio no dice am/pm toma el del fin (3 -> 3 PM si termina 8 PM). */
+function rangoHora(tx){
+  var s=String(tx||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\b([ap])\.\s?m\.?/g,"$1m");
+  var m=s.match(/\b(?:de|desde las?)\s+(?:las?\s+)?(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm|hrs?|horas)?\s*(?:a|hasta)\s+(?:las?\s+)?(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm|hrs?|horas|de la (?:tarde|noche|manana))?/);
+  if(!m) return null;
+  var h1=+m[1], n1=+(m[2]||0), a1=m[3]||"", h2=+m[4], n2=+(m[5]||0), a2=m[6]||"";
+  if(h1>23||h2>23||n1>59||n2>59) return null;
+  if(!a1 && !a2 && !m[2] && !m[5]) return null;            /* "de 3 a 5" solo (sin hora clara): no se adivina */
+  var pm2=/pm|tarde|noche/.test(a2), am2=/am|manana/.test(a2);
+  var f24=function(h, a, pmRef){ if(/pm/.test(a)) return h<12?h+12:h; if(/am/.test(a)) return h===12?0:h; return pmRef && h<12 ? h+12 : h; };
+  var e2=f24(h2, a2==="pm"||/tarde|noche/.test(a2)?"pm":(am2?"am":""), false), e1=f24(h1, a1, pm2 && (h1+12)<=e2);
+  if(/pm|tarde|noche/.test(a2) && h2<12) e2=h2+12;
+  var hh=function(h,n){ return String(h).padStart(2,"0")+":"+String(n).padStart(2,"0"); };
+  return {ini:hh(e1,n1), fin:hh(e2,n2)};
+}
 function eventoDe(t){
   if(!t) return null;
   var _f=function(v){ v=String(v||"").trim(); return /^\d{4}-\d{2}-\d{2}$/.test(v)?v:""; };
   var _h=function(v){ v=String(v||"").trim(); return /^\d{2}:\d{2}$/.test(v)?v:""; };
   if(t.evento && typeof t.evento==="object")
     return {titulo:String(t.evento.titulo||t.nombre||"").trim(), fecha:_f(t.evento.fecha), hora:_h(t.evento.hora),
-            lugar:String(t.evento.lugar||"").trim(), notas:String(t.evento.notas||"").trim(), todo_dia:t.evento.todo_dia===true, origen:"campo"};
+            lugar:String(t.evento.lugar||"").trim(), notas:String(t.evento.notas||"").trim(), todo_dia:t.evento.todo_dia===true, origen:"campo", hora_fin:_h(t.evento.hora_fin)};
   if(t.es_recordatorio) return null;                      /* un recordatorio ya es alarma */
   var cc={texto:""}; try{ cc=creadaCon(t); }catch(e){}
   var tx=[t.nombre, t.contexto, t.tarea, cc.texto].filter(Boolean).join(" · ");
   if(!CITA_RE.test(_nn(tx))) return null;
   var fd={lista:[],dudas:[]}; try{ fd=fechasDichas(tx); }catch(e){}
   var ex=(fd.dudas&&fd.dudas.length)?[]:(fd.lista||[]).filter(_esExacta);
-  var hr=""; try{ hr=horaValor(tx)||""; }catch(e){}
+  var hr="", _rg=null; try{ _rg=rangoHora(tx); hr=_rg?_rg.ini:(horaValor(tx)||""); }catch(e){}   /* build 212: rango -> la de inicio */
   if(!ex.length && !hr) return null;                      /* sin fecha ni hora de cita: no se detecta nada */
   /* build 204 (Salvador 21:04, "Fideicomiso: seguimiento con BBVA"): "el 28-sep" sin año se leia como el 28-sep del
      año que entra (el de este año ya paso) y se ofrecia agendar algo que ya fue. Si el año NO se dijo, la fecha es la
@@ -4377,7 +4396,7 @@ function eventoDe(t){
       if(!isNaN(dd) && dd<_dmin){ _dmin=dd; _mej=c; } });
     _f=_mej;
   }
-  return {titulo:String(t.nombre||"").trim(), fecha:_f, hora:_h(hr), lugar:"", notas:"", todo_dia:false, origen:"detectado"};
+  return {titulo:String(t.nombre||"").trim(), fecha:_f, hora:_h(hr), lugar:"", notas:"", todo_dia:false, origen:"detectado", hora_fin:_rg?_rg.fin:""};
 }
 function eventoPendiente(t){
   if(!t || t.cierre || t.fusionada_en || estadoReal(t)==="cerrada") return false;
@@ -4397,7 +4416,7 @@ function mtyAUtcMs(fecha, hora){
 function _gcalUtc(ms){ return new Date(ms).toISOString().replace(/[-:]/g,"").replace(/\.\d{3}/,""); }
 function urlGoogleCal(ev, t){
   var dates;
-  if(ev.hora){ var a=mtyAUtcMs(ev.fecha, ev.hora); dates=_gcalUtc(a)+"/"+_gcalUtc(a+60*60*1000); }   /* 1 hora */
+  if(ev.hora){ var a=mtyAUtcMs(ev.fecha, ev.hora), b=(ev.hora_fin && ev.hora_fin>ev.hora)?mtyAUtcMs(ev.fecha, ev.hora_fin):a+60*60*1000; dates=_gcalUtc(a)+"/"+_gcalUtc(b); }   /* build 212: con hora de fin, esa duracion; si no, 1 hora */
   else { var p=ev.fecha.split("-").map(Number), sig=new Date(Date.UTC(p[0],p[1]-1,p[2]+1)).toISOString().slice(0,10);
     dates=ev.fecha.replace(/-/g,"")+"/"+sig.replace(/-/g,""); }                                            /* todo el dia */
   var det=[ev.notas, (t&&contextoDe(t))||"", t?"Desde Doit: "+t.nombre:""].filter(Boolean).join("\n");
@@ -4414,7 +4433,7 @@ function vAgenda(t){
   var ev=eventoDe(t), edit=!ev.fecha || !!(window.__agEdit && window.__agEdit[t.id]);
   var h='<div class="fic agenda"><div class="aghd">'+ico("cal",19)+'<b>¿Te Lo Agendo?</b></div>'+
     '<p class="agev">'+esc(ev.titulo||t.nombre)+'</p>'+
-    '<p class="agcu">'+esc([ev.fecha?fechaBonita(ev.fecha):"Sin fecha", ev.hora?"a las "+horaBonita(ev.hora):(ev.todo_dia?"todo el día":""), ev.lugar].filter(Boolean).join(" · "))+'</p>';
+    '<p class="agcu">'+esc([ev.fecha?fechaBonita(ev.fecha):"Sin fecha", ev.hora?(ev.hora_fin && ev.hora_fin>ev.hora?"de "+horaBonita(ev.hora)+" a "+horaBonita(ev.hora_fin):"a las "+horaBonita(ev.hora)):(ev.todo_dia?"todo el día":""), ev.lugar].filter(Boolean).join(" · "))+'</p>';
   if(edit) h+=(!ev.fecha?'<p class="agq">¿Qué día es? Sin fecha no lo agendo.</p>':'')+
     '<div class="agin"><input type="date" id="agf" value="'+esc(ev.fecha)+'" aria-label="Día"><input type="time" id="agh" value="'+esc(ev.hora)+'" aria-label="Hora"></div>'+
     '<button class="agok" data-agguarda="1">Guardar Fecha</button>';
@@ -4448,9 +4467,10 @@ function agendaEvento(t, hora, todoDia){
   var hr=ev.hora || (/^\d{2}:\d{2}$/.test(hora||"")?hora:""), td=!hr && (ev.todo_dia===true || todoDia===true);
   if(!hr && !td){ toast("Pon la hora o Todo el día"); return null; }       /* sin hora la alarma no suena */
   var av=nuevoAviso(t, {texto:ev.titulo||t.nombre, fecha:ev.fecha, hora:hr||AGENDA_HORA_TODO_DIA, dicho:""});
-  t.evento={titulo:ev.titulo||t.nombre, fecha:ev.fecha, hora:hr, lugar:ev.lugar||"", notas:ev.notas||"", todo_dia:td, agendado_ts:Date.now(), aviso_ts:av.ts};
+  var _hf=(hr && ev.hora===hr && ev.hora_fin && ev.hora_fin>hr)?ev.hora_fin:"";   /* build 212: fin del rango, para la duracion en Calendar */
+  t.evento={titulo:ev.titulo||t.nombre, fecha:ev.fecha, hora:hr, hora_fin:_hf, lugar:ev.lugar||"", notas:ev.notas||"", todo_dia:td, agendado_ts:Date.now(), aviso_ts:av.ts};
   t.agendado=true; t.agendar=true; t.gcal="pendiente";       /* el trabajador con el conector de Calendar lo crea y escribe gcal_id */
-  msg(t,"bi","Agendado: “"+t.evento.titulo+"” · "+fechaBonita(ev.fecha)+(hr?" · a las "+horaBonita(hr):" · todo el día")+(ev.lugar?" · "+ev.lugar:"")+
+  msg(t,"bi","Agendado: “"+t.evento.titulo+"” · "+fechaBonita(ev.fecha)+(hr?(_hf?" · de "+horaBonita(hr)+" a "+horaBonita(_hf):" · a las "+horaBonita(hr)):" · todo el día")+(ev.lugar?" · "+ev.lugar:"")+
     ". La alarma de Doit ya quedó"+(td?" (ese día a las "+horaBonita(AGENDA_HORA_TODO_DIA)+")":"")+"; el Calendario va en camino.");
   guarda(t); sincronizaAvisos(t);
   if(window.__agTodoDia) window.__agTodoDia[t.id]=0;
@@ -6328,8 +6348,15 @@ function posibleDup(t){
   var mm=an.match(/posible(?:s)?\s+duplicad[oa]s?\s+(?:de|con)\s+([^\n.;]+)/i);
   if(mm){ var frag=mm[1].toLowerCase();
     tareas.forEach(function(x){ if(x.id!==t.id && (frag.indexOf(String(x.id).toLowerCase())>=0 || (x.nombre && x.nombre.length>3 && frag.indexOf(x.nombre.toLowerCase())>=0)) && ids.indexOf(x.id)<0) ids.push(x.id); }); }
-  return ids.map(function(id){ return tareas.filter(function(x){ return x.id===id; })[0]; })
+  var _desc=t.vinculos_descartados||[];   /* build 212: lo que cerro con la ✕ no vuelve a salir */
+  return ids.filter(function(id){ return _desc.indexOf(id)<0; }).map(function(id){ return tareas.filter(function(x){ return x.id===id; })[0]; })
     .filter(function(x){ return x && x.id!==t.id && !x.cierre && !x.fusionada_en && estadoReal(x)!=="cerrada"; });
+}
+/* build 212: la ✕ de "Posible vinculación" guarda esas sugerencias como descartadas; otra tarea distinta si vuelve a salir */
+function descartaVinculos(t){
+  var ids=posibleDup(t).map(function(x){ return x.id; });
+  t.vinculos_descartados=(t.vinculos_descartados||[]).concat(ids).filter(function(x,i,a){ return a.indexOf(x)===i; });
+  t.vinculos_descartados_ts=Date.now(); guarda(t); return ids;
 }
 function faltaInfoRev(t){
   if(t.pendiente_info && !esDecisionSal(t)) return true;
@@ -6514,7 +6541,7 @@ function vTarjetaRev(t){
   if(k==="vincular"){
     /* build 192: se pide como el paquete de autorizar: "Este mensaje lo pienso vincular a X. ¿Autorizas?" */
     var _pd=posibleDup(t);
-    var h='<div class="revc c-vincular"><span class="rct">POSIBLE VINCULACIÓN</span><span class="rcp">'+(_pd.length===1
+    var h='<div class="revc c-vincular"><button class="rvx" data-rvx="1" aria-label="Cerrar sugerencia">✕</button><span class="rct">POSIBLE VINCULACIÓN</span><span class="rcp">'+(_pd.length===1
       ? 'Este mensaje lo pienso vincular a “'+esc(corta40(_pd[0].nombre))+'”. ¿Autorizas?'
       : 'Este mensaje lo pienso vincular a una de estas. ¿Autorizas?')+'</span>';
     _pd.slice(0,3).forEach(function(d){
@@ -7053,7 +7080,7 @@ function aplicaRevisionClaude(t, v, j, abiertas){
   if(j.cifras && String(j.cifras).trim() && /\d/.test(String(j.cifras))){ var _fr=fechasRaras(String(j.cifras), _todas);
     if(!_fr.length){ t.datos_corregidos=(t.datos_corregidos||[]).concat([{t:String(j.cifras).trim().slice(0,600), ts:Date.now(), dicho:String(v).slice(0,300)}]).slice(-30); hecho.push("cifras"); } }
   var ids=(abiertas||[]).map(function(x){ return x.id; });
-  (Array.isArray(j.vinculos)?j.vinculos:[]).forEach(function(id){ id=String(id||"").trim(); if(id && id!==t.id && ids.indexOf(id)>=0 && vinc.indexOf(id)<0 && vinc.length<3) vinc.push(id); });
+  (Array.isArray(j.vinculos)?j.vinculos:[]).forEach(function(id){ id=String(id||"").trim(); if(id && id!==t.id && ids.indexOf(id)>=0 && vinc.indexOf(id)<0 && (t.vinculos_descartados||[]).indexOf(id)<0 && vinc.length<3) vinc.push(id); });
   if(vinc.length && !t.dup_resuelto){ t.posible_dup=(t.posible_dup||[]).concat(vinc).filter(function(x,i,a){ return a.indexOf(x)===i; }); }   /* solo se PROPONE (franja) */
   if(t.f_vigente || t.periodicidad || t.indefinida===true){ t.pendiente_info=""; t.pendiente_tipo=""; }
   /* la pregunta puede nombrar dias o meses SOLO si los dijo el ("¿jueves o viernes?"); fechas sueltas del modelo, no */
@@ -11754,6 +11781,7 @@ function bindHilo(){
     /* build 192: censo — la vinculacion propuesta NO era */
     t.censo_vinc_no={ts:Date.now(), por:yo||"", propuestas:posibleDup(t).slice(0,3).map(function(x){ return {id:x.id, nombre:x.nombre||""}; })};
     msg(t,"bi","Queda como tarea aparte."); guarda(t); render(); };
+  Array.prototype.forEach.call(document.querySelectorAll("[data-rvx]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); descartaVinculos(t); render(); }; });   /* build 212 */
   Array.prototype.forEach.call(document.querySelectorAll("[data-rvinc]"),function(el){
     el.onclick=function(){ var did=el.getAttribute("data-rvinc"), d=tareas.filter(function(x){ return x.id===did; })[0]; if(!d) return;
       hojaConfirma({titulo:"Pasar todo a \u201c"+corta40(d.nombre)+"\u201d", sub:"Lo de \u201c"+corta40(t.nombre)+"\u201d se junta all\u00e1.",
