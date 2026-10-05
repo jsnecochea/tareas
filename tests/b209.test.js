@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* PRUEBAS build 205 (Salvador 2026-10-04 21:14, "Agendar Reunión Consejo Colonia Cumbres"): lo dictado dentro de una tarea
+/* PRUEBAS build 209 (arnés de 205) (Salvador 2026-10-04 21:14, "Agendar Reunión Consejo Colonia Cumbres"): lo dictado dentro de una tarea
    en "Falta info" la completa aunque suene a nota para Claude ("…es para que sepas el contexto" caía en esNotaClaude ->
    "No cambié nada en la tarea"). Al instante, sin IA: indefinida, ritmo, fecha y contexto; luego la IA afina; barras y
    renglones en vivo; "Solo me falta: …"; completa -> palomita. Núcleo de fechas REAL. Correr: TZ=America/Monterrey node tests/b205.test.js */
@@ -30,7 +30,7 @@ function FakeDate() { var a = Array.prototype.slice.call(arguments); if (!(this 
 FakeDate.prototype = RealDate.prototype; FakeDate.now = function () { return NOW; }; FakeDate.UTC = RealDate.UTC; FakeDate.parse = RealDate.parse;
 var IA = { resp: null, err: null, llamadas: 0 }, renders = 0, sellos = [];
 var c = { Date: FakeDate, console: console, Math: Math, JSON: JSON, String: String, Number: Number, RegExp: RegExp, Array: Array, Object: Object, Intl: Intl, isNaN: isNaN, parseInt: parseInt,
-  yo: "salvador", PERSONAS: { salvador: { nombre: "Salvador", jefe: true } }, tareas: [], window: {}, vista: "hilo", abierta: null,
+  yo: "salvador", PERSONAS: { salvador: { nombre: "Salvador", jefe: true }, josue: { nombre: "Josué" } }, tareas: [], window: {}, vista: "hilo", abierta: null,
   esc: function (s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }, ico: function () { return ""; },
   msg: function (t, k, tx) { (t.msgs = t.msgs || []).push({ k: k, t: tx }); }, guarda: function () {}, render: function () { renders++; },
   preguntaAClaude: function (m, mod, cb) { IA.llamadas++; IA.prompt = m[0].content; cb(IA.err ? null : JSON.stringify(IA.resp || {}), IA.err); },
@@ -47,45 +47,50 @@ function CONSEJO() { return { id: "CONSEJO_CUMBRES_REUNION_20260927", nombre: "A
   msgs: [{ aviso: 1, h: "14:53", k: "bal", t: "¿Para cuándo agendas la reunión con el Consejo Colonia Cumbres? Lleva 7 días vencida.", ts: NOW - 6 * 3600000 }] }; }
 var DICTADO = "Esto es una tarea en contexto de donde meto todo lo que quiero hacer de proyectos en la colonia Cumbres donde yo estuve el presidente está Mario Castillo que es el secretario Adolfo Rodríguez que es el tesorero Enrique Martínez que es el vocal y Luis Mario no escucha que mi hermano y ahí nos ayuda a participar en el concepto no dormimos normalmente dos veces al año Y sacamos conclusiones de qué queremos hacer de nuevos proyectos como van las finanzas etc. entonces los casos importantes de proyectos grandes de finanzas aquí los meto cuando hay algo relevante es para que sepas el contexto Esta tarea es indefinida y cuyo propio es que merece un ritmo de una vez al mes estarme recordando este aquí para ver si vamos avanzando si no vamos avanzando ni pendiente el macro por lo pronto macro aquí tengo ahorita pues no no esté en mi proyecto de Navidad que es la decoración navideña cada año el proyecto de ponerle barda a todos los terrenos baldíos El proyecto de poner unas cámaras de seguridad el proyecto de ponerle jardinería alrededor de las plazas este para que queden muy bien el proyecto de reforestar unos árboles que se secaron";
 
-/* 1 la causa */
-si("CAUSA: el dictado real cae en esNotaClaude (\"para que sepas\")", c.esNotaClaude(DICTADO));
-var iF = html.indexOf('if(tipoRevisar(t)==="falta" && !ordenClaraClaude(v)'), iN = html.indexOf('if(typeof esNotaClaude==="function" && esNotaClaude(v)){ $("txt").value=""; marcaEnvio("tenv",""); notaClaude(t, v); return; }');
-si("CORRECCIÓN: en Falta info, completar va ANTES que la nota a Claude", iF > 0 && iN > 0 && iF < iN);
-si("\"Esto es una tarea en contexto…\" (largo) también completa y fija el tipo; \"es tarea\" solo sigue su camino corto", /!\(tipoDicho\(v\) && _corto205\)/.test(html) && /var _tp205=tipoDicho\(v\); if\(_tp205\)\{ t\.tipo_item=_tp205;/.test(html));
-eq("solo órdenes claras siguen yendo a Claude", [c.ordenClaraClaude(DICTADO), c.ordenClaraClaude("Claude, elimínala"), c.ordenClaraClaude("pásasela a Cynthia"), c.ordenClaraClaude("Claude: es indefinida y la reviso cada mes")], [false, true, true, false]);
-eq("se quita el 'Claude,' del principio", c.sinPrefijoClaude("Claude, es indefinida"), "es indefinida");
-
-/* 2 al instante, sin IA */
-eq("ritmo: el que va con 'ritmo/recordar' (una vez al mes), no 'dos veces al año' de las juntas", c.ritmoDicho(DICTADO), "una vez al mes");
-eq("ritmo: uno solo", c.ritmoDicho("revísala cada semana"), "cada semana");
-eq("ritmo: varios sin pista = ninguno (que lo diga la IA)", c.ritmoDicho("nos vemos dos veces al año y comemos una vez al mes"), "");
-var T1 = CONSEJO(); var h1 = c.extraeLocal(T1, DICTADO);
-eq("extracción local: indefinida, ritmo y contexto", [T1.indefinida, T1.ritmo, h1], [true, "Una vez al mes", ["indefinida", "ritmo: una vez al mes", "contexto"]]);
-si("el contexto queda con lo dictado (≥ la rayita)", c.contextoPct(T1) >= 75 && /Mario Castillo que es el secretario/.test(c.contextoDe(T1)));
-eq("con eso ya está completa (contexto ✓, quién ✓, finiquito: indefinida ✓, seguimiento: ritmo ✓)", c.completitud(T1).completa, true);
-var T2 = { id: "tX", nombre: "Pagar predial", duenio: "salvador", creada_por: "claude", estado: "abierta", msgs: [] };
-c.extraeLocal(T2, "el predial de Apeninos hay que pagarlo antes del 30 de octubre en el banco");
-eq("fecha dictada: entra al instante como dictada", [T2.f_vigente, T2.fecha_dictada], ["2026-10-30", true]);
-
-/* 3 el flujo completo */
-IA.resp = { contexto: "Tarea maestra de proyectos de la colonia Cumbres (Salvador presidente; Mario Castillo secretario; Adolfo Rodríguez tesorero; Enrique Martínez vocal). Se reúnen dos veces al año.", indefinida: true, ritmo: "una vez al mes", palabras: ["cumbres", "consejo"] };
-sellos.length = 0; var T3 = CONSEJO(); c.abierta = T3.id; c.completaRevision(T3, DICTADO);
-eq("dictado completo: queda lista para Autorizar, sin autorizarse sola (build 209)", [!!T3.autorizada, T3.en_revision, sellos, c.tipoRevisar(T3)], [false, true, [], "falta"]);
-si("lo dictado queda en el chat como tuyo (no como nota a Claude)", T3.msgs.some(function (m) { return m.k === "bo" && m.completa_info === 1 && !m.nota_claude; }));
-si("y la IA afinó el contexto", /Tarea maestra de proyectos/.test(T3.contexto));
-IA.resp = { contexto: "Revisar la barda del terreno" }; var T4 = { id: "tB", nombre: "Barda terreno", duenio: "salvador", creada_por: "claude", estado: "abierta", msgs: [] };
-c.completaRevision(T4, "es la barda del terreno baldío de la esquina que nos pidió el consejo revisar con Manuel Parra");
-eq("dictado parcial: dice qué anotó y 'Solo me falta: …'", T4.msgs.slice(-1)[0].t, "Anoté: contexto. Solo me falta: la fecha de finiquito (o si es indefinida), el próximo seguimiento.");
-IA.err = "sin red"; var T5 = CONSEJO(); sellos.length = 0; c.abierta = T5.id; c.completaRevision(T5, DICTADO); IA.err = null;
-eq("sin IA (sin red) igual se completa con lo sacado al instante", [T5.indefinida, T5.ritmo, !!T5.autorizada, T5.en_revision], [true, "Una vez al mes", false, true]);
-si("la IA ahora también trae 'ritmo'", /\\"ritmo\\":null/.test(saca("function", "completaRevision")) || /"ritmo":null/.test(IA.prompt));
-
-/* 4 la tarjeta en vivo */
-var T6 = { id: "tC", nombre: "Barda terreno", duenio: "salvador", creada_por: "claude", estado: "abierta", contexto: "Barda del terreno baldío de la esquina que nos pidió el consejo revisar con Manuel Parra y el ingeniero de obra", msgs: [] };
-var v6 = c.vFaltaInfo(T6);
-si("arriba: 'Solo me falta: …'", /<div class="solofalta"><b>Solo me falta:<\/b> la fecha de finiquito \(o si es indefinida\) · el próximo seguimiento<\/div>/.test(v6));
-si("el contexto ya completo se pone tenue y plegado", /class="fic ctx hecho"><span class="ok">✓ Contexto<\/span>/.test(v6));
-si("lo que ya está va tenue en un renglón; lo que falta, cada uno", /<li class="pend">○ Finiquito: ¿fecha o indefinida\?<\/li>/.test(v6) && /<li class="ok tenue">✓ Quién: tú<\/li>/.test(v6));
-si("VERSION_APP build 205+", /var VERSION_APP = "build 20[5-9]/.test(html));
+var ult = function (t) { return t.msgs.slice(-1)[0]; };
+c.tareas = [{ id: "JUNTA_CUMBRES_SEP", nombre: "Junta Consejo Cumbres septiembre", duenio: "salvador", estado: "abierta", contexto: "Junta del consejo de la colonia Cumbres", msgs: [] }];
+/* 1 Consejo Cumbres: completa, pero NO se autoriza sola */
+IA.resp = { nombre: "consejo de la colonia cumbres: proyectos", tipo: "tarea",
+  contexto: "Tarea maestra donde Salvador mete todos los proyectos de la colonia Cumbres. Consejo: Salvador presidente, Mario Castillo secretario, Adolfo Rodríguez tesorero, Enrique Martínez vocal.",
+  indefinida: true, ritmo: "una vez al mes", quien: "Salvador", palabras: ["cumbres", "consejo"], sinonimos: ["fraccionamiento"], vinculos: ["JUNTA_CUMBRES_SEP"] };
+sellos.length = 0; var T = CONSEJO(); c.tareas.push(T); c.abierta = T.id; c.completaRevision(T, DICTADO);
+eq("completa pero NO autorizada sola; sigue en Falta info", [!!T.autorizada, sellos, c.tipoRevisar(T)], [false, [], "falta"]);
+var v = c.vFaltaInfo(T);
+si("ficha completa: nombre", /<span class="ffl">Nombre<\/span><span class="ffv">Consejo de la Colonia Cumbres: Proyectos<\/span>/.test(v));
+si("ficha: Tarea", /<span class="ffl">Es<\/span><span class="ffv">Tarea<\/span>/.test(v));
+si("ficha: contexto", /<span class="ffl">Contexto<\/span><span class="ffv">Tarea maestra donde Salvador/.test(v));
+si("ficha: finiquito indefinida", /<span class="ffl">Finiquito<\/span><span class="ffv">Indefinida<\/span>/.test(v));
+si("ficha: ritmo", /<span class="ffl">Ritmo<\/span><span class="ffv">Una vez al mes<\/span>/.test(v));
+si("ficha: quién", /<span class="ffl">Quién<\/span><span class="ffv">Tú<\/span>/.test(v));
+si("ficha: etiquetas", /<span class="ffl">Etiquetas<\/span><span class="ffv">cumbres · consejo · fraccionamiento<\/span>/.test(v));
+si("ficha: vínculo propuesto (no vinculado)", /<span class="ffl">Vínculo propuesto<\/span><span class="ffv">Junta Consejo Cumbres septiembre \(no vinculado\)<\/span>/.test(v));
+si("cada campo se toca para corregirlo", (v.match(/data-fedit="/g) || []).length === 8);
+si("abajo, botón grande Autorizar HABILITADO", /<button class="autbtn" id="autrev">Autorizar<\/button>$/.test(v));
+si("sin 'Solo me falta'", !/Solo me falta/.test(v));
+eq("le dice que revise y autorice", ult(T).t, "Anoté: nombre “Consejo de la Colonia Cumbres: Proyectos”, contexto, indefinida, ritmo: una vez al mes, etiquetas. Posible vínculo con “Junta Consejo Cumbres septiembre”: te lo dejo propuesto, no lo vinculé. Revisa la ficha y pica Autorizar.");
+/* 2 corrección dictada: Claude la aplica, la ficha se refresca y el botón sigue */
+IA.resp = { ritmo: "cada semana" };
+c.completaRevision(T, "no, el ritmo es cada semana");
+eq("corrección aplicada, sigue sin autorizar", [T.ritmo, !!T.autorizada, c.tipoRevisar(T)], ["Cada semana", false, "falta"]);
+var v2 = c.vFaltaInfo(T);
+si("ficha refrescada con el botón otra vez abajo", /<span class="ffv">Cada semana<\/span>/.test(v2) && /<button class="autbtn" id="autrev">Autorizar<\/button>$/.test(v2));
+/* 3 Autorizar: palomita estándar y sale de Falta info */
+eq("Autorizar -> palomita estándar y sale de Falta info", [c.autorizaRevision(T), T.autorizada, sellos, T.en_revision, c.tipoRevisar(T) !== "falta"], [true, true, ["autorizada"], undefined, true]);
+/* 4 incompleta: Solo me falta + botón deshabilitado */
+IA.resp = { contexto: "Barda del terreno baldío de la esquina que pidió revisar el consejo de la colonia con Manuel y el arquitecto antes de las lluvias." };
+var T2 = { id: "tB", nombre: "Barda terreno", duenio: "salvador", creada_por: "claude", estado: "abierta", msgs: [] }; c.abierta = T2.id;
+c.completaRevision(T2, "es la barda del terreno baldío de la esquina que nos pidió el consejo revisar con Manuel y el arquitecto");
+var v4 = c.vFaltaInfo(T2);
+si("incompleta: 'Solo me falta' y botón DESHABILITADO", /Solo me falta:/.test(v4) && /<button class="autbtn" id="autrev" disabled>Autorizar<\/button>$/.test(v4) && !/class="ffin"/.test(v4));
+eq("incompleta: Autorizar no hace nada", [c.autorizaRevision(T2), !!T2.autorizada], [false, false]);
+/* 5 dato */
+IA.resp = { nombre: "cotización barandal terraza herrería lópez", tipo: "dato", contexto: "Cotización de Herrería López para el barandal de la terraza de acero negro, 6.5 metros lineales, para decidir después si se hace.",
+  de_quien: "Herrería López", cifras: "6.5 m lineales a $2,800 el metro; total $18,200 más IVA", palabras: ["barandal", "herrería"] };
+var D = { id: "WA_HERRERIA_1", nombre: "WhatsApp: Herrería López", creada_por: "claude", duenio: "salvador", estado: "abierta", msgs: [] }; c.abierta = D.id;
+c.completaRevision(D, "Esto es un dato: la cotización de Herrería López para el barandal de la terraza, acero negro, 6.5 metros lineales a 2,800 pesos el metro, total 18,200 más IVA");
+var vd = c.vFaltaInfo(D);
+si("dato: ficha con Es Dato, De y Cifras, y Autorizar habilitado", /<span class="ffv">Dato<\/span>/.test(vd) && /<span class="ffl">De<\/span><span class="ffv">Herrería López<\/span>/.test(vd) && /<span class="ffl">Cifras<\/span><span class="ffv">6.5 m lineales a \$2,800 el metro; total \$18,200 más IVA<\/span>/.test(vd) && /id="autrev">Autorizar<\/button>$/.test(vd) && !D.autorizada);
+si("botón y campos conectados en la pantalla", /var _ar=\$\("autrev"\); if\(_ar\) _ar\.onclick=function\(\)\{ if\(!autorizaRevision\(t\)\) render\(\); \};/.test(html) && /querySelectorAll\("\[data-fedit\]"\)/.test(html));
+si("VERSION_APP build 209", /var VERSION_APP = "build 209/.test(html));
 console.log((malas.length ? malas.map(function (x) { return "  X " + x; }).join("\n") + "\n" : "") + "RESULTADO " + ok + "/" + n);
 process.exit(malas.length ? 1 : 0);

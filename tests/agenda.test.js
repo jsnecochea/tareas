@@ -96,7 +96,7 @@ eq("Sí: alarma de Doit al instante con el mecanismo de siempre (avisos + sincro
 eq("Sí: gcal pendiente + evento completo para el trabajador", [B2.gcal, B2.agendado, B2.agendar, B2.evento.titulo, B2.evento.fecha, B2.evento.hora, B2.evento.lugar, B2.evento.notas, B2.evento.todo_dia, B2.evento.aviso_ts === B2.avisos[0].ts],
   ["pendiente", true, true, "Boda Ana y Luis", "2026-11-07", "19:30", "Jardín Los Álamos", "Etiqueta formal", false, true]);
 si("queda la nota en el hilo", /^Agendado: “Boda Ana y Luis” · sábado 7 de noviembre · a las 7:30 PM · Jardín Los Álamos\. La alarma de Doit ya quedó; el Calendario va en camino\.$/.test(B2.msgs.slice(-1)[0].t));
-eq("y con todo lo demás completo queda autorizada (sale de Falta info)", [B2.autorizada, B2.pendiente_info || ""], [true, ""]);
+eq("y con todo lo demás completo queda lista para Autorizar (build 209: ya no sola)", [!!B2.autorizada, B2.en_revision, B2.pendiente_info || ""], [false, true, ""]);
 eq("línea en la ficha: en camino", c.lineaAgenda(B2).replace(/<[^>]+>/g, ""), "Agendado ✓ · Calendario: en camino");
 B2.gcal_id = "abc123"; eq("cuando el trabajador escribe gcal_id: Calendario ✓", c.lineaAgenda(B2).replace(/<[^>]+>/g, ""), "Agendado ✓ · Calendario ✓");
 eq("sin agendar: no hay línea", c.lineaAgenda(BODA), "");
@@ -118,7 +118,7 @@ eq("el enlace de Calendar sigue sabiendo convertir la hora (por si se usa): 7-no
 
 /* 5 No */
 var B3 = JSON.parse(JSON.stringify(BODA)); abiertos.length = 0; c.noAgendar(B3);
-eq("No: agendar:false, sin calendario ni recordatorio, y sigue (se autoriza si ya estaba todo)", [B3.agendar, !!B3.agendado, abiertos.length, (B3.avisos || []).length, B3.autorizada], [false, false, 0, 0, true]);
+eq("No: agendar:false, sin calendario ni recordatorio, y sigue (lista para Autorizar si ya estaba todo)", [B3.agendar, !!B3.agendado, abiertos.length, (B3.avisos || []).length, !!B3.autorizada, B3.en_revision], [false, false, 0, 0, false, true]);
 eq("y el paso dice 'Sin agendar'", c.completitud(B3).items.slice(-1)[0].tx, "Sin agendar");
 
 /* 6 en el codigo */

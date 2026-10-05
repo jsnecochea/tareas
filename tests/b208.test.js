@@ -20,7 +20,7 @@ var ft = fs.readFileSync(path.join(__dirname, "fechas.test.js"), "utf8");
 var F_FUNCS = eval(ft.match(/var FUNCS = (\[[\s\S]*?\]);/)[1]), F_VARS = eval(ft.match(/var VARS = (\[[\s\S]*?\]);/)[1]);
 var FUNCS = F_FUNCS.concat(["esNotaClaude", "ordenClaraClaude", "sinPrefijoClaude", "ritmoDicho", "extraeLocal", "soloMeFalta", "completaRevision", "completitud", "contextoPct", "contextoDe", "tipoItem",
   "esDato", "creadaCon", "msCreacion", "_fechaDeId", "_diaCreacion", "fechaPuestaSola", "eventoDe", "revisaCompleta", "preguntasFalta", "fechasRaras", "conMayuscula", "vFaltaInfo", "palabrasClave",
-  "palabrasBusqueda", "_sinGrupo", "_bst", "_bw", "vAgenda", "eventoPendiente", "faltaVieja", "tipoRevisar", "porAutorizar", "creadaPorSistema", "faltaInfoRev", "esDecisionSal", "meDetiene", "diaMonterrey", "okDeRevision", "palomeaEnOrden", "abiertasParaVincular", "estadoParaClaude", "promptRevision", "aplicaRevisionClaude", "tituloTarea", "traeFecha", "transfiere", "posibleDup"])
+  "palabrasBusqueda", "_sinGrupo", "_bst", "_bw", "vAgenda", "eventoPendiente", "faltaVieja", "tipoRevisar", "porAutorizar", "creadaPorSistema", "faltaInfoRev", "esDecisionSal", "meDetiene", "diaMonterrey", "okDeRevision", "palomeaEnOrden", "autorizaRevision", "fichaRevision", "abiertasParaVincular", "estadoParaClaude", "promptRevision", "aplicaRevisionClaude", "tituloTarea", "traeFecha", "transfiere", "posibleDup"])
   .filter(function (x, i, a) { return a.indexOf(x) === i; });
 var VARS = F_VARS.concat(["PALOMEO_MS", "TITULO_CONECTORES", "RITMO_RE", "CITA_RE", "CTX_MIN_PAL", "SINONIMOS", "BUSCA_VACIAS", "REV_DESDE"]);
 var codigo = bloque("/* @@FECHAS-INICIO", "/* @@FECHAS-FIN */") + "\n" + VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" + FUNCS.map(function (f) { return saca("function", f); }).join("\n");
@@ -66,7 +66,7 @@ corre(); var v2 = c.vFaltaInfo(T);
 si("2º: seguimiento palomeado (el anterior ya tenue)", /<li class="ok palomea">✓ Próximo seguimiento listo<\/li>/.test(v2) && /<li class="ok palomea">✓ Finiquito/.test(v2) && !T.autorizada);
 eq("un paso más de 250 ms antes de cerrar", COLA.map(function (x) { return x.ms; }), [250]);
 corre();
-eq("al final: se autoriza con la palomita estándar", [T.autorizada, sellos, c.window.__palomeo[T.id]], [true, ["autorizada"], undefined]);
+eq("al final: queda lista para Autorizar (build 209: no sola)", [!!T.autorizada, sellos, c.window.__palomeo[T.id], T.msgs.slice(-1)[0].t], [false, [], undefined, "Anoté: contexto, indefinida, ritmo: una vez al mes. Revisa la ficha y pica Autorizar."]);
 /* parcial: se palomea lo que entró y al final "Solo me falta" */
 IA.resp = { contexto: "Revisar la barda del terreno baldío de la esquina que pidió el consejo de la colonia, con Manuel y el arquitecto, antes de que llueva." };
 var T2 = { id: "tB", nombre: "Barda terreno", duenio: "salvador", creada_por: "claude", estado: "abierta", msgs: [] }; c.abierta = T2.id; COLA.length = 0;
@@ -78,6 +78,6 @@ while (corre()) {}
 eq("al final: 'Anoté… Solo me falta…' y lo hecho tenue", T2.msgs.slice(-1)[0].t, "Anoté: contexto. Solo me falta: la fecha de finiquito (o si es indefinida), el próximo seguimiento.");
 si("ya sin animación: contexto tenue", /class="fic ctx hecho"><span class="ok">/.test(c.vFaltaInfo(T2)) && /Solo me falta/.test(c.vFaltaInfo(T2)));
 si("CSS: animación palomita (palPop) y respeta reducir movimiento", /@keyframes palPop/.test(html) && /prefers-reduced-motion:reduce\)\{\.chk li\.palomea/.test(html));
-si("VERSION_APP build 208", /var VERSION_APP = "build 208/.test(html));
+si("VERSION_APP build 208+", /var VERSION_APP = "build 20[89]/.test(html));
 console.log((malas.length ? malas.map(function (x) { return "  X " + x; }).join("\n") + "\n" : "") + "RESULTADO " + ok + "/" + n);
 process.exit(malas.length ? 1 : 0);

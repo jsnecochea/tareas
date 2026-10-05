@@ -705,6 +705,13 @@ button{font:inherit;color:inherit}
 .chk li.palomea{display:list-item;color:#30d158}
 @keyframes palPop{0%{transform:scale(.5);opacity:0}60%{transform:scale(1.12);opacity:1}100%{transform:scale(1);opacity:1}}
 @media (prefers-reduced-motion:reduce){.chk li.palomea,.fic.palomea .ok{animation-duration:.01s}}
+.ffin{margin:8px 14px 0;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}   /* build 209 */
+.ffr{display:flex;gap:12px;align-items:baseline;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:11px 14px;color:var(--ink);font:inherit}
+.ffr:last-child{border-bottom:0}
+.ffl{flex:0 0 96px;font-size:15px;color:var(--ink-2)}
+.ffv{flex:1;font-size:17px;line-height:1.35}.ffv.vac{color:var(--ink-3)}
+.autbtn{display:block;width:calc(100% - 28px);margin:14px 14px 6px;padding:17px;border:0;border-radius:14px;background:#30d158;color:#04120a;font-family:Archivo;font-size:20px;font-weight:700}
+.autbtn:disabled{background:var(--surface-2);color:var(--ink-3)}
 .solofalta{margin:6px 14px;font-size:15px;line-height:1.35;color:#ffd60a}.solofalta b{color:#ffd60a}
 .fic.hecho{opacity:.55;flex-direction:row;align-items:center;gap:8px;padding:8px 12px}.fic.hecho .ctxc{font-size:13px;color:var(--ink-3,#9a9aa2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .chk .tenue{opacity:.5;font-size:13px}
@@ -1205,7 +1212,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 208 · Falta info: al llegar lo de Claude, los checks se palomean uno por uno (250 ms) y luego Solo me falta o autoriza";
+var VERSION_APP = "build 209 · Falta info: ya no se autoriza sola; ficha completa para revisar y botón Autorizar";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -4106,6 +4113,25 @@ function vTipoToggle(t){
   return '<div class="typep"><button data-tipoi="tarea" class="'+(tp==="tarea"?"on":"")+'">Tarea</button><button data-tipoi="dato" class="'+(tp==="dato"?"on":"")+'">Dato</button></div>';
 }
 /* build 195: tarjetas de lo nuevo/incompleto: Contexto (rayita 75%) + lo que falta */
+/* build 209: la ficha como quedo, legible, cada campo se toca para corregirlo (dictado a Claude) */
+function fichaRevision(t){
+  var c=completitud(t), ctx=contextoDe(t), F=[];
+  var fin=t.indefinida===true?"Indefinida":(esRecurrente(t)?(t.periodicidad==="semanal"?"Recurrente · cada semana":"Recurrente · cada mes"):(t.f_vigente?fechaConDia(t.f_vigente):""));
+  F.push(["nombre","Nombre",t.nombre||""]);
+  F.push(["tipo","Es",c.tipo==="dato"?"Dato":"Tarea"]);
+  F.push(["contexto","Contexto",ctx]);
+  if(c.tipo==="dato"){
+    F.push(["de","De",t.de_quien||t.proyecto||""]);
+    var _cf=(t.datos_corregidos||[]).slice(-1).map(function(d){ return String((d&&d.t)||d||""); })[0]||""; F.push(["cifras","Cifras",_cf]);
+  } else {
+    F.push(["fecha",t.indefinida===true||esRecurrente(t)?"Finiquito":"Fecha",fin]);
+    F.push(["ritmo","Ritmo",t.ritmo||((t.avisos||[]).filter(function(a){ return a&&a.fecha; }).length?"Avisos puestos":"")]);
+    F.push(["quien","Quién",t.duenio&&PERSONAS[t.duenio]?(t.duenio===yo?"Tú":PERSONAS[t.duenio].nombre):""]);
+  }
+  var kw=(t.palabras||[]).slice(0,10); if(kw.length) F.push(["etiquetas","Etiquetas",kw.join(" · ")]);
+  var pd=t.dup_resuelto?[]:posibleDup(t); if(pd.length) F.push(["vinculo","Vínculo propuesto",pd.slice(0,3).map(function(d){ return d.nombre; }).join(" · ")+" (no vinculado)"]);
+  return '<div class="ffin">'+F.map(function(x){ return '<button class="ffr" data-fedit="'+x[0]+'"><span class="ffl">'+esc(x[1])+'</span><span class="ffv'+(x[2]?'':' vac')+'">'+esc(x[2]||"—")+'</span></button>'; }).join("")+'</div>';
+}
 function vFaltaInfo(t){
   var c=completitud(t), ctx=contextoDe(t), kw=palabrasClave(t);
   /* build 208: durante el palomeo, lo que aun no toca se ve pendiente y lo recien palomeado va en su renglon, animado */
@@ -4132,13 +4158,15 @@ function vFaltaInfo(t){
       _pe.map(function(x){ return '<li class="pend">○ '+esc(x.tx)+'</li>'; }).join("")+
       (_ok.length?'<li class="ok tenue">✓ '+esc(_ok.map(function(x){ return x.tx; }).join(" · "))+'</li>':'')+'</ul></div>';
     return h; }
-  if(!_pe.length){ h+='<div class="fic info hecho"><span style="color:var(--fi-blue)">✓ '+(c.tipo==="dato"?'Datos del dato':'Datos de la tarea')+'</span></div>'+vAgenda(t); return h; }
+  var _btn=function(ok){ return '<button class="autbtn" id="autrev"'+(ok?'':' disabled')+'>Autorizar</button>'; };   /* build 209 */
+  if(!_pe.length && c.ctxOk){ h+='<div class="fic info hecho"><span style="color:var(--fi-blue)">✓ '+(c.tipo==="dato"?'Datos del dato':'Datos de la tarea')+'</span></div>'+vAgenda(t)+fichaRevision(t)+_btn(c.completa); return h; }
+  if(!_pe.length){ h+='<div class="fic info hecho"><span style="color:var(--fi-blue)">✓ '+(c.tipo==="dato"?'Datos del dato':'Datos de la tarea')+'</span></div>'+vAgenda(t)+_btn(false); return h; }
   h+='<div class="fic info"><div class="meter"><div class="lb"><span style="color:var(--fi-blue)">'+(c.tipo==="dato"?'Datos del dato':'Datos de la tarea')+'</span><span class="pend">'+c.hechos+' de '+c.items.length+'</span></div>'+
     '<div class="bar b"><i style="width:'+c.datosPct+'%"></i></div></div><ul class="chk">'+
     _pe.map(function(x){ return '<li class="pend">○ '+esc(x.tx)+'</li>'; }).join("")+
     (_ok.length?'<li class="ok tenue">✓ '+esc(_ok.map(function(x){ return x.tx; }).join(" · "))+'</li>':'')+'</ul></div>';
   h+=vAgenda(t);   /* build 202 */
-  return h;
+  return h+'<button class="autbtn" id="autrev" disabled>Autorizar</button>';   /* build 209: deshabilitado hasta completar */
 }
 /* build 195: cuerpo de un DATO: Total + Desglose (lo mas nuevo arriba, lo anterior se queda como "anterior") */
 function vDatoCuerpo(t){
@@ -6335,6 +6363,7 @@ function tipoRevisar(t){
      Lo que ya tiene todo (contexto y datos) nunca sale aqui. */
   var _nuevo=!t.autorizada_asi && (porAutorizar(t) || (faltaInfoRev(t) && (t.creada_por===yo || t.duenio===yo)));
   if(_nuevo && !completitud(t).completa) return "falta";
+  if(t.en_revision && !t.autorizada && !t.autorizada_asi) return "falta";   /* build 209: completa, esperando "Autorizar" */
   if(faltaVieja(t)) return "falta";   /* build 201: tambien lo viejo abierto al que le falta algo */
   if(eventoPendiente(t) && (t.duenio===yo || t.creada_por===yo) && !t.autorizada_asi) return "falta";   /* build 202: ¿te lo agendo? */
   if(t.duenio===yo && !t.dup_resuelto && posibleDup(t).length) return "vincular";
@@ -6869,10 +6898,18 @@ function tipoDicho(v){
   return "";
 }
 /* si ya tiene todo: queda autorizada, sale la misma palomita de siempre y brinca a la siguiente */
+/* build 209 (Salvador 22:08): YA NO se autoriza sola. Completa -> se queda en "Falta info" con la ficha completa y el
+   boton "Autorizar"; solo al picarlo (autorizaRevision) sale la palomita y se va de "Falta info". */
 function revisaCompleta(t){
   if(t.autorizada || t.cierre) return false;
   var c=completitud(t); if(!c.completa) return false;
-  t.autorizada=true; t.autorizada_ts=Date.now(); t.pendiente_info=""; t.pendiente_tipo=""; t.falta_fecha=false;
+  if(!t.en_revision){ t.en_revision=true; t.pendiente_info=""; t.pendiente_tipo=""; t.falta_fecha=false; if(c.tipo==="dato") t.es_dato=true; guarda(t); }
+  return false;
+}
+function autorizaRevision(t){
+  if(!t || t.autorizada || t.cierre) return false;
+  var c=completitud(t); if(!c.completa) return false;
+  delete t.en_revision; t.autorizada=true; t.autorizada_ts=Date.now(); t.pendiente_info=""; t.pendiente_tipo=""; t.falta_fecha=false;
   if(c.tipo==="dato") t.es_dato=true;
   guarda(t);
   if(vista==="hilo" && abierta===t.id) selloYSigue(t,{tipo:"autorizada", texto:t.nombre, restaurar:null, sinDeshacer:true});
@@ -7038,6 +7075,7 @@ function palomeaEnOrden(t, antes, alFinal){
   setTimeout(paso, PALOMEO_MS);
 }
 function completaRevision(t, v){
+  t.en_revision=true;   /* build 209: ya la esta completando: no sale de "Falta info" hasta "Autorizar" */
   var _antes208=okDeRevision(t);   /* build 208: lo que ya estaba palomeado ANTES de dictar (el dictado mismo cuenta en contextoDe) */
   msg(t,"bo",v); var _m0=t.msgs[t.msgs.length-1]; _m0.de=yo; _m0.completa_info=1;
   t._leyendo=Date.now(); guarda(t); render();   /* la tarjeta dice "Claude está leyendo…" */
@@ -7046,9 +7084,11 @@ function completaRevision(t, v){
   var _cierre=function(hecho, dudas, vinc){
     var _pv=(vinc||[]).map(function(id){ var d=tareas.filter(function(x){ return x.id===id; })[0]; return d?"“"+d.nombre+"”":""; }).filter(Boolean);
     var _vx=_pv.length?" Posible vínculo con "+_pv.join(" o ")+": te lo dejo propuesto, no lo vinculé.":"";
-    if(!(dudas||[]).length && revisaCompleta(t)){ if(_vx){ msg(t,"bi",(hecho.length?"Anoté: "+hecho.join(", ")+".":"")+_vx); guarda(t); } return; }
-    var f=soloMeFalta(t), tx=[hecho.length?"Anoté: "+hecho.join(", ")+".":"", (dudas||[]).join(" "), f.length?"Solo me falta: "+f.join(", ")+".":""].filter(Boolean).join(" ")+_vx;
-    if(!tx){ if(revisaCompleta(t)) return; tx="No pesqué datos nuevos; dímelo otra vez."; }
+    revisaCompleta(t);
+    var f=soloMeFalta(t), _lista=!f.length && completitud(t).completa;
+    var tx=[hecho.length?"Anoté: "+hecho.join(", ")+".":"", (dudas||[]).join(" "), f.length?"Solo me falta: "+f.join(", ")+".":""].filter(Boolean).join(" ")+_vx;
+    if(!hecho.length && !(dudas||[]).length && !_vx) tx=_lista?"":"No pesqué datos nuevos; dímelo otra vez.";
+    if(_lista) tx=(tx?tx+" ":"")+"Revisa la ficha y pica Autorizar.";
     msg(t,"bi",tx.trim()); guarda(t); render(); };
   /* respaldo SIN red (o respuesta ilegible): la extraccion local del 205 */
   var _respaldo=function(){ var loc=extraeLocal(t, v); if(t.pendiente_info && !loc.length){ delete t._leyendo; completaPendiente(t.id, v); return; } _fin(loc, [], []); };
@@ -11828,6 +11868,11 @@ function bindHilo(){
 
   try{ bindDeslizar(t); }catch(e){ console.warn("deslizar",e); }
   var _cp=$("cnlpill"); if(_cp) _cp.onclick=function(){ if(modoClaude(t)){ window.__cnlClaude[t.id]=0; render(); return; } abreCanales(t); };
+  var _ar=$("autrev"); if(_ar) _ar.onclick=function(){ if(!autorizaRevision(t)) render(); };   /* build 209 */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-fedit]"),function(b){ b.onclick=function(){ var tx=$("txt"); if(!tx) return;   /* build 209: tocar un campo = corregirlo dictando */
+    var k=b.getAttribute("data-fedit"), et={nombre:"El nombre es",tipo:"Es",contexto:"El contexto es",fecha:"La fecha es",ritmo:"El ritmo es",quien:"La hace",etiquetas:"Las etiquetas son",vinculo:"El vínculo es con",de:"Es de",cifras:"Las cifras son"}[k]||"";
+    var val=(b.querySelector(".ffv")||{}).textContent||""; if(val==="—") val="";
+    tx.value=et+": "+val.replace(/ \(no vinculado\)$/,""); try{ tx.focus(); tx.setSelectionRange(et.length+2, tx.value.length); }catch(e){} }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-tipoi]"),function(b){ b.onclick=function(){ var k=b.getAttribute("data-tipoi"); t.tipo_item=k; t.es_dato=(k==="dato"); guarda(t); if(!revisaCompleta(t)) render(); }; });   /* build 195 */
   Array.prototype.forEach.call(document.querySelectorAll("[data-agenda]"),function(b){ b.onclick=function(){ if(b.getAttribute("data-agenda")==="si"){ var _hr=$("aghr"); agendaEvento(t, _hr&&_hr.value, !!(window.__agTodoDia&&window.__agTodoDia[t.id])); } else noAgendar(t); }; });   /* build 202/203 */
   Array.prototype.forEach.call(document.querySelectorAll("[data-agtododia]"),function(b){ b.onclick=function(){ window.__agTodoDia=window.__agTodoDia||{}; window.__agTodoDia[t.id]=window.__agTodoDia[t.id]?0:1; render(); }; });   /* build 203 */

@@ -20,7 +20,7 @@ var ft = fs.readFileSync(path.join(__dirname, "fechas.test.js"), "utf8");
 var F_FUNCS = eval(ft.match(/var FUNCS = (\[[\s\S]*?\]);/)[1]), F_VARS = eval(ft.match(/var VARS = (\[[\s\S]*?\]);/)[1]);
 var FUNCS = F_FUNCS.concat(["esNotaClaude", "ordenClaraClaude", "sinPrefijoClaude", "ritmoDicho", "extraeLocal", "soloMeFalta", "completaRevision", "completitud", "contextoPct", "contextoDe", "tipoItem",
   "esDato", "creadaCon", "msCreacion", "_fechaDeId", "_diaCreacion", "fechaPuestaSola", "eventoDe", "revisaCompleta", "preguntasFalta", "fechasRaras", "conMayuscula", "vFaltaInfo", "palabrasClave",
-  "palabrasBusqueda", "_sinGrupo", "_bst", "_bw", "vAgenda", "eventoPendiente", "faltaVieja", "tipoRevisar", "porAutorizar", "creadaPorSistema", "faltaInfoRev", "esDecisionSal", "meDetiene", "diaMonterrey", "okDeRevision", "palomeaEnOrden", "abiertasParaVincular", "estadoParaClaude", "promptRevision", "aplicaRevisionClaude", "tituloTarea", "traeFecha", "transfiere", "posibleDup"])
+  "palabrasBusqueda", "_sinGrupo", "_bst", "_bw", "vAgenda", "eventoPendiente", "faltaVieja", "tipoRevisar", "porAutorizar", "creadaPorSistema", "faltaInfoRev", "esDecisionSal", "meDetiene", "diaMonterrey", "okDeRevision", "palomeaEnOrden", "autorizaRevision", "fichaRevision", "abiertasParaVincular", "estadoParaClaude", "promptRevision", "aplicaRevisionClaude", "tituloTarea", "traeFecha", "transfiere", "posibleDup"])
   .filter(function (x, i, a) { return a.indexOf(x) === i; });
 var VARS = F_VARS.concat(["PALOMEO_MS", "TITULO_CONECTORES", "RITMO_RE", "CITA_RE", "CTX_MIN_PAL", "SINONIMOS", "BUSCA_VACIAS", "REV_DESDE"]);
 var codigo = bloque("/* @@FECHAS-INICIO", "/* @@FECHAS-FIN */") + "\n" + VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" + FUNCS.map(function (f) { return saca("function", f); }).join("\n");
@@ -77,9 +77,9 @@ si("contexto de Claude", /^Tarea maestra donde Salvador mete todos los proyectos
 eq("etiquetas + sinónimos", [T1.palabras, T1.sinonimos], [["cumbres", "consejo", "colonia", "fraccionamiento", "junta vecinal"], ["fraccionamiento", "junta vecinal"]]);
 eq("vínculo PROPUESTO (solo ids de la lista; el inventado no)", T1.posible_dup, ["JUNTA_CUMBRES_SEP"]);
 si("…y NO se aplicó (no se fusionó nada)", !T1.fusionada_en && !ABIERTAS[0].fusionada_en);
-eq("completa: palomita estándar (autorizada)", [T1.autorizada, sellos], [true, ["autorizada"]]);
+eq("completa: lista para Autorizar, no sola (build 209)", [!!T1.autorizada, T1.en_revision, sellos], [false, true, []]);
 si("dice que lo deja propuesto", /Posible vínculo con “Junta Consejo Cumbres septiembre”: te lo dejo propuesto, no lo vinculé\./.test(ult(T1).t));
-si("con la franja de vinculación después de autorizar", c.tipoRevisar(T1) === "vincular");
+si("sigue en Falta info hasta Autorizar; después, la franja de vinculación", c.tipoRevisar(T1) === "falta" && c.autorizaRevision(T1) && c.tipoRevisar(T1) === "vincular");
 c.tareas = ABIERTAS.slice();
 
 /* 3 un DATO */
@@ -90,7 +90,7 @@ IA.resp = { nombre: "cotización barandal terraza herrería lópez", tipo: "dato
 sellos.length = 0; var D = DATO(); c.tareas.push(D); c.abierta = D.id; c.completaRevision(D, DICT_DATO);
 eq("dato: tipo, nombre, de quién", [D.tipo_item, D.es_dato, D.nombre, D.de_quien], ["dato", true, "Cotización Barandal Terraza Herrería López", "Herrería López"]);
 eq("dato: cifras guardadas tal cual", D.datos_corregidos.slice(-1)[0].t, "6.5 m lineales a $2,800 el metro; total $18,200 más IVA");
-eq("dato completo -> autorizado", [D.autorizada, sellos], [true, ["autorizada"]]);
+eq("dato completo -> listo para Autorizar", [!!D.autorizada, D.en_revision, c.tipoRevisar(D)], [false, true, "falta"]);
 si("en un dato, el desglose dictado (lista) también va a Claude", /\(tipoItem\(t\)==="dato" \|\| \(!detectaLista\(v\) && listaNumerada\(v\)\.length<2\)\)/.test(html));
 c.tareas = ABIERTAS.slice();
 
@@ -117,7 +117,7 @@ si("pregunta solo lo dudoso, junto con lo anotado", /^Anoté: contexto, ritmo: u
 
 /* 6 sin red: respaldo local del 205 */
 IA.err = "sin red"; sellos.length = 0; var T6 = CONSEJO(); c.abierta = T6.id; c.completaRevision(T6, DICTADO); IA.err = null;
-eq("sin red: igual queda con lo local (indefinida + ritmo) y se autoriza", [T6.indefinida, T6.ritmo, T6.autorizada], [true, "Una vez al mes", true]);
+eq("sin red: igual queda con lo local (indefinida + ritmo), lista para Autorizar", [T6.indefinida, T6.ritmo, !!T6.autorizada, T6.en_revision], [true, "Una vez al mes", false, true]);
 IA.resp = null; var _pb = c.preguntaAClaude; c.preguntaAClaude = function (m, mod, cb) { cb("no es json", null); };
 var T7 = CONSEJO(); c.completaRevision(T7, DICTADO); c.preguntaAClaude = _pb;
 eq("respuesta ilegible: también respaldo local", [T7.indefinida, T7.ritmo], [true, "Una vez al mes"]);

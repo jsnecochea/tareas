@@ -20,7 +20,7 @@ var ft = fs.readFileSync(path.join(__dirname, "fechas.test.js"), "utf8");
 var F_FUNCS = eval(ft.match(/var FUNCS = (\[[\s\S]*?\]);/)[1]), F_VARS = eval(ft.match(/var VARS = (\[[\s\S]*?\]);/)[1]);
 var FUNCS = F_FUNCS.concat(["esNotaClaude", "ordenClaraClaude", "sinPrefijoClaude", "ritmoDicho", "extraeLocal", "soloMeFalta", "completaRevision", "completitud", "contextoPct", "contextoDe", "tipoItem",
   "esDato", "creadaCon", "msCreacion", "_fechaDeId", "_diaCreacion", "fechaPuestaSola", "eventoDe", "revisaCompleta", "preguntasFalta", "fechasRaras", "conMayuscula", "vFaltaInfo", "palabrasClave",
-  "palabrasBusqueda", "_sinGrupo", "_bst", "_bw", "vAgenda", "eventoPendiente", "faltaVieja", "tipoRevisar", "porAutorizar", "creadaPorSistema", "faltaInfoRev", "esDecisionSal", "meDetiene", "diaMonterrey", "aplicaCamposNota", "juntaNota", "ejecutaNotaClaude", "aplicaNotaClaude", "respuestaHecho", "traeFecha", "fechaConDia", "calendarioProximo", "fechaBonita"])
+  "palabrasBusqueda", "_sinGrupo", "_bst", "_bw", "vAgenda", "eventoPendiente", "faltaVieja", "tipoRevisar", "porAutorizar", "creadaPorSistema", "faltaInfoRev", "esDecisionSal", "meDetiene", "diaMonterrey", "aplicaCamposNota", "autorizaRevision", "juntaNota", "ejecutaNotaClaude", "aplicaNotaClaude", "respuestaHecho", "traeFecha", "fechaConDia", "calendarioProximo", "fechaBonita"])
   .filter(function (x, i, a) { return a.indexOf(x) === i; });
 var VARS = F_VARS.concat(["RITMO_RE", "CITA_RE", "CTX_MIN_PAL", "SINONIMOS", "BUSCA_VACIAS", "REV_DESDE"]);
 var codigo = bloque("/* @@FECHAS-INICIO", "/* @@FECHAS-FIN */") + "\n" + VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" + FUNCS.map(function (f) { return saca("function", f); }).join("\n");
@@ -108,7 +108,7 @@ si("respuesta junta las dos", /^Anoté: ritmo: una vez al mes\. Cambié el nombr
 /* 9 en Falta info: si con eso queda completa, se autoriza */
 IA.resp = { accion: "contexto", contexto: "Tarea maestra de proyectos de la colonia Cumbres con el consejo: presidente, secretario, tesorero y vocal; reuniones dos veces al año.", contexto_modo: "reemplazar", ritmo: "una vez al mes", indefinida: true, respuesta: "ok" };
 sellos.length = 0; var T10 = CONSEJO(); c.abierta = T10.id; nota(T10, DICTADO);
-eq("en Falta info y completa con la nota: palomita estándar", [T10.autorizada, sellos], [true, ["autorizada"]]);
+eq("en Falta info y completa con la nota: lista para Autorizar (build 209: no sola)", [!!T10.autorizada, T10.en_revision, sellos], [false, true, []]);
 si("VERSION_APP build 206+", /var VERSION_APP = "build 20[6-9]/.test(html));
 console.log((malas.length ? malas.map(function (x) { return "  X " + x; }).join("\n") + "\n" : "") + "RESULTADO " + ok + "/" + n);
 process.exit(malas.length ? 1 : 0);
