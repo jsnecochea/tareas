@@ -75,7 +75,7 @@ eq("y mientras no se decide NO queda completa", cb.completa, false);
 eq("en el renglón de inicio: 'falta agendar' cuando es lo único", c.faltaPrimero(c.completitud(T({ tipo_item: "dato", es_dato: true, de_quien: "Karina", datos_corregidos: [{ t: "Mesa 12" }], evento: BODA.evento }))).txt, "falta agendar");
 var SINF = T({ evento: { titulo: "Cena Mori", fecha: "", hora: "21:00", lugar: "", notas: "" } });
 eq("sin fecha: el paso pide el día primero", c.completitud(SINF).items.slice(-1)[0].tx, "¿Qué día es? (para agendarlo)");
-eq("evento que ya pasó: no se pregunta", [c.eventoPendiente(T({ evento: { titulo: "x", fecha: "2026-10-01", hora: "" } })), c.completitud(T({ evento: { titulo: "x", fecha: "2026-10-01" } })).items.slice(-1)[0].tx], [false, "El evento ya pasó"]);
+eq("evento que ya pasó: no se pregunta, ni en la tarjeta ni en el checklist (build 204)", [c.eventoPendiente(T({ evento: { titulo: "x", fecha: "2026-10-01", hora: "" } })), c.completitud(T({ evento: { titulo: "x", fecha: "2026-10-01" } })).items.some(function (x) { return x.k === "agenda"; })], [false, false]);
 eq("tarea hecha a mano con cita detectada sale en Falta info", c.tipoRevisar(DENT), "falta");
 eq("ya decidida (agendado o agendar:false): sale de Falta info por este motivo", [c.eventoPendiente(T({ evento: BODA.evento, agendado: true })), c.eventoPendiente(T({ evento: BODA.evento, agendar: false }))], [false, false]);
 
@@ -125,7 +125,7 @@ eq("y el paso dice 'Sin agendar'", c.completitud(B3).items.slice(-1)[0].tx, "Sin
 si("el paso va dentro de vFaltaInfo y los botones están cableados", /h\+=vAgenda\(t\);/.test(html) && /data-agenda\]"\),function\(b\)\{ b\.onclick=function\(\)\{ if\(b\.getAttribute\("data-agenda"\)==="si"\)\{ var _hr=\$\("aghr"\); agendaEvento\(t, _hr&&_hr\.value, !!\(window\.__agTodoDia&&window\.__agTodoDia\[t\.id\]\)\); \} else noAgendar\(t\);/.test(html) && /data-agtododia\]"\)/.test(html));
 si("build 203: agendar ya NO abre Calendar ni navega", !/w=window\.open\(url/.test(html) && !/location\.href=url/.test(html));
 si("build 203: la línea va debajo del encabezado de la ficha", /h\+=lineaAgenda\(t\);/.test(html));
-si("VERSION_APP build 203", /var VERSION_APP = "build 203/.test(html));
+si("VERSION_APP build 203 o posterior", /var VERSION_APP = "build 20[3-9]/.test(html));
 
 console.log((malas.length ? malas.map(function (x) { return "  X " + x; }).join("\n") + "\n" : "") + "RESULTADO " + ok + "/" + n);
 process.exit(malas.length ? 1 : 0);

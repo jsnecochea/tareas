@@ -857,7 +857,21 @@ button{font:inherit;color:inherit}
 .gal{padding:14px 15px 28px}
 .gal h2{font-family:Archivo;font-size:20.2px;margin:0 0 12px}
 .galgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
-.galgrid figure{margin:0}
+.galgrid figure{margin:0;position:relative}
+/* build 204: clip verde con archivos; seleccion multiple; de donde nacio */
+.iconbtn.clipon{color:#30d158}
+.galtip{color:var(--ink-3);font-size:14px;margin:-6px 0 10px}
+.galsel{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px;position:sticky;top:0;background:var(--bg,#1c1c1e);padding:6px 0;z-index:2}
+.galsel b{flex:1;font-size:17px}
+.gsx{width:36px;height:36px;border-radius:50%;border:0;background:var(--surface-2,#2a2a2d);color:var(--ink-3,#9a9aa2);font-size:16px}
+.gsb{display:inline-flex;align-items:center;gap:6px;border:1px solid #3a3a3e;background:var(--surface-2,#2a2a2d);color:var(--ink,#f2f2f4);border-radius:12px;padding:9px 12px;font-size:15px}
+.gsb:disabled{opacity:.4}
+.gchk{display:none;position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.35);color:transparent;font-size:14px;line-height:20px;text-align:center}
+.selmodo .gchk{display:block}.gfig.sel .gchk{background:#30d158;border-color:#30d158;color:#fff}
+.gfig.sel img,.gfig.sel .gdoc{outline:3px solid #30d158;outline-offset:-3px}
+.galgrid img,.gdoc{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.orgn{font-size:12.5px;color:#64d2ff;margin-top:2px}
+.orgn.ench{text-align:center;margin:4px 0 8px;opacity:.9}
 .galgrid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;cursor:pointer;
   border:1px solid var(--line);display:block}
 .galgrid figcaption{font-size:14.9px;color:var(--ink-3);margin-top:3px;line-height:1.3}
@@ -1183,7 +1197,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 203 · Agendar en un toque: alarma de Doit al instante y el Calendario lo crea el trabajador (gcal pendiente)";
+var VERSION_APP = "build 204 · Agendar solo lo de hoy en adelante, de dónde nació cada tarea, clip verde y archivos con selección";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -2797,25 +2811,74 @@ var db=null, yo=null, tareas=[], vista="lista", abierta=null, fichaOpen=false,
 /* ---- todos los adjuntos de una tarea, en orden ---- */
 function adjuntos(t){
   var out=[];
-  (t.evidencias||[]).forEach(function(e){ out.push({data:e.data,ts:e.ts,lat:e.lat,lon:e.lon,de:e.de||"evidencia"}) });
+  /* build 204: cada archivo sabe de donde viene (ref) para poder apartarlo o copiarlo; lo apartado no sale (nada se borra) */
+  (t.evidencias||[]).forEach(function(e,i){ if(e && !e.apartado) out.push({data:e.data,ts:e.ts,lat:e.lat,lon:e.lon,de:e.de||"evidencia",ref:"ev:"+i}) });
   var ft=t.fotos||{};
   Object.keys(ft).forEach(function(k){
-    var f=ft[k]; var p=(t.puntos&&t.puntos[k])?t.puntos[k].t:"punto "+k;
-    out.push({data:f.data,ts:f.ts,lat:f.lat,lon:f.lon,de:p});
+    var f=ft[k]; if(!f || f.apartado) return; var p=(t.puntos&&t.puntos[k])?t.puntos[k].t:"punto "+k;
+    out.push({data:f.data,ts:f.ts,lat:f.lat,lon:f.lon,de:p,ref:"fo:"+k});
   });
   /* build 186 (Salvador 2026-10-03 08:17): el clip junta TODO: tambien fotos y documentos que llegaron por WhatsApp */
-  (t.msgs||[]).forEach(function(x){
-    if(!x || !x.url) return;
+  (t.msgs||[]).forEach(function(x,mi){
+    if(!x || !x.url || x.apartado) return;
     var u=String(x.url), tp=String(x.tipo||"").toLowerCase();
     var esImg=/imagen|foto|sticker/.test(tp) || /\.(jpe?g|png|webp|gif|heic)(\?|$)/i.test(u);
     var esAud=/audio/.test(tp) || /\.(ogg|opus|mp3|m4a|wav)(\?|$)/i.test(u);
     var mm=String(x.t||"").match(/^([^:\n]{1,24}):/), quien=mm?mm[1]:(x.wa_c?String(x.wa_c):"WhatsApp");
     var nom=(u.split("/").pop()||"").split("?")[0];
-    out.push({url:u, data:esImg?u:"", ts:x.ts, de:quien, wa:1, img:esImg, aud:esAud, nombre:decodeURIComponent(nom)});
+    var _nm=nom; try{ _nm=decodeURIComponent(nom); }catch(e){}
+    out.push({url:u, data:esImg?u:"", ts:x.ts, de:quien, wa:1, img:esImg, aud:esAud, nombre:_nm, ref:"ms:"+mi});
   });
   out.forEach(function(f){ if(f.img===undefined) f.img=true; });
   out.sort(function(a,b){return (a.ts||0)-(b.ts||0)});
   return out;
+}
+/* build 204 (Salvador 21:08): seleccion multiple en "Archivos de esta tarea", como en WhatsApp */
+function fuenteAdj(t, ref){
+  var p=String(ref||"").split(":"), k=p[0], i=p.slice(1).join(":");
+  if(k==="ev") return (t.evidencias||[])[+i]||null;
+  if(k==="fo") return (t.fotos||{})[i]||null;
+  if(k==="ms") return (t.msgs||[])[+i]||null;
+  return null;
+}
+function apartaAdjuntos(t, refs){
+  var n=0; (refs||[]).forEach(function(r){ var f=fuenteAdj(t,r); if(f && !f.apartado){ f.apartado=true; f.apartado_ts=Date.now(); f.apartado_por=yo||""; n++; } });
+  if(n){ msg(t,"bi","Aparté "+n+" archivo"+(n===1?"":"s")+" de esta tarea (no se borra"+(n===1?"":"n")+": quedan guardados)."); guarda(t); }
+  return n;
+}
+function copiaAdjuntos(t, refs, d){
+  if(!t || !d || t.id===d.id) return 0;
+  var n=0, ahora=Date.now(); d.msgs=d.msgs||[];
+  (refs||[]).forEach(function(r){
+    var f=fuenteAdj(t,r); if(!f) return;
+    var k=String(r).split(":")[0];
+    if(k==="ms"){ var c={k:"bi", t:"Copiado de “"+t.nombre+"”: "+String(f.t||"archivo").slice(0,200), url:f.url, tipo:f.tipo||"", ts:ahora+n, h:hhmm(new Date(ahora)), copiado_de:t.id};
+      d.msgs.push(c); n++; return; }
+    d.evidencias=d.evidencias||[]; d.evidencias.push({data:f.data, ts:f.ts||ahora, lat:f.lat, lon:f.lon, de:"de “"+corta40(t.nombre)+"”", copiado_de:t.id}); n++;
+  });
+  if(n){ msg(d,"bi","Llegaron "+n+" archivo"+(n===1?"":"s")+" copiado"+(n===1?"":"s")+" de “"+t.nombre+"”."); guarda(d);
+    msg(t,"bi","Copié "+n+" archivo"+(n===1?"":"s")+" a “"+d.nombre+"”."); guarda(t); }
+  return n;
+}
+function abreCopiarA(t, refs){
+  cierraEnlazar();
+  var cand=enlazaCandidatas(t.id), nrm={}; cand.forEach(function(x){ nrm[x.id]=_nrm(x.nombre); });
+  var v=document.createElement("div"); v.className="hoja-velo"; v.id="enlv";
+  v.innerHTML='<div class="enlh"><div class="enlg">'+
+    '<div class="enlt"><b>Copiar a otra tarea</b>'+refs.length+' archivo'+(refs.length===1?'':'s')+' de “'+esc(corta40(t.nombre))+'”</div>'+
+    '<div class="enlb">'+ico("lupa",18,1.8)+'<input id="enlq" type="text" placeholder="Buscar tarea" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search"></div>'+
+    '<div class="enll" id="enll"></div></div><button class="enlc" id="enlno">Cancelar</button></div>';
+  document.body.appendChild(v);
+  v.onclick=function(e){ if(e.target===v) cierraEnlazar(); }; $("enlno").onclick=cierraEnlazar;
+  var lista=$("enll"), q=$("enlq");
+  function pinta(){ var ws=_nrm(q.value).trim().split(/\s+/).filter(Boolean);
+    var r=cand.filter(function(x){ return ws.every(function(w){ return nrm[x.id].indexOf(w)>=0; }); }).slice(0,60);
+    lista.innerHTML=r.length?r.map(function(x){ return '<button class="enlr" data-d="'+esc(x.id)+'"><span class="enln">'+esc(x.nombre)+'</span><span class="vinc">Copiar</span></button>'; }).join("")
+      :'<div class="enlv">'+(cand.length?'No encontré nada con eso.':'No hay otras tareas abiertas.')+'</div>'; }
+  lista.onclick=function(e){ var b=e.target; while(b&&b!==lista&&!(b.getAttribute&&b.getAttribute("data-d"))) b=b.parentNode; if(!b||b===lista) return;
+    var d=tareas.filter(function(x){ return x.id===b.getAttribute("data-d"); })[0]; if(!d) return;
+    var n=copiaAdjuntos(t, refs, d); cierraEnlazar(); window.__galSel=null; toast("Copié "+n+" a “"+corta40(d.nombre)+"”"); render(); };
+  q.oninput=pinta; pinta();
 }
 function adjImgs(t){ return adjuntos(t).filter(function(f){ return f.img; }); }
 function fechaCorta(ts){
@@ -4000,14 +4063,31 @@ function fraseCortaDeBusqueda(texto){
   if(typeof fechaDictada==="function" && fechaDictada(s).todas.length) return false;
   return true;
 }
+/* build 204 (Salvador 21:06, "Migración Scotia Online"): de donde nacio la tarea, con letra chica y otro color,
+   en "Creada con" del ▾ y antes del primer mensaje del chat. Sale de origen / creada_por / wa_contacto. */
+function origenDe(t){
+  if(!t) return null;
+  var m0=(t.msgs||[])[0]||{}, tx=[m0.t, m0.analisis, t.analisis, t.origen].filter(Boolean).join(" ");
+  var wc=t.wa_contactos&&t.wa_contactos[0], wac=String(t.wa_contacto || m0.wa_c || (wc&&(wc.nombre||wc)) || "").trim();
+  var og=String(t.origen||"").toLowerCase();
+  if(t.creada_por==="ia_revisor" || og==="wa_revisor") return {k:"ia", txt:"Revisor IA"+(wac?" · WhatsApp de "+wac:"")};
+  if(/correo|gmail|mail/.test(og) || /\(correo\b|\bcorreo de\b|\bcorreo\b[^.]{0,40}\basunto\b/i.test(tx)){
+    var rm=tx.match(/correo de\s+([^\s,;)]+)/i); return {k:"correo", txt:"Correo"+(rm?" · "+rm[1].slice(0,40):"")}; }
+  if(wac || /^wa_/.test(og) || /^wa_/.test(String(t.id||"")) || m0.wa_in===1) return {k:"wa", txt:"WhatsApp"+(wac?" de "+wac:"")};
+  if(t.creada_por==="claude" || /^claude/.test(og)) return {k:"claude", txt:"Claude (chat)"};
+  if(t.creada_por && PERSONAS[t.creada_por]) return {k:"doit", txt:"Doit (a mano"+(t.creada_por!==yo?" · "+PERSONAS[t.creada_por].nombre:"")+")"};
+  return null;
+}
+function lineaOrigen(t, cls){ var o=origenDe(t); return o?'<div class="'+(cls||"orgn")+'">Nació en: '+esc(o.txt)+'</div>':''; }
 /* build 195: el detalle del ▾ */
 function vDetalle(t, frows){
   var cc=creadaCon(t), cuando=cc.ts?fechaCorta(new Date(cc.ts))+" "+hhmm(new Date(cc.ts)):"";
   var h='<div class="dsec"><h4>Creada con</h4>'+(cc.foto?'<img class="dfoto" src="'+esc(cc.foto)+'" alt="foto con la que se creó">':'')+
     '<div class="dquote">“'+esc(cc.texto.length>600?cc.texto.slice(0,599)+"…":cc.texto)+'”</div>'+
-    '<small>'+esc([cc.quien,cuando].filter(Boolean).join(" · "))+'</small></div>';
+    '<small>'+esc([cc.quien,cuando].filter(Boolean).join(" · "))+'</small>'+lineaOrigen(t)+'</div>';
   var ctx=contextoDe(t), kw=palabrasClave(t);
-  h+='<div class="dctx"><h4>Contexto</h4>'+(ctx?'<p>'+esc(ctx)+'</p>':'<p class="vac">Todavía no tengo contexto. Díctalo abajo y lo sumo aquí.</p>')+
+  /* build 204 (Scotia): si la tarjeta de "Falta info" ya trae el cuadro de Contexto, aqui no se repite */
+  if(tipoRevisar(t)!=="falta") h+='<div class="dctx"><h4>Contexto</h4>'+(ctx?'<p>'+esc(ctx)+'</p>':'<p class="vac">Todavía no tengo contexto. Díctalo abajo y lo sumo aquí.</p>')+
      (kw.length?'<div class="kw">'+kw.map(function(w){ return '<span>'+esc(w)+'</span>'; }).join("")+'</div>':'')+'</div>';
   if(frows) h+='<div class="dsec"><dl>'+frows+'</dl></div>';
   return h;
@@ -4192,7 +4272,7 @@ function completitud(t){
   }
   /* build 202: invitacion, cita o evento -> ultimo paso "¿Te lo agendo?" (antes de quedar completa/autorizada) */
   var _ev=eventoDe(t);
-  if(_ev){ var _pas=!!(_ev.fecha && _ev.fecha<hoy());
+  if(_ev && !(_ev.fecha && _ev.fecha<hoy())){ var _pas=false;   /* build 204: lo que ya paso NO sale en el checklist */
     it.push({k:"agenda", ok:t.agendado===true || t.agendar===false || _pas,
       tx:t.agendado===true?(t.gcal_id?"Agendado · Calendario ✓":"Agendado · Calendario en camino"):(t.agendar===false?"Sin agendar":(_pas?"El evento ya pasó":(_ev.fecha?"¿Te lo agendo?":"¿Qué día es? (para agendarlo)")))}); }
   var hechos=it.filter(function(x){ return x.ok; }).length;
@@ -4229,7 +4309,17 @@ function eventoDe(t){
   var ex=(fd.dudas&&fd.dudas.length)?[]:(fd.lista||[]).filter(_esExacta);
   var hr=""; try{ hr=horaValor(tx)||""; }catch(e){}
   if(!ex.length && !hr) return null;                      /* sin fecha ni hora de cita: no se detecta nada */
-  return {titulo:String(t.nombre||"").trim(), fecha:ex.length?ex[0].f:"", hora:_h(hr), lugar:"", notas:"", todo_dia:false, origen:"detectado"};
+  /* build 204 (Salvador 21:04, "Fideicomiso: seguimiento con BBVA"): "el 28-sep" sin año se leia como el 28-sep del
+     año que entra (el de este año ya paso) y se ofrecia agendar algo que ya fue. Si el año NO se dijo, la fecha es la
+     mas cercana a cuando nacio el mensaje; si esa ya paso, no se pregunta. */
+  var _f=ex.length?ex[0].f:"";
+  if(_f && !new RegExp("\\b"+_f.slice(0,4)+"\\b").test(tx)){
+    var _bms=msCreacion(t)||cc.ts||0, _base=_bms?iso(new Date(_bms)):hoy(), _by=+_base.slice(0,4), _dmin=Infinity, _mej=_f;
+    [_by-1,_by,_by+1].forEach(function(y){ var c=y+_f.slice(4), dd=Math.abs(Date.parse(c+"T12:00:00Z")-Date.parse(_base+"T12:00:00Z"));
+      if(!isNaN(dd) && dd<_dmin){ _dmin=dd; _mej=c; } });
+    _f=_mej;
+  }
+  return {titulo:String(t.nombre||"").trim(), fecha:_f, hora:_h(hr), lugar:"", notas:"", todo_dia:false, origen:"detectado"};
 }
 function eventoPendiente(t){
   if(!t || t.cierre || t.fusionada_en || estadoReal(t)==="cerrada") return false;
@@ -6875,6 +6965,9 @@ function ico(n,px,gr){
          'L2.90 13.37L2.90 10.63L5.08 10.40L5.98 8.24L4.60 6.53L6.53 4.60'+
          'L8.24 5.98L10.40 5.08Z"/><circle cx="12" cy="12" r="3.15"/>',
     clip:'<path d="M19.4 11.6 11.9 19a4.7 4.7 0 0 1-6.6-6.6l7.9-7.9a3.2 3.2 0 0 1 4.5 4.5l-7.8 7.8a1.7 1.7 0 0 1-2.4-2.4l7.1-7.1"/>',
+    /* build 204: apartar (caja) y copiar */
+    caja:'<path d="M3.5 7.5h17v3h-17zM5 10.5v8a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-8M10 14h4"/>',
+    copia:'<rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2"/><path d="M15.5 8.5V5.5a1.5 1.5 0 0 0-1.5-1.5H5.5A1.5 1.5 0 0 0 4 5.5V14a1.5 1.5 0 0 0 1.5 1.5h3"/>',
     chev:'<path d="M5.8 8.9 12 15.1l6.2-6.2"/>',
     cal :'<rect x="3.2" y="4.6" width="17.6" height="16.2" rx="2.4"/>'+
          '<path d="M3.2 9.2h17.6M8 2.8v3.4M16 2.8v3.4"/>',
@@ -7326,8 +7419,8 @@ function vHilo(){
     subtituloHTML(t)+
     '</div></div>'+
     '<div class="grow"></div>'+
-    (adj.length?'<button class="iconbtn" id="bgal" aria-label="Archivos de esta tarea">'+ico("clip",20,1.6)+
-       (nuevos(t)?'<span class="cnt">'+nuevos(t)+'</span>':'')+'</button>':'')+
+    '<button class="iconbtn'+(adj.length?' clipon':'')+'" id="bgal" aria-label="Archivos de esta tarea">'+ico("clip",20,1.6)+   /* build 204: verde si hay archivos */
+       (nuevos(t)?'<span class="cnt">'+nuevos(t)+'</span>':'')+'</button>'+
     (!t.cierre && estadoReal(t)!=="cerrada"?'<button class="iconbtn" id="bmenu" aria-label="Qué hago con esta tarea">⋯</button>':'')+
     '</div>'+
     /* TODO LO QUE NO ES RESPUESTA DEL DÍA VIVE AQUÍ. Nadie lo usa a diario,
@@ -7348,12 +7441,18 @@ function vHilo(){
        El data-gi apunta al índice real en adj para que el visor abra el correcto. */
     var _ims=adj.filter(function(f){return f.img;});
     var orden=adj.map(function(f,i){return i}).reverse();
-    return h+'<div class="scroll"><div class="gal"><h2>Archivos de esta tarea · '+adj.length+'</h2><div class="galgrid">'+
-      orden.map(function(i){var f=adj[i];
-        if(f.img) return '<figure><img src="'+esc(f.data||f.url)+'" data-gi="'+_ims.indexOf(f)+'" alt="'+esc(f.de)+'">'+
+    /* build 204: presion larga = seleccionar; luego Apartar / Copiar a otra tarea */
+    var _gs=(window.__galSel && window.__galSel.tid===t.id)?window.__galSel:null, _ns=_gs?Object.keys(_gs.sel).length:0;
+    var _gh=_gs?'<div class="galsel"><button class="gsx" id="gsx" aria-label="Cancelar">✕</button><b>'+_ns+' seleccionado'+(_ns===1?'':'s')+'</b>'+
+        '<button class="gsb" id="gsapa"'+(_ns?'':' disabled')+'>'+ico("caja",18,1.7)+'Apartar</button>'+
+        '<button class="gsb" id="gscop"'+(_ns?'':' disabled')+'>'+ico("copia",18,1.7)+'Copiar a otra tarea</button></div>'
+      :'<h2>Archivos de esta tarea · '+adj.length+'</h2><p class="galtip">Deja presionado uno para seleccionar varios.</p>';
+    return h+'<div class="scroll"><div class="gal'+(_gs?' selmodo':'')+'">'+_gh+'<div class="galgrid">'+
+      orden.map(function(i){var f=adj[i], _on=_gs&&_gs.sel[f.ref]?' sel':'', _gk=' data-gk="'+esc(f.ref||"")+'"';
+        if(f.img) return '<figure class="gfig'+_on+'"'+_gk+'><img src="'+esc(f.data||f.url)+'" data-gi="'+_ims.indexOf(f)+'" alt="'+esc(f.de)+'"><span class="gchk">✓</span>'+
           '<figcaption>'+esc(f.de)+'<br>'+(f.ts?fechaCorta(new Date(f.ts)):'')+'</figcaption></figure>';
         var ext=(String(f.nombre||"").split(".").pop()||"").toUpperCase().slice(0,4)||"DOC";
-        return '<figure><a class="gdoc" href="'+esc(f.url)+'" target="_blank" rel="noopener"><span>'+esc(f.aud?"AUDIO":ext)+'</span><small>'+esc(String(f.nombre||"").slice(0,40))+'</small></a>'+
+        return '<figure class="gfig'+_on+'"'+_gk+'><a class="gdoc" href="'+esc(f.url)+'" target="_blank" rel="noopener"><span>'+esc(f.aud?"AUDIO":ext)+'</span><small>'+esc(String(f.nombre||"").slice(0,40))+'</small></a><span class="gchk">✓</span>'+
           '<figcaption>'+esc(f.de)+'<br>'+(f.ts?fechaCorta(new Date(f.ts)):'')+'</figcaption></figure>';
       }).join("")+
       '</div></div></div>';
@@ -7407,7 +7506,7 @@ function vHilo(){
     }
   }
 
-  var m="";
+  var m=lineaOrigen(t, "orgn ench");   /* build 204: de donde nacio, antes del primer mensaje */
   /* build 197: Importante | Todo. En Todo se ve todo desplegado; en Importante los avisos viejos de un tema no salen */
   if(window.__visitaDe!==t.id){ window.__visitaDe=t.id; window.__visitaIni=Date.now(); }
   var _todo=modoChat(t)==="todo", _rmp=_todo?{set:{}}:avisosReemplazados(t), _vistoNuevo=false, _ocultos=0, _visibles=0;
@@ -11340,11 +11439,30 @@ function bindHilo(){
   };
   var bg=$("bgal"); if(bg) bg.onclick=function(){
     if(vista!=="galeria") marcaVistos(t.id, adj.length);
-    vista=(vista==="galeria"?"hilo":"galeria"); render();
+    window.__galSel=null; vista=(vista==="galeria"?"hilo":"galeria"); render();
   };
   Array.prototype.forEach.call(document.querySelectorAll("[data-gi]"),function(el){
-    el.onclick=function(){abreVisor(adj.filter(function(f){return f.img;}),+el.getAttribute("data-gi"))};
+    el.onclick=function(ev){ if(window.__galSel && window.__galSel.tid===t.id) return;   /* build 204: en seleccion, el toque marca (abajo) */
+      abreVisor(adj.filter(function(f){return f.img;}),+el.getAttribute("data-gi"))};
   });
+  /* build 204: presion larga (0.5 s) activa la seleccion; ya activa, cada toque marca o desmarca */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-gk]"),function(fg){
+    var tmr=null, larga=false, ref=fg.getAttribute("data-gk");
+    var ini=function(){ larga=false; clearTimeout(tmr); tmr=setTimeout(function(){ larga=true; window.__galSel={tid:t.id, sel:{}}; window.__galSel.sel[ref]=1; try{ navigator.vibrate&&navigator.vibrate(15); }catch(e){} render(); }, 500); };
+    var fin=function(){ clearTimeout(tmr); };
+    fg.addEventListener("touchstart", ini, {passive:true}); fg.addEventListener("touchend", fin); fg.addEventListener("touchmove", fin, {passive:true});
+    fg.addEventListener("mousedown", ini); fg.addEventListener("mouseup", fin); fg.addEventListener("mouseleave", fin);
+    fg.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+    fg.addEventListener("click", function(e){
+      if(larga){ e.preventDefault(); e.stopPropagation(); larga=false; return; }
+      var gs=window.__galSel; if(!gs || gs.tid!==t.id) return;
+      e.preventDefault(); e.stopPropagation(); if(gs.sel[ref]) delete gs.sel[ref]; else gs.sel[ref]=1; render(); }, true);
+  });
+  var gsx=$("gsx"); if(gsx) gsx.onclick=function(){ window.__galSel=null; render(); };
+  var gsa=$("gsapa"); if(gsa) gsa.onclick=function(){ var refs=Object.keys((window.__galSel||{}).sel||{}); if(!refs.length) return;
+    hojaConfirma({titulo:"Apartar "+refs.length+" archivo"+(refs.length===1?"":"s"), sub:"Dejan de salir aquí. No se borra nada: quedan guardados.", accion:"Apartar",
+      cb:function(){ var n=apartaAdjuntos(t, refs); window.__galSel=null; toast("Aparté "+n); render(); }}); };
+  var gsc=$("gscop"); if(gsc) gsc.onclick=function(){ var refs=Object.keys((window.__galSel||{}).sel||{}); if(refs.length) abreCopiarA(t, refs); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-ai]"),function(el){
     el.onclick=function(){abreVisor(adj,+el.getAttribute("data-ai"))};
   });
