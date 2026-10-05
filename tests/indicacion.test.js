@@ -24,7 +24,7 @@ function saca(tipo, nombre) {
 }
 var FUNCS = ["_nn", "esDelEquipo", "_telDe", "_nomWA", "esMsgWA", "miembroDeNombre", "contactosWA", "_contactosWA",
   "_contactoDeNombre", "canalDe", "externosDe", "nombreWADe", "canalesDe", "canalActual", "msgEnCanal", "integrantesDe",
-  "responsableExt", "phCanal", "vPastilla", "modoClaude", "puedeSerIndicacion", "convierteEnIndicacion", "notasPlegadas",
+  "responsableExt", "phCanal", "vPastilla", "nombreCorto", "modoClaude", "puedeSerIndicacion", "convierteEnIndicacion", "notasPlegadas",
   "notaClaude", "preguntaExterno", "nombreInt", "iniInt"];
 var VARS = ["CNL_COL", "CNL_EXT", "CLAUDE_COL", "_cwMemo", "SVG_DESTELLO", "SVG_CHAT"];
 var codigo = VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" +

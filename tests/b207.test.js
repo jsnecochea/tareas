@@ -18,7 +18,7 @@ function saca(tipo, nombre) {
 function bloque(a, b) { var i = html.indexOf(a), j = html.indexOf(b); return html.slice(i, j + b.length); }
 var ft = fs.readFileSync(path.join(__dirname, "fechas.test.js"), "utf8");
 var F_FUNCS = eval(ft.match(/var FUNCS = (\[[\s\S]*?\]);/)[1]), F_VARS = eval(ft.match(/var VARS = (\[[\s\S]*?\]);/)[1]);
-var FUNCS = F_FUNCS.concat(["checklistTexto", "aplicaChecklistClaude", "tieneChecklist", "chkNuevo", "chkPon", "_nv", "checklistDicho", "respChecklist", "_chkTok", "chkBusca", "hhmmAhora", "esConfirmacion", "juntaY", "tienePasos", "esNotaClaude", "ordenClaraClaude", "sinPrefijoClaude", "ritmoDicho", "extraeLocal", "soloMeFalta", "completaRevision", "completitud", "contextoPct", "contextoDe", "tipoItem",
+var FUNCS = F_FUNCS.concat(["checklistTexto", "aplicaChecklistClaude", "aplicaResponsable", "aplicaSeguimientoA", "_dichoNombre", "nombreCorto", "tieneChecklist", "chkNuevo", "chkPon", "_nv", "checklistDicho", "respChecklist", "_chkTok", "chkBusca", "hhmmAhora", "esConfirmacion", "juntaY", "tienePasos", "esNotaClaude", "ordenClaraClaude", "sinPrefijoClaude", "ritmoDicho", "extraeLocal", "soloMeFalta", "completaRevision", "completitud", "contextoPct", "contextoDe", "tipoItem",
   "esDato", "creadaCon", "msCreacion", "_fechaDeId", "_diaCreacion", "fechaPuestaSola", "eventoDe", "revisaCompleta", "preguntasFalta", "fechasRaras", "conMayuscula", "vFaltaInfo", "palabrasClave",
   "palabrasBusqueda", "_sinGrupo", "_bst", "_bw", "vAgenda", "eventoPendiente", "faltaVieja", "tipoRevisar", "porAutorizar", "creadaPorSistema", "faltaInfoRev", "esDecisionSal", "meDetiene", "diaMonterrey", "okDeRevision", "palomeaEnOrden", "autorizaRevision", "fichaRevision", "abiertasParaVincular", "estadoParaClaude", "promptRevision", "aplicaRevisionClaude", "tituloTarea", "traeFecha", "transfiere", "posibleDup"])
   .filter(function (x, i, a) { return a.indexOf(x) === i; });
@@ -61,7 +61,7 @@ var T0 = CONSEJO(); c.tareas.push(T0); c.completaRevision(T0, DICTADO); c.pregun
 eq("Claude PRIMERO: al llamarlo todavía no se aplicó nada local", [visto.indef, visto.ritmo, visto.ctx], [undefined, undefined, undefined]);
 si("la petición lleva el estado actual de la tarea", /ESTADO ACTUAL DE LA TAREA:\nNOMBRE: Agendar Reunión Consejo Colonia Cumbres\nTIPO: tarea\nQUIÉN LA HACE: Salvador\nFECHA: 2026-09-27/.test(visto.prompt));
 si("…y la lista corta de tareas abiertas (la parecida primero; sin las cerradas ni ella misma)", /TAREAS ABIERTAS \(id \| nombre\):\nJUNTA_CUMBRES_SEP \| Junta Consejo Cumbres septiembre\nPREDIAL_X/.test(visto.prompt) && !/CERRADA_Y/.test(visto.prompt) && !/CONSEJO_CUMBRES_REUNION_20260927 \|/.test(visto.prompt));
-si("una sola llamada que pide TODOS los campos", /"nombre":null,"tipo":null,"contexto":null,"contexto_modo":"reemplazar","fecha":null,"indefinida":false,"periodicidad":null,"ritmo":null,"recordar":\[\],"quien":null,"palabras":\[\],"sinonimos":\[\],"vinculos":\[\],"de_quien":null,"cifras":null,"ya_hecha":false,"pregunta":null/.test(visto.prompt));
+si("una sola llamada que pide TODOS los campos", /"nombre":null,"tipo":null,"contexto":null,"contexto_modo":"reemplazar","fecha":null,"indefinida":false,"periodicidad":null,"ritmo":null,"recordar":\[\],"quien":null,("responsable":null,"yo_superviso":false,"seguimiento_a":null,)?"palabras":\[\],"sinonimos":\[\],"vinculos":\[\],"de_quien":null,"cifras":null,"ya_hecha":false,"pregunta":null/.test(visto.prompt));
 c.tareas = ABIERTAS.slice();
 
 /* 2 CONSEJO CUMBRES, dictado real, con lo que regresaría Claude */

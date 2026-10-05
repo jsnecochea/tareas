@@ -623,6 +623,9 @@ button{font:inherit;color:inherit}
 .swico{position:absolute;left:-36px;top:50%;width:28px;height:28px;margin-top:-14px;border-radius:50%;background:var(--ok,#30d158);color:#000;display:grid;place-items:center;font-weight:800;opacity:0}
 .b.flash{box-shadow:0 0 0 2px var(--ok,#30d158);transition:box-shadow .3s}
 .cnlwrap{display:flex;justify-content:center;align-items:center;gap:8px;padding:8px 0 0}
+/* build 219 (Salvador 10:15): la franja de canales va en UN renglon; si no cabe, se desliza de lado (centrada si cabe) */
+.cnlwrap{flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;padding:8px 14px 0;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.cnlwrap::-webkit-scrollbar{display:none}.cnlwrap>*{flex:none;white-space:nowrap}.cnlwrap>:first-child{margin-left:auto}.cnlwrap>:last-child{margin-right:auto}
 .intbtn{display:flex;align-items:center;padding:3px 8px 3px 4px;border:0;border-radius:18px;background:var(--surface-2,#2c2c2e);color:var(--ink-2)}
 .intbtn .av{width:24px;height:24px;margin-left:-6px;border:2px solid var(--bg,#1c1c1e);font-size:9.5px}.intbtn .av:first-child{margin-left:0}
 .intbtn small{margin-left:5px;font-size:13px}
@@ -638,6 +641,10 @@ button{font:inherit;color:inherit}
 .itdel{border:0;background:none;color:#FF453A;padding:6px}
 .itadd,.itcrear{display:block;width:100%;margin-top:12px;border:0;border-radius:14px;padding:12px;font-weight:700;font-size:16px;background:#3a3a3c;color:var(--ink)}
 .itcrear{background:#30d158;color:#000}.itcrear:disabled{opacity:.35}
+/* build 219: buscador (lupa) al agregar integrantes */
+.itbus{display:flex;align-items:center;gap:8px;margin:2px 0 8px;padding:0 10px;border-radius:12px;background:#1c1c1e;color:var(--ink-3)}
+.itbus input{flex:1;min-width:0;padding:11px 0;border:0;background:none;outline:none;font:inherit;font-size:16px;color:var(--ink)}
+.itvacio{color:var(--ink-3);font-size:14px;text-align:center;padding:14px 6px}
 .itnota{color:var(--ink-3);font-size:13px;text-align:center;margin-top:10px}
 .ptcard,.supcard{display:flex;flex-direction:column;gap:5px;margin:8px 12px 4px;padding:12px 13px;border-radius:16px;background:var(--surface-2,#2c2c2e);border-left:4px solid #0a84ff}
 .supcard{border-left-color:#ffd60a}
@@ -1253,7 +1260,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 218 · \"A todo el equipo\" (antes Solo al equipo) en la hoja ¿Para quién es?";
+var VERSION_APP = "build 219 · Buscador al agregar integrantes; nombres cortos en la franja; responsable y seguimiento dictados";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -4411,8 +4418,8 @@ function completitud(t){
   } else {
     var q=t.duenio && PERSONAS[t.duenio];
     var fin=t.indefinida===true || esRecurrente(t) || !!(t.f_vigente && !t.falta_fecha && !fechaPuestaSola(t));   /* build 201: la fecha que puso el sistema no cuenta */
-    var seg=(t.avisos||[]).some(function(a){ return a && a.fecha; }) || !!String(t.ritmo||"").trim() || esRecurrente(t) || (t.indefinida===true && !!t.f_vigente);
-    it.push({k:"quien", ok:!!q, tx:q?"Quién: "+(t.duenio===yo?"tú":PERSONAS[t.duenio].nombre):"Quién lo hace"});
+    var seg=(t.avisos||[]).some(function(a){ return a && a.fecha; }) || !!(t.seg_a && (t.seg_a.programados||[]).length) || !!String(t.ritmo||"").trim() || esRecurrente(t) || (t.indefinida===true && !!t.f_vigente);
+    it.push({k:"quien", ok:!!q, tx:q?"Quién: "+(t.revisa_ext&&t.duenio===yo?nombreCorto(t.revisa_ext)+" · tú supervisas":(t.duenio===yo?"tú":PERSONAS[t.duenio].nombre)):"Quién lo hace"});   /* build 219 */
     it.push({k:"finiquito", ok:fin, tx:fin?(t.indefinida===true||esRecurrente(t)?"Finiquito: indefinida":"Finiquito: "+fechaMovCorta(t.f_vigente)):"Finiquito: ¿fecha o indefinida?"});
     it.push({k:"seguimiento", ok:seg, tx:seg?"Próximo seguimiento listo":"Próximo seguimiento"});
   }
@@ -6821,6 +6828,22 @@ function msgEnCanal(x, cid, t){
   return c===cid;
 }
 function colorExt(t, nombre){ var l=canalesDe(t).filter(function(x){ return x.id==="ext:"+nombre; })[0]; return l?l.col:"#0a84ff"; }
+/* build 219 (Salvador 10:15): en la franja de canales SOLO primer nombre y primer apellido: sin apodos entre comillas,
+   sin parentesis, sin emojis ni siglas sueltas ("Eduardo Madero "Lalo" (padel Verde) LNN" -> "Eduardo Madero").
+   Las particulas se conservan ("Juan de la Garza"). El nombre completo sigue en el menu desplegable. */
+function nombreCorto(n){
+  var o0=String(n==null?"":n).trim();
+  var s=o0.replace(/["“”«»][^"“”«»]*["“”«»]/g," ").replace(/(^|\s)['‘’][^'‘’]*['‘’](?=\s|$)/g," ").replace(/\([^)]*\)|\[[^\]]*\]|\{[^}]*\}/g," ");
+  try{ s=s.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}\u{20E3}]/gu," "); }catch(e){}
+  var w=s.split(/\s+/).map(function(x){ return x.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ'.-]/g,"").replace(/^[.'-]+|[.'-]+$/g,""); })
+    .filter(function(x){ return x && /[A-Za-zÀ-ÖØ-öø-ÿ]/.test(x); });
+  while(w.length>1 && /^(dr|dra|ing|lic|arq|sr|sra|srita|don|do[nñ]a|mtro|mtra|c\.?p)\.?$/i.test(w[0])) w.shift();   /* titulos: "Dr. Arturo Ramírez" -> "Arturo Ramírez" */
+  if(!w.length) return o0;
+  var part=/^(de|del|la|las|los|y|da|das|do|dos|van|von|di|le)$/i, o=[w[0]], i=1;
+  while(i<w.length && part.test(w[i]) && o.length<4){ o.push(w[i]); i++; }
+  if(i<w.length && !(w[i].length<=4 && w[i]===w[i].toUpperCase() && w[i].length>1 && o.length===1 && i===w.length-1)) o.push(w[i]);
+  return o.join(" ");
+}
 function vPastilla(t){
   var c=canalActual(t), ints=integrantesDe(t);
   var conPill=!(canalesDe(t).length<=2 && c.id==="todo");
@@ -6828,7 +6851,7 @@ function vPastilla(t){
   /* build 193: canal fijo naranja "Claude" junto a la pastilla: lo que dictes es indicacion para Claude */
   var cl=modoClaude(t);
   var clB='<button class="cnlpill cnlcl'+(cl?' on':'')+'" id="cnlclaude" style="--cc:'+CLAUDE_COL+'"><i></i>Claude</button>';
-  return '<div class="cnlwrap">'+(conPill?'<button class="cnlpill'+(cl?' off':'')+'" id="cnlpill" style="--cc:'+c.col+'"><i></i>'+esc(c.nom+(c.wa?" · WhatsApp":""))+' ▾</button>':'')+clB+intB+'</div>';
+  return '<div class="cnlwrap">'+(conPill?'<button class="cnlpill'+(cl?' off':'')+'" id="cnlpill" style="--cc:'+c.col+'"><i></i>'+esc(nombreCorto(c.nom)+(c.wa?" · WhatsApp":""))+' ▾</button>':'')+clB+intB+'</div>';
 }
 /* build 186 (Salvador 2026-10-03 08:17): en "Todo" sin nombrar a nadie, el mensaje es para el
    RESPONSABLE: si la tarea es mia y la esta haciendo un externo, ese externo (el ultimo que escribio
@@ -7226,6 +7249,7 @@ function estadoParaClaude(t){
   return ["NOMBRE: "+(t.nombre||"(sin nombre)"), "TIPO: "+tipoItem(t), "QUIÉN LA HACE: "+q,
     "FECHA: "+(t.f_vigente?(t.f_vigente+(t.fecha_dictada?" (dictada)":(fechaPuestaSola(t)?" (la puso el sistema, no cuenta)":""))):"(sin fecha)"),
     "INDEFINIDA: "+(t.indefinida===true?"sí":"no"), "RECURRENTE: "+(t.periodicidad||"no"), "RITMO: "+(t.ritmo||"(ninguno)"), "AVISOS: "+(av.join(", ")||"(ninguno)"),
+    "RESPONSABLE DE FUERA: "+(t.revisa_ext||"(nadie)")+(t.revisa_ext?" (tú la supervisas)":""), "SEGUIMIENTO A: "+(t.seg_a?(t.seg_a.contacto+(t.seg_a.cada?" · "+t.seg_a.cada:"")+(t.seg_a.hora?" "+t.seg_a.hora:"")):"(nadie)"),
     "CONTEXTO: "+(contextoDe(t)||"(nada)"), "ETIQUETAS: "+((t.palabras||[]).join(", ")||"(ninguna)"), "DE QUIÉN/PROYECTO: "+(t.de_quien||"(nada)"), "CIFRAS: "+(cif||"(ninguna)")].join("\n");
 }
 function promptRevision(t, v, abiertas){
@@ -7238,15 +7262,71 @@ function promptRevision(t, v, abiertas){
     "- fecha: fecha de finiquito SOLO si la dictó. indefinida=true solo si dijo que no tiene fin. periodicidad 'semanal'/'mensual' solo si dijo que se repite.\n"+
     "- ritmo: cada cuánto quiere que le recuerde o revise (ej. 'una vez al mes'), solo si lo dijo. recordar: avisos que pidió [{fecha, hora HH:MM}].\n"+
     "- quien: quién la hace, SOLO si lo dijo, con el nombre tal cual de esta lista: "+gente+".\n"+
+    "- responsable: si dijo que la tarea es de alguien, que alguien es el responsable o el ejecutor, o que él solo la supervisa: el nombre de esa persona TAL CUAL lo dijo (puede ser alguien de fuera de la lista, como un proveedor); si no, null. yo_superviso=true SOLO si dijo que él supervisa o revisa.\n"+
+    "- seguimiento_a: SOLO si te pidió que TÚ le des seguimiento a alguien (\"dale seguimiento a X\", \"pregúntale a X cada…\"): {\"quien\":\"nombre tal cual\",\"meta\":\"qué tiene que quedar, con sus palabras\",\"cada\":\"la frecuencia TAL CUAL la dijo, o null\",\"fechas\":[AAAA-MM-DD copiadas del calendario, SOLO los días que salen de esa frecuencia, máx 10, hasta 3 semanas],\"hora\":\"HH:MM solo si la dijo, o null\",\"texto\":\"el WhatsApp corto y amable que le mandarías, empezando con 'IA: '\"}; si no, null.\n"+
     "- palabras: hasta 5 etiquetas para encontrarla; sinonimos: hasta 5 sinónimos o formas en que la podría buscar.\n"+
     "- vinculos: ids (de TAREAS ABIERTAS) que traten de LO MISMO, máx 3; solo se proponen. Si ninguna, [].\n"+
     "- de_quien y cifras: para datos (de quién o qué proyecto; montos o medidas tal cual). ya_hecha=true solo si dice que ya se hizo.\n"+
     "- pregunta: SOLO lo que de verdad quedó ambiguo, en una pregunta corta; lo demás llénalo igual. Si todo quedó claro, null.\n"+
     "- checklist: si pide una lista o checklist: {\"titulo\":\"…\",\"items\":[{\"tx\":\"renglón tal cual\",\"estado\":0}]} (0 pendiente, 1 invitado/hecho, 2 confirmado, solo si se dijo); si no, null. CHECKLIST ACTUAL: "+checklistTexto(t)+".\n"+
-    "Contesta SOLO JSON: {\"checklist\":null,\"nombre\":null,\"tipo\":null,\"contexto\":null,\"contexto_modo\":\"reemplazar\",\"fecha\":null,\"indefinida\":false,\"periodicidad\":null,\"ritmo\":null,\"recordar\":[],\"quien\":null,\"palabras\":[],\"sinonimos\":[],\"vinculos\":[],\"de_quien\":null,\"cifras\":null,\"ya_hecha\":false,\"pregunta\":null}\n\n"+
+    "Contesta SOLO JSON: {\"checklist\":null,\"nombre\":null,\"tipo\":null,\"contexto\":null,\"contexto_modo\":\"reemplazar\",\"fecha\":null,\"indefinida\":false,\"periodicidad\":null,\"ritmo\":null,\"recordar\":[],\"quien\":null,\"responsable\":null,\"yo_superviso\":false,\"seguimiento_a\":null,\"palabras\":[],\"sinonimos\":[],\"vinculos\":[],\"de_quien\":null,\"cifras\":null,\"ya_hecha\":false,\"pregunta\":null}\n\n"+
     "ESTADO ACTUAL DE LA TAREA:\n"+estadoParaClaude(t)+"\n\nLO QUE FALTA: "+(soloMeFalta(t).join(" | ")||"(nada)")+"\nPREGUNTAS QUE LE HICE: "+(preguntasFalta(t).join(" | ")||"(ninguna)")+
     "\n\nTAREAS ABIERTAS (id | nombre):\n"+(abiertas.map(function(x){ return x.id+" | "+(x.nombre||""); }).join("\n")||"(ninguna)")+
     "\n\nLO QUE DICTÓ: "+v;
+}
+/* ===== build 219 (Salvador 10:15, "Mantenimiento Casa Lerdo/Eloísa"): "esta tarea es de X / X es el responsable /
+   yo solo superviso" y "dale seguimiento a X cada N / a tales horas". Candados: el nombre tiene que estar en lo dictado;
+   frecuencia y hora solo si las dijo; las fechas solo del calendario. Si X es de Doit: la tarea pasa a X y quien dicta
+   queda de revisor. Si X es de fuera: la tarea sigue siendo de quien supervisa (es quien da seguimiento) y X queda como
+   responsable externo (revisa_ext, "Lo hace X"). El seguimiento sale SIEMPRE por Doit: WhatsApps programados en la cola
+   ([A LAS …]), nunca dependiendo de un chat. ===== */
+function _dichoNombre(v, nom){ var s=_fsa(v), w=_nn(nom).replace(/[^a-z0-9ñ ]+/g," ").split(/\s+/).filter(function(x){ return x.length>=3; }); return !!w.length && s.indexOf(" "+w[0])>=0; }
+function aplicaResponsable(t, v, j){
+  var nom=String((j&&j.responsable)||"").replace(/\s+/g," ").trim(); if(!nom || !_dichoNombre(v, nom)) return "";
+  var s=_fsa(v), pn=_nn(nom).split(/\s+/)[0];
+  var sup=j.yo_superviso===true && /\b(supervis\w*|superviso|reviso|la reviso|lo reviso|revisor)\b/.test(s);
+  var k=Object.keys(PERSONAS).filter(function(x){ return _nn(PERSONAS[x].nombre).split(/\s+/)[0]===pn; })[0];
+  if(k===yo) return "";
+  if(typeof t.encargado==="string" && !PERSONAS[t.encargado]) t.encargado=null;   /* encargado mal guardado (texto suelto) */
+  if(t.duenio && !PERSONAS[t.duenio]) t.duenio=yo;                                   /* dueño que no es de Doit: lo lleva quien supervisa */
+  if(k){
+    if(k!==t.duenio){ if(!t.duenio) t.duenio=k; else transfiere(t, k, "lo dijo "+((PERSONAS[yo]||{}).nombre||"")+": es el responsable"); }
+    if(sup){ t.revisores=t.revisores||[]; if(t.revisores.indexOf(yo)<0) t.revisores.push(yo); }
+    return "responsable: "+PERSONAS[k].nombre+(sup?" · tú supervisas":"");
+  }
+  var canon=contactoDeTarea(t, nom);
+  if(!t.duenio) t.duenio=yo;
+  if(_nn(t.revisa_ext||"")===_nn(canon)) return "";
+  t.revisa_ext=canon;
+  return "responsable: "+nombreCorto(canon)+(t.duenio===yo?" · tú supervisas":"");
+}
+function aplicaSeguimientoA(t, v, j){
+  var sa=j&&j.seguimiento_a; if(!sa || typeof sa!=="object") return {};
+  var quien=String(sa.quien||"").replace(/\s+/g," ").trim(), s=_fsa(v);
+  if(!quien || !_dichoNombre(v, quien) || !/\b(seguimiento|segu[ií]r(le|lo|la)|preg[uú]nt(ale|arle)|insist(ele|irle)|recu[eé]rd(ale|arle)|checa con|lata)\b/.test(s)) return {};
+  var k=miembroDeNombre(quien), canon=contactoDeTarea(t, quien);
+  if(k && PERSONAS[k]){ var G=null; try{ G=contactosWA(t).filter(function(g){ return g.eq===k; })[0]; }catch(e){} if(G) canon=G.nombre; }
+  var corto=nombreCorto(canon), meta=String(sa.meta||"").replace(/\s+/g," ").trim().slice(0,200);
+  var cadaOk=RITMO_RE.test(s) || new RegExp("\\b("+_DIARE+")\\b").test(s) || /\b(diario|todos los dias|cada\s+(\d+|dos|tres|cuatro)\s+(horas|dias))\b/.test(s);
+  var hora=String(sa.hora||"").trim(), mh=hora.match(/^(\d{1,2}):(\d{2})$/), horaOk=!!mh && horaDicha(v);
+  if(horaOk) hora=String(+mh[1]).padStart(2,"0")+":"+mh[2];
+  t.seg_a=Object.assign({}, t.seg_a||{}, {contacto:canon, meta:meta||((t.seg_a||{}).meta||""), cada:cadaOk?String(sa.cada||"").trim().slice(0,80):((t.seg_a||{}).cada||""), hora:horaOk?hora:((t.seg_a||{}).hora||""), dicho:String(v).slice(0,400), ts:Date.now()});
+  t.wa_contactos=t.wa_contactos||[];
+  if(!t.wa_contactos.some(function(c){ return _nn(String(c.nombre||c))===_nn(canon); })) t.wa_contactos.push({nombre:canon, desde:Date.now()});
+  var base="seguimiento a "+corto+(meta?" ("+meta+")":"");
+  if(!cadaOk) return {hecho:base, duda:"¿Cada cuándo y a qué hora le doy seguimiento a "+corto+"?"};
+  if(!horaOk) return {hecho:base+" · "+String(sa.cada||"").trim(), duda:"¿A qué hora le escribo a "+corto+"?"};
+  var cal=calendarioProximo(22).map(function(x){ return x.slice(0,10); }), ahora=Date.now();
+  var fechas=(Array.isArray(sa.fechas)?sa.fechas:[]).map(String).filter(function(f,i,a){ return cal.indexOf(f)>=0 && a.indexOf(f)===i && _tsDe(f,hora)>ahora; }).sort().slice(0,10);
+  if(!fechas.length) return {hecho:base, duda:"¿Qué días le doy seguimiento a "+corto+"?"};
+  var ya=(t.msgs||[]).filter(function(m){ return m && m.prog && !m.prog.cancelado && _nn(m.prog.contacto||"")===_nn(canon); }).map(function(m){ return m.prog.a_las?m.prog.a_las.fecha+" "+m.prog.a_las.hora:""; });
+  var texto=String(sa.texto||"").replace(/\s+/g," ").trim() || ("IA: Hola "+corto.split(" ")[0]+", ¿cómo vas con "+(meta||t.nombre)+"?");
+  var nuevas=fechas.filter(function(f){ return ya.indexOf(f+" "+hora)<0; });
+  nuevas.forEach(function(f){ mandaProgramado(t, {contacto:canon, a_las:{fecha:f, hora:hora}, sino_desde:null, texto:texto}, null); });
+  t.seg_a.programados=fechas.map(function(f){ return f+" "+hora; });
+  var rt="Seguimiento a "+corto+": "+(String(sa.cada||"").trim()||"según lo dictado")+" a las "+hora;
+  if(!String(t.ritmo||"").trim() || /^Seguimiento a /.test(t.ritmo)) t.ritmo=rt;
+  return {hecho:base+": "+nuevas.length+" WhatsApp programado"+(nuevas.length===1?"":"s")+" ("+fechas.map(fechaMovCorta).join(", ")+" "+hora+")"};
 }
 /* aplica lo que regreso Claude, con candados. Regresa {hecho, dudas, vinc, yaHecha} */
 function aplicaRevisionClaude(t, v, j, abiertas){
@@ -7284,7 +7364,7 @@ function aplicaRevisionClaude(t, v, j, abiertas){
   var pal=(Array.isArray(j.palabras)?j.palabras:[]).concat(Array.isArray(j.sinonimos)?j.sinonimos:[]).map(function(w){ return String(w).toLowerCase().trim(); }).filter(Boolean);
   pal=pal.filter(function(w,i){ return pal.indexOf(w)===i; });
   if(pal.length){ t.palabras=pal.slice(0,10); if(Array.isArray(j.sinonimos)) t.sinonimos=j.sinonimos.map(function(w){ return String(w).toLowerCase().trim(); }).filter(Boolean).slice(0,6); hecho.push("etiquetas"); }
-  if(j.de_quien && String(j.de_quien).trim() && _nn(j.de_quien)!==_nn(t.de_quien||"")){ t.de_quien=String(j.de_quien).trim().slice(0,60); hecho.push("de "+t.de_quien); }
+  if(j.de_quien && String(j.de_quien).trim() && _nn(j.de_quien)!==_nn(t.de_quien||"")){ var _dq=String(j.de_quien).trim(); if(_dq.length>120) _dq=_dq.slice(0,120).replace(/\s+\S*$/,"")+"…"; t.de_quien=_dq; hecho.push("de "+t.de_quien); }   /* build 219: ya no se corta a media palabra ("ejecutor: Man.") */
   if(j.cifras && String(j.cifras).trim() && /\d/.test(String(j.cifras))){ var _fr=fechasRaras(String(j.cifras), _todas);
     if(!_fr.length){ t.datos_corregidos=(t.datos_corregidos||[]).concat([{t:String(j.cifras).trim().slice(0,600), ts:Date.now(), dicho:String(v).slice(0,300)}]).slice(-30); hecho.push("cifras"); } }
   var ids=(abiertas||[]).map(function(x){ return x.id; });
@@ -7293,6 +7373,8 @@ function aplicaRevisionClaude(t, v, j, abiertas){
   if(t.f_vigente || t.periodicidad || t.indefinida===true){ t.pendiente_info=""; t.pendiente_tipo=""; }
   /* la pregunta puede nombrar dias o meses SOLO si los dijo el ("¿jueves o viernes?"); fechas sueltas del modelo, no */
   var _ck7=aplicaChecklistClaude(t, j); if(_ck7) hecho.push(_ck7);   /* build 214 */
+  var _rs9=aplicaResponsable(t, v, j); if(_rs9) hecho.push(_rs9);   /* build 219 */
+  var _sg9=aplicaSeguimientoA(t, v, j); if(_sg9.hecho) hecho.push(_sg9.hecho); if(_sg9.duda) dudas.push(_sg9.duda);
   var pq=String(j.pregunta||"").trim();
   if(pq){ var _dm=_fsa(pq).match(new RegExp("\\b("+_DIARE+"|"+_MESRE+")\\b","g"))||[];
     var _pqOk=!/\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}\s*[-/]\s*\d{1,2}\b/.test(pq) && _dm.every(function(w){ return new RegExp("\\b"+w+"\\b").test(s); });
@@ -13244,6 +13326,46 @@ function contactosConocidos(){
     o.n++; if((x.ts||0)>o.ts) o.ts=x.ts||0; }); });
   return Object.keys(m).map(function(k){ return m[k]; });
 }
+/* build 219 (Salvador 10:15): AGREGAR con buscador. Busca en TODOS los contactos: los de Doit (equipo), los de
+   WhatsApp vistos en las tareas y la AGENDA completa que importa la Mac, si el servidor la da (accion wa_agenda,
+   pendiente de Carlos; sin ella busca solo en lo que la app conoce). Sin importar acentos ni mayusculas, por nombre o apodo. */
+window.AGENDA_WA=window.AGENDA_WA||null;
+function _agendaDe(j){
+  if(!j || j.error) return null;
+  var l=j.contactos||j.agenda||j.lista||j.items||(Array.isArray(j)?j:null);
+  if(l && !Array.isArray(l) && typeof l==="object") l=Object.keys(l).map(function(k){ var v=l[k]; return typeof v==="object"&&v?Object.assign({nombre:k},v):{nombre:k, jid:v}; });
+  if(!Array.isArray(l)) return null;
+  return l.map(function(a){ return typeof a==="string"?{nombre:a}:{nombre:String((a&&(a.nombre||a.name||a.n))||"").trim(), alias:String((a&&(a.alias||a.apodo||a.notify))||"")}; })
+    .filter(function(a){ return a.nombre && !/^\+?\d[\d\s-]+$/.test(a.nombre); });
+}
+function cargaAgendaWA(alLlegar){
+  if(window.AGENDA_WA || window.__agendaNo || window.__agendaPide) return;
+  if(typeof APP_TOKEN==="undefined" || String(APP_TOKEN).indexOf("__")===0){ window.__agendaNo=1; return; }
+  window.__agendaPide=1;
+  fetch(PUSH+"?action=wa_agenda",{method:"POST", headers:{"content-type":"application/json","x-app-token":APP_TOKEN}, body:JSON.stringify({usuario:yo})})
+    .then(function(r){ return r.json().catch(function(){ return {error:"HTTP "+r.status}; }); })
+    .then(function(j){ window.__agendaPide=0; var l=_agendaDe(j); if(!l){ window.__agendaNo=1; return; } window.AGENDA_WA=l; if(alLlegar) try{ alLlegar(); }catch(e){} })
+    .catch(function(){ window.__agendaPide=0; window.__agendaNo=1; });
+}
+function todosLosContactos(){
+  var out=contactosConocidos(), vis={};
+  out.forEach(function(c){ vis[c.id]=1; vis["n:"+_n179(c.nombre)]=1; });
+  (window.AGENDA_WA||[]).forEach(function(a){ var id="ext:"+a.nombre, nn="n:"+_n179(a.nombre); if(vis[id]||vis[nn]) return;
+    var kk=claveDe(a.nombre); if(kk && PERSONAS[kk] && _n179(PERSONAS[kk].nombre)===_n179(a.nombre)) return;
+    vis[id]=vis[nn]=1; out.push({id:id, nombre:a.nombre, alias:a.alias||"", sub:"agenda de WhatsApp", n:0, ts:0}); });
+  return out;
+}
+function buscaContactos(q, excl){
+  var nq=_n179(q); if(!nq) return [];
+  var ws=nq.split(" ").filter(Boolean); excl=excl||{};
+  return todosLosContactos().map(function(c){
+    if(excl[c.id]) return null;
+    var hay=_n179(c.nombre+" "+(c.alias||"")+" "+(c.id.indexOf("ext:")===0?"":c.id+" "+((PERSONAS[c.id]||{}).apellido||""))), toks=hay.split(" ");
+    if(!ws.every(function(w){ return toks.some(function(x){ return x.indexOf(w)===0; }) || (w.length>=3 && hay.indexOf(w)>=0); })) return null;
+    var sc=(toks[0].indexOf(ws[0])===0?4:0)+(toks.some(function(x){ return x===ws[0]; })?2:0)+(c.id.indexOf("ext:")!==0?3:0)+Math.min(c.n||0,10)/5+(c.ts?1:0);
+    return {c:c, sc:sc}; }).filter(Boolean).sort(function(a,b){ return (b.sc-a.sc) || String(a.c.nombre).localeCompare(String(b.c.nombre)); })
+    .map(function(x){ return x.c; }).slice(0,40);
+}
 function haceCuanto(ts){ if(!ts) return ""; var d=Math.floor((Date.now()-ts)/86400000); return d<=0?"hablaron hoy":(d===1?"hablaron ayer":(d<14?"hace "+d+" días":(d<60?"hace "+Math.round(d/7)+" semanas":"hace "+Math.round(d/30)+" meses"))); }
 /* candidatos para un nombre dicho ("Perlita" -> "Perla ...") */
 function candidatosDe(nombre){
@@ -13309,11 +13431,20 @@ function abreIntegrantes(t){
     Array.prototype.forEach.call(s.querySelectorAll("[data-qk]"),function(b){ b.onclick=function(){ var k=b.getAttribute("data-qk"); if(quitaIntegrante(t,k)){ toast("Quité a "+nombreInt(k)); pinta(); } }; });
     s.querySelector(".itadd").onclick=function(){
       var ya={}; integrantesDe(t).forEach(function(x){ ya[x.k]=1; });
-      var cs=contactosConocidos().filter(function(c){ return !ya[c.id]; }).sort(function(a,b){ return (b.n-a.n)||(b.ts-a.ts); }).slice(0,12);
+      /* build 219: lupa arriba; vacia = los recientes de siempre; con texto = TODOS los contactos */
       s.innerHTML='<div class="hh"></div><div class="ith">AGREGAR A</div><div class="itn">'+esc(t.nombre)+'</div>'+
-        cs.map(function(c){ return '<button class="itr itpick" data-ak="'+esc(c.id)+'"><span class="av">'+esc(iniInt(c.id))+'</span><span class="ix"><b>'+esc(c.nombre)+'</b><small>'+esc(c.sub+(c.ts?" · "+haceCuanto(c.ts):""))+'</small></span></button>'; }).join("")+
-        '<div class="itnota">O díctalo: “agrega a Perla a esta tarea”.</div>';
-      Array.prototype.forEach.call(s.querySelectorAll("[data-ak]"),function(b){ b.onclick=function(){ agregaIntegrante(t,b.getAttribute("data-ak")); toast("Agregué a "+nombreInt(b.getAttribute("data-ak"))); pinta(); }; });
+        '<label class="itbus">'+ico("lupa",18,1.8)+'<input id="itq" type="search" placeholder="Buscar en todos tus contactos" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"></label>'+
+        '<div class="itlst"></div><div class="itnota">O díctalo: “agrega a Perla a esta tarea”.</div>';
+      var lst=s.querySelector(".itlst"), inp=s.querySelector("#itq");
+      function lista(){
+        var q=inp.value, cs=String(q).trim()?buscaContactos(q, ya):contactosConocidos().filter(function(c){ return !ya[c.id]; }).sort(function(a,b){ return (b.n-a.n)||(b.ts-a.ts); }).slice(0,12);
+        lst.innerHTML=cs.length?cs.map(function(c){ return '<button class="itr itpick" data-ak="'+esc(c.id)+'"><span class="av">'+esc(iniInt(c.id))+'</span><span class="ix"><b>'+esc(c.nombre)+'</b><small>'+esc(c.sub+(c.ts?" · "+haceCuanto(c.ts):""))+'</small></span></button>'; }).join(""):
+          '<div class="itvacio">No encontré “'+esc(String(q).trim())+'”'+(window.AGENDA_WA?'':' · la agenda completa de WhatsApp aún no está en Doit')+'</div>';
+        Array.prototype.forEach.call(lst.querySelectorAll("[data-ak]"),function(b){ b.onclick=function(){ agregaIntegrante(t,b.getAttribute("data-ak")); toast("Agregué a "+nombreInt(b.getAttribute("data-ak"))); pinta(); }; });
+      }
+      inp.oninput=lista; lista();
+      cargaAgendaWA(function(){ if(inp.isConnected && String(inp.value).trim()) lista(); });
+      try{ inp.focus(); }catch(e){}
     };
   }
   bg.onclick=cierra; pinta();
