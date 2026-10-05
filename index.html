@@ -710,6 +710,9 @@ button{font:inherit;color:inherit}
 .agin{display:flex;gap:8px}.agin input{flex:1;min-width:0;font-size:17px;padding:10px;border-radius:10px;border:1px solid #3a3a3e;background:#1c1c1e;color:var(--ink,#f2f2f4)}
 .agok{font-size:17px;font-weight:600;padding:13px;border-radius:12px;border:0;background:var(--fi-blue);color:#fff}
 .agcam{background:none;border:0;color:var(--fi-blue);font-size:14px;padding:4px 0;align-self:flex-start}
+.agtd{flex:1;font-size:16px;font-weight:600;border-radius:10px;border:1px solid #3a3a3e;background:var(--surface-2,#2a2a2d);color:var(--ink-3,#9a9aa2)}.agtd.on{background:var(--fi-bluebg);border-color:#2f6fa8;color:var(--fi-blue)}
+.agin input:disabled{opacity:.4}
+.agst{display:flex;align-items:center;gap:6px;margin:2px 16px 4px;font-size:14px;color:#30d158}.agst svg{flex:none}
 .typep button{font-size:17px;font-weight:600;border-radius:14px;padding:12px 8px;background:var(--surface-2,#2a2a2d);color:var(--ink-3,#9a9aa2);border:1px solid #3a3a3e}
 .typep button.on{background:var(--fi-bluebg);color:var(--fi-blue);border-color:#2f6fa8}
 .dtot{font-size:27px;font-weight:700;font-variant-numeric:tabular-nums}.dsub{color:var(--ink-3,#9a9aa2);font-size:14px}
@@ -1180,7 +1183,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 202 · ¿Te lo agendo? en Falta info: recordatorio de Doit + Google Calendar para invitaciones y citas";
+var VERSION_APP = "build 203 · Agendar en un toque: alarma de Doit al instante y el Calendario lo crea el trabajador (gcal pendiente)";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -4191,7 +4194,7 @@ function completitud(t){
   var _ev=eventoDe(t);
   if(_ev){ var _pas=!!(_ev.fecha && _ev.fecha<hoy());
     it.push({k:"agenda", ok:t.agendado===true || t.agendar===false || _pas,
-      tx:t.agendado===true?"Agendado":(t.agendar===false?"Sin agendar":(_pas?"El evento ya pasó":(_ev.fecha?"¿Te lo agendo?":"¿Qué día es? (para agendarlo)")))}); }
+      tx:t.agendado===true?(t.gcal_id?"Agendado · Calendario ✓":"Agendado · Calendario en camino"):(t.agendar===false?"Sin agendar":(_pas?"El evento ya pasó":(_ev.fecha?"¿Te lo agendo?":"¿Qué día es? (para agendarlo)")))}); }
   var hechos=it.filter(function(x){ return x.ok; }).length;
   return {tipo:tipo, ctxPct:pct, ctxOk:pct>=75, items:it, hechos:hechos, datosPct:Math.round(hechos*100/it.length),
           completa:pct>=75 && hechos===it.length};
@@ -4217,7 +4220,7 @@ function eventoDe(t){
   var _h=function(v){ v=String(v||"").trim(); return /^\d{2}:\d{2}$/.test(v)?v:""; };
   if(t.evento && typeof t.evento==="object")
     return {titulo:String(t.evento.titulo||t.nombre||"").trim(), fecha:_f(t.evento.fecha), hora:_h(t.evento.hora),
-            lugar:String(t.evento.lugar||"").trim(), notas:String(t.evento.notas||"").trim(), origen:"campo"};
+            lugar:String(t.evento.lugar||"").trim(), notas:String(t.evento.notas||"").trim(), todo_dia:t.evento.todo_dia===true, origen:"campo"};
   if(t.es_recordatorio) return null;                      /* un recordatorio ya es alarma */
   var cc={texto:""}; try{ cc=creadaCon(t); }catch(e){}
   var tx=[t.nombre, t.contexto, t.tarea, cc.texto].filter(Boolean).join(" · ");
@@ -4226,7 +4229,7 @@ function eventoDe(t){
   var ex=(fd.dudas&&fd.dudas.length)?[]:(fd.lista||[]).filter(_esExacta);
   var hr=""; try{ hr=horaValor(tx)||""; }catch(e){}
   if(!ex.length && !hr) return null;                      /* sin fecha ni hora de cita: no se detecta nada */
-  return {titulo:String(t.nombre||"").trim(), fecha:ex.length?ex[0].f:"", hora:_h(hr), lugar:"", notas:"", origen:"detectado"};
+  return {titulo:String(t.nombre||"").trim(), fecha:ex.length?ex[0].f:"", hora:_h(hr), lugar:"", notas:"", todo_dia:false, origen:"detectado"};
 }
 function eventoPendiente(t){
   if(!t || t.cierre || t.fusionada_en || estadoReal(t)==="cerrada") return false;
@@ -4254,38 +4257,57 @@ function urlGoogleCal(ev, t){
     "&text="+encodeURIComponent(ev.titulo||(t&&t.nombre)||"Evento")+"&dates="+dates+
     "&details="+encodeURIComponent(det)+(ev.lugar?"&location="+encodeURIComponent(ev.lugar):"")+"&ctz=America%2FMonterrey";
 }
+/* build 203 (Salvador 2026-10-04 19:26, "ahórrame todos los pasos posibles"): Sí NO abre Google Calendar. Pone al instante
+   la alarma de Doit y deja gcal:"pendiente" con el evento completo; el trabajador con el conector de Calendar lo crea y
+   escribe gcal_id. Sin hora: en la MISMA pregunta se pide la hora o "Todo el día" (la alarma suena a las 8:00 AM). */
+var AGENDA_HORA_TODO_DIA="08:00";
 function vAgenda(t){
   if(!eventoPendiente(t)) return "";
   var ev=eventoDe(t), edit=!ev.fecha || !!(window.__agEdit && window.__agEdit[t.id]);
   var h='<div class="fic agenda"><div class="aghd">'+ico("cal",19)+'<b>¿Te Lo Agendo?</b></div>'+
     '<p class="agev">'+esc(ev.titulo||t.nombre)+'</p>'+
-    '<p class="agcu">'+esc([ev.fecha?fechaBonita(ev.fecha):"Sin fecha", ev.hora?"a las "+horaBonita(ev.hora):"", ev.lugar].filter(Boolean).join(" · "))+'</p>';
+    '<p class="agcu">'+esc([ev.fecha?fechaBonita(ev.fecha):"Sin fecha", ev.hora?"a las "+horaBonita(ev.hora):(ev.todo_dia?"todo el día":""), ev.lugar].filter(Boolean).join(" · "))+'</p>';
   if(edit) h+=(!ev.fecha?'<p class="agq">¿Qué día es? Sin fecha no lo agendo.</p>':'')+
     '<div class="agin"><input type="date" id="agf" value="'+esc(ev.fecha)+'" aria-label="Día"><input type="time" id="agh" value="'+esc(ev.hora)+'" aria-label="Hora"></div>'+
     '<button class="agok" data-agguarda="1">Guardar Fecha</button>';
-  else h+='<div class="agbt"><button class="si" data-agenda="si">Sí</button><button class="no" data-agenda="no">No</button></div>'+
-    '<button class="agcam" data-agcambia="1">Cambiar Fecha u Hora</button>';
+  else {
+    if(!ev.hora && !ev.todo_dia){
+      var td=!!(window.__agTodoDia && window.__agTodoDia[t.id]);
+      h+='<p class="agq">¿A qué hora? Para que suene la alarma.</p>'+
+        '<div class="agin"><input type="time" id="aghr" aria-label="Hora"'+(td?' disabled':'')+'>'+
+        '<button class="agtd'+(td?' on':'')+'" data-agtododia="1">Todo el Día</button></div>'+
+        (td?'<p class="agcu">Te aviso ese día a las '+esc(horaBonita(AGENDA_HORA_TODO_DIA))+'.</p>':'');
+    }
+    h+='<div class="agbt"><button class="si" data-agenda="si">Sí</button><button class="no" data-agenda="no">No</button></div>'+
+      '<button class="agcam" data-agcambia="1">Cambiar Fecha u Hora</button>';
+  }
   return h+'</div>';
+}
+/* la linea de la ficha cuando ya se agendo */
+function lineaAgenda(t){
+  if(!t || t.agendado!==true) return "";
+  return '<div class="agst">'+ico("cal",15)+'<span>Agendado ✓ · '+(t.gcal_id?'Calendario ✓':'Calendario: en camino')+'</span></div>';
 }
 function guardaFechaEvento(t, f, h){
   if(!/^\d{4}-\d{2}-\d{2}$/.test(f||"")){ toast("Pon el día"); return false; }
   var ev=eventoDe(t)||{titulo:t.nombre, lugar:"", notas:""};
-  t.evento={titulo:ev.titulo||t.nombre, fecha:f, hora:/^\d{2}:\d{2}$/.test(h||"")?h:"", lugar:ev.lugar||"", notas:ev.notas||"", fecha_dictada:true};
+  t.evento={titulo:ev.titulo||t.nombre, fecha:f, hora:/^\d{2}:\d{2}$/.test(h||"")?h:"", lugar:ev.lugar||"", notas:ev.notas||"", todo_dia:false, fecha_dictada:true};
   window.__agEdit=window.__agEdit||{}; window.__agEdit[t.id]=0; guarda(t); return true;
 }
-function agendaEvento(t){
+function agendaEvento(t, hora, todoDia){
   var ev=eventoDe(t);
   if(!ev || !ev.fecha){ window.__agEdit=window.__agEdit||{}; window.__agEdit[t.id]=1; toast("Primero el día"); render(); return null; }
-  var url=urlGoogleCal(ev, t), w=null;
-  try{ w=window.open(url,"_blank"); }catch(e){}            /* dentro del toque, para que el navegador no lo bloquee */
-  var av=nuevoAviso(t, {texto:ev.titulo||t.nombre, fecha:ev.fecha, hora:ev.hora||"", dicho:""});
-  t.evento={titulo:ev.titulo, fecha:ev.fecha, hora:ev.hora, lugar:ev.lugar, notas:ev.notas, agendado_ts:Date.now(), aviso_ts:av.ts};
-  t.agendado=true; t.agendar=true;
-  msg(t,"bi","Agendado: “"+(ev.titulo||t.nombre)+"” · "+textoCuando(av)+(ev.lugar?" · "+ev.lugar:"")+". Quedó tu recordatorio en Doit y abrí Google Calendar para que lo guardes.");
+  var hr=ev.hora || (/^\d{2}:\d{2}$/.test(hora||"")?hora:""), td=!hr && (ev.todo_dia===true || todoDia===true);
+  if(!hr && !td){ toast("Pon la hora o Todo el día"); return null; }       /* sin hora la alarma no suena */
+  var av=nuevoAviso(t, {texto:ev.titulo||t.nombre, fecha:ev.fecha, hora:hr||AGENDA_HORA_TODO_DIA, dicho:""});
+  t.evento={titulo:ev.titulo||t.nombre, fecha:ev.fecha, hora:hr, lugar:ev.lugar||"", notas:ev.notas||"", todo_dia:td, agendado_ts:Date.now(), aviso_ts:av.ts};
+  t.agendado=true; t.agendar=true; t.gcal="pendiente";       /* el trabajador con el conector de Calendar lo crea y escribe gcal_id */
+  msg(t,"bi","Agendado: “"+t.evento.titulo+"” · "+fechaBonita(ev.fecha)+(hr?" · a las "+horaBonita(hr):" · todo el día")+(ev.lugar?" · "+ev.lugar:"")+
+    ". La alarma de Doit ya quedó"+(td?" (ese día a las "+horaBonita(AGENDA_HORA_TODO_DIA)+")":"")+"; el Calendario va en camino.");
   guarda(t); sincronizaAvisos(t);
-  if(!w){ try{ location.href=url; }catch(e){} }
+  if(window.__agTodoDia) window.__agTodoDia[t.id]=0;
   if(!revisaCompleta(t)) render();
-  return url;
+  return t.evento;
 }
 function noAgendar(t){ t.agendar=false; guarda(t); if(!revisaCompleta(t)) render(); }
 /* ---- DESGLOSE de un dato guardado: Total, por mL y renglones con monto, del texto tal cual ---- */
@@ -7362,6 +7384,7 @@ function vHilo(){
   var _ch=chipEncabezado(t);
   h+='<div class="hrow"><div class="hchip '+_ch.cls+'">'+ico(_ch.ico,18,1.9)+'<span>'+esc(_ch.txt)+'</span></div>'+
      '<button class="hchev" id="bstrip" aria-expanded="'+(fichaOpen?"true":"false")+'" aria-label="Detalle">'+(fichaOpen?'▴':'▾')+'</button></div>';
+  h+=lineaAgenda(t);   /* build 203: "Agendado ✓ · Calendario: en camino" / "Calendario ✓" */
   if(fichaOpen) h+=vDetalle(t, frows);
   else if(tipoRevisar(t)==="falta") h+=vTipoToggle(t);
 
@@ -11531,7 +11554,8 @@ function bindHilo(){
   try{ bindDeslizar(t); }catch(e){ console.warn("deslizar",e); }
   var _cp=$("cnlpill"); if(_cp) _cp.onclick=function(){ if(modoClaude(t)){ window.__cnlClaude[t.id]=0; render(); return; } abreCanales(t); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-tipoi]"),function(b){ b.onclick=function(){ var k=b.getAttribute("data-tipoi"); t.tipo_item=k; t.es_dato=(k==="dato"); guarda(t); if(!revisaCompleta(t)) render(); }; });   /* build 195 */
-  Array.prototype.forEach.call(document.querySelectorAll("[data-agenda]"),function(b){ b.onclick=function(){ if(b.getAttribute("data-agenda")==="si") agendaEvento(t); else noAgendar(t); }; });   /* build 202 */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-agenda]"),function(b){ b.onclick=function(){ if(b.getAttribute("data-agenda")==="si"){ var _hr=$("aghr"); agendaEvento(t, _hr&&_hr.value, !!(window.__agTodoDia&&window.__agTodoDia[t.id])); } else noAgendar(t); }; });   /* build 202/203 */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-agtododia]"),function(b){ b.onclick=function(){ window.__agTodoDia=window.__agTodoDia||{}; window.__agTodoDia[t.id]=window.__agTodoDia[t.id]?0:1; render(); }; });   /* build 203 */
   Array.prototype.forEach.call(document.querySelectorAll("[data-agcambia]"),function(b){ b.onclick=function(){ window.__agEdit=window.__agEdit||{}; window.__agEdit[t.id]=1; render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-agguarda]"),function(b){ b.onclick=function(){ var f=$("agf"), h=$("agh"); if(guardaFechaEvento(t, f&&f.value, h&&h.value)) render(); }; });
   var _ccl=$("cnlclaude"); if(_ccl) _ccl.onclick=function(){ window.__cnlClaude=window.__cnlClaude||{}; window.__cnlClaude[t.id]=window.__cnlClaude[t.id]?0:1; render(); };   /* build 193 */
