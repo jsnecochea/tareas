@@ -540,6 +540,10 @@ button{font:inherit;color:inherit}
    del chat, de un renglon; al tocarla se despliega la lista (max. media
    pantalla, se desplaza por dentro). "Ya esta" se pone verde al palomear todo. */
 .pasosw{background:var(--surface-2);padding:8px 12px 6px;flex:none;position:relative;z-index:1}
+.chkl .cit{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;border-bottom:1px solid var(--line);padding:11px 2px;color:var(--ink);font:inherit;text-align:left;cursor:pointer}   /* build 214 */
+.chkl .cit .ctx2{flex:1;font-size:16.5px}.chkl .cit .cst{flex:none;min-width:38px;text-align:right;font-size:18px;font-weight:700;color:var(--ink-3)}
+.chkl .cit.e1 .cst{color:#4aa3ff}.chkl .cit.e2 .cst{color:#30d158}.chkl .cit.e2 .ctx2{color:var(--ink-2)}
+.chkl .chlev{font-size:13px;color:var(--ink-3);padding:8px 2px 2px}
 .pasos{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 14px 9px;box-shadow:0 6px 14px -8px #000}
 .pasos .ph{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;padding:0;color:var(--ink);font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .pasos .ph .ttl{font-family:Archivo;font-weight:600;font-size:17px;flex:none}
@@ -1224,7 +1228,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 213 · Dictado: lo dicho nunca se pierde (llamada, cambio de app, bloqueo); al volver, Seguir dictando o Mandar así";
+var VERSION_APP = "build 214 · Checklist de 3 estados (○ pendiente · ✓ invitado · ✓✓ confirmado), por voz, tocando o con Claude";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -7044,7 +7048,8 @@ function promptRevision(t, v, abiertas){
     "- vinculos: ids (de TAREAS ABIERTAS) que traten de LO MISMO, máx 3; solo se proponen. Si ninguna, [].\n"+
     "- de_quien y cifras: para datos (de quién o qué proyecto; montos o medidas tal cual). ya_hecha=true solo si dice que ya se hizo.\n"+
     "- pregunta: SOLO lo que de verdad quedó ambiguo, en una pregunta corta; lo demás llénalo igual. Si todo quedó claro, null.\n"+
-    "Contesta SOLO JSON: {\"nombre\":null,\"tipo\":null,\"contexto\":null,\"contexto_modo\":\"reemplazar\",\"fecha\":null,\"indefinida\":false,\"periodicidad\":null,\"ritmo\":null,\"recordar\":[],\"quien\":null,\"palabras\":[],\"sinonimos\":[],\"vinculos\":[],\"de_quien\":null,\"cifras\":null,\"ya_hecha\":false,\"pregunta\":null}\n\n"+
+    "- checklist: si pide una lista o checklist: {\"titulo\":\"…\",\"items\":[{\"tx\":\"renglón tal cual\",\"estado\":0}]} (0 pendiente, 1 invitado/hecho, 2 confirmado, solo si se dijo); si no, null. CHECKLIST ACTUAL: "+checklistTexto(t)+".\n"+
+    "Contesta SOLO JSON: {\"checklist\":null,\"nombre\":null,\"tipo\":null,\"contexto\":null,\"contexto_modo\":\"reemplazar\",\"fecha\":null,\"indefinida\":false,\"periodicidad\":null,\"ritmo\":null,\"recordar\":[],\"quien\":null,\"palabras\":[],\"sinonimos\":[],\"vinculos\":[],\"de_quien\":null,\"cifras\":null,\"ya_hecha\":false,\"pregunta\":null}\n\n"+
     "ESTADO ACTUAL DE LA TAREA:\n"+estadoParaClaude(t)+"\n\nLO QUE FALTA: "+(soloMeFalta(t).join(" | ")||"(nada)")+"\nPREGUNTAS QUE LE HICE: "+(preguntasFalta(t).join(" | ")||"(ninguna)")+
     "\n\nTAREAS ABIERTAS (id | nombre):\n"+(abiertas.map(function(x){ return x.id+" | "+(x.nombre||""); }).join("\n")||"(ninguna)")+
     "\n\nLO QUE DICTÓ: "+v;
@@ -7093,6 +7098,7 @@ function aplicaRevisionClaude(t, v, j, abiertas){
   if(vinc.length && !t.dup_resuelto){ t.posible_dup=(t.posible_dup||[]).concat(vinc).filter(function(x,i,a){ return a.indexOf(x)===i; }); }   /* solo se PROPONE (franja) */
   if(t.f_vigente || t.periodicidad || t.indefinida===true){ t.pendiente_info=""; t.pendiente_tipo=""; }
   /* la pregunta puede nombrar dias o meses SOLO si los dijo el ("¿jueves o viernes?"); fechas sueltas del modelo, no */
+  var _ck7=aplicaChecklistClaude(t, j); if(_ck7) hecho.push(_ck7);   /* build 214 */
   var pq=String(j.pregunta||"").trim();
   if(pq){ var _dm=_fsa(pq).match(new RegExp("\\b("+_DIARE+"|"+_MESRE+")\\b","g"))||[];
     var _pqOk=!/\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}\s*[-/]\s*\d{1,2}\b/.test(pq) && _dm.every(function(w){ return new RegExp("\\b"+w+"\\b").test(s); });
@@ -7965,7 +7971,7 @@ function vHilo(){
   /* build 198: si en Importante el chat queda vacio, una pista chiquita para que no parezca roto */
   if(!_todo && !_visibles && _ocultos && !(t.evidencias||[]).length) m+='<button class="avfold" data-cmodo="todo">Hay '+_ocultos+' mensaje'+(_ocultos===1?'':'s')+' oculto'+(_ocultos===1?'':'s')+' · Todo</button>';
   m=_tgl+m;
-  return h+(esDato(t)?vDatoCuerpo(t):vDatosTarea(t))+vVuelta(t)+vPasos(t)+bannerDecision(t)+_pil+_pre179+'<div class="scroll'+(_conPill?' cnl" style="--cc:'+_cc:'')+'"><div class="msgs">'+m+pre+'</div></div>'+vTarjetaRev(t)+
+  return h+(esDato(t)?vDatoCuerpo(t):vDatosTarea(t))+vVuelta(t)+vPasos(t)+vChecklist(t)+bannerDecision(t)+_pil+_pre179+'<div class="scroll'+(_conPill?' cnl" style="--cc:'+_cc:'')+'"><div class="msgs">'+m+pre+'</div></div>'+vTarjetaRev(t)+
     /* LA MISMA BARRA DE TODAS LAS VISTAS — 2026-09-04. Antes el hilo tenia la
        camara a la IZQUIERDA y una flecha de enviar a la derecha, distinto de la
        caratula (camara a la DERECHA, sin flecha). Salvador lo cacho: "tiene que
@@ -9773,6 +9779,75 @@ function normalizaPasos(arr){
               meta:meta.slice(0,80), hecho:false, por:null, f:null});
   });
   return out.slice(0,40);
+}
+/* ===== build 214 (Salvador 8:07, "Fiesta Cumpleaños Papá": pidió 3 veces un checklist de invitados y Claude no lo hizo) =====
+   t.checklist = {titulo, items:[{id, tx, estado 0|1|2, alias[], ts, fuente}]}: 0 pendiente ○, 1 invitado ✓, 2 confirmado ✓✓.
+   Seccion desplegable arriba (como Pasos); tocar un renglon: ○ -> ✓ -> ✓✓ -> ○. Por voz o escrito: "ya invité a X", "X confirmó",
+   "agrega a Y" (con "lista"/"checklist" o si la tarea ya tiene checklist). Crear la lista: Claude (accion checklist). */
+var CHK_EST=["○","✓","✓✓"], CHK_NOM=["pendiente","invitado","confirmado"];
+function tieneChecklist(t){ return !!(t && t.checklist && (t.checklist.items||[]).length); }
+function _chkTok(x){ return _nv(x).split(" ").filter(function(w){ return w.length>=3 && ["esposa","esposo","senora","senor","pareja","novia","novio","con","los","las","del"].indexOf(w)<0; }); }
+function chkBusca(t, nombre){
+  var q=_chkTok(nombre); if(!q.length) return [];
+  return (t.checklist.items||[]).filter(function(it){ var w=_chkTok(it.tx).concat((it.alias||[]).map(_nv).join(" ").split(" ").filter(Boolean));
+    return q.some(function(x){ return w.indexOf(x)>=0 || (x==="xavier" && w.indexOf("javier")>=0) || (x==="javier" && w.indexOf("xavier")>=0); }); });
+}
+function chkNuevo(t, tx, estado, fuente){
+  t.checklist=t.checklist||{titulo:"Lista", items:[]};
+  var it={id:"c"+Date.now().toString(36)+Math.random().toString(36).slice(2,5), tx:conMayuscula(String(tx).replace(/\s+/g," ").trim()), estado:estado||0, ts:Date.now()};
+  if(fuente) it.fuente=fuente; t.checklist.items.push(it); return it;
+}
+function chkPon(it, est, fuente){ if(est>it.estado || est===0){ it.estado=est; it.ts=Date.now(); if(fuente) it.fuente=fuente; return true; } return false; }
+/* lo dicho -> cambios en la lista. Regresa null si no es para la lista; si si, {hecho:[], dudas:[]} */
+function checklistDicho(t, v){
+  var s=_nv(v), habla=/\b(check ?list|checklist|lista)\b/.test(s), tiene=tieneChecklist(t);
+  var verbo=/\b(invite|invitamos|invitado|invitados|mande (la )?invitacion|le mande|les mande|confirmo|confirmaron|confirmado|confirmados|ya confirmo|agrega|agregale|anade|suma|apunta|quita|palomea)\b/.test(s);
+  if(!verbo || !(habla || tiene)) return null;
+  if(!tiene && tienePasos(t) && !/\b(check ?list|checklist|invit|confirm)/.test(s)) return null;   /* "agrégale a la lista" de Pasos sigue en Pasos */
+  if(!tiene) return {crear:true};                                          /* no hay lista: la arma Claude con los nombres de la tarea */
+  var hecho=[], dudas=[], fte="lo dijo "+((PERSONAS[yo]||{}).nombre||"")+" "+hhmmAhora();
+  var nombres=function(seg){ return String(seg||"").replace(/\b(a la lista|en la lista|al checklist|en el checklist|por favor|tambien|ya|nada mas)\b/g," ").split(/,|\by\b|\be\b|\ba\b/).map(function(x){ return x.trim(); }).filter(function(x){ return _chkTok(x).length; }); };
+  var aplica=function(lista, est){ lista.forEach(function(nm){ var m=chkBusca(t, nm);
+    if(m.length===1){ if(chkPon(m[0], est, fte) && hecho.indexOf(m[0].tx+" "+CHK_EST[est])<0) hecho.push(m[0].tx+" "+CHK_EST[est]); }
+    else if(m.length>1) dudas.push("¿Cuál "+nm+"? "+juntaY(m.map(function(x){ return x.tx; }))+".");
+    else dudas.push("No encontré a "+conMayuscula(nm)+" en la lista; dime \"agrega a "+nm+"\" y lo pongo."); }); };
+  var m;
+  /* "X y Y confirmaron" / "ya confirmó X" / "confirmaron X" */
+  if((m=s.match(/^(.*?)\b(ya )?(me |nos )?(confirmo|confirmaron)\b(.*)$/))){ var antes=m[1].replace(/\b(oye|clau|claude|en la lista|en el checklist|ponle que|pon que)\b/g," "), despues=m[5];
+    aplica(nombres(_chkTok(antes).length?antes:despues), 2); }
+  if((m=s.match(/\b(ya )?(le |les )?(invite|invitamos|mande (la )?invitacion|le mande (la )?invitacion|les mande (la )?invitacion)( a)?\s+(.*)$/))) aplica(nombres(m[8]||""), 1);
+  if((m=s.match(/\b(agrega|agregale|anade|suma|apunta)\b( a)?\s+(.*)$/))){ nombres(m[3]).forEach(function(nm){ if(!chkBusca(t, nm).length){ chkNuevo(t, nm, 0, fte); hecho.push("agregué "+conMayuscula(nm)+" "+CHK_EST[0]); } }); }
+  return {hecho:hecho, dudas:dudas};
+}
+function hhmmAhora(){ var d=new Date(); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+function respChecklist(t, r){
+  var tot=t.checklist.items.length, inv=t.checklist.items.filter(function(x){ return x.estado>=1; }).length, conf=t.checklist.items.filter(function(x){ return x.estado===2; }).length;
+  return [r.hecho.length?"Anoté en la lista: "+r.hecho.join(", ")+".":"", r.dudas.join(" "), "Van "+inv+" de "+tot+" invitados y "+conf+" confirmados."].filter(Boolean).join(" ");
+}
+/* lo que regresa Claude: checklist {titulo, items:[{tx, estado}]} (crear o actualizar) */
+function aplicaChecklistClaude(t, j){
+  var c=j && j.checklist; if(!c || !Array.isArray(c.items) || !c.items.length) return "";
+  var nuevo=!tieneChecklist(t), n=0;
+  if(nuevo) t.checklist={titulo:String(c.titulo||"Lista").trim().slice(0,40)||"Lista", items:[]};
+  c.items.slice(0,60).forEach(function(x){ var tx=String((x&&x.tx)||x||"").trim(); if(!tx) return; var est=+((x&&x.estado)||0); if(!(est>=0&&est<=2)) est=0;
+    var ya=(t.checklist.items||[]).filter(function(it){ return _nv(it.tx)===_nv(tx); })[0];
+    if(ya){ if(chkPon(ya, est, "Claude")) n++; } else { chkNuevo(t, tx, est, est?"Claude":""); n++; } });
+  return nuevo?"lista “"+t.checklist.titulo+"” ("+t.checklist.items.length+")":(n?"lista ("+n+" cambios)":"");
+}
+function checklistTexto(t){ return tieneChecklist(t)?t.checklist.items.map(function(x){ return x.tx+" "+CHK_EST[x.estado||0]; }).join(" | "):"(no hay)"; }
+function vChecklist(t){
+  if(!tieneChecklist(t)) return "";
+  var L=t.checklist.items, inv=L.filter(function(x){ return x.estado>=1; }).length, conf=L.filter(function(x){ return x.estado===2; }).length;
+  var ab=!!((window.__chkOpen||{})[t.id]);
+  var h='<div class="pasosw"><div class="pasos chkl'+(ab?' open':'')+'" id="chkl"><button class="ph" id="bchkl" aria-expanded="'+(ab?"true":"false")+'">'+
+    '<span class="ttl pchk">'+ico("chk",18,1.9)+'<span>'+esc(t.checklist.titulo||"Lista")+'</span></span>'+
+    '<span class="cn'+(conf===L.length?' full':'')+'">✓ '+inv+' · ✓✓ '+conf+' de '+L.length+'</span>'+
+    '<svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>'+
+    '<div class="pbar"><i style="width:'+Math.round(L.length?inv*100/L.length:0)+'%"></i></div>';
+  if(ab){ h+='<div class="plst">'+L.map(function(x){ var e=x.estado||0;
+      return '<button class="cit e'+e+'" data-chk="'+esc(x.id)+'" aria-label="'+esc(x.tx)+': '+CHK_NOM[e]+'"><span class="ctx2">'+esc(x.tx)+'</span><span class="cst">'+CHK_EST[e]+'</span></button>'; }).join("")+
+    '<div class="chlev">○ pendiente · ✓ invitado · ✓✓ confirmado · toca para cambiar</div></div>'; }
+  return h+'</div></div>';
 }
 function tienePasos(t){ return !!(t && t.lista_pasos && t.lista_pasos.length); }
 function pasosHechos(t){ return (t.lista_pasos||[]).filter(function(p){ return p.hecho; }).length; }
@@ -11847,6 +11922,10 @@ function bindHilo(){
       hojaConfirma({titulo:"Pasar todo a \u201c"+corta40(d.nombre)+"\u201d", sub:"Lo de \u201c"+corta40(t.nombre)+"\u201d se junta all\u00e1.",
         accion:"Vincular", cb:function(){ d.autorizada=true; enlazaTareas(t.id, did, "trabajador (posible duplicado)"); }}); };
   });
+  var bck=$("bchkl"); if(bck) bck.onclick=function(ev){ ev.stopPropagation(); window.__chkOpen=window.__chkOpen||{}; window.__chkOpen[t.id]=!window.__chkOpen[t.id]; render(); };   /* build 214 */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-chk]"),function(el){ el.onclick=function(ev){ ev.stopPropagation();
+    var it=(t.checklist.items||[]).filter(function(x){ return x.id===el.getAttribute("data-chk"); })[0]; if(!it) return;
+    it.estado=((it.estado||0)+1)%3; it.ts=Date.now(); it.fuente="lo tocó "+((PERSONAS[yo]||{}).nombre||""); guarda(t); render(); }; });
   var bps=$("bpasos"); if(bps) bps.onclick=function(ev){ ev.stopPropagation();
     window.__pasosOpen=window.__pasosOpen||{}; window.__pasosOpen[t.id]=!window.__pasosOpen[t.id]; render(); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-paso]"),function(el){
@@ -12005,6 +12084,13 @@ function bindHilo(){
     /* build 188 (Salvador 08:39): lo que le dices a Claude (correcciones, aclaraciones) nunca sale por WhatsApp */
     /* build 194: "abre / busca / el costo de X" dentro de una tarea (aunque empiece con "Claude") = busqueda en todas */
     var _qT=pideBuscar(v); if(_qT){ $("txt").value=""; marcaEnvio("tenv",""); abreBusqueda(_qT, v, buscaTodo(_qT)); return; }
+    /* build 214: "ya invité a X" / "X confirmó" / "agrega a Y" -> la lista; "hazme un checklist…" sin lista -> Claude la arma */
+    var _ck=checklistDicho(t, v);
+    if(_ck){ $("txt").value=""; marcaEnvio("tenv","");
+      if(_ck.crear){ notaClaude(t, v); return; }
+      msg(t,"bo",v); var _mc=t.msgs[t.msgs.length-1]; _mc.de=yo; _mc.canal="priv:"+yo; _mc.nota_claude=1;
+      msg(t,"bi",respChecklist(t,_ck)); var _rc=t.msgs[t.msgs.length-1]; _rc.canal="priv:"+yo; _rc.nota_claude=1;
+      window.__chkOpen=window.__chkOpen||{}; window.__chkOpen[t.id]=true; guarda(t); render(); return; }
     /* build 205 (Salvador 21:14, "Agendar Reunión Consejo Colonia Cumbres"): en "Falta info" lo dictado COMPLETA la tarea
        aunque suene a nota para Claude ("…es para que sepas el contexto" caia en esNotaClaude -> notaClaude -> "No cambié nada").
        Solo las ordenes claras (eliminar, pasarla, encargarla) siguen yendo a Claude. */
@@ -13776,6 +13862,8 @@ function leeSuenaMensaje(v, wa){
 }
 /* lo dictado va a Claude (una llamada); al terminar, la voz dice corto que anoto y que falta */
 function leeAClaude(t, v){
+  var _ck=checklistDicho(t, v);   /* build 214: "ya invité a X", "X confirmó" por voz */
+  if(_ck && !_ck.crear){ guarda(t); return leePregunta(limpiaHabla(respChecklist(t,_ck).replace(/✓✓/g," confirmado").replace(/✓/g," invitado").replace(/○/g," pendiente"))+" ¿Algo más, o siguiente?"); }
   leeAseguraHilo(t); LEE.pensando=true; leeBarra();
   var falta=tipoRevisar(t)==="falta";
   completaRevision(t, v, {sinRevision:!falta, alTerminar:function(r){
@@ -14043,8 +14131,10 @@ function avisosReemplazados(t){
 /* Importante | Todo (solo pantalla, por sesion) */
 function modoChat(t){ var m=(window.__chatModo||{})[t&&t.id]; return m==="todo"?"todo":"importante"; }
 /* lo que sale en Importante: personas, WhatsApp, fotos/archivos, el ultimo aviso de cada tema, notas */
+function esConfirmacion(x){ return !!x && !x.nota_claude && /\b(confirm(o|a|amos|ado|ada|aron|ada)|ahi estaremos|alli estaremos|cuenta(n)? con (migo|nosotros)|si vamos|si asistimos|asistiremos|ahi nos vemos|claro que si vamos|no podremos ir|no vamos a poder)\b/.test(_nv(x.t||x.tr||"")); }
 function esImportante(x, ix, reempl){
   if(!x) return false;
+  if(esConfirmacion(x)) return true;   /* build 214: quien confirma (o no puede) siempre se ve en Importante */
   if(reempl && reempl.set[ix]) return false;
   return true;
 }
@@ -14178,7 +14268,8 @@ function ejecutaNotaClaude(t, v){
     "Si dice para cuando es la tarea o su proxima fecha, accion fecha. En respuesta NO escribas fechas ni dias (las escribe la app).\n"+
     "NUNCA contestes 'estaré pendiente' o 'te aviso': si pide mandar o recordar algo a alguien despues, la app ya lo programa sola; si no la entendiste, accion nada y pregunta a quien y a que hora.\n"+
     "Decide qué quiere y contesta SOLO JSON: {\"accion\":\"dato|renombrar|fecha|cerrar|eliminar|pasar|contexto|nada\",\"valor\":\"...\",\"respuesta\":\"QUÉ ENTENDISTE, en una frase corta en español (nunca solo 'Listo' u 'Ok')\","+
-      "\"contexto\":null,\"contexto_modo\":\"sumar|reemplazar\",\"ritmo\":null,\"indefinida\":false,\"recurrente\":null,\"fecha\":null,\"pregunta\":null}.\n"+
+      "\"contexto\":null,\"contexto_modo\":\"sumar|reemplazar\",\"ritmo\":null,\"indefinida\":false,\"recurrente\":null,\"fecha\":null,\"checklist\":null,\"pregunta\":null}.\n"+
+    "- checklist: si pide una lista o checklist (invitados, pendientes) o cambia una: {\"titulo\":\"Invitados\",\"items\":[{\"tx\":\"renglón tal cual viene en los mensajes\",\"estado\":0}]}; estado 0 pendiente, 1 invitado/mandado, 2 confirmado, SOLO si está dicho en los mensajes. NUNCA contestes con preguntas en vez de hacer la lista: hazla con lo que hay. CHECKLIST ACTUAL: "+checklistTexto(t)+".\n"+
     "ADEMÁS de la accion, llena TODO lo que la nota diga (puede ser varias cosas a la vez; nada inventado):\n"+
     "- contexto: de qué se trata la tarea, quiénes, para qué (1 a 3 frases); contexto_modo 'reemplazar' si lo cuenta completo o pide cambiarlo, 'sumar' si agrega algo.\n"+
     "- ritmo: cada cuánto quiere que le recuerde o revise (ej. 'una vez al mes'). - indefinida: true solo si dice que no tiene fin.\n"+
@@ -14193,7 +14284,8 @@ function ejecutaNotaClaude(t, v){
     preguntaAClaude([{role:"user",content:p}],"rapido",function(txt,err){
       var j=null; try{ var mm=String(txt||"").match(/\{[\s\S]*\}/); if(mm) j=JSON.parse(mm[0]); }catch(e){}
       /* build 206: primero se aplica todo lo que dijo (contexto, ritmo, indefinida/recurrente, fecha); sin IA, lo local */
-      try{ _c206=aplicaCamposNota(t, v, j||{}); if(_c206.hecho.length){ guarda(t); try{ sincronizaAvisos(t); }catch(e){} } }catch(e){ _c206={hecho:[], dudas:[]}; }
+      try{ _c206=aplicaCamposNota(t, v, j||{}); var _ckc=aplicaChecklistClaude(t, j||{}); if(_ckc){ _c206.hecho.push(_ckc); window.__chkOpen=window.__chkOpen||{}; window.__chkOpen[t.id]=true; }   /* build 214 */
+        if(_c206.hecho.length){ guarda(t); try{ sincronizaAvisos(t); }catch(e){} } }catch(e){ _c206={hecho:[], dudas:[]}; }
       if(!j){ nota(_c206.hecho.length?"":"Anotado."); return; }
       if(String(j.accion||"").toLowerCase()==="contexto"){ nota(""); return; }
       var a=j.accion, val=String(j.valor||"").trim(), r=String(j.respuesta||"").trim();

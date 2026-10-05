@@ -20,7 +20,7 @@ function saca(tipo, nombre) {
   }
   return out.join("\n");
 }
-var FUNCS = ["_nn", "_normAviso", "temaAviso", "avisosReemplazados", "modoChat", "esImportante", "indicacionVigente", "notasPlegadas",
+var FUNCS = ["_nv", "esConfirmacion", "_nn", "_normAviso", "temaAviso", "avisosReemplazados", "modoChat", "esImportante", "indicacionVigente", "notasPlegadas",
   "respuestaHecho", "traeFecha", "_fsa"];
 var VARS = ["AVISO_RX", "AVISO_SIS", "_MESRE", "_DIARE"];
 var codigo = VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" + FUNCS.map(function (f) { return saca("function", f); }).join("\n");
