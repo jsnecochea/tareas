@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* PRUEBAS build 217 (Salvador 5-oct 9:20 y 9:23: "todos los avisos iguales, por WhatsApp", con palomitas como WhatsApp).
-   1) "Solo al equipo" queda en el canal equipo y ademas sale por WhatsApp a cada integrante de Doit de la tarea con su
+   1) "A todo el equipo" queda en el canal equipo y ademas sale por WhatsApp a cada integrante de Doit de la tarea con su
       WhatsApp en la tarea (nunca a Salvador ni a quien escribe), un pedido por persona, misma cola que "Mandar a".
    2) Palomitas: reloj = en cola, ✓ enviado, ✓✓ gris entregado, ✓✓ azul leido (estado del pedido en el servidor).
    3) "Para mí (nota)" y "Para Claude" no llevan palomitas. 4) Lo redactado por Claude lleva "IA: " desde la app.
@@ -19,8 +19,9 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
 function si(nom, v) { eq(nom, !!v, true); }
 /* ---- en el codigo ---- */
 si("VERSION_APP build 217 o posterior", +((html.match(/var VERSION_APP = "build (\d+)/) || [])[1] || 0) >= 217);
-eq("los dos 'Solo al equipo' usan mandaAlEquipo", (html.match(/hayEquipo\(t\)\?function\(\)\{ mandaAlEquipo\(t, _v[NR], (_cita|null)\); \}:null,/g) || []).length, 2);
-si("ya no queda el 'Solo al equipo' que solo guardaba en el canal", !/hayEquipo\(t\)\?function\(\)\{ msg\(t,"bo",_v[NR]\)/.test(html));
+si("build 218: la opción dice 'A todo el equipo'", /data-ac="equipo">A todo el equipo<\/button>/.test(html));
+eq("los dos 'A todo el equipo' usan mandaAlEquipo", (html.match(/hayEquipo\(t\)\?function\(\)\{ mandaAlEquipo\(t, _v[NR], (_cita|null)\); \}:null,/g) || []).length, 2);
+si("ya no queda el 'A todo el equipo' que solo guardaba en el canal", !/hayEquipo\(t\)\?function\(\)\{ msg\(t,"bo",_v[NR]\)/.test(html));
 si("palomitas en la burbuja normal (a la derecha, dentro de la hora)", /palomitasHTML\(x\)\+'<\/span>'\+/.test(html));
 si("palomitas en la burbuja compacta de WhatsApp", /\+cab\+palomitasHTML\(x\)\+'<button/.test(html));
 si("Mandar a: tras crear el pedido pregunta su estado", /m\.wa_pid=pid; guarda\(t\); if\(vista==="hilo"&&abierta===t\.id\) render\(\); setTimeout\(function\(\)\{ consultaEstadosWA\(t\); \}, 15000\);/.test(html));
@@ -37,7 +38,7 @@ var tmp = path.join(os.tmpdir(), "b217-" + process.pid + ".html"); fs.writeFileS
   var pw = require("/opt/node22/lib/node_modules/playwright"), b = await pw.chromium.launch(), p = await b.newPage({ viewport: { width: 390, height: 844 } }), errs = [];
   p.on("pageerror", function (e) { errs.push(e.message); });
   try { await p.goto("file://" + tmp);
-  /* ---- 1) Solo al equipo ---- */
+  /* ---- 1) A todo el equipo ---- */
   var r = await p.evaluate(async function () {
     var t = { id: "t1", nombre: "Portón", duenio: "salvador", encargado: "cynthia", msgs: [
       { k: "bi", t: "Samuel Gamez: ya llegó la grúa", wa_in: 1, wa_c: "Samuel Gamez", ts: 1 },
@@ -96,7 +97,7 @@ var tmp = path.join(os.tmpdir(), "b217-" + process.pid + ".html"); fs.writeFileS
   eq("con pedido sin estado del servidor: reloj (en cola)", [r.cola, r.pend], [0, 0]);
   eq("✓ enviado · ✓✓ entregado · ✓✓ leído · respondido = leído", [r.env, r.ent, r.lei, r.resp], [1, 2, 3, 3]);
   eq("cerrado (cancelado / no salió): sin palomitas", r.cerr, null);
-  eq("Solo al equipo: manda el que va más atrás (como grupo)", [r.grupo, r.grupoLeido, r.grupoUnoSinPid], [2, 3, 0]);
+  eq("A todo el equipo: manda el que va más atrás (como grupo)", [r.grupo, r.grupoLeido, r.grupoUnoSinPid], [2, 3, 0]);
   eq("Para mí, Para Claude, equipo sin WhatsApp y lo que entra: sin palomitas", [r.nota, r.claude, r.equipoSinWA, r.entrante], ["", "", "", ""]);
   eq("el estado guardado en el mensaje (wa_st) se respeta al volver a abrir", r.guardado, 2);
   eq("colores: gris, gris, gris, azul WhatsApp", r.col.map(function (c, i) { return i < 3 ? (c === "rgb(83, 189, 235)" ? "azul" : "gris") : (c === "rgb(83, 189, 235)" ? "azul" : c); }), ["gris", "gris", "gris", "azul"]);

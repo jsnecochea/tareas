@@ -13,8 +13,8 @@ var ok = 0, n = 0, malas = [];
 function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
 function si(nom, v) { eq(nom, !!v, true); }
 si("VERSION_APP build 216 o posterior", +((html.match(/var VERSION_APP = "build (\d+)/) || [])[1] || 0) >= 216);
-si("los dos lugares que preguntan pasan 'Para mí' y 'Solo al equipo' solo si hay equipo",
-  (html.match(/hayEquipo\(t\)\?function\(\)\{ (msg\(t,"bo",_v[NR]\);|mandaAlEquipo\(t, _v[NR],)[^\n]*:null,\n\s*function\(\)\{ notaClaude\(t, _v[NR]\); \}, function\(\)\{ notaParaMi\(t, _v[NR]\); \}\);/g) || []).length === 2);   /* build 217: Solo al equipo = mandaAlEquipo */
+si("los dos lugares que preguntan pasan 'Para mí' y 'A todo el equipo' solo si hay equipo",
+  (html.match(/hayEquipo\(t\)\?function\(\)\{ (msg\(t,"bo",_v[NR]\);|mandaAlEquipo\(t, _v[NR],)[^\n]*:null,\n\s*function\(\)\{ notaClaude\(t, _v[NR]\); \}, function\(\)\{ notaParaMi\(t, _v[NR]\); \}\);/g) || []).length === 2);   /* build 217: A todo el equipo = mandaAlEquipo */
 si("la nota no se vuelve indicacion para Claude (los canales priv: no se convierten)", /c\.indexOf\("priv:"\)===0 \|\| c==="sup"\) return false;/.test(html));
 si("en el chat se ve marcada 'nota para ti'", /\(x\.nota_mia\?" · nota para ti":""\)/.test(html));
 si("las notas privadas de otros no se pintan (canal priv:<otro>)", /if\(_cx\.indexOf\("priv:"\)===0 && _cx!=="priv:"\+yo\) return;/.test(html));
@@ -40,7 +40,7 @@ var tmp = path.join(os.tmpdir(), "b216-" + process.pid + ".html"); fs.writeFileS
         tx: s.innerText.replace(/\s+/g, " ").trim(), ico: getComputedStyle(s.querySelector(".ami .aci")).color, svg: !!s.querySelector(".ami .aci svg") }; }, conEquipo);
   }
   var h = await abre(true);
-  eq("con equipo: Para Claude, Mandar a, Solo al equipo, Para mí, Cancelar", h.orden, ["claude", "wa", "equipo", "mia", "cancel"]);
+  eq("con equipo: Para Claude, Mandar a, A todo el equipo, Para mí, Cancelar", h.orden, ["claude", "wa", "equipo", "mia", "cancel"]);
   si("dice 'Para mí (nota)' · 'Solo tú la ves · no se manda'", /Para mí \(nota\) Solo tú la ves · no se manda Cancelar$/.test(h.tx));
   eq("ícono de lápiz de línea en azul", [h.svg, h.ico], [true, "rgb(10, 132, 255)"]);
   await p.screenshot({ path: path.join(os.tmpdir(), "b216-para.png") });
@@ -49,7 +49,7 @@ var tmp = path.join(os.tmpdir(), "b216-" + process.pid + ".html"); fs.writeFileS
   eq("Para mí: nota privada tuya, sin WhatsApp ni orden a Claude, guardada", r,
     { R: "mia", k: "bo", t: "el salón cobra 18 mil", de: "salvador", canal: "priv:salvador", mia: 1, nc: false, wa: false, g: 1, toast: "Nota guardada · solo tú la ves", hoja: false });
   h = await abre(false);
-  eq("sin nadie más de Doit en la tarea: no sale 'Solo al equipo'", h.orden, ["claude", "wa", "mia", "cancel"]);
+  eq("sin nadie más de Doit en la tarea: no sale 'A todo el equipo'", h.orden, ["claude", "wa", "mia", "cancel"]);
   await p.click('[data-ac="cancel"]');
   /* busqueda y contexto de Claude */
   r = await p.evaluate(function () {

@@ -1253,7 +1253,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 217 · Solo al equipo también por WhatsApp; palomitas como WhatsApp";
+var VERSION_APP = "build 218 · \"A todo el equipo\" (antes Solo al equipo) en la hoja ¿Para quién es?";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -6870,12 +6870,12 @@ function externoNombrado(t, v){
 }
 /* build 215 (Salvador 8:52: "muy triste"): hoja de accion inferior estilo Apple, con desenfoque. "Para Claude" con un
    destello propio en el naranja de Claude (#D97757; no es el logo) y "Mandar a <nombre>" con un globo de mensaje generico
-   de linea en verde. "Solo al equipo" queda chico (era la opcion de antes) y "Cancelar" abajo. */
+   de linea en verde. "A todo el equipo" queda chico (era la opcion de antes) y "Cancelar" abajo. */
 var SVG_DESTELLO='<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M12 2.5c.5 4.9 2.6 7 7.5 7.5v.1c-4.9.5-7 2.6-7.5 7.5h-.1c-.5-4.9-2.6-7-7.4-7.5V10c4.8-.5 6.9-2.6 7.4-7.5z"/><path d="M19 15.5c.25 2 1.1 2.85 3 3.05v.05c-1.9.2-2.75 1.05-3 3h-.05c-.2-1.95-1.05-2.8-2.95-3v-.05c1.9-.2 2.75-1.05 2.95-3.05z"/></svg>';
 var SVG_CHAT='<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.2 3.6c-.3.3-.8 0-.8-.4V16h0A2.5 2.5 0 0 1 4 13.5z"/><path d="M8.5 9.5h7M8.5 12.5h4"/></svg>';
 /* build 216 (Salvador): "Para mí (nota)": dato o avance que solo ve el; no sale por WhatsApp, no avisa a nadie,
-   Claude no la toma como orden pero si la lee como contexto y entra en la busqueda. "Solo al equipo" sale solo
-   si hay otra persona de Doit en la tarea (no=null si no). Orden: Claude, Mandar a, Solo al equipo, Para mí, Cancelar. */
+   Claude no la toma como orden pero si la lee como contexto y entra en la busqueda. "A todo el equipo" sale solo
+   si hay otra persona de Doit en la tarea (no=null si no). Orden: Claude, Mandar a, A todo el equipo, Para mí, Cancelar. */
 var SVG_LAPIZ='<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17v3z"/><path d="M14.5 7.5l3 3"/><path d="M13 20h7"/></svg>';
 function hayEquipo(t){ return integrantesDe(t).some(function(x){ return x.k!==yo && !!PERSONAS[x.k]; }); }
 function notaParaMi(t, v){
@@ -6889,7 +6889,7 @@ function preguntaExterno(nombre, v, si, no, paraClaude, paraMi){
   p.innerHTML='<div class="acg"><div class="act"><b>¿Para quién es?</b><span>“'+esc(v.length>110?v.slice(0,109)+"…":v)+'”</span></div>'+
     (paraClaude?'<button class="aco acl" data-ac="claude"><span class="aci">'+SVG_DESTELLO+'</span><span><b>Para Claude</b><small>Lo aplica en la tarea</small></span></button>':'')+
     '<button class="aco awa" data-ac="wa"><span class="aci">'+SVG_CHAT+'</span><span><b>Mandar a '+esc(nombre)+'</b><small>Por WhatsApp</small></span></button>'+
-    (no?'<button class="acmin" data-ac="equipo">Solo al equipo</button>':'')+
+    (no?'<button class="acmin" data-ac="equipo">A todo el equipo</button>':'')+
     (paraMi?'<button class="aco ami" data-ac="mia"><span class="aci">'+SVG_LAPIZ+'</span><span><b>Para mí (nota)</b><small>Solo tú la ves · no se manda</small></span></button>':'')+'</div>'+
     '<button class="acx" data-ac="cancel">Cancelar</button>';
   function cierra(){ if(bg.parentNode) bg.parentNode.removeChild(bg); if(p.parentNode) p.parentNode.removeChild(p); }
@@ -6927,7 +6927,7 @@ function mandaAExterno(t, nombre, v, cita, canal){
   toast("A "+nombre+" por WhatsApp");
 }
 /* ===== build 217 (Salvador 2026-10-05 9:20 y 9:23): "todos los avisos iguales, por WhatsApp" =====
-   "Solo al equipo": queda en el canal equipo Y sale por WhatsApp a cada integrante de Doit de la tarea que
+   "A todo el equipo": queda en el canal equipo Y sale por WhatsApp a cada integrante de Doit de la tarea que
    tenga su WhatsApp en la tarea (nunca a Salvador ni a quien escribe). Misma cola que "Mandar a": un pedido
    por persona, con los 30 s para deshacer. Lo que escribe a mano sale SIN "IA:". */
 function equipoConWA(t){
@@ -6956,7 +6956,7 @@ function mandaAlEquipo(t, v, cita){
 }
 /* PALOMITAS (como WhatsApp): reloj = en cola · ✓ = enviado · ✓✓ gris = entregado · ✓✓ azul = leido.
    El estado es el del PEDIDO en la cola del servidor (estado, enviado_en, entregado_en, leido_en), ligado al
-   mensaje por wa_pid (Mandar a) o wa_pids (Solo al equipo: una palomita = la del que va mas atras, como un grupo).
+   mensaje por wa_pid (Mandar a) o wa_pids (A todo el equipo: una palomita = la del que va mas atras, como un grupo).
    "Para mí (nota)", "Para Claude" y lo que no salio por WhatsApp NO llevan palomitas. Nunca se inventa: si el
    servidor no contesta, se queda en lo ultimo que se supo (al crear el pedido: en cola). */
 var WA_EST={};

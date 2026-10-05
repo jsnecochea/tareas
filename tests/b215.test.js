@@ -58,7 +58,7 @@ var tmp = path.join(os.tmpdir(), "b215-" + process.pid + ".html"); fs.writeFileS
   var hs = await p.evaluate(function () { var s = document.querySelector(".acsheet"), v = document.querySelector(".acveil"), cl = s.querySelector(".acl b"), wa = s.querySelector(".awa b");
     return { tx: s.innerText.replace(/\s+/g, " ").trim(), blur: getComputedStyle(v).backdropFilter, cl: getComputedStyle(cl).color, clIco: getComputedStyle(s.querySelector(".acl .aci")).color, wa: getComputedStyle(wa).color,
       abajo: s.getBoundingClientRect().bottom > window.innerHeight - 60, svgs: s.querySelectorAll(".aci svg").length }; });
-  eq("hoja inferior: título, Para Claude, Mandar a Rogelio Sada, Solo al equipo, Cancelar", hs.tx, "¿Para quién es? “dile que la fiesta es el 13 de noviembre” Para Claude Lo aplica en la tarea Mandar a Rogelio Sada Por WhatsApp Solo al equipo Cancelar");
+  eq("hoja inferior: título, Para Claude, Mandar a Rogelio Sada, A todo el equipo, Cancelar", hs.tx, "¿Para quién es? “dile que la fiesta es el 13 de noviembre” Para Claude Lo aplica en la tarea Mandar a Rogelio Sada Por WhatsApp A todo el equipo Cancelar");
   si("abajo, con desenfoque y un ícono en cada opción", hs.abajo && /blur\(12px\)/.test(hs.blur) && hs.svgs === 2);
   eq("'Para Claude' (y su destello) en el naranja de Claude; 'Mandar a' en verde", [hs.cl, hs.clIco, hs.wa], ["rgb(217, 119, 87)", "rgb(217, 119, 87)", "rgb(48, 209, 88)"]);
   await p.screenshot({ path: path.join(os.tmpdir(), "b215-para.png") });
