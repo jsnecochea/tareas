@@ -27,11 +27,11 @@ function bloque(a, b) { var i = html.indexOf(a), j = html.indexOf(b); return htm
 /* el nucleo de fechas, igual que tests/fechas.test.js */
 var ft = fs.readFileSync(path.join(__dirname, "fechas.test.js"), "utf8");
 var F_FUNCS = eval(ft.match(/var FUNCS = (\[[\s\S]*?\]);/)[1]), F_VARS = eval(ft.match(/var VARS = (\[[\s\S]*?\]);/)[1]);
-var FUNCS = F_FUNCS.concat(["rangoHora", "eventoDe", "eventoPendiente", "mtyAUtcMs", "_gcalUtc", "urlGoogleCal", "vAgenda", "guardaFechaEvento", "agendaEvento", "noAgendar", "lineaAgenda",
+var FUNCS = F_FUNCS.concat(["rangoHora", "eventoDe", "eventoPendiente", "mtyAUtcMs", "_gcalUtc", "urlGoogleCal", "vAgenda", "propuestaAgenda", "fechaRespaldada", "evidenciaDe", "vClipEvid", "guardaFechaEvento", "agendaEvento", "noAgendar", "lineaAgenda",
   "completitud", "contextoPct", "contextoDe", "tipoItem", "esDato", "creadaCon", "msCreacion", "_fechaDeId", "_diaCreacion", "fechaPuestaSola", "faltaPrimero",
   "revisaCompleta", "nuevoAviso", "textoCuando", "horaBonita", "conMayuscula", "tipoRevisar", "porAutorizar", "creadaPorSistema", "faltaInfoRev",
   "esDecisionSal", "meDetiene", "faltaVieja", "diaMonterrey"]).filter(function (x, i, a) { return a.indexOf(x) === i; });
-var VARS = F_VARS.concat(["CITA_RE", "CTX_MIN_PAL", "REV_DESDE", "AGENDA_HORA_TODO_DIA"]);
+var VARS = F_VARS.concat(["CITA_RE", "MESES229", "CTX_MIN_PAL", "REV_DESDE", "AGENDA_HORA_TODO_DIA"]);
 var codigo = bloque("/* @@FECHAS-INICIO", "/* @@FECHAS-FIN */") + "\n" + VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" +
   FUNCS.map(function (f) { return saca("function", f); }).join("\n");
 
@@ -81,10 +81,10 @@ eq("ya decidida (agendado o agendar:false): sale de Falta info por este motivo",
 
 /* 3 la tarjeta */
 var h1 = c.vAgenda(BODA);
-si("tarjeta con título con mayúscula, ícono de línea y botones grandes Sí / No", /¿Te Lo Agendo\?/.test(h1) && /data-ico="cal"/.test(h1) && /data-agenda="si">Sí</.test(h1) && /data-agenda="no">No</.test(h1));
-si("muestra el evento: título, día, hora y lugar", /Boda Ana y Luis/.test(h1) && /sábado 7 de noviembre/.test(h1) && /a las 7:30 PM/.test(h1) && /Jardín Los Álamos/.test(h1));
+si("build 229: franja compacta 'Agendar' con ícono de línea, Sí y ⋯ (el No va en el menú)", /<span class="agk">Agendar<\/span>/.test(h1) && /data-ico="cal"/.test(h1) && /data-agenda="si">Sí</.test(h1) && /data-agmenu="1"/.test(h1) && !/data-agenda="no"/.test(h1));
+si("una línea con lo que propone Claude: día, hora, título y lugar", /Sáb 7 nov · a las 7:30 PM · Boda Ana y Luis · Jardín Los Álamos/.test(h1));
 var h2 = c.vAgenda(SINF);
-si("sin fecha: pide el día (fecha y hora) y NO enseña Sí / No", /¿Qué día es\? Sin fecha no lo agendo\./.test(h2) && /type="date"/.test(h2) && /type="time" id="agh" value="21:00"/.test(h2) && !/data-agenda=/.test(h2) && /Guardar Fecha/.test(h2));
+si("sin fecha: pide el día (fecha y hora) y NO enseña Sí", /¿Qué día es\? Sin fecha no lo agendo\./.test(h2) && /type="date"/.test(h2) && /type="time" id="agh" value="21:00"/.test(h2) && !/data-agenda=/.test(h2) && /data-agguarda="1">Guardar</.test(h2));
 eq("Guardar Fecha sin día: no guarda", [c.guardaFechaEvento(SINF, "", "21:00"), toasts.slice(-1)[0]], [false, "Pon el día"]);
 si("Guardar Fecha con día: queda en el evento como fecha dictada y ya aparece Sí / No", c.guardaFechaEvento(SINF, "2026-10-09", "21:00") && SINF.evento.fecha === "2026-10-09" && SINF.evento.fecha_dictada === true && /data-agenda="si"/.test(c.vAgenda(SINF)));
 
@@ -105,12 +105,12 @@ eq("Sí sin fecha: no agenda, pide el día", [c.agendaEvento(SF2), !!SF2.agendad
 /* sin hora: se pide en la misma pregunta */
 var SH = T({ id: "tSH", evento: { titulo: "Graduación", fecha: "2026-12-05", hora: "", lugar: "Auditorio" } });
 var hS = c.vAgenda(SH);
-si("sin hora: la misma tarjeta pide la hora o Todo el Día, junto a Sí / No", /¿A qué hora\? Para que suene la alarma\./.test(hS) && /id="aghr"/.test(hS) && /data-agtododia="1">Todo el Día</.test(hS) && /data-agenda="si"/.test(hS));
+si("sin hora: propone todo el día, sin campo de hora a la vista (la hora va dentro de Cambiar)", /todo el día/.test(hS) && !/type="time"/.test(hS) && /data-agenda="si"/.test(hS));
 eq("Sí sin hora ni Todo el día: no agenda", [c.agendaEvento(SH), !!SH.agendado, toasts.slice(-1)[0]], [null, false, "Pon la hora o Todo el día"]);
 c.agendaEvento(SH, "18:00");
 eq("con la hora puesta: alarma a esa hora y evento con hora", [SH.avisos[0].hora, SH.evento.hora, SH.evento.todo_dia, SH.gcal], ["18:00", "18:00", false, "pendiente"]);
 var SD = T({ id: "tSD", evento: { titulo: "Kermés", fecha: "2026-11-15", hora: "" } }); c.window.__agTodoDia = {}; c.window.__agTodoDia[SD.id] = 1;
-si("Todo el Día marcado: lo dice (te aviso a las 8:00 AM) y desactiva la hora", /Te aviso ese día a las 8:00 AM\./.test(c.vAgenda(SD)) && /id="aghr" aria-label="Hora" disabled/.test(c.vAgenda(SD)));
+si("menú ⋯: Cambiar fecha u hora · Todo el día · No agendar", /\["Cambiar fecha u hora", function\(\)/.test(html) && /\["Todo el día", function\(\)\{ agendaTodoDia\(t\); render\(\); \}\]/.test(html) && /\["No agendar", function\(\)\{ noAgendar\(t\); \}\]/.test(html));
 c.agendaEvento(SD, "", true);
 eq("Todo el día: la alarma suena ese día a las 8:00, el evento queda de todo el día", [SD.avisos[0].fecha, SD.avisos[0].hora, SD.evento.hora, SD.evento.todo_dia, SD.gcal], ["2026-11-15", "08:00", "", true, "pendiente"]);
 si("y la nota lo dice", /todo el día\. La alarma de Doit ya quedó \(ese día a las 8:00 AM\); el Calendario va en camino\.$/.test(SD.msgs.slice(-1)[0].t));
@@ -122,7 +122,7 @@ eq("No: agendar:false, sin calendario ni recordatorio, y sigue (lista para Autor
 eq("y el paso dice 'Sin agendar'", c.completitud(B3).items.slice(-1)[0].tx, "Sin agendar");
 
 /* 6 en el codigo */
-si("el paso va dentro de vFaltaInfo y los botones están cableados", /h\+=vAgenda\(t\);/.test(html) && /data-agenda\]"\),function\(b\)\{ b\.onclick=function\(\)\{ if\(b\.getAttribute\("data-agenda"\)==="si"\)\{ var _hr=\$\("aghr"\); agendaEvento\(t, _hr&&_hr\.value, !!\(window\.__agTodoDia&&window\.__agTodoDia\[t\.id\]\)\); \} else noAgendar\(t\);/.test(html) && /data-agtododia\]"\)/.test(html));
+si("el paso va dentro de vFaltaInfo y los botones están cableados", /h\+=vAgenda\(t\);/.test(html) && /var _ev=eventoDe\(t\); agendaEvento\(t, "", !\(_ev&&_ev\.hora\)\);/.test(html) && /data-agmenu\]"\)/.test(html));
 si("build 203: agendar ya NO abre Calendar ni navega", !/w=window\.open\(url/.test(html) && !/location\.href=url/.test(html));
 si("build 203 → 228: el agendado va como ficha 'Agendado' en la fila de fichas", /var ag=estadoAgenda228\(t\); if\(ag\) h\+=/.test(html));
 si("VERSION_APP build 203 o posterior", +((html.match(/var VERSION_APP = "build (\d+)/) || [])[1] || 0) >= 203);

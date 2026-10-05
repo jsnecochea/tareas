@@ -780,6 +780,21 @@ button{font:inherit;color:inherit}
 .top:has(.ttl227) .iconbtn:not(#bback){width:33px;height:33px;border:0;background:transparent;color:var(--ink-2)}
 .top:has(.ttl227) .iconbtn:not(#bback) svg{width:21px;height:21px}
 .top:has(.ttl227) #bback{width:34px;height:34px}
+.typep229{display:flex;align-items:center;justify-content:center;gap:6px;margin:4px 12px 6px;flex:none;color:var(--ink-3)}
+.typep229 button{border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font:inherit;font-size:14px;font-weight:600;border-radius:14px;padding:5px 14px}
+.typep229 button.on{color:var(--ink);background:#3a3a3c;border-color:#3a3a3c}.typep229 button[data-tipoi="vincular"]{color:#7cc0ff}
+.fic.agenda229{padding:10px 12px;margin:6px 12px;background:var(--surface);border-radius:14px}.agr{display:flex;align-items:center;gap:8px}.agr>svg{color:var(--ink-2);flex:none}
+.agk{font-weight:700;font-size:15px;flex:none}.agp{flex:1;min-width:0;font-size:14.5px;line-height:1.3;color:var(--ink-2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.agp.ambar{color:#ffd60a}
+.agsi{flex:none;border:0;border-radius:12px;background:#0a84ff;color:#fff;font:inherit;font-size:14px;font-weight:700;padding:5px 14px}
+.agmas{flex:none;border:0;background:none;color:var(--ink-2);padding:2px;display:flex}
+.agin229{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px}.agin229 input{background:var(--surface-2);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:5px 8px;font:inherit;font-size:14px}
+.agin229 .agq{width:100%;font-size:13.5px;color:var(--ink-3)}.agok229{border:0;border-radius:10px;background:#0a84ff;color:#fff;font:inherit;font-size:14px;font-weight:700;padding:6px 12px}
+.evclip{flex:none;display:inline-flex;align-items:center;gap:3px;border:0;background:none;color:var(--ink-2);font:inherit;font-size:12.5px;padding:2px 4px}.evclip.sin{color:var(--ink-4,#636368)}.evclip small{font-size:11.5px}
+.fic.ctx .lb,.fic.ctx.hecho{position:relative}.fic.ctx.hecho{display:flex;align-items:center;gap:8px}.fic.ctx.hecho .ctxc{flex:1;min-width:0}
+.evr{display:flex;align-items:center;gap:12px;width:100%;border:0;border-top:1px solid var(--line);background:none;color:var(--ink);font:inherit;font-size:16px;padding:11px 2px;text-align:left}.evr svg{color:var(--ink-2);flex:none}
+.evt{flex:1;min-width:0;display:flex;flex-direction:column}.evt span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.evt small{font-size:13px;color:var(--ink-3)}
+.evtx{padding:8px 2px}.evtx b{display:block;font-size:16px}.evtx small{display:block;color:var(--ink-3);font-size:13px;margin:2px 0 8px}.evtx p{margin:0;font-size:15px;line-height:1.45;white-space:pre-wrap}
+.enlsim{display:inline-block;margin-left:8px;font-size:12px;color:#7cc0ff;font-weight:600}.enlnueva .enln{display:flex;align-items:center;gap:6px}
 .autpill{display:block;margin:10px auto 6px;border:0;border-radius:16px;background:rgba(48,209,88,.16);color:#30d158;font:inherit;font-size:15px;font-weight:700;padding:7px 16px}
 .hchip{flex:1;display:flex;align-items:center;gap:8px;background:var(--surface-2,#2a2a2d);border-radius:12px;padding:9px 12px;font-size:15px;color:var(--ink,#f2f2f4);min-width:0}
 .hchip span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1395,7 +1410,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 228 · Encabezado compacto: una fila de fichas (fecha · lista · personas · Agendado · Resumen · Todo · Detalles)";
+var VERSION_APP = "build 229 · Tarea · Dato · Vincular en una fila · franja Agendar compacta con evidencia";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -4338,10 +4353,6 @@ function vDetalle(t, frows){
   return h;
 }
 /* build 195: Tarea | Dato grande, arriba (solo en lo nuevo/incompleto) */
-function vTipoToggle(t){
-  var tp=tipoItem(t);
-  return '<div class="typep"><button data-tipoi="tarea" class="'+(tp==="tarea"?"on":"")+'">Tarea</button><button data-tipoi="dato" class="'+(tp==="dato"?"on":"")+'">Dato</button></div>';
-}
 /* build 195: tarjetas de lo nuevo/incompleto: Contexto (rayita 75%) + lo que falta */
 /* build 209: la ficha como quedo, legible, cada campo se toca para corregirlo (dictado a Claude) */
 function fichaRevision(t){
@@ -4366,6 +4377,8 @@ function fichaRevision(t){
 }
 function vFaltaInfo(t){
   var c=completitud(t), ctx=contextoDe(t), kw=palabrasClave(t);
+  /* build 229: "¿Te lo agendo?" ya no va en "Datos de la tarea": vive solo en su franja "Agendar" */
+  c=JSON.parse(JSON.stringify(c)); c.items=c.items.filter(function(x){ return x.k!=="agenda"; }); c.hechos=c.items.filter(function(x){ return x.ok; }).length; c.datosPct=Math.round(c.hechos*100/(c.items.length||1));
   /* build 208: durante el palomeo, lo que aun no toca se ve pendiente y lo recien palomeado va en su renglon, animado */
   var _P=(window.__palomeo||{})[t.id]||null;
   if(_P){ c=JSON.parse(JSON.stringify(c)); c.items.forEach(function(x){ if(_P.pend.indexOf(x.k)>=0) x.ok=false; });
@@ -4377,8 +4390,8 @@ function vFaltaInfo(t){
   var _pd207=t.dup_resuelto?[]:posibleDup(t);   /* build 207: vinculos que propuso Claude, solo propuestos */
   if(_pd207.length) h+='<div class="revc c-vincular"><button class="rvx" data-rvx="1" aria-label="Cerrar sugerencia">✕</button><span class="rct">POSIBLE VINCULACIÓN</span><span class="rcp">Propuesta de Claude; no la vinculé.</span>'+
     _pd207.slice(0,3).map(function(d){ return '<div class="rvv"><span><b>'+esc(d.nombre)+'</b></span><button class="rvb" data-rvinc="'+esc(d.id)+'">Vincular</button></div>'; }).join("")+'</div>';
-  if(c.ctxOk) h+='<div class="fic ctx hecho'+(_P&&_P.hechos.indexOf("ctx")>=0?' palomea':'')+'"><span class="ok">✓ Contexto</span><span class="ctxc">'+esc(ctx.length>90?ctx.slice(0,89)+"…":ctx)+'</span></div>';
-  else h+='<div class="fic ctx"><div class="meter"><div class="lb"><span class="ok">Contexto'+(c.ctxOk?' ✓':'')+'</span><span class="pend">'+(c.ctxOk?'listo':'mínimo en la rayita')+'</span></div>'+
+  if(c.ctxOk) h+='<div class="fic ctx hecho'+(_P&&_P.hechos.indexOf("ctx")>=0?' palomea':'')+'"><span class="ok">✓ Contexto</span><span class="ctxc">'+esc(ctx.length>90?ctx.slice(0,89)+"…":ctx)+'</span>'+vClipEvid(t,"ctx")+'</div>';   /* 229: clip de evidencia */
+  else h+='<div class="fic ctx"><div class="meter"><div class="lb"><span class="ok">Contexto'+(c.ctxOk?' ✓':'')+'</span><span class="pend">'+(c.ctxOk?'listo':'mínimo en la rayita')+'</span>'+vClipEvid(t,"ctx")+'</div>'+
     '<div class="bar g"><i style="width:'+c.ctxPct+'%"></i></div></div>'+
     (ctx?'<p>'+esc(ctx)+'</p>':'<p class="vac">Dime de qué se trata.</p>')+
     (kw.length?'<div class="kw">'+kw.map(function(w){ return '<span>'+esc(w)+'</span>'; }).join("")+'</div>':'')+'</div>';
@@ -4657,27 +4670,98 @@ function urlGoogleCal(ev, t){
    la alarma de Doit y deja gcal:"pendiente" con el evento completo; el trabajador con el conector de Calendar lo crea y
    escribe gcal_id. Sin hora: en la MISMA pregunta se pide la hora o "Todo el día" (la alarma suena a las 8:00 AM). */
 var AGENDA_HORA_TODO_DIA="08:00";
+/* ===================== build 229 (Salvador 16:34 y 16:36; "Limpieza Lote Samuel" y "Blue Cup BBVA") =====================
+   A) Tarea nueva sin clasificar: Tarea · Dato · Vincular, chicos y en una fila. Vincular = la hoja "Vincular a otra tarea" que ya
+      existia (abreEnlazar: lupa + lista), ahora con las parecidas primero y "Tarea nueva" arriba. Al vincular, todo pasa a la elegida y
+      esta queda apartada (enlazaTareas: nada se borra).
+   B) "¿Te lo agendo?" -> franja compacta "Agendar" como la de Contexto: una linea con lo que propone Claude, clip de evidencia, "Sí" y
+      "⋯" (Cambiar fecha u hora · Todo el día · No). La hora solo se pide dentro de "Cambiar". La linea se lee con el audifono.
+      EVIDENCIA: campo "evidencia" de la tarea (arreglo {tipo, fuente, titulo, fecha, url?, texto?, de?}); tambien se lee si llega dentro
+      de "datos" o "extra" (o como texto JSON). Sin evidencia: clip gris "sin fuente"; fecha propuesta no respaldada: en ambar. */
+function evidenciaDe(t){
+  var out=[];
+  function mete(l){ if(typeof l==="string"){ try{ l=JSON.parse(l); }catch(e){ return; } } if(!Array.isArray(l)) return;
+    l.forEach(function(x){ if(x && typeof x==="object" && (x.titulo || x.url || x.texto)) out.push(x); }); }
+  if(!t) return out;
+  mete(t.evidencia); if(t.datos && typeof t.datos==="object") mete(t.datos.evidencia); if(t.extra && typeof t.extra==="object") mete(t.extra.evidencia);
+  return out;
+}
+var MESES229=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+/* ¿alguna evidencia respalda esta fecha? (dice el dia y el mes, o trae fecha_evento igual) */
+function fechaRespaldada(t, f){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(f||"")) return false;
+  var d=+f.slice(8,10), m=+f.slice(5,7), mes=MESES229[m-1], ab=mes.slice(0,3);
+  var re=new RegExp("(\\b0?"+d+"\\s*(de\\s+)?("+mes+"|"+ab+")\\b)|(\\b0?"+d+"\\s*[/.-]\\s*0?"+m+"\\b)|("+f+")");
+  return evidenciaDe(t).some(function(x){ return x.fecha_evento===f || re.test(_nn([x.titulo, x.texto].join(" "))); });
+}
+function icoFuente229(f){ return ico({whatsapp:"bubble", correo:"sobre", drive:"folder", doit:"check"}[String(f||"").toLowerCase()]||"clip",18); }
+function vClipEvid(t, donde){
+  var n=evidenciaDe(t).length;
+  return '<button class="evclip'+(n?'':' sin')+'" data-evid="'+esc(donde||"")+'" aria-label="Evidencia">'+ico("clip",16)+(n?'<span>'+n+'</span>':'<small>sin fuente</small>')+'</button>';
+}
+function abreEvidencia(t){
+  var L=evidenciaDe(t), v=document.createElement("div"); v.className="leemask"; v.id="evi229";
+  v.innerHTML='<div class="mov225" role="dialog" aria-label="Evidencia"><div class="h225g"></div><div class="h225h"><b>Evidencia</b><button class="h225b" data-evx="1" aria-label="Cerrar">'+ico("x",14)+'</button></div>'+
+    '<div class="h225s">'+(L.length?'De dónde sale lo que propone Claude':'Esta tarea no trae fuente: corrobóralo antes de decir Sí')+'</div><div class="h225c">'+
+    L.map(function(x,i){ return '<button class="evr" data-evi="'+i+'">'+icoFuente229(x.fuente)+'<span class="evt"><span>'+esc(x.titulo||x.tipo||"Evidencia")+'</span><small>'+esc([x.fuente,x.de,x.fecha].filter(Boolean).join(" · "))+'</small></span>'+ico("der",14)+'</button>'; }).join("")+
+    '</div></div>';
+  document.body.appendChild(v);
+  v.addEventListener("click", function(ev){ ev.stopPropagation(); var b=ev.target.closest("[data-evi]");
+    if(b){ var x=L[+b.getAttribute("data-evi")]; if(!x) return; var tp=String(x.tipo||"").toLowerCase();
+      if(tp==="imagen" && x.url){ v.remove(); abreVisor([{img:true, data:x.url, url:x.url, de:(x.titulo||"")+(x.de?" · "+x.de:""), ts:Date.parse(x.fecha||"")||Date.now()}], 0); return; }
+      if(tp==="pdf" && x.url){ try{ window.open(x.url, "_blank", "noopener"); }catch(e){} return; }
+      var c=v.querySelector(".h225c"); c.innerHTML='<button class="evr" data-evback="1">'+ico("back",16)+'<span class="evt"><span>Evidencia</span></span></button><div class="evtx"><b>'+esc(x.titulo||"")+'</b><small>'+esc([x.fuente,x.de,x.fecha].filter(Boolean).join(" · "))+'</small><p>'+esc(x.texto||x.url||"")+'</p></div>'; return; }
+    if(ev.target.closest("[data-evback]")){ v.remove(); abreEvidencia(t); return; }
+    if(ev.target===v || ev.target.closest("[data-evx]")) v.remove(); });
+}
+/* la linea que propone Claude: "Vie 9 oct · todo el día · Límite confirmar renta de equipo" */
+function propuestaAgenda(t){
+  var ev=eventoDe(t); if(!ev) return null;
+  var f=ev.fecha?fechaMovCorta(ev.fecha):"Sin fecha"; f=f.charAt(0).toUpperCase()+f.slice(1);
+  var h=ev.hora?(ev.hora_fin && ev.hora_fin>ev.hora?"de "+horaBonita(ev.hora)+" a "+horaBonita(ev.hora_fin):"a las "+horaBonita(ev.hora)):"todo el día";
+  return {ev:ev, txt:[f, h, ev.titulo||t.nombre, ev.lugar].filter(Boolean).join(" · "), respaldada:fechaRespaldada(t, ev.fecha)};
+}
 function vAgenda(t){
   if(!eventoPendiente(t)) return "";
-  var ev=eventoDe(t), edit=!ev.fecha || !!(window.__agEdit && window.__agEdit[t.id]);
-  var h='<div class="fic agenda"><div class="aghd">'+ico("cal",19)+'<b>¿Te Lo Agendo?</b></div>'+
-    '<p class="agev">'+esc(ev.titulo||t.nombre)+'</p>'+
-    '<p class="agcu">'+esc([ev.fecha?fechaBonita(ev.fecha):"Sin fecha", ev.hora?(ev.hora_fin && ev.hora_fin>ev.hora?"de "+horaBonita(ev.hora)+" a "+horaBonita(ev.hora_fin):"a las "+horaBonita(ev.hora)):(ev.todo_dia?"todo el día":""), ev.lugar].filter(Boolean).join(" · "))+'</p>';
-  if(edit) h+=(!ev.fecha?'<p class="agq">¿Qué día es? Sin fecha no lo agendo.</p>':'')+
-    '<div class="agin"><input type="date" id="agf" value="'+esc(ev.fecha)+'" aria-label="Día"><input type="time" id="agh" value="'+esc(ev.hora)+'" aria-label="Hora"></div>'+
-    '<button class="agok" data-agguarda="1">Guardar Fecha</button>';
-  else {
-    if(!ev.hora && !ev.todo_dia){
-      var td=!!(window.__agTodoDia && window.__agTodoDia[t.id]);
-      h+='<p class="agq">¿A qué hora? Para que suene la alarma.</p>'+
-        '<div class="agin"><input type="time" id="aghr" aria-label="Hora"'+(td?' disabled':'')+'>'+
-        '<button class="agtd'+(td?' on':'')+'" data-agtododia="1">Todo el Día</button></div>'+
-        (td?'<p class="agcu">Te aviso ese día a las '+esc(horaBonita(AGENDA_HORA_TODO_DIA))+'.</p>':'');
-    }
-    h+='<div class="agbt"><button class="si" data-agenda="si">Sí</button><button class="no" data-agenda="no">No</button></div>'+
-      '<button class="agcam" data-agcambia="1">Cambiar Fecha u Hora</button>';
-  }
+  var p=propuestaAgenda(t); if(!p) return "";
+  var ev=p.ev, edit=!ev.fecha || !!(window.__agEdit && window.__agEdit[t.id]);
+  var h='<div class="fic agenda229"><div class="agr">'+ico("cal",17)+'<span class="agk">Agendar</span>'+
+    '<span class="agp'+(p.respaldada?'':' ambar')+'">'+esc(p.txt)+'</span>'+
+    vClipEvid(t,"agenda")+
+    (edit?'':'<button class="agsi" data-agenda="si">Sí</button>')+
+    '<button class="agmas" data-agmenu="1" aria-label="Más opciones">'+ico("more",18)+'</button></div>';
+  if(edit) h+='<div class="agin229">'+(!ev.fecha?'<span class="agq">¿Qué día es? Sin fecha no lo agendo.</span>':'')+
+    '<input type="date" id="agf" value="'+esc(ev.fecha)+'" aria-label="Día"><input type="time" id="agh" value="'+esc(ev.hora)+'" aria-label="Hora (opcional)">'+
+    '<button class="agok229" data-agguarda="1">Guardar</button></div>';
   return h+'</div>';
+}
+function agendaTodoDia(t){ var ev=eventoDe(t)||{titulo:t.nombre}; t.evento={titulo:ev.titulo||t.nombre, fecha:ev.fecha||"", hora:"", lugar:ev.lugar||"", notas:ev.notas||"", todo_dia:true, fecha_dictada:ev.fecha_dictada||ev.origen==="campo"}; guarda(t); }
+function menuAgenda229(t, el){
+  var r=el.getBoundingClientRect();
+  leeMenu(r.left+r.width/2, r.top, [
+    ["Cambiar fecha u hora", function(){ window.__agEdit=window.__agEdit||{}; window.__agEdit[t.id]=1; render(); }],
+    ["Todo el día", function(){ agendaTodoDia(t); render(); }],
+    ["No agendar", function(){ noAgendar(t); }]]);
+}
+/* para el audifono */
+function _leeAgenda229(t){
+  try{ if(!eventoPendiente(t)) return null; var p=propuestaAgenda(t); if(!p) return null;
+    return {tx:"Para agendar: "+limpiaHabla(p.txt.replace(/ · /g,", "))+"."+(p.respaldada?"":" Ojo: esa fecha no viene en ninguna fuente.")+" ¿Lo agendo?"}; }catch(e){ return null; }
+}
+/* A) tres botones chicos */
+function vTipoToggle(t){
+  var tp=tipoItem(t);
+  return '<div class="typep229"><button data-tipoi="tarea" class="'+(tp==="tarea"?"on":"")+'">Tarea</button><span>·</span>'+
+    '<button data-tipoi="dato" class="'+(tp==="dato"?"on":"")+'">Dato</button><span>·</span><button data-tipoi="vincular">Vincular</button></div>';
+}
+/* parecidas primero: las que propuso Claude (posibleDup) y las que comparten palabras del nombre/contexto */
+function similares229(t){
+  var ids={}, out=[]; try{ posibleDup(t).forEach(function(d){ if(!ids[d.id]){ ids[d.id]=1; out.push(d); } }); }catch(e){}
+  var ws=palabrasBusqueda([t.nombre, t.contexto].join(" ")).map(function(w){ return _nn(w).slice(0,6); }).filter(function(w){ return w.length>=4; });
+  if(ws.length){ tareas.map(function(d){ if(!d || d.id===t.id || ids[d.id] || d.cierre || d.fusionada_en || estadoReal(d)==="cerrada" || d.es_recordatorio) return null;
+      var n=_nn([d.nombre, d.contexto].join(" ")), p=ws.filter(function(w){ return n.indexOf(w)>=0; }).length; return p?{d:d,p:p}:null; })
+    .filter(Boolean).sort(function(a,b){ return b.p-a.p; }).slice(0,5).forEach(function(o){ ids[o.d.id]=1; out.push(o.d); }); }
+  return out.slice(0,6);
 }
 /* la linea de la ficha cuando ya se agendo */
 function lineaAgenda(t){
@@ -5471,7 +5555,8 @@ function enlazaCandidatas(oid){
            estadoReal(x)!=="cerrada" && !esEjemplo(x) && (leToca(x)||sigoElHilo(x)) && String(x.nombre||"").trim();
   }).sort(function(a,b){ return (b.tocada||0)-(a.tocada||0); });
 }
-function abreEnlazar(oid){
+function abreEnlazar(oid, op){
+  op=op||{};   /* build 229: desde "Vincular" de una tarea nueva: parecidas primero y "Tarea nueva" */
   var o=tareas.filter(function(x){return x.id===oid})[0]; if(!o) return;
   cierraEnlazar();
   var cand=enlazaCandidatas(oid);
@@ -5489,12 +5574,15 @@ function abreEnlazar(oid){
   function pinta(){
     var txt=_nrm(q.value).trim(), ws=txt?txt.split(/\s+/):[];
     var r=cand.filter(function(x){ return ws.every(function(w){ return nrmDe[x.id].indexOf(w)>=0 }) });
+    var sim=op.similares||[]; if(sim.length && !txt){ r=r.slice().sort(function(a,b){ var ia=sim.indexOf(a.id), ib=sim.indexOf(b.id); return (ia<0?99:ia)-(ib<0?99:ib); }); }
     var tot=r.length; r=r.slice(0,60);
-    lista.innerHTML=r.length?r.map(function(x){ return '<button class="enlr" data-d="'+esc(x.id)+'"><span class="enln">'+esc(x.nombre)+'</span><span class="vinc">Vincular</span></button>' }).join("")+
+    lista.innerHTML=(op.tareaNueva && !txt?'<button class="enlr enlnueva" data-nueva="1"><span class="enln">'+ico("plus",16)+' Tarea nueva</span><span class="vinc">Queda como tarea</span></button>':'')+
+      (r.length?r.map(function(x){ return '<button class="enlr" data-d="'+esc(x.id)+'"><span class="enln">'+esc(x.nombre)+(sim.indexOf(x.id)>=0 && !txt?'<small class="enlsim">parecida</small>':'')+'</span><span class="vinc">Vincular</span></button>' }).join("")+
         (tot>r.length?'<div class="enlv">Escribe m\u00e1s para acotar \u00b7 '+tot+' tareas</div>':'')
-      : '<div class="enlv">'+(cand.length?'No encontr\u00e9 nada con eso.':'No hay otras tareas abiertas.')+'</div>';
+      : '<div class="enlv">'+(cand.length?'No encontr\u00e9 nada con eso.':'No hay otras tareas abiertas.')+'</div>');
   }
   lista.onclick=function(e){
+    if(e.target.closest && e.target.closest("[data-nueva]")){ cierraEnlazar(); if(op.tareaNueva) op.tareaNueva(); return; }   /* build 229 */
     var b=e.target; while(b&&b!==lista&&!(b.getAttribute&&b.getAttribute("data-d"))) b=b.parentNode;
     if(!b||b===lista) return;
     var did=b.getAttribute("data-d"), d=tareas.filter(function(x){return x.id===did})[0]; if(!d) return;
@@ -7871,7 +7959,7 @@ function ico(n,px,gr){
     list:'<path d="M4 7l1.6 1.6L8.5 5.7M4 16.5l1.6 1.6 2.9-2.9M11.5 7.5h9M11.5 17h9"/>',
     audio:'<path d="M4 15v-3a8 8 0 0116 0v3"/><rect x="3.5" y="14" width="4.5" height="6.5" rx="1.6"/><rect x="16" y="14" width="4.5" height="6.5" rx="1.6"/>',
     more:'<circle cx="5.5" cy="12" r="1.1" fill="currentColor"/><circle cx="12" cy="12" r="1.1" fill="currentColor"/><circle cx="18.5" cy="12" r="1.1" fill="currentColor"/>',
-    move:'<path d="M4 12h15M14 7l5 5-5 5"/>', der:'<path d="M9 5l7 7-7 7"/>', plus:'<path d="M12 5v14M5 12h14"/>', down:'<path d="M5 9l7 7 7-7"/>', x:'<path d="M6 6l12 12M18 6L6 18"/>',
+    move:'<path d="M4 12h15M14 7l5 5-5 5"/>', back:'<path d="M15 5l-7 7 7 7"/>', sobre:'<rect x="3.5" y="6" width="17" height="12.5" rx="2"/><path d="M4 7l8 6 8-6"/>', der:'<path d="M9 5l7 7-7 7"/>', plus:'<path d="M12 5v14M5 12h14"/>', down:'<path d="M5 9l7 7 7-7"/>', x:'<path d="M6 6l12 12M18 6L6 18"/>',
     folder:'<path d="M3.5 7.5a2 2 0 012-2h4l2 2h7a2 2 0 012 2v8a2 2 0 01-2 2h-13a2 2 0 01-2-2z"/>',
     bubble:'<path d="M5.5 4.5h13a2 2 0 012 2v8.5a2 2 0 01-2 2H10l-4.5 3.5V17h0a2 2 0 01-2-2V6.5a2 2 0 012-2z"/>',
     lupa:'<circle cx="10.5" cy="10.5" r="6.2"/><path d="M15.1 15.1 21 21"/>',
@@ -8584,7 +8672,7 @@ function vDetalles225(t){
   if(!esMetas(t) && tieneChecklist(t)){ var L=t.checklist.items; B.push(["Lista", '<button class="d225m" data-chip="lista"><span>'+esc(t.checklist.titulo||"Lista")+'</span><span>'+L.filter(function(x){ return (+x.estado||0)>=1; }).length+'/'+L.length+' ›</span></button>']); }
   var f=[]; try{ if(tipoRevisar(t)==="falta") f=soloMeFalta(t); }catch(e){}
   if(f.length) B.push(["Falta por poner", '<p class="azul">'+esc(f.join(" · "))+'</p><button class="d225dic" data-chip="falta">Dictar</button>', "falta"]);
-  var cx=contextoDe(t); if(cx) B.push(["Contexto", '<p>'+esc(cx)+'</p>']);
+  var cx=contextoDe(t); if(cx) B.push(["Contexto", '<p>'+esc(cx)+'</p>'+vClipEvid(t,"ctx")]);   /* 229 */
   var pp=personas225(t), sq=[];
   if(t.seg_a && t.seg_a.contacto) sq.push("Claude a "+t.seg_a.contacto+(t.seg_a.cada?" · "+t.seg_a.cada:"")+(t.seg_a.hora?" · "+t.seg_a.hora:""));
   else if(String(t.ritmo||"").trim()) sq.push("Ritmo: "+String(t.ritmo).trim());
@@ -13667,8 +13755,12 @@ function bindHilo(){
     var k=b.getAttribute("data-fedit"), et={nombre:"El nombre es",tipo:"Es",contexto:"El contexto es",fecha:"La fecha es",ritmo:"El ritmo es",quien:"La hace",etiquetas:"Las etiquetas son",vinculo:"El vínculo es con",de:"Es de",cifras:"Las cifras son"}[k]||"";
     var val=(b.querySelector(".ffv")||{}).textContent||""; if(val==="—") val="";
     tx.value=et+": "+val.replace(/ \(no vinculado\)$/,""); try{ tx.focus(); tx.setSelectionRange(et.length+2, tx.value.length); }catch(e){} }; });
-  Array.prototype.forEach.call(document.querySelectorAll("[data-tipoi]"),function(b){ b.onclick=function(){ var k=b.getAttribute("data-tipoi"); t.tipo_item=k; t.es_dato=(k==="dato"); guarda(t); if(!revisaCompleta(t)) render(); }; });   /* build 195 */
-  Array.prototype.forEach.call(document.querySelectorAll("[data-agenda]"),function(b){ b.onclick=function(){ if(b.getAttribute("data-agenda")==="si"){ var _hr=$("aghr"); agendaEvento(t, _hr&&_hr.value, !!(window.__agTodoDia&&window.__agTodoDia[t.id])); } else noAgendar(t); }; });   /* build 202/203 */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-tipoi]"),function(b){ b.onclick=function(){ var k=b.getAttribute("data-tipoi");
+    if(k==="vincular"){ abreEnlazar(t.id, {similares:similares229(t).map(function(d){ return d.id; }), tareaNueva:function(){ t.tipo_item="tarea"; t.es_dato=false; guarda(t); if(!revisaCompleta(t)) render(); }}); return; }   /* build 229 */
+    t.tipo_item=k; t.es_dato=(k==="dato"); guarda(t); if(!revisaCompleta(t)) render(); }; });   /* build 195 */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-agenda]"),function(b){ b.onclick=function(){ if(b.getAttribute("data-agenda")==="si"){ var _ev=eventoDe(t); agendaEvento(t, "", !(_ev&&_ev.hora)); } else noAgendar(t); }; });   /* build 202/203; 229: sin hora = todo el dia (lo que propone la franja) */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-agmenu]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); menuAgenda229(t, b); }; });   /* build 229 */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-evid]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); abreEvidencia(t); }; });   /* build 229 */
   Array.prototype.forEach.call(document.querySelectorAll("[data-agtododia]"),function(b){ b.onclick=function(){ window.__agTodoDia=window.__agTodoDia||{}; window.__agTodoDia[t.id]=window.__agTodoDia[t.id]?0:1; render(); }; });   /* build 203 */
   Array.prototype.forEach.call(document.querySelectorAll("[data-agcambia]"),function(b){ b.onclick=function(){ window.__agEdit=window.__agEdit||{}; window.__agEdit[t.id]=1; render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-agguarda]"),function(b){ b.onclick=function(){ var f=$("agf"), h=$("agh"); if(guardaFechaEvento(t, f&&f.value, h&&h.value)) render(); }; });
@@ -15239,6 +15331,7 @@ function leeDesde(t, ix){ leeArranca(t, _leeMsgs(t, ix, (t.msgs||[]).length), "d
 function leeResumenSolo(t){ var r=_leeResumen(t); leeArranca(t, r?[r]:[], "resumen"); }
 function leeTarea(t){
   var c=[_leeEntrada(t)], r=_leeResumen(t, true); if(r) c.push(r);
+  var _ag=_leeAgenda229(t); if(_ag) c.push(_ag);   /* build 229: la franja Agendar tambien se lee */
   leeArranca(t, c.concat(_leeMsgs(t,0,(t.msgs||[]).length)), "tarea");
 }
 function leeNuevo(t){
@@ -15248,6 +15341,7 @@ function leeNuevo(t){
   var antes=_leeMsgs(t,0,k).slice(-3), nuevos=_leeMsgs(t,k,ms.length);
   var leidos=antes.concat(nuevos).map(function(x){ return x.ix; });
   var c=[_leeEntrada(t)], r0=_leeResumen(t), r=(r0 && leidos.indexOf(r0.pix)>=0)?_leeResumen(t,true):r0; if(r) c.push(r);
+  var _ag2=_leeAgenda229(t); if(_ag2) c.push(_ag2);   /* build 229 */
   if(antes.length && mk){ c.push({tx:"Lo último que escuchaste."}); antes.forEach(function(x){ c.push(x); }); }
   if(nuevos.length){ if(antes.length && mk) c.push({tx:"Ahora lo nuevo."}); nuevos.forEach(function(x){ c.push(x); }); }
   else c.push({tx:"No hay mensajes nuevos."});
