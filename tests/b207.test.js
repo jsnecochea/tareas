@@ -20,9 +20,9 @@ var ft = fs.readFileSync(path.join(__dirname, "fechas.test.js"), "utf8");
 var F_FUNCS = eval(ft.match(/var FUNCS = (\[[\s\S]*?\]);/)[1]), F_VARS = eval(ft.match(/var VARS = (\[[\s\S]*?\]);/)[1]);
 var FUNCS = F_FUNCS.concat(["esNotaClaude", "ordenClaraClaude", "sinPrefijoClaude", "ritmoDicho", "extraeLocal", "soloMeFalta", "completaRevision", "completitud", "contextoPct", "contextoDe", "tipoItem",
   "esDato", "creadaCon", "msCreacion", "_fechaDeId", "_diaCreacion", "fechaPuestaSola", "eventoDe", "revisaCompleta", "preguntasFalta", "fechasRaras", "conMayuscula", "vFaltaInfo", "palabrasClave",
-  "palabrasBusqueda", "_sinGrupo", "_bst", "_bw", "vAgenda", "eventoPendiente", "faltaVieja", "tipoRevisar", "porAutorizar", "creadaPorSistema", "faltaInfoRev", "esDecisionSal", "meDetiene", "diaMonterrey", "abiertasParaVincular", "estadoParaClaude", "promptRevision", "aplicaRevisionClaude", "tituloTarea", "traeFecha", "transfiere", "posibleDup"])
+  "palabrasBusqueda", "_sinGrupo", "_bst", "_bw", "vAgenda", "eventoPendiente", "faltaVieja", "tipoRevisar", "porAutorizar", "creadaPorSistema", "faltaInfoRev", "esDecisionSal", "meDetiene", "diaMonterrey", "okDeRevision", "palomeaEnOrden", "abiertasParaVincular", "estadoParaClaude", "promptRevision", "aplicaRevisionClaude", "tituloTarea", "traeFecha", "transfiere", "posibleDup"])
   .filter(function (x, i, a) { return a.indexOf(x) === i; });
-var VARS = F_VARS.concat(["TITULO_CONECTORES", "RITMO_RE", "CITA_RE", "CTX_MIN_PAL", "SINONIMOS", "BUSCA_VACIAS", "REV_DESDE"]);
+var VARS = F_VARS.concat(["PALOMEO_MS", "TITULO_CONECTORES", "RITMO_RE", "CITA_RE", "CTX_MIN_PAL", "SINONIMOS", "BUSCA_VACIAS", "REV_DESDE"]);
 var codigo = bloque("/* @@FECHAS-INICIO", "/* @@FECHAS-FIN */") + "\n" + VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" + FUNCS.map(function (f) { return saca("function", f); }).join("\n");
 var RealDate = Date, NOW = new RealDate(2026, 9, 4, 21, 14, 0).getTime();
 function FakeDate() { var a = Array.prototype.slice.call(arguments); if (!(this instanceof FakeDate)) return new RealDate(NOW).toString();
@@ -35,7 +35,7 @@ var c = { Date: FakeDate, console: console, Math: Math, JSON: JSON, String: Stri
   msg: function (t, k, tx) { (t.msgs = t.msgs || []).push({ k: k, t: tx }); }, guarda: function () {}, render: function () { renders++; },
   preguntaAClaude: function (m, mod, cb) { IA.llamadas++; IA.prompt = m[0].content; cb(IA.err ? null : JSON.stringify(IA.resp || {}), IA.err); },
   selloYSigue: function (t, o) { sellos.push(o.tipo); }, sincronizaAvisos: function () {}, cierraHecha: function () {}, completaPendiente: function () {}, nuevoAviso: function () {},
-  esEjemplo: function () { return false; }, contactosWA: function () { return []; }, posibleDup: function () { return []; }, estadoReal: function (t) { return t.estado || "abierta"; } };
+  setTimeout: function (f) { f(); }, esEjemplo: function () { return false; }, contactosWA: function () { return []; }, posibleDup: function () { return []; }, estadoReal: function (t) { return t.estado || "abierta"; } };
 vm.createContext(c); vm.runInContext(codigo, c);
 var ok = 0, n = 0, malas = [];
 function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
@@ -127,6 +127,6 @@ var T8 = CONSEJO(); T8._leyendo = Date.now(); T8.posible_dup = ["JUNTA_CUMBRES_S
 var v8 = c.vFaltaInfo(T8);
 si("tarjeta: 'Claude está leyendo…' mientras contesta", /Claude está leyendo lo que dictaste…/.test(v8));
 si("tarjeta: la franja con el vínculo propuesto y su botón (no aplicado)", /POSIBLE VINCULACIÓN<\/span><span class="rcp">Propuesta de Claude; no la vinculé\.<\/span><div class="rvv"><span><b>Junta Consejo Cumbres septiembre<\/b><\/span><button class="rvb" data-rvinc="JUNTA_CUMBRES_SEP">Vincular/.test(v8));
-si("VERSION_APP build 207", /var VERSION_APP = "build 207/.test(html));
+si("VERSION_APP build 207+", /var VERSION_APP = "build 20[7-9]/.test(html));
 console.log((malas.length ? malas.map(function (x) { return "  X " + x; }).join("\n") + "\n" : "") + "RESULTADO " + ok + "/" + n);
 process.exit(malas.length ? 1 : 0);

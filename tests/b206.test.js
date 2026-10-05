@@ -35,7 +35,7 @@ var c = { Date: FakeDate, console: console, Math: Math, JSON: JSON, String: Stri
   msg: function (t, k, tx) { (t.msgs = t.msgs || []).push({ k: k, t: tx }); }, guarda: function () {}, render: function () { renders++; },
   preguntaAClaude: function (m, mod, cb) { IA.llamadas++; IA.prompt = m[0].content; cb(IA.err ? null : JSON.stringify(IA.resp || {}), IA.err); },
   selloYSigue: function (t, o) { sellos.push(o.tipo); }, sincronizaAvisos: function () {}, cierraHecha: function () {}, completaPendiente: function () {}, nuevoAviso: function () {},
-  esEjemplo: function () { return false; }, contactosWA: function () { return []; }, posibleDup: function () { return []; }, estadoReal: function (t) { return t.estado || "abierta"; },
+  setTimeout: function (f) { f(); }, esEjemplo: function () { return false; }, contactosWA: function () { return []; }, posibleDup: function () { return []; }, estadoReal: function (t) { return t.estado || "abierta"; },
   duenioDicho: function () { return null; }, transfiere: function () { return { ok: false }; }, faltanParaCerrar: function () { return []; }, tituloTarea: function (x) { return x; }, cierraSinEjecutar: function () {}, muestraDeshacer: function () {} };
 vm.createContext(c); vm.runInContext(codigo, c);
 var ok = 0, n = 0, malas = [];

@@ -701,6 +701,10 @@ button{font:inherit;color:inherit}
 .chk{list-style:none;margin:0;padding:0;font-size:15px;line-height:1.6}
 .typep{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 14px}
 /* build 205: Falta info en vivo */
+.chk li.palomea,.fic.palomea .ok{display:inline-block;animation:palPop .45s cubic-bezier(.2,.9,.25,1.2)}   /* build 208 */
+.chk li.palomea{display:list-item;color:#30d158}
+@keyframes palPop{0%{transform:scale(.5);opacity:0}60%{transform:scale(1.12);opacity:1}100%{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){.chk li.palomea,.fic.palomea .ok{animation-duration:.01s}}
 .solofalta{margin:6px 14px;font-size:15px;line-height:1.35;color:#ffd60a}.solofalta b{color:#ffd60a}
 .fic.hecho{opacity:.55;flex-direction:row;align-items:center;gap:8px;padding:8px 12px}.fic.hecho .ctxc{font-size:13px;color:var(--ink-3,#9a9aa2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .chk .tenue{opacity:.5;font-size:13px}
@@ -1201,7 +1205,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 207 · Falta info: todo lo dictado va primero a Claude (una llamada: nombre, contexto, fechas, ritmo, quién, tipo, etiquetas y vínculos propuestos)";
+var VERSION_APP = "build 208 · Falta info: al llegar lo de Claude, los checks se palomean uno por uno (250 ms) y luego Solo me falta o autoriza";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -4104,18 +4108,30 @@ function vTipoToggle(t){
 /* build 195: tarjetas de lo nuevo/incompleto: Contexto (rayita 75%) + lo que falta */
 function vFaltaInfo(t){
   var c=completitud(t), ctx=contextoDe(t), kw=palabrasClave(t);
+  /* build 208: durante el palomeo, lo que aun no toca se ve pendiente y lo recien palomeado va en su renglon, animado */
+  var _P=(window.__palomeo||{})[t.id]||null;
+  if(_P){ c=JSON.parse(JSON.stringify(c)); c.items.forEach(function(x){ if(_P.pend.indexOf(x.k)>=0) x.ok=false; });
+    if(_P.pend.indexOf("ctx")>=0){ c.ctxOk=false; c.ctxPct=Math.min(c.ctxPct,74); }
+    c.hechos=c.items.filter(function(x){ return x.ok; }).length; c.datosPct=Math.round(c.hechos*100/(c.items.length||1)); }
   /* build 205: arriba "Solo me falta: …"; lo ya completo se pone tenue y plegado */
-  var _sf=soloMeFalta(t), h=_sf.length?'<div class="solofalta"><b>Solo me falta:</b> '+esc(_sf.join(" · "))+'</div>':'';
+  var _sf=_P?[]:soloMeFalta(t), h=_sf.length?'<div class="solofalta"><b>Solo me falta:</b> '+esc(_sf.join(" · "))+'</div>':'';
   if(t._leyendo && Date.now()-t._leyendo<60000) h='<div class="solofalta leyendo">Claude está leyendo lo que dictaste…</div>'+h;   /* build 207 */
   var _pd207=t.dup_resuelto?[]:posibleDup(t);   /* build 207: vinculos que propuso Claude, solo propuestos */
   if(_pd207.length) h+='<div class="revc c-vincular"><span class="rct">POSIBLE VINCULACIÓN</span><span class="rcp">Propuesta de Claude; no la vinculé.</span>'+
     _pd207.slice(0,3).map(function(d){ return '<div class="rvv"><span><b>'+esc(d.nombre)+'</b></span><button class="rvb" data-rvinc="'+esc(d.id)+'">Vincular</button></div>'; }).join("")+'</div>';
-  if(c.ctxOk) h+='<div class="fic ctx hecho"><span class="ok">✓ Contexto</span><span class="ctxc">'+esc(ctx.length>90?ctx.slice(0,89)+"…":ctx)+'</span></div>';
+  if(c.ctxOk) h+='<div class="fic ctx hecho'+(_P&&_P.hechos.indexOf("ctx")>=0?' palomea':'')+'"><span class="ok">✓ Contexto</span><span class="ctxc">'+esc(ctx.length>90?ctx.slice(0,89)+"…":ctx)+'</span></div>';
   else h+='<div class="fic ctx"><div class="meter"><div class="lb"><span class="ok">Contexto'+(c.ctxOk?' ✓':'')+'</span><span class="pend">'+(c.ctxOk?'listo':'mínimo en la rayita')+'</span></div>'+
     '<div class="bar g"><i style="width:'+c.ctxPct+'%"></i></div></div>'+
     (ctx?'<p>'+esc(ctx)+'</p>':'<p class="vac">Dime de qué se trata.</p>')+
     (kw.length?'<div class="kw">'+kw.map(function(w){ return '<span>'+esc(w)+'</span>'; }).join("")+'</div>':'')+'</div>';
   var _ok=c.items.filter(function(x){ return x.ok; }), _pe=c.items.filter(function(x){ return !x.ok; });
+  if(_P){ var _rec=_ok.filter(function(x){ return _P.hechos.indexOf(x.k)>=0; }); _ok=_ok.filter(function(x){ return _P.hechos.indexOf(x.k)<0; });
+    h+='<div class="fic info"><div class="meter"><div class="lb"><span style="color:var(--fi-blue)">'+(c.tipo==="dato"?'Datos del dato':'Datos de la tarea')+'</span><span class="pend">'+c.hechos+' de '+c.items.length+'</span></div>'+
+      '<div class="bar b"><i style="width:'+c.datosPct+'%"></i></div></div><ul class="chk">'+
+      _rec.map(function(x){ return '<li class="ok palomea">✓ '+esc(x.tx)+'</li>'; }).join("")+
+      _pe.map(function(x){ return '<li class="pend">○ '+esc(x.tx)+'</li>'; }).join("")+
+      (_ok.length?'<li class="ok tenue">✓ '+esc(_ok.map(function(x){ return x.tx; }).join(" · "))+'</li>':'')+'</ul></div>';
+    return h; }
   if(!_pe.length){ h+='<div class="fic info hecho"><span style="color:var(--fi-blue)">✓ '+(c.tipo==="dato"?'Datos del dato':'Datos de la tarea')+'</span></div>'+vAgenda(t); return h; }
   h+='<div class="fic info"><div class="meter"><div class="lb"><span style="color:var(--fi-blue)">'+(c.tipo==="dato"?'Datos del dato':'Datos de la tarea')+'</span><span class="pend">'+c.hechos+' de '+c.items.length+'</span></div>'+
     '<div class="bar b"><i style="width:'+c.datosPct+'%"></i></div></div><ul class="chk">'+
@@ -7005,10 +7021,29 @@ function aplicaRevisionClaude(t, v, j, abiertas){
     if(_pqOk) dudas.push(pq); }
   return {hecho:hecho, dudas:dudas, vinc:vinc, yaHecha:false};
 }
+/* ===== build 208 (Salvador 22:04): nada de palomeo en vivo mientras dicta. Al llegar lo de Claude, lo que se completo
+   se palomea UNO POR UNO (animacion de palomita, PALOMEO_MS entre cada uno); al final queda tenue y sale "Solo me falta"
+   o se autoriza. Mientras se palomea, lo que aun no toca se ve pendiente. ===== */
+var PALOMEO_MS=250;
+function okDeRevision(t){ var c=completitud(t), r=c.items.filter(function(x){ return x.ok; }).map(function(x){ return x.k; }); if(c.ctxOk) r.unshift("ctx"); return r; }
+function palomeaEnOrden(t, antes, alFinal){
+  var nuevos=okDeRevision(t).filter(function(k){ return antes.indexOf(k)<0; });
+  if(!nuevos.length){ alFinal(); return; }
+  window.__palomeo=window.__palomeo||{}; var P=window.__palomeo[t.id]={pend:nuevos.slice(), hechos:[]};
+  if(vista==="hilo" && abierta===t.id) render();
+  var paso=function(){
+    if(!P.pend.length){ delete window.__palomeo[t.id]; alFinal(); return; }
+    P.hechos.push(P.pend.shift()); if(vista==="hilo" && abierta===t.id) render();
+    setTimeout(paso, PALOMEO_MS); };
+  setTimeout(paso, PALOMEO_MS);
+}
 function completaRevision(t, v){
+  var _antes208=okDeRevision(t);   /* build 208: lo que ya estaba palomeado ANTES de dictar (el dictado mismo cuenta en contextoDe) */
   msg(t,"bo",v); var _m0=t.msgs[t.msgs.length-1]; _m0.de=yo; _m0.completa_info=1;
   t._leyendo=Date.now(); guarda(t); render();   /* la tarjeta dice "Claude está leyendo…" */
   var _fin=function(hecho, dudas, vinc){ delete t._leyendo; guarda(t); try{ sincronizaAvisos(t); }catch(e){}
+    palomeaEnOrden(t, _antes208, function(){ _cierre(hecho, dudas, vinc); }); };
+  var _cierre=function(hecho, dudas, vinc){
     var _pv=(vinc||[]).map(function(id){ var d=tareas.filter(function(x){ return x.id===id; })[0]; return d?"“"+d.nombre+"”":""; }).filter(Boolean);
     var _vx=_pv.length?" Posible vínculo con "+_pv.join(" o ")+": te lo dejo propuesto, no lo vinculé.":"";
     if(!(dudas||[]).length && revisaCompleta(t)){ if(_vx){ msg(t,"bi",(hecho.length?"Anoté: "+hecho.join(", ")+".":"")+_vx); guarda(t); } return; }
