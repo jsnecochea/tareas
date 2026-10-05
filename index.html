@@ -1048,8 +1048,7 @@ button{font:inherit;color:inherit}
 .metas .mth{display:flex;align-items:center;gap:8px;font-size:16px}.metas .mth b{flex:1}.metas .mtc{font-size:13px;color:var(--ink-3)}.metas .mtc.rojo{color:#ff453a;font-weight:700}
 .metas .mt{display:flex;gap:10px;padding:10px 0;border-top:1px solid #2c2c2e}.metas .mt:first-of-type{border-top:0}
 .metas .mts{width:12px;height:12px;border-radius:50%;margin-top:5px;flex:none;background:#8e8e93}
-.metas .s-verde .mts{background:#30d158}.metas .s-ambar .mts{background:#ff9f0a}.metas .s-rojo .mts{background:#ff453a;box-shadow:0 0 8px #ff453a}
-.metas .s-rojo .mtsf{color:#ff453a;font-weight:700}.metas .s-ambar .mtsf{color:#ff9f0a;font-weight:600}.metas .s-verde .mtsf{color:#30d158}
+.metas .s-rojo .mts{background:#ff453a;box-shadow:0 0 8px #ff453a}.metas .s-rojo .mtsf{color:#ff453a;font-weight:700}   /* Salvador 11:17: SOLO rojo si está atrasada */
 .metas .mtb{flex:1;min-width:0}.metas .mtx{font-size:16px;line-height:1.3}.metas .mtm,.metas .mtg{font-size:13px;color:var(--ink-3);margin-top:3px}
 .metas .mta{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
 .metas .mtfoto,.metas .mtok{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:12px;padding:7px 12px;font-size:14px;font-weight:600}
@@ -1057,6 +1056,9 @@ button{font:inherit;color:inherit}
 .metas .mtf{width:46px;height:46px;border-radius:8px;object-fit:cover}.metas .mtv{color:var(--ink-3);font-size:14px;padding:6px 0}
 .metas .mthist{display:block;width:100%;margin-top:6px;border:0;background:none;color:var(--ink-3);font-size:14px;text-align:left;padding:8px 0}
 .metas .mthl{display:flex;flex-direction:column;gap:8px}.metas .mth1{display:flex;gap:10px;align-items:center;opacity:.8}.metas .mtnf{width:46px;font-size:11px;color:var(--ink-3);text-align:center}
+.revc.c-decmeta{background:#3a0d12;border:1px solid #ff453a}.revc.c-decmeta .rct{color:#ff8a80}.revc.c-decmeta .rcp{color:#ffb3ad}
+.revc .dmr{font-size:14.5px;line-height:1.35;color:var(--ink)}.revc .dmr .vac{color:var(--ink-3)}.revc .dmf{display:flex;gap:6px;overflow-x:auto}.revc .dmf img{width:64px;height:64px;border-radius:10px;object-fit:cover;flex:none}
+.revc .dmb{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}.revc .dmk{border:0;border-radius:12px;padding:10px 14px;font-weight:700;font-size:15px;background:#2c2c2e;color:var(--ink)}.revc .dmk.si{background:#0a84ff;color:#fff}
 .revc.c-quien{background:#10283f;border:1px solid #4aa3ff}.revc.c-quien .rct,.revc.c-quien .rcp{color:#9cc9ff}   /* build 221 */
 .qdl{display:flex;flex-direction:column;gap:6px;max-height:46vh;overflow:auto}
 .qdb{display:flex;flex-direction:column;align-items:flex-start;width:100%;border:0;border-radius:12px;padding:9px 12px;background:#1c3a5a;color:var(--ink);text-align:left;font-size:16px}
@@ -1282,7 +1284,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 222 · Tareas continuas con Metas: semáforo, foto, historial, seguimiento por meta y aviso de atraso";
+var VERSION_APP = "build 222 · Metas en tareas continuas; Claude supervisa al ejecutor y solo te llegan decisiones armadas";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -7298,13 +7300,14 @@ function promptRevision(t, v, abiertas){
     "- seguimiento_a: SOLO si te pidió que TÚ le des seguimiento a alguien (\"dale seguimiento a X\", \"pregúntale a X cada…\"): {\"quien\":\"nombre tal cual\",\"meta\":\"qué tiene que quedar, con sus palabras\",\"cada\":\"la frecuencia TAL CUAL la dijo, o null\",\"fechas\":[AAAA-MM-DD copiadas del calendario, SOLO los días que salen de esa frecuencia, máx 10, hasta 3 semanas],\"hora\":\"HH:MM solo si la dijo, o null\",\"texto\":\"el WhatsApp corto y amable que le mandarías, empezando con 'IA: '\"}; si no, null.\n"+
     "- compartir_con: si dijo con quién se comparte la tarea o a quién se le avisa (\"la comparto con mi madre María…\"): los nombres COMPLETOS tal cual los dijo, sin cortarlos; si no, [].\n"+
     "- Los nombres de personas SIEMPRE completos, tal cual los dijo; nunca abreviados ni cortados.\n"+
-    "- metas: SOLO si la tarea es INDEFINIDA/continua (o dice que no tiene fin): cada cosa que debe quedar con su fecha (\"que quede el 9\", \"impermeabilizar en 3 meses\") es una META [{\"tx\":\"qué debe quedar, con sus palabras\",\"fecha\":\"AAAA-MM-DD del calendario o null\",\"quien\":\"quién la ejecuta tal cual o null\",\"seguimiento\":{\"quien\":\"…\",\"cada\":\"…\",\"hora\":\"HH:MM o null\"} o null}]; en una tarea continua NUNCA pongas esa fecha en \"fecha\". Si no, [].\n"+
+    "- metas: SOLO si la tarea es INDEFINIDA/continua (o dice que no tiene fin): cada cosa que debe quedar con su fecha (\"que quede el 9\", \"impermeabilizar en 3 meses\") es una META [{\"tx\":\"qué debe quedar, con sus palabras\",\"fecha\":\"AAAA-MM-DD del calendario o null\",\"quien\":\"quién la ejecuta tal cual o null\",\"seguimiento\":{\"quien\":\"…\",\"cada\":\"…\",\"hora\":\"HH:MM o null\"} o null}]; en una tarea continua NUNCA pongas esa fecha en \"fecha\". Si no, []. Cada meta puede llevar \"aviso_inmediato\":true SOLO si pidió que le avises de inmediato si ESA se vence.\n"+
+    "- aviso_inmediato: true SOLO si dijo \"avísame de inmediato si se vence\" (o igual) para la tarea en general.\n"+
     "- palabras: hasta 5 etiquetas para encontrarla; sinonimos: hasta 5 sinónimos o formas en que la podría buscar.\n"+
     "- vinculos: ids (de TAREAS ABIERTAS) que traten de LO MISMO, máx 3; solo se proponen. Si ninguna, [].\n"+
     "- de_quien y cifras: para datos (de quién o qué proyecto; montos o medidas tal cual). ya_hecha=true solo si dice que ya se hizo.\n"+
     "- pregunta: SOLO lo que de verdad quedó ambiguo, en una pregunta corta; lo demás llénalo igual. Si todo quedó claro, null.\n"+
     "- checklist: si pide una lista o checklist: {\"titulo\":\"…\",\"items\":[{\"tx\":\"renglón tal cual\",\"estado\":0}]} (0 pendiente, 1 invitado/hecho, 2 confirmado, solo si se dijo); si no, null. CHECKLIST ACTUAL: "+checklistTexto(t)+".\n"+
-    "Contesta SOLO JSON: {\"checklist\":null,\"nombre\":null,\"tipo\":null,\"contexto\":null,\"contexto_modo\":\"reemplazar\",\"fecha\":null,\"indefinida\":false,\"periodicidad\":null,\"ritmo\":null,\"recordar\":[],\"quien\":null,\"responsable\":null,\"yo_superviso\":false,\"seguimiento_a\":null,\"compartir_con\":[],\"metas\":[],\"palabras\":[],\"sinonimos\":[],\"vinculos\":[],\"de_quien\":null,\"cifras\":null,\"ya_hecha\":false,\"pregunta\":null}\n\n"+
+    "Contesta SOLO JSON: {\"checklist\":null,\"nombre\":null,\"tipo\":null,\"contexto\":null,\"contexto_modo\":\"reemplazar\",\"fecha\":null,\"indefinida\":false,\"periodicidad\":null,\"ritmo\":null,\"recordar\":[],\"quien\":null,\"responsable\":null,\"yo_superviso\":false,\"seguimiento_a\":null,\"compartir_con\":[],\"metas\":[],\"aviso_inmediato\":false,\"palabras\":[],\"sinonimos\":[],\"vinculos\":[],\"de_quien\":null,\"cifras\":null,\"ya_hecha\":false,\"pregunta\":null}\n\n"+
     "ESTADO ACTUAL DE LA TAREA:\n"+estadoParaClaude(t)+(esMetas(t)?"\nMETAS: "+metasDe(t).map(function(m){ return m.tx+(m.fecha?" ("+m.fecha+")":"")+(metaCumplida(m)?" CUMPLIDA "+(m.cumplida||""):""); }).join(" | "):"")+"\n\nLO QUE FALTA: "+(soloMeFalta(t).join(" | ")||"(nada)")+"\nPREGUNTAS QUE LE HICE: "+(preguntasFalta(t).join(" | ")||"(ninguna)")+
     "\n\nTAREAS ABIERTAS (id | nombre):\n"+(abiertas.map(function(x){ return x.id+" | "+(x.nombre||""); }).join("\n")||"(ninguna)")+
     "\n\nLO QUE DICTÓ: "+v;
@@ -7540,6 +7543,7 @@ function aplicaRevisionClaude(t, v, j, abiertas){
   if(t.f_vigente || t.periodicidad || t.indefinida===true){ t.pendiente_info=""; t.pendiente_tipo=""; }
   /* la pregunta puede nombrar dias o meses SOLO si los dijo el ("¿jueves o viernes?"); fechas sueltas del modelo, no */
   var _mt2=aplicaMetasClaude(t, v, j); hecho=hecho.concat(_mt2.hecho); dudas=dudas.concat(_mt2.dudas);   /* build 222 */
+  var _ai2=aplicaAvisoInmediato(t, v, j); if(_ai2) hecho.push(_ai2);
   if(t.indefinida===true && j.fecha && !(_mt2.hecho.length) && _fdv.todas.length && !esMetas(t)) dudas.push("Es continua: esa fecha la tomo como meta. ¿Meta de qué?");
   var _ck7=(esMetas(t) && !(j.checklist && /^metas?$/i.test(String(j.checklist.titulo||""))))?"":aplicaChecklistClaude(t, j); if(_ck7) hecho.push(_ck7);   /* build 214 */
   var _rs9=aplicaResponsable(t, v, j); if(_rs9) hecho.push(_rs9);   /* build 219 */
@@ -8232,7 +8236,7 @@ function vHilo(){
   h+='<div class="hrow"><div class="hchip '+_ch.cls+'">'+ico(_ch.ico,18,1.9)+'<span>'+esc(_ch.txt)+'</span></div>'+
      '<button class="hchev" id="bstrip" aria-expanded="'+(fichaOpen?"true":"false")+'" aria-label="Detalle">'+(fichaOpen?'▴':'▾')+'</button></div>';
   h+=lineaAgenda(t);   /* build 203: "Agendado ✓ · Calendario: en camino" / "Calendario ✓" */
-  h+=vQuienDudas(t)+vCompartir(t);   /* build 221 */
+  h+=vDecisionMeta(t)+vQuienDudas(t)+vCompartir(t);   /* build 221; 222: decisión de meta atrasada */
   if(fichaOpen) h+=vDetalle(t, frows);
   else if(tipoRevisar(t)==="falta") h+=vTipoToggle(t);
 
@@ -10294,12 +10298,15 @@ function checklistTexto(t){ return tieneChecklist(t)?t.checklist.items.map(funct
 /* ===== build 222 (Salvador, tareas continuas con METAS; caso "Mantenimiento Casa Lerdo/Eloísa") =====
    Una tarea indefinida no tiene finiquito: lo que tiene fecha son sus METAS. Viven en el checklist con titulo "Metas":
    items {id, tx, fecha, estado 0 pendiente | 1 en curso | 2 cumplida, quien, foto, cumplida, fuente, seguimiento|seg}.
-   - En la tarea: bloque "Metas" (texto, fecha meta, quién, semáforo a tiempo / vence hoy / atrasada, foto y palomear).
+   - En la tarea: bloque "Metas" (texto, fecha meta, quién, semáforo: SOLO rojo si está atrasada; foto y palomear).
    - Las cumplidas NO se borran: "Historial de metas" plegado, con fecha de cumplido y foto.
    - Claude: en una tarea indefinida toda fecha dictada ("que quede el 9", "en 3 meses") entra como META, nunca como
      finiquito; si se parece a una del historial lo dice ("Se cumplió “Azotea” el 9-oct; ¿duró poco?").
    - Seguimiento por meta (contacto, días, hora) programado por la cola con [A LAS …].
-   - Meta vencida sin palomear: aviso a Salvador "Atraso en Casa Lerdo: meta Azotea (9-oct)". ===== */
+   - Meta vencida sin palomear (ajuste 11:17): primero se le escribe al ejecutor; a Salvador solo una decisión armada (abajo). ===== */
+var AVISO_INM_RE=/\b(av[ií]s(a|ame|enme)|dime|notif[ií]ca(me)?)\b[^.]{0,40}\b(de inmediato|inmediatamente|de volada|luego luego|en cuanto|al momento|enseguida)\b|\b(de inmediato|en cuanto|luego luego)\b[^.]{0,30}\bse venc/;
+/* "avísame de inmediato si se vence": la tarea escala a Salvador desde el primer día de atraso */
+function aplicaAvisoInmediato(t, v, j){ if(!j || j.aviso_inmediato!==true || !AVISO_INM_RE.test(_fsa(v)) || t.aviso_inmediato===true) return ""; t.aviso_inmediato=true; return "aviso inmediato si se vence"; }
 function esMetas(t){ return !!(t && t.checklist && /^metas?$/i.test(String(t.checklist.titulo||"").trim())); }
 function metasDe(t){ return esMetas(t) ? (t.checklist.items||[]) : []; }
 function metaCumplida(m){ return !!m && (+m.estado||0)>=2; }
@@ -10369,7 +10376,8 @@ function aplicaMetasClaude(t, v, j){
     var m=metaNueva(t, {tx:tx, fecha:fecha, fuente:"dictado "+hhmmAhora()});
     if(!m){ out.dudas.push("Esta tarea ya tiene la lista “"+t.checklist.titulo+"”; no puse la meta “"+tx+"”."); return; }
     if(x.quien && _dichoNombre(v, x.quien)){ var rq=resuelvePersona(t, x.quien); if(rq.estado==="uno") m.quien=rq.persona.nombre; else out.dudas.push(nuevaDudaPersona(t, x.quien, "quien_meta", rq.cands, {metaId:m.id})); }
-    out.hecho.push("meta “"+metaCorta(m)+"”"+(fecha?" para el "+fechaMeta(fecha):""));
+    if(x.aviso_inmediato===true && AVISO_INM_RE.test(s)) m.aviso_inmediato=true;
+    out.hecho.push("meta “"+metaCorta(m)+"”"+(fecha?" para el "+fechaMeta(fecha):"")+(m.aviso_inmediato?" · aviso inmediato si se vence":""));
     if(!fecha) out.dudas.push("¿Para cuándo queda “"+metaCorta(m)+"”?");
     if(par) out.dudas.push("Se cumplió “"+metaCorta(par)+"” el "+fechaMeta(par.cumplida)+"; ¿duró poco?");
     var sg=x.seguimiento;
@@ -10384,20 +10392,113 @@ function aplicaMetasClaude(t, v, j){
   });
   return out;
 }
-/* metas vencidas sin palomear: UN aviso por meta y fecha a Salvador (en la tarea y, si quien usa la app no es él, push) */
-function chequeoMetas(){
-  var H=hoy();
+/* ===== build 222 (Salvador 11:17): CLAUDE ES EL SUPERVISOR OPERATIVO DE CADA RESPONSABLE; los de arriba solo ven problemas
+   o decisiones ya armadas. Meta vencida sin palomear:
+   1) primero se le escribe AL EJECUTOR por la cola de WhatsApp, positivo y motivador (reconoce, propone el siguiente paso,
+      pide fecha corta; nunca regaño ni conteo de veces), máximo 1 al día, de 8 a 20 h;
+   2) a Salvador SOLO si: la tarea o la meta tiene aviso_inmediato (él lo dictó), o el desfase es grande según la importancia:
+      criticidad alta (diario/alta) 1 día; normal 3 días o 2 seguimientos sin respuesta; baja (lento/baja) 7 días;
+   3) le llega UNA tarjeta para decidir en un toque: meta, fecha, atraso, qué contestó el ejecutor, evidencia (fotos),
+      costo si lo hay, y botones con la decisión ("Nueva fecha 12-oct" / "Hablo yo con él" / "Autorizo"). ===== */
+var ESCALA_DIAS={alta:1, normal:3, baja:7};
+function importanciaDe(t){ var c=String((t&&t.criticidad)||"normal").toLowerCase(); return (c==="diario"||c==="alta"||c==="critica")?"alta":((c==="lento"||c==="baja")?"baja":"normal"); }
+function ejecutorMeta(t, m){
+  var c=String((m.seg&&m.seg.contacto)||m.quien||t.revisa_ext||"").trim();
+  if(c) return {nombre:c};                                                      /* por WhatsApp (la cola) */
+  if(t.duenio && t.duenio!==yo && PERSONAS[t.duenio]) return {k:t.duenio, nombre:PERSONAS[t.duenio].nombre};   /* de Doit: en la app */
+  return null;
+}
+/* lo que contestó el ejecutor desde que venció la meta (sus mensajes entrantes) */
+function respuestasEjecutor(t, ej, desdeTs){
+  var nn=_nn(ej.nombre).split(/\s+/)[0];
+  return (t.msgs||[]).filter(function(x){ return x && x.wa_in===1 && (x.ts||0)>=desdeTs && _nn(String(x.wa_c||"")).split(/\s+/)[0]===nn; });
+}
+function textoEmpuje(t, m, ej){
+  var n=nombreCorto(ej.nombre).split(" ")[0];
+  return "IA: Hola "+n+", gracias por lo que van avanzando en "+tareaCorta(t)+". La meta “"+metaCorta(m)+"” estaba para el "+fechaMeta(m.fecha)+
+    ". ¿Qué te falta para dejarla lista y para qué día la podemos cerrar? Si me mandas una foto de cómo va, mejor.";
+}
+function empujaEjecutor(t, m, ej){
+  var tx=textoEmpuje(t, m, ej);
+  if(ej.k){ msg(t,"bal",tx.replace(/^IA:\s*/,"")); var mm=t.msgs[t.msgs.length-1]; mm.canal="dm:"+ej.k; mm.aviso=1; mm.meta_id=m.id; mm.pide_a=ej.k;
+    try{ disparaPushInstantaneo(ej.k, tareaCorta(t), "Meta “"+metaCorta(m)+"”: ¿para cuándo queda?", urlTarea(t.id), "seguimiento"); }catch(e){}
+    return; }
+  msg(t,"bi","→ "+nombreCorto(ej.nombre)+": “"+tx.replace(/^IA:\s*/,"")+"” · en cola"); var mw=t.msgs[t.msgs.length-1]; mw.wa=1; mw.wa_c=ej.nombre; mw.meta_id=m.id;
+  pideWhatsApp({usuario:yo, tarea_id:t.id, contacto:ej.nombre, texto:tx, sin_espera:1})
+    .then(function(j){ var pid=(j&&(j.id||j.pedido_id))||null; if(pid){ mw.wa_pid=pid; guarda(t); } })
+    .catch(function(e){ mw.wa_err=String((e&&e.message)||e).slice(0,60); guarda(t); });
+}
+/* fotos que mandó el ejecutor desde que venció + la foto de la meta; costo en lo que dijo o en el gasto de la tarea */
+function evidenciaMeta(t, m, ej, desdeTs){
+  var rs=ej?respuestasEjecutor(t, ej, desdeTs):[], fotos=[];
+  rs.forEach(function(x){ if(x.url && /foto|imagen|image|jpe?g|png/i.test(String(x.tipo||"")+" "+x.url)) fotos.push(x.url); });
+  if(m.foto) fotos.unshift(m.foto);
+  var costo=""; rs.concat([{t:t.gasto||""}]).some(function(x){ var mm=String(x.t||"").match(/\$\s?[\d.,]+(\s*(mil|\+\s*iva|m\.?n\.?))?|\b\d[\d.,]*\s*(mil\s*)?pesos\b/i); if(mm){ costo=mm[0].trim(); return true; } return false; });
+  return {resp:rs.map(function(x){ return String(x.t||"").replace(/^[^:]{1,40}:\s*/,"").slice(0,240); }).filter(Boolean).slice(-3), fotos:fotos.slice(0,4), costo:costo};
+}
+/* propuesta de nueva fecha: la que dijo el ejecutor, si dijo una; si no, en 3 días */
+function fechaPropuesta(ev, H){
+  for(var i=ev.resp.length-1;i>=0;i--){ try{ var fd=fechaDictada(ev.resp[i]); if(fd && fd.todas && fd.todas.length && fd.todas[0]>H) return fd.todas[0]; }catch(e){} }
+  var d=new Date(H+"T00:00:00"); d.setDate(d.getDate()+3); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function escalaMeta(t, m, ej, atraso, motivo, desdeTs, H){
+  var ev=evidenciaMeta(t, m, ej, desdeTs), nf=fechaPropuesta(ev, H);
+  t.decision_meta=(t.decision_meta||[]).filter(function(d){ return d.metaId!==m.id; });
+  var d={id:"dm"+Date.now().toString(36), metaId:m.id, meta:m.tx, corta:metaCorta(m), fecha:m.fecha, atraso:atraso, motivo:motivo,
+    ejecutor:ej?ej.nombre:"", resp:ev.resp, fotos:ev.fotos, costo:ev.costo, nueva:nf, ts:Date.now()};
+  t.decision_meta.push(d); m.escalada=m.fecha;
+  if(!t.pendiente_info || t.pendiente_meta){ t.pendiente_tipo="decision_salvador"; t.pendiente_meta=d.id;
+    t.pendiente_info="Meta “"+d.corta+"” atrasada "+atraso+" día"+(atraso===1?"":"s")+(ej?" · "+nombreCorto(ej.nombre):"")+": decide"; }
+  try{ if(yo!=="salvador" && PERSONAS.salvador) disparaPushInstantaneo("salvador", tareaCorta(t), "Decide: meta “"+d.corta+"” atrasada "+atraso+" día"+(atraso===1?"":"s"), urlTarea(t.id), "espera"); }catch(e){}
+  return d;
+}
+function chequeoMetas(ahoraMs){
+  var ahora=ahoraMs||Date.now(), H=hoy(), hr=new Date(ahora).getHours();
   tareas.forEach(function(t){
     if(t.cierre || estadoReal(t)==="cerrada" || !esMetas(t)) return;
+    var imp=importanciaDe(t), cambio=false;
     metasDe(t).forEach(function(m){
-      if(metaCumplida(m) || !/^\d{4}-\d{2}-\d{2}$/.test(m.fecha||"") || m.fecha>=H || m.aviso_atraso===m.fecha) return;
-      m.aviso_atraso=m.fecha;
-      var tx="Atraso en "+tareaCorta(t)+": meta "+metaCorta(m)+" ("+fechaMeta(m.fecha)+")";
-      msg(t,"bal",tx); var mm=t.msgs[t.msgs.length-1]; mm.aviso=1; mm.meta_id=m.id; mm.canal="equipo";
-      guarda(t);
-      try{ if(yo!=="salvador" && PERSONAS.salvador) disparaPushInstantaneo("salvador", tareaCorta(t), tx, urlTarea(t.id), "seguimiento"); }catch(e){}
+      if(metaCumplida(m) || !/^\d{4}-\d{2}-\d{2}$/.test(m.fecha||"") || m.fecha>=H || m.escalada===m.fecha) return;
+      var atraso=dDif(m.fecha, H), ej=ejecutorMeta(t, m), desde=new Date(m.fecha+"T23:59:59").getTime();
+      m.empuje=(m.empuje && m.empuje.fecha===m.fecha)?m.empuje:{fecha:m.fecha, n:0, ult:"", ts:[]};
+      var resp=ej?respuestasEjecutor(t, ej, desde):[], ultResp=resp.length?Math.max.apply(null, resp.map(function(x){ return x.ts||0; })):0;
+      var sinResp=m.empuje.ts.filter(function(x){ return x>ultResp; }).length;
+      var inmediato=t.aviso_inmediato===true || m.aviso_inmediato===true;
+      var motivo=inmediato?"pediste aviso inmediato":(atraso>=ESCALA_DIAS[imp]?"lleva "+atraso+" día"+(atraso===1?"":"s")+" de atraso (importancia "+imp+")":
+        ((imp==="normal" && sinResp>=2)?"no contestó 2 seguimientos":""));
+      if(motivo || !ej){ escalaMeta(t, m, ej, atraso, motivo||"no hay a quién darle seguimiento", desde, H); cambio=true; return; }
+      if(m.yo_hablo || m.empuje.ult===H || hr<8 || hr>=20) return;
+      empujaEjecutor(t, m, ej); m.empuje.n++; m.empuje.ult=H; m.empuje.ts.push(ahora); cambio=true;
     });
+    if(cambio) guarda(t);
   });
+}
+/* Salvador decide en un toque desde la tarjeta */
+function decideMeta(t, did, accion, fecha){
+  var d=(t.decision_meta||[]).filter(function(x){ return x.id===did; })[0]; if(!d) return "";
+  var m=metasDe(t).filter(function(x){ return x.id===d.metaId; })[0], ej=m?ejecutorMeta(t, m):null, tx="";
+  t.decision_meta=t.decision_meta.filter(function(x){ return x.id!==did; });
+  if(t.pendiente_meta===did){ t.pendiente_info=""; t.pendiente_tipo=""; delete t.pendiente_meta; }
+  if(accion==="fecha" && m){ var nf=/^\d{4}-\d{2}-\d{2}$/.test(fecha||"")?fecha:d.nueva; m.fecha_antes=(m.fecha_antes||[]).concat([m.fecha]); m.fecha=nf; m.escalada=null; m.empuje=null; m.aviso_atraso=null;
+    tx="Nueva fecha para “"+d.corta+"”: "+fechaMeta(nf)+".";
+    if(ej && !ej.k) pideWhatsApp({usuario:yo, tarea_id:t.id, contacto:ej.nombre, texto:"IA: Hola "+nombreCorto(ej.nombre).split(" ")[0]+", quedamos para el "+fechaMeta(nf)+" con “"+d.corta+"”. ¡Gracias!", sin_espera:1}).catch(function(){}); }
+  else if(accion==="hablo" && m){ m.yo_hablo=true; tx="Tú hablas con "+(d.ejecutor?nombreCorto(d.ejecutor):"el responsable")+" de “"+d.corta+"”; dejo de insistirle."; }
+  else if(accion==="autorizo" && m){ m.autorizado={costo:d.costo||"", ts:Date.now(), por:yo}; m.escalada=m.fecha; tx="Autorizaste “"+d.corta+"”"+(d.costo?" ("+d.costo+")":"")+".";
+    if(ej && !ej.k) pideWhatsApp({usuario:yo, tarea_id:t.id, contacto:ej.nombre, texto:"IA: Hola "+nombreCorto(ej.nombre).split(" ")[0]+", Salvador autoriza “"+d.corta+"”"+(d.costo?" ("+d.costo+")":"")+". Adelante, ¡gracias!", sin_espera:1}).catch(function(){}); }
+  if(tx) msg(t,"bi",tx); guarda(t); return tx;
+}
+function vDecisionMeta(t){
+  return (t.decision_meta||[]).map(function(d){
+    return '<div class="revc c-decmeta" data-dm="'+esc(d.id)+'"><span class="rct">DECIDE · META ATRASADA</span>'+
+      '<span class="rcq">'+esc(d.meta)+'</span>'+
+      '<span class="rcp">Meta '+esc(fechaMovCorta(d.fecha))+' · <b>'+d.atraso+' día'+(d.atraso===1?'':'s')+' de atraso</b>'+(d.ejecutor?' · '+esc(nombreCorto(d.ejecutor)):'')+' · '+esc(d.motivo)+'</span>'+
+      '<div class="dmr"><b>Contestó:</b> '+(d.resp.length?d.resp.map(function(x){ return '“'+esc(x)+'”'; }).join(" · "):'<span class="vac">nada desde que venció</span>')+'</div>'+
+      (d.fotos.length?'<div class="dmf">'+d.fotos.map(function(u){ return '<img src="'+esc(u)+'" alt="evidencia">'; }).join("")+'</div>':'<div class="dmr"><b>Evidencia:</b> <span class="vac">sin fotos</span></div>')+
+      (d.costo?'<div class="dmr"><b>Costo:</b> '+esc(d.costo)+'</div>':'')+
+      '<div class="dmb"><button class="dmk si" data-dmact="fecha" data-dmid="'+esc(d.id)+'">Nueva fecha '+esc(fechaMeta(d.nueva))+'</button>'+
+      '<button class="dmk" data-dmact="hablo" data-dmid="'+esc(d.id)+'">Hablo yo con él</button>'+
+      (d.costo?'<button class="dmk" data-dmact="autorizo" data-dmid="'+esc(d.id)+'">Autorizo</button>':'')+'</div></div>';
+  }).join("");
 }
 function vMetas(t){
   var L=metasDe(t), H=hoy(), pend=L.filter(function(m){ return !metaCumplida(m); }), hech=L.filter(metaCumplida);
@@ -12522,7 +12623,8 @@ function bindHilo(){
       hojaConfirma({titulo:"Pasar todo a \u201c"+corta40(d.nombre)+"\u201d", sub:"Lo de \u201c"+corta40(t.nombre)+"\u201d se junta all\u00e1.",
         accion:"Vincular", cb:function(){ d.autorizada=true; enlazaTareas(t.id, did, "trabajador (posible duplicado)"); }}); };
   });
-  /* build 222: metas — palomear, foto de comprobante, historial */
+  /* build 222: metas — palomear, foto de comprobante, historial; decisión de meta atrasada en un toque */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-dmact]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var tx=decideMeta(t, el.getAttribute("data-dmid"), el.getAttribute("data-dmact")); if(tx) toast(tx); render(); }; });
   var _bmh=$("bmetahist"); if(_bmh) _bmh.onclick=function(ev){ ev.stopPropagation(); window.__metaHist=window.__metaHist||{}; window.__metaHist[t.id]=!window.__metaHist[t.id]; render(); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-metaok]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var mid=el.getAttribute("data-metaok"), m=metasDe(t).filter(function(x){ return x.id===mid; })[0]; if(!m) return;
     hojaConfirma({titulo:"¿Se cumplió “"+metaCorta(m)+"”?", sub:m.foto?"Con su foto de comprobante. Se va al historial.":"Sin foto de comprobante. Se va al historial.", accion:"Cumplida", cb:function(){ cumpleMeta(t, mid); render(); }}); }; });
@@ -14928,6 +15030,7 @@ function ejecutaNotaClaude(t, v){
     "- responsable: si dice que la tarea es de alguien / alguien es el responsable / él solo supervisa: el nombre COMPLETO tal cual (puede ser de fuera); yo_superviso=true solo si lo dijo.\n"+
     "- seguimiento_a: SOLO si te pide que TÚ le des seguimiento a alguien: {\"quien\":\"nombre completo tal cual\",\"meta\":\"qué tiene que quedar\",\"cada\":\"frecuencia tal cual o null\",\"fechas\":[AAAA-MM-DD del calendario que salen de esa frecuencia, máx 10],\"hora\":\"HH:MM solo si la dijo\",\"texto\":\"WhatsApp corto y amable empezando con 'IA: '\"}.\n"+
     "- compartir_con: nombres COMPLETOS de con quién dice que se comparte o a quién se avisa; si no, [].\n"+
+    "- aviso_inmediato: true SOLO si dice que le avises de inmediato si se vence. Cada meta puede llevar aviso_inmediato igual.\n"+
     "- metas: SOLO si la tarea es continua (indefinida): [{\"tx\":\"qué debe quedar\",\"fecha\":\"AAAA-MM-DD o null\",\"quien\":null,\"seguimiento\":{\"quien\":\"…\",\"cada\":\"…\",\"hora\":null} o null}]; en ese caso NUNCA uses accion fecha.\n"+
     "- checklist: si pide una lista o checklist (invitados, pendientes) o cambia una: {\"titulo\":\"Invitados\",\"items\":[{\"tx\":\"renglón tal cual viene en los mensajes\",\"estado\":0}]}; estado 0 pendiente, 1 invitado/mandado, 2 confirmado, SOLO si está dicho en los mensajes. NUNCA contestes con preguntas en vez de hacer la lista: hazla con lo que hay. CHECKLIST ACTUAL: "+checklistTexto(t)+".\n"+
     "ADEMÁS de la accion, llena TODO lo que la nota diga (puede ser varias cosas a la vez; nada inventado):\n"+
@@ -14946,6 +15049,7 @@ function ejecutaNotaClaude(t, v){
       /* build 206: primero se aplica todo lo que dijo (contexto, ritmo, indefinida/recurrente, fecha); sin IA, lo local */
       try{ _c206=aplicaCamposNota(t, v, j||{}); if(t.indefinida===true && j && String(j.accion||"").toLowerCase()==="fecha"){ j.accion="nada"; j.fecha=null; }   /* build 222: continua: la fecha es meta */
         var _mt222=aplicaMetasClaude(t, v, j||{}); _c206.hecho=_c206.hecho.concat(_mt222.hecho); _c206.dudas=_c206.dudas.concat(_mt222.dudas);
+        var _ai222=aplicaAvisoInmediato(t, v, j||{}); if(_ai222) _c206.hecho.push(_ai222);
         var _pr221=aplicaResponsable(t, v, j||{}); if(_pr221) _c206.hecho.push(_pr221); if(t.__dudas221){ _c206.dudas=_c206.dudas.concat(t.__dudas221); delete t.__dudas221; }   /* build 221 */
         var _sg221=aplicaSeguimientoA(t, v, j||{}); if(_sg221.hecho) _c206.hecho.push(_sg221.hecho); if(_sg221.duda) _c206.dudas.push(_sg221.duda);
         var _ckc=aplicaChecklistClaude(t, j||{}); if(_ckc){ _c206.hecho.push(_ckc); window.__chkOpen=window.__chkOpen||{}; window.__chkOpen[t.id]=true; }   /* build 214 */
