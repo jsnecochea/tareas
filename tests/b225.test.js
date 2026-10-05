@@ -69,13 +69,13 @@ var L2 = LERDO(); delete L2.por_autorizar; eq("sin por_autorizar (como antes) si
 /* ---------- 1 chips ---------- */
 var ch = c.chipsTarea(L);
 var chips = []; ch.replace(/data-chip="(\w+)"[^>]*>([\s\S]*?)<\/button>/g, function (_, k, tx) { chips.push([k, tx.replace(/<[^>]+>/g, "")]); });
-eq("chips en una línea (226: iconos de línea, sin emojis): Indefinida · Metas 2 · 3 · Detalles", chips, [["detalles", "Indefinida"], ["metas", "Metas 2"], ["personas", "3"], ["resumen", "Resumen"], ["detalles", "Detalles"]]);
+eq("build 231: una fila: Indefinida · Metas n/m · (filtro) · ⓘ Detalles; sin personas ni Resumen sueltos", chips, [["detalles", "Indefinida"], ["metas", "Metas 0/2"], ["detalles", ""]]);
 var F = { id: "fiesta1", nombre: "Fiesta Cumpleaños Papá", duenio: "salvador", f_vigente: "2026-11-13", fecha_dictada: true, estado: "abierta", msgs: [], ritmo: "cada semana", agendado: true,
   contexto: "Comida de cumpleaños de mi papá el 13 de noviembre a partir de las dos de la tarde con la familia y los amigos de siempre en la casa",
   checklist: { titulo: "Invitados", items: [{ id: "1", tx: "Lore y Javier", estado: 2 }, { id: "2", tx: "Néstor", estado: 2 }, { id: "3", tx: "Sada", estado: 1 }, { id: "4", tx: "Lalo", estado: 1 }, { id: "5", tx: "Pollo", estado: 0 }, { id: "6", tx: "Pily", estado: 0 }, { id: "7", tx: "Braña", estado: 0 }, { id: "8", tx: "Vecino", estado: 0 }, { id: "9", tx: "Arq", estado: 0 }] } };
 c.fechaMovCorta = function (f) { return { "2026-11-13": "vie 13 nov", "2026-10-09": "vie 9 oct", "2026-10-16": "vie 16 oct" }[f] || f; };
 chips = []; c.chipsTarea(F).replace(/data-chip="(\w+)"[^>]*>([\s\S]*?)<\/button>/g, function (_, k, tx) { chips.push([k, tx.replace(/<[^>]+>/g, "")]); });
-eq("con lista: 📅 fecha · Lista 4/9 · ⓘ Detalles", chips, [["detalles", "vie 13 nov"], ["lista", "Lista 4/9"], ["agenda", "Falta calendario"], ["resumen", "Resumen"], ["detalles", "Detalles"]]);
+eq("con lista: 📅 fecha · Lista 4/9 · ⓘ Detalles", chips, [["detalles", "vie 13 nov"], ["lista", "Lista 4/9"], ["agenda", "Falta calendario"], ["detalles", ""]]);
 var FA = { id: "tFA", nombre: "Fiesta", duenio: "salvador", creada_por: "claude", por_autorizar: true, estado: "abierta", msgs: [] };
 si("le falta algo: primer chip azul 'Falta N ›'", /^<div class="chips225"><button class="chip225 falta" data-chip="falta">Falta \d ›<\/button>/.test(c.chipsTarea(FA)));
 /* ---------- 2 resumen vivo ---------- */
@@ -85,7 +85,7 @@ eq("resumen vivo: lo que sigue, a quién se espera y lo último (solo con lo que
   "Sigue: Azotea · vie 9 oct · Se espera de Manuel Parra · Último: Manuel 11:51 «Tema 2… Mesa Comedor Alt Brillo. Maribel Gonzál…»");
 eq("sin nada que decir, no se muestra", c.resumenVivo({ id: "x", nombre: "x", duenio: "salvador", indefinida: true, contexto: "algo que ya tiene contexto suficiente", msgs: [] }).una, "");
 eq("build 228: el resumen está plegado en su ficha (no hay bloque fijo)", c.vResumenVivo(L), "");
-c.togMin225(L.id, "rvab"); c.window.__vf230 = { tIAMUVF22TRJF: "imp" }; si("build 230: la ficha 'Resumen' abre la vista Importante (un solo resumen)", /data-chip="resumen" aria-expanded="true"/.test(c.chipsTarea(L))); c.window.__vf230 = {};
+c.togMin225(L.id, "rvab"); si("build 231: ya no hay ficha 'Resumen' ni de personas (viven en el filtro y en Detalles)", !/data-chip="(resumen|personas)"/.test(c.chipsTarea(L)));
 eq("y se recuerda (localStorage)", JSON.parse(ALMACEN.doit_min225), { "tIAMUVF22TRJF|rvab": 1 });
 c.togMin225(L.id, "rvab");
 var LA = LERDO(); LA.checklist.items[0].fecha = "2026-10-02";
@@ -111,7 +111,7 @@ eq("Detalles: Resumen, Lo que sigue, Metas, Contexto, Seguimiento, Origen (sin L
   ["Resumen vivo", "Lo que sigue · de quién se espera", "Metas", "Contexto", "Seguimiento y con quién se comparte", "Origen"]);
 si("Origen plegado con 'Creada con'", /Creada con/.test(de) && /data-orig225/.test(de) && !/class="dquote"/.test(de));
 var tit2 = []; c.vDetalles225(FA).replace(/<h4><i>\d+<\/i>([^<]*)<\/h4>/g, function (_, x) { tit2.push(x); });
-si("Falta por poner sale en azul con botón Dictar cuando falta algo", tit2.indexOf("Falta por poner") >= 0 && /class="d225dic" data-chip="falta">Dictar/.test(c.vDetalles225(FA)));
+si("build 231: Detalles en orden fijo; lo que falta va en su ficha 'Falta' (no se repite)", tit2.indexOf("Falta por poner") < 0);
 /* ---------- 6 sin botón verde gigante ---------- */
 eq("cosas para ti: la duda de tarea del 11:51", c.cosasParaTi(L), 1);
 si("build 228: sin la pastilla '1 cosa para ti'; la ficha Todo va en la fila", !/paraTi225/.test(c.chipsTarea(L)) && /id="cnlpill"/.test(c.chipsTarea(L)));

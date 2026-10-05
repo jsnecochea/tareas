@@ -9,7 +9,7 @@ var fs = require("fs"), path = require("path");
 var ok = 0, n = 0, malas = [];
 function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
 var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
-eq("versión 230", /var VERSION_APP = "build 230/.test(html), true);
+eq("versión 230 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || [])[1] || 0) >= 230, true);
 (async function () {
   var pw = require("/opt/node22/lib/node_modules/playwright"), b = await pw.chromium.launch(), p = await b.newPage({ viewport: { width: 390, height: 844 } }), errs = [];
   p.on("pageerror", function (e) { if (!/firebase is not defined/.test(e.message)) errs.push(e.message); });
@@ -46,30 +46,30 @@ eq("versión 230", /var VERSION_APP = "build 230/.test(html), true);
       document.querySelector('.fil227h [data-fil="imp"]').click();
       o.imp = [document.getElementById("cnlpill").textContent, ids(), !!document.querySelector(".msgs .cmodo"), document.querySelector(".scroll").scrollTop];
       var rc = document.querySelector(".res230"); o.res = [rc.querySelector(".rtx").textContent, txt(".res230 .racu li"), rc.querySelector(".rfal").textContent, /^act\. \d\d:\d\d$/.test(rc.querySelector(".ract").textContent)];
-      document.querySelector('[data-chip="resumen"]').click(); o.resCierra = [document.getElementById("cnlpill").textContent, !!document.querySelector(".res230")];
-      document.querySelector('[data-chip="resumen"]').click(); o.resAbre = [document.getElementById("cnlpill").textContent, !!document.querySelector(".res230")];
+      (function(){ document.getElementById("cnlpill").click(); document.querySelector('.fil227h [data-fil="todo"]').click(); })(); o.resCierra = [document.getElementById("cnlpill").textContent, !!document.querySelector(".res230")];
+      (function(){ document.getElementById("cnlpill").click(); document.querySelector('.fil227h [data-fil="imp"]').click(); })(); o.resAbre = [document.getElementById("cnlpill").textContent, !!document.querySelector(".res230")];
       document.getElementById("cnlpill").click(); document.querySelector('.fil227h [data-fil="claude"]').click();
       o.claude = [document.getElementById("cnlpill").textContent, ids(), document.getElementById("txt").getAttribute("data-ph")];
       document.getElementById("cnlpill").click(); document.querySelector('.fil227h [data-fil="todo"]').click(); o.vuelveTodo = [document.getElementById("cnlpill").textContent, ids().length];
       abre(arma("sinres")); o.numero = [txt(".msgs .cn").filter(function (x) { return /1884|Contacto/.test(x); }), /86088425201884/.test(document.getElementById("app").innerHTML)];
-      document.querySelector('[data-chip="resumen"]').click(); o.sinRes = txt(".res230");
+      (function(){ document.getElementById("cnlpill").click(); document.querySelector('.fil227h [data-fil="imp"]').click(); })(); o.sinRes = txt(".res230");
       var t3 = arma(""); window.AGENDA_WA = [{ nombre: "Laura Mendoza", jid: "86088425201884@lid" }]; abre(t3); o.agenda = txt(".msgs .cn").filter(function (x) { return /Laura/.test(x); });
-      var t2 = arma(""); t2.indefinida = true; delete t2.resumen; abre(t2); o.indef = !!document.querySelector('[data-chip="resumen"]');
+      var t2 = arma(""); t2.indefinida = true; delete t2.resumen; abre(t2); o.indef = !document.querySelector('[data-chip="resumen"]');
       return o; });
-    eq("fichas: Resumen sale siempre (indefinida) y Todo", r.fichas, ["Indefinida", "2", "Resumen", "Todo", "Detalles"]);
+    eq("fichas (231): Indefinida · Todo · ⓘ (sin personas ni Resumen sueltos)", r.fichas, ["Indefinida", "Todo", ""]);
     eq("en Todo sale todo", r.todos, ["w1", "w2", "w3", "w4", "w5", "n1", "c1", "c2", "w6"]);
     eq("hoja: Todo · Importante · Claude · integrantes · agregar o quitar", r.hoja,
-      ["Todotodo junto", "Importanteacuerdos y conclusiones", "Claudelo que le pediste y lo que contestó", "Javier Ortiz BBVAexterno · por WhatsApp · solo ve lo suyo", "Contacto sin nombre ·1884no está en tu agenda", "Integrantesagregar o quitar"]);
+      ["Todotodo junto", "Importanteacuerdos y conclusiones", "Claudelo que le pediste y lo que contestó", "Javier Ortiz BBVAexterno · por WhatsApp · solo ve lo suyo", "Contacto sin nombre ·1884no está en tu agenda", "Invitar a nuevo miembroagregar o quitar integrantes"]);
     eq("Importante: msg_imp manda (w2=1 aunque sea corto, w5=0) y lo demás por la regla (fuera 'Ok', 'Ahorita salí a comer…', notas y plática con Claude); arriba el Resumen", r.imp, ["Importante", ["w1", "w2", "w6"], false, 0]);
     eq("tarjeta Resumen: texto, acuerdos con palomita y fecha, Falta y act.", r.res,
       ["Se reinvierte el pagaré en fondo de deuda a 28 días; falta la tasa final y el contrato del fondo.", ["Reinvertir $2,500,000 del pagaré en fondo de deudalun 5 oct", "Javier manda el contrato del fondolun 5 oct"], "Falta: Tasa final del fondo (Javier) · Firmar contrato", true]);
-    eq("la ficha Resumen cierra y abre la misma vista Importante", [r.resCierra, r.resAbre], [["Todo", false], ["Importante", true]]);
+    eq("Todo / Importante desde el filtro (el Resumen vive en Importante)", [r.resCierra, r.resAbre], [["Todo", false], ["Importante", true]]);
     eq("Claude: solo lo que le pediste y lo que contestó (sin Nota IA); la caja es para Claude", r.claude, ["Claude", ["c1", "c2"], "Indicación para Claude…"]);
     eq("vuelve a Todo", r.vuelveTodo, ["Todo", 9]);
     eq("sin resumen: 'Claude está preparando el resumen'", r.sinRes, ["ResumenClaude está preparando el resumen"]);
     eq("número sin nombre: 'Contacto sin nombre ·1884' y nunca el número completo", r.numero, [["Contacto sin nombre ·1884:"], false]);
     eq("si la agenda lo tiene, su nombre", r.agenda, ["Laura Mendoza:"]);
-    eq("Resumen sale también en tareas indefinidas sin resumen", r.indef, true);
+    eq("231: sin ficha Resumen suelta", r.indef, true);
     eq("sin errores de página", errs, []);
   } finally { await b.close(); }
   console.log((malas.length ? malas.map(function (x) { return "  X " + x; }).join("\n") + "\n" : "") + "RESULTADO " + ok + "/" + n);
