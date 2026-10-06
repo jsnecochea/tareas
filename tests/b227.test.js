@@ -53,7 +53,7 @@ eq("versión 227 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
       document.querySelector(".ptcard [data-acmov]").click(); var mv = document.getElementById("mov225"); o.mover = (mv.querySelector(".opt226.best") || {}).textContent;
       mv.querySelector('[data-movto="tPADEL"]').click(); o.moverSale = [!!document.querySelector(".ptcard"), !!tareas[0].msgs[3].oculto, tareas[1].msgs.length];
       tareas = [FIESTA(), { id: "tPADEL", nombre: "Pádel miércoles", duenio: "salvador", estado: "abierta", msgs: [] }]; render();
-      document.querySelector(".ptcard [data-acnueva]").click(); o.nuevaSale = [!!document.querySelector(".ptcard"), tareas.length];
+      var _va = vaATareaNueva249; vaATareaNueva249 = function () { render(); }; document.querySelector(".ptcard [data-acnueva]").click(); (function(){ var ok=document.querySelector('[data-nom249="ok"]'); if(ok) ok.click(); })(); o.nuevaSale = [!!document.querySelector(".ptcard"), tareas.length]; vaATareaNueva249 = _va;
       /* resumen plegable */
       tareas = [FIESTA()]; render(); o.rvAbierto = [!!document.querySelector('[data-chip="resumen"]'), !!document.querySelector(".res230")];
       (function(){ document.getElementById("cnlpill").click(); document.querySelector('.fil227h [data-fil="imp"]').click(); })(); o.rvMin = [document.getElementById("cnlpill").textContent, !!document.querySelector(".res230")];

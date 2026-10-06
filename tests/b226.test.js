@@ -62,7 +62,7 @@ si("iconos: trazo 1.5 fijo", /var s=px\|\|18, w=1\.5, p=\{/.test(html));
       tareas = [LERDO(), COMEDOR(), VEST()]; render(); abreDetalle242(tareas[0], 1); document.querySelector('#det242 [data-acmov]').click(); document.querySelector('#mov225 [data-movplatica]').click();
       o.platica = [!!tareas[0].msgs[1].oculto, tareas[0].msgs[1].oculto_motivo, tareas[0].censo_acomodo[0].tipo, tareas.length];
       /* Nueva */
-      tareas = [LERDO(), COMEDOR(), VEST()]; render(); abreDetalle242(tareas[0], 1); document.querySelector('#det242 [data-acnueva]').click();
+      tareas = [LERDO(), COMEDOR(), VEST()]; render(); abreDetalle242(tareas[0], 1); document.querySelector('#det242 [data-acnueva]').click(); (function(){ var ok=document.querySelector('[data-nom249="ok"]'); if(ok) ok.click(); })();
       var nv = tareas[tareas.length - 1];
       o.nueva = [tareas.length, nv.nombre, tipoRevisar(nv), !!nv.msgs.filter(function (m) { return m.movido_de; }).length, !!tareas[0].msgs[1].oculto, tareas[0].censo_acomodo[0].tipo];
       /* ---- Inicio ---- */

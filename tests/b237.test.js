@@ -62,7 +62,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
       mv.querySelector('[data-movto="tCOMEDOR"]').click();
       var C = tareas[2]; o.mover = [C.msgs.length, tareas[0].msgs.filter(function (x) { return /Manuel/.test(x.wa_c || "") && x.oculto; }).length];
       var rm = __ESCR.filter(function (e) { return e[0] === "bitacora_personas"; }).pop(); var rr = rm[2].acomodo_reglas[Object.keys(rm[2].acomodo_reglas)[0]]; o.reglaMover = [rr.tipo, rr.tarea_destino, rr.mensajes];
-      card(/Toldos/).querySelector("[data-acnueva]").click(); var nv = tareas[tareas.length - 1]; o.nueva = [nv.id !== "tIATOLDO", nv.msgs.filter(function (x) { return x.movido_de; }).length, tareas[3].msgs.filter(function (x) { return x.oculto; }).length];
+      card(/Toldos/).querySelector("[data-acnueva]").click(); (function(){ var ok=document.querySelector('[data-nom249="ok"]'); if(ok) ok.click(); })(); var nv = tareas[tareas.length - 1]; o.nueva = [nv.id !== "tIATOLDO", nv.msgs.filter(function (x) { return x.movido_de; }).length, tareas[3].msgs.filter(function (x) { return x.oculto; }).length];
       o.quedan = document.querySelectorAll(".aco226 .acor.g237").length;
       /* dentro de la tarea */
       tareas = F237(); abierta = "tLERDO"; vista = "hilo"; poneVista230(tareas[0], ""); render(); poneVista230(tareas[0], ""); render();

@@ -183,8 +183,8 @@ eq("versión >= 245", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       render(); solo(); var l = ops2 = leeOpcionesDe(pon(/número 6 del partido/)); l[0][1](); pon(/número 7 del partido/).click(); document.querySelector('[data-sel245="ng"]').click();
       o.ng = [T.msgs.filter(function (x) { return x.oculto && x.oculto_motivo === "platica"; }).length, !!window.__sel245, histLee240()[0].undo.tipo];
       var q = document.getElementById("ng243"); if (q) q.remove();
-      render(); solo(); leeOpcionesDe(pon(/número 8 del partido/))[0][1](); pon(/número 9 del partido/).click(); var nt = tareas.length; document.querySelector('[data-sel245="nueva"]').click();
-      o.nueva = [tareas.length === nt + 1, T.msgs.filter(function (x) { return x.oculto && x.movido_a; }).length, histLee240()[0].que.replace(/“.*”/, "“…”"), histLee240()[0].undo.tipo];
+      render(); solo(); leeOpcionesDe(pon(/número 8 del partido/))[0][1](); pon(/número 9 del partido/).click(); var nt = tareas.length; document.querySelector('[data-sel245="nueva"]').click(); (function(){ var ok=document.querySelector('[data-nom249="ok"]'); if(ok) ok.click(); })();
+      o.nueva = [tareas.length === nt + 1, T.msgs.filter(function (x) { return x.oculto && x.movido_a; }).length, histLee240().filter(function (h) { return !/^Abri/.test(h.que); })[0].que.replace(/“.*”/, "“…”"), histLee240().filter(function (h) { return !/^Abri/.test(h.que); })[0].undo.tipo];
       return o; });
     eq("Mover desde la selección: sin 'solo desde', mueve los 2 marcados, cierra la selección", [r7.desde, r7.mov], [false, [2, 2, false, true]]);
     eq("Historial UN renglón con Deshacer; reglas: una por contacto", [r7.hist, r7.reglas], [[1, "Movió 2 mensajes de Guillermo a “Pádel Miércoles”", "mover_lote"], [["Guillermo Herrera", 2]]]);
