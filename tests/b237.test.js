@@ -23,7 +23,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
     await p.goto("file://" + path.join(__dirname, "..", "index.html")); await p.waitForTimeout(600);
     var r = await p.evaluate(function () {
       yo = "salvador"; var o = {}, NOW = Date.now(), hm = function (ms) { var d = new Date(NOW - ms); return ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2); };
-      window.__ESCR = []; db = { collection: function (c) { return { doc: function (id) { return { set: function (v, op) { window.__ESCR.push([c, id, JSON.parse(JSON.stringify(v)), op || null]); return Promise.resolve(); }, get: function () { return Promise.resolve({ exists: false, data: function () { return null; } }); } }; } }; } };
+      window.esPropuesta256 = function () { return false; };   /* build 256: este suite prueba el camino viejo de la plática sin clasificar; las propuestas lo tienen b256 */ window.__ESCR = []; db = { collection: function (c) { return { doc: function (id) { return { set: function (v, op) { window.__ESCR.push([c, id, JSON.parse(JSON.stringify(v)), op || null]); return Promise.resolve(); }, get: function () { return Promise.resolve({ exists: false, data: function () { return null; } }); } }; } }; } };
       function solo() { [].forEach.call(document.body.children, function (x) { if (x.id !== "app" && x.id !== "mov225") x.style.display = "none"; }); document.getElementById("app").style.display = "flex"; }
       function m(c, tx, hace, extra) { var x = { k: "bi", wa_in: 1, wa_c: c, t: c + ": " + tx, ts: NOW - hace, h: hm(hace), wa_id: "w" + Math.random().toString(36).slice(2, 8) }; for (var k in (extra || {})) x[k] = extra[k]; return x; }
       window.F237 = function () {

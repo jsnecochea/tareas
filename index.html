@@ -786,6 +786,10 @@ button{font:inherit;color:inherit}
 .sep226{height:1px;background:var(--line);margin:6px 2px 12px}
 .aco226{margin:6px 12px 12px}.acoh{display:flex;align-items:baseline;justify-content:space-between;padding:2px 4px 8px}.acoh b{font-size:20px}.acoh span{color:var(--ink-3);font-size:15px}
 .acog{background:var(--surface);border-radius:16px;overflow:hidden}
+.acor.p256{background:rgba(10,132,255,.09)}.p256 .acow b{font-size:16.5px;white-space:normal}.p256de{color:var(--ink-3);font-size:14px}.p256m{display:block;color:var(--ink-2);font-size:15px;line-height:1.35;margin-top:1px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ac226.p256b,.ac226.p256f{margin-top:6px;flex-wrap:wrap}.p256f>span.q{color:var(--ink-2);font-size:15px;margin-right:4px}
+.prop256row{display:flex;align-items:center;justify-content:space-between;width:calc(100% - 24px);margin:8px 12px 2px;padding:12px 14px;border:0;border-radius:14px;background:rgba(10,132,255,.18);color:#7cc0ff;font:inherit;font-size:16px;font-weight:700}.prop256row b{background:#0a84ff;color:#fff;border-radius:11px;padding:1px 9px;font-size:14px}
+.iatag.nueva256{color:#7cc0ff;background:rgba(10,132,255,.2)}
 .acor{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-bottom:1px solid var(--line);background:var(--surface);transition:transform .15s}.acor:last-child{border-bottom:0}
 .acob{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}.acow{display:flex;justify-content:space-between;align-items:baseline}.acow b{font-size:17px;font-weight:600}.acow time{color:var(--ink-3);font-size:14px}
 .acom{color:var(--ink-2);font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1525,7 +1529,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 256 · privacidad: Josué y Carlos ya no ven las tareas de los demás (cada usuario ve solo lo suyo)";
+var VERSION_APP = "build 257 · tareas nuevas de la IA = propuestas: no salen en las listas, se aprueban en Acomodo";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -3991,7 +3995,7 @@ function arranca(){
         /* build 155: una tarea fusionada (enlazada a otra) NO se pinta en ninguna vista;
            sigue en la base (nada se borra). Y las que crea WhatsApp con `tarea` en vez de
            `nombre` se leen con ese nombre. */
-        if(o.estado==="fusionada" || o.fusionada_en) return;
+        if(o.estado==="fusionada" || o.fusionada_en || o.estado==="descartada") return;   /* build 256: la propuesta descartada no se pinta (queda en la base) */
         if(!o.nombre && o.tarea) o.nombre=String(o.tarea);
         if(o.nombre && !o.es_recordatorio) o.nombre=tituloTarea(o.nombre);   /* build 196: se ve ya normalizado; se guarda asi la proxima vez */
         tareas.push(o)});
@@ -5372,7 +5376,7 @@ function ultimoEmpujonHoy(t){
 /* el resumen de una línea. NADA SE ESCONDE, SOLO SE APLAZA:
    lo que no escaló aparece aquí de todos modos. */
 function resumenDelDia(){
-  var vivas=tareas.filter(function(t){return !t.cierre});
+  var vivas=tareas.filter(function(t){return !t.cierre && !esPropuesta256(t)});
   var venc=vivas.filter(function(t){return estadoReal(t)==="vencida"});
   var mal=vivas.filter(function(t){var r=ritmo(t); return r&&r.va_a_fallar});
   var sube=vivas.filter(subeAlJefe);
@@ -5493,7 +5497,7 @@ function mias(){
   });
   /* los RECORDATORIOS no son tareas: no llevan semaforo ni entran a los grupos.
      Se sacan aqui y se pintan en su propia seccion (misRecordatorios). */
-  var base=tareas.filter(function(t){ return leToca(t) && !t.es_recordatorio && !t.pendiente_info });
+  var base=tareas.filter(function(t){ return leToca(t) && !t.es_recordatorio && !t.pendiente_info && !esPropuesta256(t) });
   var vivas=base.filter(function(t){ return !(t.cierre&&t.cierre.tipo==="no_ejecutada") });
   /* el toque del día del atorado sale como una tarea más, hasta arriba */
   var toques=[];
@@ -5518,7 +5522,7 @@ function mias(){
 function sigoElHilo(t){ return !!(t.creada_por && t.creada_por===yo && t.duenio!==yo) }
 function misMensajes(){
   return tareas.filter(function(t){
-    return (leToca(t)||sigoElHilo(t)) && !t.es_recordatorio && !t.pendiente_info &&
+    return (leToca(t)||sigoElHilo(t)) && !t.es_recordatorio && !t.pendiente_info && !esPropuesta256(t) &&
            estadoReal(t)!=="cerrada" && nuevosNov(t)>0;
   });
 }
@@ -5745,7 +5749,7 @@ function cierraEnlazar(){ var e=$("enlv"); if(e&&e.parentNode) e.parentNode.remo
 function enlazaCandidatas(oid){
   return tareas.filter(function(x){
     return x.id!==oid && !x.cierre && !x.fusionada_en && x.estado!=="fusionada" && !x.es_recordatorio &&
-           estadoReal(x)!=="cerrada" && !esEjemplo(x) && (leToca(x)||sigoElHilo(x)) && String(x.nombre||"").trim();
+           estadoReal(x)!=="cerrada" && !esEjemplo(x) && !esPropuesta256(x) && (leToca(x)||sigoElHilo(x)) && String(x.nombre||"").trim();
   }).sort(function(a,b){ return (b.tocada||0)-(a.tocada||0); });
 }
 function abreEnlazar(oid, op){
@@ -5769,7 +5773,7 @@ function abreEnlazar(oid, op){
     var r=cand.filter(function(x){ return ws.every(function(w){ return nrmDe[x.id].indexOf(w)>=0 }) });
     var sim=op.similares||[]; if(sim.length && !txt){ r=r.slice().sort(function(a,b){ var ia=sim.indexOf(a.id), ib=sim.indexOf(b.id); return (ia<0?99:ia)-(ib<0?99:ib); }); }
     var tot=r.length; r=r.slice(0,60);
-    lista.innerHTML=(op.tareaNueva && !txt?'<button class="enlr enlnueva" data-nueva="1"><span class="enln">'+ico("plus",16)+' Tarea nueva</span><span class="vinc">Queda como tarea</span></button>':'')+
+    lista.innerHTML=(op.tareaNueva && !txt?'<button class="enlr enlnueva" data-nueva="1"><span class="enln">'+ico("plus",16)+' '+(op.etiquetaNueva||'Tarea nueva')+'</span><span class="vinc">'+(op.subNueva||'Queda como tarea')+'</span></button>':'')+
       (r.length?r.map(function(x){ return '<button class="enlr" data-d="'+esc(x.id)+'"><span class="enln">'+esc(x.nombre)+(sim.indexOf(x.id)>=0 && !txt?'<small class="enlsim">parecida</small>':'')+'</span><span class="vinc">Vincular</span></button>' }).join("")+
         (tot>r.length?'<div class="enlv">Escribe m\u00e1s para acotar \u00b7 '+tot+' tareas</div>':'')
       : '<div class="enlv">'+(cand.length?'No encontr\u00e9 nada con eso.':'No hay otras tareas abiertas.')+'</div>');
@@ -6489,6 +6493,8 @@ function vLista(){
   }
 
   h+=bannerAvisos();
+  var _pp256=propuestas256().filter(function(t){ return !(window.__p256f||{})[t.id]; });
+  if(_pp256.length) h+='<button class="prop256row" id="bprop256"><span>'+_pp256.length+(_pp256.length===1?' tarea nueva por revisar':' tareas nuevas por revisar')+'</span><b>'+_pp256.length+'</b></button>';   /* build 256 */
 
   var msgs=misMensajes();
   var pend=pendientesInfo();
@@ -6573,6 +6579,9 @@ function vLista(){
   hoyYa=ordenHoy246(hoyYa);   /* build 246: primero las que tienen aviso (hoy o con hora), por hora del aviso; luego las demás en su orden */
   var futuras=resto.filter(function(t){var c=campanaDe(t); return dDif(t.f_vigente||hoy(),hoy())<0 && !(c&&!c.fut)})
                    .sort(function(a,b){return (a.f_vigente||"").localeCompare(b.f_vigente||"")});
+
+  var _n256=function(t){ return !!(t.nueva256 && Date.now()-t.nueva256<3*864e5); };   /* build 256: las recién aceptadas, arriba, con la etiqueta "Nueva" */
+  hoyYa=hoyYa.filter(_n256).concat(hoyYa.filter(function(t){ return !_n256(t); })); futuras=futuras.filter(_n256).concat(futuras.filter(function(t){ return !_n256(t); }));
 
   var hVenc="";
   if(mias_venc.length){
@@ -6784,7 +6793,7 @@ function fila(t, mudo, secClass){
                 : '<span class="ls">'+esc(t.ultima||"")+'</span>')))+'</span>'+
       '<span class="meta">'+(_pz&&toca&&camp.c!=="roja"&&/a las (\S+ [ap]m)/.test(camp.txt)?'<span class="fdate pcamp c-'+camp.c+'">'+ico("bell",13,1.9)+esc(camp.txt.match(/a las (\S+ [ap]m)/)[1])+'</span>':'')+
       ((mudo||toca?"":chipFechaTarea(t))?'<span class="fdate">'+esc(chipFechaTarea(t))+'</span>':'')+
-      (t.ia_wa?'<span class="iatag" title="Creada por IA desde WhatsApp">IA·WA</span>':'')+
+      (t.nueva256 && (Date.now()-t.nueva256)<3*864e5?'<span class="iatag nueva256">Nueva</span>':'')+(t.ia_wa?'<span class="iatag" title="Creada por IA desde WhatsApp">IA·WA</span>':'')+
       '<span class="tm">'+((t.duenio&&t.duenio!==yo&&PERSONAS[t.duenio])?PERSONAS[t.duenio].ini:"")+'</span>'+
       (b?(b.ico?'<span class="bico">'+b.ico+'</span>':'<span class="bdg">'+b.n+'</span>'):'')+'</span></button></li>';
   }catch(e){
@@ -7015,7 +7024,7 @@ function censoEjemplos(){
 }
 function porRevisar(){
   var ord={espera:0,falta:1,vincular:2,autorizar:3};
-  return tareas.map(function(t){ return {t:t,k:tipoRevisar(t)}; }).filter(function(x){ return x.k; })
+  return tareas.filter(function(t){ return !esPropuesta256(t); }).map(function(t){ return {t:t,k:tipoRevisar(t)}; }).filter(function(x){ return x.k; })
     .sort(function(a,b){ return ord[a.k]-ord[b.k] || (msCreacion(b.t)-msCreacion(a.t)); });
 }
 /* quien te espera: el nombre corto */
@@ -8571,9 +8580,9 @@ function completaRevision(t, v, op){
   _lanza251(promptRevision(t, v, _ab), 0);
 }
 function loQueDetengo(){
-  var a=tareas.filter(function(t){ return meDetiene(t) && !t.pendiente_info && !esDecisionSal(t) });
+  var a=tareas.filter(function(t){ return meDetiene(t) && !t.pendiente_info && !esDecisionSal(t) && !esPropuesta256(t) });
   if(PERSONAS[yo] && PERSONAS[yo].jefe){
-    tareas.forEach(function(t){ if(esDecisionSal(t) && a.indexOf(t)<0) a.push(t) });
+    tareas.forEach(function(t){ if(esDecisionSal(t) && a.indexOf(t)<0 && !esPropuesta256(t)) a.push(t) });
   }
   return a;
 }
@@ -9611,7 +9620,7 @@ function nombreLimpio(n){ return String(n||"").replace(/\s*\(.*?\)\s*/g," ").rep
 function buscaTareasMover253(q, t){
   var ws=_n179(q).split(" ").filter(Boolean); if(!ws.length) return [];
   var out=[]; (tareas||[]).forEach(function(x){
-    if(!x || (t && x.id===t.id) || x.fusionada_en || x.es_recordatorio) return;
+    if(!x || (t && x.id===t.id) || x.fusionada_en || x.es_recordatorio || esPropuesta256(x)) return;
     var viva=!x.cierre && (function(){ try{ return estadoReal(x)!=="cerrada"; }catch(e){ return true; } })();
     if(!viva && !esCerradaReciente248(x)) return;
     var nom=_n179(x.nombre), rest=_n179([(x.palabras||[]).join(" "), (x.sinonimos||[]).join(" "), contextoDe(x)||x.contexto||"", x.de_quien||""].join(" ")), hay=nom+" "+rest;
@@ -10238,7 +10247,7 @@ function bindAcomodo(raiz, tareaDe){
   Array.prototype.forEach.call(raiz.querySelectorAll("[data-mq237]"), function(el){ el.onclick=function(ev){ ev.stopPropagation(); window.__mq237=window.__mq237||{}; var k=el.getAttribute("data-mq237"); window.__mq237[k]=!window.__mq237[k]; render(); }; });
 }
 /* ---- Inicio: seccion Acomodo ---- */
-function abiertaVisible(t){ return t && !t.cierre && !t.fusionada_en && !t.es_recordatorio && estadoReal(t)!=="cerrada" && (t.duenio===yo || (PERSONAS[yo]&&PERSONAS[yo].jefe)); }
+function abiertaVisible(t){ return t && !esPropuesta256(t) && !t.cierre && !t.fusionada_en && !t.es_recordatorio && estadoReal(t)!=="cerrada" && (t.duenio===yo || (PERSONAS[yo]&&PERSONAS[yo].jefe)); }
 /* build 237: pláticas por acomodar (solo las que tienen duda o están en una tarea de la IA sin clasificar), la más reciente primero */
 function platicasAcomodo237(){
   var out=[]; tareas.forEach(function(t){ if(!abiertaVisible(t)) return; try{ aplicaDudasNota237(t); }catch(e){}
@@ -10290,6 +10299,7 @@ function deshaz240(e){
     var o=sn.o, d2=tareaId240(sn.did); if(d2){ d2.msgs=sn.dmsgs; d2.enlazadas=sn.denl; guarda(d2); } if(!tareaId240(o.id)) tareas.push(o); guarda(o); }
   else if(u.tipo==="palomita" && t){ if(u.clave){ (t.claves||[]).forEach(function(c){ if(c && String(c.id)===u.clave) c.ok=!!u.prev; }); }
     else if(t.checklist){ (t.checklist.items||[]).forEach(function(it){ if(it && it.id===u.item) it.estado=u.prev; }); } guarda(t); }
+  else if(u.tipo==="prop256" && t){ delete t.tipo_elegido; t.autorizada=false; t.por_autorizar=true; delete t.nueva256; t.tipo_item=u.prev||t.tipo_item; t.es_dato=!!u.dato; if(window.__p256f) delete window.__p256f[t.id]; guarda(t); }
   else if(u.tipo==="tipo" && t){ t.tipo_item=u.prev||""; t.es_dato=(u.prev==="dato"); if(u.elegido) t.tipo_elegido=true; else delete t.tipo_elegido; guarda(t); }
   else return "";
   histMarca240(e.id); return "Deshecho: "+e.que;
@@ -10318,7 +10328,9 @@ function bindHistorial240(){
       /* build 243: la destino abre en su vista normal (Importante) con "Vinculada · Deshacer" */
       if(window.__vf230) delete window.__vf230[did]; window.__hoja225=null; menuOpen=false; quitaToast243();
       if(e && sn){ window.__ultimoDeshacer={id:o.id, tipo:"vinculo", cuando:Date.now(), restaurar:function(){ deshaz240(e); }}; muestraDeshacer("vinculo", "Vinculada", 6000); }
-      if(vista==="hilo" && abierta===did) render(); } }catch(er){} return r; };
+      if(vista==="hilo" && abierta===did) render(); } }catch(er){}
+    try{ if(window.__volver256 && window.__volver256.oid===oid){ window.__volver256=null; if(o && o.fusionada_en===did){ abierta=null; vista="lista"; render(); } } }catch(er){}   /* build 256: se vuelve al Acomodo */
+    return r; };
   var _ok=okG237; okG237=function(t, ixs){ var r=_ok.apply(this, arguments); try{ if(r && !window.__lote245) hist240("Acomodo: OK", t, null); }catch(e){} return r; };
   var _nv=nuevaG237; nuevaG237=function(t, ixs, comoDato){ var n=_nv.apply(this, arguments); try{ if(n && !window.__lote245) hist240("Acomodo: "+(comoDato?"Dato":"Nueva")+" “"+n.nombre+"”", t, null); }catch(e){} return n; };
   var _cr=completaRevision; completaRevision=function(t, v){ try{ hist240("Dictado: “"+String(v||"").replace(/\s+/g," ").slice(0,60)+(String(v||"").length>60?"…":"")+"”", t, null); }catch(e){} return _cr.apply(this, arguments); };
@@ -10351,9 +10363,85 @@ function acomodoHoy(){
       L.push({t:t, x:x, mal:m}); }); });
   return {n:n, ok:n-mal, lista:L.sort(function(a,b){ return (b.x.ts||0)-(a.x.ts||0); })};
 }
+/* ===================== build 256 (Salvador): NINGUNA TAREA NUEVA DE LA IA QUEDA CREADA SIN PASAR POR ÉL =====================
+   Toda tarea con creada_por "ia" / "mac" / "revisor" / "ia_revisor" y sin tipo_elegido es una PROPUESTA: no sale en ninguna lista normal ni cuenta
+   en ellas; sale en Acomodo como "Tarea nueva propuesta: <título> · de <contacto>" con los mensajes que la originaron y OK · Mover/Vincular · Dato ·
+   No guardar. OK la crea (si no tiene fecha, fechas rápidas) y queda arriba con la etiqueta "Nueva"; Vincular la fusiona en otra; Dato la deja como
+   dato; No guardar la deja "descartada" (no se borra) y pregunta "¿Sí era de X?" para que el sistema aprenda. Las que ya existían se muestran igual. */
+var PROP256=/^(ia|mac|revisor|ia_revisor)$/i;
+function esPropuesta256(t){
+  if(!t || !PROP256.test(String(t.creada_por||""))) return false;
+  if(t.tipo_elegido || t.autorizada || t.cierre || t.fusionada_en || t.es_recordatorio || t.descartada_al_nacer) return false;
+  if(t.estado==="fusionada" || t.estado==="descartada") return false;
+  try{ if(estadoReal(t)==="cerrada" || esEjemplo(t)) return false; }catch(e){}
+  return !t.duenio || t.duenio===yo || !!(PERSONAS[yo] && PERSONAS[yo].jefe);
+}
+function propuestas256(){
+  window.__p256f=window.__p256f||{};
+  return (tareas||[]).filter(function(t){ return esPropuesta256(t) || (t && window.__p256f[t.id] && !t.fusionada_en); })
+    .sort(function(a,b){ return (msCreacion(b)||b.ultimo_ts||0)-(msCreacion(a)||a.ultimo_ts||0); });
+}
+function contactoProp256(t){
+  var c=""; (t.wa_contactos||[]).some(function(w){ c=String((w&&w.nombre)||w||""); return !!c; });
+  if(!c) (t.msgs||[]).some(function(x){ if(x && (x.wa_c||x.chat)){ c=String(x.wa_c||x.chat); return true; } return false; });
+  if(!c && t.revisa_ext) c=String(t.revisa_ext);
+  return nombreLimpio(c||"")||"la IA";
+}
+function msgsProp256(t){
+  return (t.msgs||[]).map(function(x,i){ return {x:x, i:i}; }).filter(function(o){ var x=o.x; return x && !x.nota_ia && !x.nota_claude && !x.res238 && !x.dict238 && x.k!=="bal" && !x.prog && !(typeof esNotaIA242==="function" && esNotaIA242(x)) && String(_txMsg(x)||"").trim(); }).slice(0,3);
+}
+function vPropuestas256(P){
+  return P.map(function(t){
+    var c=contactoProp256(t), esp=!!(window.__p256f||{})[t.id];
+    if(esp) return '<div class="acor p256" data-p256="'+esc(t.id)+'"><span class="av226">'+esc(inicialesDe(c))+'</span><span class="acob"><span class="acow"><b>Creada: '+esc(t.nombre||"Tarea nueva")+'</b></span><span class="ac226 p256f"><span class="q">¿Para cuándo?</span><button data-p256d="hoy">Hoy</button><span>·</span><button data-p256d="man">Mañana</button><span>·</span><button data-p256d="sem">Esta semana</button><span>·</span><button data-p256d="sin">Sin fecha</button></span></span></div>';
+    return '<div class="acor p256" data-p256="'+esc(t.id)+'"><span class="av226">'+esc(inicialesDe(c))+'</span><span class="acob"><span class="acow"><b>Tarea nueva propuesta: '+esc(t.nombre||"Sin nombre")+'</b></span><span class="p256de">de '+esc(c)+'</span>'+
+      msgsProp256(t).map(function(o){ return '<span class="p256m">'+htmlTx245(_txMsg(o.x).replace(/^[^:\n]{1,40}:\s*/,""), o.x)+'</span>'; }).join("")+
+      '<span class="ac226 p256b"><button data-p256a="ok">OK</button><span>·</span><button data-p256a="vinc">Mover / Vincular a…</button><span>·</span><button data-p256a="dato">Dato</button><span>·</span><button data-p256a="ng">No guardar</button></span></span></div>';
+  }).join("");
+}
+function viernes256(){ var d=new Date(hoy()+"T12:00:00"), w=d.getDay(), add=(w>=1&&w<=5)?(5-w):(w===6?6:5); if(w===0) add=5; d.setDate(d.getDate()+add); return iso(d); }
+function okProp256(t, esp){
+  var ant={tipo:t.tipo_item||"", dato:!!t.es_dato};
+  t.tipo_elegido=true; t.tipo_item=(t.tipo_item==="dato")?"dato":"tarea"; t.es_dato=(t.tipo_item==="dato"); t.autorizada=true; t.autorizada_ts=Date.now(); t.por_autorizar=false; t.nueva256=Date.now();
+  window.__p256f=window.__p256f||{}; if(!t.f_vigente) window.__p256f[t.id]=1;
+  guarda(t); try{ hist240("Propuesta aceptada: “"+String(t.nombre||"")+"”", t, {tipo:"prop256", prev:ant.tipo, dato:ant.dato}); }catch(e){}
+  return t;
+}
+function fechaProp256(t, k){
+  var f=""; if(k==="hoy") f=hoy(); else if(k==="man"){ var d=new Date(hoy()+"T12:00:00"); d.setDate(d.getDate()+1); f=iso(d); } else if(k==="sem") f=viernes256();
+  if(window.__p256f) delete window.__p256f[t.id];
+  if(f){ t.f_vigente=f; t.f_original=t.f_original||f; t.fecha_dictada=true; delete t.falta_fecha; try{ sincronizaAvisos(t); }catch(e){} }
+  guarda(t); return f;
+}
+function descartaProp256(t){
+  var ixs=[]; (t.msgs||[]).forEach(function(x,i){ if(x && !x.oculto && !x.nota_ia && !x.nota_claude && !x.res238 && !x.dict238 && x.k!=="bal" && !x.prog && !(typeof esNotaIA242==="function" && esNotaIA242(x))) ixs.push(i); });
+  try{ noGuardar243(t, ixs); }catch(e){}   /* oculta los mensajes y pregunta "¿Sí era de X?" (acomodo_reglas) */
+  t.estado="descartada"; t.descartada256_ts=Date.now(); t.descartada256_por=yo||""; guarda(t);
+  var i=tareas.indexOf(t); if(i>=0) tareas.splice(i,1);
+  try{ hist240("Propuesta descartada: “"+String(t.nombre||"")+"”", t, null); }catch(e){}
+}
+function bindPropuestas256(){
+  var r=document.querySelector(".aco226");
+  var rb=$("bprop256"); if(rb) rb.onclick=function(){ window.__aco256=(window.__aco256==="prop")?"":"prop"; render(); setTimeout(function(){ var a=document.querySelector(".aco226"); if(a) try{ a.scrollIntoView({block:"start"}); }catch(e){} }, 30); };
+  if(!r) return;
+  var tDe=function(el){ var c=el.closest("[data-p256]"); return c?tareas.filter(function(z){ return z.id===c.getAttribute("data-p256"); })[0]:null; };
+  Array.prototype.forEach.call(r.querySelectorAll("[data-p256a]"), function(el){ el.onclick=function(ev){ ev.stopPropagation(); var t=tDe(el); if(!t) return; var a=el.getAttribute("data-p256a");
+    try{ var _rc=el.getBoundingClientRect(); window.__tap245={l:_rc.left, t:_rc.top, w:_rc.width, h:_rc.height, ts:Date.now()}; }catch(e){}
+    if(a==="ok"){ okProp256(t); toast(t.f_vigente?"Creada: “"+corta40(t.nombre)+"”":"Creada. ¿Para cuándo?"); render(); return; }
+    if(a==="ng"){ descartaProp256(t); render(); return; }
+    var sim=[]; try{ sim=similares229(t).map(function(d){ return d.id; }); }catch(e){}
+    window.__volver256={oid:t.id};
+    if(a==="vinc"){ abreEnlazar(t.id, {similares:sim}); return; }
+    if(a==="dato"){ abreEnlazar(t.id, {similares:sim, etiquetaNueva:"Dato suelto", subNueva:"Queda como dato", tareaNueva:function(){ t.tipo_item="dato"; t.es_dato=true; t.tipo_elegido=true; t.autorizada=true; t.autorizada_ts=Date.now(); t.por_autorizar=false; t.falta_fecha=false; guarda(t);
+      try{ hist240("Propuesta como dato: “"+String(t.nombre||"")+"”", t, {tipo:"prop256", prev:t.tipo_item||"", dato:false}); }catch(e){} window.__volver256=null; toast("Quedó como dato “"+corta40(t.nombre)+"”"); render(); }}); return; } }; });
+  Array.prototype.forEach.call(r.querySelectorAll("[data-p256d]"), function(el){ el.onclick=function(ev){ ev.stopPropagation(); var t=tDe(el); if(!t) return; var f=fechaProp256(t, el.getAttribute("data-p256d")); toast("Creada: “"+corta40(t.nombre)+"”"+(f?" · "+fechaMovCorta(f):" · sin fecha")); render(); }; });
+}
 function vAcomodo(){
-  var D=platicasAcomodo237(), A=acomodoHoy(); if(!D.length && !A.n) return "";   /* build 237: UNA tarjeta por plática */
-  var h='<div class="aco226"><div class="acoh"><b>Acomodo</b><span>'+(D.length?D.length+(D.length===1?' plática':' pláticas')+' por revisar':'al día')+'</span></div>';
+  var P=propuestas256(), solo=(window.__aco256==="prop" && P.length);
+  var D=solo?[]:platicasAcomodo237(), A=solo?{n:0,ok:0,lista:[]}:acomodoHoy(); if(!D.length && !A.n && !P.length) return "";   /* build 237: UNA tarjeta por plática */
+  var _np=P.filter(function(t){ return !(window.__p256f||{})[t.id]; }).length;
+  var h='<div class="aco226"><div class="acoh"><b>Acomodo</b><span>'+((D.length||P.length)?[(_np?_np+(_np===1?' tarea nueva':' tareas nuevas'):''), (D.length?D.length+(D.length===1?' plática':' pláticas'):'')].filter(Boolean).join(' · ')+' por revisar':'al día')+'</span></div>';
+  if(P.length) h+='<div class="acog">'+vPropuestas256(P)+'</div>'+(solo?'<button class="acof" id="bprop256x" onclick="window.__aco256=\'\';render()"><span>Ver todo el Acomodo</span></button>':'');
   if(D.length) h+='<div class="acog">'+D.slice(0,8).map(function(g){ var t=g.t, ix0=g.ixs[0], x0=t.msgs[g.ixs[g.ixs.length-1]], k=t.id+"|"+ix0, ab=!!(window.__g237open||{})[k],
       _pm=ab && g.ixs.some(function(i){ var x=t.msgs[i]; return !(esSaludo239(t,x) || confirmado237(x) || x.oculto); });   /* build 245: con botones por mensaje, la fila del final sobra */
     return '<div class="acor g237'+(ab?' ab':'')+'" data-acot="'+esc(t.id)+'" data-acoix="'+ix0+'" data-acg="'+esc(g.ixs.join(","))+'" data-g237="'+esc(k)+'"><span class="av226">'+esc(inicialesDe(g.contacto))+'</span><span class="acob"><span class="acow"><b>'+esc(g.contacto||"Contacto")+'</b><span class="n237">'+(g.n||g.ixs.length)+' mensaje'+((g.n||g.ixs.length)===1?'':'s')+'</span><time>'+esc(x0.h||"")+'</time></span>'+
@@ -13547,7 +13635,7 @@ window.recienCreadas = window.recienCreadas || [];
 /* las que estan a medias, para el bote naranja (del que las dicto) */
 function pendientesInfo(){
   return tareas.filter(function(t){
-    return t.pendiente_info && !esDecisionSal(t) && (t.creada_por===yo || t.duenio===yo) &&
+    return t.pendiente_info && !esDecisionSal(t) && !esPropuesta256(t) && (t.creada_por===yo || t.duenio===yo) &&
            !t.cierre && estadoReal(t)!=="cerrada";
   }).sort(function(a,b){ return (b.creada||0)-(a.creada||0); });
 }
@@ -14875,6 +14963,7 @@ function bindCaja2(){
 /* ============ BINDS ============ */
 function bindLista(){
   try{ bindAcomodoInicio(); }catch(e){ console.warn("acomodo",e); }   /* build 226 */
+  try{ bindPropuestas256(); }catch(e){ console.warn("propuestas256",e); }   /* build 256 */
   recargaMic();   /* canal de audio fresco en cuanto se vuelve al home */
   /* la pantalla de la foto reusa estos binds: su flecha suelta la foto */
   var bbk=$("bback"); if(bbk) bbk.onclick=function(){ fotoEnMano=null; vista="lista"; render() };
