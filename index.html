@@ -1532,7 +1532,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 265 · chip Falta rojo y ancho, micrófono sin autoarranque · build 264 · expedientes: Ya está los deja dormidos, despiertan solos, cerradas y dormidas siempre en búsqueda · recordatorios una vez, siguiente en orden, Hoy solo lo de Salvador, esperas con fecha, falta info coherente, dictado oculto, WhatsApp sin contacto basura";
+var VERSION_APP = "build 266 · toda pregunta de Claude en texto (sin fichas de botones), la respuesta dictada la cierra · build 265 · chip Falta rojo y ancho, micrófono sin autoarranque · build 264 · expedientes: Ya está los deja dormidos, despiertan solos, cerradas y dormidas siempre en búsqueda · recordatorios una vez, siguiente en orden, Hoy solo lo de Salvador, esperas con fecha, falta info coherente, dictado oculto, WhatsApp sin contacto basura";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -7345,6 +7345,7 @@ function vTarjetaRev(t){
   }
   if(k==="espera"){
     if(esDecisionSal(t)) return "";   /* ya trae su banner "Esperando tu decision" */
+    if(true) return "";   /* build 266: "Te espera" ya no es ficha: es una pregunta en texto (registroPreg266) */
     var q=ultimoDeOtro(t)||quienEspera(t)||"";
     return '<div class="revc c-espera"><span class="rct">'+esc(quienTeEspera(t).toUpperCase())+' TE ESPERA</span>'+
       (q?'<span class="rcq">'+esc(q.length>160?q.slice(0,159)+"…":q)+'</span>':'')+
@@ -8749,6 +8750,7 @@ function preguntas249(t){
     if(f.k==="txt" && /^¿Quién es .*Te dejé/.test(String(f.q))) return;   /* ya va como renglón de persona */
     P.push({k:f.k||"txt", hi:i, q:String(f.q), ops:(f.ops||[]).slice(0,6), texto:f.texto, persona:esPersonaQ249(f.q)}); });
   (t.falta263||[]).forEach(function(f){ if(f && f.q) P.push({k:"txt", q:String(f.q), ops:[], d263:1, persona:esPersonaQ249(f.q)}); });   /* build 263: lo que falta, en pregunta precisa */
+  try{ if(typeof registroPreg266==="function") registroPreg266(t).forEach(function(r){ P.push(r); }); }catch(e){ console.warn("reg266",e); }
   return P;
 }
 function contactosApp249(){
@@ -8830,6 +8832,7 @@ function enviaPreguntas249(tid, P, A){
     if(p.k==="cond" && a.opt){ var fc=(H&&H.falta||[])[p.hi]; if(fc){ var h250=resuelveCond250(t, fc, a.opt); if(h250 && H) H.hecho=(H.hecho||[]).concat([h250]); } aplicadas++; return; }
     if(p.k==="msg" && a.opt){ var per2=(candidatosPersona(t).filter(function(c){ return c.id===a.opt.id; })[0])||{id:a.opt.id, nombre:a.opt.label}; var por=mandaOrden238(t, per2, p.texto);
       if(H) H.hecho=(H.hecho||[]).concat(["Le escribí a "+nombreCorto(per2.nombre)+" "+por+": “"+p.texto+"”"]); aplicadas++; return; }
+    if(p.reg){ try{ resuelveReg266(t, p, tx); }catch(e266){ console.warn("resuelve266", e266); } }   /* build 266: cierra el registro de origen */
     textos.push("Respuesta a «"+p.q+"»: "+tx+"."); });
   if(H && quitar.length){ quitar.sort(function(a,b){ return b-a; }).forEach(function(ix){ (H.falta||[]).splice(ix,1); }); }
   guarda(t);
@@ -8919,6 +8922,7 @@ function filaDecision(t){
     (b?(b.ico?'<span class="bico">'+b.ico+'</span>':'<span class="bdg">'+b.n+'</span>'):'')+'</span></button></li>';
 }
 function bannerDecision(t){
+  if(true) return "";   /* build 266: "Esperando tu decisión" ya no es ficha con botón: es una pregunta en texto (registroPreg266) */
   if(!esDecisionSal(t) || !PERSONAS[yo] || !PERSONAS[yo].jefe) return "";
   return '<div class="decban"><div class="dect">Esperando tu decisi\u00f3n</div>'+
     '<div class="decq">'+esc(t.pendiente_info)+'</div>'+
@@ -11035,7 +11039,8 @@ function vHilo(){
   h+=vCondicional250(t);   /* build 250: Esperando respuesta de A → confirmar a B */
   if(tipoRevisar(t)==="falta" && !vistaSup(t) && esIA240(t)) h+=vTipoToggle(t);   /* build 240: solo las que creó la IA */   /* build 236: lo primero que se ve, justo debajo de las fichas */
   /* build 228: el renglon "Agendado ✓ · Calendario…" ahora es la ficha "Agendado" (lineaAgenda queda para otras vistas) */
-  h+=vDecisionMeta(t)+vDecisionDato(t)+vQuienDudas(t)+vBorradorMsj(t);   /* build 225: mensaje por confirmar; "Se comparte con" va en 👥 */   /* build 221; 222: decisión de meta atrasada */
+  h+=vQuienDudas(t)+vBorradorMsj(t);   /* build 266: DECIDE (meta / dato) ya no son fichas de botones: van como pregunta en texto (registroPreg266) */
+     /* build 225: mensaje por confirmar; "Se comparte con" va en 👥 */   /* build 221; 222: decisión de meta atrasada */
 
   /* Si esta tarea es MI REVISION de algo que ejecuta otro, aqui va el acceso
      directo a su tarea: ahi vive su evidencia. Salvador 2026-09-04. */
@@ -13321,6 +13326,52 @@ function revisaClaridadTodas(ahora){
       if(!j) return; var x=(t.msgs||[])[cand.ix]; if(!x || x.claridad) return;
       aplicaNoClara(t, cand, j, Date.now()); guarda(t); if(vista==="hilo" && abierta===t.id) render(); }); }catch(e){ window.__clarPend=0; }
   });
+}
+/* ===== build 266: TODA pregunta de Claude a Salvador va en el bloque de preguntas (texto + micrófono/cuadro), nunca en fichas de botones fijos =====
+   Registros que antes eran ficha: decision_dato (DECIDE · SIN DATO CLARO / repregunta), decision_meta (DECIDE · META ATRASADA),
+   pendiente_tipo "decision_salvador" (Esperando tu decisión) y "Te espera". Las opciones pasan a ser texto de la pregunta.
+   Si la pelota no es de Salvador (pelota263 sin contar estos registros) no se muestra ninguna: arriba solo va "Qué toca". */
+function pelotaMia266(t){
+  window.__sinReg266=1; var o=null; try{ o=pelota263(t); }catch(e){ o=null; } finally{ window.__sinReg266=0; }
+  return !o || o.de==="yo";
+}
+function _contacto266(m, c){ if(!m || !c) return false; var a=_nn(String(m.wa_c||m.chat||(PERSONAS[m.de]&&PERSONAS[m.de].nombre)||m.de||"")).split(/\s+/)[0], b=_nn(String(c)).split(/\s+/)[0]; return !!a && a===b; }
+/* el contacto ya contestó algo útil DESPUÉS de la pregunta: la ficha no sale (la Mac la va a cerrar) */
+function contestoUtil266(t, d){
+  var ts=+d.ts||0; if(!ts) return false;
+  return (t.msgs||[]).some(function(m){ return m && !m.oculto && m.wa_in && (+m.ts||0)>ts && _contacto266(m, d.contacto) && m.claridad==="ok"; });
+}
+function ultimoOtroTs266(t){ var ms=t.msgs||[]; for(var i=ms.length-1;i>=0;i--){ var x=ms[i]; if(x && x.k!=="bi" && (x.wa_in || (x.de && x.de!==yo))) return +x.ts||1; } return 0; }
+function registroPreg266(t){
+  var R=[]; if(!t || t.cierre || t.fusionada_en || window.__sinReg266) return R;
+  var dds=t.decision_dato||[], dms=t.decision_meta||[], hay=dds.length||dms.length||esDecisionSal(t)||(meDetiene(t) && !t.pendiente_info);
+  if(!hay || !pelotaMia266(t)) return R;
+  dds.forEach(function(d){ if(contestoUtil266(t,d)) return; var n=nombreCorto(d.contacto);
+    R.push({k:"dd", id:d.id, q:n+" no da el dato «"+d.falta+"». ¿Hablas tú con él, le vuelvo a preguntar o ya no hace falta?", ops:[], reg:1}); });
+  dms.forEach(function(d){ var ej=d.ejecutor?nombreCorto(d.ejecutor):"el responsable";
+    R.push({k:"dm", id:d.id, q:"La meta «"+(d.corta||d.meta)+"» lleva "+d.atraso+" día"+(d.atraso===1?"":"s")+" de atraso con "+ej+". ¿Le pongo nueva fecha"+(d.nueva?" ("+fechaMeta(d.nueva)+")":"")+", hablas tú con él"+(d.costo?" o autorizas "+d.costo:"")+"?", ops:[], reg:1}); });
+  if(esDecisionSal(t) && !(t.pendiente_dato && dds.some(function(d){ return d.id===t.pendiente_dato; })) && !(t.pendiente_meta && dms.some(function(d){ return d.id===t.pendiente_meta; })) && !(t.pendiente_dato && !dds.some(function(d){ return d.id===t.pendiente_dato; }) && false)){
+    var pi=String(t.pendiente_info||"").trim(); R.push({k:"dsal", q:/[?¿]/.test(pi)?pi:pi+". ¿Qué decides?", ops:[], reg:1}); }
+  else if(meDetiene(t) && !t.pendiente_info && !esDecisionSal(t)){ var uo=ultimoOtroTs266(t); if(uo && t.espera266!==uo){ var q0=ultimoDeOtro(t)||quienEspera(t)||"";
+    R.push({k:"espera", q:quienTeEspera(t)+" te espera"+(q0?": «"+(q0.length>160?q0.slice(0,159)+"…":q0)+"»":"")+". ¿Qué le contesto?", ops:[], uo:uo, reg:1}); } }
+  return R;
+}
+/* la respuesta dictada o escrita cierra el registro de origen (la acción fina la aplica el cerebro con la pregunta como contexto) */
+function resuelveReg266(t, p, tx){
+  var n=_n179(tx);
+  if(p.k==="dd"){ var d=(t.decision_dato||[]).filter(function(x){ return x.id===p.id; })[0]; if(!d) return;
+    var acc=/\b(yo (le )?hablo|hablo yo|le hablo yo|yo hablo|hablo con el)\b/.test(n)?"hablo":(/\b(repregunt\w*|otra vez|vuelve a preguntar|vuelvele a preguntar|pregunt\w* otra vez)\b/.test(n)?"otra":(/\b(ya no hace falta|no hace falta|ya no|dejalo|olvidalo)\b/.test(n)?"ya":""));
+    if(acc){ decideDato(t, p.id, acc); return; }
+    t.decision_dato=t.decision_dato.filter(function(x){ return x.id!==p.id; }); if(t.pendiente_dato===p.id){ t.pendiente_info=""; t.pendiente_tipo=""; delete t.pendiente_dato; }
+    var r=(t.repreg||[]).filter(function(q){ return q.contacto===d.contacto && _n179(q.falta)===_n179(d.falta); })[0]; if(r) r.yo_hablo=true;
+    msg(t,"bi","Decidiste sobre «"+d.falta+"»: "+tx); guarda(t); return; }
+  if(p.k==="dm"){ var dm=(t.decision_meta||[]).filter(function(x){ return x.id===p.id; })[0]; if(!dm) return;
+    var ac2=/\bautoriz\w*\b/.test(n)?"autorizo":(/\b(yo (le )?hablo|hablo yo|le hablo yo)\b/.test(n)?"hablo":(/\b(nueva fecha|fecha|d[ei]ja|pasal\w*|muevel\w*)\b/.test(n)?"fecha":""));
+    if(ac2){ decideMeta(t, p.id, ac2, fechaEnTexto(tx)||""); return; }
+    t.decision_meta=t.decision_meta.filter(function(x){ return x.id!==p.id; }); if(t.pendiente_meta===p.id){ t.pendiente_info=""; t.pendiente_tipo=""; delete t.pendiente_meta; }
+    msg(t,"bi","Decidiste sobre la meta «"+(dm.corta||dm.meta)+"»: "+tx); guarda(t); return; }
+  if(p.k==="dsal"){ msg(t,"bi","Ya decidiste: "+t.pendiente_info); t.pendiente_tipo=""; t.pendiente_info=""; t.decision_ts=Date.now(); guarda(t); return; }
+  if(p.k==="espera"){ t.espera266=p.uo||ultimoOtroTs266(t); guarda(t); return; }
 }
 function decideDato(t, did, accion){
   var d=(t.decision_dato||[]).filter(function(x){ return x.id===did; })[0]; if(!d) return "";
@@ -17270,7 +17321,7 @@ function pelota263(t){
   if(!t) return o;
   if(t.es_recordatorio){ o.por="recordatorio"; return o; }
   /* 1) una pregunta te_necesito abierta, una decisión o alguien que lo espera: es suya */
-  try{ if(esDecisionSal(t) || meDetiene(t) || preguntaParaMi(t) || (t.quien_dudas||[]).length || preguntas249(t).length || t.te_necesito===true){ o.por="te_necesito"; return o; } }catch(e){}
+  try{ if((!window.__sinReg266 && esDecisionSal(t)) || meDetiene(t) || preguntaParaMi(t) || (t.quien_dudas||[]).length || preguntas249(t).length || t.te_necesito===true){ o.por="te_necesito"; return o; } }catch(e){}
   var R=(t.resumen && typeof t.resumen==="object")?t.resumen:{};
   /* 2) lo que llena la Mac: el siguiente paso pendiente y de quién es */
   var L=pasos263(t).filter(function(p){ return !p.hecho; });
