@@ -18,10 +18,10 @@ function saca(tipo, nombre) {
 function bloque(a, b) { var i = html.indexOf(a), j = html.indexOf(b); return html.slice(i, j + b.length); }
 var ft = fs.readFileSync(path.join(__dirname, "fechas.test.js"), "utf8");
 var F_FUNCS = eval(ft.match(/var FUNCS = (\[[\s\S]*?\]);/)[1]), F_VARS = eval(ft.match(/var VARS = (\[[\s\S]*?\]);/)[1]);
-var FUNCS = F_FUNCS.concat(["eventoDe", "eventoPendiente", "completitud", "contextoPct", "contextoDe", "tipoItem", "esDato", "creadaCon", "msCreacion", "_fechaDeId", "_diaCreacion",
+var FUNCS = F_FUNCS.concat([ "_bpega", "palTema248", "temaComun248", "esCerradaReciente248", "nombreVinc248", "preguntaQuienYaResuelta248", "aplicaLecturaFechas248", "lecturaFechas248", "_hitsFecha248", "cierraDeEvento248", "pasosSeguimiento248", "armaMensajesSeguimiento248", "reintentaDudas248", "eventoDe", "eventoPendiente", "completitud", "contextoPct", "contextoDe", "tipoItem", "esDato", "creadaCon", "msCreacion", "_fechaDeId", "_diaCreacion",
   "fechaPuestaSola", "origenDe", "lineaOrigen", "vDetalle", "adjuntos", "fuenteAdj", "apartaAdjuntos", "copiaAdjuntos", "corta40", "palabrasClave", "palabrasBusqueda", "_sinGrupo", "_bst", "_bw"])
   .filter(function (x, i, a) { return a.indexOf(x) === i; });
-var VARS = F_VARS.concat(["CITA_RE", "CTX_MIN_PAL", "SINONIMOS", "BUSCA_VACIAS"]);
+var VARS = F_VARS.concat(["EMPRESAS248", "CITA_RE", "CTX_MIN_PAL", "SINONIMOS", "BUSCA_VACIAS"]);
 var codigo = bloque("/* @@FECHAS-INICIO", "/* @@FECHAS-FIN */") + "\n" + VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" + FUNCS.map(function (f) { return saca("function", f); }).join("\n");
 var RealDate = Date, NOW = new RealDate(2026, 9, 4, 21, 10, 0).getTime();
 function FakeDate() { var a = Array.prototype.slice.call(arguments); if (!(this instanceof FakeDate)) return new RealDate(NOW).toString();

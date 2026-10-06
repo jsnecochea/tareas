@@ -1484,7 +1484,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 247 · Menú completo al tocar cualquier globo · Te pregunta: Mover / No es de aquí / Ya la contesté · Sin bloques de revisión en tareas hechas a mano";
+var VERSION_APP = "build 248 · Dictado: \"no termina el X\" ya no cierra, termina cuando → Cierra con · Fernando de BBVA sin preguntar · Seguimientos por pasos · Vínculos con cerradas";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -2036,7 +2036,7 @@ function fechasDichas(txt){
     }
   }
   /* 4) "el 15", "el dia 15", "para el 15" (sin mes): el proximo 15, hoy cuenta */
-  re=new RegExp("\\b(?:el|al)\\s+(?:dia\\s+)?(\\d{1,2})\\b"+noNum+"(?!\\s*(?:de\\s+)?(?:"+_MESRE+")\\b)","g");
+  re=new RegExp("\\b(?:(?:antes|despues)\\s+del|el|al)\\s+(?:dia\\s+)?(\\d{1,2})\\b"+noNum+"(?!\\s*(?:de\\s+)?(?:"+_MESRE+")\\b)","g");
   while((m=re.exec(w))){
     var n4=+m[1];
     if(n4>=1 && n4<=31){ var p4=_proxNumero(n4,H); if(p4) add(p4,m.index,"elN"); tapa(m); }
@@ -2104,6 +2104,66 @@ function candadoFecha(dicho, fModelo){
                                  : {ok:false, fecha:null, duda:"", dictada:false, corregida:false};
   if(fm && fd.todas.indexOf(fm)>=0) return {ok:true, fecha:fm, duda:"", dictada:true, corregida:false};
   return {ok:true, fecha:fd.fecha, duda:"", dictada:true, corregida:!!fm};
+}
+/* ===== build 248 (Salvador 6-oct 07:47, "Fideicomiso: Seguimiento con BBVA"): LO QUE DIJO SOBRE LAS FECHAS NO SE LEE AL REVES =====
+   "esta tarea NO termina el 8 de octubre… el 8 si no tienes respuesta favorable me avisas… va a terminar CUANDO firmemos… me
+   gustaría firmar ANTES DEL 15": la app contestó "termina el jueves 8", justo al revés. Ahora cada fecha dicha se lee por su papel:
+   · "no termina el X" (y "el X … me avisas") -> AVISO / revisión ese día, nunca finiquito;
+   · "antes del X" -> la FECHA META (f_vigente);
+   · "termina cuando <evento>" / "continúa hasta que <evento>" -> "Cierra con: <evento>" (t.cierra), sin fecha. */
+var EMPRESAS248=["bbva","banorte","santander","hsbc","banamex","citibanamex","scotiabank","inbursa","afirme","bancomer","azteca","telcel","telmex","cfe","imss","sat","infonavit","fovissste","amazon","google","walmart","soriana","costco","liverpool","femsa","cemex","oxxo","coppel","elektra","mercadolibre","pemex","bimbo","apple","microsoft","samsung","toyota","ford","nissan","chevrolet"];
+function _hitsFecha248(s){
+  var out=[], m, re, noNum=/^\s*(?:%|por\s+ciento|mil\b|pesos|minutos?|horas?|hrs?|personas|veces|y\s+media|de\s+(?:la|las|los|el)\b)/;
+  re=new RegExp("\\b(?:(antes|despues)\\s+del?\\s+|(?:para\\s+)?(?:el|al)\\s+(?:dia\\s+)?)(\\d{1,2})(?:\\s+de\\s+("+_MESRE+"))?(?![a-z0-9])","g");
+  while((m=re.exec(s))){
+    var end=m.index+m[0].length; if(!m[3] && noNum.test(s.slice(end))) continue;
+    var fd=fechaDictada("el "+(+m[2])+(m[3]?" de "+m[3]:""));
+    if(fd.fecha && !fd.duda) out.push({i:m.index, end:end, pref:m[1]||"", f:fd.fecha});
+  }
+  re=new RegExp("\\b(?:(antes|despues)\\s+del?\\s+|(?:para\\s+)?(?:el|este)\\s+)("+_DIARE+")\\b(?!\\s+(?:el\\s+)?(?:dia\\s+)?\\d)","g");
+  while((m=re.exec(s))){ var fw=fechaDictada(m[2]); if(fw.fecha && !fw.duda) out.push({i:m.index, end:m.index+m[0].length, pref:m[1]||"", f:fw.fecha}); }
+  return out.sort(function(a,b){ return a.i-b.i; });
+}
+function lecturaFechas248(v){
+  var s=_fsa(v), L={noCierre:[], meta:"", avisos:[], continua:false, evento:"", libres:0, hay:false}, H=_hitsFecha248(s), H0=hoy();
+  H.forEach(function(h, k){
+    var antes=s.slice(Math.max(0,h.i-50), h.i), sig=H[k+1]?H[k+1].i:h.end+130, desp=s.slice(h.end, Math.min(sig, h.end+130));
+    if(!h.pref && /\bno\s+(?:va\s+a\s+|ira\s+a\s+)?(?:termin\w*|cierr\w*|cerr\w*|acab\w*|venc\w*)\s+(?:(?:para|hasta|en)\s+)?$/.test(antes)){
+      if(L.noCierre.indexOf(h.f)<0) L.noCierre.push(h.f); if(h.f>=H0 && L.avisos.indexOf(h.f)<0) L.avisos.push(h.f); }
+    else if(h.pref==="antes"){ if(!L.meta && h.f>=H0) L.meta=h.f; }
+    else { var ia=desp.search(/\b(?:me\s+avis\w*|avisame|me\s+(?:muestr|record|dig|dic|informa|marc)\w*|revis\w*|checa\w*)\b/), it=desp.search(/\b(?:termin\w*|cierr\w*|acab\w*)\b/);
+      if(ia>=0 && (it<0 || ia<it)){ if(h.f>=H0 && L.avisos.indexOf(h.f)<0) L.avisos.push(h.f); } else L.libres++; }
+  });
+  L.continua=/\bno\s+(?:va\s+a\s+|ira\s+a\s+)?(?:termin\w*|cierr\w*|acab\w*)\b/.test(s) || /\b(?:continu\w*|seguir\w*|sigue)\s+(?:abierta\s+)?(?:hasta\s+que|mas\s+adelante|despues)\b/.test(s);
+  var cv=String(v||"").replace(/\s+/g," "), mm=cv.match(/(?:termina(?:r|rá|ra)?|cierra|cerrar|acaba(?:r)?|se\s+cierra|concluye)\s+(?:solo\s+)?cuando\s+((?:[^\s.,;:?!]+\s*){1,10})/i)
+    || cv.match(/(?:contin[uú]a(?:r|rá|ra)?|seguir[aá]?|sigue|se\s+queda\s+abierta)\s+(?:abierta\s+)?hasta\s+que\s+((?:[^\s.,;:?!]+\s*){1,10})/i);
+  if(mm){ var ws=mm[1].trim().split(/\s+/), out=[]; for(var i=0;i<ws.length;i++){ if(i>0 && /^(me|y|pero|entonces|este|tu|tú|ya|luego|despues|después|ahora|pues|para|porque)$/i.test(ws[i])) break; out.push(ws[i]); } L.evento=out.join(" ").trim(); }
+  L.hay=!!(L.noCierre.length||L.meta||L.avisos.length||L.continua||L.evento);
+  return L;
+}
+/* el evento dicho ("tengamos firmado el fideicomiso", "firmemos") -> el texto de "Cierra con" ("Fideicomiso firmado") */
+function cierraDeEvento248(ev, t){
+  var e=String(ev||"").replace(/\s+/g," ").trim().replace(/[.,;:]+$/,""), low=e.toLowerCase(), m; if(!e) return "";
+  var r=low.replace(/^(?:que\s+)?(?:ya\s+)?(?:tengamos|tengan|tenga|tenemos|tengo|tienen|hayamos|hayan|haya|quede|queden|este|esten|estemos)\s+/,"");
+  if((m=r.match(/^([a-zñ]+(?:ado|ada|ido|ida|ados|adas|idos|idas))\s+(?:el|la|los|las)\s+(.+)$/))) return conMayuscula(m[2]+" "+m[1]);
+  if((m=low.match(/^(firm|cerr|pag|entreg|aprob|autoriz|termin|acab|recib)(?:emos|amos|imos|en|an|e|a|es|ues|uemos)$/))){
+    var P={firm:"firmado",cerr:"cerrado",pag:"pagado",entreg:"entregado",aprob:"aprobado",autoriz:"autorizado",termin:"terminado",acab:"acabado",recib:"recibido"}, tema=String((t&&t.nombre)||"").split(/[:\-–]/)[0].trim().toLowerCase();
+    return conMayuscula((tema?tema+" ":"")+P[m[1]]); }
+  return conMayuscula(low);
+}
+function aplicaLecturaFechas248(t, v, j, op){
+  op=op||{}; var L=lecturaFechas248(v), hecho=[], H0=hoy(), R={L:L, hecho:hecho, bloquea:false};
+  if(!L.hay) return R;
+  R.bloquea=!!(L.noCierre.length || L.meta || (L.continua && !L.libres));
+  if(L.meta && t.indefinida!==true && L.meta!==t.f_vigente){
+    if(op.mueve && t.f_vigente){ var rr=mueveFecha(t, L.meta, "lo dijo "+((PERSONAS[yo]||{}).nombre||"")+" (fecha meta)"); if(!(rr && rr.ok===false)){ t.falta_fecha=false; hecho.push("fecha meta: antes del "+fechaBonita(L.meta)); } }
+    else { t.fecha_dictada=true; t.f_original=L.meta; t.f_vigente=L.meta; t.falta_fecha=false; hecho.push("fecha meta: antes del "+fechaBonita(L.meta)); } }
+  L.avisos.forEach(function(f){ if(f<H0 || avisoMismoDia(t, f)) return; nuevoAviso(t, {texto:"Revisión: "+(t.nombre||"la tarea"), fecha:f, hora:"", dicho:""}); hecho.push("aviso "+fechaBonita(f)); });
+  if(L.evento){ var c=cierraDeEvento248(L.evento, t);
+    if(c===conMayuscula(L.evento.toLowerCase()) && j && typeof j.cierra==="string" && j.cierra.trim().length>=4 && j.cierra.trim().length<=120) c=conMayuscula(j.cierra.trim());
+    var ya=String(t.cierra||""), ws=_nn(c).split(/\s+/).filter(function(w){ return w.length>=4; });
+    if(c && (!ya || !ws.every(function(w){ return _nn(ya).indexOf(w.slice(0,5))>=0; }))){ t.cierra=c; hecho.push("cierra con: "+c.toLowerCase()); } }
+  return R;
 }
 /* ¿el texto (del modelo) trae fechas o dias? Si si, NO se le muestra al usuario: el
    texto lo arma el codigo desde la fecha guardada. */
@@ -4448,7 +4508,7 @@ function fichaRevision(t){
   }
   var _cp221=_compartirLista(t); if(_cp221.length) F.push(["compartir","Se comparte con",_cp221.map(function(c){ return c.nombre; }).join(" · ")]);   /* build 221 */
   var kw=(t.palabras||[]).slice(0,10); if(kw.length) F.push(["etiquetas","Etiquetas",kw.join(" · ")]);
-  var pd=t.dup_resuelto?[]:posibleDup(t); if(pd.length) F.push(["vinculo","Vínculo propuesto",pd.slice(0,3).map(function(d){ return d.nombre; }).join(" · ")+" (no vinculado)"]);
+  var pd=t.dup_resuelto?[]:posibleDup(t); if(pd.length) F.push(["vinculo","Vínculo propuesto",pd.slice(0,3).map(nombreVinc248).join(" · ")+" (no vinculado)"]);
   return '<div class="ffin">'+F.map(function(x){ return '<button class="ffr" data-fedit="'+x[0]+'"><span class="ffl">'+esc(x[1])+'</span><span class="ffv'+(x[2]?'':' vac')+'">'+esc(x[2]||"—")+'</span></button>'; }).join("")+'</div>';
 }
 function vFaltaInfo(t){
@@ -4468,7 +4528,7 @@ function vFaltaInfo(t){
   if(t._leyendo && Date.now()-t._leyendo<60000) h='<div class="solofalta leyendo">Claude está leyendo lo que dictaste…</div>'+h;   /* build 207 */
   var _pd207=t.dup_resuelto?[]:posibleDup(t);   /* build 207: vinculos que propuso Claude, solo propuestos */
   if(_pd207.length) h+='<div class="revc c-vincular"><button class="rvx" data-rvx="1" aria-label="Cerrar sugerencia">✕</button><span class="rct">POSIBLE VINCULACIÓN</span><span class="rcp">Propuesta de Claude; no la vinculé.</span>'+
-    _pd207.slice(0,3).map(function(d){ return '<div class="rvv"><span><b>'+esc(d.nombre)+'</b></span><button class="rvb" data-rvinc="'+esc(d.id)+'">Vincular</button></div>'; }).join("")+'</div>';
+    _pd207.slice(0,3).map(function(d){ return '<div class="rvv"><span><b>'+esc(nombreVinc248(d))+'</b></span><button class="rvb" data-rvinc="'+esc(d.id)+'">'+(esCerradaReciente248(d)?'Ver':'Vincular')+'</button></div>'; }).join("")+'</div>';
   if(c.ctxOk) h+='<div class="fic ctx hecho'+(_P&&_P.hechos.indexOf("ctx")>=0?' palomea':'')+'"><span class="ok">✓ Contexto</span><span class="ctxc">'+esc(ctx.length>90?ctx.slice(0,89)+"…":ctx)+'</span>'+vClipEvid(t,"ctx")+'</div>';   /* 229: clip de evidencia */
   else h+='<div class="fic ctx"><div class="meter"><div class="lb"><span class="ok">Contexto'+(c.ctxOk?' ✓':'')+'</span><span class="pend">'+(c.ctxOk?'listo':'mínimo en la rayita')+'</span>'+vClipEvid(t,"ctx")+'</div>'+
     '<div class="bar g"><i style="width:'+c.ctxPct+'%"></i></div></div>'+
@@ -6785,7 +6845,7 @@ function posibleDup(t){
     tareas.forEach(function(x){ if(x.id!==t.id && (frag.indexOf(String(x.id).toLowerCase())>=0 || (x.nombre && x.nombre.length>3 && frag.indexOf(x.nombre.toLowerCase())>=0)) && ids.indexOf(x.id)<0) ids.push(x.id); }); }
   var _desc=t.vinculos_descartados||[];   /* build 212: lo que cerro con la ✕ no vuelve a salir */
   return ids.filter(function(id){ return _desc.indexOf(id)<0; }).map(function(id){ return tareas.filter(function(x){ return x.id===id; })[0]; })
-    .filter(function(x){ return x && x.id!==t.id && !x.cierre && !x.fusionada_en && estadoReal(x)!=="cerrada"; });
+    .filter(function(x){ return x && x.id!==t.id && !x.fusionada_en && ((!x.cierre && estadoReal(x)!=="cerrada") || esCerradaReciente248(x)); });   /* build 248: también cerradas de los últimos 30 días, marcadas (cerrada) */
 }
 /* build 212: la ✕ de "Posible vinculación" guarda esas sugerencias como descartadas; otra tarea distinta si vuelve a salir */
 function descartaVinculos(t){
@@ -6987,8 +7047,8 @@ function vTarjetaRev(t){
     _pd.slice(0,3).forEach(function(d){
       var quien=(d.duenio&&PERSONAS[d.duenio])?(d.duenio===yo?"Tuya":PERSONAS[d.duenio].nombre):"";
       var cu=d.f_vigente?fechaChip(d.f_vigente):"";
-      h+='<div class="rvv"><span><b>'+esc(d.nombre)+'</b><small>'+esc([quien,cu].filter(Boolean).join(" · "))+'</small></span>'+
-         '<button class="rvb" data-rvinc="'+esc(d.id)+'">Vincular</button></div>';
+      h+='<div class="rvv"><span><b>'+esc(nombreVinc248(d))+'</b><small>'+esc([quien,cu].filter(Boolean).join(" · "))+'</small></span>'+
+         '<button class="rvb" data-rvinc="'+esc(d.id)+'">'+(esCerradaReciente248(d)?'Ver':'Vincular')+'</button></div>';
     });
     return h+'<button class="rvn" id="rvnueva">Crear tarea nueva</button></div>';
   }
@@ -7597,7 +7657,8 @@ function extraeLocal(t, v){
   if(/indefinid|sin\s+fecha|no\s+tiene\s+(fecha|fin)|sin\s+fin|permanente/.test(s) && t.indefinida!==true){ t.indefinida=true; t.falta_fecha=false; hecho.push("indefinida"); }
   var rt=ritmoDicho(v);
   if(rt && !String(t.ritmo||"").trim()){ t.ritmo=conMayuscula(rt); hecho.push("ritmo: "+rt); }
-  if(t.indefinida!==true){ var fd=fechaDictada(v); if(fd && fd.fecha && !fd.duda){ t.fecha_dictada=true; t.f_original=fd.fecha; t.f_vigente=fd.fecha; t.falta_fecha=false; hecho.push("termina el "+fechaBonita(fd.fecha)); } }
+  var _l248=aplicaLecturaFechas248(t, v, null); hecho=hecho.concat(_l248.hecho);   /* build 248: no termina / antes del / termina cuando */
+  if(t.indefinida!==true && !_l248.bloquea){ var fd=fechaDictada(v); if(fd && fd.fecha && !fd.duda){ t.fecha_dictada=true; t.f_original=fd.fecha; t.f_vigente=fd.fecha; t.falta_fecha=false; hecho.push("termina el "+fechaBonita(fd.fecha)); } }
   var pal=String(v).split(/\s+/).filter(function(w){ return w.length>1; }).length;
   if(pal>=8 && !String(t.contexto||"").trim()){ t.contexto=String(v).replace(/\s+/g," ").trim().slice(0,600); hecho.push("contexto"); }   /* lo dictado manda sobre la descripcion vieja */
   else if(pal>=8 && contextoPct(t)<75){ t.contexto=(String(contextoDe(t)||"")+" "+String(v)).replace(/\s+/g," ").trim().slice(0,600); hecho.push("contexto"); }
@@ -7615,12 +7676,21 @@ function soloMeFalta(t){
    sin red. Candados (nada inventado): fecha por candadoFecha; indefinida, recurrente y ritmo solo si se dijeron; quien
    solo si se nombro; vinculos solo ids de la lista que se le paso, y solo se proponen (franja), nunca se aplican. ===== */
 /* lista corta de tareas abiertas para proponer vinculos: primero las que comparten palabras con lo dictado */
+/* build 248: palabras de TEMA (sin nombres de empresa: compartir solo "BBVA" no es el mismo tema) y cuántas comparten dos textos */
+function palTema248(txt){ return palabrasBusqueda(txt).filter(function(w){ return EMPRESAS248.indexOf(_bst(w))<0 && EMPRESAS248.indexOf(w)<0; }).filter(function(w,i,a){ return a.indexOf(w)===i; }); }
+function temaComun248(base, txt){ var w=palTema248(txt), n=0; (Array.isArray(base)?base:palTema248(base)).forEach(function(b){ if(w.some(function(x){ return _bpega(b,x); })) n++; }); return n; }
+/* cerrada o no ejecutada en los últimos 30 días (sigue siendo del mismo tema y puede servir de vínculo) */
+function esCerradaReciente248(x){
+  if(!x || !x.cierre || x.fusionada_en) return false; var f=String(x.cierre.f||""); if(!_fReal(f)) return false;
+  var d=dDif(f, hoy()); return d>=0 && d<=30;
+}
+function nombreVinc248(d){ return String((d&&d.nombre)||"")+(esCerradaReciente248(d)?" (cerrada)":""); }
 function abiertasParaVincular(t, v, max){
-  var base=palabrasBusqueda([v, t.nombre, t.contexto].join(" "));
-  return (tareas||[]).filter(function(x){ return x && x.id!==t.id && !x.cierre && !x.fusionada_en && !x.es_recordatorio && estadoReal(x)!=="cerrada"; })
-    .map(function(x, i){ var w=palabrasBusqueda([x.nombre, x.contexto, (x.palabras||[]).join(" ")].join(" ")), n=0;
-      base.forEach(function(b){ if(w.indexOf(b)>=0) n++; }); return {t:x, n:n, i:i}; })
-    .sort(function(a,b){ return (b.n-a.n) || (a.i-b.i); }).slice(0, max||30).map(function(x){ return x.t; });
+  var base=palTema248([v, t.nombre, t.contexto].join(" "));
+  var L=(tareas||[]).filter(function(x){ return x && x.id!==t.id && !x.fusionada_en && !x.es_recordatorio && ((!x.cierre && estadoReal(x)!=="cerrada") || esCerradaReciente248(x)); })
+    .map(function(x, i){ var n=temaComun248(base, [x.nombre, x.contexto, (x.palabras||[]).join(" ")].join(" ")); return {t:x, n:n, i:i, c:esCerradaReciente248(x)?1:0}; })
+    .filter(function(o){ return !o.c || o.n>=2; });   /* las cerradas solo si comparten 2+ palabras de tema */
+  return L.sort(function(a,b){ return (b.n-a.n) || (a.c-b.c) || (a.i-b.i); }).slice(0, max||30).map(function(x){ return x.t; });
 }
 /* lo que se le pasa a Claude: el estado actual de la tarea */
 function estadoParaClaude(t){
@@ -7639,17 +7709,17 @@ function promptRevision(t, v, abiertas){
     "- nombre: un nombre corto y bueno (máx 60 letras) si el actual no sirve o lo pide; si el actual está bien, null.\n"+
     "- tipo: 'tarea' si alguien tiene que hacer algo; 'dato' si es información para consultar (precios, medidas, teléfonos); null si no se sabe.\n"+
     "- contexto: el contexto COMPLETO actualizado (lo que ya había + lo nuevo): de qué se trata, quiénes, para qué, en 1 a 3 frases. contexto_modo 'reemplazar' (default) o 'sumar'.\n"+
-    "- fecha: fecha de finiquito SOLO si la dictó. indefinida=true solo si dijo que no tiene fin. periodicidad 'semanal'/'mensual' solo si dijo que se repite.\n"+
+    "- fecha: fecha de finiquito SOLO si la dictó y es DONDE TERMINA. OJO: \"no termina el 8\", \"continúa hasta que…\" y \"termina cuando <evento>\" NO son fecha de finiquito: esa fecha va en recordar (aviso) y el evento en cierra (texto corto, ej. \"Fideicomiso firmado\"); \"antes del 15\" es la fecha meta y SÍ va en fecha. indefinida=true solo si dijo que no tiene fin. periodicidad 'semanal'/'mensual' solo si dijo que se repite.\n"+
     "- ritmo: cada cuánto quiere que le recuerde o revise (ej. 'una vez al mes'), solo si lo dijo. recordar: avisos que pidió [{fecha, hora HH:MM}].\n"+
     "- quien: quién la hace, SOLO si lo dijo, con el nombre tal cual de esta lista: "+gente+". Si es alguien de fuera de la lista, ponlo en responsable (nunca lo sueltes).\n"+
     "- responsable: si dijo que la tarea es de alguien, que alguien es el responsable o el ejecutor, o que él solo la supervisa: el nombre de esa persona TAL CUAL lo dijo (puede ser alguien de fuera de la lista, como un proveedor); si no, null. yo_superviso=true SOLO si dijo que él supervisa o revisa.\n"+
-    "- seguimiento_a: SOLO si te pidió que TÚ le des seguimiento a alguien (\"dale seguimiento a X\", \"pregúntale a X cada…\"): {\"quien\":\"nombre tal cual\",\"meta\":\"qué tiene que quedar, con sus palabras\",\"cada\":\"la frecuencia TAL CUAL la dijo, o null\",\"fechas\":[AAAA-MM-DD copiadas del calendario, SOLO los días que salen de esa frecuencia, máx 10, hasta 3 semanas],\"hora\":\"HH:MM solo si la dijo, o null\",\"texto\":\"el WhatsApp corto y amable que le mandarías, empezando con 'IA: '\"}; si no, null.\n"+
+    "- seguimiento_a: SOLO si te pidió que TÚ le des seguimiento a alguien (\"dale seguimiento a X\", \"pregúntale a X cada…\"): {\"quien\":\"nombre tal cual\",\"meta\":\"qué tiene que quedar, con sus palabras\",\"cada\":\"la frecuencia TAL CUAL la dijo, o null\",\"fechas\":[AAAA-MM-DD copiadas del calendario, SOLO los días que salen de esa frecuencia, máx 10, hasta 3 semanas],\"pasos\":[{\"tx\":\"cada paso dictado como cosa que se le pregunta, EN EL ORDEN dictado (ej. 'el contacto del carpintero de Lorena (se lo pide a Karina)', 'el estatus con los dos carpinteros', 'las muestras de un cajón pintado')\",\"fecha\":\"AAAA-MM-DD del calendario si ese paso tiene plazo, o null\",\"hora\":\"HH:MM límite solo si la dijo (ej. 'a las 12'), o null\"}] (el primero es lo urgente de hoy; si no dictó pasos, []),\"hora\":\"HH:MM solo si la dijo, o null\",\"texto\":\"el WhatsApp corto y amable que le mandarías, empezando con 'IA: '\"}; si no, null.\n"+
     "- compartir_con: si dijo con quién se comparte la tarea o a quién se le avisa (\"la comparto con mi madre María…\"): los nombres COMPLETOS tal cual los dijo, sin cortarlos; si no, [].\n"+
     "- Los nombres de personas SIEMPRE completos, tal cual los dijo; nunca abreviados ni cortados.\n"+
     "- metas: SOLO si la tarea es INDEFINIDA/continua (o dice que no tiene fin): cada cosa que debe quedar con su fecha (\"que quede el 9\", \"impermeabilizar en 3 meses\") es una META [{\"tx\":\"qué debe quedar, con sus palabras\",\"fecha\":\"AAAA-MM-DD del calendario o null\",\"quien\":\"quién la ejecuta tal cual o null\",\"seguimiento\":{\"quien\":\"…\",\"cada\":\"…\",\"hora\":\"HH:MM o null\"} o null}]; en una tarea continua NUNCA pongas esa fecha en \"fecha\". Si no, []. Cada meta puede llevar \"aviso_inmediato\":true SOLO si pidió que le avises de inmediato si ESA se vence.\n"+
     "- aviso_inmediato: true SOLO si dijo \"avísame de inmediato si se vence\" (o igual) para la tarea en general.\n"+
     "- palabras: hasta 5 etiquetas para encontrarla; sinonimos: hasta 5 sinónimos o formas en que la podría buscar.\n"+
-    "- vinculos: ids (de TAREAS ABIERTAS) que traten de LO MISMO, máx 3; solo se proponen. Si ninguna, [].\n"+
+    "- vinculos: ids (de TAREAS ABIERTAS; las marcadas (cerrada) se cerraron hace poco y también sirven) que traten de LO MISMO, máx 3; solo se proponen. Piden AL MENOS 2 palabras de tema en común, sin contar nombres de empresa (compartir solo \"BBVA\" no es el mismo tema). Si ninguna, [].\n"+
     "- de_quien y cifras: para datos (de quién o qué proyecto; montos o medidas tal cual). ya_hecha=true solo si dice que ya se hizo.\n"+
     "- pregunta: SOLO lo que de verdad quedó ambiguo, en una pregunta corta; lo demás llénalo igual. Si todo quedó claro, null.\n"+
     "- ordenes (build 238): TODO lo que pidió HACER (no los datos), en orden, sin perder ninguna: [{\"tipo\":\"vincular|mensaje|claude|agendar|seguimiento|clasificar\",\"a\":\"persona tal cual (mensaje)\",\"canal\":\"whatsapp|correo\",\"texto\":\"lo que se le dice, breve, en segunda persona, de parte de Salvador\",\"que\":\"qué tiene que revisar o investigar Claude, o qué se agenda\",\"fecha\":\"AAAA-MM-DD copiada del calendario o null\",\"hora\":\"HH:MM o null\",\"tareas\":[ids de TAREAS ABIERTAS candidatas para vincular, la más probable primero],\"busca\":\"cómo nombró la tarea a vincular\",\"tipo_item\":\"tarea|dato\"}]. 'revísalo/investiga/checa' dirigido a ti = tipo claude. 'pídele/dile/escríbele a X' = tipo mensaje. Si no pidió nada, [].\n"+
@@ -7657,9 +7727,9 @@ function promptRevision(t, v, abiertas){
     "- OJO DUEÑO: pedirle algo a una persona, o que una persona dé información, NO la hace dueña. quien/responsable SOLO si dijo explícito que la tarea es suya o la hace ella ('pásasela a X', 'la hace X', 'X es el responsable').\n"+
     "- HOY en Monterrey es "+fechaMty238(0)+" (mañana "+fechaMty238(1)+"). 'mañana', 'el jueves', etc. se convierten con el calendario.\n"+
     "- checklist: si pide una lista o checklist: {\"titulo\":\"…\",\"items\":[{\"tx\":\"renglón tal cual\",\"estado\":0}]} (0 pendiente, 1 invitado/hecho, 2 confirmado, solo si se dijo); si no, null. CHECKLIST ACTUAL: "+checklistTexto(t)+".\n"+
-    "Contesta SOLO JSON: {\"checklist\":null,\"nombre\":null,\"tipo\":null,\"contexto\":null,\"contexto_modo\":\"reemplazar\",\"fecha\":null,\"indefinida\":false,\"periodicidad\":null,\"ritmo\":null,\"recordar\":[],\"quien\":null,\"responsable\":null,\"yo_superviso\":false,\"seguimiento_a\":null,\"compartir_con\":[],\"metas\":[],\"aviso_inmediato\":false,\"palabras\":[],\"sinonimos\":[],\"vinculos\":[],\"de_quien\":null,\"cifras\":null,\"ya_hecha\":false,\"pregunta\":null,\"ordenes\":[],\"dudas\":[]}\n\n"+
+    "Contesta SOLO JSON: {\"cierra\":null,\"checklist\":null,\"nombre\":null,\"tipo\":null,\"contexto\":null,\"contexto_modo\":\"reemplazar\",\"fecha\":null,\"indefinida\":false,\"periodicidad\":null,\"ritmo\":null,\"recordar\":[],\"quien\":null,\"responsable\":null,\"yo_superviso\":false,\"seguimiento_a\":null,\"compartir_con\":[],\"metas\":[],\"aviso_inmediato\":false,\"palabras\":[],\"sinonimos\":[],\"vinculos\":[],\"de_quien\":null,\"cifras\":null,\"ya_hecha\":false,\"pregunta\":null,\"ordenes\":[],\"dudas\":[]}\n\n"+
     "ESTADO ACTUAL DE LA TAREA:\n"+estadoParaClaude(t)+(esMetas(t)?"\nMETAS: "+metasDe(t).map(function(m){ return m.tx+(m.fecha?" ("+m.fecha+")":"")+(metaCumplida(m)?" CUMPLIDA "+(m.cumplida||""):""); }).join(" | "):"")+"\n\nLO QUE FALTA: "+(soloMeFalta(t).join(" | ")||"(nada)")+"\nPREGUNTAS QUE LE HICE: "+(preguntasFalta(t).join(" | ")||"(ninguna)")+
-    "\n\nTAREAS ABIERTAS (id | nombre):\n"+(abiertas.map(function(x){ return x.id+" | "+(x.nombre||""); }).join("\n")||"(ninguna)")+
+    "\n\nTAREAS ABIERTAS (id | nombre):\n"+(abiertas.map(function(x){ return x.id+" | "+(x.nombre||"")+(esCerradaReciente248(x)?" (cerrada)":""); }).join("\n")||"(ninguna)")+
     "\n\nLO QUE DICTÓ: "+v;
 }
 /* ===== build 219 (Salvador 10:15, "Mantenimiento Casa Lerdo/Eloísa"): "esta tarea es de X / X es el responsable /
@@ -7712,7 +7782,26 @@ function resuelvePersona(t, dicho){
   var tar=cs.filter(function(c){ return c.prio>=3; });
   if(tar.length===1) return {estado:"uno", persona:tar[0], cands:cs};   /* el de la tarea manda: es de quien se esta hablando */
   if(cs.length===1) return {estado:"uno", persona:cs[0], cands:cs};
+  if(!cs.length && ws.length>=2){   /* build 248: "Fernando de BBVA" = nombre + empresa: el nombre empata y la empresa sale en la agenda o en la tarea */
+    var ctx248=_tokPer([t.nombre, t.contexto, t.de_quien, (t.palabras||[]).join(" ")].join(" ")), rest=ws.slice(1);
+    var rl=candidatosPersona(t).filter(function(c){ var toks=_tokPer(c.nombre+" "+(c.alias||"")+" "+(c.sub||"")), t0=_tokPer(c.nombre)[0]||"";
+      return (t0===ws[0] || (ws[0].length>=3 && t0.indexOf(ws[0])===0)) && rest.every(function(w){ return toks.some(function(x){ return x===w || (w.length>=3 && x.indexOf(w)===0); }) || (EMPRESAS248.indexOf(w)>=0 && ctx248.indexOf(w)>=0); }); });
+    if(rl.length===1) return {estado:"uno", persona:rl[0], cands:rl}; }
   return {estado:cs.length?"varios":"ninguno", cands:cs};
+}
+/* build 248: la pregunta "¿Quién es X?" (de la tarjeta o del modelo) no se hace si X ya se resuelve con los contactos de la tarea o la agenda */
+function preguntaQuienYaResuelta248(t, tx){
+  var m=String(tx||"").match(/qui[eé]n\s+es\s+(?:el\s+|la\s+)?([^?¿]{2,60})\?/i); if(!m) return false;
+  var r; try{ r=resuelvePersona(t, m[1].trim()); }catch(e){ return false; }
+  return r.estado==="uno";
+}
+/* llegó la agenda: lo que quedó preguntado ("¿Quién es X?") y ya se resuelve, se aplica solo */
+function reintentaDudas248(){
+  (tareas||[]).forEach(function(t){ if(!t || !(t.quien_dudas||[]).length) return;
+    (t.quien_dudas||[]).slice().forEach(function(d){ var r; try{ r=resuelvePersona(t, d.dicho); }catch(e){ return; }
+      if(r.estado==="uno"){ var h=""; try{ h=resuelveDudaPersona(t, d.id, r.persona); }catch(e){}
+        _notaPriv(t,"bi","Ya sé quién es "+d.dicho+": "+r.persona.nombre+(h&&h!=="Listo"?" · "+h:"")+"."); guarda(t); } }); });
+  try{ if(vista==="hilo") render(); }catch(e){}
 }
 /* deja la pregunta en la ficha. extra = lo necesario para aplicar al elegir */
 function nuevaDudaPersona(t, dicho, rol, cands, extra){
@@ -7794,13 +7883,52 @@ function programaSeguimiento(t, persona, pl){
   fechas=fechas.filter(function(f){ return _tsDe(f,hora)>ahora; }).sort().slice(0,10);
   if(!fechas.length) return {hecho:base+" · "+t.seg_a.cada, duda:"¿Qué días le doy seguimiento a "+corto+"?"};
   var ya=(t.msgs||[]).filter(function(m){ return m && m.prog && !m.prog.cancelado && _nn(m.prog.contacto||"")===_nn(canon); }).map(function(m){ return m.prog.a_las?m.prog.a_las.fecha+" "+m.prog.a_las.hora:""; });
-  var texto=String(pl.texto||"").replace(/\s+/g," ").trim() || ("IA: Hola "+corto.split(" ")[0]+", ¿cómo vas con "+(meta||t.nombre)+"?");
+  var MS=armaMensajesSeguimiento248(corto, fechas, hora, pl, meta, t), extras=[];   /* build 248: por pasos, nunca N textos iguales */
   var nuevas=fechas.filter(function(f){ return ya.indexOf(f+" "+hora)<0; });
-  nuevas.forEach(function(f){ mandaProgramado(t, {contacto:canon, a_las:{fecha:f, hora:hora}, sino_desde:null, texto:texto}, null); });
-  t.seg_a.programados=fechas.map(function(f){ return f+" "+hora; });
+  nuevas.forEach(function(f){ mandaProgramado(t, {contacto:canon, a_las:{fecha:f, hora:hora}, sino_desde:null, texto:MS[f].texto}, null);
+    (MS[f].extra||[]).forEach(function(e){ if(_tsDe(e.fecha,e.hora)>ahora && ya.indexOf(e.fecha+" "+e.hora)<0){ mandaProgramado(t, {contacto:canon, a_las:{fecha:e.fecha, hora:e.hora}, sino_desde:null, texto:e.texto}, null); extras.push(e); } }); });
+  t.seg_a.programados=fechas.map(function(f){ return f+" "+hora; }).concat(extras.map(function(e){ return e.fecha+" "+e.hora; }));
   var rt="Seguimiento a "+corto+": "+(t.seg_a.cada||"según lo dictado")+" a las "+hora;
   if(!String(t.ritmo||"").trim() || /^Seguimiento a /.test(t.ritmo)) t.ritmo=rt;
-  return {hecho:base+": "+nuevas.length+" WhatsApp programado"+(nuevas.length===1?"":"s")+" ("+fechas.map(fechaMovCorta).join(", ")+" "+hora+")"+(defecto?" · a las "+hora+" porque no dijiste hora":"")};
+  var _nt=nuevas.length+extras.length;
+  return {hecho:base+": "+_nt+" WhatsApp programado"+(_nt===1?"":"s")+" ("+fechas.map(fechaMovCorta).join(", ")+" "+hora+(extras.length?" y a las "+extras[0].hora+" el del plazo":"")+")"+(defecto?" · a las "+hora+" porque no dijiste hora":"")};
+}
+/* build 248 (Vestidores): los pasos dictados, en orden: [{tx, fecha, hora}]. Fecha solo del calendario o dictada; hora solo si se dijo */
+function pasosSeguimiento248(v, sa){
+  var cal=calendarioProximo(40).map(function(x){ return x.slice(0,10); }), dich=fechaDictada(v).todas;
+  return (Array.isArray(sa&&sa.pasos)?sa.pasos:[]).slice(0,6).map(function(p){
+    if(typeof p==="string") p={tx:p};
+    var tx=String((p&&(p.tx||p.paso))||"").replace(/\s+/g," ").trim().slice(0,160); if(tx.length<3) return null;
+    var f=String((p&&p.fecha)||"").trim(); f=(_fReal(f) && (cal.indexOf(f)>=0 || dich.indexOf(f)>=0))?f:"";
+    var h=String((p&&p.hora)||"").trim(), mh=h.match(/^(\d{1,2}):(\d{2})$/); h=(mh && horaDicha(v))?String(+mh[1]).padStart(2,"0")+":"+mh[2]:"";
+    return {tx:tx, fecha:f, hora:h}; }).filter(Boolean);
+}
+/* cada WhatsApp programado sigue los pasos, en orden; nunca el mismo texto en todos. Regresa {fecha: {texto, extra:[{fecha,hora,texto}]}} */
+function armaMensajesSeguimiento248(corto, fechas, hora, pl, meta, t){
+  var n1=String(corto||"").split(/\s+/)[0]||"", P=(pl&&pl.pasos)||[], out={}, usados={}, tema=meta||(t&&t.nombre)||"el tema";
+  var VAR=["¿qué avance hay con TEMA desde ayer?","¿ya hay algo concreto de TEMA? Cuéntame en qué vas.","¿cómo va TEMA? Si algo se atoró, dime y lo movemos.","paso a ver cómo va TEMA: ¿qué ya quedó y qué falta?","¿me das un avance de TEMA?"];
+  fechas.forEach(function(f, k){
+    var tx="", extra=[];
+    if(!P.length){
+      tx=(k===0 && String((pl&&pl.texto)||"").trim()) ? String(pl.texto).replace(/\s+/g," ").trim() : "Hola "+n1+", "+(k===0?"¿cómo vas con TEMA?":VAR[(k-1)%VAR.length]).replace("TEMA", tema);
+    } else {
+      var idx=Math.min(k, P.length-1), st=P[idx], rep=Math.max(0, k-(P.length-1));
+      var plazo=function(){ if(!st.fecha) return ""; var d=Math.round((new Date(st.fecha+"T00:00:00")-new Date(f+"T00:00:00"))/86400000);
+        return d>0?"Faltan "+d+" día"+(d===1?"":"s")+" para el "+fechaMovCorta(st.fecha)+".":(d===0?"El plazo es hoy.":"El plazo era el "+fechaMovCorta(st.fecha)+"."); };
+      if(k===0){
+        tx="Hola "+n1+", lo primero de hoy: "+st.tx+"."+(st.hora?" Necesito que me lo pases a las "+st.hora+".":"")+" ¿Ya lo tienes?";
+        if(st.hora && st.hora>hora) extra.push({fecha:f, hora:st.hora, texto:"IA: "+n1+", ya es la hora ("+st.hora+"): ¿me pasas "+st.tx+"?"});
+      } else if(rep===0){
+        tx="Hola "+n1+", sigue: "+st.tx+"."+(plazo()?" "+plazo():"")+" ¿Cómo vas? Cuéntame el estatus.";
+      } else {
+        tx="Hola "+n1+", sobre "+st.tx+": "+(plazo()?plazo()+" ¿Cómo van?":VAR[(rep-1)%VAR.length].replace("TEMA","eso"));
+      }
+    }
+    tx="IA: "+String(tx).replace(/^IA:\s*/i,"");
+    if(usados[_nn(tx)]) tx=tx.replace(/(\?|\.)?$/," ("+fechaMovCorta(f)+")$1");
+    usados[_nn(tx)]=1; out[f]={texto:tx, extra:extra};
+  });
+  return out;
 }
 function aplicaSeguimientoA(t, v, j){
   var sa=j&&j.seguimiento_a; if(!sa || typeof sa!=="object") return {};
@@ -7810,7 +7938,7 @@ function aplicaSeguimientoA(t, v, j){
   var hora=String(sa.hora||"").trim(), mh=hora.match(/^(\d{1,2}):(\d{2})$/), horaOk=!!mh && horaDicha(v);
   var pl={meta:String(sa.meta||"").replace(/\s+/g," ").trim().slice(0,200), cada:cadaOk?String(sa.cada||"").trim():"", cadaOk:cadaOk,
     hora:horaOk?String(+mh[1]).padStart(2,"0")+":"+mh[2]:"", fechas:Array.isArray(sa.fechas)?sa.fechas:[], local:cadaOk?fechasDeCada(s):[],
-    texto:String(sa.texto||""), dicho:String(v).slice(0,400)};
+    texto:String(sa.texto||""), dicho:String(v).slice(0,400), pasos:pasosSeguimiento248(v, sa)};
   var r=resuelvePersona(t, quien);
   if(r.estado!=="uno") return {hecho:"", duda:nuevaDudaPersona(t, quien, "seguimiento", r.cands, pl)};
   return programaSeguimiento(t, r.persona, pl);
@@ -7970,10 +8098,12 @@ function aplicaRevisionClaude(t, v, j, abiertas){
   /* fecha SOLO si Claude la vio como fecha de la tarea Y se dicto (el candado manda la dictada); sin fecha dictada, ninguna */
   var _fdv=fechaDictada(v), _cf=(j.fecha && _fdv.todas.length) ? candadoFecha(v, j.fecha) : {ok:false, fecha:null, duda:_fdv.duda||""};
   if(t.indefinida===true){ _cf={ok:false, fecha:null, duda:""}; }   /* build 222: continua -> lo que tiene fecha es META, nunca finiquito */
+  var _l248=aplicaLecturaFechas248(t, v, j); if(_l248.bloquea){ _cf={ok:false, fecha:null, duda:_fdv.duda||""}; }   /* build 248: "no termina el 8" no es finiquito; "antes del 15" es la meta */
   if(_cf.ok && _cf.corregida && _fdv.todas.length>1){ _cf={ok:false, fecha:null, duda:"¿Cuál de las fechas que dijiste es la de la tarea?"}; }
   if(_cf.duda) dudas.push(_cf.duda+" La fecha no la cambié.");
   else if(_cf.ok && _cf.fecha && _cf.fecha!==t.f_vigente){ t.fecha_dictada=!!_cf.dictada; t.f_original=_cf.fecha; t.f_vigente=_cf.fecha; t.falta_fecha=false; hecho.push("termina el "+fechaBonita(_cf.fecha)); }
   else if(_cf.ok && _cf.fecha){ t.fecha_dictada=!!_cf.dictada; t.falta_fecha=false; }
+  hecho=hecho.concat(_l248.hecho);
   var _todas=fechaDictada(v).todas, _rel=/\b(antes|despues|previo|previa)\b/.test(s);
   (Array.isArray(j.recordar)?j.recordar:[]).slice(0,6).forEach(function(r){
     if(r && _fReal(r.fecha) && !_cf.duda && (!_todas.length || _rel || _todas.indexOf(r.fecha)>=0) && !avisoMismoDia(t, r.fecha)){ nuevoAviso(t,{texto:t.nombre, fecha:r.fecha, hora:r.hora||"", dicho:v}); hecho.push("aviso "+fechaBonita(r.fecha)+(r.hora?" "+r.hora:"")); } });
@@ -7986,8 +8116,9 @@ function aplicaRevisionClaude(t, v, j, abiertas){
   if(j.de_quien && String(j.de_quien).trim() && _nn(j.de_quien)!==_nn(t.de_quien||"")){ var _dq=String(j.de_quien).trim(); if(_dq.length>120) _dq=_dq.slice(0,120).replace(/\s+\S*$/,"")+"…"; t.de_quien=_dq; hecho.push("de "+t.de_quien); }   /* build 219: ya no se corta a media palabra ("ejecutor: Man.") */
   if(j.cifras && String(j.cifras).trim() && /\d/.test(String(j.cifras))){ var _fr=fechasRaras(String(j.cifras), _todas);
     if(!_fr.length){ t.datos_corregidos=(t.datos_corregidos||[]).concat([{t:String(j.cifras).trim().slice(0,600), ts:Date.now(), dicho:String(v).slice(0,300)}]).slice(-30); hecho.push("cifras"); } }
-  var ids=(abiertas||[]).map(function(x){ return x.id; });
-  (Array.isArray(j.vinculos)?j.vinculos:[]).forEach(function(id){ id=String(id||"").trim(); if(id && id!==t.id && ids.indexOf(id)>=0 && vinc.indexOf(id)<0 && (t.vinculos_descartados||[]).indexOf(id)<0 && vinc.length<3) vinc.push(id); });
+  var ids=(abiertas||[]).map(function(x){ return x.id; }), _b248=palTema248([v, t.nombre, t.contexto].join(" "));
+  (Array.isArray(j.vinculos)?j.vinculos:[]).forEach(function(id){ id=String(id||"").trim(); var xo=(abiertas||[]).filter(function(x){ return x.id===id; })[0];
+    if(id && id!==t.id && xo && vinc.indexOf(id)<0 && (t.vinculos_descartados||[]).indexOf(id)<0 && vinc.length<3 && temaComun248(_b248, [xo.nombre, xo.contexto, (xo.palabras||[]).join(" ")].join(" "))>=2) vinc.push(id); });   /* build 248: 2+ palabras de tema, sin contar empresas */
   if(vinc.length && !t.dup_resuelto){ t.posible_dup=(t.posible_dup||[]).concat(vinc).filter(function(x,i,a){ return a.indexOf(x)===i; }); }   /* solo se PROPONE (franja) */
   if(t.f_vigente || t.periodicidad || t.indefinida===true){ t.pendiente_info=""; t.pendiente_tipo=""; }
   /* la pregunta puede nombrar dias o meses SOLO si los dijo el ("¿jueves o viernes?"); fechas sueltas del modelo, no */
@@ -8001,7 +8132,7 @@ function aplicaRevisionClaude(t, v, j, abiertas){
   var pq=String(j.pregunta||"").trim();
   if(pq){ var _dm=_fsa(pq).match(new RegExp("\\b("+_DIARE+"|"+_MESRE+")\\b","g"))||[];
     var _pqOk=!/\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}\s*[-/]\s*\d{1,2}\b/.test(pq) && _dm.every(function(w){ return new RegExp("\\b"+w+"\\b").test(s); });
-    if(_pqOk) dudas.push(pq); }
+    if(_pqOk && !preguntaQuienYaResuelta248(t, pq)) dudas.push(pq); }
   return {hecho:hecho, dudas:dudas, vinc:vinc, yaHecha:false};
 }
 /* ===== build 208 (Salvador 22:04): nada de palomeo en vivo mientras dicta. Al llegar lo de Claude, lo que se completo
@@ -8110,6 +8241,7 @@ function vHecho238(t){
 }
 function completaRevision(t, v, op){
   op=op||{};   /* build 210: {alTerminar(r), sinRevision}: audifonos (respuesta hablada; en una tarea ya autorizada no la regresa a Falta info) */
+  try{ cargaAgendaWA(); }catch(e){}   /* build 248: la agenda se pide ya, para no preguntar "¿Quién es Fernando de BBVA?" si está en ella */
   if(!op.sinRevision) t.en_revision=true;   /* build 209: ya la esta completando: no sale de "Falta info" hasta "Autorizar" */
   var _antes208=okDeRevision(t);   /* build 208: lo que ya estaba palomeado ANTES de dictar (el dictado mismo cuenta en contextoDe) */
   msg(t,"bo",v); var _m0=t.msgs[t.msgs.length-1]; _m0.de=yo; _m0.completa_info=1; _m0.dict238=1;   /* build 238: queda en el historial, no se repite en la vista */
@@ -8118,7 +8250,7 @@ function completaRevision(t, v, op){
   var _fin=function(hecho, dudas, vinc){ delete t._leyendo; guarda(t); try{ sincronizaAvisos(t); }catch(e){}
     palomeaEnOrden(t, _antes208, function(){ _cierre(hecho, dudas, vinc); }); };
   var _cierre=function(hecho, dudas, vinc){
-    var _pv=(vinc||[]).map(function(id){ var d=tareas.filter(function(x){ return x.id===id; })[0]; return d?"“"+d.nombre+"”":""; }).filter(Boolean);
+    var _pv=(vinc||[]).map(function(id){ var d=tareas.filter(function(x){ return x.id===id; })[0]; return d?"“"+nombreVinc248(d)+"”":""; }).filter(Boolean);
     var _vx=_pv.length?" Posible vínculo con "+_pv.join(" o ")+": te lo dejo propuesto, no lo vinculé.":"";
     if(!op.sinRevision) revisaCompleta(t);
     var f=op.sinRevision?[]:soloMeFalta(t), _lista=!op.sinRevision && !f.length && completitud(t).completa;
@@ -8129,7 +8261,7 @@ function completaRevision(t, v, op){
     /* build 238: tarjeta "Hecho:" / "Me falta:" (en la tarea donde quedó, si se vinculó) */
     var _dio=dioFecha238(v, _j238), _fx=(op.sinRevision?[]:soloMeFalta(_T238)).filter(function(x){ return !(_dio && /fecha|finiquito|indefinid/i.test(x)); });
     _T238.hecho238={ts:Date.now(), hecho:(hecho||[]).filter(function(x){ return !/^etiquetas$/i.test(String(x)); }).map(function(x){ return conMayuscula(String(x)); }).concat(_or238.hecho),
-      falta:_or238.falta.concat((Array.isArray(_j238&&_j238.dudas)?_j238.dudas:[]).filter(function(d){ return d && d.pregunta; }).slice(0,3).map(function(d){ return {k:"resp", q:String(d.pregunta), ops:(Array.isArray(d.opciones)?d.opciones:[]).slice(0,4).map(function(x){ return {id:String(x), label:String(x)}; })}; })).concat((dudas||[]).map(function(d){ return {k:"txt", q:String(d), ops:[]}; })).concat(_fx.map(function(x){ return {k:"txt", q:"¿"+conMayuscula(String(x).replace(/[.?¿]+$/,""))+"?", ops:[]}; }))};
+      falta:_or238.falta.concat((Array.isArray(_j238&&_j238.dudas)?_j238.dudas:[]).filter(function(d){ return d && d.pregunta && !preguntaQuienYaResuelta248(t, d.pregunta); }).slice(0,3).map(function(d){ return {k:"resp", q:String(d.pregunta), ops:(Array.isArray(d.opciones)?d.opciones:[]).slice(0,4).map(function(x){ return {id:String(x), label:String(x)}; })}; })).concat((dudas||[]).map(function(d){ return {k:"txt", q:String(d), ops:[]}; })).concat(_fx.map(function(x){ return {k:"txt", q:"¿"+conMayuscula(String(x).replace(/[.?¿]+$/,""))+"?", ops:[]}; }))};
     if(_T238!==t) guarda(_T238);
     guarda(t); render();
     if(op.alTerminar) try{ op.alTerminar({hecho:hecho||[], dudas:dudas||[], vinc:vinc||[], falta:f}); }catch(e){} };
@@ -14605,6 +14737,7 @@ function bindHilo(){
   Array.prototype.forEach.call(document.querySelectorAll("[data-rvx]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); descartaVinculos(t); render(); }; });   /* build 212 */
   Array.prototype.forEach.call(document.querySelectorAll("[data-rvinc]"),function(el){
     el.onclick=function(){ var did=el.getAttribute("data-rvinc"), d=tareas.filter(function(x){ return x.id===did; })[0]; if(!d) return;
+      if(esCerradaReciente248(d)){ abierta=d.id; vista="hilo"; render(); return; }   /* build 248: una cerrada no se vincula, se abre para verla */
       hojaConfirma({titulo:"Pasar todo a \u201c"+corta40(d.nombre)+"\u201d", sub:"Lo de \u201c"+corta40(t.nombre)+"\u201d se junta all\u00e1.",
         accion:"Vincular", cb:function(){ d.autorizada=true; enlazaTareas(t.id, did, "trabajador (posible duplicado)"); }}); };
   });
@@ -15775,7 +15908,7 @@ function cargaAgendaWA(alLlegar){
   window.__agendaPide=1;
   fetch(PUSH+"?action=wa_agenda",{method:"POST", headers:{"content-type":"application/json","x-app-token":APP_TOKEN}, body:JSON.stringify({usuario:yo})})
     .then(function(r){ return r.json().catch(function(){ return {error:"HTTP "+r.status}; }); })
-    .then(function(j){ window.__agendaPide=0; var l=_agendaDe(j); if(!l){ window.__agendaNo=1; return; } window.AGENDA_WA=l; if(alLlegar) try{ alLlegar(); }catch(e){} })
+    .then(function(j){ window.__agendaPide=0; var l=_agendaDe(j); if(!l){ window.__agendaNo=1; return; } window.AGENDA_WA=l; if(alLlegar) try{ alLlegar(); }catch(e){} try{ reintentaDudas248(); }catch(e){} })
     .catch(function(){ window.__agendaPide=0; window.__agendaNo=1; });
 }
 function todosLosContactos(){
@@ -17041,15 +17174,16 @@ function aplicaCamposNota(t, v, j){
     t.contexto=(modo==="reemplazar" || !String(t.contexto||"").trim()) ? cx.slice(0,1500) : (String(t.contexto).trim()+" "+cx).slice(0,1500);   /* build 211: 600 cortaba lo dictado */
     if(Array.isArray(j.palabras) && j.palabras.length) t.palabras=j.palabras.map(function(w){ return String(w).toLowerCase().trim(); }).filter(Boolean).slice(0,6);
     hecho.push(modo==="reemplazar"?"contexto nuevo":"contexto"); }
-  if(a!=="fecha" && j.fecha && t.indefinida!==true){ var fd=fechaDictada(v);   /* build 222: en una continua la fecha es meta */
+  var _l248=aplicaLecturaFechas248(t, v, j, {mueve:true}); hecho=hecho.concat(_l248.hecho);   /* build 248: no termina el X / antes del X / termina cuando */
+  if(a!=="fecha" && j.fecha && t.indefinida!==true){ var fd=fechaDictada(v); if(_l248.bloquea) fd={todas:[]};   /* build 222: en una continua la fecha es meta */
     if(fd.todas.length){ var cf=candadoFecha(v, j.fecha);
       if(cf.duda) dudas.push(cf.duda);
       else if(cf.fecha && cf.fecha!==t.f_vigente){ var rr=mueveFecha(t, cf.fecha, "lo dijo "+((PERSONAS[yo]||{}).nombre||"")+" en nota a Claude"); if(!(rr && rr.ok===false)){ t.fecha_dictada=true; t.falta_fecha=false; hecho.push("fecha: "+fechaConDia(cf.fecha)); } } } }
   if(hecho.length && (t.indefinida===true || t.f_vigente || t.periodicidad)){ t.pendiente_info=""; t.pendiente_tipo=""; }
   var pq=String(j.pregunta||"").trim(), rr2=String(j.respuesta||"").trim();
   if(!pq && j.pregunta===undefined && !hecho.length && /\?/.test(rr2)) pq=rr2.replace(/^\s*(no\s+entend[ií]\s+bien|no\s+me\s+qued[oó]\s+claro)[:,.]?\s*/i,"");
-  if(pq && !traeFecha(pq)) dudas.push(pq);
-  return {hecho:hecho, dudas:dudas};
+  if(pq && !traeFecha(pq) && !preguntaQuienYaResuelta248(t, pq)) dudas.push(pq);
+  return {hecho:hecho, dudas:dudas, bloquea248:_l248.bloquea};
 }
 /* junta lo anotado con lo que hizo la accion y lo que falta preguntar ("No cambié nada" ya no aplica si se anotó algo) */
 function juntaNota(c, tx){
@@ -17069,6 +17203,7 @@ function respuestaHecho(hecho, entendi){
   return e ? "Entendí: "+e.replace(/[.]+$/,"")+". No cambié nada en la tarea." : "No cambié nada: no me quedó claro qué hacer. Dímelo otra vez.";
 }
 function ejecutaNotaClaude(t, v){
+  try{ cargaAgendaWA(); }catch(e){}   /* build 248 */
   var ls=[]; (t.msgs||[]).slice(-40).forEach(function(x,i){ if(!x||x.nota_claude||x.eliminado||(x.nota_mia&&x.de!==yo)) return; var q=x.wa_c||(x.de&&PERSONAS[x.de]&&PERSONAS[x.de].nombre)||(x.k==="bo"?"Salvador":"Sistema"); ls.push(q+(x.nota_mia?" (nota suya, contexto)":"")+": "+String(x.tr||x.t||"").slice(0,300)); });
   (t.msgs||[]).slice(0,-40).forEach(function(x){ if(x && x.nota_mia && x.de===yo && !x.eliminado) ls.unshift(((PERSONAS[yo]||{}).nombre||"Salvador")+" (nota suya, contexto): "+String(x.t||"").slice(0,300)); });   /* build 216 */
   var hoyS=hoy();
@@ -17080,9 +17215,9 @@ function ejecutaNotaClaude(t, v){
     "Si dice para cuando es la tarea o su proxima fecha, accion fecha. En respuesta NO escribas fechas ni dias (las escribe la app).\n"+
     "NUNCA contestes 'estaré pendiente' o 'te aviso': si pide mandar o recordar algo a alguien despues, la app ya lo programa sola; si no la entendiste, accion nada y pregunta a quien y a que hora.\n"+
     "Decide qué quiere y contesta SOLO JSON: {\"accion\":\"dato|renombrar|fecha|cerrar|eliminar|pasar|contexto|nada\",\"valor\":\"...\",\"respuesta\":\"QUÉ ENTENDISTE, en una frase corta en español (nunca solo 'Listo' u 'Ok')\","+
-      "\"contexto\":null,\"contexto_modo\":\"sumar|reemplazar\",\"ritmo\":null,\"indefinida\":false,\"recurrente\":null,\"fecha\":null,\"checklist\":null,\"responsable\":null,\"yo_superviso\":false,\"seguimiento_a\":null,\"compartir_con\":[],\"pregunta\":null}.\n"+
+      "\"cierra\":null,\"contexto\":null,\"contexto_modo\":\"sumar|reemplazar\",\"ritmo\":null,\"indefinida\":false,\"recurrente\":null,\"fecha\":null,\"checklist\":null,\"responsable\":null,\"yo_superviso\":false,\"seguimiento_a\":null,\"compartir_con\":[],\"pregunta\":null}.\n"+
     "- responsable: si dice que la tarea es de alguien / alguien es el responsable / él solo supervisa: el nombre COMPLETO tal cual (puede ser de fuera); yo_superviso=true solo si lo dijo.\n"+
-    "- seguimiento_a: SOLO si te pide que TÚ le des seguimiento a alguien: {\"quien\":\"nombre completo tal cual\",\"meta\":\"qué tiene que quedar\",\"cada\":\"frecuencia tal cual o null\",\"fechas\":[AAAA-MM-DD del calendario que salen de esa frecuencia, máx 10],\"hora\":\"HH:MM solo si la dijo\",\"texto\":\"WhatsApp corto y amable empezando con 'IA: '\"}.\n"+
+    "- seguimiento_a: SOLO si te pide que TÚ le des seguimiento a alguien: {\"quien\":\"nombre completo tal cual\",\"meta\":\"qué tiene que quedar\",\"cada\":\"frecuencia tal cual o null\",\"fechas\":[AAAA-MM-DD del calendario que salen de esa frecuencia, máx 10],\"pasos\":[{\"tx\":\"cada paso dictado como cosa que se le pregunta, EN EL ORDEN dictado (ej. 'el contacto del carpintero de Lorena (se lo pide a Karina)', 'el estatus con los dos carpinteros', 'las muestras de un cajón pintado')\",\"fecha\":\"AAAA-MM-DD del calendario si ese paso tiene plazo, o null\",\"hora\":\"HH:MM límite solo si la dijo (ej. 'a las 12'), o null\"}] (el primero es lo urgente de hoy; si no dictó pasos, []),\"hora\":\"HH:MM solo si la dijo\",\"texto\":\"WhatsApp corto y amable empezando con 'IA: '\"}.\n"+
     "- compartir_con: nombres COMPLETOS de con quién dice que se comparte o a quién se avisa; si no, [].\n"+
     "- aviso_inmediato: true SOLO si dice que le avises de inmediato si se vence. Cada meta puede llevar aviso_inmediato igual.\n"+
     "- metas: SOLO si la tarea es continua (indefinida): [{\"tx\":\"qué debe quedar\",\"fecha\":\"AAAA-MM-DD o null\",\"quien\":null,\"seguimiento\":{\"quien\":\"…\",\"cada\":\"…\",\"hora\":null} o null}]; en ese caso NUNCA uses accion fecha.\n"+
@@ -17090,6 +17225,7 @@ function ejecutaNotaClaude(t, v){
     "ADEMÁS de la accion, llena TODO lo que la nota diga (puede ser varias cosas a la vez; nada inventado):\n"+
     "- contexto: de qué se trata la tarea, quiénes, para qué (1 a 3 frases); contexto_modo 'reemplazar' si lo cuenta completo o pide cambiarlo, 'sumar' si agrega algo.\n"+
     "- ritmo: cada cuánto quiere que le recuerde o revise (ej. 'una vez al mes'). - indefinida: true solo si dice que no tiene fin.\n"+
+    "- OJO fechas: \"no termina el 8\", \"va a continuar hasta que…\" y \"termina cuando <evento>\" NO mueven la fecha de finiquito (accion nunca fecha por eso): el evento va en cierra (texto corto, ej. \"Fideicomiso firmado\"); \"antes del 15\" es la fecha meta.\n"+
     "- recurrente: 'semanal' o 'mensual' solo si dice que la tarea se repite. - fecha: AAAA-MM-DD solo si dicta una fecha.\n"+
     "- pregunta: SOLO lo que de verdad no quedó claro, en una pregunta corta; lo demás se aplica igual.\n"+
     "- dato: corrige o aclara información (precios, medidas, quién dijo qué). valor = el dato ya corregido, claro y completo.\n- renombrar: valor = nombre nuevo.\n- fecha: valor = AAAA-MM-DD.\n- cerrar: ya se hizo.\n- eliminar: ya no se va a hacer.\n- pasar: valor = nombre de la persona.\nNo inventes; si no entiendes, accion nada y pregunta en respuesta.\n\nNOTA: "+v+"\n\nULTIMOS MENSAJES:\n"+ls.join("\n");
@@ -17102,6 +17238,7 @@ function ejecutaNotaClaude(t, v){
       var j=null; try{ var mm=String(txt||"").match(/\{[\s\S]*\}/); if(mm) j=JSON.parse(mm[0]); }catch(e){}
       /* build 206: primero se aplica todo lo que dijo (contexto, ritmo, indefinida/recurrente, fecha); sin IA, lo local */
       try{ _c206=aplicaCamposNota(t, v, j||{}); if(t.indefinida===true && j && String(j.accion||"").toLowerCase()==="fecha"){ j.accion="nada"; j.fecha=null; }   /* build 222: continua: la fecha es meta */
+        if(_c206.bloquea248 && j && String(j.accion||"").toLowerCase()==="fecha"){ j.accion="nada"; j.fecha=null; j.valor=""; }   /* build 248: "no termina el X" no mueve el finiquito */
         var _mt222=aplicaMetasClaude(t, v, j||{}); _c206.hecho=_c206.hecho.concat(_mt222.hecho); _c206.dudas=_c206.dudas.concat(_mt222.dudas);
         var _ai222=aplicaAvisoInmediato(t, v, j||{}); if(_ai222) _c206.hecho.push(_ai222);
         var _pr221=aplicaResponsable(t, v, j||{}); if(_pr221) _c206.hecho.push(_pr221); if(t.__dudas221){ _c206.dudas=_c206.dudas.concat(t.__dudas221); delete t.__dudas221; }   /* build 221 */
