@@ -786,7 +786,7 @@ button{font:inherit;color:inherit}
 .sep226{height:1px;background:var(--line);margin:6px 2px 12px}
 .aco226{margin:6px 12px 12px}.acoh{display:flex;align-items:baseline;justify-content:space-between;padding:2px 4px 8px}.acoh b{font-size:20px}.acoh span{color:var(--ink-3);font-size:15px}
 .acog{background:var(--surface);border-radius:16px;overflow:hidden}
-.acor.p256{background:rgba(10,132,255,.09)}.p256 .acow b{font-size:16.5px;white-space:normal}.p256de{color:var(--ink-3);font-size:14px}.p256m{display:block;color:var(--ink-2);font-size:15px;line-height:1.35;margin-top:1px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.acor.p256{background:rgba(10,132,255,.09)}.p256 .acow b{font-size:16.5px;white-space:normal}.p256de{color:var(--ink-3);font-size:14px}.p256cn{display:inline-block;background:rgba(10,132,255,.2);color:#7cc0ff;border-radius:7px;padding:0 7px;font-weight:700;font-size:12.5px}.p256why{display:block;color:var(--ink-3);font-size:13.5px;line-height:1.35;margin-top:3px}.p256why b{color:var(--ink-2)}.p256x{margin-left:auto;background:none;border:0;color:var(--ink-3);padding:4px 6px}.p256x svg{display:block}.p256m{display:block;color:var(--ink-2);font-size:15px;line-height:1.35;margin-top:1px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .ac226.p256b,.ac226.p256f{margin-top:6px;flex-wrap:wrap}.p256f>span.q{color:var(--ink-2);font-size:15px;margin-right:4px}
 .prop256row{display:flex;align-items:center;justify-content:space-between;width:calc(100% - 24px);margin:8px 12px 2px;padding:12px 14px;border:0;border-radius:14px;background:rgba(10,132,255,.18);color:#7cc0ff;font:inherit;font-size:16px;font-weight:700}.prop256row b{background:#0a84ff;color:#fff;border-radius:11px;padding:1px 9px;font-size:14px}
 .iatag.nueva256{color:#7cc0ff;background:rgba(10,132,255,.2)}
@@ -1530,7 +1530,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 259 · una sola hoja Vincular · Nueva; el cerebro no cambia el propósito de una tarea ni la cierra con pasos sin palomear";
+var VERSION_APP = "build 260 · propuestas con su origen; el banner pliega Acomodo; Te pregunta con menú propio";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -6533,8 +6533,8 @@ function vLista(){
   }
 
   h+=bannerAvisos();
-  var _pp256=propuestas256().filter(function(t){ return !(window.__p256f||{})[t.id]; });
-  if(_pp256.length) h+='<button class="prop256row" id="bprop256"><span>'+_pp256.length+(_pp256.length===1?' tarea nueva por revisar':' tareas nuevas por revisar')+'</span><b>'+_pp256.length+'</b></button>';   /* build 256 */
+  var _pp256=propuestas256();
+  if(_pp256.length){ var _pl=acoPlegado260(); h+='<button class="prop256row" id="bprop256" aria-expanded="'+(_pl?'false':'true')+'"><span>'+_pp256.length+(_pp256.length===1?' tarea nueva por revisar':' tareas nuevas por revisar')+'</span><b>'+ico(_pl?"der":"down",14)+'</b></button>'; }   /* build 256; 260: plega y despliega Acomodo */
 
   var msgs=misMensajes();
   var pend=pendientesInfo();
@@ -9975,15 +9975,16 @@ function abreMenuPregunta247(t, ixDato){
   var ds=(typeof ixDato==="number" && ixDato!==p.ix && t.msgs[ixDato] && !t.msgs[ixDato].oculto)?t.msgs[ixDato]:null;
   v.innerHTML='<div class="mov225" role="dialog" aria-label="Te pregunta"><div class="h225g"></div><div class="h225h"><b>'+esc(p.todos?"Piden a todos":"Te pregunta")+' · '+esc(p.de)+'</b><button class="h225b" data-detx="1" aria-label="Cerrar">'+ico("x",14)+'</button></div>'+
     '<div class="h225c"><p class="h225v0">“'+esc(p.t)+'”</p>'+(ds?'<p class="h225v0">Dato: '+esc(String(ds.t||"").replace(/^[^:\n]{1,40}:\s*/,""))+'</p>':'')+
-    '<div class="det242b det247"><div class="ac226 hj242 pt247"><button data-p247="mover">Mover</button><span>·</span><button data-p247="noaqui">No es de aquí</button><span>·</span><button data-p247="contesta">Ya la contesté</button></div></div></div></div>';
+    '<div class="det242b det247"><div class="ac226 hj242 pt247"><button data-p247="mover">Mover</button><span>·</span><button data-p247="noaqui">No es de aquí</button><span>·</span><button data-p247="contesta">Ya la contesté</button><span>·</span><button data-p247="del">Eliminar</button></div></div></div></div>';
   document.body.appendChild(v);
   v.addEventListener("click", function(ev){
     var b=ev.target.closest("[data-p247]");
     if(b){ ev.stopPropagation(); var a=b.getAttribute("data-p247"); v.remove(); var ixs=[p.ix]; if(ds){ var di=t.msgs.indexOf(ds); if(di>=0 && ixs.indexOf(di)<0) ixs.push(di); }
       if(a==="mover") abreMover225(t, p.ix, ixs);
+      else if(a==="del"){ ixs.forEach(function(i){ aparta247(t, i, "eliminado"); }); guarda(t); try{ hist240("Eliminó la pregunta de “"+p.de+"”", t, {tipo:"ng_lote", tss:ixs.map(function(i){ return (t.msgs[i]||{}).ts; })}); }catch(e){} render(); toast("Apartada, no borrada. Deshacer en el Historial"); }   /* build 260: oculto:true, nunca se borra */
       else if(a==="noaqui"){ var q=t.msgs[p.ix], alt=q&&q.duda_tarea&&q.duda_tarea.alternativa_id, d=alt?tareaId240(alt):null, r="";
-        if(d && d.id!==t.id) r=moverG237(t, ixs, d.id); else ixs.forEach(function(i){ noEsDeAqui247(t, i); });   /* con la alternativa que propuso Claude, pasa allá; si no, solo sale de aquí */
-        render(); toast(r||"Quitada de aquí. Deshacer en el Historial"); }
+        if(d && d.id!==t.id){ r=moverG237(t, ixs, d.id); render(); toast(r||"Quitada de aquí. Deshacer en el Historial"); }   /* con la alternativa que propuso Claude, pasa allá */
+        else abreMover225(t, p.ix, ixs); }   /* build 260: si no, la hoja Vincular · Nueva: ahí elige a dónde va (o Solo plática) */
       else if(a==="contesta"){ var y=t.msgs[p.ix]; if(y){ y.contestada247=Date.now(); guarda(t); try{ hist240("Te pregunta: ya la contesté", t, {tipo:"contestada247", ts:y.ts}); }catch(e){} } render(); toast("Listo: ya no te la pregunta"); }
       return; }
     if(ev.target===v || ev.target.closest("[data-detx]")) v.remove(); });
@@ -10454,6 +10455,9 @@ function acomodoHoy(){
    No guardar. OK la crea (si no tiene fecha, fechas rápidas) y queda arriba con la etiqueta "Nueva"; Vincular la fusiona en otra; Dato la deja como
    dato; No guardar la deja "descartada" (no se borra) y pregunta "¿Sí era de X?" para que el sistema aprenda. Las que ya existían se muestran igual. */
 var PROP256=/^(ia|mac|revisor|ia_revisor)$/i;
+/* build 260: el banner "N tareas nuevas por revisar" PLIEGA y DESPLIEGA la sección Acomodo de la lista principal (se recuerda en localStorage) */
+function acoPlegado260(){ if(window.__acoPleg260===undefined){ var v=false; try{ v=localStorage.getItem("bit_aco_pleg260")==="1"; }catch(e){} window.__acoPleg260=v; } return !!window.__acoPleg260; }
+function poneAcoPlegado260(v){ window.__acoPleg260=!!v; try{ localStorage.setItem("bit_aco_pleg260", v?"1":"0"); }catch(e){} }
 function esPropuesta256(t){
   if(!t || !PROP256.test(String(t.creada_por||""))) return false;
   if(t.tipo_elegido || t.autorizada || t.cierre || t.fusionada_en || t.es_recordatorio || t.descartada_al_nacer) return false;
@@ -10472,15 +10476,48 @@ function contactoProp256(t){
   if(!c && t.revisa_ext) c=String(t.revisa_ext);
   return nombreLimpio(c||"")||"la IA";
 }
+/* build 260: ORIGEN de la propuesta (canal · quién · frase · por qué). Campos que deja la Mac: origen ("correo_revisor"…), correo_de (nombre del remitente),
+   analisis, msgs[0] ("IA: Tarea creado desde correo de X: …"). Opcionales y mejores si la Mac los llena: correo_asunto, correo_remitente (email),
+   correo_fragmento (primeras líneas del correo), por_que. */
 function msgsProp256(t){
   return (t.msgs||[]).map(function(x,i){ return {x:x, i:i}; }).filter(function(o){ var x=o.x; return x && !x.nota_ia && !x.nota_claude && !x.res238 && !x.dict238 && x.k!=="bal" && !x.prog && !(typeof esNotaIA242==="function" && esNotaIA242(x)) && String(_txMsg(x)||"").trim(); }).slice(0,3);
 }
+function sinPrefijoIA260(x){ return String(x||"").replace(/^\s*IA:\s*/i,"").replace(/^\s*Tarea\s+(crea\w+|nueva)\s+(desde|por)\s+(correo|whats\s?app|dictado)[^:]{0,80}:\s*/i,"").replace(/\s+/g," ").trim(); }
+function origenProp256(t){
+  var og=String(t.origen||"")+" "+String(t.analisis||"")+" "+String(t.fuente||"")+" "+String(t.via||""), m0=(t.msgs||[])[0]||{};
+  var msgsWA=(t.msgs||[]).some(function(x){ return x && (x.wa_c || +x.wa_in===1); }), esCorreo=!!(t.correo_de||t.correo_asunto||t.correo_remitente||t.correo||t.gmail_id||t.gmail_thread||/correo|gmail|e-?mail/i.test(og) || m0.tipo==="correo" || m0.correo || /correo/i.test(String(m0.origen||"")) || /desde correo/i.test(String(m0.t||"")));
+  var canal=esCorreo?"Correo":((msgsWA||(t.wa_contactos||[]).length||/whats\s?app|^wa_|_wa\b/i.test(og))?"WhatsApp":((/dict/i.test(og)||m0.dict238||(m0.k==="bo" && !m0.wa_c))?"Dictado":(/mac|revisor|ia/i.test(String(t.creada_por||""))&&!msgsWA?"Dictado":"WhatsApp")));
+  if(canal==="Dictado" && (t.msgs||[]).length && !(t.msgs[0].k==="bo" || t.msgs[0].dict238) && !/dict/i.test(og)) canal=esCorreo?"Correo":"WhatsApp";
+  var quien, frase=[], extra="";
+  if(canal==="Correo"){
+    quien=String(t.correo_remitente||"").trim()||String(t.correo_de||"").trim(); if(t.correo_remitente && t.correo_de && !/@/.test(t.correo_de)) quien=t.correo_de+" <"+t.correo_remitente+">";
+    if(!quien){ var mm=String(m0.t||"").match(/desde correo de ([^:]{2,60}):/i); quien=mm?mm[1].trim():"remitente no registrado"; }
+    var cuerpo=sinPrefijoIA260(m0.t||t.contexto||"");
+    if(t.correo_asunto) frase.push("Asunto: "+String(t.correo_asunto).trim());
+    var fr=String(t.correo_fragmento||"").trim()||cuerpo; if(fr){ var ls=(fr.match(/[^.!?\n]+[.!?]?/g)||[fr]).map(function(z){ return z.trim(); }).filter(Boolean).slice(0,2).join(" "); frase.push((t.correo_asunto?"":"Del correo: ")+ls.slice(0,260)); }
+    if(!t.correo_asunto) extra="asunto";
+  } else if(canal==="WhatsApp"){
+    quien=contactoProp256(t); var ms=msgsProp256(t); ms.forEach(function(o){ frase.push(_txMsg(o.x).replace(/^[^:\n]{1,40}:\s*/,"")); });
+    if(!frase.length && m0.t) frase.push(sinPrefijoIA260(m0.t).slice(0,260));
+  } else {
+    quien="Salvador"; var d0=(t.msgs||[]).filter(function(x){ return x && String(x.t||"").trim(); })[0]; if(d0) frase.push(sinPrefijoIA260(d0.t).slice(0,260));
+  }
+  var pq=String(t.por_que||"").trim(), nc=(t.notas_claude||[]).filter(function(n){ return n && n.t && !/^CONTEXTO:/.test(n.t); }).slice(-1)[0];
+  var ctx=String(t.contexto||"").replace(/\s+/g," ").trim(), mostrada=_n179(frase.join(" "));
+  if(!pq && nc) pq=String(nc.t||"");
+  if(!pq && ctx && _n179(ctx).indexOf(mostrada.slice(0,60))<0 && mostrada.indexOf(_n179(ctx).slice(0,60))<0) pq=ctx;
+  if(!pq) pq=String(t.analisis||"").replace(/\s+/g," ").trim()||String(t.pendiente_info||"").trim();
+  if(!pq) pq="La IA detectó un pendiente en "+(canal==="Correo"?"este correo":(canal==="Dictado"?"lo que dictaste":"estos mensajes"))+" y lo dejó aquí para que tú decidas.";
+  return {canal:canal, quien:nombreLimpio(quien)||quien, frase:frase, porque:pq.slice(0,220), falta:extra};
+}
 function vPropuestas256(P){
   return P.map(function(t){
-    var c=contactoProp256(t), esp=!!(window.__p256f||{})[t.id];
-    if(esp) return '<div class="acor p256" data-p256="'+esc(t.id)+'"><span class="av226">'+esc(inicialesDe(c))+'</span><span class="acob"><span class="acow"><b>Creada: '+esc(t.nombre||"Tarea nueva")+'</b></span><span class="ac226 p256f"><span class="q">¿Para cuándo?</span><button data-p256d="hoy">Hoy</button><span>·</span><button data-p256d="man">Mañana</button><span>·</span><button data-p256d="sem">Esta semana</button><span>·</span><button data-p256d="sin">Sin fecha</button></span></span></div>';
-    return '<div class="acor p256" data-p256="'+esc(t.id)+'"><span class="av226">'+esc(inicialesDe(c))+'</span><span class="acob"><span class="acow"><b>Tarea nueva propuesta: '+esc(t.nombre||"Sin nombre")+'</b></span><span class="p256de">de '+esc(c)+'</span>'+
-      msgsProp256(t).map(function(o){ return '<span class="p256m">'+htmlTx245(_txMsg(o.x).replace(/^[^:\n]{1,40}:\s*/,""), o.x)+'</span>'; }).join("")+
+    var og=origenProp256(t), c=og.quien, esp=!!(window.__p256f||{})[t.id];
+    if(esp) return '<div class="acor p256" data-p256="'+esc(t.id)+'"><span class="av226">'+esc(inicialesDe(c))+'</span><span class="acob"><span class="acow"><b>Creada: '+esc(t.nombre||"Tarea nueva")+'</b><button class="p256x" data-p256d="sin" aria-label="Después: sin fecha">'+ico("x",14)+'</button></span><span class="ac226 p256f"><span class="q">¿Para cuándo?</span><button data-p256d="hoy">Hoy</button><span>·</span><button data-p256d="man">Mañana</button><span>·</span><button data-p256d="sem">Esta semana</button><span>·</span><button data-p256d="sin">Sin fecha</button></span></span></div>';
+    return '<div class="acor p256" data-p256="'+esc(t.id)+'"><span class="av226">'+esc(inicialesDe(c))+'</span><span class="acob"><span class="acow"><b>Tarea nueva propuesta: '+esc(t.nombre||"Sin nombre")+'</b></span>'+
+      '<span class="p256de"><span class="p256cn">'+esc(og.canal)+'</span> · '+esc(og.quien)+'</span>'+
+      og.frase.map(function(f){ return '<span class="p256m">'+htmlTx245(f, {})+'</span>'; }).join("")+
+      (og.porque?'<span class="p256why"><b>Por qué la propuse:</b> '+esc(og.porque)+'</span>':'')+
       '<span class="ac226 p256b"><button data-p256a="ok">OK</button><span>·</span><button data-p256a="vinc">Mover / Vincular a…</button><span>·</span><button data-p256a="dato">Dato</button><span>·</span><button data-p256a="ng">No guardar</button></span></span></div>';
   }).join("");
 }
@@ -10507,7 +10544,7 @@ function descartaProp256(t){
 }
 function bindPropuestas256(){
   var r=document.querySelector(".aco226");
-  var rb=$("bprop256"); if(rb) rb.onclick=function(){ window.__aco256=(window.__aco256==="prop")?"":"prop"; render(); setTimeout(function(){ var a=document.querySelector(".aco226"); if(a) try{ a.scrollIntoView({block:"start"}); }catch(e){} }, 30); };
+  var rb=$("bprop256"); if(rb) rb.onclick=function(){ poneAcoPlegado260(!acoPlegado260()); render(); };
   if(!r) return;
   var tDe=function(el){ var c=el.closest("[data-p256]"); return c?tareas.filter(function(z){ return z.id===c.getAttribute("data-p256"); })[0]:null; };
   Array.prototype.forEach.call(r.querySelectorAll("[data-p256a]"), function(el){ el.onclick=function(ev){ ev.stopPropagation(); var t=tDe(el); if(!t) return; var a=el.getAttribute("data-p256a");
@@ -10523,8 +10560,9 @@ function bindPropuestas256(){
 }
 function vAcomodo(){
   var P=propuestas256(), solo=(window.__aco256==="prop" && P.length);
+  if(acoPlegado260() && P.length) return "";   /* build 260: el banner plegó la sección */
   var D=solo?[]:platicasAcomodo237(), A=solo?{n:0,ok:0,lista:[]}:acomodoHoy(); if(!D.length && !A.n && !P.length) return "";   /* build 237: UNA tarjeta por plática */
-  var _np=P.filter(function(t){ return !(window.__p256f||{})[t.id]; }).length;
+  var _np=P.length;   /* build 260: cuenta las dos clases (propuestas y 'Creada · ¿Para cuándo?'): el número cuadra con las tarjetas */
   var h='<div class="aco226"><div class="acoh"><b>Acomodo</b><span>'+((D.length||P.length)?[(_np?_np+(_np===1?' tarea nueva':' tareas nuevas'):''), (D.length?D.length+(D.length===1?' plática':' pláticas'):'')].filter(Boolean).join(' · ')+' por revisar':'al día')+'</span></div>';
   if(P.length) h+='<div class="acog">'+vPropuestas256(P)+'</div>'+(solo?'<button class="acof" id="bprop256x" onclick="window.__aco256=\'\';render()"><span>Ver todo el Acomodo</span></button>':'');
   if(D.length) h+='<div class="acog">'+D.slice(0,8).map(function(g){ var t=g.t, ix0=g.ixs[0], x0=t.msgs[g.ixs[g.ixs.length-1]], k=t.id+"|"+ix0, ab=!!(window.__g237open||{})[k],
@@ -16769,11 +16807,26 @@ function misNombres(){
 }
 function PIDE_RXf(){ return /\?|¿|\b(autoriza|autorizas|me (pasas|mandas|confirmas|dices|apruebas)|necesito|ocupo|pasame|mandame|confirmame|dime|que opinas|como ves|le doy|lo compro|cuanto|cual|apruebas|vobo|visto bueno)\b/; }
 /* la ultima pregunta o pedido de OTRO dirigido a mi, que no he contestado bien */
+/* build 260: ¿este mensaje es de OTRO tema? movido_de, o la Mac dudó de la tarea (apunta a otra), o la tarea ya tiene historia y el mensaje no comparte ni una raíz de palabra con su nombre/contexto/pasos (y no es respuesta directa a lo último que dijo Salvador) */
+function temaAjeno260(t, y, respondeAlUltimo){
+  if(!y) return false; if(y.movido_de) return true;
+  if(y.duda_tarea && !y.duda_resuelta) return false;   /* con duda de la Mac, la tarjeta ofrece OK · Mover · Nueva: ahí se acomoda */
+  try{ if(dudasDeNotas237(t).some(function(d){ return _n179(d.c).split(" ")[0]===_n179(y.wa_c||"").split(" ")[0]; })) return false; }catch(e){}
+  if(y.cita || !historiaTarea259(t)) return false;
+  var cuerpo=String(y.tr||y.t||"").replace(/^\s*[^:\n]{1,40}:\s*/,""), ms=stems259(cuerpo); if(ms.length<2) return false;
+  var base=stems259([t.nombre, contextoDe(t)||t.contexto||"", (t.lista_pasos||[]).map(function(p){ return p&&p.tx; }).join(" ")].join(" "));
+  if(ms.length<3 || ms.some(function(w){ return base.indexOf(w)>=0; })) return false;
+  var c0=_n179(y.wa_c||"").split(" ")[0]; if(c0 && (t.wa_contactos||[]).some(function(w){ return _n179((w&&w.nombre)||w||"").split(" ")[0]===c0; })) return false;   /* un contacto de la tarea no es ajeno */
+  var c=_n179(y.wa_c||"").split(" ")[0];   /* ¿quien lo manda ya hablaba del tema de esta tarea? entonces no es ajeno */
+  if(c && (t.msgs||[]).some(function(m){ if(!m || m===y || m.oculto || m.movido_de || _n179(m.wa_c||"").split(" ")[0]!==c) return false; return stems259(String(m.t||"").replace(/^\s*[^:\n]{1,40}:\s*/,"")).some(function(w){ return base.indexOf(w)>=0; }); })) return false;
+  return true;
+}
 function preguntaParaMi(t){
   var ms=t.msgs||[], nombres=misNombres();
   var iUlt=-1; for(var i=ms.length-1;i>=0;i--){ var x=ms[i]; if(x && x.k==="bo" && (x.de===yo || (!x.de && t.duenio===yo)) && !x.vaga){ if(x.compromiso && x.compromiso.hasta>Date.now()) return null; iUlt=i; break; } }
   for(var j=ms.length-1;j>iUlt;j--){
-    var y=ms[j]; if(!y || y.de===yo || y.oculto || y.eliminado || y.contestada247) continue;   /* build 247: ya la contesté; build 227: lo movido/oculto ya no pregunta aqui */
+    var y=ms[j]; if(!y || y.de===yo || y.oculto || y.eliminado || y.contestada247) continue;
+    if(temaAjeno260(t, y, j-1===iUlt && iUlt>=0)) continue;   /* build 260: un mensaje movido de otra tarea o de otro tema no genera "Te pregunta" aquí */   /* build 247: ya la contesté; build 227: lo movido/oculto ya no pregunta aqui */
     var deOtro=(y.wa_in===1) || (y.k==="bo" && y.de && y.de!==yo); if(!deOtro) continue;
     var tx=_n179((y.tr||y.t||"")), mm=String(y.t||"").match(/^([^:\n]{1,24}):\s*/), quien=y.wa_c||(y.de&&PERSONAS[y.de]&&PERSONAS[y.de].nombre)||(mm?mm[1]:"Alguien");
     var pide=PIDE_RXf().test(" "+tx+" ") || /\?/.test(String(y.t||""));
@@ -17337,7 +17390,8 @@ function leeOpcionesDe(el){
     if(vista!=="hilo") return; var el=e.target.closest && e.target.closest(SEL); if(!el) return;
     if(e.target.closest("button,a,input,[contenteditable]")) return;
     var p=e.touches[0]; x0=p.clientX; y0=p.clientY; el0=el; clearTimeout(tm);
-    tm=setTimeout(function(){ var ops=leeOpcionesDe(el0); if(!ops) return; window.__leeLP=Date.now();
+    tm=setTimeout(function(){ if(el0.classList && el0.classList.contains("ptcard")){ var _tq=tareas.filter(function(z){ return z.id===abierta; })[0]; if(_tq){ window.__leeLP=Date.now(); try{ navigator.vibrate&&navigator.vibrate(12); }catch(_){} abreMenuPregunta247(_tq); } return; }   /* build 260: mantener presionada "Te pregunta" = su menú, no el de lectura */
+      var ops=leeOpcionesDe(el0); if(!ops) return; window.__leeLP=Date.now();
       try{ navigator.vibrate&&navigator.vibrate(12); }catch(_){} leeMenu(x0,y0,ops); }, 520);
   },{passive:true});
   document.addEventListener("touchmove",function(e){ if(!tm) return; var p=e.touches[0]; if(Math.abs(p.clientX-x0)>10||Math.abs(p.clientY-y0)>10){ clearTimeout(tm); tm=null; } },{passive:true});
@@ -17345,6 +17399,7 @@ function leeOpcionesDe(el){
   document.addEventListener("contextmenu",function(e){
     if(vista!=="hilo") return; var el=e.target.closest && e.target.closest(SEL); if(!el) return;
     e.preventDefault(); if(window.__leeLP && Date.now()-window.__leeLP<900) return;
+    if(el.classList && el.classList.contains("ptcard")){ var _tq2=tareas.filter(function(z){ return z.id===abierta; })[0]; if(_tq2){ window.__leeLP=Date.now(); abreMenuPregunta247(_tq2); } return; }   /* build 260 */
     var ops=leeOpcionesDe(el); if(ops){ window.__leeLP=Date.now(); leeMenu(e.clientX,e.clientY,ops); }
   });
   document.addEventListener("click",function(e){ if(window.__leeLP && Date.now()-window.__leeLP<700 && !(e.target.closest&&e.target.closest("#leemask"))){ e.stopPropagation(); e.preventDefault(); } },true);

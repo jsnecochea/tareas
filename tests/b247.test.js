@@ -91,7 +91,7 @@ eq("versión >= 247", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       var key = T.id + "|" + 6; window.__paraTi = {}; window.__paraTi[key] = { posturas: [], datos: [{ texto: "Depósito de $12,500", ix: 1 }], decidido: [], falta: [] }; window.__ptAb[T.id] = true; render(); solo();
       o.card = !!document.querySelector(".ptcard"); o.dato = !!document.querySelector(".ptcard .ptl[data-pt247]");
       document.querySelector(".ptcard .ptq").click(); var d = document.getElementById("det242"); o.btns = d ? [].map.call(d.querySelectorAll("[data-p247]"), function (b) { return b.textContent.trim(); }) : null; return o; });
-    eq("tocar Te pregunta: Mover · No es de aquí · Ya la contesté", [r4.card, r4.dato, r4.btns], [true, true, ["Mover", "No es de aquí", "Ya la contesté"]]);
+    eq("tocar Te pregunta: Mover · No es de aquí · Ya la contesté", [r4.card, r4.dato, r4.btns], [true, true, ["Mover", "No es de aquí", "Ya la contesté", "Eliminar"]]);
     await foto("b247-menu-te-pregunta.png");
     var r4b = await p.evaluate(function () { var o = {}, T = MORIC(); abre(T, [OTRA()]); window.__paraTi = {}; window.__paraTi[T.id + "|6"] = { posturas: [], datos: [{ texto: "Depósito de $12,500", ix: 1 }], decidido: [], falta: [] }; window.__ptAb[T.id] = true; render(); solo();
       /* Dato: abre el mismo menú */
@@ -100,12 +100,12 @@ eq("versión >= 247", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       document.querySelector(".ptcard .ptq").click(); document.querySelector('#det242 [data-p247="contesta"]').click(); o.contesta = [!document.querySelector(".ptcard"), !!T.msgs[6].contestada247, T.msgs[6].oculto || false];
       var h = JSON.parse(localStorage.getItem(HIST240_K) || "[]")[0]; deshaz240(h); o.deshaz = [!!T.msgs[6].contestada247]; render(); o.vuelve = !!document.querySelector(".ptcard");
       /* No es de aquí */
-      document.querySelector(".ptcard .ptq").click(); document.querySelector('#det242 [data-p247="noaqui"]').click(); o.noaqui = [!document.querySelector(".ptcard"), T.msgs[6].oculto, T.msgs[6].oculto_motivo];
+      document.querySelector(".ptcard .ptq").click(); document.querySelector('#det242 [data-p247="noaqui"]').click(); var _m = document.getElementById("mov225"); o.noaqui = [!!_m, _m ? _m.querySelector(".mvh").textContent : "", T.msgs[6].oculto || false]; if (_m) _m.remove();
       return o; });
     eq("tocar un Dato: abre el menú", r4b.dato, true);
     eq("Ya la contesté: desaparece la tarjeta y el mensaje no se oculta", r4b.contesta, [true, true, false]);
     eq("Deshacer del Historial la regresa", [r4b.deshaz, r4b.vuelve], [[false], true]);
-    eq("No es de aquí: desaparece la tarjeta; el mensaje queda oculto con motivo", r4b.noaqui, [true, true, "no_es_de_aqui"]);
+    eq("No es de aquí (sin alternativa de Claude): abre la hoja Vincular · Nueva para elegir a dónde va (260)", r4b.noaqui, [true, "Vincular · Nueva", false]);
     var r4c = await p.evaluate(function () { var o = {}, T = MORIC(), O = OTRA(); abre(T, [O]); window.__paraTi = {}; window.__paraTi[T.id + "|6"] = { posturas: [], datos: [{ texto: "Depósito de $12,500", ix: 1 }], decidido: [], falta: [] }; window.__ptAb[T.id] = true; render(); solo();
       document.querySelector(".ptcard .ptl[data-pt247]").click(); document.querySelector('#det242 [data-p247="mover"]').click();
       var m = document.getElementById("mov225"); o.hoja = !!m; var b = m && m.querySelector('[data-movto="tOTRA"]'); o.opcion = !!b; if (b) b.click();

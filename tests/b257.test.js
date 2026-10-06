@@ -24,7 +24,7 @@ eq("versión >= 257", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       document.getElementById("app").style.display = "flex";
       window.PR = function (id, nom, extra) { var t = { id: id, nombre: nom, duenio: "salvador", creada_por: "ia", estado: "abierta", tipo_item: "tarea", wa_contactos: [{ nombre: "Ing. Pedro" }], msgs: [{ id: "m" + id, de: "Ing. Pedro", t: "Ing. Pedro: mándame el plano de la azotea", ts: Date.now() - 60000 }] }; for (var k in (extra || {})) t[k] = extra[k]; return t; };
       window.NORMAL = function () { return { id: "tN", contexto: "algo", nombre: "Tarea normal mía", duenio: "salvador", creada_por: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, f_vigente: "2026-10-20", f_original: "2026-10-20", msgs: [] }; };
-      window.lista = function (T) { tareas = T; abierta = null; vista = "lista"; window.__aco256 = ""; window.__p256f = {}; render(); };
+      window.lista = function (T) { tareas = T; abierta = null; vista = "lista"; window.__aco256 = ""; window.__p256f = {}; window.__acoPleg260 = undefined; try { localStorage.removeItem("bit_aco_pleg260"); } catch (e) {} render(); };
     });
     var limpia = async function () { await p.evaluate(function () { [].forEach.call(document.querySelectorAll("#preg249,#hoja254,#acom249,#det242,.leemask,.cnlbg,.cnlsheet,.pop243"), function (e) { e.remove(); }); }); };
     /* 1) propuesta excluida de las listas y visible en Acomodo */
@@ -32,14 +32,14 @@ eq("versión >= 257", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       var app = document.getElementById("app").innerText;
       return { esP: [esPropuesta256(tareas[0]), esPropuesta256(tareas[1]), esPropuesta256(tareas[2]), esPropuesta256(tareas[3])], mias: mias().map(function (t) { return t.id; }), card: !!document.querySelector('[data-p256="p1"]'), txt: (document.querySelector('[data-p256="p1"]') || { innerText: "" }).innerText, fila: !!document.getElementById("bprop256"), filaTxt: (document.getElementById("bprop256") || { innerText: "" }).innerText.replace(/\s+/g, " "), enLista: /Plano de la azotea/.test(Array.prototype.map.call(document.querySelectorAll(".fila,.tar,.row"), function (x) { return x.innerText; }).join(" ")), ab: abiertaVisible(tareas[0]) }; });
     eq("Solo la de la IA sin tipo_elegido es propuesta; no entra en mias() ni abiertaVisible", [r1.esP, r1.mias.indexOf("p1") < 0, r1.ab], [[true, false, false, false], true, false]);
-    eq("Acomodo muestra la tarjeta con título, contacto y mensaje", [r1.card, /Tarea nueva propuesta: Plano de la azotea/.test(r1.txt), /de Ing\. Pedro/.test(r1.txt), /plano de la azotea/.test(r1.txt), /OK/.test(r1.txt), /Vincular/.test(r1.txt), /Dato/.test(r1.txt), /No guardar/.test(r1.txt)], [true, true, true, true, true, true, true, true]);
+    eq("Acomodo muestra la tarjeta con título, contacto y mensaje", [r1.card, /Tarea nueva propuesta: Plano de la azotea/.test(r1.txt), /WhatsApp · Ing\. Pedro/.test(r1.txt), /plano de la azotea/.test(r1.txt), /OK/.test(r1.txt), /Vincular/.test(r1.txt), /Dato/.test(r1.txt), /No guardar/.test(r1.txt)], [true, true, true, true, true, true, true, true]);
     eq("Fila superior '1 tarea nueva por revisar' y la propuesta no sale en las listas", [r1.fila, /1 tarea nueva por revisar/.test(r1.filaTxt), r1.enLista], [true, true, false]);
     await foto("b256-1-propuesta.png");
     var r1b = await p.evaluate(function () { var ic = document.querySelector(".acoh span"); return ic ? ic.textContent : ""; });
     eq("Encabezado de Acomodo cuenta las tareas nuevas", /1 tarea nueva/.test(r1b), true);
-    /* fila abre Acomodo filtrado */
+    /* el banner pliega (260) */
     await p.evaluate(function () { lista([PR("p1", "Plano de la azotea"), NORMAL()]); document.getElementById("bprop256").click(); });
-    eq("La fila abre Acomodo filtrado a propuestas", await p.evaluate(function () { return window.__aco256; }), "prop");
+    eq("La fila (banner) pliega Acomodo (build 260)", await p.evaluate(function () { return !document.querySelector(".aco226"); }), true);
     /* 2) OK sin fecha -> fechas rápidas -> Mañana -> arriba en Por ejecutar con 'Nueva' */
     var r2 = await p.evaluate(function () { lista([PR("p1", "Plano de la azotea"), NORMAL()]); document.querySelector('[data-p256="p1"] [data-p256a="ok"]').click();
       var t = tareas[0], f = document.querySelector('[data-p256="p1"] .p256f');
