@@ -73,11 +73,11 @@ eq("versión >= 260", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
         msgs: [{ k: "bo", de: "salvador", t: "Revisa los vales", ts: Date.now() - 90000, h: "07:00" }, { k: "bi", wa_in: 1, wa_c: "Carlos Ing", t: "Carlos Ing: ¿Ya tienes los vales de septiembre de Moric?", ts: Date.now() - 60000, h: "07:01" }] };
       tareas = [t, NORMAL()]; abierta = "tCOB"; vista = "hilo"; render();
       var c = document.querySelector(".ptcard"); var hay = !!c; var ev = new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: 100, clientY: 400 }); c.querySelector(".ptq").dispatchEvent(ev);
-      var m = document.getElementById("det242"), btns = m ? [].map.call(m.querySelectorAll("[data-p247]"), function (b) { return b.textContent; }) : [], lee = !!document.getElementById("leemask");
-      return { hay: hay, btns: btns, lee: lee, prevent: ev.defaultPrevented }; });
-    eq("Mantener presionada la tarjeta: menú propio (Mover · No es de aquí · Ya la contesté · Eliminar), sin el menú de lectura", [r6.hay, r6.btns, r6.lee], [true, ["Mover", "No es de aquí", "Ya la contesté", "Eliminar"], false]);
+      var lm = document.getElementById("leemask"), unico = lm ? [].filter.call(lm.querySelectorAll("button"), function (b) { return !b.disabled && /Mover|contesté|Eliminar/.test(b.textContent); }).map(function (b) { return b.textContent; }) : [], lee = !!lm; if (lm) lm.remove(); window.__leeLP = 0; var m = null, btns = [];
+      return { hay: hay, btns: btns, lee: lee, unico: unico, prevent: ev.defaultPrevented }; });
+    eq("Mantener presionada la tarjeta: el menú único (261) con Mover · Ya la contesté · Eliminar activos", [r6.hay, r6.lee, r6.unico], [true, true, ["Mover a otra tarea", "Ya la contesté", "Eliminar"]]);
     await foto("b259-3-menu.png");
-    var r7 = await p.evaluate(async function () { await espera(800); document.querySelector('[data-p247="mover"]').click(); await espera(50); var m1 = document.getElementById("mov225"), t1 = m1 ? m1.querySelector(".mvh").textContent : ""; if (m1) m1.remove();
+    var r7 = await p.evaluate(async function () { await espera(800); document.querySelector(".ptcard .ptq").click(); await espera(30); document.querySelector('[data-p247="mover"]').click(); await espera(50); var m1 = document.getElementById("mov225"), t1 = m1 ? m1.querySelector(".mvh").textContent : ""; if (m1) m1.remove();
       var T = tareas[0]; render(); await espera(800); document.querySelector(".ptcard .ptq").click(); await espera(30); document.querySelector('[data-p247="noaqui"]').click(); await espera(50); var m2 = document.getElementById("mov225"), t2 = m2 ? m2.querySelector(".mvh").textContent : ""; if (m2) m2.remove();
       return { mover: t1, noaqui: t2 }; });
     eq("Mover y No es de aquí usan la hoja Vincular · Nueva", r7, { mover: "Vincular · Nueva", noaqui: "Vincular · Nueva" });

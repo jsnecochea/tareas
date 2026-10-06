@@ -1484,8 +1484,8 @@ button{font:inherit;color:inherit}
 
 .leemenu{position:fixed;width:230px;background:#2a2a33;border-radius:14px;padding:4px 0;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 .leemenu button{display:block;width:100%;text-align:left;border:0;background:none;color:#fff;font-size:17px;padding:13px 16px}
-.leemenu button+button{border-top:.5px solid #3a3a44}
-.msgs .b,.ptcard,.top .tnm{-webkit-touch-callout:none}.msgs .b,.ptcard{-webkit-user-select:none;user-select:none}
+.leemenu button+button{border-top:.5px solid #3a3a44}.leemenu.u261{max-height:calc(100vh - 24px);overflow-y:auto}.leemenu.u261 button{padding:11px 16px;font-size:16.5px}.leemenu.u261 button.lmoff{color:#6c6c76}
+.msgs .b,.ptcard,.top .tnm{-webkit-touch-callout:none}.msgs .b,.ptcard,.hc238,.rtx,.sub246,#preg249 li,.acor,.nia242{-webkit-user-select:none;user-select:none}.nia242{-webkit-touch-callout:none}.hc238,.rtx,.sub246,#preg249 li,.acor{-webkit-touch-callout:none}
 .ttlee{margin-left:auto;border:0;background:none;color:var(--ink-2);padding:2px 8px;display:flex;align-items:center}
 .fotin{flex-direction:column;align-items:flex-end;gap:2px}.fotin img{width:180px;height:auto;max-height:240px;border-radius:12px}.fotin .fh{font-size:12px;color:var(--ink-3)}
 .gdoc{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;aspect-ratio:1;border-radius:10px;background:#2a2a33;color:#fff;text-decoration:none;padding:6px;text-align:center}
@@ -1530,7 +1530,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 260 · propuestas con su origen; el banner pliega Acomodo; Te pregunta con menú propio";
+var VERSION_APP = "build 261 · un solo menú completo en cualquier texto (11 opciones fijas, en gris las que no aplican)";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -17349,16 +17349,60 @@ function leeRepinta(scroll){
 function leeMenu(x, y, ops){
   leeCierraMenu();
   var m=document.createElement("div"); m.className="leemask"; m.id="leemask";
-  m.innerHTML='<div class="leemenu">'+ops.map(function(o,i){ return '<button data-lmo="'+i+'">'+esc(o[0])+'</button>'; }).join("")+'</div>';
+  var _u=ops.some(function(o){ return !o[1]; });   /* build 261: el menú único trae opciones en gris (sin acción) */
+  m.innerHTML='<div class="leemenu'+(ops.unico261?' u261':'')+'">'+ops.map(function(o,i){ return '<button data-lmo="'+i+'"'+(o[1]?'':' class="lmoff" disabled aria-disabled="true"')+'>'+esc(o[0])+'</button>'; }).join("")+'</div>';
   document.body.appendChild(m);
-  var mn=m.firstChild, w=230, h=ops.length*50+8;
+  var mn=m.firstChild, w=230, h=Math.min(ops.length*(ops.unico261?45:50)+8, window.innerHeight-24);
   mn.style.left=Math.max(12,Math.min(window.innerWidth-w-12, x-w/2))+"px";
   mn.style.top=Math.max(12,Math.min(window.innerHeight-h-12, y-h-14))+"px";
-  m.addEventListener("click",function(ev){ ev.stopPropagation(); var b=ev.target.closest("[data-lmo]"); leeCierraMenu(); if(b) ops[+b.getAttribute("data-lmo")][1](); });
+  m.addEventListener("click",function(ev){ ev.stopPropagation(); var b=ev.target.closest("[data-lmo]"); if(b && !ops[+b.getAttribute("data-lmo")][1]) return; leeCierraMenu(); if(b) ops[+b.getAttribute("data-lmo")][1](); });
 }
 function leeCierraMenu(){ var m=document.getElementById("leemask"); if(m) m.remove(); }
 function _leeTareaAbierta(){ return tareas.filter(function(x){return x.id===abierta})[0]; }
 function _leeCopia(s){ try{ navigator.clipboard.writeText(String(s||"")).then(function(){ toast("Copiado"); },function(){ toast("No se pudo copiar"); }); }catch(e){ toast("No se pudo copiar"); } }
+/* ===================== build 261 (Salvador): UN SOLO MENÚ COMPLETO, IGUAL EN CUALQUIER TEXTO =====================
+   Burbujas propias y ajenas, tarjeta Te pregunta, Hecho / Me falta, notas IA, resumen, preguntas de Claude, comentarios y acomodo.
+   Orden fijo: Leer desde aquí · Leer lo actual · Es para Claude · Mover a otra tarea · Nueva tarea · Dato · Copiar · Editar (solo lo propio) ·
+   Ya la contesté (solo preguntas) · No guardar · Eliminar (oculta, nunca borra). Lo que no aplica sale en gris (siempre se ve igual).
+   Mover y Nueva usan la hoja Vincular · Nueva. */
+var MENU261=["Leer desde aquí","Leer lo actual","Es para Claude","Mover a otra tarea","Nueva tarea","Dato","Copiar","Editar","Ya la contesté","No guardar","Eliminar"];
+function ctx261(el){
+  var t=_leeTareaAbierta(), c={t:t, kind:"", ix:null, x:null, texto:"", el:el, card:null};
+  if(!el) return c;
+  var pt=el.closest(".ptcard"); if(pt && t){ c.kind="pt"; var p=null; try{ p=preguntaParaMi(t); }catch(e){} c.p=p; if(p){ c.ix=p.ix; c.x=t.msgs[p.ix]; } c.texto=pt.innerText.replace(/ver (todo|menos)\s*[▾▴]/g,"").trim(); return c; }
+  var b=el.closest(".msgs [data-mix], .msgs [data-hab], .msgs .nia242[data-nix]");
+  if(b && t){ var ix=b.hasAttribute("data-mix")?+b.getAttribute("data-mix"):+String(b.getAttribute(b.hasAttribute("data-hab")?"data-hab":"data-nix")).split("|").pop(); if(!isNaN(ix)){ c.kind="msg"; c.ix=ix; c.x=t.msgs[ix]; c.texto=(c.x&&(c.x.tr||c.x.t))||b.innerText||""; return c; } }
+  var ac=el.closest(".acor"); if(ac){ c.kind="acomodo"; c.card=ac; c.texto=ac.innerText.replace(/\s+/g," ").trim(); return c; }
+  var hc=el.closest(".hc238"); if(hc){ c.kind="hecho"; c.texto=hc.innerText.replace(/\s+/g," ").trim(); return c; }
+  var pq=el.closest("#preg249 li, .pq255l li"); if(pq){ c.kind="pregunta"; c.texto=pq.innerText.replace(/\s+/g," ").trim(); return c; }
+  var rs=el.closest(".rsm246, .rtx, .sub246"); if(rs){ c.kind="resumen"; c.texto=(rs.closest(".rsm246")||rs.parentNode||rs).innerText.replace(/\s+/g," ").trim(); return c; }
+  return c;
+}
+function opcionesUnico261(el){
+  if(el && el.closest && el.closest(".top .tnm")) return leeOpcionesDe(el);
+  var c=ctx261(el), t=c.t, x=c.x, ix=c.ix, k=c.kind, hayMsg=!!(t && x && !x.oculto && ix!=null), propio=hayMsg && propio247(x);
+  var inner=function(sel){ return c.card && c.card.querySelector(sel); };
+  var A=[]; for(var i=0;i<MENU261.length;i++) A.push([MENU261[i], null]);
+  var pon=function(n, fn){ A[n][1]=fn; };
+  if(t && k==="pt" && c.p) pon(0, function(){ var r=_leeResumen(t,false), ms=_leeMsgs(t,c.p.ix+1,(t.msgs||[]).length); leeArranca(t,(r?[r]:[]).concat(ms),"desde"); });
+  else if(t && hayMsg && k==="msg") pon(0, function(){ leeDesde(t, ix); });
+  if(t) pon(1, function(){ leeActual(t); });
+  /* Es para Claude: lo propio va directo; lo ajeno que suena a indicación, como indicación */
+  if(hayMsg){ if(propio) pon(2, function(){ accion247(t, ix, "claude", document.createElement("div")); }); else if(puedeSerIndicacion(x, t)) pon(2, function(){ convierteEnIndicacion(t, ix); }); }
+  /* Mover / Nueva / Dato / No guardar: sobre el mensaje, sobre la plática (acomodo) o sobre la propuesta */
+  if(hayMsg){ pon(3, function(){ abreMover225(t, ix); }); pon(4, function(){ menuAcc254(t, ix, '[data-acnueva]'); }); pon(5, function(){ menuAcc254(t, ix, '[data-acdato]'); }); pon(9, function(){ menuAcc254(t, ix, '[data-acng]'); }); }
+  if(k==="acomodo"){ var pr=c.card.hasAttribute("data-p256");
+    var b3=inner(pr?'[data-p256a="vinc"]':'[data-acmov]'), b4=inner(pr?'[data-p256a="ok"]':'[data-acnueva]'), b5=inner(pr?'[data-p256a="dato"]':'[data-acdato]'), b9=inner(pr?'[data-p256a="ng"]':'[data-acng]');
+    if(b3) pon(3, function(){ b3.click(); }); if(b4) pon(4, function(){ b4.click(); }); if(b5) pon(5, function(){ b5.click(); }); if(b9) pon(9, function(){ b9.click(); }); }
+  pon(6, function(){ _leeCopia(c.texto); });
+  if(propio) pon(7, function(){ menuAcc254(t, ix, '[data-d247="edit"]'); });
+  if(k==="pt" && c.p) pon(8, function(){ var y=t.msgs[c.p.ix]; if(y){ y.contestada247=Date.now(); guarda(t); try{ hist240("Te pregunta: ya la contesté", t, {tipo:"contestada247", ts:y.ts}); }catch(e){} } render(); toast("Listo: ya no te la pregunta"); });
+  if(k==="pt" && c.p){ pon(3, function(){ abreMover225(t, c.p.ix, [c.p.ix]); }); pon(4, function(){ menuAcc254(t, c.p.ix, '[data-acnueva]'); }); pon(5, function(){ menuAcc254(t, c.p.ix, '[data-acdato]'); });
+    pon(9, function(){ noEsDeAqui247(t, c.p.ix); render(); toast("Quitada de aquí. Deshacer en el Historial"); });
+    pon(10, function(){ if(aparta247(t, c.p.ix, "eliminado")){ guarda(t); try{ hist240("Eliminó la pregunta de “"+c.p.de+"”", t, {tipo:"ng_lote", tss:[(t.msgs[c.p.ix]||{}).ts]}); }catch(e){} } render(); toast("Apartada, no borrada. Deshacer en el Historial"); }); }
+  if(hayMsg && k==="msg") pon(10, function(){ if(aparta247(t, ix, "eliminado")){ guarda(t); try{ hist240("Eliminó un mensaje", t, {tipo:"ng_lote", tss:[x.ts]}); }catch(e){} } render(); toast("Apartado, no borrado. Deshacer en el Historial"); });
+  A.unico261=true; A.kind261=k; return A;
+}
 function leeOpcionesDe(el){
   var t=_leeTareaAbierta(); if(!t) return null;
   var actual=["Leer lo actual",function(){ leeActual(t); }];
@@ -17385,25 +17429,30 @@ function leeOpcionesDe(el){
 }
 (function(){
   var tm=null, x0=0, y0=0, el0=null;
-  var SEL=".msgs [data-mix], .msgs [data-hab], .ptcard, .top .tnm";
+  var SEL=".msgs [data-mix], .msgs [data-hab], .msgs .nia242[data-nix], .ptcard, .hc238, .rsm246, .rtx, .sub246, #preg249 li, .acor, .top .tnm";
   document.addEventListener("touchstart",function(e){
-    if(vista!=="hilo") return; var el=e.target.closest && e.target.closest(SEL); if(!el) return;
+    if(vista!=="hilo" && !(vista==="lista" && e.target.closest && e.target.closest(".acor"))) return; var el=e.target.closest && e.target.closest(SEL); if(!el) return;
     if(e.target.closest("button,a,input,[contenteditable]")) return;
     var p=e.touches[0]; x0=p.clientX; y0=p.clientY; el0=el; clearTimeout(tm);
-    tm=setTimeout(function(){ if(el0.classList && el0.classList.contains("ptcard")){ var _tq=tareas.filter(function(z){ return z.id===abierta; })[0]; if(_tq){ window.__leeLP=Date.now(); try{ navigator.vibrate&&navigator.vibrate(12); }catch(_){} abreMenuPregunta247(_tq); } return; }   /* build 260: mantener presionada "Te pregunta" = su menú, no el de lectura */
-      var ops=leeOpcionesDe(el0); if(!ops) return; window.__leeLP=Date.now();
+    tm=setTimeout(function(){ var ops=opcionesUnico261(el0); if(!ops) return; window.__leeLP=Date.now();   /* build 261: UN solo menú, igual en cualquier texto */
       try{ navigator.vibrate&&navigator.vibrate(12); }catch(_){} leeMenu(x0,y0,ops); }, 520);
   },{passive:true});
   document.addEventListener("touchmove",function(e){ if(!tm) return; var p=e.touches[0]; if(Math.abs(p.clientX-x0)>10||Math.abs(p.clientY-y0)>10){ clearTimeout(tm); tm=null; } },{passive:true});
   document.addEventListener("touchend",function(){ clearTimeout(tm); tm=null; },{passive:true});
   document.addEventListener("contextmenu",function(e){
-    if(vista!=="hilo") return; var el=e.target.closest && e.target.closest(SEL); if(!el) return;
+    if(vista!=="hilo" && !(vista==="lista" && e.target.closest && e.target.closest(".acor"))) return; var el=e.target.closest && e.target.closest(SEL); if(!el) return;
     e.preventDefault(); if(window.__leeLP && Date.now()-window.__leeLP<900) return;
-    if(el.classList && el.classList.contains("ptcard")){ var _tq2=tareas.filter(function(z){ return z.id===abierta; })[0]; if(_tq2){ window.__leeLP=Date.now(); abreMenuPregunta247(_tq2); } return; }   /* build 260 */
-    var ops=leeOpcionesDe(el); if(ops){ window.__leeLP=Date.now(); leeMenu(e.clientX,e.clientY,ops); }
+    var ops=opcionesUnico261(el);   /* build 261 */ if(ops){ window.__leeLP=Date.now(); leeMenu(e.clientX,e.clientY,ops); }
   });
   document.addEventListener("click",function(e){ if(window.__leeLP && Date.now()-window.__leeLP<700 && !(e.target.closest&&e.target.closest("#leemask"))){ e.stopPropagation(); e.preventDefault(); } },true);
 })();
+/* build 261: un toque en el texto de Hecho / Me falta, el resumen o una pregunta de Claude abre el MISMO menú único */
+document.addEventListener("click",function(e){
+  if(window.__leeLP && Date.now()-window.__leeLP<700) return; var t0=e.target; if(!t0 || !t0.closest) return;
+  if(t0.closest("button,a,input,textarea,summary,select,[data-hc238x]")) return;
+  var el=t0.closest(".hc238, .rsm246 .rtx, .rtx, .sub246, #preg249 li"); if(!el) return;
+  var ops=opcionesUnico261(el); if(ops){ window.__leeLP=Date.now(); leeMenu(e.clientX, e.clientY, ops); }
+});
 /* lo que ya viste en pantalla cuenta como leido: al salir de una tarea se marca hasta su ultimo mensaje */
 (function(){
   var _r=render;
