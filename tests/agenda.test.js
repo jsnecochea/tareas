@@ -124,7 +124,7 @@ eq("y el paso dice 'Sin agendar'", c.completitud(B3).items.slice(-1)[0].tx, "Sin
 /* 6 en el codigo */
 si("el paso va dentro de vFaltaInfo y los botones están cableados", /h\+=vAgenda\(t\);/.test(html) && /var _ev=eventoDe\(t\); agendaEvento\(t, "", !\(_ev&&_ev\.hora\)\);/.test(html) && /data-agmenu\]"\)/.test(html));
 si("build 203: agendar ya NO abre Calendar ni navega", !/w=window\.open\(url/.test(html) && !/location\.href=url/.test(html));
-si("build 203 → 228: el agendado va como ficha 'Agendado' en la fila de fichas", /var ag=estadoAgenda228\(t\); if\(ag\) h\+=/.test(html));
+si("build 203 → 234: el agendado vive en la ficha de FECHA (verde si está completo)", /var ag=estadoAgenda228\(t\), cz=citas234\(t\)/.test(html) && /data-chip="fecha"/.test(html) && !/data-chip="agenda"/.test(html));
 si("VERSION_APP build 203 o posterior", +((html.match(/var VERSION_APP = "build (\d+)/) || [])[1] || 0) >= 203);
 
 console.log((malas.length ? malas.map(function (x) { return "  X " + x; }).join("\n") + "\n" : "") + "RESULTADO " + ok + "/" + n);

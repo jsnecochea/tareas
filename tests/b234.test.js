@@ -1,17 +1,15 @@
 #!/usr/bin/env node
-/* PRUEBAS build 233 (opción A del encabezado, Salvador 18:45): audífono siempre · clip SOLO con archivos y la cantidad en azul · ⋯ siempre;
-   los tres sin fondo ni borde, ~30 px, gap 6 px. Renglón de propietario en TODAS las vistas: mía = sin subtítulo; de otro = UNA línea
-   "De Manuel" / "De Manuel · sup. tú" / "De Samuel · sup. Carlos" (primer nombre), nunca salta. Antes: build 232: sin restos viejos. El filtro por meta (fila "Todo · Azotea · Interior · Otro" del 225) vive en la hoja de la ficha
-   "Metas n/m": tocar una meta filtra el chat y la ficha dice "Azotea ⌄"; "Todo" la regresa. Sin el selector "Importante | Todo" (Importante
-   vive en el filtro). Título con fuente del sistema (-apple-system, SF Pro, Inter de respaldo). Ninguna fila/control viejo (219–226) en tarea
-   con metas, con checklist, tarea nueva, dato y supervisor. App completa sin red, 390 px. Correr: node tests/b233.test.js  (CAP=<carpeta> guarda capturas) */
+/* PRUEBAS build 234 (Salvador 18:56): sin ficha "Agendado": vive en la ficha de FECHA (calendario; VERDE icono y texto si está completo
+   = alerta de Doit + Google Calendar; ícono ámbar si falta algo; sin evento, fecha normal). Tocarla abre la hoja con lo que hay y lo que
+   falta, cada cita con su estado y "Mover la fecha". Indefinida verde con calendario si hay alguna cita completa. ⓘ pasa a "Resumen"
+   (misma hoja numerada, titulada "Resumen"). La fila nunca hace dos renglones: cabe o se desliza. Correr: node tests/b234.test.js (CAP=<carpeta>) */
 "use strict";
 var fs = require("fs"), path = require("path");
 var ok = 0, n = 0, malas = [];
 function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
 var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 eq("versión >= 233", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[1] >= 233, true);
-eq("sin 'Lo hace … · supervisas tú' en el encabezado", /Lo hace <b>'\+esc\(nombreCorto\(ejecutorNombre/.test(html), false);
+eq("sin ficha 'Agendado' (data-chip=agenda)", /data-chip="agenda"/.test(html), false);
 eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Archivo|Barlow);/g) || []).length, 0);
 (async function () {
   var pw = require("/opt/node22/lib/node_modules/playwright"), b = await pw.chromium.launch(), p = await b.newPage({ viewport: { width: 390, height: 844 } }), errs = [];
@@ -22,22 +20,19 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
     window.firebase = { apps: [1], initializeApp: function () {}, firestore: function () { return fs0; }, auth: function () { return { onAuthStateChanged: function () {}, signOut: P }; } }; window.firebase.auth.GoogleAuthProvider = function () {}; });
   try {
     await p.goto("file://" + path.join(__dirname, "..", "index.html")); await p.waitForTimeout(600);
-    async function caso(T, nom) {
-      var r = await p.evaluate(function (T) {
-        yo = "salvador"; if (!PERSONAS.salvador) PERSONAS.salvador = { nombre: "Salvador", jefe: true };
-        window.__vf230 = {}; window.__cnlClaude = {}; window.__cnl = {}; window.__mfil225 = {}; window.__hoja225 = null;
-        tareas = [T]; abierta = T.id; vista = "hilo"; render(); try { leeExtras(); } catch (e) {}
+    async function caso(T, nom, hoja) {
+      var r = await p.evaluate(function (a) { var T = a[0], hoja = a[1];
+        yo = "salvador"; window.__vf230 = {}; window.__cnlClaude = {}; window.__cnl = {}; window.__mfil225 = {}; window.__hoja225 = null;
+        tareas = [T]; abierta = T.id; vista = "hilo"; render();
         [].forEach.call(document.body.children, function (x) { if (x.id !== "app") x.style.display = "none"; }); document.getElementById("app").style.display = "flex";
-        var top = document.querySelector("#app .top"), d = top.querySelector(".own233"), t = top.querySelector(".t");
-        var bs = [].slice.call(top.querySelectorAll(".iconbtn:not(#bback)")).filter(function (b) { return b.offsetParent; });
-        var R = bs.map(function (b) { return b.getBoundingClientRect(); });
-        return { ids: bs.map(function (b) { return b.id; }), tam: bs.map(function (b) { var c = getComputedStyle(b); return [Math.round(b.getBoundingClientRect().width), c.borderTopWidth, c.backgroundColor === "rgba(0, 0, 0, 0)" || c.backgroundImage === "none" && /rgba\(0, 0, 0, 0\)|transparent/.test(c.backgroundColor)]; }),
-          gap: R.length > 1 ? Math.round(R[1].left - R[0].right) : null,
-          cnt: (top.querySelector("#bgal .cnt") || {}).textContent || "", cntColor: top.querySelector("#bgal .cnt") ? getComputedStyle(top.querySelector("#bgal .cnt")).backgroundColor : "",
-          sub: d ? d.textContent : null, subLineas: d ? Math.round(d.getBoundingClientRect().height / parseFloat(getComputedStyle(d).lineHeight || 18)) : 0, subWrap: d ? getComputedStyle(d).whiteSpace : "",
-          subDentro: d ? d.getBoundingClientRect().right <= top.getBoundingClientRect().right : true, tituloAncho: Math.round(t.parentNode.parentNode.getBoundingClientRect().width), tw: [t.scrollWidth, t.clientWidth], lohace: /Lo hace|supervisas/.test(top.textContent) };
-      }, T);
-      if (process.env.CAP) await p.screenshot({ path: path.join(process.env.CAP, "b233-" + nom + ".png"), clip: { x: 0, y: 0, width: 390, height: 300 } });
+        var w = document.querySelector(".chips225"), bs = [].slice.call(w.querySelectorAll(":scope > button")), f = w.querySelector('[data-chip="fecha"]');
+        var o = { fichas: bs.map(function (x) { return x.textContent; }), unaFila: bs.every(function (x) { return Math.round(x.getBoundingClientRect().top) === Math.round(bs[0].getBoundingClientRect().top); }),
+          cabe: w.scrollWidth <= w.clientWidth, desliza: getComputedStyle(w).overflowX, wrap: getComputedStyle(w).flexWrap,
+          f: f ? [f.classList.contains("verde"), getComputedStyle(f.querySelector(".ftx234")).color, getComputedStyle(f.querySelector("svg")).color, f.querySelector("svg").innerHTML.length > 0] : null };
+        if (hoja) { (hoja === "res" ? w.querySelector('[data-chip="detalles"]') : f).click(); var h = document.querySelector(".h225");
+          o.hoja = [h.querySelector(".h225h b").textContent, [].map.call(h.querySelectorAll(".mfr"), function (x) { return x.querySelector(".k").textContent + ": " + x.querySelector(".v").textContent; }), !!h.querySelector('[data-f234="mover"]'), h.querySelectorAll(".d225n, .d225s, [class*=d225]").length > 0]; }
+        return o; }, [T, hoja || ""]);
+      if (process.env.CAP) await p.screenshot({ path: path.join(process.env.CAP, "b234-" + nom + ".png"), clip: { x: 0, y: 0, width: 390, height: hoja ? 844 : 260 } });
       return r;
     }
     var F = await p.evaluate(function () { var NOW = Date.now();
@@ -57,22 +52,26 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
   var LOTE={id:"tIALOTE1",nombre:"Limpieza Lote Samuel",duenio:"salvador",creada_por:"ia_revisor",por_autorizar:true,estado:"abierta",msgs:[{k:"bi",wa_in:1,wa_c:"Samuel Gamez ciper",t:"Samuel Gamez ciper: Ya quedó la limpieza del lote, mañana te mando fotos",ts:NOW-3e6,h:"16:20"}]};
   var DATO={id:"tDATO1",nombre:"Precio barda Cumbres",duenio:"salvador",es_dato:true,tipo_item:"dato",estado:"abierta",datos_corregidos:[{t:"6.5 m lineales a $2,800 el metro; total $18,200 más IVA",ts:NOW-1e6}],msgs:[{k:"bi",wa_in:1,wa_c:"Herrería López",t:"Herrería López: Le paso el precio de la barda",ts:NOW-2e6,h:"15:00"}]};
       return { FIESTA: FIESTA, LERDO: LERDO }; });
-    var fot = { data: "data:image/gif;base64,R0lGODlhAQABAAAAACw=", ts: Date.now() };
-    var mia = JSON.parse(JSON.stringify(F.FIESTA)); delete mia.evidencias; delete mia.fotos; delete mia.adjuntos;
-    var mia3 = JSON.parse(JSON.stringify(mia)); mia3.id = "tMIA3"; mia3.evidencias = [fot, fot, fot];
-    var man = JSON.parse(JSON.stringify(F.LERDO)); man.revisa_ext = "Manuel Parra";
-    var lar = JSON.parse(JSON.stringify(F.LERDO)); lar.id = "tLARGO"; lar.revisa_ext = "Manuel Parra Mármoles y Granitos"; lar.nombre = "Cubierta de mármol para el comedor nuevo y la barra de la cocina";
-    var a = await caso(mia, "mia"), b3 = await caso(mia3, "mia-3archivos"), m = await caso(man, "manuel-sup-tu"), l = await caso(lar, "nombre-largo");
-    var s1 = await caso({ id: "tS1", nombre: "Revisar facturas", duenio: "samuel", estado: "abierta", msgs: [] }, "samuel"),
-        s2 = await caso({ id: "tS2", nombre: "Revisar facturas", duenio: "samuel", revisores: ["carlos"], estado: "abierta", msgs: [] }, "samuel-sup-carlos"),
-        s3 = await caso({ id: "tS3", nombre: "Revisar facturas", duenio: "samuel", revisores: ["salvador"], estado: "abierta", msgs: [] }, "samuel-sup-tu");
-    eq("mía sin archivos: audífono y ⋯, sin clip, sin subtítulo", [a.ids, a.sub], [["bleeh", "bmenu"], null]);
-    eq("los botones: ~30 px, sin borde ni fondo, gap 6 px", [a.tam, a.gap], [[[30, "0px", true], [30, "0px", true]], 6]);
-    eq("mía con 3 archivos: clip con '3' en azul", [b3.ids, b3.cnt, b3.cntColor, b3.sub], [["bleeh", "bgal", "bmenu"], "3", "rgb(10, 132, 255)", null]);
-    eq("sin clip el título gana el espacio", a.tituloAncho - b3.tituloAncho >= 30, true);
-    eq("de Manuel supervisada por Salvador", [m.sub, m.subLineas, m.subWrap, m.lohace], ["De Manuel · sup. tú", 1, "nowrap", false]);
-    eq("nombre largo: una sola línea, dentro de la pantalla", [l.sub, l.subLineas, l.subWrap, l.subDentro], ["De Manuel · sup. tú", 1, "nowrap", true]);
-    eq("de otro sin supervisor / sup. otro / sup. tú", [s1.sub, s2.sub, s3.sub], ["De Samuel", "De Samuel · sup. Carlos", "De Samuel · sup. tú"]);
+    var VERDE = "rgb(48, 209, 88)", AMB = "rgb(255, 159, 10)";
+    var fi = await caso(F.FIESTA, "fiesta-completo");
+    var fiH = await caso(F.FIESTA, "fiesta-hoja", "fecha");
+    var fc = JSON.parse(JSON.stringify(F.FIESTA)); fc.id = "tFC"; delete fc.gcal_id; fc.gcal = "pendiente"; var fcR = await caso(fc, "falta-calendario"), fcH = await caso(fc, "falta-calendario-hoja", "fecha");
+    var dos = JSON.parse(JSON.stringify(F.FIESTA)); dos.id = "tDOS"; dos.nombre = "Juntas con el banco"; delete dos.checklist; delete dos.gcal_id; dos.agendado = true;
+    dos.citas = [{ titulo: "Firma con BBVA", fecha: "2026-10-14", hora: "10:00", lugar: "Sucursal Colón", alerta: true, gcal_id: "e1" }, { titulo: "Revisión de avalúo", fecha: "2026-10-21", hora: "17:30", alerta: true }];
+    var dosH = await caso(dos, "hoja-2-citas", "fecha");
+    var sin = JSON.parse(JSON.stringify(F.FIESTA)); sin.id = "tSIN"; sin.nombre = "Revisar bomba"; sin.contexto = "Revisar la bomba de agua del jardín porque hace ruido"; delete sin.evento; delete sin.gcal_id; sin.agendado = false; sin.avisos = []; delete sin.checklist; sin.msgs = sin.msgs.slice(0, 1);
+    var sinR = await caso(sin, "sin-evento");
+    var ind = JSON.parse(JSON.stringify(F.LERDO)); ind.id = "tIND"; ind.citas = [{ titulo: "Visita de obra", fecha: "2026-10-09", hora: "09:00", alerta: true, gcal_id: "e9" }];
+    var indR = await caso(ind, "indefinida-cita"), lerR = await caso(F.LERDO, "lerdo-metas"), resH = await caso(F.LERDO, "resumen-hoja", "res");
+    eq("Fiesta completa: fecha · Lista 3/4 · Todo · Resumen, en una fila que cabe", [fi.fichas, fi.unaFila, fi.cabe], [["vie 13 nov", "Lista 3/4", "Todo", "Resumen"], true, true]);
+    eq("Fiesta completa: ficha VERDE (icono y texto) con calendario", fi.f, [true, VERDE, VERDE, true]);
+    eq("hoja de la fecha: qué hay + Mover la fecha", [fiH.hoja[0], fiH.hoja[1].slice(0, 2), fiH.hoja[2]], ["vie 13 nov", ["Alerta de Doit: Lista · vie 13 nov 14:00", "Google Calendar: Evento creado"], true]);
+    eq("falta calendario: icono ámbar, texto normal; la hoja dice qué falta", [fcR.f[0], fcR.f[2], fcR.f[1] !== VERDE && fcR.f[1] !== AMB, fcH.hoja[1][1]], [false, AMB, true, "Google Calendar: Falta · en camino (lo crea el trabajador de Calendar)"]);
+    eq("2 citas: la hoja las lista con su estado", [dosH.hoja[0], dosH.hoja[1], dosH.hoja[2]], ["vie 13 nov", ["mié 14 oct 10:00 · Firma con BBVA · Sucursal Colón: Agendada", "mié 21 oct 17:30 · Revisión de avalúo: Falta Google Calendar"], true]);
+    eq("sin evento: la fecha normal, sin color", [sinR.f[0], sinR.f[2] === AMB, sinR.f[1] === VERDE], [false, false, false]);
+    eq("indefinida con una cita completa: 'Indefinida' en verde con calendario", [indR.fichas[0], indR.f[0], indR.f[1]], ["Indefinida", true, VERDE]);
+    eq("con Metas 1/3: una sola fila; si no cabe se desliza (nunca dos renglones)", [lerR.fichas, lerR.unaFila, lerR.desliza, lerR.wrap], [["Indefinida", "Metas 1/3", "Manuel", "Resumen"], true, "auto", "nowrap"]);
+    eq("Resumen abre la hoja numerada titulada 'Resumen'", [resH.hoja[0], resH.hoja[3]], ["Resumen", true]);
     eq("sin errores de página", errs, []);
   } finally { await b.close(); }
   console.log((malas.length ? malas.map(function (x) { return "  X " + x; }).join("\n") + "\n" : "") + "RESULTADO " + ok + "/" + n);

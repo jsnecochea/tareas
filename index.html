@@ -803,6 +803,8 @@ button{font:inherit;color:inherit}
 .res230.vacio span{color:var(--ink-3);font-size:14.5px}
 .vac230{text-align:center;color:var(--ink-3);font-size:14px;padding:24px 16px}
 .chips225{gap:4px;padding:2px 8px 6px}.chip225{font-size:13px;padding:5px 7px;gap:3px}.chip225 svg{width:14px;height:14px}.chip225.det231{padding:5px 7px}.chip225.det231 svg{width:17px;height:17px}
+.chip225.fecha234.amb234 svg{color:#FF9F0A}.chip225.res234{font-weight:500}.mfr .v.amb234{color:#FF9F0A}.cit234 .mfr{display:block}.cit234 .mfr .k{display:flex;gap:6px;align-items:center;width:auto;max-width:none;color:var(--ink)}.cit234 .mfr .v{display:block;margin:2px 0 0 21px;text-align:left}
+.fbt234{margin-top:10px}.fbt234 .hop{width:100%}
 .top .t,.top .t.uno227,.top .tin{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Inter,system-ui,sans-serif}
 /* build 233: botones del encabezado sin fondo ni borde, 30 px, juntos; renglon de propietario en una sola linea */
 .top .hb233,.top #bleeh{width:30px;height:30px;border:0;background:none;border-radius:8px;color:var(--ink)}
@@ -1431,7 +1433,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 233 · Encabezado opción A: audífono · clip solo con archivos · ⋯, sin fondo · renglón De X · sup. Y en una línea";
+var VERSION_APP = "build 234 · Fecha y Agendado en una sola ficha (verde si está completo) · ficha Resumen · fila desliza";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -8608,7 +8610,12 @@ function chipsTarea(t){
   try{ if(tipoRevisar(t)==="falta" && !vistaSup(t)) falta=soloMeFalta(t); }catch(e){}
   if(falta.length) h+='<button class="chip225 falta" data-chip="falta">Falta '+falta.length+' ›</button>';
   var ftx=ch.cls==="ind"?ch.txt.replace(/ · próx\. .*/,""):(ch.cls==="sin"?"Sin fecha":ch.txt.replace(/^Finiquito:\s*/,""));   /* 226: sin emojis */
-  h+='<button class="chip225" data-chip="detalles">'+(ch.cls==="ind"?ico("recur",15):'')+esc(ftx)+'</button>';   /* build 231: la fecha sola se entiende; sin ícono para que quepa */
+  /* build 234 (Salvador 18:56): sin ficha "Agendado": se fusiona con la de FECHA. Calendario siempre; VERDE (icono y texto) si el evento
+     esta completo (alerta de Doit + Google Calendar); icono ámbar y texto normal si falta algo; sin evento, fecha normal. Indefinida: verde
+     con el calendario si hay alguna cita completa. Tocar = hoja con lo que hay y lo que falta, cada cita y "Mover la fecha". */
+  var ag=estadoAgenda228(t), cz=citas234(t), cok=cz.some(function(c){ return c.ok; }), cfa=cz.length && !cz.every(function(c){ return c.ok; });
+  var verde=ch.cls==="ind"?cok:!!(ag&&ag.ok&&!cfa), amb=!verde && !!(ag||cz.length);
+  h+='<button class="chip225 fecha234'+(verde?' verde':'')+(amb?' amb234':'')+'" data-chip="fecha">'+(ch.cls==="ind"&&!verde&&!amb?ico("recur",15):ico("cal",15))+'<span class="ftx234">'+esc(ftx)+'</span></button>';
   if(esMetas(t)){ var pe=metasEnCurso(t), rj=pe.filter(function(m){ return (+m.estado||0)===0 && semaforoMeta(m).k==="rojo"; }).length;
     var mt=metasDe(t), fm=filtroMeta(t), fmm=fm&&fm!=="otro"?mt.filter(function(m){ return m.id===fm; })[0]:null;   /* build 232: con filtro, el nombre de la meta */
     h+='<button class="chip225'+(rj&&!fm?' red':'')+(fm?' on232':'')+'" data-chip="metas">'+ico("list",15)+(fm?esc(fmm?metaCorta(fmm):"Otro")+ico("down",13):'Metas '+mt.filter(metaCumplida).length+'/'+mt.length)+'</button>'; }   /* build 231: n/m */
@@ -8616,9 +8623,8 @@ function chipsTarea(t){
   /* build 231 (Salvador 17:00): sin ficha de personas (los integrantes viven en la hoja del filtro) ni ficha "Resumen" (vive en Importante y en Detalles) */
   /* build 228 (Salvador 16:33): UNA fila de fichas iguales: fecha · Lista · personas · Agendado · Resumen · Todo ⌄ · Detalles.
      Sin "1 cosa para ti", sin el renglon "Agendado ✓ · Calendario…" y sin el bloque grande del Resumen. */
-  var ag=estadoAgenda228(t); if(ag) h+='<button class="chip225'+(ag.ok?' verde':'')+'" data-chip="agenda">'+ico("cal",15)+esc(ag.txt)+'</button>';
   h+=vPastilla(t);
-  h+='<button class="chip225 det231" data-chip="detalles" aria-label="Detalles">'+ico("info",17)+'</button></div>';   /* build 231: solo el ícono, para que quepa la fila */
+  h+='<button class="chip225 res234" data-chip="detalles">Resumen</button></div>';   /* build 234: la palabra "Resumen" (abre la hoja numerada) */
   return h;
 }
 /* build 228: agendado = alerta de Doit Y evento en Google Calendar. Solo sale si es evento o ya se agendo algo. */
@@ -8629,6 +8635,28 @@ function estadoAgenda228(t){
   if(!alerta && !cal && t.agendar===false) return null;   /* dijo que no se agenda */
   var txt=alerta&&cal?"Agendado":(!alerta&&!cal?"Sin agendar":(alerta?"Falta calendario":"Falta alerta"));
   return {ok:alerta&&cal, alerta:alerta, cal:cal, gcalPend:t.gcal==="pendiente", txt:txt, ev:ev};
+}
+/* build 234: las citas/reuniones de la tarea, cada una con su estado. t.citas=[{titulo,fecha,hora,lugar,alerta,gcal_id}] si viene;
+   si no, las alertas de Doit con fecha (t.avisos); el evento de Google Calendar de la tarea (t.gcal_id) cuenta para todas. */
+function citas234(t){
+  var out=[];
+  if(Array.isArray(t.citas) && t.citas.length) t.citas.forEach(function(c){ if(!c || c.apartado) return; var al=c.alerta===true, ca=!!c.gcal_id;
+    out.push({titulo:String(c.titulo||"").trim(), fecha:c.fecha||"", hora:c.hora||"", lugar:String(c.lugar||"").trim(), alerta:al, cal:ca, ok:al&&ca}); });
+  else if(t.agendado===true || t.gcal_id) (t.avisos||[]).filter(function(a){ return a && a.fecha && !a.apartado && !a.borrado; }).forEach(function(a){ var ca=!!(a.gcal_id||t.gcal_id);
+    out.push({titulo:String(a.texto||"").trim(), fecha:a.fecha, hora:a.hora||"", lugar:"", alerta:true, cal:ca, ok:ca}); });
+  return out.sort(function(x,y){ return String(x.fecha+(x.hora||"")).localeCompare(String(y.fecha+(y.hora||""))); });
+}
+function vFecha234(t){
+  var cz=citas234(t), fc=function(f){ return typeof fechaMovCorta==="function"?fechaMovCorta(f):f; }, h="";
+  if(cz.length>1){
+    h='<div class="mf225 cit234">'+cz.map(function(c){ var fal=[c.alerta?"":"alerta de Doit", c.cal?"":"Google Calendar"].filter(Boolean);
+      return '<div class="mfr"><span class="k">'+ico("cal",15)+esc([fc(c.fecha), c.hora].filter(Boolean).join(" ")+(c.titulo?" · "+c.titulo:"")+(c.lugar?" · "+c.lugar:""))+'</span>'+
+        '<span class="v'+(c.ok?' verde':' amb234')+'">'+esc(c.ok?"Agendada":"Falta "+fal.join(" y "))+'</span></div>'; }).join("")+'</div>'+
+      '<p class="h225v0">'+esc(cz.every(function(c){ return c.ok; })?"Todas tienen la alerta de Doit y el evento en tu Google Calendar.":"Cada cita necesita las dos: la alerta de Doit y el evento en Google Calendar.")+'</p>';
+  } else if(estadoAgenda228(t)) h=vAgenda228(t);
+  else h='<p class="h225v0">Esta tarea no tiene evento agendado.</p>';
+  if(!t.cierre) h+='<div class="fbt234"><button class="hop" data-f234="mover">Mover la fecha</button></div>';
+  return h;
 }
 function vAgenda228(t){
   var a=estadoAgenda228(t); if(!a) return '<p class="h225v0">Esta tarea no tiene nada que agendar.</p>';
@@ -8734,7 +8762,9 @@ function vHoja225(t){
   else if(H.k==="lista"){ tit=(t.checklist&&t.checklist.titulo)||"Lista"; window.__chkOpen=window.__chkOpen||{}; var _ab=window.__chkOpen[t.id]; window.__chkOpen[t.id]=true; cuerpo=vChecklist(t); window.__chkOpen[t.id]=_ab; }
   else if(H.k==="personas"){ tit="Personas"; cuerpo=vPersonas225(t); }
   else if(H.k==="agenda"){ var _a228=estadoAgenda228(t); tit=_a228?_a228.txt:"Agenda"; cuerpo=vAgenda228(t); }   /* build 228 */
-  else { tit="Detalles"; cuerpo=vDetalles225(t); }
+  else if(H.k==="fecha"){ var _ch=chipEncabezado(t); tit=_ch.cls==="ind"?"Indefinida":(_ch.cls==="sin"?"Sin fecha":_ch.txt.replace(/^Finiquito:\s*/,"")); var _ag=estadoAgenda228(t), _cz=citas234(t);
+    sub=_cz.length>1?_cz.length+" citas":(_ag?_ag.txt:"Sin evento agendado"); cuerpo=vFecha234(t); }   /* build 234 */
+  else { tit="Resumen"; cuerpo=vDetalles225(t); }   /* build 234: antes "Detalles" */
   if(H.alto==="min") return '<button class="h225bar" data-h225alto="media">'+esc(tit)+' ▴</button>';
   return '<div class="h225v" data-h225x="1"></div><div class="h225 '+esc(H.alto)+'" role="dialog" aria-label="'+esc(tit)+'"><div class="h225g"></div>'+
     (H.k==="lista"?'<div class="h225al"><button data-h225alto="media" class="'+(H.alto==="media"?'on':'')+'">media</button><button data-h225alto="completa" class="'+(H.alto==="completa"?'on':'')+'">completa ⇡</button></div>':'')+
@@ -13686,6 +13716,8 @@ function bindHilo(){
     abreHoja225(t, k); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-min225]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); togMin225(t.id, el.getAttribute("data-min225")); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-mfil]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); window.__mfil225=window.__mfil225||{}; window.__mfil225[t.id]=el.getAttribute("data-mfil"); if(el.closest(".h225")) window.__hoja225=null; render(); }; });   /* build 232: desde la hoja de Metas: filtra y cierra */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-f234]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); window.__hoja225=null; menuOpen=false;   /* build 234: igual que ⋯ > Mover la fecha */
+    t.pide_fecha=true; msg(t,"bi","¿Para cuándo la muevo? Dime por ejemplo: el viernes, en 15 días o a fin de mes."); guarda(t); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-h225x]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); window.__hoja225=null; render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-h225alto]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var H=hoja225(t); if(H){ H.alto=el.getAttribute("data-h225alto"); render(); } }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-fmeta]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); abreHoja225(t, "meta", el.getAttribute("data-fmeta")); render(); }; });

@@ -53,12 +53,12 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
       abre(LOTE); o.nueva = [txt(".typep229 button"), limpio()];
       abre(DATO); o.dato = limpio();
       return o; });
-    eq("Casa Lerdo: una sola fila, sin la fila de filtro por meta ni 'Importante | Todo'", r.lerdo, [["Indefinida", "Metas 1/3", "Manuel", ""], 0, 2]);
+    eq("Casa Lerdo: una sola fila, sin la fila de filtro por meta ni 'Importante | Todo'", r.lerdo, [["Indefinida", "Metas 1/3", "Manuel", "Resumen"], 0, 2]);
     eq("hoja de Metas: Todo · cada meta · Otro (con › a la ficha)", [r.hoja, r.fichaMeta], [["Todotodo el chat", "Azoteavie 9 oct", "Interiorvie 16 oct", "Otrolo que no es de ninguna meta"], true]);
     eq("tocar Azotea: filtra el chat, cierra la hoja y la ficha dice 'Azotea'", r.filtrado, ["Azotea", false, [true]]);
     eq("'Todo' lo regresa", r.todo, ["Metas 1/3", 2]);
     eq("título con la fuente del sistema", r.font, "-apple-system");
-    eq("Fiesta con checklist: limpia", r.fiesta, [["vie 13 nov", "Lista 3/4", "Agendado", "Todo", ""], 0]);
+    eq("Fiesta con checklist: limpia", r.fiesta, [["vie 13 nov", "Lista 3/4", "Todo", "Resumen"], 0]);
     eq("tarea nueva: Tarea · Dato · Vincular y nada viejo", r.nueva, [["Tarea", "Dato", "Vincular"], 0]);
     eq("dato: nada viejo", r.dato, 0);
     eq("sin errores de página", errs, []);

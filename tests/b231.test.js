@@ -38,20 +38,20 @@ eq("versión 231 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
       function abre(T) { window.__vf230 = {}; window.__cnlClaude = {}; window.__cnl = {}; window.__hoja225 = null; tareas = [T]; abierta = T.id; vista = "hilo"; render(); [].forEach.call(document.body.children, function (x) { if (x.id !== "app" && !/cnl/.test(x.className)) x.style.display = "none"; }); document.getElementById("app").style.display = "flex"; }
       function txt(sel) { return [].map.call(document.querySelectorAll(sel), function (x) { return x.textContent.replace(/\s+/g, " ").trim(); }); }
       function fila() { var bs = document.querySelectorAll(".chips225 > button"), r = [].map.call(bs, function (x) { var q = x.getBoundingClientRect(); return [Math.round(q.top), Math.round(q.right)]; }); return [txt(".chips225 > button"), r.every(function (x) { return x[0] === r[0][0]; }), r[r.length - 1][1] <= 390, document.querySelectorAll('.chips225 [data-chip="personas"], .chips225 [data-chip="resumen"]').length]; }
-      abre(FIESTA); o.fiesta = fila(); o.detIcon = [!!document.querySelector('.chips225 [data-chip="detalles"][aria-label="Detalles"] svg')];
+      abre(FIESTA); o.fiesta = fila(); o.detIcon = [document.querySelector('.chips225 [data-chip="detalles"]').textContent];
       abre(LERDO); o.lerdo = fila();
       abre(FIESTA); document.getElementById("cnlpill").click(); o.hoja = txt(".fil227h [data-fil]").map(function (x) { return x.replace(/^(EM|AT|CS)/, ""); });
       var inv = document.querySelector('.fil227h [data-fil="__int"]'); o.invita = !!inv; document.querySelector(".cnlbg").click();
-      abre(LERDO); document.querySelector('.chips225 [aria-label="Detalles"]').click();
+      abre(LERDO); document.querySelector('.chips225 [data-chip="detalles"]').click();
       var h = document.querySelector(".h225"); o.det = txt(".h225 .d225b h4");
       var b1 = h.querySelector(".d225b"); o.res1 = [b1.querySelector("p").textContent, txt(".h225 .d225b:first-child .racu li").length, /Falta:/.test(b1.textContent)];
       o.ctxClip = !!h.querySelectorAll(".d225b")[3].querySelector("[data-evid]");
       o.botones = [!!h.querySelector('[data-h225alto="min"]'), !!h.querySelector("[data-h225x]")];
-      var L2 = JSON.parse(JSON.stringify(LERDO)); delete L2.resumen; abre(L2); document.querySelector('.chips225 [aria-label="Detalles"]').click(); o.sinRes = document.querySelector(".h225 .d225b p").textContent;
+      var L2 = JSON.parse(JSON.stringify(LERDO)); delete L2.resumen; abre(L2); document.querySelector('.chips225 [data-chip="detalles"]').click(); o.sinRes = document.querySelector(".h225 .d225b p").textContent;
       return o; });
-    eq("con fecha y evento: fecha · Lista 3/4 · Agendado · Todo · ⓘ, en UNA fila que cabe a 390 px, sin personas ni Resumen", r.fiesta, [["vie 13 nov", "Lista 3/4", "Agendado", "Todo", ""], true, true, 0]);
-    eq("Detalles como ícono (con su nombre para lectores)", r.detIcon, [true]);
-    eq("indefinida con metas: Indefinida · Metas 1/3 · filtro · ⓘ, cabe", r.lerdo, [["Indefinida", "Metas 1/3", "Manuel", ""], true, true, 0]);
+    eq("con fecha y evento: fecha · Lista 3/4 · Agendado · Todo · ⓘ, en UNA fila que cabe a 390 px, sin personas ni Resumen", r.fiesta, [["vie 13 nov", "Lista 3/4", "Todo", "Resumen"], true, true, 0]);
+    eq("Detalles es la ficha 'Resumen' (234)", r.detIcon, ["Resumen"]);
+    eq("indefinida con metas: Indefinida · Metas 1/3 · filtro · ⓘ, cabe", r.lerdo, [["Indefinida", "Metas 1/3", "Manuel", "Resumen"], true, true, 0]);
     eq("hoja del filtro: Todo · Importante · Claude · integrantes · Invitar a nuevo miembro", [r.hoja, r.invita],
       [["Todotodo junto", "Importanteacuerdos y conclusiones", "Claudelo que le pediste y lo que contestó", "Eduardo Maderoexterno · por WhatsApp · solo ve lo suyo", "Arturo Tijerinaexterno · por WhatsApp · solo ve lo suyo", "Contacto sin nombre ·1884no está en tu agenda", "Invitar a nuevo miembroagregar o quitar integrantes"], true]);
     eq("Detalles en orden fijo y numerado", r.det, ["1Resumen vivo", "2Lo que sigue · de quién se espera", "3Metas", "4Contexto", "5Seguimiento y con quién se comparte", "6Origen"]);

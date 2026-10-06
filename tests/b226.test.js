@@ -43,7 +43,7 @@ si("iconos: trazo 1.5 fijo", /var s=px\|\|18, w=1\.5, p=\{/.test(html));
       o.sinPregunta = !/¿Es de/.test(document.querySelector(".msgs").textContent);
       o.unaVez = document.querySelectorAll(".msgs .ac226").length;
       o.sinEmojiNota = !/📝/.test(document.querySelector(".msgs").textContent) && /Nota IA 11:52/.test(document.querySelector(".msgs").textContent);
-      var chips = document.querySelector(".chips225"); o.chipsSinEmoji = !/[\u{1F300}-\u{1FAFF}ℹⓘ↻]/u.test(chips.textContent) && chips.querySelectorAll("svg").length >= 4;
+      var chips = document.querySelector(".chips225"); o.chipsSinEmoji = !/[\u{1F300}-\u{1FAFF}ℹⓘ↻]/u.test(chips.textContent) && chips.querySelectorAll("svg").length >= 3;
       o.svgTrazo = [].every.call(document.querySelectorAll("#app svg.icx"), function (s) { return s.getAttribute("stroke-width") === "1.5"; });
       o.tituloCompacto = !!document.querySelector(".top .tnm") && !document.querySelector(".ttl");
       /* Mover: la hoja */

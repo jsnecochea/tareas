@@ -56,7 +56,7 @@ eq("versión 230 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
       var t3 = arma(""); window.AGENDA_WA = [{ nombre: "Laura Mendoza", jid: "86088425201884@lid" }]; abre(t3); o.agenda = txt(".msgs .cn").filter(function (x) { return /Laura/.test(x); });
       var t2 = arma(""); t2.indefinida = true; delete t2.resumen; abre(t2); o.indef = !document.querySelector('[data-chip="resumen"]');
       return o; });
-    eq("fichas (231): Indefinida · Todo · ⓘ (sin personas ni Resumen sueltos)", r.fichas, ["Indefinida", "Todo", ""]);
+    eq("fichas (234): Indefinida · Todo · Resumen (abre Detalles; sin personas)", r.fichas, ["Indefinida", "Todo", "Resumen"]);
     eq("en Todo sale todo", r.todos, ["w1", "w2", "w3", "w4", "w5", "n1", "c1", "c2", "w6"]);
     eq("hoja: Todo · Importante · Claude · integrantes · agregar o quitar", r.hoja,
       ["Todotodo junto", "Importanteacuerdos y conclusiones", "Claudelo que le pediste y lo que contestó", "Javier Ortiz BBVAexterno · por WhatsApp · solo ve lo suyo", "Contacto sin nombre ·1884no está en tu agenda", "Invitar a nuevo miembroagregar o quitar integrantes"]);
