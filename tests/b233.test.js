@@ -1,14 +1,17 @@
 #!/usr/bin/env node
-/* PRUEBAS build 232: sin restos viejos. El filtro por meta (fila "Todo · Azotea · Interior · Otro" del 225) vive en la hoja de la ficha
+/* PRUEBAS build 233 (opción A del encabezado, Salvador 18:45): audífono siempre · clip SOLO con archivos y la cantidad en azul · ⋯ siempre;
+   los tres sin fondo ni borde, ~30 px, gap 6 px. Renglón de propietario en TODAS las vistas: mía = sin subtítulo; de otro = UNA línea
+   "De Manuel" / "De Manuel · sup. tú" / "De Samuel · sup. Carlos" (primer nombre), nunca salta. Antes: build 232: sin restos viejos. El filtro por meta (fila "Todo · Azotea · Interior · Otro" del 225) vive en la hoja de la ficha
    "Metas n/m": tocar una meta filtra el chat y la ficha dice "Azotea ⌄"; "Todo" la regresa. Sin el selector "Importante | Todo" (Importante
    vive en el filtro). Título con fuente del sistema (-apple-system, SF Pro, Inter de respaldo). Ninguna fila/control viejo (219–226) en tarea
-   con metas, con checklist, tarea nueva, dato y supervisor. App completa sin red, 390 px. Correr: node tests/b232.test.js */
+   con metas, con checklist, tarea nueva, dato y supervisor. App completa sin red, 390 px. Correr: node tests/b233.test.js  (CAP=<carpeta> guarda capturas) */
 "use strict";
 var fs = require("fs"), path = require("path");
 var ok = 0, n = 0, malas = [];
 function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
 var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
-eq("versión >= 232", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[1] >= 232, true);
+eq("versión 233", /var VERSION_APP = "build 233/.test(html), true);
+eq("sin 'Lo hace … · supervisas tú' en el encabezado", /Lo hace <b>'\+esc\(nombreCorto\(ejecutorNombre/.test(html), false);
 eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Archivo|Barlow);/g) || []).length, 0);
 (async function () {
   var pw = require("/opt/node22/lib/node_modules/playwright"), b = await pw.chromium.launch(), p = await b.newPage({ viewport: { width: 390, height: 844 } }), errs = [];
@@ -19,9 +22,25 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
     window.firebase = { apps: [1], initializeApp: function () {}, firestore: function () { return fs0; }, auth: function () { return { onAuthStateChanged: function () {}, signOut: P }; } }; window.firebase.auth.GoogleAuthProvider = function () {}; });
   try {
     await p.goto("file://" + path.join(__dirname, "..", "index.html")); await p.waitForTimeout(600);
-    var r = await p.evaluate(function () {
-      yo = "salvador"; if (!PERSONAS.salvador) PERSONAS.salvador = { nombre: "Salvador", jefe: true };
-      var o = {};
+    async function caso(T, nom) {
+      var r = await p.evaluate(function (T) {
+        yo = "salvador"; if (!PERSONAS.salvador) PERSONAS.salvador = { nombre: "Salvador", jefe: true };
+        window.__vf230 = {}; window.__cnlClaude = {}; window.__cnl = {}; window.__mfil225 = {}; window.__hoja225 = null;
+        tareas = [T]; abierta = T.id; vista = "hilo"; render(); try { leeExtras(); } catch (e) {}
+        [].forEach.call(document.body.children, function (x) { if (x.id !== "app") x.style.display = "none"; }); document.getElementById("app").style.display = "flex";
+        var top = document.querySelector("#app .top"), d = top.querySelector(".own233"), t = top.querySelector(".t");
+        var bs = [].slice.call(top.querySelectorAll(".iconbtn:not(#bback)")).filter(function (b) { return b.offsetParent; });
+        var R = bs.map(function (b) { return b.getBoundingClientRect(); });
+        return { ids: bs.map(function (b) { return b.id; }), tam: bs.map(function (b) { var c = getComputedStyle(b); return [Math.round(b.getBoundingClientRect().width), c.borderTopWidth, c.backgroundColor === "rgba(0, 0, 0, 0)" || c.backgroundImage === "none" && /rgba\(0, 0, 0, 0\)|transparent/.test(c.backgroundColor)]; }),
+          gap: R.length > 1 ? Math.round(R[1].left - R[0].right) : null,
+          cnt: (top.querySelector("#bgal .cnt") || {}).textContent || "", cntColor: top.querySelector("#bgal .cnt") ? getComputedStyle(top.querySelector("#bgal .cnt")).backgroundColor : "",
+          sub: d ? d.textContent : null, subLineas: d ? Math.round(d.getBoundingClientRect().height / parseFloat(getComputedStyle(d).lineHeight || 18)) : 0, subWrap: d ? getComputedStyle(d).whiteSpace : "",
+          subDentro: d ? d.getBoundingClientRect().right <= top.getBoundingClientRect().right : true, tituloAncho: Math.round(t.parentNode.parentNode.getBoundingClientRect().width), tw: [t.scrollWidth, t.clientWidth], lohace: /Lo hace|supervisas/.test(top.textContent) };
+      }, T);
+      if (process.env.CAP) await p.screenshot({ path: path.join(process.env.CAP, "b233-" + nom + ".png"), clip: { x: 0, y: 0, width: 390, height: 300 } });
+      return r;
+    }
+    var F = await p.evaluate(function () { var NOW = Date.now();
   window.AGENDA_WA=[]; var NOW=Date.now();
   var LERDO={id:"tIAMUVF22TRJF",nombre:"Mantenimiento Casa Lerdo/Eloísa",duenio:"salvador",revisa_ext:"Manuel Parra",indefinida:true,estado:"abierta",por_autorizar:false,
     contexto:"Filtración en recámara/estudio por el baño; azotea con ramas y posible panal; luego impermeabilizar.",
@@ -37,30 +56,23 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
     msgs:[{k:"bi",wa_in:1,wa_c:"Eduardo Madero",t:"Eduardo Madero: Ahí estaremos",ts:NOW-8e6,h:"09:40"},{k:"bi",wa_in:1,wa_c:"Arturo Tijerina",t:"Arturo Tijerina: Fecha separada",ts:NOW-7e6,h:"10:10"},{k:"bi",wa_in:1,wa_c:"86088425201884",t:"86088425201884: Gracias por la invitación",ts:NOW-6e6,h:"11:00"}]};
   var LOTE={id:"tIALOTE1",nombre:"Limpieza Lote Samuel",duenio:"salvador",creada_por:"ia_revisor",por_autorizar:true,estado:"abierta",msgs:[{k:"bi",wa_in:1,wa_c:"Samuel Gamez ciper",t:"Samuel Gamez ciper: Ya quedó la limpieza del lote, mañana te mando fotos",ts:NOW-3e6,h:"16:20"}]};
   var DATO={id:"tDATO1",nombre:"Precio barda Cumbres",duenio:"salvador",es_dato:true,tipo_item:"dato",estado:"abierta",datos_corregidos:[{t:"6.5 m lineales a $2,800 el metro; total $18,200 más IVA",ts:NOW-1e6}],msgs:[{k:"bi",wa_in:1,wa_c:"Herrería López",t:"Herrería López: Le paso el precio de la barda",ts:NOW-2e6,h:"15:00"}]};
-      function abre(T) { window.__vf230 = {}; window.__cnlClaude = {}; window.__cnl = {}; window.__mfil225 = {}; window.__hoja225 = null; tareas = [T]; abierta = T.id; vista = "hilo"; render(); [].forEach.call(document.body.children, function (x) { if (x.id !== "app" && !/cnl/.test(x.className)) x.style.display = "none"; }); document.getElementById("app").style.display = "flex"; }
-      function txt(sel) { return [].map.call(document.querySelectorAll(sel), function (x) { return x.textContent.replace(/\s+/g, " ").trim(); }); }
-      var VIEJOS = ".fm225,.cmodo,.cnlwrap,#cnlclaude,#intbtn,.paraTi225,.agst,.rv225,.rvrow227,.rv228,.hrow,.compc,.typep,.supsec,[data-chip=personas],[data-chip=resumen]";
-      function limpio() { return document.querySelectorAll(VIEJOS).length; }
-      var L = JSON.parse(JSON.stringify(LERDO)); L.msgs.push({ k: "bi", wa_in: 1, wa_c: "Manuel Parra", t: "Manuel Parra: el cielo del interior lo pintamos con un galón de Berel", ts: Date.now() - 1e6, h: "12:00" });
-      abre(L); o.lerdo = [txt(".chips225 > button"), limpio(), document.querySelectorAll(".msgs [data-mix]").length];
-      document.querySelector('.chips225 [data-chip="metas"]').click(); o.hoja = txt(".h225 .mf232 .mfb");
-      o.fichaMeta = !!document.querySelector('.h225 [data-fmeta="a"]');
-      document.querySelector('.h225 [data-mfil="a"]').click();
-      o.filtrado = [txt(".chips225 > button")[1], !!document.querySelector(".h225"), txt(".msgs [data-mix]").map(function (x) { return /techo/.test(x); })];
-      document.querySelector('.chips225 [data-chip="metas"]').click(); document.querySelector('.h225 [data-mfil=""]').click(); o.todo = [txt(".chips225 > button")[1], document.querySelectorAll(".msgs [data-mix]").length];
-      var tt = getComputedStyle(document.querySelector(".top .t")); o.font = tt.fontFamily.split(",")[0].replace(/"/g, "").trim();
-      abre(FIESTA); o.fiesta = [txt(".chips225 > button"), limpio()];
-      abre(LOTE); o.nueva = [txt(".typep229 button"), limpio()];
-      abre(DATO); o.dato = limpio();
-      return o; });
-    eq("Casa Lerdo: una sola fila, sin la fila de filtro por meta ni 'Importante | Todo'", r.lerdo, [["Indefinida", "Metas 1/3", "Manuel", ""], 0, 2]);
-    eq("hoja de Metas: Todo · cada meta · Otro (con › a la ficha)", [r.hoja, r.fichaMeta], [["Todotodo el chat", "Azoteavie 9 oct", "Interiorvie 16 oct", "Otrolo que no es de ninguna meta"], true]);
-    eq("tocar Azotea: filtra el chat, cierra la hoja y la ficha dice 'Azotea'", r.filtrado, ["Azotea", false, [true]]);
-    eq("'Todo' lo regresa", r.todo, ["Metas 1/3", 2]);
-    eq("título con la fuente del sistema", r.font, "-apple-system");
-    eq("Fiesta con checklist: limpia", r.fiesta, [["vie 13 nov", "Lista 3/4", "Agendado", "Todo", ""], 0]);
-    eq("tarea nueva: Tarea · Dato · Vincular y nada viejo", r.nueva, [["Tarea", "Dato", "Vincular"], 0]);
-    eq("dato: nada viejo", r.dato, 0);
+      return { FIESTA: FIESTA, LERDO: LERDO }; });
+    var fot = { data: "data:image/gif;base64,R0lGODlhAQABAAAAACw=", ts: Date.now() };
+    var mia = JSON.parse(JSON.stringify(F.FIESTA)); delete mia.evidencias; delete mia.fotos; delete mia.adjuntos;
+    var mia3 = JSON.parse(JSON.stringify(mia)); mia3.id = "tMIA3"; mia3.evidencias = [fot, fot, fot];
+    var man = JSON.parse(JSON.stringify(F.LERDO)); man.revisa_ext = "Manuel Parra";
+    var lar = JSON.parse(JSON.stringify(F.LERDO)); lar.id = "tLARGO"; lar.revisa_ext = "Manuel Parra Mármoles y Granitos"; lar.nombre = "Cubierta de mármol para el comedor nuevo y la barra de la cocina";
+    var a = await caso(mia, "mia"), b3 = await caso(mia3, "mia-3archivos"), m = await caso(man, "manuel-sup-tu"), l = await caso(lar, "nombre-largo");
+    var s1 = await caso({ id: "tS1", nombre: "Revisar facturas", duenio: "samuel", estado: "abierta", msgs: [] }, "samuel"),
+        s2 = await caso({ id: "tS2", nombre: "Revisar facturas", duenio: "samuel", revisores: ["carlos"], estado: "abierta", msgs: [] }, "samuel-sup-carlos"),
+        s3 = await caso({ id: "tS3", nombre: "Revisar facturas", duenio: "samuel", revisores: ["salvador"], estado: "abierta", msgs: [] }, "samuel-sup-tu");
+    eq("mía sin archivos: audífono y ⋯, sin clip, sin subtítulo", [a.ids, a.sub], [["bleeh", "bmenu"], null]);
+    eq("los botones: ~30 px, sin borde ni fondo, gap 6 px", [a.tam, a.gap], [[[30, "0px", true], [30, "0px", true]], 6]);
+    eq("mía con 3 archivos: clip con '3' en azul", [b3.ids, b3.cnt, b3.cntColor, b3.sub], [["bleeh", "bgal", "bmenu"], "3", "rgb(10, 132, 255)", null]);
+    eq("sin clip el título gana el espacio", a.tituloAncho - b3.tituloAncho >= 30, true);
+    eq("de Manuel supervisada por Salvador", [m.sub, m.subLineas, m.subWrap, m.lohace], ["De Manuel · sup. tú", 1, "nowrap", false]);
+    eq("nombre largo: una sola línea, dentro de la pantalla", [l.sub, l.subLineas, l.subWrap, l.subDentro], ["De Manuel · sup. tú", 1, "nowrap", true]);
+    eq("de otro sin supervisor / sup. otro / sup. tú", [s1.sub, s2.sub, s3.sub], ["De Samuel", "De Samuel · sup. Carlos", "De Samuel · sup. tú"]);
     eq("sin errores de página", errs, []);
   } finally { await b.close(); }
   console.log((malas.length ? malas.map(function (x) { return "  X " + x; }).join("\n") + "\n" : "") + "RESULTADO " + ok + "/" + n);

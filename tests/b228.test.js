@@ -59,7 +59,7 @@ eq("versión 228 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
     eq("UNA fila (231): fecha · Lista n/m · Agendado · Todo · ⓘ", r.fichas, ["vie 13 nov", "Lista 3/4", "Agendado[verde]", "Todo", ""]);
     eq("sin segunda fila: se desliza de lado", r.unaFila, [true, "auto", "nowrap"]);
     eq("quitados: '1 cosa para ti', el renglón de agendado y el bloque del Resumen", r.quitado, [0]);
-    eq("audífono, clip y … chicos (33 px) sin fondo ni borde", r.botones, [[33, true, "0px"], [33, true, "0px"], [33, true, "0px"]]);
+    eq("audífono y … chicos (30 px, 233) sin fondo ni borde; sin archivos no hay clip", r.botones, [[30, true, "0px"], [30, true, "0px"]]);
     eq("el título gana espacio", r.tituloAncho >= 200, true);
     eq("Agendado completo: hoja con lo que hay", r.hojaCompleto, ["Agendado", ["Alerta de Doit: Lista · vie 13 nov 14:00", "Google Calendar: Evento creado", "Evento: vie 13 nov · 14:00 · Casa"]]);
     eq("alerta sin evento de Calendar: gris 'Falta calendario' y la hoja dice qué falta", [r.faltaCal, r.hojaFalta.slice(0, 2)], ["Falta calendario", ["Alerta de Doit: Lista · vie 13 nov 14:00", "Google Calendar: Falta · en camino (lo crea el trabajador de Calendar)"]]);

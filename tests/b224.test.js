@@ -13,7 +13,7 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
 function si(nom, v) { eq(nom, !!v, true); }
 si("VERSION_APP build 224", +((html.match(/var VERSION_APP = "build (\d+)/) || [])[1] || 0) >= 224);
 var F = ["_nn", "_n179", "nombreCorto", "tareaCorta", "esMetas", "metasDe", "metaCumplida", "metaCorta", "fechaMeta", "semaforoMeta", "fechaMovCorta", "dDif", "_compartirLista",
-  "ejecutorNombre", "vistaSup", "necesitaAprobacion", "subSupHTML", "_supAb", "porAprobar", "resumenDatos", "vMetasSup", "vSecSup", "vSupSecciones", "vEntregas", "apruebaMeta", "pideCorreccion", "sugSup", "cumpleMeta"];
+  "ejecutorNombre", "vistaSup", "necesitaAprobacion", "subSupHTML", "pila233", "propietario233", "_supAb", "porAprobar", "resumenDatos", "vMetasSup", "vSecSup", "vSupSecciones", "vEntregas", "apruebaMeta", "pideCorreccion", "sugSup", "cumpleMeta"];
 var pre = 'var yo="salvador", PERSONAS={salvador:{nombre:"Salvador",jefe:true}, samuel:{nombre:"Samuel"}}, H0="2026-10-11", WA=[], PUSH=[], MSG=[], window_={};' +
   'function hoy(){ return H0; } function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;"); } function esDato(){ return false; }' +
   'function soySupervisor(t){ return !!(t && t.duenio && t.duenio!==yo && (t.revisores||[]).indexOf(yo)>=0); } function contextoDe(t){ return t.contexto||""; } function fechaConDia(f){ return f; }' +
@@ -47,7 +47,7 @@ function LERDO() { return { id: "tL", nombre: "Mantenimiento Casa Lerdo/Eloísa"
       o.nada = m.querySelector(".suptodo").textContent; o.gigante = m.querySelectorAll(".autbtn").length;
       return o; }, LERDO());
     eq("vista supervisor: externo (sí), sin ejecutor (no), Doit con metas y yo revisor (sí), Doit sin metas (no, queda la de antes)", r.vista, [true, false, true, false]);
-    eq("encabezado 'Lo hace Manuel Parra · supervisas tú'", r.sub, "Lo hace <b>Manuel Parra</b> · supervisas tú");
+    eq("encabezado (233): 'De Manuel · sup. tú'", r.sub, "De Manuel · sup. tú");
     eq("Metas abierta y compacta: 1 renglón por meta; ROJO solo si atrasada", r.rows,
       [["Jardín", "atrasada · 2 días", "rgb(255, 69, 58)"], ["Azotea", "atrasada · 2 días", "rgb(255, 69, 58)"], ["Interior", "vie 16 oct", "normal"]]);
     eq("encabezado de Metas con el conteo en rojo", r.metasHead, "Metas2 atrasadas · 3▴");
@@ -85,7 +85,7 @@ function LERDO() { return { id: "tL", nombre: "Mantenimiento Casa Lerdo/Eloísa"
       var w = m.querySelector(".cnlwrap"), b = w.querySelector(".cnlpill"); return [Math.round(w.getBoundingClientRect().height) >= Math.round(b.getBoundingClientRect().height), getComputedStyle(w).flexShrink]; });
     eq("la franja de canales nunca se aplasta (flex:none) aunque no quepa todo", fr, [true, "0"]);
     /* lugares en el código */
-    si("encabezado, sin Tarea|Dato ni la pastilla 'Lo hace' que se desbordaba", /\(vistaSup\(t\)\?\x27<div class="d">\x27\+subSupHTML\(t\)\+\x27<\/div>\x27:\x27\x27\)/.test(html) && /tipoRevisar\(t\)==="falta" && !vistaSup\(t\)\) h\+=vTipoToggle/.test(html) && /if\(t\.revisa_a \|\| \(t\.revisa_ext && !vistaSup\(t\)\)\)\{/.test(html));
+    si("encabezado, sin Tarea|Dato ni la pastilla 'Lo hace' que se desbordaba", /\(propietario233\(t\)\?\x27<div class="d own233">\x27\+esc\(propietario233\(t\)\)\+\x27<\/div>\x27:\x27\x27\)/.test(html) && /tipoRevisar\(t\)==="falta" && !vistaSup\(t\)\) h\+=vTipoToggle/.test(html) && /if\(t\.revisa_a \|\| \(t\.revisa_ext && !vistaSup\(t\)\)\)\{/.test(html));
     si("secciones y entregas en lugar del bloque de metas; abajo sugSup; sin la tarjeta grande de Falta info", /vPasos\(t\)\+vEntregas\(t\)\+bannerDecision\(t\)/.test(html) && /if\(vistaSup\(t\)\) sug=sugSup\(t\);/.test(html) && /return vistaSup\(t\)\?"":vFaltaInfo\(t\);/.test(html));
     si("las notas del campo 'notas' (nota_privada) se pintan en su lugar; las privadas solo para Salvador", /var _nts=\(Array\.isArray\(t\.notas\)\?t\.notas:\[\]\)\.filter\(function\(n\)\{ return n && String\(n\.t\|\|""\)\.trim\(\) && !n\.oculto && \(!n\.privado \|\| yo==="salvador"\)/.test(html) && /_evHasta\(x\.ts\); _ntHasta\(x\.ts\);/.test(html));
     si("una meta entregada no cuenta como atrasada", /metaCumplida\(m\) \|\| \(\+m\.estado\|\|0\)===1 \|\|/.test(html));

@@ -777,7 +777,7 @@ button{font:inherit;color:inherit}
 .rv228{flex:none;margin:0 12px 6px;padding:8px 12px;border-radius:12px;background:var(--surface);font-size:14.5px;line-height:1.45;color:var(--ink-2)}.rv228 .red{color:#ff453a;font-weight:700}
 .mf225 .v.verde{color:#30d158}
 .top:has(.ttl227){gap:6px;padding-left:10px;padding-right:8px}
-.top:has(.ttl227) .iconbtn:not(#bback){width:33px;height:33px;border:0;background:transparent;color:var(--ink-2)}
+.top:has(.ttl227) .iconbtn:not(#bback){width:30px;height:30px;border:0;background:transparent;color:var(--ink-2)}
 .top:has(.ttl227) .iconbtn:not(#bback) svg{width:21px;height:21px}
 .top:has(.ttl227) #bback{width:34px;height:34px}
 .typep229{display:flex;align-items:center;justify-content:center;gap:6px;margin:4px 12px 6px;flex:none;color:var(--ink-3)}
@@ -804,6 +804,12 @@ button{font:inherit;color:inherit}
 .vac230{text-align:center;color:var(--ink-3);font-size:14px;padding:24px 16px}
 .chips225{gap:4px;padding:2px 8px 6px}.chip225{font-size:13px;padding:5px 7px;gap:3px}.chip225 svg{width:14px;height:14px}.chip225.det231{padding:5px 7px}.chip225.det231 svg{width:17px;height:17px}
 .top .t,.top .t.uno227,.top .tin{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Inter,system-ui,sans-serif}
+/* build 233: botones del encabezado sin fondo ni borde, 30 px, juntos; renglon de propietario en una sola linea */
+.top .hb233,.top #bleeh{width:30px;height:30px;border:0;background:none;border-radius:8px;color:var(--ink)}
+.top .ttl227{min-width:0;flex:1 1 auto}
+
+.top .d.own233{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.top .hb233 .cnt233{background:var(--azul);color:#fff;top:-5px;right:-6px}
 .chip225.on232{color:#7cc0ff}
 .mf232l{display:flex;flex-direction:column}.mf232{display:flex;align-items:center;border-top:1px solid var(--line)}.mf232:first-child{border-top:0}
 .mf232 .mfb{flex:1;min-width:0;display:flex;align-items:center;gap:10px;border:0;background:none;color:var(--ink);font:inherit;font-size:16px;padding:11px 2px;text-align:left}
@@ -1425,7 +1431,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 232 · Filtro por meta en la hoja de Metas · sin selector Importante|Todo duplicado · título con fuente del sistema";
+var VERSION_APP = "build 233 · Encabezado opción A: audífono · clip solo con archivos · ⋯, sin fondo · renglón De X · sup. Y en una línea";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -9003,12 +9009,15 @@ function vHilo(){
       : '<span class="t uno227'+(t.cierre?" tach":"")+((window.__tit227||{})[t.id]?' full':'')+'" id="tit227" role="button">'+esc(t.nombre)+'</span>')+   /* build 227: una linea; tocar = completo */
     '</div>'+
     /* build 227 (Salvador 16:24): sin el renglon "Tuya · con X, Y +1": lo dice el chip de personas. En la vista supervisor queda "Lo hace X". */
-    (vistaSup(t)?'<div class="d">'+subSupHTML(t)+'</div>':'')+   /* build 224 */
+    /* build 233 (Salvador 18:45, opcion A): renglon de propietario en TODAS las vistas. Mia: sin subtitulo. De otro: UNA linea
+       "De Manuel" / "De Manuel · sup. tú" / "De Manuel · sup. Carlos" (solo primer nombre; nunca salta de renglon). */
+    (propietario233(t)?'<div class="d own233">'+esc(propietario233(t))+'</div>':'')+
     '</div>'+
     '<div class="grow"></div>'+
-    '<button class="iconbtn'+(adj.length?' clipon':'')+'" id="bgal" aria-label="Archivos de esta tarea">'+ico("clip",20,1.6)+   /* build 204: verde si hay archivos */
-       (nuevos(t)?'<span class="cnt">'+nuevos(t)+'</span>':'')+'</button>'+
-    (!t.cierre && estadoReal(t)!=="cerrada"?'<button class="iconbtn" id="bmenu" aria-label="Qué hago con esta tarea">'+ico("more",22)+'</button>':'')+
+    /* build 233: audifono (lo pone leeExtras) · clip SOLO si hay archivos, con la cantidad en azul · ⋯ siempre. Sin fondo ni borde. */
+    (adj.length?'<button class="iconbtn hb233" id="bgal" aria-label="Archivos de esta tarea">'+ico("clip",20,1.5)+
+       '<span class="cnt cnt233">'+adj.length+'</span></button>':'')+
+    '<button class="iconbtn hb233" id="bmenu" aria-label="Qué hago con esta tarea">'+ico("more",22)+'</button>'+
     '</div>'+
     /* TODO LO QUE NO ES RESPUESTA DEL DÍA VIVE AQUÍ. Nadie lo usa a diario,
        así que no merece lugar permanente en la pantalla. */
@@ -11162,7 +11171,18 @@ function vistaSup(t){
   try{ return soySupervisor(t) && esMetas(t); }catch(e){ return false; }
 }
 function necesitaAprobacion(t){ return (t.revisores||[]).some(function(k){ return k && k!==yo; }) || (t.duenio===yo && !!t.supervisa && t.supervisa!==yo); }
-function subSupHTML(t){ return 'Lo hace <b>'+esc(nombreCorto(ejecutorNombre(t))||"—")+'</b> · supervisas tú'; }
+function subSupHTML(t){ return esc(propietario233(t)); }   /* build 233: era "Lo hace X · supervisas tú" */
+/* build 233: primer nombre (o el alias corto de Doit) para que quepa en una linea */
+function pila233(k){ if(k && PERSONAS[k]) return nombreCorto(PERSONAS[k].nombre).split(" ")[0]; return nombreCorto(String(k||"")).split(" ")[0]; }
+function propietario233(t){
+  if(!t) return "";
+  var de="", sup="";
+  if(t.revisa_ext){ de=t.revisa_ext; sup=(!t.duenio||t.duenio===yo)?yo:t.duenio; }
+  else if(t.duenio && t.duenio!==yo){ de=t.duenio; sup=(t.revisores||[]).filter(function(k){ return k && k!==t.duenio; })[0] || (t.supervisa&&t.supervisa!==t.duenio?t.supervisa:""); }
+  else return "";
+  var n=pila233(de); if(!n) return "";
+  return "De "+n+(sup?" · sup. "+(sup===yo?"tú":pila233(sup)):"");
+}
 function _supAb(t, k, def){ var o=window.__supAb=window.__supAb||{}, kk=t.id+"|"+k; return (kk in o)?!!o[kk]:def; }
 function porAprobar(t){ return metasDe(t).filter(function(m){ return (+m.estado||0)===1; }); }
 function resumenDatos(t){

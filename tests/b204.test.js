@@ -73,7 +73,7 @@ falta = true; si("con la tarjeta de Falta info visible, el ▾ ya NO repite el C
 falta = false;
 
 /* 3 clip verde */
-si("el clip siempre está y se pinta verde con archivos", /'<button class="iconbtn'\+\(adj\.length\?' clipon':''\)\+'" id="bgal"/.test(html) && /\.iconbtn\.clipon\{color:#30d158\}/.test(html));
+si("el clip sale SOLO si hay archivos, con la cantidad (233)", /\(adj\.length\?'<button class="iconbtn hb233" id="bgal"/.test(html) && /'<span class="cnt cnt233">'\+adj\.length\+'<\/span>/.test(html));
 
 /* 4 archivos: apartar y copiar */
 var T1 = { id: "tUNO", nombre: "Invitaciones", msgs: [{ k: "bi", t: "Papá: invitación", url: "https://x/inv.jpg", tipo: "foto", ts: 1 }, { k: "bi", t: "Papá: meme político", url: "https://x/meme.jpg", tipo: "foto", ts: 2 }, { k: "bi", t: "texto" }],
