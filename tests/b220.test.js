@@ -45,12 +45,12 @@ vm.createContext(c); vm.runInContext(F.map(saca).join("\n"), c);
   eq("si el servidor dice que la acción no existe: deja de preguntar", [c.FETCH.length, !!c.window.__waEstNo], [1, true]);
   /* ---------- notificaciones: clave "espera" ---------- */
   var N = { PERSONAS: { salvador: {} }, yo: "salvador", _nn: null, JSON: JSON, String: String, Object: Object };
-  vm.createContext(N); vm.runInContext(["NOTIF_VERSION", "NOTIF_TIPOS", "NOTIF_PRESETS", "NOTIF_NIVEL", "NOTIF_DEFECTO", "_nn", "notifDePreset", "notifDefectoDe", "notifPrefs", "notifGuardadas", "notifPermite", "tipoDePush"].map(saca).join("\n"), N);
+  vm.createContext(N); vm.runInContext(["NOTIF_VERSION", "NOTIF_TIPOS", "NOTIF_PRESETS", "NOTIF_NIVEL", "NOTIF_DEFECTO", "NOTIF_ESENCIAL", "_nn", "notifDePreset", "notifDefectoDe", "notifPrefs", "notifGuardadas", "notifPermite", "esJefe269", "subtipoDePush", "tipoDePush"].map(saca).join("\n"), N);
   var esp = N.NOTIF_TIPOS.filter(function (x) { return x.k === "espera"; });
   eq("hay UNA clave 'espera', grupo Urgente, texto 'Alguien te espera o está atorado'", esp.map(function (x) { return [x.grupo, x.nivel, x.tx]; }), [["Urgente", "urgente", "Alguien te espera o está atorado"]]);
   eq("encendida en Solo urgente, Normal y Todas; apagada en Ninguna", ["ninguna", "urgente", "normal", "todas"].map(function (k) { return N.notifDePreset(k).espera; }), [false, true, true, true]);
-  eq("no hay otra clave vieja para lo mismo (nada que migrar)", N.NOTIF_TIPOS.filter(function (x) { return /espera|atorad|consulta/i.test(x.k + " " + x.tx); }).map(function (x) { return x.k; }), ["espera"]);
-  eq("los avisos de consulta / atorado se clasifican 'espera'", [N.tipoDePush("Alguien te espera", ""), N.tipoDePush("Tarea atorada", "")], ["espera", "espera"]);
+  eq("no hay otra clave vieja para lo mismo (nada que migrar)", N.NOTIF_TIPOS.filter(function (x) { return /espera|atorad|consulta/i.test(x.k + " " + x.tx); }).map(function (x) { return x.k; }).filter(function (k) { return k !== "atorado" && k !== "ia_atorada"; }), ["espera"]);
+  eq("los avisos de consulta / atorado se clasifican 'espera'", [N.tipoDePush("Alguien te espera", ""), N.tipoDePush("Tarea atorada", "")], ["te_necesito", "te_necesito"]);   /* build 269: alguien espera tu sí = te_necesito/atorado */
   N.PERSONAS.salvador.notif = { v: 1, tipos: { espera: false } };
   eq("la preferencia guardada de 'espera' se respeta tal cual", N.notifPermite("salvador", "espera"), false);
   console.log((malas.length ? malas.map(function (x) { return "  X " + x; }).join("\n") + "\n" : "") + "RESULTADO " + ok + "/" + n);

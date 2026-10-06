@@ -20,9 +20,9 @@ function saca(tipo, nombre) {
   }
   return out.join("\n");
 }
-var FUNCS = ["_nn", "notifDePreset", "notifDefectoDe", "notifPrefs", "notifGuardadas", "notifPresetDe", "notifPermite", "tipoDePush", "guardaNotif",
+var FUNCS = ["_nn", "notifDePreset", "notifDefectoDe", "notifPrefs", "notifGuardadas", "notifPresetDe", "notifPermite", "esJefe269", "subtipoDePush", "tipoDePush", "guardaNotif",
   "vNotif", "tituloTarea", "disparaPushInstantaneo"];
-var VARS = ["NOTIF_VERSION", "NOTIF_TIPOS", "NOTIF_PRESETS", "NOTIF_NIVEL", "NOTIF_DEFECTO", "TITULO_CONECTORES"];
+var VARS = ["NOTIF_VERSION", "NOTIF_TIPOS", "NOTIF_PRESETS", "NOTIF_NIVEL", "NOTIF_DEFECTO", "NOTIF_ESENCIAL", "TITULO_CONECTORES"];
 var codigo = VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" + FUNCS.map(function (f) { return saca("function", f); }).join("\n");
 var escritos = [], enviados = [];
 var c = { console: { log: function () {}, error: function () {} }, JSON: JSON, String: String, Math: Math, Date: Date, Object: Object,
@@ -36,10 +36,11 @@ vm.createContext(c); vm.runInContext(codigo, c);
 var ok = 0, n = 0, malas = [];
 function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
 function si(nom, v) { eq(nom, !!v, true); }
-function prendidos(o) { return Object.keys(o).filter(function (k) { return o[k]; }); }
+var NUEVOS269 = ["acuerdo", "llamada", "atorado", "ia_atorada"];
+function prendidos(o) { return Object.keys(o).filter(function (k) { return o[k] && NUEVOS269.indexOf(k) < 0; }); }
 
 /* catalogo */
-eq("catalogo: 9 tipos en 3 grupos, como la maqueta", c.NOTIF_TIPOS.map(function (t) { return t.grupo + ":" + t.k; }),
+eq("catalogo: 9 tipos en 3 grupos, como la maqueta (+ los 4 de lo esencial, build 269)", c.NOTIF_TIPOS.filter(function (t) { return NUEVOS269.indexOf(t.k) < 0; }).map(function (t) { return t.grupo + ":" + t.k; }),
   ["Urgente:te_necesito", "Urgente:recordatorio", "Urgente:espera", "Urgente:falla", "Trabajo:falta_info", "Trabajo:seguimiento", "Trabajo:asignado", "WhatsApp:wa_tarea", "WhatsApp:wa_todo"]);
 si("cada tipo trae clave, grupo, nivel, icono, titulo y subtitulo", c.NOTIF_TIPOS.every(function (t) { return t.k && t.grupo && c.NOTIF_NIVEL[t.nivel] && t.ico && t.tx && t.sub; }));
 eq("claves unicas", new Set(c.NOTIF_TIPOS.map(function (t) { return t.k; })).size, c.NOTIF_TIPOS.length);
@@ -57,7 +58,7 @@ eq("mezcla = personalizado (ningun atajo marcado)", c.notifPresetDe(pers), "");
 /* guardar en la ficha, con version */
 c.guardaNotif(c.notifDePreset("normal"));
 eq("se guarda en bitacora_personas/<usuario>.notif con merge", [escritos[0][0], escritos[0][1], escritos[0][3]], ["bitacora_personas", "salvador", { merge: true }]);
-eq("con version y atajo", [escritos[0][2].notif.v, escritos[0][2].notif.preset], [2, "normal"]);
+eq("con version y atajo", [escritos[0][2].notif.v, escritos[0][2].notif.preset], [3, "normal"]);
 eq("y queda en memoria", c.notifPrefs("salvador").asignado, true);
 c.PERSONAS.samuel.notif = { v: 1, tipos: { recordatorio: true } };
 eq("tipo nuevo que la persona nunca vio: toma el defecto", [c.notifPrefs("samuel").espera, c.notifPrefs("samuel").wa_todo], [true, false]);
@@ -65,7 +66,7 @@ eq("tipo nuevo que la persona nunca vio: toma el defecto", [c.notifPrefs("samuel
 /* filtro de lo que manda la app */
 c.PERSONAS.samuel.notif = { v: 1, tipos: c.notifDePreset("urgente") };
 eq("tipos de los avisos de la app", ["Urgente: Requiere tu acción", "Nueva tarea asignada", "Nuevo encargo", "Revisión asignada", "Nuevo comentario", "Respuesta a tu consulta", "Tarea"].map(function (x, i) { return c.tipoDePush(x, i === 6 ? "“Pintar” está atrasado" : ""); }),
-  ["espera", "asignado", "asignado", "asignado", "asignado", "asignado", "seguimiento"]);
+  ["te_necesito", "asignado", "asignado", "asignado", "asignado", "asignado", "seguimiento"]);
 si("Samuel en Solo urgente: SI le llega lo urgente", c.notifPermite("samuel", "espera"));
 si("Samuel en Solo urgente: NO le llega 'te asignaron'", !c.notifPermite("samuel", "asignado"));
 si("quien nunca eligio: le llega todo como siempre", c.notifPermite("cynthia", "asignado"));
@@ -73,7 +74,7 @@ si("tipo desconocido: suena como siempre", c.notifPermite("samuel", "otro"));
 c.disparaPushInstantaneo("samuel", "Nueva tarea asignada", "Te asignaron: X", "u");
 eq("no se le manda lo que apago", enviados.length, 0);
 c.disparaPushInstantaneo("samuel", "Urgente: Requiere tu acción", "La tarea X requiere tu decisión", "u");
-eq("lo urgente si, y el tipo viaja al servidor", [enviados.length, enviados[0] && enviados[0].tipo], [1, "espera"]);
+eq("lo urgente si, y el tipo viaja al servidor", [enviados.length, enviados[0] && enviados[0].tipo], [1, "te_necesito"]);
 c.disparaPushInstantaneo("salvador", "Urgente: Requiere tu acción", "x", "u");
 eq("nunca a uno mismo", enviados.length, 1);
 

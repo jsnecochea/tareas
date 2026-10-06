@@ -58,15 +58,15 @@ eq("versión >= 263", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       r.conRespuesta = window.__push.filter(function (x) { return x[0] === "aviso_set"; }).length;
       r.permite = [notifPermite("salvador", "recordatorio"), notifPermite("salvador", "te_necesito")];
       return r; });
-    eq("Salvador: el defecto del tablero es 'Solo lo que necesita mi respuesta'", A.defecto, "respuesta");
-    eq("Lo guardado con el defecto viejo (Solo urgente) pasa al nuevo", A.migra, "respuesta");
-    eq("Con ese defecto no se manda ningún aviso de recordatorio al servidor", A.conDefecto, 0);
-    eq("Al prender 'Recordatorios' en el tablero sí se manda (una vez)", A.trasPreset, 1);
+    eq("Salvador: el defecto del tablero es 'Solo lo esencial' (build 269)", A.defecto, "esencial");
+    eq("Lo guardado con el defecto viejo (Solo urgente) pasa al nuevo", A.migra, "esencial");
+    eq("Build 269: con ese defecto el recordatorio SÍ se manda (es uno de los 5), una vez", A.conDefecto, 1);
+    eq("Al cambiar de preset no se duplica el aviso (una vez)", A.trasPreset, 2);
     eq("Guardar la tarea 4 veces NO vuelve a mandar el aviso (antes: re-disparo en cada barrido)", A.repetidos, 0);
     eq("El espejo se escribe con merge y NO pisa avisado_en en cada guardado (solo la primera vez o si cambia)", [A.espejo.length > 1, A.espejo.slice(1).every(function (x) { return x[0] === false && x[1] === true; })], [true, true]);
     eq("Si cambia la hora sí se manda otra vez, tipo recordatorio y repite_max 1", A.cambio, [["2026-10-07 11:30:00", "recordatorio", 1]]);
     eq("Los de 'revisar avance' y 'revisar si Cynthia…' de lo que lleva Claude no se mandan a Salvador", A.deClaude, 0);
-    eq("Con 'Solo lo que necesita mi respuesta' tampoco sale el recordatorio y te_necesito sí pasa", [A.conRespuesta, A.permite], [0, [false, true]]);
+    eq("Con 'Solo lo que necesita mi respuesta' el recordatorio ya no pasa para Salvador (solo los 5 de lo esencial: ese preset ya no está en su tablero)", [A.conRespuesta, A.permite], [0, [false, false]]);
 
     /* ===================== 2. SIGUIENTE EN ORDEN ===================== */
     var B = await p.evaluate(async function () {
