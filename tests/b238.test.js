@@ -95,8 +95,8 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
       [].forEach.call(document.body.children, function (x) { if (x.id !== "app") x.style.display = "none"; });
       o.iconos = [].map.call(document.querySelectorAll(".msgs [data-mix]"), function (b) { return !!b.querySelector(".cl238"); });
       [].filter.call(document.querySelectorAll(".msgs [data-mix]"), function (b) { return /miercolitos/.test(b.textContent); })[0].click();
-      o.menu = [].map.call(document.querySelectorAll(".msgs .ac226.mq237ab"), function (x) { return x.getAttribute("data-acg"); });
-      var e = document.querySelector(".msgs .ac226.mq237ab"); if (e) e.scrollIntoView({ block: "center" });
+      o.menu = [].map.call(document.querySelectorAll("#det242 .ac226"), function (x) { return x.getAttribute("data-acg"); });   /* 242: en la hoja del globo */
+      
       return o; });
     if (process.env.CAP) await p.screenshot({ path: path.join(process.env.CAP, "b238-globo-menu.png") });
     eq("el mismo cerebro (promptRevision, modelo 'rapido') pide ordenes y dudas, con la fecha de Monterrey", r2.modelo, ["rapido", true, true, true]);

@@ -39,7 +39,7 @@ eq("versión 230 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
         return T; }
       function abre(T) { window.__vf230 = {}; window.__cnlClaude = {}; window.__cnl = {}; tareas = [T]; abierta = T.id; vista = "hilo"; render(); /* 235: arranca en Importante; estas pruebas eligen Todo */ poneVista230(T, ""); render(); [].forEach.call(document.body.children, function (x) { if (x.id !== "app" && !/cnl/.test(x.className)) x.style.display = "none"; }); document.getElementById("app").style.display = "flex"; }
       function txt(sel) { return [].map.call(document.querySelectorAll(sel), function (x) { return x.textContent.replace(/\s+/g, " ").trim(); }); }
-      function ids() { return [].map.call(document.querySelectorAll(".msgs [data-mix]"), function (x) { return tareas[0].msgs[+x.getAttribute("data-mix")].id; }); }
+      function ids() { return [].map.call(document.querySelectorAll(".msgs [data-mix], .msgs [data-nia242]"), function (x) { return tareas[0].msgs[+(x.getAttribute("data-mix") || String(x.getAttribute("data-nia242")).split("|").pop())].id; }); }   /* 242: las notas de la IA son nota gris */
       abre(arma(""));
       o.fichas = txt(".chips225 > button"); o.todos = ids();
       document.getElementById("cnlpill").click(); o.hoja = txt(".fil227h [data-fil]").map(function (x) { return x.replace(/^(JO|CS)/, ""); });

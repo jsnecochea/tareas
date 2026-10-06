@@ -736,6 +736,11 @@ button{font:inherit;color:inherit}
 .mov225{position:fixed;left:0;right:0;bottom:0;max-height:70vh;background:#1c1c1e;border-radius:22px 22px 0 0;padding:12px 14px calc(18px + env(safe-area-inset-bottom));display:flex;flex-direction:column;box-shadow:0 -10px 40px rgba(0,0,0,.7)}
 /* build 226: acomodo (OK · Mover · Nueva), hoja "¿A dónde va?", seccion Acomodo del Inicio */
 .ac226{display:flex;align-items:center;gap:6px;margin:-2px 0 6px 10px;font-size:13.5px;color:var(--ink-3)}
+.dia242{display:flex;justify-content:center;margin:10px 0 6px}.dia242 span{font-size:12px;color:var(--ink-3);font-weight:600;letter-spacing:.2px}
+.nia242{display:flex;align-items:flex-start;gap:6px;margin:4px 12px;padding:6px 10px;border-radius:12px;background:var(--surface-2);color:var(--ink-3);font-size:13.5px;line-height:1.35;max-width:92%}
+.nia242 .niai{flex:none;width:14px;height:14px;margin-top:2px}.nia242 .niai svg{width:13px;height:13px}.nia242 .niat{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nia242.ab .niat{white-space:normal}
+.nia242 .niam{flex:none;border:0;background:none;color:var(--azul);font:inherit;font-size:12.5px;padding:0}
+.b .st .mdel{display:none}.b .st:empty{display:none}.det242b .ac226{margin:10px 0 0;font-size:15px}.det242b .ac226 button{font-size:15px}.det242x{margin-top:12px;color:var(--venc)}
 .cl238{display:inline-flex;width:16px;height:16px;color:var(--ink-2);vertical-align:-3px;margin-right:4px}.cl238 svg{width:15px;height:15px}.cl238.on{color:var(--azul)}
 .b[data-mix]{cursor:default}.ac226.m238{margin:2px 0 4px 0}.ac226.triv240{margin-top:0}.ac226.triv240 button{color:var(--ink-3);font-weight:500}.prop238{font-size:12.5px;color:var(--ink-3);margin-top:2px}.m237{display:flex;flex-direction:column}.m237.listo{opacity:.5}
 .hc238{position:relative;margin:6px 12px 8px;padding:12px 14px 10px;background:var(--surface-2);border-radius:14px;font-size:15.5px;line-height:1.4}
@@ -1457,7 +1462,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 241 · Salvador cierra siempre (la condición de la IA no frena) · sin respuestas duplicadas · cierra_sugerido";
+var VERSION_APP = "build 242 · Globos limpios estilo iMessage (detalle al tocar) · notas de la IA en gris · Importante sin notas · Pasos como ficha";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -5488,7 +5493,7 @@ function burbujaHablada(x, meta, mid){
     /* ver más y el play, juntos: puedes oír todo sin expandir primero */
     '<div class="hbar"><button class="hmas" data-hmas="'+esc(mid)+'">'+(ab?"ver menos":"ver más")+'</button>'+
       '<button class="hplay" data-hplay="'+esc(mid)+'" aria-label="Escuchar">'+svgPlay()+'</button>'+
-      '<span class="hfch">'+(meta?esc(meta)+" · ":"")+fecha+'</span></div>'+
+      '</div>'+   /* build 242: sin autor ni fecha en el globo */
     '<div class="htr"><span class="hlab">Transcript:</span> '+esc(x.tr||"")+'</div>'+
   '</div>';
 }
@@ -8774,6 +8779,7 @@ function chipsTarea(t){
   var verde=ch.cls==="ind"?cok:!!(ag&&ag.ok&&!cfa), amb=!verde && !!(ag||cz.length);
   h+='<button class="chip225 fecha234'+(verde?' verde':'')+(amb?' amb234':'')+'" data-chip="fecha">'+(ch.cls==="ind"&&!verde&&!amb?ico("recur",15):ico("cal",15))+'<span class="ftx234">'+esc(ftx)+'</span></button>';
   h+=vChipClaves235(t);   /* build 235: Claves n/m despues de la fecha */
+  if(tienePasos(t)) h+='<button class="chip225" data-chip="pasos">'+ico("list",15)+'Pasos '+pasosHechos(t)+'/'+t.lista_pasos.length+'</button>';   /* build 242: Pasos es ficha (antes bloque grande) */
   if(esMetas(t)){ var pe=metasEnCurso(t), rj=pe.filter(function(m){ return (+m.estado||0)===0 && semaforoMeta(m).k==="rojo"; }).length;
     var mt=metasDe(t), fm=filtroMeta(t), fmm=fm&&fm!=="otro"?mt.filter(function(m){ return m.id===fm; })[0]:null;   /* build 232: con filtro, el nombre de la meta */
     h+='<button class="chip225'+(rj&&!fm?' red':'')+(fm?' on232':'')+'" data-chip="metas">'+ico("list",15)+(fm?esc(fmm?metaCorta(fmm):"Otro")+ico("down",13):'Metas '+mt.filter(metaCumplida).length+'/'+mt.length)+'</button>'; }   /* build 231: n/m */
@@ -8949,6 +8955,7 @@ function vHoja225(t){
   else if(H.k==="lista"){ tit=(t.checklist&&t.checklist.titulo)||"Lista"; window.__chkOpen=window.__chkOpen||{}; var _ab=window.__chkOpen[t.id]; window.__chkOpen[t.id]=true; cuerpo=vChecklist(t); window.__chkOpen[t.id]=_ab; }
   else if(H.k==="personas"){ tit="Personas"; cuerpo=vPersonas225(t); }
   else if(H.k==="agenda"){ var _a228=estadoAgenda228(t); tit=_a228?_a228.txt:"Agenda"; cuerpo=vAgenda228(t); }   /* build 228 */
+  else if(H.k==="pasos"){ tit="Pasos"; sub=pasosHechos(t)+" de "+t.lista_pasos.length; window.__pasosOpen=window.__pasosOpen||{}; var _pa242=window.__pasosOpen[t.id]; window.__pasosOpen[t.id]=true; cuerpo=vPasos(t); window.__pasosOpen[t.id]=_pa242; }   /* build 242 */
   else if(H.k==="claves"){ var _S=semClaves235(t); tit="Claves"; sub=_S?(_S.todas?"Todo asegurado":(_S.n-_S.ok)+" por asegurar"+(_S.k==="rojo"?" · ya pasó el límite":(_S.k==="ambar"?" · 7 días o menos":""))):""; cuerpo=vClaves235(t); }   /* build 235 */
   else if(H.k==="fecha"){ var _ch=chipEncabezado(t); tit=_ch.cls==="ind"?"Indefinida":(_ch.cls==="sin"?"Sin fecha":_ch.txt.replace(/^Finiquito:\s*/,"")); var _ag=estadoAgenda228(t), _cz=citas234(t);
     sub=_cz.length>1?_cz.length+" citas":(_ag?_ag.txt:"Sin evento agendado"); cuerpo=vFecha234(t); }   /* build 234 */
@@ -9171,12 +9178,66 @@ function esSaludo239(t, x){
   if(SALUDO239.test(tx)) return true;
   return esPlatica237(t, x);                            /* la regla del 230 */
 }
+/* ===================== build 242 (Salvador 21:58, "Decoración Navideña Cumbres"): globos limpios estilo iMessage =====================
+   Bajo el globo nada de "Salvador · 17:20" ni "acomodó Claude": solo palomitas en los enviados y el destello de Claude en los que acomodó.
+   Tocar el globo = hoja con canal, fecha y hora, de quién, entrega, quién lo acomodó y OK · Mover · Nueva · Dato. Separadores de día.
+   Las notas que escribió la IA (aunque traigan otro autor: "HILO (", "Nota IA", "Chuy pregunta (3:22pm)…") son nota gris de Claude. */
+var NIA242_RE=/^\s*(?:📝\s*)?(?:HILO\s*\(|IA\s+nota\b|Nota\s+IA\b|IA\s*:|Resumen\s*:|Contexto\s*:)/i;
+var NIA242_PAT=/^[A-ZÁÉÍÓÚÑ][\wáéíóúñÁÉÍÓÚÑ.]*(?:\s+[A-ZÁÉÍÓÚÑ][\wáéíóúñÁÉÍÓÚÑ.]*){0,3}\s+(?:(?:pregunta|dice|pide|contesta|responde|avisa)\s*\(\s*\d{1,2}:\d{2}|confirma\b)/;
+function textoSinAutor242(x){ var tx=String((x&&(x.t||""))||""); if(x && x.wa_c) tx=tx.replace(/^[^:\n]{1,40}:\s*/,""); return tx; }
+function esNotaIA242(x){
+  if(!x || x.hab) return false;
+  if(x.nota_ia) return true;
+  var tx=textoSinAutor242(x);
+  if(NIA242_RE.test(tx)){ if(/^\s*IA\s*:/i.test(tx) && (llevaPalomitas(x) || x.wa_pid || x.wa_auto)) return false; return true; }
+  return NIA242_PAT.test(tx);
+}
+function originalDe242(x){
+  if(!x || !(+x.wa_in===1 || x.wa_c) || x.k==="bo") return "";
+  var m=textoSinAutor242(x).match(/[“"«]([^”"»]{3,400})[”"»]/); return m?m[1].trim():"";
+}
+function vNotaIA242(x, mid){
+  var ab=!!(window.__nia242||{})[mid], tx=sinEmojiUI(String(x.t||"")).replace(/\s+/g," ").trim();
+  return '<div class="nia242'+(ab?' ab':'')+'"><span class="niai">'+SVG_DESTELLO+'</span><span class="niat">'+esc(tx)+'</span><button class="niam" data-nia242="'+esc(mid)+'">'+(ab?'ver menos':'ver más')+'</button></div>';
+}
+function sepDia242(x){
+  var ts=+(x&&x.ts)||0; if(!ts) return ""; var d=iso(new Date(ts)); if(window.__dia242===d) return ""; window.__dia242=d;
+  var h=hoy(), lab=d===h?"Hoy":(dDif(d,h)===1?"Ayer":fechaMovCorta(d));
+  return '<div class="dia242"><span>'+esc(lab)+'</span></div>';
+}
+/* la hoja del detalle del globo */
+function abreDetalle242(t, ix){
+  var x=(t.msgs||[])[ix]; if(!x) return; var cx=""; try{ cx=canalDe(x,t); }catch(e){} var _v0=document.getElementById("det242"); if(_v0) _v0.remove();
+  var canal=(/correo/i.test(String(x.origen||""))||x.correo||x.tipo==="correo")?"Correo":((x.wa_c||x.wa_auto||x.wa_pid||+x.wa_in===1||/^wa_/.test(String(x.origen||""))||cx.indexOf("ext:")===0)?"WhatsApp":"App");
+  var fecha=(x.ts?fechaBonita(iso(new Date(+x.ts))):"")+(x.h?" · "+x.h:"");
+  var de=""; try{ de=partesMsg(x).de||autorMsg(x,t)||""; }catch(e){}
+  if(esNotaIA242(x)) de="Claude (nota)"+(x.wa_c?" · sobre "+nombreCorto(x.wa_c).split(" ")[0]:"");
+  var ent="—"; try{ if(llevaPalomitas(x)){ var nv=nivelMsgWA(x); ent=nv>=0?["En cola","Enviado","Entregado","Leído"][nv]:"Sin confirmar"; } else if(+x.wa_in===1) ent="Recibido"; }catch(e){}
+  var aco=x.movido_de?"Tú (lo moviste desde “"+tareaCorta({nombre:x.movido_de.nombre||""})+"”)":((x.acomodo&&x.acomodo.por==="auto")?"Claude (plática)":((x.acomodo&&x.acomodo.ok===1)?"Confirmado por ti":(acomodoIA237(x)?"Claude":"—")));
+  var fila=function(k,v){ return '<div class="mfr"><span class="k">'+esc(k)+'</span><span class="v">'+esc(v)+'</span></div>'; };
+  var hay=function(sel){ return !!document.querySelector('.msgs [data-mix="'+ix+'"] '+sel); };
+  var v=document.createElement("div"); v.className="leemask"; v.id="det242";
+  v.innerHTML='<div class="mov225" role="dialog" aria-label="Detalle del mensaje"><div class="h225g"></div><div class="h225h"><b>Detalle</b><button class="h225b" data-detx="1" aria-label="Cerrar">'+ico("x",14)+'</button></div>'+
+    '<div class="h225c"><div class="mf225">'+fila("Canal", canal)+fila("Fecha", fecha||"—")+fila("De", de||"—")+fila("Entrega", ent)+fila("Lo acomodó", aco)+'</div>'+
+    (x.analisis?'<p class="h225v0">'+esc(x.analisis)+'</p>':'')+
+    ((+x.wa_in===1 || x.wa_c) && !x.oculto && !confirmado237(x)?'<div class="det242b">'+botonesG237(ix, [ix], " hj242")+'</div>':'')+
+    ((hay("[data-mdel]")||hay("[data-wacan]"))?'<button class="hop det242x" data-detdel="1">'+(hay("[data-wacan]")?"Cancelar este WhatsApp":"Borrar este mensaje")+'</button>':'')+
+    '</div></div>';
+  document.body.appendChild(v);
+  bindAcomodo(v, function(){ return t; });
+  v.addEventListener("click", function(ev){
+    if(ev.target.closest("[data-detdel]")){ var b=document.querySelector('.msgs [data-mix="'+ix+'"] [data-wacan], .msgs [data-mix="'+ix+'"] [data-mdel]'); v.remove(); if(b) b.click(); return; }
+    if(ev.target.closest(".ac226 button")){ if(v.parentNode) v.remove(); return; }
+    if(ev.target===v || ev.target.closest("[data-detx]")) v.remove(); });
+}
 function claudeAcomodo238(t, x){ return !!x && acomodoIA237(x) && !esSaludo238(t, x); }
 function icoCl238(t, x, ix){
   if(!claudeAcomodo238(t, x)) return "";
   return '<span class="cl238'+(((window.__cl238||{})[t.id+"|"+ix])?' on':'')+'" data-cl238="'+ix+'" role="img" aria-label="Lo acomodó Claude">'+SVG_DESTELLO+'</span>';
 }
-function vDudaTarea(t, x, ix){
+/* build 242: OK · Mover · Nueva · Dato ya no van debajo del globo: viven en la hoja del detalle (tocar el globo) */
+function vDudaTarea(t, x, ix){ return ""; }
+function vDudaTarea238(t, x, ix){
   if(!x || x.oculto || confirmado237(x) || esSaludo238(t, x)) return "";
   if(x.duda_tarea && !x.duda_resuelta) return botonesG237(ix, [ix]);
   if(acomodoIA237(x) && (window.__cl238||{})[t.id+"|"+ix]) return botonesG237(ix, [ix], " mq237ab");
@@ -9243,9 +9304,10 @@ function bindAcomodo(raiz, tareaDe){
   q2("[data-actriv]", function(t, ix, ixs){ var r=trivialG240(t, ixs); if(r) toast(r); render(); });
   q2("[data-acnueva]", function(t, ix, ixs){ var n=nuevaG237(t, ixs); if(n) toast("Tarea nueva “"+n.nombre+"” en Falta info; "+(ixs.length===1?"el mensaje pasó":"la plática pasó")+" ahí."); render(); });
   /* build 238: tocar el globo con el iconito de Claude = OK · Mover · Nueva para ese mensaje */
-  Array.prototype.forEach.call(raiz.querySelectorAll(".msgs [data-mix]"), function(el){ if(!el.querySelector("[data-cl238]")) return; el.addEventListener("click", function(ev){
-    if(ev.target.closest("button,a,input") || (window.__lp238 && Date.now()-window.__lp238<700)) return; var t=tareaDe(el); if(!t) return; var k=t.id+"|"+el.getAttribute("data-mix");
-    window.__cl238=window.__cl238||{}; window.__cl238[k]=!window.__cl238[k]; render(); }); });
+  Array.prototype.forEach.call(raiz.querySelectorAll(".msgs [data-mix]"), function(el){ if(el.classList.contains("liga")) return; el.addEventListener("click", function(ev){
+    if(ev.target.closest("button,a,input") || (window.__lp238 && Date.now()-window.__lp238<700)) return; var t=tareaDe(el); if(!t) return;
+    abreDetalle242(t, +el.getAttribute("data-mix")); }); });   /* build 242: tocar el globo = su hoja de detalle */
+  Array.prototype.forEach.call(raiz.querySelectorAll("[data-nia242]"), function(el){ el.onclick=function(ev){ ev.stopPropagation(); window.__nia242=window.__nia242||{}; var k=el.getAttribute("data-nia242"); window.__nia242[k]=!window.__nia242[k]; render(); }; });
   Array.prototype.forEach.call(raiz.querySelectorAll("[data-mq237]"), function(el){ el.onclick=function(ev){ ev.stopPropagation(); window.__mq237=window.__mq237||{}; var k=el.getAttribute("data-mq237"); window.__mq237[k]=!window.__mq237[k]; render(); }; });
 }
 /* ---- Inicio: seccion Acomodo ---- */
@@ -9392,7 +9454,7 @@ function vista230(t){ var o=window.__vf230||{}; if(t && !Object.prototype.hasOwn
 function poneVista230(t, v){ window.__vf230=window.__vf230||{}; window.__vf230[t.id]=v||""; window.__cnlClaude=window.__cnlClaude||{}; window.__cnlClaude[t.id]=(v==="claude")?1:0; }
 function msgId230(x){ return String((x&&(x.id||x.msg_id||x.wa_id||x.nid))||((x&&x.ts)?"ts"+x.ts:"")); }
 /* ¿es importante? 1/0 si Claude ya lo clasificó en msg_imp; si no, la regla de respaldo */
-function esOrdenFecha240(tx){ var s=_fsa(tx); return s.length<200 && /\b(modific\w*|muev\w*|mueve|reprogram\w*|recorr\w*|para el (proximo |\d)|para cuando|vencid\w*|ritmo|recuerdame|avisame|ejecutar? para|ejecutada para|es para el|fecha)\b/.test(s); }
+function esOrdenFecha240(tx){ var s=_fsa(tx); return s.length<200 && (/\b(modific\w*|muev\w*|mueve|reprogram\w*|recorr\w*|para cuando|vencid\w*|ritmo|recuerdame|avisame|ejecutar? para|ejecutada para|esta tarea es para|fecha)\b/.test(s) || /^\s*para el\b/.test(s)); }   /* 242: "deben estar listos para el próximo miércoles" es contenido */
 function esImp230(t, x){
   var mi=(t && t.msg_imp && typeof t.msg_imp==="object")?t.msg_imp:{}, k=msgId230(x);
   if(k && Object.prototype.hasOwnProperty.call(mi,k)) return +mi[k]===1;
@@ -9401,6 +9463,9 @@ function esImp230(t, x){
      ("Van 9 veces…", "Ya venció…"), los avisos del sistema ("Movida del… al…", "Anotado. Te aviso…", "¿Para cuándo…?") y las órdenes de
      fecha o ritmo de Salvador ("muévela para el viernes", "recuérdame martes y jueves"). */
   if(x.k==="bal" || x.aviso || x.empujon) return false;
+  if(esNotaIA242(x)) return false;                                                     /* build 242 */
+  if(+x.wa_in!==1 && (x.wa_c || x.origen==="wa_saliente") && x.k!=="bo" && !(x.url || x.tipo==="foto" || x.tipo==="documento")) return false;   /* 242: lo que mandó Salvador por WhatsApp (salvo archivos) */
+  if(x.k==="bo" && !x.nota_claude && (t && t.msgs||[]).some(function(y){ return y!==x && y && y.nota_claude && y.k==="bo" && _nn(String(y.t||"")).replace(/^\s*claude\s*/,"").slice(0,60)===_nn(String(x.t||"")).slice(0,60); })) return false;   /* 242: la misma indicación a Claude repetida */
   if(x.k==="bi" && !(+x.wa_in) && !x.wa_c && !x.de && !x.hab && !x.url && !x.tipo) return false;
   if(x.k==="bo" && esOrdenFecha240(String(x.tr||x.t||""))) return false;
   if(x.nota_claude || x.indicacion_ts) return false;   /* la platica con Claude vive en la vista Claude (salvo que la marque importante) */
@@ -9448,7 +9513,7 @@ function nombreVisible230(nom, t){
 function vHilo(){
   var t=tareas.filter(function(x){return x.id===abierta})[0];
   if(!t){vista="lista";return vLista()}
-  window.__g237r={}; try{ aplicaDudasNota237(t); }catch(e){}   /* build 237 */
+  window.__g237r={}; window.__dia242=""; try{ aplicaDudasNota237(t); }catch(e){}   /* build 237; 242: separadores de día */
   /* si es una REVISION ligada, su hilo es el de la tarea que revisa */
   if(t.revisa_a){
     var _org=tareas.filter(function(x){return x.id===t.revisa_a})[0];
@@ -9604,6 +9669,14 @@ function vHilo(){
     if(x && x.oculto) return;      /* build 225: oculto (movido a otra tarea u ocultado): no se pinta, sigue en los datos */
     if(_mf225 && metaDeMsg(t,x)!==_mf225) return;   /* build 225: filtro por meta */
     if(x.res238) return;                                 /* build 238: la respuesta larga no se repite (va en la tarjeta); el dictado sí queda */
+    /* build 242: lo que escribió la IA (aunque venga con otro autor) es nota gris de Claude; nunca en Importante. Si trae el texto
+       original entre comillas, ese original es el globo de la persona (y sí puede salir en Importante). */
+    if(esNotaIA242(x)){ var _or242=originalDe242(x);
+      if(_v230==="claude") return;
+      if(_or242){ _visibles++; m+=sepDia242(x)+'<div class="b bi orig242" data-mix="'+ix+'"><b class="cn">'+esc(nombreCorto(partesMsg(x).de).split(" ")[0])+':</b> '+esc(_or242)+'<span class="st">'+icoCl238(t,x,ix)+'</span></div>'; }
+      if(_v230==="imp") return;
+      if(!_or242) _visibles++;
+      m+=(_or242?'':sepDia242(x))+vNotaIA242(x, t.id+"|"+ix); return; }
     if(_v230==="imp" && !esImp230(t,x)) return;        /* build 230: solo lo importante */
     if(_v230==="claude" && !esClaude230(x)) return;    /* build 230: solo lo que le pediste a Claude y lo que contesto */
     if(!_v230 && !esImportante(x, ix, _rmp)){ _ocultos++; return; }   /* build 197: aviso reemplazado por uno mas nuevo del mismo tema */
@@ -9613,6 +9686,7 @@ function vHilo(){
        no sale (indicaciones viejas, avisos del sistema, avisos de seguimiento atendidos); en Todo sale todo */
     if(!_v230 && (_pln.set[ix] || _pls.set[ix] || _plg.set[ix])){ _ocultos++; return; }
     _visibles++;
+    m+=sepDia242(x);   /* build 242: separador de día estilo iMessage, solo cuando cambia el día */
     var q=autorMsg(x,t);
     if(x.hab){ m+=burbujaHablada(x, (q||""), t.id+"|"+ix); return; }
     var meta=(q?esc(q)+" · ":"")+esc(x.h)+(x.wa_auto?" · → "+esc(String(x.wa_auto).split(" ")[0])+" por WhatsApp":"")+(_cx.indexOf("dm:")===0?" · privado":"")+(x.nota_mia?" · nota para ti":"")+(x.wa_eq&&x.wa_eq.length?" · por WhatsApp a "+esc(x.wa_eq.map(function(c){ return String(c).split(" ")[0]; }).join(" y ")):"");   /* build 216/217 */
@@ -9654,7 +9728,7 @@ function vHilo(){
       return;
     }
     m+='<div class="b '+(x.k==="bal"?"bal":(x.k==="bo"?"bo":"bi"))+(x.abre?' liga" data-abre="'+esc(x.abre):'')+'" data-mix="'+ix+'">'+(x.movido_de?'<span class="mvnuevo">NUEVO · movido desde '+esc(tareaCorta({nombre:x.movido_de.nombre||""}))+'</span>':'')+citaHTML(x)+esc(sinEmojiUI(quitaEtiquetasWA(x.t)))+
-       (x.abre?'<span class="abre">Abrir ›</span>':'')+'<span class="st">'+meta+
+       (x.abre?'<span class="abre">Abrir ›</span>':'')+'<span class="st">'+   /* build 242: sin autor ni hora (van en la hoja de detalle) */
        (tieneAn?'<button class="mdel" data-an="'+ix+'" aria-label="Ver cómo se decidió este mensaje">'+ico("info",15,1.8)+'</button>':'')+
        (waCan?'<button class="mdel" data-wacan="'+ix+'" aria-label="Cancelar este WhatsApp">'+ico("trash",15,1.8)+'</button>':'')+
        (undo?'<button class="mdel" data-mdel="'+ix+'" aria-label="Borrar este mensaje">'+ico("trash",15,1.8)+'</button>':'')+
@@ -9750,7 +9824,7 @@ function vHilo(){
   if(_v230==="claude" && !_visibles) m+='<div class="vac230">Aquí sale lo que le pidas a Claude y lo que te conteste.</div>';
   if(!_v230 && !_todo && !_visibles && _ocultos && !(t.evidencias||[]).length) m+='<button class="avfold" data-cmodo="todo">Hay '+_ocultos+' mensaje'+(_ocultos===1?'':'s')+' oculto'+(_ocultos===1?'':'s')+' · Todo</button>';
   m=_v230==='imp'?vResumen230(t)+(!_visibles && /res230 (vacio|local240)/.test(vResumen230(t))?'<button class="vt235" data-vt235="1">Ver todo</button>':'')+m:m;   /* build 235: sin nada importante ni resumen, "Ver todo" */   /* build 230: Importante arriba con su Resumen; 232: sin el selector "Importante | Todo" (Importante vive en el filtro) */
-  return h+(esDato(t)?vDatoCuerpo(t):vDatosTarea(t))+vVuelta(t)+vPasos(t)+vEntregas(t)+bannerDecision(t)+_pre179+'<div class="scroll'+(_conPill?' cnl" style="--cc:'+_cc:'')+'"><div class="msgs">'+m+pre+'</div></div>'+vTarjetaRev(t)+
+  return h+(esDato(t)?vDatoCuerpo(t):vDatosTarea(t))+vVuelta(t)+vEntregas(t)+bannerDecision(t)+_pre179+'<div class="scroll'+(_conPill?' cnl" style="--cc:'+_cc:'')+'"><div class="msgs">'+m+pre+'</div></div>'+vTarjetaRev(t)+
     /* LA MISMA BARRA DE TODAS LAS VISTAS — 2026-09-04. Antes el hilo tenia la
        camara a la IZQUIERDA y una flecha de enviar a la derecha, distinto de la
        caratula (camara a la DERECHA, sin flecha). Salvador lo cacho: "tiene que

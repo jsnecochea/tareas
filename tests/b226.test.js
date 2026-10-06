@@ -37,17 +37,17 @@ si("iconos: trazo 1.5 fijo", /var s=px\|\|18, w=1\.5, p=\{/.test(html));
       function pinta() { [].forEach.call(document.body.children, function (x) { if (x.id !== "app") x.style.display = "none"; }); var A = document.getElementById("app"); A.style.display = "flex"; document.body.style.height = "844px"; }
       /* ---- dentro de la tarea ---- */
       tareas = [LERDO(), COMEDOR(), VEST()]; abierta = "tIAMUVF22TRJF"; vista = "hilo"; render(); poneVista230(tareas[0], ""); render(); pinta();   /* 235: elige Todo */
-      var ac = document.querySelector(".msgs .ac226");
+      abreDetalle242(tareas[0], 1); var ac = document.querySelector("#det242 .ac226");   /* 242: OK · Mover · Nueva · Dato viven en la hoja del globo */
       o.botones = ac ? [].map.call(ac.querySelectorAll("button"), function (x) { return x.textContent; }) : null;
-      o.debajo = !!(ac && ac.previousElementSibling && ac.previousElementSibling.classList.contains("b") && !ac.closest(".b"));
+      o.debajo = !!(ac && ac.closest("#det242"));
       o.sinPregunta = !/¿Es de/.test(document.querySelector(".msgs").textContent);
-      o.unaVez = document.querySelectorAll(".msgs .ac226").length;
+      o.unaVez = document.querySelectorAll("#det242 .ac226").length + document.querySelectorAll(".msgs .ac226").length;
       o.sinEmojiNota = !/📝/.test(document.querySelector(".msgs").textContent) && /Nota IA 11:52/.test(document.querySelector(".msgs").textContent);
       var chips = document.querySelector(".chips225"); o.chipsSinEmoji = !/[\u{1F300}-\u{1FAFF}ℹⓘ↻]/u.test(chips.textContent) && chips.querySelectorAll("svg").length >= 3;
       o.svgTrazo = [].every.call(document.querySelectorAll("#app svg.icx"), function (s) { return s.getAttribute("stroke-width") === "1.5"; });
       o.tituloCompacto = !!document.querySelector(".top .tnm") && !document.querySelector(".ttl");
       /* Mover: la hoja */
-      document.querySelector('.msgs [data-acmov]').click();
+      document.querySelector('#det242 [data-acmov]').click();
       var hj = document.getElementById("mov225");
       o.hoja = { titulo: hj.querySelector(".mvh").textContent, ops: [].map.call(hj.querySelectorAll(".opt226"), function (x) { return (x.classList.contains("best") ? "*" : "") + x.textContent; }) };
       hj.querySelector('[data-movto="tCOMEDOR_NUEVO_300926"]').click();
@@ -56,13 +56,13 @@ si("iconos: trazo 1.5 fijo", /var s=px\|\|18, w=1\.5, p=\{/.test(html));
       o.censo = (L.censo_acomodo || []).map(function (c) { return [c.contacto, c.de, c.a, c.tipo, c.texto.slice(0, 22)]; });
       /* OK */
       tareas = [LERDO(), COMEDOR(), VEST()]; abierta = "tIAMUVF22TRJF"; render(); pinta();
-      document.querySelector('.msgs [data-acok]').click();
+      abreDetalle242(tareas[0], 1); document.querySelector('#det242 [data-acok]').click();
       var L2 = tareas[0]; o.ok = [L2.msgs[1].duda_resuelta, L2.msgs[1].acomodo.ok, (L2.censo_acomodo || [])[0].tipo, document.querySelectorAll(".msgs .ac226").length, !!L2.msgs[1].oculto];
       /* Solo plática */
-      tareas = [LERDO(), COMEDOR(), VEST()]; render(); document.querySelector('.msgs [data-acmov]').click(); document.querySelector('#mov225 [data-movplatica]').click();
+      tareas = [LERDO(), COMEDOR(), VEST()]; render(); abreDetalle242(tareas[0], 1); document.querySelector('#det242 [data-acmov]').click(); document.querySelector('#mov225 [data-movplatica]').click();
       o.platica = [!!tareas[0].msgs[1].oculto, tareas[0].msgs[1].oculto_motivo, tareas[0].censo_acomodo[0].tipo, tareas.length];
       /* Nueva */
-      tareas = [LERDO(), COMEDOR(), VEST()]; render(); document.querySelector('.msgs [data-acnueva]').click();
+      tareas = [LERDO(), COMEDOR(), VEST()]; render(); abreDetalle242(tareas[0], 1); document.querySelector('#det242 [data-acnueva]').click();
       var nv = tareas[tareas.length - 1];
       o.nueva = [tareas.length, nv.nombre, tipoRevisar(nv), !!nv.msgs.filter(function (m) { return m.movido_de; }).length, !!tareas[0].msgs[1].oculto, tareas[0].censo_acomodo[0].tipo];
       /* ---- Inicio ---- */

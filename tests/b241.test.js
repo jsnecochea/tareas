@@ -8,7 +8,7 @@ var fs = require("fs"), path = require("path"), vm = require("vm");
 var ok = 0, n = 0, malas = [];
 function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
 var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
-eq("versión 241", /var VERSION_APP = "build 241/.test(html), true);
+eq("versión >= 241", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[1] >= 241, true);
 var L = html.split("\n");
 function saca(name) { var i = L.findIndex(function (l) { return l.indexOf("function " + name + "(") === 0; }); if (i < 0) throw new Error("no " + name); var out = []; for (var j = i; j < L.length; j++) { out.push(L[j]); if (j > i && /^}/.test(L[j])) break; if (j === i && /}\s*$/.test(L[j]) && (L[j].match(/{/g) || []).length === (L[j].match(/}/g) || []).length) break; } return out.join("\n"); }
 var F = ["msg", "_fsa", "cierreLibre241", "condicionDeIA241", "faltanParaCerrar", "faltanParaCerrar0", "intentaCerrar", "cierraHecha", "cierraDicho241"];

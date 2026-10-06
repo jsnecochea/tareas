@@ -86,7 +86,7 @@ function LERDO() { return { id: "tL", nombre: "Mantenimiento Casa Lerdo/Eloísa"
     eq("la franja de canales nunca se aplasta (flex:none) aunque no quepa todo", fr, [true, "0"]);
     /* lugares en el código */
     si("encabezado, sin Tarea|Dato ni la pastilla 'Lo hace' que se desbordaba", /\(propietario233\(t\)\?\x27<div class="d own233">\x27\+esc\(propietario233\(t\)\)\+\x27<\/div>\x27:\x27\x27\)/.test(html) && /tipoRevisar\(t\)==="falta" && !vistaSup\(t\) && esIA240\(t\)\) h\+=vTipoToggle/.test(html) && /if\(t\.revisa_a \|\| \(t\.revisa_ext && !vistaSup\(t\)\)\)\{/.test(html));
-    si("secciones y entregas en lugar del bloque de metas; abajo sugSup; sin la tarjeta grande de Falta info", /vPasos\(t\)\+vEntregas\(t\)\+bannerDecision\(t\)/.test(html) && /if\(vistaSup\(t\)\) sug=sugSup\(t\);/.test(html) && /return vistaSup\(t\)\?"":vFaltaInfo\(t\);/.test(html));
+    si("secciones y entregas en lugar del bloque de metas; abajo sugSup; sin la tarjeta grande de Falta info", /vVuelta\(t\)\+vEntregas\(t\)\+bannerDecision\(t\)/.test(html) && /if\(vistaSup\(t\)\) sug=sugSup\(t\);/.test(html) && /return vistaSup\(t\)\?"":vFaltaInfo\(t\);/.test(html));
     si("las notas del campo 'notas' (nota_privada) se pintan en su lugar; las privadas solo para Salvador", /var _nts=\(Array\.isArray\(t\.notas\)\?t\.notas:\[\]\)\.filter\(function\(n\)\{ return n && String\(n\.t\|\|""\)\.trim\(\) && !n\.oculto && \(!n\.privado \|\| yo==="salvador"\)/.test(html) && /_evHasta\(x\.ts\); _ntHasta\(x\.ts\);/.test(html));
     si("una meta entregada no cuenta como atrasada", /metaCumplida\(m\) \|\| \(\+m\.estado\|\|0\)===1 \|\|/.test(html));
     eq("sin errores de página", errs, []);

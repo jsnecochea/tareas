@@ -118,7 +118,7 @@ si("build 228: sin la pastilla '1 cosa para ti'; la ficha Todo va en la fila", !
 si("vFaltaInfo ya no trae el botón verde gigante", !/class="autbtn"/.test(html.slice(html.indexOf("function vFaltaInfo("), html.indexOf("function vDatoCuerpo("))));
 /* ---------- 7 mensaje mal acomodado ---------- */
 var bd = c.vDudaTarea(L, L.msgs[4], 4);
-si("burbuja con duda (226): OK · Mover · Nueva, sin pregunta", /data-acok="4">OK</.test(bd) && /data-acmov="4">Mover</.test(bd) && /data-acnueva="4">Nueva</.test(bd) && !/¿Es de/.test(bd));
+si("burbuja con duda (242): debajo del globo ya no va nada; OK · Mover · Nueva · Dato viven en la hoja del globo", bd === "" && /function abreDetalle242\(t, ix\)/.test(html) && /botonesG237\(ix, \[ix\], " hj242"\)/.test(html));
 var LM = LERDO(), CM = COMEDOR(); c.tareas = [LM, CM, { id: "tOtra", nombre: "Fideicomiso", duenio: "salvador", msgs: [] }];
 eq("Mover: primero las del mismo contacto", c.tareasParaMover(LM, LM.msgs[4]).map(function (o) { return [o.d.id, o.mismo]; }), [["tCOMEDOR_NUEVO_300926", true], ["tOtra", false]]);
 GUARDADAS.length = 0; r = c.mueveMensaje(LM, 4, "tCOMEDOR_NUEVO_300926");

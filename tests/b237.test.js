@@ -69,10 +69,10 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
       o.dentro = { botones: [].map.call(document.querySelectorAll("#app .ac226"), function (x) { return x.getAttribute("data-acg").split(",").length; }), marquitas: [].map.call(document.querySelectorAll(".msgs .cl238"), function (x) { return x.getAttribute("aria-label"); }) };
       return o; });
     var r4 = await p.evaluate(function () { var o = {};
-      var _bb = [].filter.call(document.querySelectorAll(".msgs [data-mix]"), function (b) { return /Esteban/.test(b.textContent); })[0]; _bb.click(); o.abierta = [document.querySelectorAll(".msgs .ac226.mq237ab").length, document.querySelectorAll(".msgs .ac226.mq237ab button").length];
-      var el = document.querySelector(".msgs .ac226.mq237ab"); if (!el) return o; el.scrollIntoView({ block: "center" });
+      var _bb = [].filter.call(document.querySelectorAll(".msgs [data-mix]"), function (b) { return /Esteban/.test(b.textContent); })[0]; _bb.click(); o.abierta = [document.querySelectorAll("#det242 .ac226").length, document.querySelectorAll("#det242 .ac226 button").length];
+      
       return o; });
-    var r5 = await p.evaluate(function () { document.querySelector(".msgs .ac226.mq237ab [data-acok]").click(); var L = tareas[0];
+    var r5 = await p.evaluate(function () { document.querySelector("#det242 [data-acok]").click(); var L = tareas[0];
       return [L.msgs.filter(function (x) { return /Manuel/.test(x.wa_c || "") && x.ts < Date.now() - 3600000 && x.acomodo && x.acomodo.ok === 1; }).length, document.querySelectorAll(".msgs .cl238").length]; });
     var r6 = await p.evaluate(function () {   /* captura limpia: tarea ya clasificada con una plática que acomodó Claude, marquita abierta */
       var NOW = Date.now(), hm = function (ms) { var d = new Date(NOW - ms); return ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2); };
@@ -83,7 +83,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
           { k: "bi", wa_in: 1, wa_c: "Manuel Parra", t: "Manuel Parra: te mando 3 fotos del techo limpio en un rato", ts: NOW - 28 * 60000, h: hm(28 * 60000), wa_id: "a2" }] };
       tareas = [T]; abierta = T.id; vista = "hilo"; window.__cl238 = {}; render(); poneVista230(T, ""); render();
       [].forEach.call(document.body.children, function (x) { if (x.id !== "app") x.style.display = "none"; });
-      document.querySelector(".msgs .cl238").closest("[data-mix]").click(); return [document.querySelectorAll(".msgs .ac226.mq237ab").length]; });
+      document.querySelector(".msgs .cl238").closest("[data-mix]").click(); return [document.querySelectorAll("#det242 .ac226").length]; });
     if (process.env.CAP) await p.screenshot({ path: path.join(process.env.CAP, "b237-tarea-acomodo-claude.png") });
     eq("Acomodo: 3 pláticas (no 10 mensajes)", r.cab, "Acomodo3 pláticas por revisar");
     eq("tarjetas: contacto · N mensajes (sin 'ok/gracias/ahí estaremos') · extracto · creo que es · tamaño de la plática", r.tarjetas, [
@@ -97,7 +97,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
     eq("regla de Mover (238: una por mensaje)", r3.reglaMover, ["mover", "tCOMEDOR", 1]);
     eq("Nueva: tarea nueva con toda la plática", r3.nueva, [true, 2, 2]);
     eq("ya no queda nada por revisar", r3.quedan, 0);
-    eq("en la tarea (238 por MENSAJE): botones en cada mensaje con duda (Lalo por la nota de la Mac en Te pregunta, Manuel) e iconito de Claude en los acomodados con contenido", [r3.dentro.botones, r3.dentro.marquitas], [[1, 1], ["Lo acomodó Claude", "Lo acomodó Claude", "Lo acomodó Claude", "Lo acomodó Claude", "Lo acomodó Claude"]]);
+    eq("en la tarea (238 por MENSAJE): botones en cada mensaje con duda (Lalo por la nota de la Mac en Te pregunta, Manuel) e iconito de Claude en los acomodados con contenido", [r3.dentro.botones, r3.dentro.marquitas], [[1],   /* 242: solo la tarjeta Te pregunta; los demás en la hoja del globo */ ["Lo acomodó Claude", "Lo acomodó Claude", "Lo acomodó Claude", "Lo acomodó Claude", "Lo acomodó Claude"]]);
     eq("tocar el globo con el iconito abre OK · Mover · Nueva para ese mensaje", r4.abierta, [1, 4]);   /* 240: + Dato */
     eq("OK desde el globo confirma ese mensaje y le quita el iconito", r5[0], 1);
     eq("tarea limpia: globo tocado abierto", r6, [1]);
