@@ -1448,6 +1448,14 @@ button{font:inherit;color:inherit}
 @keyframes ac249{to{transform:rotate(360deg)}}
 .preg249{position:fixed;left:0;right:0;bottom:0;max-height:86vh;overflow:auto;background:#1c1c1e;border-radius:22px 22px 0 0;padding:14px 14px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(0,0,0,.7)}
 .preg249 h3{margin:2px 2px 4px;font-size:22px;font-weight:700}.preg249 .sub{font-size:14px;color:var(--ink-3,#9a9aa0);margin:0 2px 10px}
+.pq255{position:fixed;left:0;right:0;top:0;bottom:84px;z-index:80;background:rgba(8,8,12,.5);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);display:flex;align-items:flex-start;justify-content:center;padding:calc(18px + env(safe-area-inset-top)) 16px 12px;overflow:auto}
+.pq255c{position:relative;width:100%;max-width:520px;background:rgba(36,36,40,.92);border:.5px solid rgba(255,255,255,.14);border-radius:20px;padding:18px 16px 14px;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+.pq255c h3{margin:0 34px 12px 2px;font-size:19px;font-weight:700;line-height:1.3}.pq255c h3 b{color:#7cc0ff}
+.pq255l{margin:0 0 12px;padding:0 0 0 24px;font-size:17px;line-height:1.4}.pq255l li{margin:0 0 9px}.pq255l small{display:block;color:var(--ink-3,#9a9aa0);font-size:14px}
+.pq255x{position:absolute;top:10px;right:10px;width:34px;height:34px;border:0;border-radius:50%;background:rgba(255,255,255,.1);color:var(--ink,#fff);display:grid;place-items:center;padding:0}
+.pq255m{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:64px;border:0;border-radius:16px;background:var(--hacer,#30d158);color:#06340f;font:inherit;font-size:17px;font-weight:700;margin:2px 0 10px}
+.pq255.oyendo255 .pq255m{display:none}
+.pq255d{display:block;margin:0 auto;border:0;background:none;color:var(--ink-3,#9a9aa0);font:inherit;font-size:15px;padding:8px 16px;text-decoration:underline}
 .q249{background:var(--surface-2,#2c2c2e);border:1px solid transparent;border-radius:14px;padding:10px 12px;margin-bottom:10px}.q249.ok{border-color:#30d158}
 .q249 .qt{display:block;font-size:16.5px;font-weight:600;margin-bottom:8px}
 .q249 .qo{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}.q249 .qop,.q249 .qsg{border:0;border-radius:12px;padding:8px 12px;background:#1c3a5a;color:var(--ink,#fff);font:inherit;font-size:15.5px;text-align:left}
@@ -1517,7 +1525,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 254 · el cuadro de abajo manda a Claude por defecto; WhatsApp directo solo con el selector, con clasificación y vista previa";
+var VERSION_APP = "build 255 · preguntas del cerebro en un solo paso: pantalla difuminada, preguntas en texto y se contestan dictando";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -8380,10 +8388,9 @@ function ordenesDichas238(v){
 /* ¿dio una fecha en lo dictado? entonces no se le vuelve a pedir */
 function dioFecha238(v, j){ var o=(j&&j.ordenes)||[]; return !!(fechaDictada(v).todas.length || /\b(manana|pasado manana|hoy|lunes|martes|miercoles|jueves|viernes|sabado|domingo)\b/.test(_fsa(v)) || o.some(function(x){ return x && _fReal(x.fecha); })); }
 function vHecho238(t){
-  var H=t && t.hecho238; if(!H || (!(H.hecho||[]).length && !(H.falta||[]).length)) return "";
+  var H=t && t.hecho238; if(!H || !(H.hecho||[]).length) return "";   /* build 255: las preguntas ("Me falta") ya no van en la tarjeta: salen difuminadas, en texto, y se contestan dictando */
   return '<div class="hc238"><button class="hcx" data-hc238x="1" aria-label="Cerrar">'+ico("x",14)+'</button>'+
-    ((H.hecho||[]).length?'<b>Hecho:</b><ul class="hch">'+H.hecho.map(function(x){ return '<li>'+ico("check",15)+'<span>'+esc(x)+'</span></li>'; }).join("")+'</ul>':'')+
-    ((H.falta||[]).length?'<b>Me falta:</b><ul class="hcf">'+H.falta.map(function(f,i){ return '<li><span>'+esc(f.q)+'</span>'+((f.ops||[]).length?'<span class="hco">'+f.ops.map(function(o,k){ return '<button data-hc238="'+i+'|'+k+'">'+esc(o.label)+'</button>'; }).join("")+'</span>':'')+'</li>'; }).join("")+'</ul>':'')+(preguntas249(t).length?'<button class="hc249" data-hc249="1">Contestar mis preguntas ('+preguntas249(t).length+')</button>':'')+'</div>';
+    '<b>Hecho:</b><ul class="hch">'+H.hecho.map(function(x){ return '<li>'+ico("check",15)+'<span>'+esc(x)+'</span></li>'; }).join("")+'</ul></div>';
 }
 /* ===== build 249: LA VISTA DE REVISIÓN =====
    enRevision249 = tarea nueva/incompleta, o con preguntas del cerebro pendientes (quien_dudas, "Me falta" con preguntas).
@@ -8445,41 +8452,49 @@ function buscaContactos249(q, max){
     return ws.every(function(w){ return toks.some(function(x){ return x===w || x.indexOf(w)===0; }); }); })
     .sort(function(a,b){ return (a.id.indexOf("ext:")===0)-(b.id.indexOf("ext:")===0) || String(a.nombre).localeCompare(String(b.nombre)); }).slice(0, max||8);
 }
+function cierraPreg255(){ var v=document.getElementById("preg249"); if(v){ try{ clearInterval(v.__iv); }catch(e){} v.remove(); } window.__preg255=null; }
 function abrePreguntas249(tid, opt){
   var t=(tareas||[]).filter(function(z){ return z.id===tid; })[0]; if(!t) return;
   var P=preguntas249(t); if(!P.length) return;
-  var ya=document.getElementById("preg249"); if(ya) ya.remove();
-  var A=P.map(function(){ return {texto:"", persona:null, opt:null}; });
-  var v=document.createElement("div"); v.className="leemask"; v.id="preg249";
-  v.innerHTML='<div class="preg249" role="dialog" aria-label="Preguntas de Claude"><h3>Claude te pregunta</h3><p class="sub">'+(P.length===1?"1 duda":P.length+" dudas")+' · contesta y se aplica todo junto</p>'+
-    P.map(function(p, i){ var pers=(p.k==="persona")||p.persona, ops=(p.k==="persona")?(p.cands||[]).map(function(c){ return {id:c.id, label:c.nombre}; }):(p.ops||[]);
-      return '<div class="q249" data-qi="'+i+'"><span class="qt">'+esc(p.q)+'</span>'+
-        (ops.length?'<div class="qo">'+ops.map(function(o, j){ return '<button class="qop" data-qo="'+i+'|'+j+'">'+esc(o.label)+'</button>'; }).join("")+'</div>':'')+
-        '<div class="row252"><input class="qi" data-qin="'+i+'" type="text" placeholder="'+(pers?"Escribe el nombre":"Escribe o dicta tu respuesta")+'" autocomplete="off" autocapitalize="sentences" enterkeyhint="next">'+micBtn252(i)+'</div>'+
-        (pers?'<div class="qs" data-qs="'+i+'"></div>':'')+'</div>'; }).join("")+
-    '<div class="pie249"><button data-q249="later">Después</button><button class="go" data-q249="go" disabled>Listo</button></div></div>';
+  var ya=document.getElementById("preg249"); if(ya){ try{ clearInterval(ya.__iv); }catch(e){} ya.remove(); }
+  window.__preg255=tid; window.__pq255Last=tid;
+  var v=document.createElement("div"); v.className="pq255"; v.id="preg249";
+  v.innerHTML='<div class="pq255c" role="dialog" aria-label="Preguntas de Claude"><button class="pq255x" data-pq255="later" aria-label="Cerrar">'+ico("x",16)+'</button>'+
+    '<h3>Contéstame por favor estas preguntas sobre <b>'+esc(t.nombre||"esta tarea")+'</b></h3>'+
+    '<ol class="pq255l">'+P.map(function(p){ var ex=(p.k==="persona")?(p.cands||[]).map(function(c){ return c.nombre; }):(p.ops||[]).map(function(o){ return o.label; });
+      return '<li>'+esc(p.q)+(ex.length?'<small>('+esc(ex.join(" · "))+')</small>':'')+'</li>'; }).join("")+'</ol>'+
+    '<button class="pq255m" data-pq255="mic">'+ico("mic",28,1.7)+'<span>Toca y contesta con tu voz</span></button>'+
+    '<button class="pq255d" data-pq255="later">Después</button></div>';
   document.body.appendChild(v);
-  function opsDe(i){ var p=P[i]; return (p.k==="persona")?(p.cands||[]).map(function(c){ return {id:c.id, label:c.nombre}; }):(p.ops||[]); }
-  function refresca(){ var todas=A.every(function(a){ return String(a.texto||"").trim(); });
-    Array.prototype.forEach.call(v.querySelectorAll(".q249"), function(r){ var a=A[+r.getAttribute("data-qi")]; r.classList.toggle("ok", !!String(a.texto||"").trim()); });
-    var go=v.querySelector('[data-q249="go"]'); if(go) go.disabled=!todas; }
-  function pon(i, texto, persona, opt){ var a=A[i]; a.texto=texto; a.persona=persona||null; a.opt=opt||null; var inp=v.querySelector('[data-qin="'+i+'"]'); if(inp) inp.value=texto; var sg=v.querySelector('[data-qs="'+i+'"]'); if(sg) sg.innerHTML=""; refresca(); }
-  v.addEventListener("input", function(ev){ var inp=ev.target.closest("[data-qin]"); if(!inp) return; var i=+inp.getAttribute("data-qin"), a=A[i]; a.texto=inp.value; a.persona=null; a.opt=null;
-    var sg=v.querySelector('[data-qs="'+i+'"]');
-    if(sg){ var l=buscaContactos249(inp.value, 8); sg.innerHTML=l.map(function(c, j){ return '<button class="qsg" data-qsg="'+i+'|'+j+'"><b>'+esc(c.nombre)+'</b><small>'+esc(c.sub||"")+'</small></button>'; }).join(""); sg.__l=l; }
-    Array.prototype.forEach.call(v.querySelectorAll('[data-qo^="'+i+'|"]'), function(b){ b.classList.remove("on"); }); refresca(); });
-  v.addEventListener("click", function(ev){ ev.stopPropagation();
-    var mb=ev.target.closest("[data-mic252]"); if(mb){ dictaACampo252(mb, v.querySelector('[data-qin="'+mb.getAttribute("data-mic252")+'"]')); return; }
-    var b=ev.target.closest("[data-qo]"); if(b){ var a=b.getAttribute("data-qo").split("|"), i=+a[0], o=opsDe(i)[+a[1]]; if(!o) return;
-      Array.prototype.forEach.call(v.querySelectorAll('[data-qo^="'+i+'|"]'), function(x){ x.classList.toggle("on", x===b); });
-      pon(i, o.label, (P[i].k==="persona")?{id:o.id, nombre:o.label}:null, (P[i].k==="persona")?null:o); b.classList.add("on"); return; }
-    var g=ev.target.closest("[data-qsg]"); if(g){ var a2=g.getAttribute("data-qsg").split("|"), i2=+a2[0], sg=v.querySelector('[data-qs="'+i2+'"]'), c=sg&&sg.__l&&sg.__l[+a2[1]]; if(c) pon(i2, c.nombre, {id:c.id, nombre:c.nombre}, null); return; }
-    var x=ev.target.closest("[data-q249]"); if(x){ var k=x.getAttribute("data-q249");
-      if(k==="later"){ paraDictadosCampo252(v); v.remove(); return; }
-      if(k==="go" && !x.disabled){ paraDictadosCampo252(v); v.remove(); enviaPreguntas249(tid, P, A); return; } return; }
-    if(ev.target===v){ paraDictadosCampo252(v); v.remove(); } });
-  /* build 252: el teclado solo se pide si la ventanita se abrió con un toque (en iOS un focus fuera del toque deja el campo "enfocado" sin teclado y ya no hay cómo sacarlo) */
-  if(opt && opt.gesto){ var f0=v.querySelector(".qi"); if(f0) enfoca252(f0); }
+  /* la barra normal (cuadro + micrófono) queda libre abajo: el bloque se detiene justo arriba de ella */
+  var ajusta=function(){ if(!v.parentNode){ clearInterval(v.__iv); return; } var c=document.querySelector(".comp"), h=c?c.getBoundingClientRect().height:0, dc=document.getElementById("dictacapa"), h2=dc?dc.getBoundingClientRect().height:0;
+    v.style.bottom=Math.max(h,h2,60)+"px"; v.classList.toggle("oyendo255", !!window.__oyendo); };
+  ajusta(); v.__iv=setInterval(ajusta, 300);
+  v.addEventListener("click", function(ev){
+    if(ev.target.closest("[data-pq255='mic']")){ ev.stopPropagation(); var m=document.getElementById("tmic"); if(m && !window.__oyendo) m.click(); return; }
+    if(ev.target.closest("[data-pq255='later']") || ev.target===v){ ev.stopPropagation(); if(window.__oyendo){ try{ paraDictadoHilo(); cierraDictado(); }catch(e){} } cierraPreg255(); } });
+  /* el micrófono arranca SOLO, en el mismo toque que abrió el bloque (regla de iOS) */
+  if(opt && opt.gesto){ var mc=document.getElementById("tmic"); if(mc && !window.__oyendo) mc.click(); }
+}
+/* UN SOLO PASO: lo dictado responde TODAS las preguntas; el cerebro (pesado) reparte la respuesta y se aplica; lo que quedó sin contestar vuelve solo en el bloque */
+function enviaRespuestas255(tid, texto){
+  var t=(tareas||[]).filter(function(z){ return z.id===tid; })[0]; if(!t) return;
+  var P=preguntas249(t); if(!P.length) return;
+  cierraPreg255(); mostrarAcomoda249();
+  var lista=P.map(function(p, i){ var ex=(p.k==="persona")?(p.cands||[]).map(function(c){ return c.nombre; }):(p.ops||[]).map(function(o){ return o.label; }); return (i+1)+". "+p.q+(ex.length?" (opciones: "+ex.join(", ")+")":""); }).join("\n");
+  var prompt="Le hiciste a Salvador estas PREGUNTAS sobre la tarea “"+(t.nombre||"")+"”:\n"+lista+"\n\nÉl contestó TODO JUNTO, dictando: “"+texto+"”.\nReparte su respuesta: para cada pregunta pon lo que contestó, con sus palabras y completo (fecha y hora incluidas), o null si NO contestó esa. No inventes nada: si no la contestó, null.\nResponde SOLO JSON: {\"respuestas\":[{\"n\":1,\"r\":\"...\"},{\"n\":2,\"r\":null}]}";
+  var vuelve=function(msg){ ocultaAcomoda249(); var tx=document.getElementById("txt"); if(tx){ tx.value=texto; try{ marcaEnvio("tenv", texto); }catch(e){} } abrePreguntas249(tid); if(msg) toast(msg); };
+  preguntaAClaude([{role:"user",content:prompt}], MODO_CEREBRO, function(txt, err){
+    var J=null; try{ J=JSON.parse(String(txt||"").replace(/^[^{]*/,"").replace(/[^}]*$/,"")); }catch(e){}
+    if(err || !J || !Array.isArray(J.respuestas)){ vuelve("No pude repartir tu respuesta. Inténtalo otra vez"); return; }
+    var A=P.map(function(){ return {texto:"", persona:null, opt:null}; });
+    J.respuestas.forEach(function(x){ var i=(+(x&&x.n))-1; var r=x&&x.r; if(i>=0 && i<A.length && r!=null && String(r).trim() && !/^(null|ninguna|no contest[oó])$/i.test(String(r).trim())) A[i].texto=String(r).replace(/\s+/g," ").trim(); });
+    A.forEach(function(a, i){ var ops=(P[i].k==="persona")?[]:(P[i].ops||[]), tx=_n179(a.texto); if(!tx || !ops.length) return;   /* la respuesta que coincide con una opción la elige */
+      var m=ops.filter(function(o){ var l=_n179(o.label); return l && (tx===l || tx.indexOf(l)>=0 || (tx.length>=3 && l.indexOf(tx)>=0)); })[0]; if(m) a.opt=m; });
+    if(!A.some(function(a){ return a.texto; })){ vuelve("No encontré respuesta a ninguna pregunta. Dímelo otra vez"); return; }
+    var T=viva249(t); try{ _notaPriv(T,"bo",texto); T.msgs[T.msgs.length-1].resp_preguntas255=1; guarda(T); }catch(e){}
+    enviaPreguntas249(tid, P, A);
+  });
 }
 function enviaPreguntas249(tid, P, A){
   var t=(tareas||[]).filter(function(z){ return z.id===tid; })[0]; if(!t) return;
@@ -8497,7 +8512,7 @@ function enviaPreguntas249(tid, P, A){
     textos.push("Respuesta a «"+p.q+"»: "+tx+"."); });
   if(H && quitar.length){ quitar.sort(function(a,b){ return b-a; }).forEach(function(ix){ (H.falta||[]).splice(ix,1); }); }
   guarda(t);
-  if(textos.length){ completaRevision(t, textos.join(" "), {sinRevision:tipoRevisar(t)!=="falta"}); return; }
+  if(textos.length){ completaRevision(t, textos.join(" "), {sinRevision:tipoRevisar(t)!=="falta", conservaFalta:(H&&H.falta||[]).slice()}); return; }
   liberaAcomoda249(t.id);
 }
 function completaRevision(t, v, op){
@@ -8525,6 +8540,7 @@ function completaRevision(t, v, op){
     var _dio=dioFecha238(v, _j238), _fx=(op.sinRevision?[]:soloMeFalta(_T238)).filter(function(x){ return !(_dio && /fecha|finiquito|indefinid/i.test(x)); });
     _T238.hecho238={ts:Date.now(), hecho:(hecho||[]).filter(function(x){ return !/^etiquetas$/i.test(String(x)); }).map(function(x){ return conMayuscula(String(x)); }).concat(_or238.hecho),
       falta:_or238.falta.concat((Array.isArray(_j238&&_j238.dudas)?_j238.dudas:[]).filter(function(d){ return d && d.pregunta && !preguntaQuienYaResuelta248(t, d.pregunta); }).slice(0,3).map(function(d){ return {k:"resp", q:String(d.pregunta), ops:(Array.isArray(d.opciones)?d.opciones:[]).slice(0,4).map(function(x){ return {id:String(x), label:String(x)}; })}; })).concat((dudas||[]).map(function(d){ return {k:"txt", q:String(d), ops:[]}; })).concat(_fx.map(function(x){ return {k:"txt", q:"¿"+conMayuscula(String(x).replace(/[.?¿]+$/,""))+"?", ops:[]}; }))};
+    if(op.conservaFalta && op.conservaFalta.length){ var _qs255=_T238.hecho238.falta.map(function(f){ return f.q; }); op.conservaFalta.forEach(function(f){ if(f && _qs255.indexOf(f.q)<0) _T238.hecho238.falta.push(f); }); }   /* build 255: lo que no contestó se queda */
     if(_T238!==t) guarda(_T238);
     guarda(t); render();
     if(_ov249) liberaAcomoda249((_T238||t).id); else ocultaAcomoda249();   /* build 249: se libera YA REFRESCADA y, si hay dudas, sale su ventanita */
@@ -9218,7 +9234,8 @@ function chipsTarea(t){
   if(esDato(t)) return "";
   var ch=chipEncabezado(t), h='<div class="chips225">', falta=[];
   try{ if(tipoRevisar(t)==="falta" && !vistaSup(t) && clasif236(t)) falta=soloMeFalta(t); }catch(e){}   /* 236: sin clasificar no pide nada mas */
-  if(falta.length) h+='<button class="chip225 falta" data-chip="falta">Falta '+falta.length+' ›</button>';
+  var _np255=0; try{ _np255=preguntas249(t).length; }catch(e){}
+  if(_np255||falta.length) h+='<button class="chip225 falta" data-chip="falta">Falta '+(_np255||falta.length)+' ›</button>';   /* build 255: con preguntas pendientes, el chip vuelve a abrirlas */
   var ftx=ch.cls==="ind"?ch.txt.replace(/ · próx\. .*/,""):(ch.cls==="sin"?"Sin fecha":ch.txt.replace(/^Finiquito:\s*/,""));   /* 226: sin emojis */
   /* build 234 (Salvador 18:56): sin ficha "Agendado": se fusiona con la de FECHA. Calendario siempre; VERDE (icono y texto) si el evento
      esta completo (alerta de Doit + Google Calendar); icono ámbar y texto normal si falta algo; sin evento, fecha normal. Indefinida: verde
@@ -15187,6 +15204,7 @@ function bindHilo(){
   /* build 225: chips -> su hoja; Falta -> dictado; resumen y filtro minimizables; ficha de meta; duda de tarea */
   Array.prototype.forEach.call(document.querySelectorAll("[data-chip]"),function(el){ el.onclick=function(ev){ ev.stopPropagation();
     var k=el.getAttribute("data-chip");
+    if(k==="falta" && preguntas249(t).length){ abrePreguntas249(t.id, {gesto:true}); return; }   /* build 255 */
     if(k==="falta"){ window.__hoja225=null; var f=[]; try{ f=soloMeFalta(t); }catch(e){} render();
       setTimeout(function(){ var mc=$("tmic"); if(mc) mc.click(); if(f.length) toast("Dímelo y lo completo: "+f.join(" · ")); }, 60); return; }
     if(k==="resumen"){ var _imp=vista230(t)==="imp"; poneVista230(t, _imp?"":"imp"); if(!_imp){ window.__cnl=window.__cnl||{}; window.__cnl[t.id]="todo"; } render(); return; }   /* build 230: un solo resumen = la vista Importante */
@@ -15195,7 +15213,6 @@ function bindHilo(){
   Array.prototype.forEach.call(document.querySelectorAll("[data-mfil]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); window.__mfil225=window.__mfil225||{}; window.__mfil225[t.id]=el.getAttribute("data-mfil"); if(el.closest(".h225")) window.__hoja225=null; render(); }; });   /* build 232: desde la hoja de Metas: filtra y cierra */
   /* build 235: claves (palomear a mano, ver la confirmacion, agregar) y "Ver todo" de Importante */
   /* build 238: tarjeta Hecho / Me falta */
-  Array.prototype.forEach.call(document.querySelectorAll("[data-hc249]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); abrePreguntas249(t.id, {gesto:true}); }; });   /* build 249 */
   Array.prototype.forEach.call(document.querySelectorAll("[data-hc238x]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); t.hecho238=null; guarda(t); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-hc238]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var a=el.getAttribute("data-hc238").split("|"), H=t.hecho238; if(!H) return; var f=(H.falta||[])[+a[0]], o=f&&f.ops[+a[1]]; if(!o) return;
     H.falta.splice(+a[0],1);
@@ -15430,6 +15447,8 @@ function bindHilo(){
     /* build 141: con la alarma roja abierta no se escribe ni se dicta */
     if(alarmaRoja(t)){ toast("Primero: Eliminar alarma o Posponer 1 hora"); render(); return; }
     var v=limpiaHoraDictada($("txt").value.trim()); if(!v)return;
+    /* build 255: con el bloque de preguntas abierto, lo dictado o escrito las contesta TODAS (un solo paso) */
+    if(window.__preg255===t.id && document.getElementById("preg249")){ $("txt").value=""; marcaEnvio("tenv",""); enviaRespuestas255(t.id, v); return; }
     /* build 249 (Salvador 07:58): en la vista de revisión (nueva, incompleta o con preguntas) TODO lo dictado o escrito es indicación para el
        cerebro del 238 (si pide un mensaje, el cerebro lo arma; nunca sale tal cual al WhatsApp). Solo siguen su camino "es dato/es tarea",
        "autorízala así" y la corrección del borrador de un mensaje que ya está en curso. */
@@ -15763,6 +15782,8 @@ function bindHilo(){
   if(vista230(t)==="imp"){ var _sc230=document.querySelector(".scroll"); if(_sc230) _sc230.scrollTop=0; } else alFondo();   /* build 230: en Importante se ve el Resumen arriba */
   ta.onfocus=function(){ setTimeout(alFondo,120); setTimeout(alFondo,420) };
   if(window.visualViewport) window.visualViewport.addEventListener("resize",alFondo);
+  /* build 255: al entrar a una tarea con preguntas pendientes, el bloque sale solo (difuminado) y el micrófono arranca en el mismo toque */
+  try{ if(window.__pq255Last!==t.id && !t._leyendo && !document.getElementById("acom249") && preguntas249(t).length) abrePreguntas249(t.id, {gesto:true}); }catch(e){ console.warn("preguntas255",e); }
 }
 /* quien ha entrado = las fichas reales en bitacora_personas. Cada una con su
    bote para quitarle el acceso (a bitacora_bloqueados) y borrar su ficha. */
@@ -17158,6 +17179,7 @@ function leeOpcionesDe(el){
   var _r=render;
   render=function(){
     var antes=window.__leeHilo||null;
+    if(window.__pq255Last && !(vista==="hilo" && abierta===window.__pq255Last)){ window.__pq255Last=null; try{ cierraPreg255(); }catch(e){} }   /* build 255: al salir de la tarea el bloque se va y vuelve a salir al entrar */
     var r=_r.apply(this, arguments);
     var ahora=(vista==="hilo"&&abierta)?abierta:null;
     if(antes && antes!==ahora && !(LEE.act && LEE.t && LEE.t.id===antes)){

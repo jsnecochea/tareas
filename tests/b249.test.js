@@ -123,33 +123,25 @@ eq("versión >= 249", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
         seguimiento_a: { quien: "Fernando", meta: "tener listo el fideicomiso", cada: "hoy y el jueves", fechas: ["2026-10-06", "2026-10-08"], hora: null, texto: "IA: Hola Fernando, ¿ya tienen listo el fideicomiso?" } }, 30);
       document.getElementById("txt").value = D; document.getElementById("txt").dispatchEvent(new Event("input")); document.getElementById("tenv").click();
       await espera(2800);
-      var m = document.getElementById("preg249"), filas = m ? [].map.call(m.querySelectorAll(".q249 .qt"), function (x) { return x.textContent; }) : [];
-      return { cont0: cont0, cont: cont, hay: !!m, filas: filas, overlay: !!document.getElementById("acom249"), dudas: (T.quien_dudas || []).length, go: m ? m.querySelector('[data-q249="go"]').disabled : null, opcionesPersona: m ? [].map.call(m.querySelectorAll('[data-qo^="0|"]'), function (x) { return x.textContent; }) : [] }; }, D3);
+      var m = document.getElementById("preg249"), filas = m ? [].map.call(m.querySelectorAll(".pq255l li"), function (x) { return x.firstChild.textContent; }) : [];
+      return { cont0: cont0, cont: cont, hay: !!m, filas: filas, overlay: !!document.getElementById("acom249"), dudas: (T.quien_dudas || []).length }; }, D3);
     console.log("CONTACTOS_ENCONTRADOS " + r3.cont0 + " :: " + r3.cont.join(" | "));
-    eq("Preguntas: se abre la ventanita con una pregunta por renglón", [r3.hay, r3.filas.slice(0, 2), r3.dudas, r3.overlay], [true, ["¿Quién es Fernando?", "¿A qué hora le escribo?"], 1, false]);
-    eq("Preguntas: el botón Listo espera a que estén todas contestadas", r3.go, true);
+    eq("Preguntas (build 255): sale el bloque difuminado con las preguntas numeradas en texto", [r3.hay, r3.filas.slice(0, 2), r3.dudas, r3.overlay], [true, ["¿Quién es Fernando?", "¿A qué hora le escribo?"], 1, false]);
     eq("Contactos de la app (equipo, wa_contactos de todas las tareas, WhatsApp, responsables): incluye los Fernando de todas las tareas", [r3.cont.indexOf("Fernando Fuentes BBVA") >= 0, r3.cont.indexOf("Fernando Ruiz BBVA") >= 0, r3.cont.indexOf("Fernando Garza") >= 0, r3.cont.indexOf("Fernando Lozano Constructora") >= 0, r3.cont.indexOf("Fer Peñaloza") >= 0], [true, true, true, true, true]);
-    /* autocompletar: al teclear "Fernando" salen todos los Fernando */
-    var r3b = await p.evaluate(async function () { var inp = document.querySelector('[data-qin="0"]'); inp.value = "Fernando"; inp.dispatchEvent(new Event("input", { bubbles: true })); await espera(40);
-      return { sug: [].map.call(document.querySelectorAll('[data-qs="0"] .qsg b'), function (x) { return x.textContent; }) }; });
-    eq("Autocompletar: 'Fernando' trae todos los Fernando", ["Fernando Fuentes BBVA", "Fernando Garza", "Fernando Lozano Constructora", "Fernando Ruiz BBVA"].every(function (x) { return r3b.sug.indexOf(x) >= 0; }), true);
-    var r3b2 = await p.evaluate(async function () { var inp = document.querySelector('[data-qin="0"]'); inp.value = "Fernando Fu"; inp.dispatchEvent(new Event("input", { bubbles: true })); await espera(30); return [].map.call(document.querySelectorAll('[data-qs="0"] .qsg b'), function (x) { return x.textContent; }); });
-    eq("Autocompletar: se afina mientras se escribe", r3b2, ["Fernando Fuentes BBVA"]);
-    await p.evaluate(function () { var inp = document.querySelector('[data-qin="0"]'); inp.value = "Fern"; inp.dispatchEvent(new Event("input", { bubbles: true })); });
-    await foto("b249-3-preguntas-autocompletar.png");
-    /* contestar todas: persona por sugerencia + opción de hora */
-    var r3c = await p.evaluate(async function () { __WA.length = 0; document.querySelector('[data-qs="0"] .qsg').click(); await espera(20);
-      var go0 = document.querySelector('[data-q249="go"]').disabled, valor = document.querySelector('[data-qin="0"]').value;
-      document.querySelector('[data-qo="1|0"]').click(); [].forEach.call(document.querySelectorAll('[data-qin]'), function (i) { if (i.getAttribute('data-qin') !== '0' && !i.value) { i.value = 'sin más contexto'; i.dispatchEvent(new Event('input', { bubbles: true })); } }); await espera(20); var go1 = document.querySelector('[data-q249="go"]').disabled;
-      modelo({ tipo: "tarea", fecha: "2026-10-08", contexto: "Seguimiento con BBVA para el fideicomiso: Fernando Fuentes debe tener listo el documento; se le escribe hoy y el jueves.", recordar: [], vinculos: [], ordenes: [], dudas: [], pregunta: null }, 30);
-      document.querySelector('[data-q249="go"]').click(); await espera(2800);
+    await foto("b249-3-preguntas.png");
+    /* contestar todo junto en un dictado: el cerebro reparte (persona + hora) y se aplica */
+    var r3c = await p.evaluate(async function () { __WA.length = 0;
+      var brain = { tipo: "tarea", fecha: "2026-10-08", contexto: "Seguimiento con BBVA para el fideicomiso: Fernando Fuentes debe tener listo el documento; se le escribe hoy y el jueves.", recordar: [], vinculos: [], ordenes: [], dudas: [], pregunta: null };
+      var reparto = { respuestas: [{ n: 1, r: "Fernando Fuentes BBVA" }, { n: 2, r: "a las 10" }] };
+      preguntaAClaude = function (msgs, mod, cb) { window.__PROMPT = msgs[0].content; window.__PROMPTS = (window.__PROMPTS || []).concat([msgs[0].content]); setTimeout(function () { cb(JSON.stringify(/Reparte su respuesta/.test(msgs[0].content) ? reparto : brain)); }, 30); };
+      var tx = document.getElementById("txt"); tx.value = "Es Fernando Fuentes y escríbele a las 10"; document.getElementById("tenv").click(); await espera(2800);
       var T = tareas.filter(function (x) { return x.id === "tFIDE"; })[0];
-      console.log("DBG", JSON.stringify(preguntas249(tareas.filter(function (x) { return x.id === "tFIDE"; })[0]).map(function(q){return q.q;}))); return { dbg: 0, go0: go0, valor: valor, go1: go1, dbg: preguntas249(T).map(function(q){return q.q;}), cerrada: !document.getElementById("preg249"), overlay: !!document.getElementById("acom249"), dudas: (T.quien_dudas || []).length, wa: __WA.map(function (w) { return [w.contacto, /^\[A LAS 2026-10-0[68] \d{1,2}:\d{2}\]/.test(w.texto)]; }),
+      return { reparto: (window.__PROMPTS || []).some(function (q) { return /Reparte su respuesta/.test(q) && /1\. ¿Quién es Fernando\?/.test(q) && /2\. ¿A qué hora le escribo\?/.test(q); }), dbg: preguntas249(T).map(function(q){return q.q;}), cerrada: !document.getElementById("preg249"), overlay: !!document.getElementById("acom249"), dudas: (T.quien_dudas || []).length, wa: __WA.map(function (w) { return [w.contacto, /^\[A LAS 2026-10-0[68] \d{1,2}:\d{2}\]/.test(w.texto)]; }),
         prompt: /Respuesta a «¿A qué hora le escribo\?»: a las 10/.test(window.__PROMPT || ""), tarjeta: !!document.querySelector(".hc238"), seg: T.seg_a && T.seg_a.contacto, resp: (T.msgs || []).some(function (m) { return /Ya sé|Anoté: seguimiento a Fernando/.test(m.t || "") || (m.prog && m.prog.contacto === "Fernando Fuentes BBVA"); }) }; });
-    eq("Contestar: elegir la persona y la hora habilita Listo", [r3c.go0, r3c.valor, r3c.go1], [true, "Fernando Fuentes BBVA", false]);
-    eq("Listo: se libera la pantalla, no quedan preguntas de persona y solo reaparece lo que de verdad falta (la fecha meta)", [r3c.overlay, r3c.dudas, r3c.dbg], [false, 0, ["¿La fecha de finiquito (o si es indefinida)?"]]);
-    eq("Listo: lo contestado se manda junto al cerebro", r3c.prompt, true);
-    eq("Listo: queda programado el seguimiento a Fernando Fuentes BBVA (2 WhatsApp) y refrescado", [r3c.wa.length >= 2, r3c.wa[0] && r3c.wa[0][0], r3c.seg, r3c.tarjeta, r3c.resp], [true, "Fernando Fuentes BBVA", "Fernando Fuentes BBVA", true, true]);
+    eq("Un solo dictado: el cerebro (con las preguntas de contexto) reparte la respuesta", r3c.reparto, true);
+    eq("Se libera la pantalla, no quedan preguntas de persona y en el bloque se quedan SOLO las que no contestó", [r3c.overlay, r3c.dudas, r3c.dbg], [false, 0, ["¿La fecha de finiquito (o si es indefinida)?", "¿Un poco más de contexto?", "¿El próximo seguimiento?"]]);
+    eq("Lo contestado se manda junto al cerebro", r3c.prompt, true);
+    eq("Queda programado el seguimiento a Fernando Fuentes BBVA (2 WhatsApp) y refrescado", [r3c.wa.length >= 2, r3c.wa[0] && r3c.wa[0][0], r3c.seg, r3c.tarjeta, r3c.resp], [true, "Fernando Fuentes BBVA", "Fernando Fuentes BBVA", true, true]);
 
     eq("sin errores de página", errs, []);
   } catch (e) { malas.push("EXCEPCION " + (e && e.stack || e)); }

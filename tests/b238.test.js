@@ -57,14 +57,15 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
       o.wa = __WA.map(function (w) { return [w.contacto, /^IA: Cynthia, de parte de Salvador: ¿Me mandas/.test(w.texto), w.tarea_id]; });
       o.encargos = (T.encargos || []).map(function (e) { return [/Revisar los testamentos/.test(e.t), e.cuando === fechaMty238(1) + "T09:00:00-06:00", e.origen, e.estado, typeof e.creado]; });
       o.contexto = /4 partes/.test(T.contexto) && /Ocampo 777/.test(T.contexto);
-      o.tarjeta = c ? { hecho: [].map.call(c.querySelectorAll(".hch li"), function (x) { return x.textContent; }), falta: [].map.call(c.querySelectorAll(".hcf li > span:first-child"), function (x) { return x.textContent; }), ops: [].map.call(c.querySelectorAll(".hco button"), function (x) { return x.textContent; }) } : null;
+      o.tarjeta = c ? { hecho: [].map.call(c.querySelectorAll(".hch li"), function (x) { return x.textContent; }), falta: [].map.call(document.querySelectorAll("#preg249 .pq255l li"), function (x) { return x.firstChild.textContent; }), ops: ((document.querySelector("#preg249 .pq255l small") || { textContent: "" }).textContent.replace(/[()]/g, "").split(" · ")).filter(Boolean) } : null;   /* build 255: las preguntas van en el bloque difuminado */
       o.limpio = [document.querySelectorAll(".solofalta,.fic.info,.fic.ctx").length, [].filter.call(document.querySelectorAll(".msgs [data-mix]"), function (b) { return /Esta tarea está se vincula/.test(b.textContent); }).length, [].filter.call(document.querySelectorAll(".msgs [data-mix]"), function (b) { return /^Anoté/.test(b.textContent.trim()); }).length];
       o.palomitas = document.querySelectorAll(".msgs .wtk").length; o.dbgm = [vista230(T), canalActual(T).id, (document.querySelector(".msgs")||{}).textContent.slice(0, 400), T.msgs.map(function (x) { return [x.k, (x.t||"").slice(0, 20), x.canal||"", x.res238||0]; })];
       var sc = document.querySelector(".scroll"); if (sc) sc.scrollTop = 0;
       return o; });
     if (process.env.CAP) await p.screenshot({ path: path.join(process.env.CAP, "b238-testamento-hecho.png") });
-    var r3 = await p.evaluate(function () { var o = {};
-      document.querySelector('.hc238 [data-hc238="0|0"]').click(); var d = tareas.filter(function (x) { return x.id === "tTESTAM"; })[0];
+    var r3 = await p.evaluate(async function () { var o = {};
+      var _p0 = preguntaAClaude; preguntaAClaude = function (m, mo, cb) { if (/Reparte su respuesta/.test(m[0].content)) { setTimeout(function () { cb(JSON.stringify({ respuestas: [{ n: 1, r: "Mandar a Hacer Testamentos" }] })); }, 5); } else _p0(m, mo, cb); };
+      document.getElementById("txt").value = "a Mandar a Hacer Testamentos"; document.getElementById("tenv").click(); await new Promise(function (r) { setTimeout(r, 900); }); var d = tareas.filter(function (x) { return x.id === "tTESTAM"; })[0];
       o.vinc = [abierta, (d.encargos || []).length, (d.hecho238 && d.hecho238.hecho || []).some(function (x) { return /Vinculada a “Mandar a Hacer Testamentos”/.test(x); })];
       o.dueno = [["pídele a Cynthia que mande los testamentos", duenoDicho238("pídele a Cynthia que mande los testamentos", "Cynthia")], ["pásasela a Cynthia", duenoDicho238("pásasela a Cynthia", "Cynthia")], ["que la haga Cynthia", duenoDicho238("que la haga Cynthia", "Cynthia")], ["Cynthia me dio los datos", duenoDicho238("Cynthia me dio los datos", "Cynthia")]].map(function (x) { return x[1]; });
       o.ordenesDichas = [ordenesDichas238("ok gracias"), ordenesDichas238("Manuel revisa la azotea"), ordenesDichas238(document.getElementById ? "Claude revisa esto mañana" : "")];

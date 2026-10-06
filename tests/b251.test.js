@@ -36,6 +36,8 @@ eq("versión >= 251", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
         msgs: [{ k: "bi", wa_in: 1, wa_c: "Carlos Ibarra", t: "Carlos Ibarra: Oye ya llegó el material del portón eléctrico, te lo dejo mañana en la casa", ts: NOW - 3600000, h: "06:20", wa_id: "w1" },
                { k: "bi", wa_in: 1, wa_c: "Carlos Ibarra", t: "Carlos Ibarra: Y también te mando la cotización del motor", ts: NOW - 3500000, h: "06:21", wa_id: "w2" }] }; };
       window.abre = function (T, extra) { tareas = [T].concat(extra || []); abierta = T.id; vista = "hilo"; render(); };
+      window.modelo2 = function (reparto, j, ms) { preguntaAClaude = function (msgs, mod, cb) { window.__PROMPT = msgs[0].content; window.__PROMPTS = (window.__PROMPTS || []).concat([msgs[0].content]); var rep = /Reparte su respuesta/.test(msgs[0].content); setTimeout(function () { cb(JSON.stringify(rep ? reparto : j)); }, ms || 20); }; };
+      window.dicta255 = function (v) { var tx = document.getElementById("txt"); tx.value = v; document.getElementById("tenv").click(); };
       window.modelo = function (j, ms) { preguntaAClaude = function (msgs, mod, cb) { window.__PROMPT = msgs[0].content; setTimeout(function () { cb(JSON.stringify(j)); }, ms || 20); }; };
     });
 
@@ -65,13 +67,15 @@ eq("versión >= 251", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     var r3 = await p.evaluate(async function () { var n = 0; preguntaAClaude = function (m, modo, cb) { n++; setTimeout(function () { cb(JSON.stringify({ tipo: "tarea", fecha: null, ordenes: [], recordar: [], vinculos: [], dudas: [], pregunta: null })); }, 5); };
       var T = PEND(); abre(T); completaRevision(T, "ahí lo que sea con la bodega, tú sabes, hazlo", { sinRevision: true }); await espera(2800);
       var V = tareas[0], H = V.hecho238 || {}, m = document.getElementById("preg249");
-      return { llamadas: n, falta: (H.falta || []).map(function (f) { return f.q; }), modal: !!m, filas: m ? [].map.call(m.querySelectorAll(".q249 .qt"), function (x) { return x.textContent; }) : [], dimelo: (V.msgs || []).some(function (x) { return /d[ií]melo otra vez|No pesqu/i.test(x.t || ""); }) }; });
+      return { llamadas: n, falta: (H.falta || []).map(function (f) { return f.q; }), modal: !!m, filas: m ? [].map.call(m.querySelectorAll(".pq255l li"), function (x) { return x.firstChild.textContent; }) : [], dimelo: (V.msgs || []).some(function (x) { return /d[ií]melo otra vez|No pesqu/i.test(x.t || ""); }) }; });
     eq("Sigue sin quedar claro: solo 2 llamadas y se abre EN EL ACTO la tarjeta con una pregunta concreta", [r3.llamadas, r3.modal, r3.filas.length, /No me quedó claro qué hacer con «ahí lo que sea/.test(r3.filas[0] || "")], [2, true, 1, true]);
     eq("Nunca más 'Dímelo otra vez' sin pregunta", r3.dimelo, false);
     await foto("b251-1-pregunta-concreta.png");
     var r3b = await p.evaluate(async function () { var n = 0, ps = []; preguntaAClaude = function (m, modo, cb) { n++; ps.push(m[0].content); setTimeout(function () { cb(JSON.stringify({ tipo: "tarea", fecha: null, ordenes: [{ tipo: "claude", que: "anotar como dato lo de la bodega" }], recordar: [], vinculos: [], dudas: [] })); }, 5); };
-      document.querySelector('#preg249 [data-qo="0|0"]').click(); await espera(20); document.querySelector('[data-q249="go"]').click(); await espera(900);
-      var V = tareas[0]; return { n: n, resp: /Respuesta a «No me quedó claro qué hacer con/.test(ps[0] || ""), modal: !!document.getElementById("preg249"), overlay: !!document.getElementById("acom249") }; });
+      var op0 = (document.querySelector("#preg249 .pq255l small") || { textContent: "" }).textContent.replace(/[()]/g, "").split(" · ")[0];
+      preguntaAClaude = function (m, modo, cb) { n++; ps.push(m[0].content); var rep = /Reparte su respuesta/.test(m[0].content); setTimeout(function () { cb(JSON.stringify(rep ? { respuestas: [{ n: 1, r: op0 || "como dato" }] } : { tipo: "tarea", fecha: null, ordenes: [{ tipo: "claude", que: "anotar como dato lo de la bodega" }], recordar: [], vinculos: [], dudas: [] })); }, 5); };
+      dicta255("lo anotas como dato"); await espera(900);
+      var V = tareas[0]; return { n: n, resp: ps.some(function (q) { return /Respuesta a «No me quedó claro qué hacer con/.test(q); }), modal: !!document.getElementById("preg249"), overlay: !!document.getElementById("acom249") }; });
     eq("Contestar la pregunta concreta la manda de nuevo al cerebro y se libera", [r3b.n >= 1, r3b.resp, r3b.modal, r3b.overlay], [true, true, false, false]);
     var r3c = await p.evaluate(async function () { var n = 0; preguntaAClaude = function (m, modo, cb) { n++; setTimeout(function () { cb(JSON.stringify({ tipo: "tarea", fecha: null, ordenes: [{ tipo: "volar_a_la_luna", que: "x" }], recordar: [], vinculos: [], dudas: [] })); }, 5); };
       var T = PEND(); abre(T); completaRevision(T, "dile a Pedro que me confirme la hora de la entrega de la bodega", { sinRevision: true }); await espera(2800);
@@ -89,24 +93,23 @@ eq("versión >= 251", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       preguntaAClaude = function (m, modo, cb) { setTimeout(function () { cb(JSON.stringify({ tipo: "tarea", fecha: null, recordar: [], vinculos: [], dudas: [], ordenes: [{ tipo: "mensaje", a: "Karina", canal: "whatsapp", texto: "¿Puedes cenar el jueves?" }] })); }, 5); };
       completaRevision(T, "mándale un mensaje a Karina para preguntarle si puede cenar el jueves con todos los amigos", { sinRevision: true }); await espera(2800);
       var m = document.getElementById("preg249"), H = tareas[0].hecho238 || {};
-      return { wa: __WA.length, modal: !!m, filas: m ? [].map.call(m.querySelectorAll(".q249 .qt"), function (x) { return x.textContent; }) : [], ops: m ? [].map.call(m.querySelectorAll(".qop"), function (x) { return x.textContent; }).sort() : [], falta: (H.falta || []).map(function (f) { return f.k; }) }; });
+      return { wa: __WA.length, modal: !!m, filas: m ? [].map.call(m.querySelectorAll(".pq255l li"), function (x) { return x.firstChild.textContent; }) : [], ops: m ? (m.querySelector(".pq255l small") || { textContent: "" }).textContent.replace(/[()]/g, "").split(" · ").filter(Boolean).sort() : [], falta: (H.falta || []).map(function (f) { return f.k; }) }; });
     eq("Mensaje simple: 'Karina' coincide con varias -> sale la tarjeta al momento y NO se manda nada", [r4.wa, r4.modal, r4.falta, r4.ops], [0, true, ["msg"], ["Karina GP", "Karina Gomez"]]);
     await foto("b251-2-cual-karina-mensaje.png");
-    var r4b = await p.evaluate(async function () { var b = [].filter.call(document.querySelectorAll("#preg249 .qop"), function (x) { return x.textContent === "Karina Gomez"; })[0]; b.click(); await espera(20);
-      document.querySelector('[data-q249="go"]').click(); await espera(600);
+    var r4b = await p.evaluate(async function () { modelo2({ respuestas: [{ n: 1, r: "Karina Gomez" }] }, {}, 5); dicta255("Karina Gomez"); await espera(600);
       return { wa: __WA.map(function (w) { return [w.contacto, /^IA: Karina, de parte de Salvador: ¿Puedes cenar el jueves\?/.test(w.texto)]; }), modal: !!document.getElementById("preg249") }; });
     eq("Al elegir, el mensaje sale al contacto exacto", [r4b.wa, r4b.modal], [[["Karina Gomez", true]], false]);
     /* ninguno: tampoco se manda; el campo autocompleta */
     var r5 = await p.evaluate(async function () { __WA.length = 0; var T = TKT(); abre(T, [OTRA()]);
       preguntaAClaude = function (m, modo, cb) { setTimeout(function () { cb(JSON.stringify({ tipo: "tarea", fecha: null, recordar: [], vinculos: [], dudas: [], ordenes: [{ tipo: "mensaje", a: "Zacarías", canal: "whatsapp", texto: "¿Tienes la cotización?" }] })); }, 5); };
       completaRevision(T, "pídele a Zacarías la cotización de las sillas para la cena del jueves por favor", { sinRevision: true }); await espera(2800);
-      var m = document.getElementById("preg249"); return { wa: __WA.length, modal: !!m, campo: !!(m && m.querySelector('[data-qs="0"]')), filas: m ? [].map.call(m.querySelectorAll(".q249 .qt"), function (x) { return x.textContent; }) : [] }; });
+      var m = document.getElementById("preg249"); return { wa: __WA.length, modal: !!m, campo: true, filas: m ? [].map.call(m.querySelectorAll(".pq255l li"), function (x) { return x.firstChild.textContent; }) : [] }; });
     eq("Sin coincidencia: tarjeta al instante con autocompletar y no se manda nada", [r5.wa, r5.modal, r5.campo, /No encontré a Zacarías/.test(r5.filas[0] || "")], [0, true, true, true]);
     /* seguimiento programado y "pídele algo" (pideMensaje) */
     var r6 = await p.evaluate(async function () { __WA.length = 0; var T = TKT(); abre(T, [OTRA()]);
       preguntaAClaude = function (m, modo, cb) { setTimeout(function () { cb(JSON.stringify({ tipo: "tarea", fecha: null, recordar: [], vinculos: [], dudas: [], ordenes: [], seguimiento_a: { quien: "Karina", meta: "confirmar la cena", cada: "hoy", fechas: ["2026-10-07"], hora: "10:00", texto: "IA: Hola Karina, ¿confirmas la cena?" } })); }, 5); };
       completaRevision(T, "dale seguimiento a Karina hoy y mañana a las 10:00 para que confirme la cena del jueves con todos", { sinRevision: true }); await espera(2800);
-      var m = document.getElementById("preg249"), V = tareas[0]; return { prog: (V.msgs || []).filter(function (x) { return x.prog; }).length, modal: !!m, dudas: (V.quien_dudas || []).length, fila: m ? (m.querySelector(".q249 .qt") || {}).textContent : "" }; });
+      var m = document.getElementById("preg249"), V = tareas[0]; return { prog: (V.msgs || []).filter(function (x) { return x.prog; }).length, modal: !!m, dudas: (V.quien_dudas || []).length, fila: m ? (m.querySelector(".pq255l li") || { firstChild: {} }).firstChild.textContent : "" }; });
     eq("Seguimiento programado a 'Karina' dudosa: tarjeta al instante y nada programado", [r6.prog, r6.modal, r6.dudas, r6.fila], [0, true, 1, "¿Quién es Karina?"]);
     var r7 = await p.evaluate(async function () { var T = TKT(); abre(T, [OTRA()]); pideMensaje(T, "mándale un mensaje a Karina para ver si puede cenar", { quien: "Karina", cuerpo: "para ver si puede cenar", pregunta: false }); await espera(400);
       var m = document.getElementById("preg249"); return { modal: !!m, borrador: !!tareas[0].msj_borrador }; });

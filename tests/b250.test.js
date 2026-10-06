@@ -36,6 +36,8 @@ eq("versión >= 250", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
         msgs: [{ k: "bi", wa_in: 1, wa_c: "Carlos Ibarra", t: "Carlos Ibarra: Oye ya llegó el material del portón eléctrico, te lo dejo mañana en la casa", ts: NOW - 3600000, h: "06:20", wa_id: "w1" },
                { k: "bi", wa_in: 1, wa_c: "Carlos Ibarra", t: "Carlos Ibarra: Y también te mando la cotización del motor", ts: NOW - 3500000, h: "06:21", wa_id: "w2" }] }; };
       window.abre = function (T, extra) { tareas = [T].concat(extra || []); abierta = T.id; vista = "hilo"; render(); };
+      window.modelo2 = function (reparto, j, ms) { preguntaAClaude = function (msgs, mod, cb) { window.__PROMPT = msgs[0].content; window.__PROMPTS = (window.__PROMPTS || []).concat([msgs[0].content]); var rep = /Reparte su respuesta/.test(msgs[0].content); setTimeout(function () { cb(JSON.stringify(rep ? reparto : j)); }, ms || 20); }; };
+      window.dicta255 = function (v) { var tx = document.getElementById("txt"); tx.value = v; document.getElementById("tenv").click(); };
       window.modelo = function (j, ms) { preguntaAClaude = function (msgs, mod, cb) { window.__PROMPT = msgs[0].content; setTimeout(function () { cb(JSON.stringify(j)); }, ms || 20); }; };
     });
 
@@ -71,13 +73,12 @@ eq("versión >= 250", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     var rB = await p.evaluate(async function (D) { __WA.length = 0; pideWhatsApp = function (c) { __WA.push(c); return Promise.resolve({ id: "pz" + __WA.length }); };
       var T = CENA([{ nombre: "Karina Gomez", desde: 1 }]); var O = { id: "tOTRA", nombre: "Pádel", duenio: "salvador", estado: "abierta", wa_contactos: [{ nombre: "Karina GP", desde: 1 }], msgs: [] }; abre(T, [O]); modelo(MODELO, 20);
       completaRevision(T, D, { sinRevision: true }); await espera(2700);
-      var V = tareas[0], m = document.getElementById("preg249"), filas = m ? [].map.call(m.querySelectorAll(".q249 .qt"), function (x) { return x.textContent; }) : [], ops = m ? [].map.call(m.querySelectorAll(".qop"), function (x) { return x.textContent; }) : [];
+      var V = tareas[0], m = document.getElementById("preg249"), filas = m ? [].map.call(m.querySelectorAll(".pq255l li"), function (x) { return x.textContent; }) : [], ops = m ? (m.querySelector(".pq255l small") || { textContent: "" }).textContent.replace(/[()]/g, "").split(" · ").filter(Boolean) : [];
       return { wa: __WA.length, nEnc: (V.encargos || []).length, hay: !!m, filas: filas, ops: ops, falta: ((V.hecho238 || {}).falta || []).map(function (f) { return [f.k, f.lado]; }) }; }, TXT);
     eq("Varias Karina: no manda nada y pregunta cuál (tarjeta de preguntas), con las dos opciones", [rB.wa, rB.nEnc, rB.hay, rB.falta, rB.ops.sort()], [0, 0, true, [["cond", "A"]], ["Karina GP", "Karina Gomez"].sort()]);
     eq("Varias Karina: el renglón dice cuál", /¿Cuál Karina es\?/.test(rB.filas[0] || ""), true);
     await foto("b250-2-cual-karina.png");
-    var rB2 = await p.evaluate(async function () { var b = [].filter.call(document.querySelectorAll("#preg249 .qop"), function (x) { return x.textContent === "Karina GP"; })[0]; b.click(); await espera(30);
-      document.querySelector('[data-q249="go"]').click(); await espera(2500);
+    var rB2 = await p.evaluate(async function () { modelo2({ respuestas: [{ n: 1, r: "Karina GP" }] }, MODELO, 20); dicta255("La de Pádel, Karina GP"); await espera(2500);
       var V = tareas[0], e = (V.encargos || [])[0] || {};
       return { wa: __WA.map(function (w) { return [w.contacto, /^IA: Karina, de parte de Salvador:/.test(w.texto)]; }), tipo: e.tipo, preg: e.pregunta && e.pregunta.contacto, si: e.si_si && e.si_si.contacto, hecho: ((V.hecho238 || {}).hecho || []).join("|"), pend: Object.keys(V.cond_pend250 || {}).length, modal: !!document.getElementById("preg249") }; });
     eq("Varias Karina: al elegir 'Karina GP' ahora sí manda la pregunta y deja el encargo", [rB2.wa, rB2.tipo, rB2.preg, rB2.si, rB2.pend], [[["Karina GP", true]], "condicional", "Karina GP", "Eduardo Madero", 0]);

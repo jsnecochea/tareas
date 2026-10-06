@@ -36,6 +36,8 @@ eq("versión >= 252", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
         msgs: [{ k: "bi", wa_in: 1, wa_c: "Carlos Ibarra", t: "Carlos Ibarra: Oye ya llegó el material del portón eléctrico, te lo dejo mañana en la casa", ts: NOW - 3600000, h: "06:20", wa_id: "w1" },
                { k: "bi", wa_in: 1, wa_c: "Carlos Ibarra", t: "Carlos Ibarra: Y también te mando la cotización del motor", ts: NOW - 3500000, h: "06:21", wa_id: "w2" }] }; };
       window.abre = function (T, extra) { tareas = [T].concat(extra || []); abierta = T.id; vista = "hilo"; render(); };
+      window.modelo2 = function (reparto, j, ms) { preguntaAClaude = function (msgs, mod, cb) { window.__PROMPT = msgs[0].content; window.__PROMPTS = (window.__PROMPTS || []).concat([msgs[0].content]); var rep = /Reparte su respuesta/.test(msgs[0].content); setTimeout(function () { cb(JSON.stringify(rep ? reparto : j)); }, ms || 20); }; };
+      window.dicta255 = function (v) { var tx = document.getElementById("txt"); tx.value = v; document.getElementById("tenv").click(); };
       window.modelo = function (j, ms) { preguntaAClaude = function (msgs, mod, cb) { window.__PROMPT = msgs[0].content; setTimeout(function () { cb(JSON.stringify(j)); }, ms || 20); }; };
     });
 
@@ -74,24 +76,13 @@ eq("versión >= 252", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     await CLK('[data-sel245="nueva"]');
     var f8 = await p.evaluate(function () { var o = { foc: __FOC.filter(function (f) { return f[0] === "nom249i"; }), act: document.activeElement && document.activeElement.id }; var n = document.getElementById("nom249"); if (n) n.remove(); window.__sel245 = null; pintaSel245(); return o; });
     eq("Barra de selección > Nueva: focus dentro del toque", [f8.foc, f8.act], [[["nom249i", true]], "nom249i"]);
-    /* tarjeta de preguntas: mic por renglón; el teclado solo se pide con un toque */
+    /* bloque de preguntas (build 255): abierto por el cerebro (sin toque) no roba el focus y no trae campos por renglón */
     var f9 = await p.evaluate(async function () { var T = { id: "tFIDE", nombre: "Fideicomiso: Seguimiento", duenio: "salvador", creada_por: "ia_revisor", origen: "wa_revisor", por_autorizar: true, estado: "abierta", tipo_item: "tarea", pendiente_info: "x", pendiente_tipo: "dato", falta_fecha: true, contexto: "Seguimiento con BBVA.", wa_contactos: [], msgs: [],
         quien_dudas: [{ id: "q1", dicho: "Fernando", rol: "mensaje", cands: [], extra: {}, ts: 1 }], hecho238: { ts: 1, hecho: [], falta: [{ k: "txt", q: "¿Para qué día?", ops: [] }] } };
       var O = { id: "tO1", nombre: "Blue Cup", duenio: "salvador", estado: "abierta", wa_contactos: [{ nombre: "Fernando Fuentes BBVA", desde: 1 }, { nombre: "Fernando Ruiz BBVA", desde: 1 }], msgs: [] };
-      abre(T, [O]); __FOC.length = 0; abrePreguntas249("tFIDE"); var sinGesto = __FOC.filter(function (f) { return /qi/.test(f[0]); }).length;
-      return { sinGesto: sinGesto, mics: document.querySelectorAll("#preg249 [data-mic252]").length, act: document.activeElement && document.activeElement.className }; });
-    eq("Tarjeta de preguntas abierta por el cerebro (sin toque): no roba el focus y trae un micrófono por renglón", [f9.sinGesto, f9.mics, /qi/.test(f9.act || "")], [0, 2, false]);
-    await p.evaluate(function () { document.getElementById("preg249").remove(); __FOC.length = 0; });
-    await p.evaluate(function () { render(); }); await p.waitForTimeout(60);
-    var vis = await p.evaluate(function () { var b = document.querySelector("[data-hc249]"), r = b.getBoundingClientRect(), cs = getComputedStyle(b), pa = b.closest(".hc238"); return [r.width, r.height, cs.display, cs.visibility, pa ? getComputedStyle(pa).display : "sin hc238", r.top]; }); 
-    await p.evaluate(function () { document.querySelector("[data-hc249]").click(); }); await p.waitForTimeout(80);
-    var f10 = await p.evaluate(function () { return { foc: __FOC.filter(function (f) { return /qi/.test(f[0]); }).map(function (f) { return f[1]; }), act: /qi/.test(document.activeElement.className || "") }; });
-    eq("Abierta con un toque ('Contestar mis preguntas'): enfoca el primer campo dentro del toque", [f10.foc, f10.act], [[true], true]);
-    var f11 = await p.evaluate(async function () { var m = document.querySelector('#preg249 [data-mic252="0"]'); __SRS.length = 0; m.click(); await espera(30);
-      __SRS[0].onresult({ results: [Object.assign([{ transcript: "Fernando" }], { isFinal: false })] }); await espera(30);
-      return { v: document.querySelector('[data-qin="0"]').value, sug: [].map.call(document.querySelectorAll('[data-qs="0"] .qsg b'), function (x) { return x.textContent; }).sort(), otro: document.querySelector('[data-qin="1"]').value, modal: !!document.getElementById("preg249") }; });
-    eq("Micrófono de la tarjeta: dicta a SU campo, dispara el autocompletar y no cierra la tarjeta", [f11.v, f11.sug, f11.otro, f11.modal], ["Fernando", ["Fernando Fuentes BBVA", "Fernando Ruiz BBVA"], "", true]);
-    await foto("b252-2-preguntas-con-mic.png");
+      abre(T, [O]); var m0 = document.getElementById("preg249"); if (m0) m0.remove(); __FOC.length = 0; abrePreguntas249("tFIDE"); var sinGesto = __FOC.filter(function (f) { return /qi/.test(f[0]); }).length;
+      return { sinGesto: sinGesto, hay: !!document.getElementById("preg249"), campos: document.querySelectorAll("#preg249 input").length }; });
+    eq("Bloque de preguntas abierto por el cerebro (sin toque): no roba el focus y no trae un campo por pregunta", [f9.sinGesto, f9.hay, f9.campos], [0, true, 0]);
     await p.evaluate(function () { var m = document.getElementById("preg249"); if (m) m.remove(); });
     /* Editar mensaje */
     var f12 = await p.evaluate(async function () { var T = { id: "tED", nombre: "Mensajes", duenio: "salvador", estado: "abierta", msgs: [{ k: "bo", t: "Hola", ts: Date.now() - 1000, h: "07:00", de: "salvador" }] }; abre(T); __FOC.length = 0; abreDetalle242(T, 0); return 1; });
