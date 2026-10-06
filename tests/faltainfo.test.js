@@ -22,7 +22,7 @@ function saca(tipo, nombre) {
   return out.join("\n");
 }
 var FUNCS = ["iso", "dDif", "dmDe", "hoy", "fechaMovCorta", "esRecurrente", "estadoReal", "esDecisionSal", "meDetiene", "creadaPorSistema",
-  "porAutorizar", "faltaInfoRev", "msCreacion", "_fechaDeId", "diaMonterrey", "tipoRevisar", "completitud", "contextoPct", "contextoDe",
+  "porAutorizar", "faltaInfoRev", "msCreacion", "_fechaDeId", "diaMonterrey", "tipoRevisar", "tipoRevisar0", "completitud", "contextoPct", "contextoDe",
   "tipoItem", "esDato", "_nn", "_diaCreacion", "fechaPuestaSola", "faltaVieja", "creadaCon", "faltaPrimero", "eventoDe", "_esExacta", "eventoPendiente"];   /* build 202 */
 var codigo = ["REV_DESDE", "CTX_MIN_PAL", "CITA_RE"].map(function (v) { return saca("var", v); }).join("\n") + "\n" + FUNCS.map(function (f) { return saca("function", f); }).join("\n");
 var RealDate = Date, NOW = new RealDate(2026, 9, 4, 17, 0, 0).getTime();

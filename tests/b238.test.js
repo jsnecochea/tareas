@@ -107,7 +107,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
     eq("contexto: el reparto", r2.contexto, true);
     eq("tarjeta: Hecho (mensaje y encargo) · Me falta: ¿a cuál la vinculo? con 'Mandar a hacer testamentos' primero; no pide fecha", [r2.tarjeta.hecho.length >= 2, r2.tarjeta.hecho.some(function (x) { return /Le escribí a Cynthia/.test(x); }), r2.tarjeta.hecho.some(function (x) { return /Lo reviso yo mañana/.test(x); }), r2.tarjeta.falta[0], r2.tarjeta.ops[0], r2.tarjeta.falta.some(function (x) { return /fecha|finiquito/i.test(x); })],
       [true, true, true, "¿A cuál la vinculo?", "Mandar a Hacer Testamentos", false]);
-    eq("pantalla limpia: sin bloques largos; el dictado queda como burbuja; sin 'Anoté…'", r2.limpio, [0, 1, 0]);
+    eq("pantalla limpia: sin bloques largos; el dictado procesado queda OCULTO (build 263); sin 'Anoté…'", r2.limpio, [0, 0, 0]);
     eq("burbuja con palomitas (estilo Apple) en el mensaje que salió", r2.palomitas >= 1, true);
     eq("tocar la candidata vincula; el encargo y la tarjeta pasan a la tarea elegida", r3.vinc, ["tTESTAM", 1, true]);
     eq("dueño solo si lo dice explícito", r3.dueno, [false, true, true, false]);

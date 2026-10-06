@@ -84,7 +84,7 @@ eq("versión >= 247", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       o.orig = [T.msgs[4].oculto, T.msgs[4].oculto_motivo]; o.dict = nuevos.filter(function (m) { return m.dict238 && m.k === "bo"; }).map(function (m) { return m.t; });
       o.hecho = T.hecho238 ? [T.hecho238.hecho.length > 0, (T.hecho238.hecho.join(" ") || "").slice(0, 40)] : null; o.enc = (T.encargos || []).length;
       o.card = !!document.querySelector(".hc238"); return o; });
-    eq("Es para Claude: el dictado oculta el mensaje de chat y va al cerebro del 238 como indicación", [r3b.orig, r3b.dict], [[true, "es_para_claude"], ["Claude revísame el comprobante y dime si cuadra con el estado de cuenta"]]);
+    eq("Es para Claude: el dictado oculta el mensaje de chat y va al cerebro del 238 como indicación (sin copia visible: build 263)", [r3b.orig, r3b.dict], [[true, "es_para_claude"], []]);
     eq("ejecuta las órdenes y deja su tarjeta Hecho", [r3b.hecho && r3b.hecho[0], r3b.enc, r3b.card], [true, 1, true]);
     /* ---------- 4) Te pregunta ---------- */
     var r4 = await p.evaluate(function () { var o = {}, T = MORIC(); abre(T, [OTRA()]);

@@ -45,7 +45,7 @@ vm.createContext(c); vm.runInContext(F.map(saca).join("\n"), c);
   eq("si el servidor dice que la acción no existe: deja de preguntar", [c.FETCH.length, !!c.window.__waEstNo], [1, true]);
   /* ---------- notificaciones: clave "espera" ---------- */
   var N = { PERSONAS: { salvador: {} }, yo: "salvador", _nn: null, JSON: JSON, String: String, Object: Object };
-  vm.createContext(N); vm.runInContext(["NOTIF_VERSION", "NOTIF_TIPOS", "NOTIF_PRESETS", "NOTIF_NIVEL", "NOTIF_DEFECTO", "_nn", "notifDePreset", "notifPrefs", "notifGuardadas", "notifPermite", "tipoDePush"].map(saca).join("\n"), N);
+  vm.createContext(N); vm.runInContext(["NOTIF_VERSION", "NOTIF_TIPOS", "NOTIF_PRESETS", "NOTIF_NIVEL", "NOTIF_DEFECTO", "_nn", "notifDePreset", "notifDefectoDe", "notifPrefs", "notifGuardadas", "notifPermite", "tipoDePush"].map(saca).join("\n"), N);
   var esp = N.NOTIF_TIPOS.filter(function (x) { return x.k === "espera"; });
   eq("hay UNA clave 'espera', grupo Urgente, texto 'Alguien te espera o está atorado'", esp.map(function (x) { return [x.grupo, x.nivel, x.tx]; }), [["Urgente", "urgente", "Alguien te espera o está atorado"]]);
   eq("encendida en Solo urgente, Normal y Todas; apagada en Ninguna", ["ninguna", "urgente", "normal", "todas"].map(function (k) { return N.notifDePreset(k).espera; }), [false, true, true, true]);

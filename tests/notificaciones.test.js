@@ -20,7 +20,7 @@ function saca(tipo, nombre) {
   }
   return out.join("\n");
 }
-var FUNCS = ["_nn", "notifDePreset", "notifPrefs", "notifGuardadas", "notifPresetDe", "notifPermite", "tipoDePush", "guardaNotif",
+var FUNCS = ["_nn", "notifDePreset", "notifDefectoDe", "notifPrefs", "notifGuardadas", "notifPresetDe", "notifPermite", "tipoDePush", "guardaNotif",
   "vNotif", "tituloTarea", "disparaPushInstantaneo"];
 var VARS = ["NOTIF_VERSION", "NOTIF_TIPOS", "NOTIF_PRESETS", "NOTIF_NIVEL", "NOTIF_DEFECTO", "TITULO_CONECTORES"];
 var codigo = VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" + FUNCS.map(function (f) { return saca("function", f); }).join("\n");
@@ -57,7 +57,7 @@ eq("mezcla = personalizado (ningun atajo marcado)", c.notifPresetDe(pers), "");
 /* guardar en la ficha, con version */
 c.guardaNotif(c.notifDePreset("normal"));
 eq("se guarda en bitacora_personas/<usuario>.notif con merge", [escritos[0][0], escritos[0][1], escritos[0][3]], ["bitacora_personas", "salvador", { merge: true }]);
-eq("con version y atajo", [escritos[0][2].notif.v, escritos[0][2].notif.preset], [1, "normal"]);
+eq("con version y atajo", [escritos[0][2].notif.v, escritos[0][2].notif.preset], [2, "normal"]);
 eq("y queda en memoria", c.notifPrefs("salvador").asignado, true);
 c.PERSONAS.samuel.notif = { v: 1, tipos: { recordatorio: true } };
 eq("tipo nuevo que la persona nunca vio: toma el defecto", [c.notifPrefs("samuel").espera, c.notifPrefs("samuel").wa_todo], [true, false]);

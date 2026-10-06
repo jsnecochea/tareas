@@ -84,7 +84,7 @@ eq("versión >= 259", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       enviaPreguntas249(T.id, P, P.map(function (x, k) { return k === i ? { texto: "sí, crea una nueva", persona: null, opt: op } : { texto: "", persona: null, opt: null }; })); await espera(300);
       var N = tareas.filter(function (x) { return x.nombre === "App Doit Programación Carlos"; })[0], O = tareas.filter(function (x) { return x.id === "tmuq8c6"; })[0] || tareas[0];
       return { nueva: !!N, movidosNueva: N ? N.msgs.filter(function (m) { return m.movido_de; }).length : -1, ocultosOrigen: O.msgs.filter(function (m) { return m.oculto; }).length, origenNombre: O.nombre, siguePregunta: ((O.hecho238 || {}).falta || []).some(function (x) { return x.k === "contradice259"; }) }; });
-    eq("'Sí, crear nueva': tarea nueva con los 2 mensajes de Carlos; la original sigue intacta y la pregunta se va", r7, { nueva: true, movidosNueva: 2, ocultosOrigen: 2, origenNombre: "Cobranza Moric Pádel Draw", siguePregunta: false });
+    eq("'Sí, crear nueva': tarea nueva con los 2 mensajes de Carlos; la original sigue intacta (más el dictado procesado, oculto) y la pregunta se va", r7, { nueva: true, movidosNueva: 2, ocultosOrigen: 3, origenNombre: "Cobranza Moric Pádel Draw", siguePregunta: false });
     /* 6c) 'Cambiar esta' sí aplica */
     var r8 = await p.evaluate(async function () { tareas = [COBRA()]; abierta = "tmuq8c6"; vista = "hilo"; render();
       modelo({ nombre: "App Doit Programación Carlos", tipo: "tarea", contexto: "Todo lo que escribe Carlos.", ya_hecha: false, ordenes: [], dudas: [], vinculos: [], pregunta: null });
