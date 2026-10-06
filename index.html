@@ -1466,6 +1466,7 @@ button{font:inherit;color:inherit}
 .pl252 .pq{font-size:13px;color:var(--ink-3,#9a9aa0);margin-bottom:2px}.pl252 .pt{display:block;width:100%;text-align:left;border:0;background:none;color:inherit;font:inherit;padding:0}
 .pl252 .pm{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap;font-size:13px;color:var(--ink-3,#9a9aa0)}.pl252 .pg{border:0;border-radius:10px;padding:5px 9px;min-height:30px;background:#1d3b5c;color:#9ecbff;font:inherit;font-size:13px;font-weight:600}.pl252 .pg.sa{background:#5c3d12;color:#ffc982}.pl252 .pg.ng{background:#3a3a3c;color:#c7c7cc}
 .plat252 .pie{margin:16px 16px 0;font-size:13.5px;color:var(--ink-3,#9a9aa0)}
+.bus253{display:flex;gap:8px;margin:2px 0 10px}.bus253 input{flex:1;min-width:0;box-sizing:border-box;border:1px solid var(--line,#38383a);border-radius:12px;padding:11px 12px;background:var(--surface,#000);color:var(--ink,#fff);font:inherit;font-size:17px}.bus253 .lupa{flex:0 0 46px;border:0;border-radius:12px;background:var(--surface-2,#2c2c2e);color:var(--ink,#fff);display:flex;align-items:center;justify-content:center}.bus253x{color:var(--ink-3,#9a9aa0);font-size:14px;padding:6px 2px}
 .hc238 .hc249{display:block;width:100%;margin-top:6px;min-height:42px;border:0;border-radius:12px;background:#0a84ff;color:#fff;font:inherit;font-size:16px;font-weight:700}
 
 .leemenu{position:fixed;width:230px;background:#2a2a33;border-radius:14px;padding:4px 0;box-shadow:0 10px 30px rgba(0,0,0,.5)}
@@ -1516,7 +1517,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 252 · Teclado en las ventanitas (focus en el toque) y micrófono propio que dicta al campo · Ver toda la plática con <persona> (7 días, todas las tareas, ocultos y no guardados)";
+var VERSION_APP = "build 253 · ¿A dónde va?: buscador de tareas (todas las abiertas y las cerradas de 30 días)";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -9585,6 +9586,21 @@ function opcionesMover(t, x){
 function inicialesDe(n){ var w=nombreCorto(String(n||"")).replace(/\(.*?\)/g,"").replace(/[^\wáéíóúñü ]+/gi," ").trim().split(/\s+/).filter(Boolean); return ((w[0]||"?").charAt(0)+((w[1]||"").charAt(0)||"")).toUpperCase(); }
 function nombreLimpio(n){ return String(n||"").replace(/\s*\(.*?\)\s*/g," ").replace(/[☀-➿️‍]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uD83E[\uDC00-\uDFFF]/g,"").replace(/\s+/g," ").trim(); }
 /* hoja "¿A donde va?" */
+
+/* ===== build 253: BUSCADOR EN "¿A DÓNDE VA?" =====
+   Todas las tareas abiertas y las cerradas de los últimos 30 días ("(cerrada)"), por nombre, sinónimos, palabras y contexto, sin acentos. */
+function buscaTareasMover253(q, t){
+  var ws=_n179(q).split(" ").filter(Boolean); if(!ws.length) return [];
+  var out=[]; (tareas||[]).forEach(function(x){
+    if(!x || (t && x.id===t.id) || x.fusionada_en || x.es_recordatorio) return;
+    var viva=!x.cierre && (function(){ try{ return estadoReal(x)!=="cerrada"; }catch(e){ return true; } })();
+    if(!viva && !esCerradaReciente248(x)) return;
+    var nom=_n179(x.nombre), rest=_n179([(x.palabras||[]).join(" "), (x.sinonimos||[]).join(" "), contextoDe(x)||x.contexto||"", x.de_quien||""].join(" ")), hay=nom+" "+rest;
+    if(!ws.every(function(w){ return hay.indexOf(w)>=0; })) return;
+    var sc=0; ws.forEach(function(w){ if(nom.indexOf(w)>=0) sc+=3; if(nom.split(" ").some(function(p){ return p.indexOf(w)===0; })) sc+=2; });
+    out.push({d:x, sc:sc-(viva?0:1), cerrada:!viva}); });
+  out.sort(function(a,b){ return b.sc-a.sc || String(a.d.nombre).localeCompare(String(b.d.nombre)); }); return out.slice(0,20);
+}
 function abreMover225(t, ix, ixs, opts){
   var x=(t.msgs||[])[ix]; if(!x) return; ixs=(ixs&&ixs.length)?ixs:null; opts=opts||{};   /* build 237: con ixs mueve toda la plática */
   var ops=opcionesMover(t, x), q=nombreLimpio(x.wa_c||((PERSONAS[x.de]||{}).nombre)||""), tx=_txMsg(x).replace(/^[^:\n]{1,40}:\s*/,"");
@@ -9595,15 +9611,22 @@ function abreMover225(t, ix, ixs, opts){
     (opts.desde?'<div class="desde245"><label>Solo desde <input type="date" id="desde245"></label><span id="nd245">'+ixs.length+' mensajes</span></div>':'')+
     '<div class="h225c">'+
     (opts.soloNg?'<button class="opt226 plain" data-movplatica="1">'+ico("bubble",20)+'<span class="two"><span id="ngt245">No guardar '+(ixs?ixs.length:1)+' mensajes</span><small>no va a ninguna tarea; queda oculto, no borrado</small></span></button></div></div>':
+    '<div class="bus253"><button type="button" class="lupa" data-lupa253="1" aria-label="Buscar tarea">'+ico("lupa",20,1.8)+'</button><input id="mbus253" type="search" placeholder="Buscar tarea…" autocomplete="off" autocapitalize="none" enterkeyhint="search"></div><div id="mres253"></div><div id="mops253">'+
     ops.map(function(o){ return '<button class="opt226'+(o.best?' best':'')+'" data-movto="'+esc(o.d.id)+'">'+ico("folder",20)+'<span class="ot">'+esc(o.d.nombre||"(sin nombre)")+'</span>'+(o.tag?'<span class="tag">'+esc(o.tag)+'</span>':'')+'</button>'; }).join("")+
-    '<div class="sep226"></div>'+
+    '</div><div class="sep226"></div>'+
     '<button class="opt226 plain" data-movnueva="1">'+ico("plus",20)+'<span class="two"><span>Tarea nueva</span><small>“'+esc(nombreSugerido(x))+'”</small></span></button>'+
     '<button class="opt226 plain" data-movplatica="1">'+ico("bubble",20)+'<span class="two"><span>Solo plática</span><small>saludo o charla, no va a ninguna tarea</small></span></button></div></div>');
   document.body.appendChild(v);
   /* build 245: en lote ("Mover todos" / selección) la hoja aplica a todos, o solo a los desde una fecha */
   function usa245(){ var f=(v.querySelector("#desde245")||{}).value, d=f?new Date(f+"T00:00:00").getTime():0; return (ixs||[ix]).filter(function(i){ var m=(t.msgs||[])[i]; return m && !m.oculto && (!d || (+m.ts||0)>=d); }); }
   var _de=v.querySelector("#desde245"); if(_de) _de.onchange=function(){ var n=usa245().length; v.querySelector("#nd245").textContent=n+" mensaje"+(n===1?"":"s"); var g=v.querySelector("#ngt245"); if(g) g.textContent="No guardar "+n+" mensajes"; };
-  v.addEventListener("click", function(ev){ ev.stopPropagation(); var b=ev.target.closest("[data-movto],[data-movnueva],[data-movplatica]"), r="";
+  /* build 253: buscador. La lupa enfoca el campo DENTRO del toque (iOS); los resultados son botones data-movto como las propuestas */
+  var _bi=v.querySelector("#mbus253"), _br=v.querySelector("#mres253"), _bo=v.querySelector("#mops253");
+  if(_bi) _bi.addEventListener("input", function(){ var q=_bi.value, L=buscaTareasMover253(q, t), hay=!!_n179(q);
+    if(_bo) _bo.style.display=hay?"none":"";
+    _br.innerHTML=!hay?"":(L.length?L.map(function(o){ return '<button class="opt226" data-movto="'+esc(o.d.id)+'">'+ico("folder",20)+'<span class="ot">'+esc(nombreVinc248(o.d))+'</span></button>'; }).join(""):'<div class="bus253x">No encontré “'+esc(q.trim())+'” en tus tareas.</div>'); });
+  v.addEventListener("click", function(ev){ ev.stopPropagation(); if(ev.target.closest("[data-lupa253]")){ if(_bi) enfoca252(_bi); return; }
+    var b=ev.target.closest("[data-movto],[data-movnueva],[data-movplatica]"), r="";
     if(b && b.hasAttribute("data-movnueva")){   /* build 249: Nueva pide el nombre; al crear, se va a la tarea nueva */
       var uso9=opts.lote?usa245():(ixs||[ix]); if(!uso9.length){ toast("Ninguno desde esa fecha"); return; }
       v.remove();
