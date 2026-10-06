@@ -759,7 +759,7 @@ button{font:inherit;color:inherit}
 .nia242{display:flex;align-items:flex-start;gap:6px;margin:4px 12px;padding:6px 10px;border-radius:12px;background:var(--surface-2);color:var(--ink-3);font-size:13.5px;line-height:1.35;max-width:92%}
 .nia242 .niai{flex:none;width:14px;height:14px;margin-top:2px}.nia242 .niai svg{width:13px;height:13px}.nia242 .niat{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nia242.ab .niat{white-space:normal}
 .nia242 .niam{flex:none;border:0;background:none;color:var(--azul);font:inherit;font-size:12.5px;padding:0}
-.b .st .mdel{display:none}.b .st:empty{display:none}.det242b .ac226{margin:10px 0 0;font-size:15px}.det242b .ac226 button{font-size:15px}.det242x{margin-top:12px;color:var(--venc)}
+.b .st .mdel{display:none}.b .st:empty{display:none}.det242b .ac226{margin:10px 0 0;font-size:15px}.det242b .ac226 button{font-size:15px}.det242x{margin-top:12px;color:var(--venc)}.det247 .prop247{margin-top:10px}.det247 .cl247{color:#D97757;font-weight:600}.ed247{margin-top:12px;display:flex;flex-direction:column;gap:8px}.ed247 textarea{width:100%;box-sizing:border-box;border-radius:12px;border:1px solid var(--line,#3a3a3c);background:var(--surface-2);color:var(--ink);font:inherit;font-size:16px;padding:10px}.ed247b{display:flex;gap:10px}.ptcard,.ptcard .ptl{cursor:pointer}
 .cl238{display:inline-flex;width:16px;height:16px;color:var(--ink-2);vertical-align:-3px;margin-right:4px}.cl238 svg{width:15px;height:15px}.cl238.on{color:var(--azul)}
 .b[data-mix]{cursor:default}.ac226.m238{margin:2px 0 4px 0}.ac226.triv240{margin-top:0}.ac226.triv240 button{color:var(--ink-3);font-weight:500}.prop238{font-size:12.5px;color:var(--ink-3);margin-top:2px}.m237{display:flex;flex-direction:column}.m237.listo{opacity:.5}
 .hc238{position:relative;margin:6px 12px 8px;padding:12px 14px 10px;background:var(--surface-2);border-radius:14px;font-size:15.5px;line-height:1.4}
@@ -1484,7 +1484,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 246 · Hoy: primero lo que tiene recordatorio · Importante: Qué toca primero · Importante más estricto";
+var VERSION_APP = "build 247 · Menú completo al tocar cualquier globo · Te pregunta: Mover / No es de aquí / Ya la contesté · Sin bloques de revisión en tareas hechas a mano";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -6956,6 +6956,9 @@ function ultimoDeOtro(t){
 }
 function vTarjetaRev(t){
   var k=tipoRevisar(t); if(!k) return "";
+  /* build 247 (Salvador 6-oct 07:25, "Cobranza Moric"): solo las creadas por la IA y sin clasificar piden revisión con bloques grandes ("Solo me falta",
+     "Datos de la tarea"). Una creada a mano (dictado) deja lo que falta solo en la ficha "Falta N". */
+  if(k==="falta" && !esIA240(t) && (t.creada_por===yo || t.duenio===yo) && !porAutorizar(t) && !t._leyendo && !t.hecho238 && !(window.__palomeo||{})[t.id]) return "";
   /* build 173: si ya lo habia dicho con un build anterior, se aplica al abrirla */
   /* build 173: si lo ultimo del chat es algo que el dijo con un build anterior
      ("no es mia, es de X" o "ponle de nombre X") y nadie lo atendio, se aplica al abrirla */
@@ -9246,7 +9249,7 @@ function originalDe242(x){
 }
 function vNotaIA242(x, mid){
   var ab=!!(window.__nia242||{})[mid], tx=sinEmojiUI(String(x.t||"")).replace(/\s+/g," ").trim();
-  return '<div class="nia242'+(ab?' ab':'')+'"><span class="niai">'+SVG_DESTELLO+'</span><span class="niat">'+esc(tx)+'</span><button class="niam" data-nia242="'+esc(mid)+'">'+(ab?'ver menos':'ver más')+'</button></div>';
+  return '<div class="nia242'+(ab?' ab':'')+'" data-nix="'+esc(mid)+'"><span class="niai">'+SVG_DESTELLO+'</span><span class="niat">'+esc(tx)+'</span><button class="niam" data-nia242="'+esc(mid)+'">'+(ab?'ver menos':'ver más')+'</button></div>';
 }
 function sepDia242(x){
   var ts=+(x&&x.ts)||0; if(!ts) return ""; var d=iso(new Date(ts)); if(window.__dia242===d) return ""; window.__dia242=d;
@@ -9324,6 +9327,61 @@ function htmlTx245(str, x){
     ev.stopPropagation(); ev.preventDefault(); var u=b.getAttribute("data-img245"); if(!u) return;
     abreVisor([{img:true, data:u, url:u, de:"", ts:Date.now()}], 0); }, true);
 })();
+/* ===================== build 247 (Salvador 6-oct 07:25): MENÚ COMPLETO AL TOCAR CUALQUIER GLOBO =====================
+   Todos: Mover · No guardar · Nueva · Dato. Propios de Salvador: Editar · Eliminar · Es para Claude. "No guardar" en uno ya acomodado = sacarlo de
+   esta tarea (oculto, oculto_motivo "no_es_de_aqui", no se borra, Historial con Deshacer). Tarjeta "Te pregunta" (y sus Dato:): Mover · No es de aquí · Ya la contesté. */
+function botones247(ix){ return '<div class="ac226 hj242" data-acix="'+ix+'" data-acg="'+ix+'"><button data-acmov="'+ix+'">Mover</button><span>·</span><button data-acng="'+ix+'">No guardar</button><span>·</span><button data-acnueva="'+ix+'">Nueva</button><span>·</span><button data-acdato="'+ix+'">Dato</button></div>'; }
+function botonesPropio247(){ return '<div class="ac226 hj242 prop247"><button data-d247="edit">Editar</button><span>·</span><button data-d247="del">Eliminar</button><span>·</span><button data-d247="claude" class="cl247">Es para Claude</button></div>'; }
+function propio247(x){ return !!x && !x.oculto && !x.nota_ia && !esNotaIA242(x) && x.k!=="bal" && ((x.k==="bo" && (!x.de || x.de===yo)) || esSaliente245(x)); }
+function yaSalio247(x){ return !!(x && (x.wa || x.wa_c || x.wa_auto || x.wa_ok || x.wa_pid || esSaliente245(x) || String(x.canal||"").indexOf("ext:")===0)); }
+function aparta247(t, ix, motivo){
+  var x=(t.msgs||[])[ix]; if(!x || x.oculto) return false; if(!x.ts) x.ts=Date.now()+ix;
+  var ahora=Date.now(); x.oculto=true; x.oculto_ts=ahora; x.oculto_por=yo||""; x.oculto_motivo=motivo; x.acomodo={ok:0, ts:ahora, por:yo||""};
+  try{ censoAcomodo(t, x, t.id, "", motivo); }catch(e){} return true;
+}
+function noEsDeAqui247(t, ix){
+  if(!aparta247(t, ix, "no_es_de_aqui")) return false; var x=t.msgs[ix]; guarda(t);
+  try{ hist240("No es de aquí (1 mensaje)", t, {tipo:"ng_lote", tss:[x.ts]}); }catch(e){} return true;
+}
+function accion247(t, ix, a, v){
+  var x=(t.msgs||[])[ix]; if(!x) return;
+  if(a==="edit"){ if(v.querySelector(".ed247")) return; var c=v.querySelector(".h225c"), d=document.createElement("div"); d.className="ed247";
+    d.innerHTML='<textarea id="ed247t" rows="4"></textarea><div class="ed247b"><button class="hop" data-d247="save">Guardar</button><button class="hop" data-d247="cancel">Cancelar</button></div>';
+    c.appendChild(d); var ta=d.querySelector("textarea"); ta.value=String(x.t||""); try{ ta.focus(); }catch(e){} return; }
+  if(a==="cancel"){ var e0=v.querySelector(".ed247"); if(e0) e0.remove(); return; }
+  if(a==="save"){ var ta2=v.querySelector("#ed247t"), nv=ta2?String(ta2.value||"").trim():""; if(!nv){ toast("El texto no puede quedar vacío"); return; }
+    if(nv!==String(x.t||"")){ x.t_original=x.t_original||x.t; x.t=nv; x.editado=Date.now(); guarda(t); }
+    var enviado=yaSalio247(x); v.remove(); render(); toast(enviado?"Ya se envió, solo se corrige aquí":"Corregido"); return; }
+  if(a==="del"){ if(aparta247(t, ix, "eliminado")){ guarda(t); try{ hist240("Eliminó un mensaje propio", t, {tipo:"ng_lote", tss:[x.ts]}); }catch(e){} }
+    v.remove(); render(); toast("Apartado, no borrado. Deshacer en el Historial"); return; }
+  if(a==="claude"){ v.remove(); esParaClaude247(t, ix); return; }
+}
+/* "Es para Claude": ese texto va al cerebro de dictado (238) como indicación, ejecuta las órdenes y deja su tarjeta Hecho / Me falta */
+function esParaClaude247(t, ix){
+  var x=(t.msgs||[])[ix]; if(!x) return false; var tx=String(x.tr||x.t||"").trim(); if(!tx) return false;
+  if(aparta247(t, ix, "es_para_claude")){ try{ hist240("Es para Claude: “"+(tx.length>50?tx.slice(0,49)+"…":tx)+"”", t, {tipo:"ng_lote", tss:[x.ts]}); }catch(e){} }
+  completaRevision(t, tx, {sinRevision:true}); return true;
+}
+function abreMenuPregunta247(t, ixDato){
+  var p=null; try{ p=preguntaParaMi(t); }catch(e){} if(!p) return;
+  var _v0=document.getElementById("det242"); if(_v0) _v0.remove();
+  var v=document.createElement("div"); v.className="leemask"; v.id="det242";
+  var ds=(typeof ixDato==="number" && ixDato!==p.ix && t.msgs[ixDato] && !t.msgs[ixDato].oculto)?t.msgs[ixDato]:null;
+  v.innerHTML='<div class="mov225" role="dialog" aria-label="Te pregunta"><div class="h225g"></div><div class="h225h"><b>'+esc(p.todos?"Piden a todos":"Te pregunta")+' · '+esc(p.de)+'</b><button class="h225b" data-detx="1" aria-label="Cerrar">'+ico("x",14)+'</button></div>'+
+    '<div class="h225c"><p class="h225v0">“'+esc(p.t)+'”</p>'+(ds?'<p class="h225v0">Dato: '+esc(String(ds.t||"").replace(/^[^:\n]{1,40}:\s*/,""))+'</p>':'')+
+    '<div class="det242b det247"><div class="ac226 hj242 pt247"><button data-p247="mover">Mover</button><span>·</span><button data-p247="noaqui">No es de aquí</button><span>·</span><button data-p247="contesta">Ya la contesté</button></div></div></div></div>';
+  document.body.appendChild(v);
+  v.addEventListener("click", function(ev){
+    var b=ev.target.closest("[data-p247]");
+    if(b){ ev.stopPropagation(); var a=b.getAttribute("data-p247"); v.remove(); var ixs=[p.ix]; if(ds){ var di=t.msgs.indexOf(ds); if(di>=0 && ixs.indexOf(di)<0) ixs.push(di); }
+      if(a==="mover") abreMover225(t, p.ix, ixs);
+      else if(a==="noaqui"){ var q=t.msgs[p.ix], alt=q&&q.duda_tarea&&q.duda_tarea.alternativa_id, d=alt?tareaId240(alt):null, r="";
+        if(d && d.id!==t.id) r=moverG237(t, ixs, d.id); else ixs.forEach(function(i){ noEsDeAqui247(t, i); });   /* con la alternativa que propuso Claude, pasa allá; si no, solo sale de aquí */
+        render(); toast(r||"Quitada de aquí. Deshacer en el Historial"); }
+      else if(a==="contesta"){ var y=t.msgs[p.ix]; if(y){ y.contestada247=Date.now(); guarda(t); try{ hist240("Te pregunta: ya la contesté", t, {tipo:"contestada247", ts:y.ts}); }catch(e){} } render(); toast("Listo: ya no te la pregunta"); }
+      return; }
+    if(ev.target===v || ev.target.closest("[data-detx]")) v.remove(); });
+}
 /* la hoja del detalle del globo */
 function abreDetalle242(t, ix){
   var x=(t.msgs||[])[ix]; if(!x) return; var cx=""; try{ cx=canalDe(x,t); }catch(e){} var _v0=document.getElementById("det242"); if(_v0) _v0.remove();
@@ -9340,12 +9398,13 @@ function abreDetalle242(t, ix){
     '<div class="h225c"><div class="mf225">'+fila("Canal", canal)+fila("Fecha", fecha||"—")+fila("De", de||"—")+fila("Entrega", ent)+fila("Lo acomodó", aco)+'</div>'+
     (tieneImg245(x.t)?'<p class="h225v0">'+htmlTx245(textoSinAutor242(x), x)+'</p>':'')+   /* build 245: la foto se abre desde aquí */
     (x.analisis?'<p class="h225v0">'+esc(x.analisis)+'</p>':'')+
-    ((+x.wa_in===1 || x.wa_c) && !x.oculto && !confirmado237(x)?'<div class="det242b">'+botonesG237(ix, [ix], " hj242")+'</div>':'')+
+    (!x.oculto?'<div class="det242b det247">'+(((+x.wa_in===1 || x.wa_c) && !confirmado237(x))?botonesG237(ix, [ix], " hj242"):botones247(ix))+(propio247(x)?botonesPropio247():'')+'</div>':'')+   /* build 247: menú completo en todos los globos */
     ((hay("[data-mdel]")||hay("[data-wacan]"))?'<button class="hop det242x" data-detdel="1">'+(hay("[data-wacan]")?"Cancelar este WhatsApp":"Borrar este mensaje")+'</button>':'')+
     '</div></div>';
   document.body.appendChild(v);
   bindAcomodo(v, function(){ return t; });
   v.addEventListener("click", function(ev){
+    var _b247=ev.target.closest("[data-d247]"); if(_b247){ ev.stopPropagation(); accion247(t, ix, _b247.getAttribute("data-d247"), v); return; }
     if(ev.target.closest("[data-detdel]")){ var b=document.querySelector('.msgs [data-mix="'+ix+'"] [data-wacan], .msgs [data-mix="'+ix+'"] [data-mdel]'); v.remove(); if(b) b.click(); return; }
     if(ev.target.closest(".ac226 button")){ if(v.parentNode) v.remove(); return; }
     if(ev.target===v || ev.target.closest("[data-detx]")) v.remove(); });
@@ -9403,7 +9462,10 @@ function datoG240(t, ixs){
 /* build 243: "No guardar" = lo mismo que "Solo plática" (no va a ninguna tarea, queda oculto, no se borra). Debajo, 6 s, una pregunta
    opcional "¿Sí era de <tarea>? Sí · No": si contesta, regla "no_guardar" con acierto_tema; si no, no pasa nada. */
 function noGuardar243(t, ixs){
-  var hechos=[]; ixs.forEach(function(ix){ var x=(t.msgs||[])[ix]; if(!x || x.oculto || confirmado237(x)) return; if(soloPlatica(t, ix)) hechos.push(ix); });
+  var hechos=[], fuera=[]; ixs.forEach(function(ix){ var x=(t.msgs||[])[ix]; if(!x || x.oculto) return;
+    if(confirmado237(x)){ if(noEsDeAqui247(t, ix)) fuera.push(ix); return; }   /* build 247: ya acomodado = sacarlo de esta tarea (no_es_de_aqui) */
+    if(soloPlatica(t, ix)) hechos.push(ix); });
+  if(fuera.length && !hechos.length) return "ok";
   if(!hechos.length) return "";
   try{ hist240("No guardar ("+hechos.length+" mensaje"+(hechos.length===1?"":"s")+")", t, {tipo:"ng_lote", tss:hechos.map(function(i){ return t.msgs[i].ts; })}); }catch(e){}   /* 245: con Deshacer */
   preguntaTema243(t, hechos); return "ok";
@@ -9515,6 +9577,10 @@ function bindAcomodo(raiz, tareaDe){
   Array.prototype.forEach.call(raiz.querySelectorAll(".msgs [data-mix]"), function(el){ if(el.classList.contains("liga")) return; el.addEventListener("click", function(ev){
     if(ev.target.closest("button,a,input") || (window.__lp238 && Date.now()-window.__lp238<700)) return; var t=tareaDe(el); if(!t) return;
     abreDetalle242(t, +el.getAttribute("data-mix")); }); });   /* build 242: tocar el globo = su hoja de detalle */
+  /* build 247: tocar un globo hablado (dictado) o una nota de la IA también abre su menú */
+  Array.prototype.forEach.call(raiz.querySelectorAll(".msgs [data-hab], .msgs .nia242[data-nix]"), function(el){ el.addEventListener("click", function(ev){
+    if(ev.target.closest("button,a,input,textarea") || (window.__lp238 && Date.now()-window.__lp238<700) || (window.__leeLP && Date.now()-window.__leeLP<700)) return; var t=tareaDe(el); if(!t) return;
+    var k=el.hasAttribute("data-hab")?el.getAttribute("data-hab"):el.getAttribute("data-nix"); var ix=+String(k).split("|").pop(); if(isNaN(ix)) return; abreDetalle242(t, ix); }); });
   Array.prototype.forEach.call(raiz.querySelectorAll("[data-nia242]"), function(el){ el.onclick=function(ev){ ev.stopPropagation(); window.__nia242=window.__nia242||{}; var k=el.getAttribute("data-nia242"); window.__nia242[k]=!window.__nia242[k]; render(); }; });
   Array.prototype.forEach.call(raiz.querySelectorAll("[data-mq237]"), function(el){ el.onclick=function(ev){ ev.stopPropagation(); window.__mq237=window.__mq237||{}; var k=el.getAttribute("data-mq237"); window.__mq237[k]=!window.__mq237[k]; render(); }; });
 }
@@ -9564,8 +9630,9 @@ function deshaz240(e){
       x.oculto=false; delete x.movido_a; delete x.oculto_ts; delete x.oculto_por; if(x.duda_resuelta==="otra") delete x.duda_resuelta; delete x.acomodo; tocados[it.did]=1; });
     Object.keys(tocados).forEach(function(did){ var d=tareaId240(did); if(d){ d.msgs=(d.msgs||[]).filter(function(m){ return !(m && m.movido_de && m.movido_de.id===t.id && (u.items||[]).some(function(it){ return it.did===did && it.ts===m.movido_de.ts; })); }); guarda(d); } });
     guarda(t); }
-  else if(u.tipo==="ng_lote" && t){ (u.tss||[]).forEach(function(ts){ var x=(t.msgs||[]).filter(function(m){ return m && m.ts===ts && m.oculto && m.oculto_motivo==="platica"; })[0]; if(!x) return;
+  else if(u.tipo==="ng_lote" && t){ (u.tss||[]).forEach(function(ts){ var x=(t.msgs||[]).filter(function(m){ return m && m.ts===ts && m.oculto && /^(platica|no_es_de_aqui|eliminado|es_para_claude)$/.test(m.oculto_motivo||""); })[0]; if(!x) return;
       x.oculto=false; delete x.oculto_ts; delete x.oculto_por; delete x.oculto_motivo; if(x.duda_resuelta==="platica") delete x.duda_resuelta; delete x.acomodo; }); guarda(t); }
+  else if(u.tipo==="contestada247" && t){ (t.msgs||[]).forEach(function(m){ if(m && m.ts===u.ts) delete m.contestada247; }); guarda(t); }
   else if(u.tipo==="vincular"){ var sn=(window.__undo240||{})[e.id]; if(!sn) return "Este vínculo ya no se puede deshacer desde este teléfono.";
     var o=sn.o, d2=tareaId240(sn.did); if(d2){ d2.msgs=sn.dmsgs; d2.enlazadas=sn.denl; guarda(d2); } if(!tareaId240(o.id)) tareas.push(o); guarda(o); }
   else if(u.tipo==="palomita" && t){ if(u.clave){ (t.claves||[]).forEach(function(c){ if(c && String(c.id)===u.clave) c.ok=!!u.prev; }); }
@@ -9731,7 +9798,7 @@ function vResumen230(t){
   if(!r || !(String(r.texto||"").trim() || String(r.que_toca||"").trim() || (r.acuerdos||[]).length || (r.pendientes||[]).length)){
     /* build 240: sin resumen de Claude se arma uno local (2 o 3 líneas: contexto, lo que sigue y el último dato real) */
     var L=[], cx=String(contextoDe(t)||"").replace(/\s+/g," ").trim(); if(cx) L.push(cx.length>140?cx.slice(0,139).replace(/\s+\S*$/,"")+"…":cx);
-    try{ (resumenVivo(t).partes||[]).forEach(function(p){ if(L.length<3 && p && p.tx) L.push(p.tx); }); }catch(e){}
+    try{ (resumenVivo(t).partes||[]).forEach(function(p){ if(L.length<3 && p && p.tx && p.k!=="falta" && p.k!=="ultimo") L.push(p.tx); });   /* build 247: sin "Falta:" ni "Último:" */ }catch(e){}
     if(!L.length) return '<div class="res230 vacio"><b>Resumen</b><span>Claude está preparando el resumen</span></div>';
     return '<div class="res230 local240"><b>Resumen</b>'+L.map(function(x){ return '<p class="rtx">'+esc(x)+'</p>'; }).join("")+'</div>'; }
   var fc=function(f){ return /^\d{4}-\d{2}-\d{2}/.test(f||"")?fechaMovCorta(String(f).slice(0,10)):String(f||""); };
@@ -14701,6 +14768,9 @@ function bindHilo(){
   Array.prototype.forEach.call(document.querySelectorAll("[data-ncexp]"),function(b){ b.onclick=function(){ window.__ncExp=window.__ncExp||{}; window.__ncExp[t.id]=1; render(); }; });
   var _ib=$("intbtn"); if(_ib) _ib.onclick=function(){ abreIntegrantes(t); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-ptab]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); window.__ptAb=window.__ptAb||{}; window.__ptAb[t.id]=b.getAttribute("data-ptab")==="1"; render(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll(".ptcard"),function(c){ c.addEventListener("click",function(ev){   /* build 247: tocar la tarjeta (o un Dato:) = su menú */
+    if(ev.target.closest("button,a,input,[data-irmsg]") || (window.__leeLP && Date.now()-window.__leeLP<700)) return;
+    var e2=ev.target.closest("[data-pt247]"), n=e2?+e2.getAttribute("data-pt247"):NaN; abreMenuPregunta247(t, isNaN(n)?undefined:n); }); });
   Array.prototype.forEach.call(document.querySelectorAll(".ptcard [data-irmsg]"),function(q){ q.onclick=function(ev){ ev.stopPropagation();
     window.__cnl=window.__cnl||{}; if(window.__cnl[t.id]!=="todo"){ window.__cnl[t.id]="todo"; render(); }
     var o=document.querySelector('.msgs [data-mix="'+q.getAttribute("data-irmsg")+'"]'); if(o){ o.scrollIntoView({behavior:"smooth",block:"center"}); o.classList.add("flash"); setTimeout(function(){ o.classList.remove("flash"); },1200); } }; });
@@ -15861,7 +15931,7 @@ function preguntaParaMi(t){
   var ms=t.msgs||[], nombres=misNombres();
   var iUlt=-1; for(var i=ms.length-1;i>=0;i--){ var x=ms[i]; if(x && x.k==="bo" && (x.de===yo || (!x.de && t.duenio===yo)) && !x.vaga){ if(x.compromiso && x.compromiso.hasta>Date.now()) return null; iUlt=i; break; } }
   for(var j=ms.length-1;j>iUlt;j--){
-    var y=ms[j]; if(!y || y.de===yo || y.oculto || y.eliminado) continue;   /* build 227: lo movido/oculto ya no pregunta aqui */
+    var y=ms[j]; if(!y || y.de===yo || y.oculto || y.eliminado || y.contestada247) continue;   /* build 247: ya la contesté; build 227: lo movido/oculto ya no pregunta aqui */
     var deOtro=(y.wa_in===1) || (y.k==="bo" && y.de && y.de!==yo); if(!deOtro) continue;
     var tx=_n179((y.tr||y.t||"")), mm=String(y.t||"").match(/^([^:\n]{1,24}):\s*/), quien=y.wa_c||(y.de&&PERSONAS[y.de]&&PERSONAS[y.de].nombre)||(mm?mm[1]:"Alguien");
     var pide=PIDE_RXf().test(" "+tx+" ") || /\?/.test(String(y.t||""));
@@ -15916,11 +15986,11 @@ function vParaTi(t){
   var _tit=(p.todos?"Piden a todos · ":"Te pregunta · ")+p.de;
   if(min225(t.id,"pt")) return '<button class="ptmini227" data-min225="pt" aria-expanded="false">'+esc(_tit)+ico("der",13)+'</button>';
   var _x=(t.msgs||[])[p.ix], _ac=(_x && _x.duda_tarea && !_x.duda_resuelta && !_x.oculto)?botonesG237(p.ix, [p.ix], " pt227"):'';   /* build 238: por mensaje */
-  var h='<div class="ptcard'+(_ab?' ab':'')+'"><span class="pth">'+esc((p.todos?"PIDEN A TODOS · ":"TE PREGUNTA · ")+p.de)+'<button class="ptmin227" data-min225="pt" aria-label="Minimizar">'+ico("down",15)+'</button></span><span class="ptq" data-irmsg="'+p.ix+'">“'+esc(p.t)+'”</span>'+_ac;
+  var h='<div class="ptcard'+(_ab?' ab':'')+'"><span class="pth">'+esc((p.todos?"PIDEN A TODOS · ":"TE PREGUNTA · ")+p.de)+'<button class="ptmin227" data-min225="pt" aria-label="Minimizar">'+ico("down",15)+'</button></span><span class="ptq" data-pt247="'+p.ix+'">“'+esc(p.t)+'”</span>'+_ac;
   if(!_ab) return h+'<button class="ptmas" data-ptab="1">ver todo ▾</button></div>';
   if(r && !r.err){
     (r.posturas||[]).slice(0,3).forEach(function(x){ if(typeof x.ix==="number"&&t.msgs[x.ix]) h+='<span class="ptl"><b>'+esc(x.postura||"")+':</b> '+esc((x.quienes||[]).join(", "))+fuente(x.ix)+'</span>'; });
-    (r.datos||[]).slice(0,4).forEach(function(x){ if(typeof x.ix==="number"&&t.msgs[x.ix]) h+='<span class="ptl"><b>Dato:</b> '+esc(x.texto||"")+fuente(x.ix)+'</span>'; });
+    (r.datos||[]).slice(0,4).forEach(function(x){ if(typeof x.ix==="number"&&t.msgs[x.ix]) h+='<span class="ptl" data-pt247="'+x.ix+'"><b>Dato:</b> '+esc(x.texto||"")+fuente(x.ix)+'</span>'; });
     (r.decidido||[]).slice(0,2).forEach(function(x){ if(typeof x.ix==="number"&&t.msgs[x.ix]) h+='<span class="ptl"><b>Se decidió:</b> '+esc(x.texto||"")+fuente(x.ix)+'</span>'; });
     (r.falta||[]).slice(0,2).forEach(function(x){ h+='<span class="ptl ptf"><b>Falta:</b> '+esc(String(x.texto||x))+'</span>'; });
   } else if(!r) h+='<span class="ptl ptw">Armando el contexto…</span>';
