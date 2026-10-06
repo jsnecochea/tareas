@@ -1456,6 +1456,7 @@ button{font:inherit;color:inherit}
 .q249 .qs{display:flex;flex-direction:column;gap:6px;margin-top:8px}
 .preg249 .pie249{display:flex;gap:10px;margin-top:6px}.preg249 .pie249 button{flex:1;min-height:48px;border:0;border-radius:14px;font:inherit;font-size:17px;font-weight:700;background:var(--surface-2,#2c2c2e);color:var(--ink,#fff)}
 .preg249 .pie249 .go{background:#0a84ff;color:#fff}.preg249 .pie249 .go:disabled{opacity:.4}
+.cond250{margin:6px 12px 8px}.cd250{padding:10px 14px;border-radius:14px;background:var(--surface-2);border-left:4px solid #ff9f0a;display:flex;flex-direction:column;gap:2px;margin-bottom:6px}.cd250 .cdt{font-size:15.5px;font-weight:600}.cd250 .cde{font-size:13.5px;color:var(--ink-3)}.cd250.e-contesto_si,.cd250.e-confirmado{border-left-color:#30d158}.cd250.e-contesto_no,.cd250.e-vencido{border-left-color:#8e8e93}
 .hc238 .hc249{display:block;width:100%;margin-top:6px;min-height:42px;border:0;border-radius:12px;background:#0a84ff;color:#fff;font:inherit;font-size:16px;font-weight:700}
 
 .leemenu{position:fixed;width:230px;background:#2a2a33;border-radius:14px;padding:4px 0;box-shadow:0 10px 30px rgba(0,0,0,.5)}
@@ -1506,7 +1507,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 249 · Tarea nueva pide nombre · En revisión todo dictado va al cerebro (pantalla difuminada y refrescada) · Preguntas del cerebro en su ventanita con autocompletar";
+var VERSION_APP = "build 250 · Órdenes condicionales: pregúntale a A y si dice que sí, dile a B (encargo que la Mac continúa) · Si el nombre es de varios contactos, pregunta cuál antes de mandar";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -7388,13 +7389,13 @@ function candadoExterno(t, destino, v, sigue){
   document.body.appendChild(bg); document.body.appendChild(p);
 }
 /* manda a un externo: se guarda en SU canal y sale por WhatsApp (programa de la Mac) */
-function mandaAExterno(t, nombre, v, cita, canal){
+function mandaAExterno(t, nombre, v, cita, canal, alId){
   msg(t,"bo",v); var m=t.msgs[t.msgs.length-1]; m.canal=canal||("ext:"+nombre); m.wa_auto=nombre; m.de=yo;
   if(cita) m.cita={ix:cita.ix, de:cita.de, t:String(cita.t).slice(0,300)};
   t.ultima=((PERSONAS[yo]||{}).nombre||"")+" → "+nombre+": "+v; guarda(t); render();
   var cpo={usuario:yo, tarea_id:t.id, contacto:nombre, texto:v, auto_respuesta:1, desde_ts:Date.now()};
   if(cita && cita.t) cpo.cita_texto=String(cita.t).slice(0,300);
-  pideWhatsApp(cpo).then(function(j){ var pid=(j&&(j.id||j.pedido_id))||null; if(pid){ m.wa_pid=pid; guarda(t); if(vista==="hilo"&&abierta===t.id) render(); setTimeout(function(){ consultaEstadosWA(t); }, 15000); } })
+  pideWhatsApp(cpo).then(function(j){ var pid=(j&&(j.id||j.pedido_id))||null; if(pid){ m.wa_pid=pid; guarda(t); if(alId) try{ alId(pid); }catch(e){} if(vista==="hilo"&&abierta===t.id) render(); setTimeout(function(){ consultaEstadosWA(t); }, 15000); } })
     .catch(function(e){ msg(t,"bi","No se pudo mandar a "+nombre+" por WhatsApp ("+String((e&&e.message)||e).slice(0,60)+")."); guarda(t); if(vista==="hilo") render(); });
   toast("A "+nombre+" por WhatsApp");
 }
@@ -7745,6 +7746,7 @@ function promptRevision(t, v, abiertas){
     "- de_quien y cifras: para datos (de quién o qué proyecto; montos o medidas tal cual). ya_hecha=true solo si dice que ya se hizo.\n"+
     "- pregunta: SOLO lo que de verdad quedó ambiguo, en una pregunta corta; lo demás llénalo igual. Si todo quedó claro, null.\n"+
     "- ordenes (build 238): TODO lo que pidió HACER (no los datos), en orden, sin perder ninguna: [{\"tipo\":\"vincular|mensaje|claude|agendar|seguimiento|clasificar\",\"a\":\"persona tal cual (mensaje)\",\"canal\":\"whatsapp|correo\",\"texto\":\"lo que se le dice, breve, en segunda persona, de parte de Salvador\",\"que\":\"qué tiene que revisar o investigar Claude, o qué se agenda\",\"fecha\":\"AAAA-MM-DD copiada del calendario o null\",\"hora\":\"HH:MM o null\",\"tareas\":[ids de TAREAS ABIERTAS candidatas para vincular, la más probable primero],\"busca\":\"cómo nombró la tarea a vincular\",\"tipo_item\":\"tarea|dato\"}]. 'revísalo/investiga/checa' dirigido a ti = tipo claude. 'pídele/dile/escríbele a X' = tipo mensaje. Si no pidió nada, [].\n"+
+    "- CONDICIONAL (build 250): 'pregúntale/mándale mensaje a A y si dice/te contesta que sí, dile/confírmale a B' es UNA SOLA orden {\"tipo\":\"condicional\",\"pregunta_a\":\"A tal cual\",\"pregunta_texto\":\"lo que se le pregunta a A, con el contexto (qué, cuándo, para qué), de parte de Salvador\",\"si_a\":\"B tal cual\",\"si_texto\":\"lo que se le confirma a B si A dice que sí\",\"vence\":\"AAAA-MM-DD fecha límite que dijo, o null\",\"vence_hora\":\"HH:MM o null\",\"evento_fecha\":\"AAAA-MM-DD del evento o plan de que se trata (copiada del calendario), o null\"}. No la partas en dos mensajes ni la conviertas en aviso: se manda la pregunta a A y la respuesta de B queda esperando. Si en la misma frase dice 'tengo que contestarle a X' y a la vez pide ejecutarlo, NO pongas recordar: la orden ya lo hace.\n"+
     "- dudas: SOLO lo genuinamente ambiguo que no se puede ejecutar sin preguntar: [{\"pregunta\":\"corta\",\"opciones\":[\"opción\",…]}] (máx 4 opciones, la más probable primero). Si no hay, [].\n"+
     "- OJO DUEÑO: pedirle algo a una persona, o que una persona dé información, NO la hace dueña. quien/responsable SOLO si dijo explícito que la tarea es suya o la hace ella ('pásasela a X', 'la hace X', 'X es el responsable').\n"+
     "- HOY en Monterrey es "+fechaMty238(0)+" (mañana "+fechaMty238(1)+"). 'mañana', 'el jueves', etc. se convierten con el calendario.\n"+
@@ -8127,8 +8129,9 @@ function aplicaRevisionClaude(t, v, j, abiertas){
   else if(_cf.ok && _cf.fecha){ t.fecha_dictada=!!_cf.dictada; t.falta_fecha=false; }
   hecho=hecho.concat(_l248.hecho);
   var _todas=fechaDictada(v).todas, _rel=/\b(antes|despues|previo|previa)\b/.test(s);
+  var _ej250=(Array.isArray(j.ordenes)?j.ordenes:[]).some(function(o){ return o && /^(mensaje|condicional)$/i.test(String(o.tipo||"")); }) && /\b(tengo que|debo|hay que|me toca|quiero)\s+(contestar|responder|confirmar|avisar|decir)\w*/.test(s);   /* build 250: "mañana tengo que contestarle a X" + orden ejecutable = no es aviso sin hora */
   (Array.isArray(j.recordar)?j.recordar:[]).slice(0,6).forEach(function(r){
-    if(r && _fReal(r.fecha) && !_cf.duda && (!_todas.length || _rel || _todas.indexOf(r.fecha)>=0) && !avisoMismoDia(t, r.fecha)){ nuevoAviso(t,{texto:t.nombre, fecha:r.fecha, hora:r.hora||"", dicho:v}); hecho.push("aviso "+fechaBonita(r.fecha)+(r.hora?" "+r.hora:"")); } });
+    if(r && !(_ej250 && !r.hora) && _fReal(r.fecha) && !_cf.duda && (!_todas.length || _rel || _todas.indexOf(r.fecha)>=0) && !avisoMismoDia(t, r.fecha)){ nuevoAviso(t,{texto:t.nombre, fecha:r.fecha, hora:r.hora||"", dicho:v}); hecho.push("aviso "+fechaBonita(r.fecha)+(r.hora?" "+r.hora:"")); } });
   if(j.quien && String(j.quien).trim() && duenoDicho238(v, String(j.quien))){ var qn=_nn(String(j.quien).trim()), k=Object.keys(PERSONAS).filter(function(x){ var pn=_nn(PERSONAS[x].nombre); return pn===qn || pn.split(" ")[0]===qn.split(" ")[0]; })[0];
     var dicho=k && (s.indexOf(_nn(PERSONAS[k].nombre).split(" ")[0])>=0 || (k===yo && /\b(yo|mia|mio|me toca|la hago|lo hago)\b/.test(s)));
     if(dicho && k!==t.duenio){ if(!t.duenio) t.duenio=k; else transfiere(t, k, "lo dijo "+((PERSONAS[yo]||{}).nombre||"")+" al completarla"); hecho.push("quién: "+(k===yo?"tú":PERSONAS[k].nombre)); } }
@@ -8213,13 +8216,13 @@ function candidatasVinc238(t, o, abiertas){
 function corto238(s){ s=String(s||"").replace(/\s+/g," ").trim(); return s.length>70?s.slice(0,69).replace(/\s+\S*$/,"")+"…":s; }
 function nombreTarea238(id){ var d=tareas.filter(function(x){ return x.id===id; })[0]; return d?String(d.nombre||""):""; }
 /* manda por la cola de WhatsApp de siempre, "IA: " y de parte de Salvador */
-function mandaOrden238(T, persona, texto){
+function mandaOrden238(T, persona, texto, alId){
   var p1=String(persona.nombre||"").split(/\s+/)[0], tx=conIA(p1+", de parte de "+(((PERSONAS[yo]||{}).nombre)||"Salvador")+": "+String(texto||"").replace(/^IA:\s*/i,"").trim());
   if(PERSONAS[persona.id]){ var G=null; try{ G=contactosWA(T).filter(function(g){ return g.eq===persona.id; })[0]; }catch(e){}
-    if(G && G.nombre){ mandaAExterno(T, G.nombre, tx, null, "dm:"+persona.id); return "por WhatsApp"; }
+    if(G && G.nombre){ mandaAExterno(T, G.nombre, tx, null, "dm:"+persona.id, alId); return "por WhatsApp"; }
     mandaDM(T, persona.id, tx); return "en Doit"; }
   T.wa_contactos=T.wa_contactos||[]; if(!T.wa_contactos.some(function(c){ return _nn(String(c.nombre||c))===_nn(persona.nombre); })) T.wa_contactos.push({nombre:persona.nombre, desde:Date.now()});
-  mandaAExterno(T, persona.nombre, tx, null); return "por WhatsApp";
+  mandaAExterno(T, persona.nombre, tx, null, null, alId); return "por WhatsApp";
 }
 function ejecutaOrdenes238(t, v, j, abiertas){
   var L=(Array.isArray(j&&j.ordenes)?j.ordenes:[]).filter(function(o){ return o && typeof o==="object"; }).slice(0,8), hecho=[], falta=[], T=t, hm=horaMty238();
@@ -8241,11 +8244,72 @@ function ejecutaOrdenes238(t, v, j, abiertas){
         cuando:f?(f+"T"+(o.hora&&/^\d{2}:\d{2}$/.test(o.hora)?o.hora:"09:00")+":00-06:00"):"", origen:"dictado", hora_dictado:hm, estado:"pendiente", creado:Date.now(), tarea_id:T.id, por:yo||""}]);
       if(f && !T.revisar) T.revisar=f;
       hecho.push("Lo reviso yo"+(f?" "+(f===fechaMty238(1)?"mañana":fechaBonita(f)):"")+": "+corto238(que)); }
+    else if(tp==="condicional"){ ordenCondicional250(T, v, o, hecho, falta); }
     else if(tp==="agendar" || tp==="seguimiento"){ var f2=fechaOrden238(o, v), q2=String(o.que||o.texto||T.nombre).trim();
       if(f2 && !avisoMismoDia(T, f2)){ nuevoAviso(T,{texto:q2, fecha:f2, hora:(/^\d{2}:\d{2}$/.test(o.hora||"")?o.hora:""), dicho:v}); hecho.push((tp==="agendar"?"Agendado ":"Seguimiento ")+fechaBonita(f2)+(o.hora?" "+o.hora:"")+": "+q2); }
       else if(!f2) falta.push({k:"txt", q:"¿Qué día "+(tp==="agendar"?"lo agendo":"le doy seguimiento")+"? ("+q2+")", ops:[]}); }
   });
   return {hecho:hecho, falta:falta, T:T};
+}
+
+/* ===== build 250: ÓRDENES CONDICIONALES =====
+   "pregúntale a A … y si dice que sí, dile a B …": se manda la pregunta a A (IA: …, con contexto) y se deja un encargo
+   t.encargos {tipo:"condicional", estado:"esperando", pregunta:{contacto, pedido_id}, si_si:{contacto, texto}, si_no:{accion:"nota"}, vence, …}.
+   La Mac (18y) espera la respuesta y manda lo de B. Si el nombre coincide con varios contactos, se pregunta cuál ANTES de mandar. */
+function personasPara250(T, dicho){
+  var r={cands:[]}; try{ r=resuelveDestino(T, dicho); }catch(e){}
+  var out=(r.cands||[]).slice(), vis={}; out.forEach(function(c){ vis[_n179(c.nombre)]=1; });
+  try{ buscaContactos249(dicho, 10).forEach(function(c){ var k=_n179(c.nombre); if(!vis[k]){ vis[k]=1; out.push({id:c.id, nombre:c.nombre, sub:c.sub||"", prio:0}); } }); }catch(e){}
+  var ws=_tokPer(dicho), ex=out.filter(function(c){ return _tokPer(c.nombre).join(" ")===ws.join(" "); });
+  if(ex.length===1 && (ws.length>=2 || out.length===1)) return {estado:"uno", persona:ex[0], cands:out};   /* un solo nombre ("Karina") con varios contactos que lo comparten: se pregunta cuál */
+  if(out.length===1) return {estado:"uno", persona:out[0], cands:out};
+  return {estado:out.length?"varios":"ninguno", cands:out};
+}
+function _diaAntes250(f){ var d=new Date(f+"T12:00:00Z"); d.setUTCDate(d.getUTCDate()-1); return d.toISOString().slice(0,10); }
+function eventoDicho250(v){
+  var s=_fsa(v), DIAS=["domingo","lunes","martes","miercoles","jueves","viernes","sabado"], m=s.match(/\b(domingo|lunes|martes|miercoles|jueves|viernes|sabado)\b/); if(!m) return "";
+  var h=new Date(fechaMty238(0)+"T12:00:00Z"), want=DIAS.indexOf(m[1]), add=(want-h.getUTCDay()+7)%7||7; return fechaMty238(add);
+}
+function venceCond250(o, v){
+  var f=String((o&&o.vence)||"").trim(), hr=/^\d{2}:\d{2}$/.test(o&&o.vence_hora||"")?o.vence_hora:"20:00";
+  if(!_fReal(f)){ var ev=String((o&&o.evento_fecha)||"").trim(); if(!_fReal(ev)) ev=eventoDicho250(v); f=_fReal(ev)?_diaAntes250(ev):fechaMty238(1); hr="20:00"; }
+  return f+"T"+hr+":00-06:00";
+}
+function ordenCondicional250(T, v, o, hecho, falta){
+  var aN=String(o.pregunta_a||o.a||"").trim(), bN=String(o.si_a||"").trim(), txA=String(o.pregunta_texto||o.texto||"").trim(), txB=String(o.si_texto||"").trim();
+  if(!aN || !bN || !txA || !txB){ falta.push({k:"txt", q:"En lo condicional me faltó algo: ¿a quién le pregunto y a quién le confirmo si dice que sí?", ops:[]}); return; }
+  var cid="cd"+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36), rA=personasPara250(T, aN), rB=personasPara250(T, bN);
+  var P={cid:cid, aN:aN, bN:bN, txA:txA, txB:txB, vence:venceCond250(o, v), dicho:String(v||"").slice(0,300), A:null, B:null};
+  if(rA.estado==="uno") P.A={id:rA.persona.id, nombre:rA.persona.nombre};
+  if(rB.estado==="uno") P.B={id:rB.persona.id, nombre:rB.persona.nombre}; else if(rB.estado==="ninguno") P.B={id:"ext:"+bN, nombre:bN};
+  if(rA.estado==="ninguno"){ falta.push({k:"txt", q:"No encontré a "+aN+" para preguntarle: ¿cómo se llama o a quién le escribo?", ops:[]}); return; }
+  var dudas=false;
+  if(!P.A){ dudas=true; falta.push({k:"cond", lado:"A", cid:cid, q:"¿Cuál "+aN+" es? Le pregunto a ella/él antes de mandar nada.", ops:rA.cands.slice(0,5).map(function(c){ return {id:c.id, label:c.nombre}; })}); }
+  if(!P.B){ dudas=true; falta.push({k:"cond", lado:"B", cid:cid, q:"¿Cuál "+bN+" es? Es a quien le confirmo si "+nombreCorto(aN).split(" ")[0]+" dice que sí.", ops:rB.cands.slice(0,5).map(function(c){ return {id:c.id, label:c.nombre}; })}); }
+  if(dudas){ T.cond_pend250=T.cond_pend250||{}; T.cond_pend250[cid]=P; return; }
+  hecho.push(ejecutaCond250(T, P));
+}
+function ejecutaCond250(T, P){
+  var enc={id:"enc"+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36), tipo:"condicional", estado:"esperando", t:"Esperar respuesta de "+P.A.nombre+" y, si dice que sí, confirmar a "+P.B.nombre,
+    pregunta:{contacto:P.A.nombre, pedido_id:""}, si_si:{contacto:P.B.nombre, texto:conIA(String(P.B.nombre||"").split(/\s+/)[0]+", de parte de "+(((PERSONAS[yo]||{}).nombre)||"Salvador")+": "+String(P.txB).replace(/^IA:\s*/i,"").trim())},
+    si_no:{accion:"nota"}, vence:P.vence, creado:Date.now(), por:yo||"", origen:"dictado", tarea_id:T.id};
+  T.encargos=(Array.isArray(T.encargos)?T.encargos:[]).concat([enc]); var tid=T.id;
+  mandaOrden238(T, P.A, P.txA, function(pid){ var V=viva249(T)||T, e=(V.encargos||[]).filter(function(x){ return x.id===enc.id; })[0]; if(e){ e.pregunta.pedido_id=pid; guarda(V); } });
+  guarda(T);
+  return "Le pregunté a "+nombreCorto(P.A.nombre).split(" ")[0]+". Si dice que sí, le confirmo a "+nombreCorto(P.B.nombre).split(" ")[0]+".";
+}
+/* una opción elegida en la duda de "¿cuál X?": cuando ya están los dos, se ejecuta. Devuelve la línea de Hecho o "" */
+function resuelveCond250(T, f, op){
+  var P=(T.cond_pend250||{})[f.cid]; if(!P) return "";
+  var per={id:op.id, nombre:op.label||op.nombre}; if(f.lado==="A") P.A=per; else P.B=per;
+  if(!P.A || !P.B){ return ""; }
+  delete T.cond_pend250[f.cid]; return ejecutaCond250(T, P);
+}
+var ESTADO_COND250={esperando:"esperando respuesta", contesto_si:"dijo que sí, ya se confirmó", contesto_no:"dijo que no", confirmado:"ya se confirmó", vencido:"venció sin respuesta", cancelado:"cancelado"};
+function vCondicional250(t){
+  var L=(t&&Array.isArray(t.encargos)?t.encargos:[]).filter(function(e){ return e && e.tipo==="condicional" && e.pregunta && e.si_si; }); if(!L.length) return "";
+  return '<div class="cond250">'+L.map(function(e){ var est=ESTADO_COND250[e.estado]||String(e.estado||"");
+    return '<div class="cd250 e-'+esc(String(e.estado||""))+'"><span class="cdt">Esperando respuesta de '+esc(nombreCorto(e.pregunta.contacto).split(" ")[0])+' → confirmar a '+esc(nombreCorto(e.si_si.contacto).split(" ")[0])+'</span><span class="cde">'+esc(est)+(e.vence&&e.estado==="esperando"?' · vence '+esc(fechaBonita(String(e.vence).slice(0,10)))+' '+esc(String(e.vence).slice(11,16)):'')+'</span></div>'; }).join("")+'</div>';
 }
 /* ¿es un dictado con órdenes? (largo, o dirigido a Claude) — un mensaje corto a una persona sigue su camino */
 function ordenesDichas238(v){
@@ -8364,6 +8428,7 @@ function enviaPreguntas249(tid, P, A){
     if(p.hi!=null) quitar.push(p.hi);
     if(p.k==="vinc" && a.opt){ var pc=t.encargos; enlazaTareas(t.id, a.opt.id, "dictado"); var d=tareas.filter(function(x){ return x.id===a.opt.id; })[0];
       if(d && t.fusionada_en===d.id){ if(Array.isArray(pc) && pc.length) d.encargos=(Array.isArray(d.encargos)?d.encargos:[]).concat(pc); if(H){ H.hecho=(H.hecho||[]).concat(["Vinculada a “"+(d.nombre||"")+"”"]); d.hecho238=H; guarda(d); } } aplicadas++; return; }
+    if(p.k==="cond" && a.opt){ var fc=(H&&H.falta||[])[p.hi]; if(fc){ var h250=resuelveCond250(t, fc, a.opt); if(h250 && H) H.hecho=(H.hecho||[]).concat([h250]); } aplicadas++; return; }
     if(p.k==="msg" && a.opt){ var per2=(candidatosPersona(t).filter(function(c){ return c.id===a.opt.id; })[0])||{id:a.opt.id, nombre:a.opt.label}; var por=mandaOrden238(t, per2, p.texto);
       if(H) H.hecho=(H.hecho||[]).concat(["Le escribí a "+nombreCorto(per2.nombre)+" "+por+": “"+p.texto+"”"]); aplicadas++; return; }
     textos.push("Respuesta a «"+p.q+"»: "+tx+"."); });
@@ -10237,6 +10302,7 @@ function vHilo(){
   /* build 225: chips en una linea (cada uno abre su hoja) + "Resumen vivo · Claude". El ▾ y su detalle viven en ⓘ Detalles */
   h+=chipsTarea(t);   /* build 228/230: una fila de fichas; el resumen vive en la vista Importante */
   h+=vHecho238(t);   /* build 238: Hecho / Me falta */
+  h+=vCondicional250(t);   /* build 250: Esperando respuesta de A → confirmar a B */
   if(tipoRevisar(t)==="falta" && !vistaSup(t) && esIA240(t)) h+=vTipoToggle(t);   /* build 240: solo las que creó la IA */   /* build 236: lo primero que se ve, justo debajo de las fichas */
   /* build 228: el renglon "Agendado ✓ · Calendario…" ahora es la ficha "Agendado" (lineaAgenda queda para otras vistas) */
   h+=vDecisionMeta(t)+vDecisionDato(t)+vQuienDudas(t)+vBorradorMsj(t);   /* build 225: mensaje por confirmar; "Se comparte con" va en 👥 */   /* build 221; 222: decisión de meta atrasada */
@@ -14878,6 +14944,7 @@ function bindHilo(){
     if(f.k==="vinc"){ var pc=t.encargos, hh=H; enlazaTareas(t.id, o.id, "dictado"); var d=tareas.filter(function(x){ return x.id===o.id; })[0];
       if(d && t.fusionada_en===d.id){ if(Array.isArray(pc) && pc.length) d.encargos=(Array.isArray(d.encargos)?d.encargos:[]).concat(pc);
         hh.hecho=(hh.hecho||[]).concat(["Vinculada a “"+(d.nombre||"")+"”"]); d.hecho238=hh; guarda(d); render(); } return; }
+    if(f.k==="cond"){ var _h250=resuelveCond250(t, f, o); if(_h250) H.hecho=(H.hecho||[]).concat([_h250]); guarda(t); render(); return; }
     if(f.k==="msg"){ var per=(candidatosPersona(t).filter(function(c){ return c.id===o.id; })[0])||{id:o.id, nombre:o.label}; var por=mandaOrden238(t, per, f.texto); H.hecho=(H.hecho||[]).concat(["Le escribí a "+nombreCorto(per.nombre)+" "+por+": “"+f.texto+"”"]); }
     guarda(t); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-clv]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var id=el.getAttribute("data-clv");
