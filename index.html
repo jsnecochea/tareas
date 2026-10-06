@@ -1525,7 +1525,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 255 · preguntas del cerebro en un solo paso: pantalla difuminada, preguntas en texto y se contestan dictando";
+var VERSION_APP = "build 256 · privacidad: Josué y Carlos ya no ven las tareas de los demás (cada usuario ve solo lo suyo)";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -2974,11 +2974,12 @@ var PERSONAS={
   salvador:{nombre:"Salvador",ini:"S",jefe:true},
   samuel:{nombre:"Samuel",ini:"SM",jefe:false},
   cynthia:{nombre:"Cynthia",ini:"C",jefe:false},
-  /* Los dos ingenieros, solo para cazar fallas durante la prueba.
-     LES DA VISTA COMPLETA. Hay que bajarles el nivel antes de que entren
-     datos reales de la operación. */
-  josue:{nombre:"Josué",ini:"J",jefe:true,prueba:true},
-  carlos:{nombre:"Carlos",ini:"CA",jefe:true,prueba:true},
+  /* Los dos ingenieros. Salvador 6-oct-2026 10:54: cada usuario ve SOLO sus
+     tareas; nadie ve las de los demás por ser jefe ni por estar en prueba.
+     Ya no traen jefe:true (antes les daba vista completa de las tareas de
+     Salvador). */
+  josue:{nombre:"Josué",ini:"J",jefe:false,prueba:true},
+  carlos:{nombre:"Carlos",ini:"CA",jefe:false,prueba:true},
   /* Karina entra como usuario NIVEL 1: solo recibe, no configura nada.
      Es el usuario mas dificil de complacer y por eso el que mas importa. */
   karina:{nombre:"Karina",ini:"K",jefe:false}
