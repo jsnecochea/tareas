@@ -842,6 +842,7 @@ button{font:inherit;color:inherit}
 .evr{display:flex;align-items:center;gap:12px;width:100%;border:0;border-top:1px solid var(--line);background:none;color:var(--ink);font:inherit;font-size:16px;padding:11px 2px;text-align:left}.evr svg{color:var(--ink-2);flex:none}
 .evt{flex:1;min-width:0;display:flex;flex-direction:column}.evt span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.evt small{font-size:13px;color:var(--ink-3)}
 .evtx{padding:8px 2px}.evtx b{display:block;font-size:16px}.evtx small{display:block;color:var(--ink-3);font-size:13px;margin:2px 0 8px}.evtx p{margin:0;font-size:15px;line-height:1.45;white-space:pre-wrap}
+.cer259 .ot{color:var(--ink-3)}.enlcer .enln{color:var(--ink-3)}.enlcerr{display:inline-block;margin-left:8px;font-size:12px;color:var(--ink-3);font-weight:600;border:1px solid var(--ink-3);border-radius:8px;padding:0 6px}
 .enlsim{display:inline-block;margin-left:8px;font-size:12px;color:#7cc0ff;font-weight:600}.enlnueva .enln{display:flex;align-items:center;gap:6px}
 .res230{margin:4px 2px 10px;padding:12px 14px;border-radius:16px;background:var(--surface-2);display:flex;flex-direction:column;gap:6px}
 .res230>b{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3)}.res230 .rtx{margin:0;font-size:15.5px;line-height:1.4;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -1529,7 +1530,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 258 · notificaciones: tipo Claude necesita tu respuesta y atajo Solo lo que necesita mi respuesta";
+var VERSION_APP = "build 259 · una sola hoja Vincular · Nueva; el cerebro no cambia el propósito de una tarea ni la cierra con pasos sin palomear";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -5757,40 +5758,74 @@ function enlazaCandidatas(oid){
            estadoReal(x)!=="cerrada" && !esEjemplo(x) && !esPropuesta256(x) && (leToca(x)||sigoElHilo(x)) && String(x.nombre||"").trim();
   }).sort(function(a,b){ return (b.tocada||0)-(a.tocada||0); });
 }
+/* ===== build 259: UNA SOLA HOJA "Vincular · Nueva" (la de Vincular a otra tarea y la de ¿A dónde va?) =====
+   Orden: [+ Crear tarea nueva] fijo · las PARECIDAS (de más a menos) · TODAS las demás abiertas en orden alfabético sin acentos.
+   Buscador: nombre, nombre anterior, contexto y alias, sin acentos, en TODAS las abiertas; si no hay coincidencia en abiertas muestra
+   también las cerradas (marcadas "cerrada", en gris); al vincular a una cerrada, se reabre. */
+function _txtBusca259(x){
+  var flat=function(v){ return [].concat(v||[]).map(function(z){ return (z&&typeof z==="object")?(z.nombre||z.tx||""):String(z); }).join(" "); };
+  var ctx=""; try{ ctx=contextoDe(x)||""; }catch(e){}
+  return _n179([x.nombre, flat(x.nombre_anterior), flat(x.nombres_anteriores), ctx||x.contexto||"", flat(x.alias), flat(x.alias_tarea), flat(x.palabras), flat(x.sinonimos), x.de_quien||""].join(" "));
+}
+function esCerradaVinc259(x){ var c=!!x.cierre; if(!c){ try{ c=estadoReal(x)==="cerrada"; }catch(e){} } return c; }
+function buscaVinc259(q, excl){
+  var ws=_n179(q).split(" ").filter(Boolean); if(!ws.length) return {lista:[], cerradas:false};
+  var ab=[], ce=[];
+  (tareas||[]).forEach(function(x){
+    if(!x || x.id===excl || x.fusionada_en || x.estado==="fusionada" || x.estado==="descartada" || x.es_recordatorio || !String(x.nombre||"").trim()) return;
+    try{ if(esEjemplo(x) || esPropuesta256(x)) return; }catch(e){}
+    var cer=esCerradaVinc259(x); if(!cer){ try{ if(!(leToca(x)||sigoElHilo(x))) return; }catch(e){} }
+    var nom=_n179(x.nombre), hay=nom+" "+_txtBusca259(x);
+    if(!ws.every(function(w){ return hay.indexOf(w)>=0; })) return;
+    var sc=0; ws.forEach(function(w){ if(nom.indexOf(w)>=0) sc+=3; if(nom.split(" ").some(function(p){ return p.indexOf(w)===0; })) sc+=2; });
+    (cer?ce:ab).push({d:x, sc:sc, cerrada:cer}); });
+  var ord=function(a,b){ return b.sc-a.sc || _n179(a.d.nombre).localeCompare(_n179(b.d.nombre)); };
+  ab.sort(ord); ce.sort(ord);
+  return ab.length?{lista:ab, cerradas:false}:{lista:ce, cerradas:true};
+}
+function ordenVinc259(oid, simIds){
+  var cand=enlazaCandidatas(oid), sims=[], vis={};
+  (simIds||[]).forEach(function(id){ var d=cand.filter(function(x){ return x.id===id; })[0]; if(d && !vis[id]){ vis[id]=1; sims.push(d); } });
+  var rest=cand.filter(function(x){ return !vis[x.id]; }).sort(function(a,b){ return _n179(a.nombre).localeCompare(_n179(b.nombre)); });
+  return {sims:sims, rest:rest};
+}
 function abreEnlazar(oid, op){
   op=op||{};   /* build 229: desde "Vincular" de una tarea nueva: parecidas primero y "Tarea nueva" */
   var o=tareas.filter(function(x){return x.id===oid})[0]; if(!o) return;
   cierraEnlazar();
-  var cand=enlazaCandidatas(oid);
-  var nrmDe={}; cand.forEach(function(x){ nrmDe[x.id]=_nrm(x.nombre); });   /* aparte: nunca se escribe en la tarea */
+  var simIds=op.similares; if(!simIds){ try{ simIds=similares229(o).map(function(d){ return d.id; }); }catch(e){ simIds=[]; } }
   var v=document.createElement("div"); v.className="hoja-velo"; v.id="enlv";
   v.innerHTML='<div class="enlh"><div class="enlg">'+
-    '<div class="enlt"><b>Vincular a otra tarea</b>Elige a cu\u00e1l pasar todo lo de \u201c'+esc(corta40(o.nombre))+'\u201d</div>'+
+    '<div class="enlt"><b>Vincular · Nueva</b>Elige a cuál pasar todo lo de “'+esc(corta40(o.nombre))+'”, o crea una tarea nueva</div>'+
     '<div class="enlb">'+ico("lupa",18,1.8)+'<input id="enlq" type="text" placeholder="Buscar tarea" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search"></div>'+
+    '<button class="enlr enlnueva" data-nueva="1" id="enlcrea"><span class="enln">'+ico("plus",16)+' '+esc(op.etiquetaNueva||'Crear tarea nueva')+'</span><span class="vinc">'+esc(op.subNueva||'Nombre nuevo')+'</span></button>'+
     '<div class="enll" id="enll"></div></div>'+
     '<button class="enlc" id="enlno">Cancelar</button></div>';
   document.body.appendChild(v);
   v.onclick=function(e){ if(e.target===v) cierraEnlazar(); };
   $("enlno").onclick=cierraEnlazar;
   var lista=$("enll"), q=$("enlq");
+  var fila=function(x, sim, cer){ return '<button class="enlr'+(cer?' enlcer':'')+'" data-d="'+esc(x.id)+'"><span class="enln">'+esc(x.nombre)+(sim?'<small class="enlsim">parecida</small>':'')+(cer?'<small class="enlcerr">cerrada</small>':'')+'</span><span class="vinc">'+(cer?'Reabrir y vincular':'Vincular')+'</span></button>'; };
   function pinta(){
-    var txt=_nrm(q.value).trim(), ws=txt?txt.split(/\s+/):[];
-    var r=cand.filter(function(x){ return ws.every(function(w){ return nrmDe[x.id].indexOf(w)>=0 }) });
-    var sim=op.similares||[]; if(sim.length && !txt){ r=r.slice().sort(function(a,b){ var ia=sim.indexOf(a.id), ib=sim.indexOf(b.id); return (ia<0?99:ia)-(ib<0?99:ib); }); }
-    var tot=r.length; r=r.slice(0,60);
-    lista.innerHTML=(op.tareaNueva && !txt?'<button class="enlr enlnueva" data-nueva="1"><span class="enln">'+ico("plus",16)+' '+(op.etiquetaNueva||'Tarea nueva')+'</span><span class="vinc">'+(op.subNueva||'Queda como tarea')+'</span></button>':'')+
-      (r.length?r.map(function(x){ return '<button class="enlr" data-d="'+esc(x.id)+'"><span class="enln">'+esc(x.nombre)+(sim.indexOf(x.id)>=0 && !txt?'<small class="enlsim">parecida</small>':'')+'</span><span class="vinc">Vincular</span></button>' }).join("")+
-        (tot>r.length?'<div class="enlv">Escribe m\u00e1s para acotar \u00b7 '+tot+' tareas</div>':'')
-      : '<div class="enlv">'+(cand.length?'No encontr\u00e9 nada con eso.':'No hay otras tareas abiertas.')+'</div>');
+    var txt=_n179(q.value);
+    if(!txt){ var O=ordenVinc259(oid, simIds);
+      lista.innerHTML=(O.sims.length||O.rest.length)?O.sims.map(function(x){ return fila(x,true,false); }).join("")+O.rest.slice(0,300).map(function(x){ return fila(x,false,false); }).join(""):'<div class="enlv">No hay otras tareas abiertas.</div>'; return; }
+    var R=buscaVinc259(q.value, oid), L=R.lista.slice(0,60);
+    lista.innerHTML=L.length?L.map(function(o2){ return fila(o2.d, simIds.indexOf(o2.d.id)>=0, o2.cerrada); }).join("")+(R.lista.length>L.length?'<div class="enlv">Escribe más para acotar · '+R.lista.length+' tareas</div>':''):'<div class="enlv">No encontré nada con eso.</div>';
   }
+  v.querySelector("#enlcrea").onclick=function(){
+    if(op.tareaNueva){ cierraEnlazar(); op.tareaNueva(); return; }   /* build 229: la propia tarea ya es la nueva */
+    cierraEnlazar();
+    pideNombreNueva249(o, [], function(nombre){ var n=creaTarea({nombre:nombre, duenio:o.duenio, pendiente_info:"", falta_fecha:true}); if(!n) return; n.tipo_elegido=true; n.tipo_item=o.tipo_item||"tarea"; n.creada_desde={tarea_id:o.id, ts:Date.now(), tipo:"vincular_nueva"}; guarda(n); enlazaTareas(oid, n.id, "nueva"); vaATareaNueva249(n); });
+  };
   lista.onclick=function(e){
-    if(e.target.closest && e.target.closest("[data-nueva]")){ cierraEnlazar(); if(op.tareaNueva) op.tareaNueva(); return; }   /* build 229 */
     var b=e.target; while(b&&b!==lista&&!(b.getAttribute&&b.getAttribute("data-d"))) b=b.parentNode;
     if(!b||b===lista) return;
     var did=b.getAttribute("data-d"), d=tareas.filter(function(x){return x.id===did})[0]; if(!d) return;
-    hojaConfirma({titulo:"Pasar todo a \u201c"+corta40(d.nombre)+"\u201d",
-      sub:"Lo de \u201c"+corta40(o.nombre)+"\u201d se junta all\u00e1 y esta tarea sale de tu lista.",
-      accion:"Pasar todo a "+corta40(d.nombre), cb:function(){ enlazaTareas(oid,did); }});
+    var cer=esCerradaVinc259(d);
+    hojaConfirma({titulo:(cer?"Reabrir y pasar todo a “":"Pasar todo a “")+corta40(d.nombre)+"”",
+      sub:"Lo de “"+corta40(o.nombre)+"” se junta allá y esta tarea sale de tu lista."+(cer?" “"+corta40(d.nombre)+"” está cerrada: se reabre.":""),
+      accion:(cer?"Reabrir y pasar todo a ":"Pasar todo a ")+corta40(d.nombre), cb:function(){ if(cer) reabre(d, "vinculada desde “"+corta40(o.nombre)+"”"); enlazaTareas(oid,did); }});
   };
   if(op.q) q.value=op.q;   /* build 236: "vincúlala a X" por voz */
   q.oninput=pinta; pinta();
@@ -7760,13 +7795,14 @@ function estadoParaClaude(t){
     "FECHA: "+(t.f_vigente?(t.f_vigente+(t.fecha_dictada?" (dictada)":(fechaPuestaSola(t)?" (la puso el sistema, no cuenta)":""))):"(sin fecha)"),
     "INDEFINIDA: "+(t.indefinida===true?"sí":"no"), "RECURRENTE: "+(t.periodicidad||"no"), "RITMO: "+(t.ritmo||"(ninguno)"), "AVISOS: "+(av.join(", ")||"(ninguno)"),
     "RESPONSABLE DE FUERA: "+(t.revisa_ext||"(nadie)")+(t.revisa_ext?" (tú la supervisas)":""), "SEGUIMIENTO A: "+(t.seg_a?(t.seg_a.contacto+(t.seg_a.cada?" · "+t.seg_a.cada:"")+(t.seg_a.hora?" "+t.seg_a.hora:"")):"(nadie)"),
-    "CONTEXTO: "+(contextoDe(t)||"(nada)"), "ETIQUETAS: "+((t.palabras||[]).join(", ")||"(ninguna)"), "DE QUIÉN/PROYECTO: "+(t.de_quien||"(nada)"), "CIFRAS: "+(cif||"(ninguna)")].join("\n");
+    "PASOS: "+(tienePasos(t)?t.lista_pasos.map(function(p){ return (p.hecho?"[x] ":"[ ] ")+(p.tx||""); }).join(" | "):"(ninguno)"), "CONTEXTO: "+(contextoDe(t)||"(nada)"), "ETIQUETAS: "+((t.palabras||[]).join(", ")||"(ninguna)"), "DE QUIÉN/PROYECTO: "+(t.de_quien||"(nada)"), "CIFRAS: "+(cif||"(ninguna)")].join("\n");
 }
 function promptRevision(t, v, abiertas){
   var gente=Object.keys(PERSONAS).map(function(k){ return PERSONAS[k].nombre; }).join(", ");
   return "Eres Claude dentro de la app de tareas Doit. "+((PERSONAS[yo]||{}).nombre||"El usuario")+" está completando esta tarea y te dicta TODO de una vez. "+
     "Entiende el concepto completo y saca SOLO lo que dijo, sin inventar. Fechas AAAA-MM-DD copiadas de este calendario (NO calcules el día): "+calendarioProximo(60).join(", ")+".\n"+
     "- nombre: un nombre corto y bueno (máx 60 letras) si el actual no sirve o lo pide; si el actual está bien, null.\n"+
+    "- REGLA DURA (build 259): NUNCA cambies el propósito de una tarea ya existente. Si lo dictado contradice su contexto, sus pasos, su nombre o los mensajes con que nació (ej. la tarea es de cobranza y dicta que es para los mensajes de un ingeniero), NO pongas nombre ni contexto nuevos: pon contradice={\"tema_dictado\":\"de qué habla lo dictado\",\"persona\":\"de quién son los mensajes, o null\"} y el sistema le pregunta. Tampoco pongas ya_hecha=true si quedan pasos sin hacer, salvo que él haya dicho explícitamente que la cierres.\n"+
     "- tipo: 'tarea' si alguien tiene que hacer algo; 'dato' si es información para consultar (precios, medidas, teléfonos); null si no se sabe.\n"+
     "- contexto: el contexto COMPLETO actualizado (lo que ya había + lo nuevo): de qué se trata, quiénes, para qué, en 1 a 3 frases. contexto_modo 'reemplazar' (default) o 'sumar'.\n"+
     "- fecha: fecha de finiquito SOLO si la dictó y es DONDE TERMINA. OJO: \"no termina el 8\", \"continúa hasta que…\" y \"termina cuando <evento>\" NO son fecha de finiquito: esa fecha va en recordar (aviso) y el evento en cierra (texto corto, ej. \"Fideicomiso firmado\"); \"antes del 15\" es la fecha meta y SÍ va en fecha. indefinida=true solo si dijo que no tiene fin. periodicidad 'semanal'/'mensual' solo si dijo que se repite.\n"+
@@ -7788,7 +7824,7 @@ function promptRevision(t, v, abiertas){
     "- OJO DUEÑO: pedirle algo a una persona, o que una persona dé información, NO la hace dueña. quien/responsable SOLO si dijo explícito que la tarea es suya o la hace ella ('pásasela a X', 'la hace X', 'X es el responsable').\n"+
     "- HOY en Monterrey es "+fechaMty238(0)+" (mañana "+fechaMty238(1)+"). 'mañana', 'el jueves', etc. se convierten con el calendario.\n"+
     "- checklist: si pide una lista o checklist: {\"titulo\":\"…\",\"items\":[{\"tx\":\"renglón tal cual\",\"estado\":0}]} (0 pendiente, 1 invitado/hecho, 2 confirmado, solo si se dijo); si no, null. CHECKLIST ACTUAL: "+checklistTexto(t)+".\n"+
-    "Contesta SOLO JSON: {\"cierra\":null,\"checklist\":null,\"nombre\":null,\"tipo\":null,\"contexto\":null,\"contexto_modo\":\"reemplazar\",\"fecha\":null,\"indefinida\":false,\"periodicidad\":null,\"ritmo\":null,\"recordar\":[],\"quien\":null,\"responsable\":null,\"yo_superviso\":false,\"seguimiento_a\":null,\"compartir_con\":[],\"metas\":[],\"aviso_inmediato\":false,\"palabras\":[],\"sinonimos\":[],\"vinculos\":[],\"de_quien\":null,\"cifras\":null,\"ya_hecha\":false,\"pregunta\":null,\"ordenes\":[],\"dudas\":[]}\n\n"+
+    "Contesta SOLO JSON: {\"contradice\":null,\"cierra\":null,\"checklist\":null,\"nombre\":null,\"tipo\":null,\"contexto\":null,\"contexto_modo\":\"reemplazar\",\"fecha\":null,\"indefinida\":false,\"periodicidad\":null,\"ritmo\":null,\"recordar\":[],\"quien\":null,\"responsable\":null,\"yo_superviso\":false,\"seguimiento_a\":null,\"compartir_con\":[],\"metas\":[],\"aviso_inmediato\":false,\"palabras\":[],\"sinonimos\":[],\"vinculos\":[],\"de_quien\":null,\"cifras\":null,\"ya_hecha\":false,\"pregunta\":null,\"ordenes\":[],\"dudas\":[]}\n\n"+
     "ESTADO ACTUAL DE LA TAREA:\n"+estadoParaClaude(t)+(esMetas(t)?"\nMETAS: "+metasDe(t).map(function(m){ return m.tx+(m.fecha?" ("+m.fecha+")":"")+(metaCumplida(m)?" CUMPLIDA "+(m.cumplida||""):""); }).join(" | "):"")+"\n\nLO QUE FALTA: "+(soloMeFalta(t).join(" | ")||"(nada)")+"\nPREGUNTAS QUE LE HICE: "+(preguntasFalta(t).join(" | ")||"(ninguna)")+
     "\n\nTAREAS ABIERTAS (id | nombre):\n"+(abiertas.map(function(x){ return x.id+" | "+(x.nombre||"")+(esCerradaReciente248(x)?" (cerrada)":""); }).join("\n")||"(ninguna)")+
     "\n\nLO QUE DICTÓ: "+v;
@@ -8138,9 +8174,58 @@ function vCompartir(t){
   return '<div class="compc"><span class="cpl">Se comparte con</span>'+l.map(function(c){ return '<span class="cpp">'+esc(c.nombre)+'</span>'; }).join("")+'</div>';
 }
 /* aplica lo que regreso Claude, con candados. Regresa {hecho, dudas, vinc, yaHecha} */
+/* ===== build 259 (caso real "Cobranza Moric Pádel Draw"): EL CEREBRO NUNCA CAMBIA EL PROPÓSITO DE UNA TAREA NI LA CIERRA A LA LIGERA =====
+   a) Si lo dictado contradice el contexto o la historia de la tarea (pasos, nombre, mensajes de origen), NO renombra ni cambia el
+      contexto: pregunta "Esta tarea es de <tema actual>. ¿Creo una tarea nueva para <lo que dictaste> y muevo ahí los mensajes de
+      <persona>?" con [Sí, crear nueva] [Cambiar esta]. Renombrar con orden explícita ("cámbiale el nombre a…") sí se hace.
+   b) Nunca la cierra con pasos sin palomear si la orden de cierre no vino explícita de Salvador en ese mismo dictado. */
+function stems259(s){ return _n179(s).split(" ").filter(function(w){ return w.length>=4; }).map(function(w){ return w.slice(0,5); }); }
+function renombreExplicito259(v){ return /\b(cambi\w*|renombr\w*|pon\w*|dej\w*|llam\w*)\s+(le\s+|la\s+|lo\s+)?(el\s+)?(nombre|titulo)\b|\b(que\s+se\s+llame|ll[aá]mala|ll[aá]malo|renombr[aá]la)\b/.test(_fsa(v)); }
+function cierreExplicito259(v){ return /\b(cierr\w*|ci[eé]rra(la|lo)|dala\s+por\s+(hecha|cerrada|terminada)|dalo\s+por\s+(hecho|cerrado|terminado)|marca(la|lo)?\s+(como\s+)?(hecha|cerrada|terminada|hecho|cerrado)|ya\s+(la|lo)\s+(hice|termine|cerre)|quedo\s+cerrada|termina(la|lo))\b/.test(_fsa(v)); }
+function historiaTarea259(t){
+  var real=(t.msgs||[]).filter(function(m){ return m && !m.nota_ia && !m.nota_claude && !m.res238 && !m.dict238 && m.k!=="bal" && !m.oculto && String(m.t||"").trim(); }).length;
+  var ctx=String(contextoDe(t)||t.contexto||"").trim().split(/\s+/).filter(Boolean).length;
+  return tienePasos(t) || ((t.checklist&&t.checklist.items||[]).length>0) || real>=4 || (ctx>=10 && !!(t.autorizada||t.tipo_elegido));
+}
+function contradice259(t, v, j){
+  j=j||{}; if(!t || renombreExplicito259(v) || !historiaTarea259(t)) return null;
+  var nj=String(j.nombre||"").replace(/\s+/g," ").trim(), cj=String(j.contexto||"").replace(/\s+/g," ").trim(), cd=j.contradice;
+  var cambia=(nj.length>=2 && _n179(nj)!==_n179(t.nombre||"")) || (cj && _n179(cj)!==_n179(contextoDe(t)||""));
+  var base=stems259([t.nombre, contextoDe(t)||t.contexto||"", (t.lista_pasos||[]).map(function(p){ return p&&p.tx; }).join(" "), ((t.checklist&&t.checklist.items)||[]).map(function(i){ return i&&i.tx; }).join(" ")].join(" "));
+  var nuevo=stems259(nj+" "+cj), comparte=nuevo.some(function(w){ return base.indexOf(w)>=0; });
+  var flag=(cd===true) || !!(cd && typeof cd==="object" && (cd.tema_dictado||cd.persona));
+  if(!(flag || (cambia && nuevo.length && !comparte))) return null;
+  var persona=String((cd&&cd.persona)||"").trim();
+  if(!persona){ var ds=_n179(v); (t.msgs||[]).slice().reverse().some(function(m){ var c=nombreLimpio((m&&m.wa_c)||""); if(!c) return false; var p0=_n179(c).split(" ")[0]; if(p0.length>=3 && (" "+ds+" ").indexOf(" "+p0+" ")>=0){ persona=c; return true; } return false; }); }
+  var nuevoTema=String((cd&&cd.tema_dictado)||nj||"").trim()||corta40(String(v||"").replace(/\s+/g," ").trim());
+  return {nombre:nj, contexto:cj, persona:persona, tema:nuevoTema};
+}
+function preguntaContradice259(t, c, v){
+  return {k:"contradice259", q:"Esta tarea es de “"+(t.nombre||"")+"”. ¿Creo una tarea nueva para “"+corta40(c.tema)+"” y muevo ahí los mensajes de "+(c.persona||"esa persona")+"?",
+    ops:[{id:"nueva", label:"Sí, crear nueva"},{id:"cambiar", label:"Cambiar esta"}], dato259:{nombre:c.nombre, contexto:c.contexto, persona:c.persona, tema:c.tema, dicho:String(v||"").slice(0,400)}};
+}
+/* responde la pregunta: "nueva" crea la tarea y mueve los mensajes de la persona; "cambiar" aplica el nombre y contexto nuevos */
+function resuelveContradice259(t, f, op){
+  var d=(f&&f.dato259)||{}; var id=String((op&&op.id)||"");
+  if(id==="cambiar"){ if(d.nombre){ t.nombre=tituloTarea(conMayuscula(d.nombre.slice(0,60))); } if(d.contexto){ t.contexto=d.contexto.slice(0,1500); } guarda(t); return "Cambié esta tarea: “"+(t.nombre||"")+"”."; }
+  if(id!=="nueva") return "";
+  var nom=tituloTarea(conMayuscula((d.nombre||d.tema||"Tarea nueva").slice(0,60)));
+  var n=creaTarea({nombre:nom, duenio:t.duenio, pendiente_info:"", falta_fecha:true}); if(!n) return "";
+  n.tipo_elegido=true; n.tipo_item="tarea"; n.creada_desde={tarea_id:t.id, ts:Date.now(), tipo:"contradice259"}; if(d.contexto) n.contexto=d.contexto.slice(0,1500); guarda(n);
+  var p0=_n179(d.persona||"").split(" ")[0], movidos=0;
+  if(p0.length>=3) (t.msgs||[]).forEach(function(m, i){ if(m && !m.oculto && +m.wa_in===1 && m.wa_c && _n179(m.wa_c).split(" ")[0]===p0){ if(mueveMensaje(t, i, n.id, "nueva")) movidos++; } });
+  guarda(t);
+  return "Tarea nueva “"+nom+"”"+(movidos?"; pasaron ahí "+movidos+" mensaje"+(movidos===1?"":"s")+" de "+d.persona:"")+".";
+}
 function aplicaRevisionClaude(t, v, j, abiertas){
   j=j||{}; var s=_fsa(v), hecho=[], dudas=[], vinc=[];
-  if(j.ya_hecha===true) return {hecho:hecho, dudas:dudas, vinc:vinc, yaHecha:true};
+  if(j.ya_hecha===true){
+    /* build 259: con pasos sin palomear NO se cierra si la orden de cierre no vino explícita en ESTE dictado */
+    if(tienePasos(t) && pasosFaltan(t).length && !cierreExplicito259(v)){ var _nf=pasosFaltan(t).length; j.ya_hecha=false; dudas.push("No la cerré: quedan "+_nf+" paso"+(_nf===1?"":"s")+" sin palomear. Dime \u201ccierra la tarea\u201d si de verdad la cierro."); }
+    else return {hecho:hecho, dudas:dudas, vinc:vinc, yaHecha:true};
+  }
+  var _c259=contradice259(t, v, j), _cp259=null;
+  if(_c259){ _cp259=preguntaContradice259(t, _c259, v); j=JSON.parse(JSON.stringify(j)); j.nombre=null; j.contexto=null; }   /* build 259: no renombra ni cambia el propósito */
   var tp=String(j.tipo||"").toLowerCase();
   if((tp==="tarea"||tp==="dato") && tipoItem(t)!==tp){ t.tipo_item=tp; t.es_dato=(tp==="dato"); hecho.push(tp==="dato"?"es dato":"es tarea"); }
   else if(tp==="tarea"||tp==="dato"){ t.tipo_item=tp; t.es_dato=(tp==="dato"); }
@@ -8197,7 +8282,7 @@ function aplicaRevisionClaude(t, v, j, abiertas){
   if(pq){ var _dm=_fsa(pq).match(new RegExp("\\b("+_DIARE+"|"+_MESRE+")\\b","g"))||[];
     var _pqOk=!/\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}\s*[-/]\s*\d{1,2}\b/.test(pq) && _dm.every(function(w){ return new RegExp("\\b"+w+"\\b").test(s); });
     if(_pqOk && !preguntaQuienYaResuelta248(t, pq)) dudas.push(pq); }
-  return {hecho:hecho, dudas:dudas, vinc:vinc, yaHecha:false};
+  return {hecho:hecho, dudas:dudas, vinc:vinc, yaHecha:false, contradice:_cp259};
 }
 /* ===== build 208 (Salvador 22:04): nada de palomeo en vivo mientras dicta. Al llegar lo de Claude, lo que se completo
    se palomea UNO POR UNO (animacion de palomita, PALOMEO_MS entre cada uno); al final queda tenue y sale "Solo me falta"
@@ -8518,6 +8603,8 @@ function enviaPreguntas249(tid, P, A){
     if(p.k==="persona"){ var per=a.persona; if(!per){ var r=resuelvePersona(t, tx); per=(r.estado==="uno")?{id:r.persona.id, nombre:r.persona.nombre}:{id:"ext:"+tx, nombre:tx}; }
       try{ resuelveDudaPersona(t, p.id, per); aplicadas++; }catch(e){} return; }
     if(p.hi!=null) quitar.push(p.hi);
+    if(p.k==="contradice259"){ var fc9=(H&&H.falta||[])[p.hi]; var op9=a.opt||(/\b(cambi\w+|esta)\b/.test(_n179(tx))&&!/\bnueva\b/.test(_n179(tx))?{id:"cambiar"}:(/\b(si|nueva|crea\w*)\b/.test(_n179(tx))?{id:"nueva"}:null));
+      if(fc9 && op9){ var h9=resuelveContradice259(t, fc9, op9); if(h9 && H) H.hecho=(H.hecho||[]).concat([h9]); aplicadas++; } else if(p.hi!=null){ quitar.pop(); } return; }
     if(p.k==="vinc" && a.opt){ var pc=t.encargos; enlazaTareas(t.id, a.opt.id, "dictado"); var d=tareas.filter(function(x){ return x.id===a.opt.id; })[0];
       if(d && t.fusionada_en===d.id){ if(Array.isArray(pc) && pc.length) d.encargos=(Array.isArray(d.encargos)?d.encargos:[]).concat(pc); if(H){ H.hecho=(H.hecho||[]).concat(["Vinculada a “"+(d.nombre||"")+"”"]); d.hecho238=H; guarda(d); } } aplicadas++; return; }
     if((p.k==="cond"||p.k==="msg") && !a.opt && tx){ a.opt=a.persona?{id:a.persona.id, label:a.persona.nombre}:{id:"ext:"+tx, label:tx}; }   /* build 251: elegido del autocompletar o escrito */
@@ -8573,6 +8660,7 @@ function completaRevision(t, v, op){
       var r=aplicaRevisionClaude(t, v, j, _ab); _j238=j;
       var _err251=false;
       try{ if(!r.yaHecha){ _or238=ejecutaOrdenes238(t, v, j, _ab); _T238=_or238.T||t; } }catch(e238){ _err251=true; try{ console.warn("ordenes238", e238); }catch(_e){} }
+      if(r.contradice){ _or238=_or238||{hecho:[], falta:[]}; _or238.falta=(_or238.falta||[]).concat([r.contradice]); }   /* build 259 */
       /* build 251: NADA SE QUEDA ATORADO. Sin órdenes ni datos (o una acción imposible): UNA vez más con el prompt reforzado; si aun así no, pregunta concreta en la tarjeta del 249 */
       if(!r.yaHecha && sinResultado251(t, v, j, r, _or238, _err251)){
         if(intento<1){ _lanza251(promptRevision(t, v, _ab)+refuerzo251(t, v), 1); return; }
@@ -9622,32 +9710,23 @@ function nombreLimpio(n){ return String(n||"").replace(/\s*\(.*?\)\s*/g," ").rep
 
 /* ===== build 253: BUSCADOR EN "¿A DÓNDE VA?" =====
    Todas las tareas abiertas y las cerradas de los últimos 30 días ("(cerrada)"), por nombre, sinónimos, palabras y contexto, sin acentos. */
-function buscaTareasMover253(q, t){
-  var ws=_n179(q).split(" ").filter(Boolean); if(!ws.length) return [];
-  var out=[]; (tareas||[]).forEach(function(x){
-    if(!x || (t && x.id===t.id) || x.fusionada_en || x.es_recordatorio || esPropuesta256(x)) return;
-    var viva=!x.cierre && (function(){ try{ return estadoReal(x)!=="cerrada"; }catch(e){ return true; } })();
-    if(!viva && !esCerradaReciente248(x)) return;
-    var nom=_n179(x.nombre), rest=_n179([(x.palabras||[]).join(" "), (x.sinonimos||[]).join(" "), contextoDe(x)||x.contexto||"", x.de_quien||""].join(" ")), hay=nom+" "+rest;
-    if(!ws.every(function(w){ return hay.indexOf(w)>=0; })) return;
-    var sc=0; ws.forEach(function(w){ if(nom.indexOf(w)>=0) sc+=3; if(nom.split(" ").some(function(p){ return p.indexOf(w)===0; })) sc+=2; });
-    out.push({d:x, sc:sc-(viva?0:1), cerrada:!viva}); });
-  out.sort(function(a,b){ return b.sc-a.sc || String(a.d.nombre).localeCompare(String(b.d.nombre)); }); return out.slice(0,20);
+function buscaTareasMover253(q, t){   /* build 259: misma búsqueda que "Vincular · Nueva" (abiertas; si no hay, cerradas) */
+  var R=buscaVinc259(q, t&&t.id); return R.lista.slice(0,20).map(function(o){ return {d:o.d, sc:o.sc, cerrada:o.cerrada}; });
 }
 function abreMover225(t, ix, ixs, opts){
   var x=(t.msgs||[])[ix]; if(!x) return; ixs=(ixs&&ixs.length)?ixs:null; opts=opts||{};   /* build 237: con ixs mueve toda la plática */
   var ops=opcionesMover(t, x), q=nombreLimpio(x.wa_c||((PERSONAS[x.de]||{}).nombre)||""), tx=_txMsg(x).replace(/^[^:\n]{1,40}:\s*/,"");
   var v=document.createElement("div"); v.className="leemask"; v.id="mov225";
-  v.innerHTML='<div class="mov225" role="dialog" aria-label="¿A dónde va?"><div class="h225g"></div>'+
+  v.innerHTML='<div class="mov225" role="dialog" aria-label="Vincular · Nueva"><div class="h225g"></div>'+
     '<div class="mvctx"><span class="av226">'+esc(inicialesDe(q))+'</span><span class="mvt"><small>'+esc((q||"Mensaje")+(x.h?" · "+x.h:"")+(ixs&&ixs.length>1?" · "+ixs.length+" mensajes":""))+'</small><span>'+htmlTx245(tx, x)+'</span></span><button class="h225b" data-movx="1" aria-label="Cerrar">'+ico("x",14)+'</button></div>'+
-    '<h3 class="mvh">'+(opts.soloNg?'No guardar':'¿A dónde va?')+'</h3>'+
+    '<h3 class="mvh">'+(opts.soloNg?'No guardar':'Vincular · Nueva')+'</h3>'+
     (opts.desde?'<div class="desde245"><label>Solo desde <input type="date" id="desde245"></label><span id="nd245">'+ixs.length+' mensajes</span></div>':'')+
     '<div class="h225c">'+
     (opts.soloNg?'<button class="opt226 plain" data-movplatica="1">'+ico("bubble",20)+'<span class="two"><span id="ngt245">No guardar '+(ixs?ixs.length:1)+' mensajes</span><small>no va a ninguna tarea; queda oculto, no borrado</small></span></button></div></div>':
-    '<div class="bus253"><button type="button" class="lupa" data-lupa253="1" aria-label="Buscar tarea">'+ico("lupa",20,1.8)+'</button><input id="mbus253" type="search" placeholder="Buscar tarea…" autocomplete="off" autocapitalize="none" enterkeyhint="search"></div><div id="mres253"></div><div id="mops253">'+
+    '<div class="bus253"><button type="button" class="lupa" data-lupa253="1" aria-label="Buscar tarea">'+ico("lupa",20,1.8)+'</button><input id="mbus253" type="search" placeholder="Buscar tarea…" autocomplete="off" autocapitalize="none" enterkeyhint="search"></div><button class="opt226 plain nueva259" data-movnueva="1">'+ico("plus",20)+'<span class="two"><span>+ Crear tarea nueva</span><small>“'+esc(nombreSugerido(x))+'”</small></span></button><div id="mres253"></div><div id="mops253">'+
     ops.map(function(o){ return '<button class="opt226'+(o.best?' best':'')+'" data-movto="'+esc(o.d.id)+'">'+ico("folder",20)+'<span class="ot">'+esc(o.d.nombre||"(sin nombre)")+'</span>'+(o.tag?'<span class="tag">'+esc(o.tag)+'</span>':'')+'</button>'; }).join("")+
+    ordenVinc259(t.id, []).rest.filter(function(d){ return !ops.some(function(o){ return o.d.id===d.id; }); }).map(function(d){ return '<button class="opt226 alf259" data-movto="'+esc(d.id)+'">'+ico("folder",20)+'<span class="ot">'+esc(d.nombre||"(sin nombre)")+'</span></button>'; }).join("")+
     '</div><div class="sep226"></div>'+
-    '<button class="opt226 plain" data-movnueva="1">'+ico("plus",20)+'<span class="two"><span>Tarea nueva</span><small>“'+esc(nombreSugerido(x))+'”</small></span></button>'+
     '<button class="opt226 plain" data-movplatica="1">'+ico("bubble",20)+'<span class="two"><span>Solo plática</span><small>saludo o charla, no va a ninguna tarea</small></span></button></div></div>');
   document.body.appendChild(v);
   /* build 245: en lote ("Mover todos" / selección) la hoja aplica a todos, o solo a los desde una fecha */
@@ -9657,7 +9736,7 @@ function abreMover225(t, ix, ixs, opts){
   var _bi=v.querySelector("#mbus253"), _br=v.querySelector("#mres253"), _bo=v.querySelector("#mops253");
   if(_bi) _bi.addEventListener("input", function(){ var q=_bi.value, L=buscaTareasMover253(q, t), hay=!!_n179(q);
     if(_bo) _bo.style.display=hay?"none":"";
-    _br.innerHTML=!hay?"":(L.length?L.map(function(o){ return '<button class="opt226" data-movto="'+esc(o.d.id)+'">'+ico("folder",20)+'<span class="ot">'+esc(nombreVinc248(o.d))+'</span></button>'; }).join(""):'<div class="bus253x">No encontré “'+esc(q.trim())+'” en tus tareas.</div>'); });
+    _br.innerHTML=!hay?"":(L.length?L.map(function(o){ return '<button class="opt226'+(o.cerrada?' cer259':'')+'" data-movto="'+esc(o.d.id)+'">'+ico("folder",20)+'<span class="ot">'+esc(o.d.nombre||"(sin nombre)")+'</span>'+(o.cerrada?'<span class="tag">cerrada</span>':'')+'</button>'; }).join(""):'<div class="bus253x">No encontré “'+esc(q.trim())+'” en tus tareas.</div>'); });
   v.addEventListener("click", function(ev){ ev.stopPropagation(); if(ev.target.closest("[data-lupa253]")){ if(_bi) enfoca252(_bi); return; }
     var b=ev.target.closest("[data-movto],[data-movnueva],[data-movplatica]"), r="";
     if(b && b.hasAttribute("data-movnueva")){   /* build 249: Nueva pide el nombre; al crear, se va a la tarea nueva */
@@ -9669,11 +9748,12 @@ function abreMover225(t, ix, ixs, opts){
         else { n9=nuevaDesdeMsg(t, ix, nombre); if(n9) guardaRegla237("nueva", t, [ix], n9); r9=n9?"Tarea nueva “"+n9.nombre+"”; el mensaje pasó ahí.":""; }
         if(r9 && r9!=="ok") toast(r9); if(n9) vaATareaNueva249(n9); else render(); });
       return; }
+    if(b && b.hasAttribute("data-movto")){ try{ var _dc2=tareas.filter(function(z){ return z.id===b.getAttribute("data-movto"); })[0]; if(_dc2 && _dc2.id!==t.id && esCerradaVinc259(_dc2)) reabre(_dc2, "recibe mensajes movidos desde otra tarea"); }catch(e){} }
     if(b && opts.lote){ var uso=usa245(); if(!uso.length){ toast("Ninguno desde esa fecha"); return; }
       r=aplicaLote245(t, uso, b.hasAttribute("data-movnueva")?"nueva":(b.hasAttribute("data-movplatica")?"ng":"mover"), b.getAttribute("data-movto")||""); v.remove(); window.__sel245=null; if(r && r!=="ok") toast(r); render(); return; }
     if(b){ if(b.hasAttribute("data-movnueva")){ var n=ixs?nuevaG237(t, ixs):nuevaDesdeMsg(t, ix); if(n && !ixs) guardaRegla237("nueva", t, [ix], n); r=n?"Tarea nueva “"+n.nombre+"” en Falta info; "+(ixs&&ixs.length>1?"la plática pasó":"el mensaje pasó")+" ahí.":""; }
       else if(b.hasAttribute("data-movplatica")){ (ixs||[ix]).forEach(function(i){ var rr=soloPlatica(t, i); if(rr) r=rr; }); reglasPorMsg238("platica", t, ixs||[ix], null); }
-      else { var id=b.getAttribute("data-movto"); r=(id===t.id)?okG237(t, ixs||[ix]):(ixs?moverG237(t, ixs, id):(guardaRegla237("mover", t, [ix], tareas.filter(function(z){ return z.id===id; })[0]), mueveMensaje(t, ix, id))); }
+      else { var id=b.getAttribute("data-movto"); try{ var _dc=tareas.filter(function(z){ return z.id===id; })[0]; if(_dc && _dc.id!==t.id && esCerradaVinc259(_dc)) reabre(_dc, "recibe mensajes movidos desde otra tarea"); }catch(e){} r=(id===t.id)?okG237(t, ixs||[ix]):(ixs?moverG237(t, ixs, id):(guardaRegla237("mover", t, [ix], tareas.filter(function(z){ return z.id===id; })[0]), mueveMensaje(t, ix, id))); }
       v.remove(); if(r) toast(r); render(); return; }
     if(ev.target===v || ev.target.closest("[data-movx]")) v.remove(); });
 }
@@ -14140,7 +14220,7 @@ function completaPendiente(id, texto){
   /* build 150 (Salvador 2026-09-29): si contesta que YA SE HIZO ("ya lo mande", "ya lo
      envie", "ya quedo", "es para mi mismo y ya lo envie"), la tarea NO es una fecha
      pendiente: se anota lo que dijo y se CIERRA. Antes se quedaba pidiendo fecha. */
-  if(/\bya\s+(?:se\s+|lo\s+|la\s+|los\s+|las\s+)*(?:envi|mand|hice|hizo|hic|termin|qued|resolv|contest|cumpl|pas[eé]|dej[eé])|\bya\s+est[aá](?:\s+hech[oa])?\b|\bya\s+lo\s+hic/i.test(texto.normalize("NFD").replace(/[\u0300-\u036f]/g,""))){
+  if(/\bya\s+(?:se\s+|lo\s+|la\s+|los\s+|las\s+)*(?:envi|mand|hice|hizo|hic|termin|qued|resolv|contest|cumpl|pas[eé]|dej[eé])|\bya\s+est[aá](?:\s+hech[oa])?\b|\bya\s+lo\s+hic/i.test(texto.normalize("NFD").replace(/[\u0300-\u036f]/g,"")) && !(tienePasos(t) && pasosFaltan(t).length && !cierreExplicito259(texto))){   /* build 259: con pasos sin palomear no se cierra sola */
     msg(t,"bi","Contestaste: “"+texto+"”.");
     t.pendiente_info=""; t.pendiente_tipo=""; t.falta_fecha=false;
     cierraHecha(t);

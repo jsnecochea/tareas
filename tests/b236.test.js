@@ -67,7 +67,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
     eq("Dato: relleno blanco suave", r3.dato, ["dato", true, "rgba(255, 255, 255, 0.16)"]);
     eq("Vincular abre la hoja", r3.vincular, [true, ""]);
     eq("por voz: 'es tarea' / 'es dato'", [r3.vozTarea, r3.vozDato], ["tarea", "dato"]);
-    eq("por voz: 'vincúlala al fideicomiso' abre la hoja ya buscada; no pide datos", r3.vozVinc, [true, "fideicomiso", ["Fideicomiso testamentario BBVA"], ""]);
+    eq("por voz: 'vincúlala al fideicomiso' abre la hoja ya buscada; no pide datos", r3.vozVinc, [true, "fideicomiso", ["Fideicomiso testamentario BBVAparecida"], ""]);
     eq("frases de vincular (al inicio)", r3.frases, ["golf", "Golf simulador", "fideicomiso", "", null]);
     eq("sin errores de página", errs, []);
   } finally { await b.close(); }

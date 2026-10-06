@@ -39,11 +39,11 @@ eq("versión 229 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
       o.tres = [tb.map(function (x) { return x[0]; }), tb.every(function (x) { return x[1] === tb[0][1]; }), tb.every(function (x) { return x[2] >= 46 && x[2] <= 50; })];   /* 236: grandes otra vez */
       o.encabezado = [document.querySelectorAll(".cnlwrap,#cnlclaude,#intbtn").length, !!document.querySelector(".chips225 #cnlpill")];
       document.querySelector('[data-tipoi="vincular"]').click();
-      o.hoja = [!!document.getElementById("enlq"), [].map.call(document.querySelectorAll("#enll .enlr"), function (x) { return x.querySelector(".enln").textContent; })];
+      o.hoja = [!!document.getElementById("enlq"), [].map.call(document.querySelectorAll("#enlv .enlr"), function (x) { return x.querySelector(".enln").textContent; })];
       var L0 = tareas[0]; document.querySelector('#enll [data-d="tLIMP"]').click(); document.getElementById("hojaok").click();
       var D = tareas.filter(function (x) { return x.id === "tLIMP"; })[0];
       o.vincula = [L0.estado, L0.fusionada_en, L0.msgs.length, D.msgs.some(function (m) { return /limpieza del lote/.test(m.t); })];
-      abre([LOTE(), LIMP()]); document.querySelector('[data-tipoi="vincular"]').click(); document.querySelector("#enll [data-nueva]").click();
+      abre([LOTE(), LIMP()]); document.querySelector('[data-tipoi="vincular"]').click(); document.querySelector("#enlv [data-nueva]").click();
       o.tareaNueva = [tareas[0].tipo_item, !!document.getElementById("enlv")];
       /* B */
       abre([BLUE(EVI)]);
@@ -66,7 +66,7 @@ eq("versión 229 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
       return o; });
     eq("A) Tarea · Dato · Vincular en una fila (236: grandes, 48 px)", r.tres, [["Tarea", "Dato", "Vincular"], true, true]);
     eq("encabezado del 228 (sin pastillas viejas; Todo ⌄ en las fichas)", r.encabezado, [0, true]);
-    eq("Vincular = la hoja que ya existía (lupa), con Tarea nueva y la parecida primero", r.hoja, [true, [" Tarea nueva", "Limpieza y mantenimiento lotes Cumbresparecida", "Golf simulador"]]);
+    eq("Vincular = la hoja que ya existía (lupa), con Tarea nueva y la parecida primero", r.hoja, [true, [" Crear tarea nueva", "Limpieza y mantenimiento lotes Cumbresparecida", "Golf simulador"]]);
     eq("al vincular: los mensajes pasan y la suelta queda apartada (no borrada)", r.vincula, ["fusionada", "tLIMP", 1, true]);
     eq("Tarea nueva: queda como tarea", r.tareaNueva, ["tarea", false]);
     eq("B) franja Agendar: una línea, clip con 2, Sí, ⋯ y sin campo de hora", r.franja, ["Agendar", "Vie 9 oct · todo el día · Límite confirmar renta de equipo", false, "2", true, true, false]);

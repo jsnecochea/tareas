@@ -69,7 +69,7 @@ eq("versión >= 253", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     eq("Por contexto", (await busca("quincena")).res, ["Pago de nómina"]);
     eq("Todas las palabras deben estar (portón + lerdo)", (await busca("porton lerdo")).res, ["Reparación del portón"]);
     var r6 = await busca("planos");
-    eq("Cerradas de los últimos 30 días salen marcadas '(cerrada)'; las de hace 60 días no", r6.res, ["Revisión de planos de la ampliación (cerrada)"]);
+    eq("Sin abiertas que coincidan, salen las cerradas (de cualquier antigüedad), marcadas 'cerrada'", r6.res, ["Planos viejos del terreno", "Revisión de planos de la ampliación"]);
     eq("Sin resultados: lo dice", (await busca("zzzz")).vacio, "No encontré “zzzz” en tus tareas.");
     var r8 = await busca("mantenimiento");
     eq("No ofrece la tarea de origen", r8.res.indexOf("Mantenimiento Casa Lerdo"), -1);
@@ -87,7 +87,7 @@ eq("versión >= 253", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     /* cerrada */
     var m3 = await p.evaluate(async function () { tareas = MUNDO(); abierta = "tORIGEN"; vista = "hilo"; render(); abreMover225(tareas[0], 0); var i = document.getElementById("mbus253"); i.value = "ampliacion"; i.dispatchEvent(new Event("input", { bubbles: true })); await espera(40);
       document.querySelector('#mres253 [data-movto="tD"]').click(); await espera(150); return (tareas.filter(function (x) { return x.id === "tD"; })[0].msgs || []).length; });
-    eq("También se puede mover a una cerrada reciente", m3, 1);
+    eq("Mover a una cerrada la REABRE (queda el mensaje y la nota 'Reabierta')", m3, 2);
     /* sin buscar: las 5 propuestas siguen igual */
     var m4 = await p.evaluate(function () { tareas = MUNDO(); abierta = "tORIGEN"; render(); abreMover225(tareas[0], 0); return { props: document.querySelectorAll("#mops253 [data-movto]").length > 0, nueva: !!document.querySelector("[data-movnueva]"), ng: !!document.querySelector("[data-movplatica]") }; });
     eq("Las propuestas, Tarea nueva y Solo plática siguen ahí", m4, { props: true, nueva: true, ng: true });

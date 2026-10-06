@@ -112,7 +112,7 @@ eq("la hoja ¿A dónde va? ya no trae 'Bien, pero sin importancia' en el código
     eq("pregunta Sí: regla no_guardar con acierto_tema true y la línea se quita", r3.si, [[["no_guardar", true, "tFIESTA"]], false]);
     eq("pregunta No: regla no_guardar con acierto_tema false (y queda oculto)", [r3.no, r3.noOculto], [[["no_guardar", false]], true]);
     eq("sin contestar: oculto, y a los 8 s se quita sola sin regla", [r3.sinContestar, r4], [[true, true], [false, 0]]);
-    eq("hoja ¿A dónde va?: solo Tarea nueva y Solo plática", r5.hoja, ["Tarea nueva", "Solo plática"]);
+    eq("hoja ¿A dónde va?: solo Tarea nueva y Solo plática", r5.hoja, ["+ Crear tarea nueva", "Solo plática"]);
     eq("hoja de detalle del globo: OK · Mover · Nueva · Dato · No guardar, y No guardar funciona", [r5.det, r5.detOculto, r5.detPregunta], [["OK", "Mover", "Nueva", "Dato", "No guardar"], true, true]);
     eq("sin errores de página", errs, []);
   } finally { await b.close(); }
