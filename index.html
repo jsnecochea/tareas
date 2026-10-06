@@ -695,7 +695,7 @@ button{font:inherit;color:inherit}
 /* build 225: chips del encabezado, resumen vivo, filtro por meta, hojas, ficha de meta, mover mensaje */
 .chips225{display:flex;gap:6px;padding:2px 12px 6px;overflow-x:auto;scrollbar-width:none;flex:none}.chips225::-webkit-scrollbar{display:none}
 .chip225{flex:none;display:inline-flex;align-items:center;gap:5px;font:inherit;font-size:14px;color:var(--ink-2);background:var(--surface-2);border:0;border-radius:14px;padding:6px 11px;white-space:nowrap;cursor:pointer}
-.chip225.b{color:var(--ink-2)}.chip225 svg{flex:none;margin-right:1px}.chip225.red{color:#ff453a;font-weight:700}.chip225.falta{background:rgba(10,132,255,.18);color:#7cc0ff;font-weight:700}
+.chip225.b{color:var(--ink-2)}.chip225 svg{flex:none;margin-right:1px}.chip225.red{color:#ff453a;font-weight:700}.chip225.falta{background:#ff453a;color:#fff;font-weight:700;min-width:88px;justify-content:center}   /* build 265: rojo mientras falte algo, ancho cómodo para el dedo */
 .paraTi225{flex:none;align-self:flex-start;margin:0 12px 6px;background:rgba(10,132,255,.16);color:#7cc0ff;font-size:13.5px;font-weight:600;border-radius:14px;padding:4px 11px}
 .rv225{flex:none;display:block;width:calc(100% - 24px);margin:0 12px 6px;text-align:left;border:0;border-left:3px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 10px;font:inherit;color:var(--ink);cursor:pointer}
 .rv225 .rvk{display:block;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:2px}
@@ -1532,7 +1532,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 264 · expedientes: Ya está los deja dormidos, despiertan solos, cerradas y dormidas siempre en búsqueda · recordatorios una vez, siguiente en orden, Hoy solo lo de Salvador, esperas con fecha, falta info coherente, dictado oculto, WhatsApp sin contacto basura";
+var VERSION_APP = "build 265 · chip Falta rojo y ancho, micrófono sin autoarranque · build 264 · expedientes: Ya está los deja dormidos, despiertan solos, cerradas y dormidas siempre en búsqueda · recordatorios una vez, siguiente en orden, Hoy solo lo de Salvador, esperas con fecha, falta info coherente, dictado oculto, WhatsApp sin contacto basura";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -8793,8 +8793,7 @@ function abrePreguntas249(tid, opt){
   v.addEventListener("click", function(ev){
     if(ev.target.closest("[data-pq255='mic']")){ ev.stopPropagation(); var m=document.getElementById("tmic"); if(m && !window.__oyendo) m.click(); return; }
     if(ev.target.closest("[data-pq255='later']") || ev.target===v){ ev.stopPropagation(); if(window.__oyendo){ try{ paraDictadoHilo(); cierraDictado(); }catch(e){} } cierraPreg255(); } });
-  /* el micrófono arranca SOLO, en el mismo toque que abrió el bloque (regla de iOS) */
-  if(opt && opt.gesto){ var mc=document.getElementById("tmic"); if(mc && !window.__oyendo) mc.click(); }
+  /* build 265: el micrófono ya NO arranca solo; Salvador lo toca (o escribe) para contestar */
 }
 /* UN SOLO PASO: lo dictado responde TODAS las preguntas; el cerebro (pesado) reparte la respuesta y se aplica; lo que quedó sin contestar vuelve solo en el bloque */
 function enviaRespuestas255(tid, texto){
@@ -15674,7 +15673,7 @@ function bindHilo(){
     var k=el.getAttribute("data-chip");
     if(k==="falta" && preguntas249(t).length){ abrePreguntas249(t.id, {gesto:true}); return; }   /* build 255 */
     if(k==="falta"){ window.__hoja225=null; var f=[]; try{ f=soloMeFalta(t); }catch(e){} render();
-      setTimeout(function(){ var mc=$("tmic"); if(mc) mc.click(); if(f.length) toast("Dímelo y lo completo: "+f.join(" · ")); }, 60); return; }
+      setTimeout(function(){ if(f.length) toast("Toca el micrófono y dímelo: "+f.join(" · ")); }, 60); return; }   /* build 265: sin autoarranque */
     if(k==="resumen"){ var _imp=vista230(t)==="imp"; poneVista230(t, _imp?"":"imp"); if(!_imp){ window.__cnl=window.__cnl||{}; window.__cnl[t.id]="todo"; } render(); return; }   /* build 230: un solo resumen = la vista Importante */
     abreHoja225(t, k); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-min225]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); togMin225(t.id, el.getAttribute("data-min225")); render(); }; });
@@ -16257,7 +16256,7 @@ function bindHilo(){
   if(vista230(t)==="imp"){ var _sc230=document.querySelector(".scroll"); if(_sc230) _sc230.scrollTop=0; } else alFondo();   /* build 230: en Importante se ve el Resumen arriba */
   ta.onfocus=function(){ setTimeout(alFondo,120); setTimeout(alFondo,420) };
   if(window.visualViewport) window.visualViewport.addEventListener("resize",alFondo);
-  /* build 255: al entrar a una tarea con preguntas pendientes, el bloque sale solo (difuminado) y el micrófono arranca en el mismo toque */
+  /* build 255: al entrar a una tarea con preguntas pendientes, el bloque sale solo (difuminado); build 265: el micrófono NO arranca solo */
   try{ if(window.__pq255Last!==t.id && !t._leyendo && !document.getElementById("acom249") && preguntas249(t).length) abrePreguntas249(t.id, {gesto:true}); }catch(e){ console.warn("preguntas255",e); }
 }
 /* quien ha entrado = las fichas reales en bitacora_personas. Cada una con su

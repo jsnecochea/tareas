@@ -49,14 +49,14 @@ eq("versión >= 255", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     /* 2) el micrófono arrancó SOLO al entrar (mismo toque) y la barra normal queda libre abajo */
     var r2 = await p.evaluate(function () { var tx = document.getElementById("txt"), r = tx.getBoundingClientRect(), x = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2), m = document.getElementById("preg249"), cr = m.getBoundingClientRect();
       return { mic: __SRS.length, oyendo: !!window.__oyendo, barraLibre: !m.contains(x), bloqueArribaDeLaBarra: cr.bottom <= r.top + 2, txt: !!tx }; });
-    eq("Al entrar el micrófono arranca solo (1 sola escucha) y la barra (cuadro + micrófono) queda libre y habilitada", r2, { mic: 1, oyendo: true, barraLibre: true, bloqueArribaDeLaBarra: true, txt: true });
+    eq("Al entrar el micrófono NO arranca solo (build 265) y la barra (cuadro + micrófono) queda libre y habilitada", r2, { mic: 0, oyendo: false, barraLibre: true, bloqueArribaDeLaBarra: true, txt: true });
     /* 3) Después cierra; el chip lo vuelve a abrir (y arranca el mic en ese toque) */
     await p.evaluate(function () { document.querySelector('#preg249 [data-pq255="later"].pq255d').click(); });
     var r3 = await p.evaluate(function () { return { hay: !!document.getElementById("preg249"), oyendo: !!window.__oyendo, chip: !!document.querySelector('[data-chip="falta"]') }; });
     eq("'Después' cierra el blur (y detiene el dictado); queda el chip 'Falta N'", r3, { hay: false, oyendo: false, chip: true });
     await p.evaluate(function () { document.getElementById("dictacapa") && document.getElementById("dictacapa").remove(); window.__SRS.length = 0; document.querySelector('[data-chip="falta"]').click(); });
     var r3b = await p.evaluate(function () { return { hay: !!document.getElementById("preg249"), mic: __SRS.length, oyendo: !!window.__oyendo }; });
-    eq("El chip 'Falta N' vuelve a abrir el bloque y el micrófono arranca en ese toque", r3b, { hay: true, mic: 1, oyendo: true });
+    eq("El chip 'Falta N' vuelve a abrir el bloque y el micrófono NO arranca solo (build 265)", r3b, { hay: true, mic: 0, oyendo: false });
     /* X y tocar fuera */
     await p.evaluate(function () { document.querySelector("#preg249 .pq255x").click(); });
     eq("La X lo cierra", await p.evaluate(function () { return !document.getElementById("preg249"); }), true);
