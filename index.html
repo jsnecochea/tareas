@@ -843,6 +843,7 @@ button{font:inherit;color:inherit}
 .evt{flex:1;min-width:0;display:flex;flex-direction:column}.evt span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.evt small{font-size:13px;color:var(--ink-3)}
 .evtx{padding:8px 2px}.evtx b{display:block;font-size:16px}.evtx small{display:block;color:var(--ink-3);font-size:13px;margin:2px 0 8px}.evtx p{margin:0;font-size:15px;line-height:1.45;white-space:pre-wrap}
 .cer259 .ot{color:var(--ink-3)}.enlcer .enln{color:var(--ink-3)}.enlcerr{display:inline-block;margin-left:8px;font-size:12px;color:var(--ink-3);font-weight:600;border:1px solid var(--ink-3);border-radius:8px;padding:0 6px}
+.enlh .enlr .enln{white-space:normal;overflow:visible;line-height:1.25}.enlh .enlr .enln small{display:block;margin-left:0}.opt226 .ot{white-space:normal;line-height:1.25;padding:8px 0}.opt226.sim262 .tag{color:#7cc0ff;font-weight:600}.opt226 .tag.aqui262{color:var(--ink-3)}
 .enlsim{display:inline-block;margin-left:8px;font-size:12px;color:#7cc0ff;font-weight:600}.enlnueva .enln{display:flex;align-items:center;gap:6px}
 .res230{margin:4px 2px 10px;padding:12px 14px;border-radius:16px;background:var(--surface-2);display:flex;flex-direction:column;gap:6px}
 .res230>b{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3)}.res230 .rtx{margin:0;font-size:15.5px;line-height:1.4;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -1530,7 +1531,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 261 · un solo menú completo en cualquier texto (11 opciones fijas, en gris las que no aplican)";
+var VERSION_APP = "build 262 · un solo motor de parecidas y de búsqueda en todas las hojas (significado, sinónimos, errores de dedo)";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -5768,22 +5769,131 @@ function _txtBusca259(x){
   return _n179([x.nombre, flat(x.nombre_anterior), flat(x.nombres_anteriores), ctx||x.contexto||"", flat(x.alias), flat(x.alias_tarea), flat(x.palabras), flat(x.sinonimos), x.de_quien||""].join(" "));
 }
 function esCerradaVinc259(x){ var c=!!x.cierre; if(!c){ try{ c=estadoReal(x)==="cerrada"; }catch(e){} } return c; }
-function buscaVinc259(q, excl){
-  var ws=_n179(q).split(" ").filter(Boolean); if(!ws.length) return {lista:[], cerradas:false};
+/* ===================== build 262: UN SOLO MOTOR DE PARECIDAS Y DE BÚSQUEDA (sugeridasPara262) =====================
+   Lo usan TODAS las hojas (Vincular, Mover mensajes / ¿A dónde va?, Acomodo, Nueva y Dato): mismo formato — buscador, "+ Crear tarea nueva",
+   las parecidas (de más a menos, con la marca "parecida") y el resto en orden alfabético sin acentos.
+   Parecidas por SIGNIFICADO: texto de los mensajes y nombre/contexto de origen contra nombre, nombre anterior, alias, contexto, pasos y
+   contactos de cada tarea abierta; sin acentos, por raíces y con un diccionario de sinónimos del dominio; los contactos en común suman fuerte.
+   Con confianza baja o empate, el cerebro ligero ("rapido") ordena por significado las 30 mejores (caché de 10 min por origen; 1 llamada por hoja).
+   El buscador es del mismo motor: tolera errores de dedo, raíces y sinónimos; con 3+ letras y menos de 3 resultados suma una búsqueda por
+   significado con el cerebro ligero (debounce de 600 ms). */
+var SIN262=[
+  "cobro cobros cobranza cobranzas cobrar cobrado pago pagos pagar pagado vale vales anuncio anuncios anunciar",
+  "casa casas residencia hogar vivienda domicilio",
+  "reparacion reparaciones reparar arreglo arreglos arreglar mantenimiento mantener compostura",
+  "junta juntas reunion reuniones asamblea sesion",
+  "cotizacion cotizaciones cotizar presupuesto presupuestos",
+  "factura facturas facturar cfdi comprobante comprobantes recibo recibos",
+  "carro carros auto autos automovil coche coches vehiculo camioneta",
+  "fiesta fiestas evento eventos celebracion cumpleanos",
+  "viaje viajes vuelo vuelos boleto boletos reservacion",
+  "medico doctor doctora clinica hospital consulta",
+  "terreno terrenos lote lotes predio",
+  "dinero efectivo billete billetes pesos",
+  "restaurante restaurantes restaurant comedor",
+  "limpieza limpiar aseo",
+  "contrato contratos convenio acuerdo",
+  "proveedor proveedores vendedor",
+  "empleado empleados trabajador trabajadores personal"
+];
+var STOP262=["hola","buen","buenas","buenos","dias","tardes","noches","gracias","favor","para","como","esta","este","esto","estos","estas","pero","porque","cuando","donde","quien","tiene","tengo","tienen","puedo","puede","hacer","haces","vamos","mismo","sigue","ahora","ahorita","luego","todo","toda","todos","todas","algo","unos","unas","entre","sobre","desde","hasta","ya","que","con","los","las","del","una","por","mas","muy","sin","nos","les","hay","fue","son","ser","era","sus","mis","tus","dos","tres","hoy","manana","salvador","mensaje","tarea","mandame","manda","dime","oye","ok","okey","si","no"];
+var SINMAP262=null;
+function stem262(w){ w=String(w||""); if(w.length>3 && w.charAt(w.length-1)==="s") w=w.slice(0,-1); if(w.length>4 && /[aeo]$/.test(w)) w=w.slice(0,-1); return w.slice(0,6); }
+function grupos262(){ if(SINMAP262) return SINMAP262; SINMAP262={}; SIN262.forEach(function(g, i){ g.split(" ").forEach(function(w){ SINMAP262[stem262(_n179(w))]="g"+i; }); }); return SINMAP262; }
+function concepto262(w){ var st=stem262(w); return grupos262()[st]||st; }
+function toks262(txt){ var out=[], seen={}; _n179(txt).split(" ").forEach(function(w){ if(w.length<3 || STOP262.indexOf(w)>=0 || /^\d+$/.test(w)) return; var c=concepto262(w); if(!seen[c]){ seen[c]=1; out.push({w:w, c:c, st:stem262(w)}); } }); return out; }
+function lev262(a, b){ if(a===b) return 0; var m=a.length, n=b.length; if(Math.abs(m-n)>2) return 9; var p=[], i, j; for(j=0;j<=n;j++) p[j]=j; for(i=1;i<=m;i++){ var prev=p[0]; p[0]=i; for(j=1;j<=n;j++){ var tmp=p[j]; p[j]=Math.min(p[j]+1, p[j-1]+1, prev+(a.charAt(i-1)===b.charAt(j-1)?0:1)); prev=tmp; } } return p[n]; }
+/* ¿la palabra q (de la búsqueda) coincide con alguna de la tarea? 3 = exacta, 2 = raíz o sinónimo, 1 = prefijo o error de dedo, 0 = no */
+function coincide262(q, kt){
+  var best=0; for(var i=0;i<kt.length;i++){ var k=kt[i];
+    if(q.w===k.w) return 3; if(q.c===k.c){ best=Math.max(best,2); continue; }
+    if(q.w.length>=3 && (k.w.indexOf(q.w)===0 || (q.w.length>=5 && q.w.indexOf(k.w)===0 && k.w.length>=4))){ best=Math.max(best,1); continue; }
+    var L=Math.min(q.st.length,k.st.length); if(L>=5 && lev262(q.st,k.st)<=(L>=8?2:1)) best=Math.max(best,1); }
+  return best;
+}
+function camposTarea262(d){
+  var flat=function(v){ return [].concat(v||[]).map(function(z){ return (z&&typeof z==="object")?(z.nombre||z.tx||z.t||""):String(z); }).join(" "); };
+  var ctx=""; try{ ctx=contextoDe(d)||""; }catch(e){}
+  var pasos=flat((d.lista_pasos||[]).map(function(p){ return p&&p.tx; }))+" "+flat(((d.checklist&&d.checklist.items)||[]).map(function(i){ return i&&i.tx; }));
+  var contactos=[]; (d.wa_contactos||[]).forEach(function(w){ contactos.push(String((w&&w.nombre)||w||"")); }); (d.msgs||[]).forEach(function(m){ if(m && m.wa_c) contactos.push(String(m.wa_c)); }); if(d.revisa_ext) contactos.push(String(d.revisa_ext)); if(d.seg_a && d.seg_a.contacto) contactos.push(String(d.seg_a.contacto));
+  return {nom:toks262(d.nombre), ant:toks262(flat(d.nombre_anterior)+" "+flat(d.nombres_anteriores)), ali:toks262(flat(d.alias)+" "+flat(d.alias_tarea)+" "+flat(d.palabras)+" "+flat(d.sinonimos)+" "+(d.de_quien||"")),
+    ctx:toks262(ctx||d.contexto||""), pas:toks262(pasos), con:contactos.map(function(c){ return _n179(nombreLimpio(c)).split(" ")[0]; }).filter(function(c){ return c.length>=3; })};
+}
+function cacheCampos262(d){ var k=(d.nombre||"")+"|"+(d.contexto||"")+"|"+((d.msgs||[]).length)+"|"+((d.lista_pasos||[]).length); if(!d.__c262 || d.__c262k!==k){ try{ Object.defineProperty(d,"__c262",{value:camposTarea262(d),writable:true,configurable:true,enumerable:false}); Object.defineProperty(d,"__c262k",{value:k,writable:true,configurable:true,enumerable:false}); }catch(e){ return camposTarea262(d); } } return d.__c262; }
+/* texto del ORIGEN: los mensajes elegidos (o los de la tarea) + su nombre y contexto */
+function origen262(t, ixs){
+  var ms=(ixs&&ixs.length)?ixs.map(function(i){ return (t.msgs||[])[i]; }):(t.msgs||[]).slice(-15);
+  ms=ms.filter(function(m){ return m && !m.oculto && !m.nota_ia && !m.res238 && !m.dict238 && String(m.t||"").trim() && !(typeof esNotaIA242==="function" && esNotaIA242(m)); });
+  var txt=ms.map(function(m){ return String(m.tr||m.t||"").replace(/^\s*[^:\n]{1,40}:\s*/,""); }).join(" ")+" "+(t.nombre||"")+" "+(function(){ try{ return contextoDe(t)||t.contexto||""; }catch(e){ return t.contexto||""; } })();
+  var cont=[]; ms.forEach(function(m){ if(m.wa_c) cont.push(_n179(nombreLimpio(m.wa_c)).split(" ")[0]); }); (t.wa_contactos||[]).forEach(function(w){ cont.push(_n179(nombreLimpio((w&&w.nombre)||w||"")).split(" ")[0]); });
+  var alts={}; ms.forEach(function(m){ if(m.duda_tarea && m.duda_tarea.alternativa_id) alts[m.duda_tarea.alternativa_id]=1; });   /* la duda del acomodo (la alternativa) suma como una pista más */
+  return {alts:alts, txt:txt, toks:toks262(txt), contactos:cont.filter(function(c){ return c.length>=3; }), key:t.id+"|"+(ixs&&ixs.length?ixs.join(","):"t")+"|"+txt.length};
+}
+function candidatas262(excl){ return enlazaCandidatas(excl); }
+function sugeridasPara262(t, ixs){
+  var O=origen262(t, ixs), C=candidatas262(t.id), N=C.length||1, df={};
+  var F=C.map(function(d){ return cacheCampos262(d); });
+  F.forEach(function(f){ var vis={}; [f.nom,f.ant,f.ali,f.ctx,f.pas].forEach(function(arr){ arr.forEach(function(k){ if(!vis[k.c]){ vis[k.c]=1; df[k.c]=(df[k.c]||0)+1; } }); }); });
+  var R=C.map(function(d, i){ var f=F[i], sc=0, why=[];
+    O.toks.forEach(function(q){ var w=0; var peso=[[f.nom,3],[f.ant,2],[f.ali,2],[f.ctx,1],[f.pas,1]];
+      peso.forEach(function(pr){ var m=0; pr[0].forEach(function(k){ if(k.c===q.c || (q.st.length>=6 && k.st.length>=6 && lev262(q.st,k.st)<=1)) m=1; }); if(m) w=Math.max(w,pr[1]); });
+      if(w){ var idf=Math.log(1+N/(1+(df[q.c]||0))); sc+=w*Math.max(idf,0.35); why.push(q.w); } });
+    if(O.alts[d.id]) sc+=6;
+    var comunes=0; O.contactos.forEach(function(c){ if(f.con.indexOf(c)>=0) comunes++; }); if(comunes) sc+=Math.min(comunes,2)*3;
+    return {d:d, sc:sc, why:why}; });
+  R.sort(function(a,b){ return (b.sc-a.sc) || (_n179(a.d.nombre)<_n179(b.d.nombre)?-1:1); });
+  var UMBRAL=2.5, sims=R.filter(function(r){ return r.sc>=UMBRAL; }).slice(0,6);
+  var simIds={}; sims.forEach(function(r){ simIds[r.d.id]=1; });
+  var rest=R.filter(function(r){ return !simIds[r.d.id]; }).map(function(r){ return r.d; }).sort(function(a,b){ return _n179(a.nombre)<_n179(b.nombre)?-1:(_n179(a.nombre)>_n179(b.nombre)?1:0); });
+  var top=sims[0]?sims[0].sc:0, segundo=sims[1]?sims[1].sc:0;
+  var dudosa=!sims.length || top<6 || (segundo>=0.75*top && top<14);
+  return {sims:sims.map(function(r){ return r.d; }), scores:sims.map(function(r){ return r.sc; }), rest:rest, todas:R, dudosa:dudosa, key:O.key, texto:O.txt};
+}
+/* el cerebro ligero ordena por significado las 30 mejores candidatas; caché de 10 min por origen y 1 llamada por hoja abierta */
+function refinaSug262(S, cb){
+  window.__sug262=window.__sug262||{}; var c=window.__sug262[S.key];
+  if(c && Date.now()-c.ts<10*60000){ cb(c.ids); return; }
+  if(typeof preguntaAClaude!=="function" || !S.dudosa || !S.todas.length) return;
+  var L=S.todas.slice(0,30).map(function(r){ var cx=""; try{ cx=contextoDe(r.d)||""; }catch(e){} return r.d.id+" | "+(r.d.nombre||"")+" | "+String(cx||r.d.contexto||"").replace(/\s+/g," ").slice(0,140); }).join("\n");
+  var prompt="Salvador va a pasar esto a otra tarea:\n“"+String(S.texto||"").replace(/\s+/g," ").slice(0,700)+"”\n\nTAREAS CANDIDATAS (id | nombre | contexto):\n"+L+"\n\nOrdénalas por SIGNIFICADO, de la que más trata de lo mismo a la que menos, y devuelve SOLO las que de verdad tratan del mismo asunto (máx 5; puede ser ninguna). Contesta SOLO JSON: {\"ids\":[\"id\",…]}";
+  try{ preguntaAClaude([{role:"user",content:prompt}],"rapido",function(txt,err){ if(err) return; var ids=null; try{ var j=JSON.parse(String(txt||"").replace(/^[^{]*/,"").replace(/[^}]*$/,"")); ids=Array.isArray(j.ids)?j.ids.map(String):null; }catch(e){} if(!ids) return;
+    var vál={}; S.todas.forEach(function(r){ vál[r.d.id]=1; }); ids=ids.filter(function(id){ return vál[id]; }).slice(0,5); window.__sug262[S.key]={ts:Date.now(), ids:ids}; cb(ids); }); }catch(e){}
+}
+/* aplica el orden del cerebro: los que dijo van primero y con la marca; los fuertes del motor se quedan; el resto alfabético */
+function aplicaRefino262(S, ids){
+  var by={}; S.todas.forEach(function(r){ by[r.d.id]=r; });
+  var sims=ids.map(function(id){ return by[id].d; }); S.sims.forEach(function(d, i){ if(sims.indexOf(d)<0 && (S.scores[i]||0)>=14) sims.push(d); });
+  sims=sims.slice(0,6); var m={}; sims.forEach(function(d){ m[d.id]=1; });
+  var rest=S.todas.map(function(r){ return r.d; }).filter(function(d){ return !m[d.id]; }).sort(function(a,b){ return _n179(a.nombre)<_n179(b.nombre)?-1:(_n179(a.nombre)>_n179(b.nombre)?1:0); });
+  return {sims:sims, rest:rest};
+}
+/* BUSCADOR: tolerante a errores de dedo, raíces y sinónimos; abiertas primero y, si no hay, cerradas */
+function buscaVinc262(q, excl){
+  var qs=toks262(q); if(!qs.length) return {lista:[], cerradas:false};
   var ab=[], ce=[];
   (tareas||[]).forEach(function(x){
     if(!x || x.id===excl || x.fusionada_en || x.estado==="fusionada" || x.estado==="descartada" || x.es_recordatorio || !String(x.nombre||"").trim()) return;
     try{ if(esEjemplo(x) || esPropuesta256(x)) return; }catch(e){}
     var cer=esCerradaVinc259(x); if(!cer){ try{ if(!(leToca(x)||sigoElHilo(x))) return; }catch(e){} }
-    var nom=_n179(x.nombre), hay=nom+" "+_txtBusca259(x);
-    if(!ws.every(function(w){ return hay.indexOf(w)>=0; })) return;
-    var sc=0; ws.forEach(function(w){ if(nom.indexOf(w)>=0) sc+=3; if(nom.split(" ").some(function(p){ return p.indexOf(w)===0; })) sc+=2; });
-    (cer?ce:ab).push({d:x, sc:sc, cerrada:cer}); });
+    var f=cacheCampos262(x), sc=0, ok=true;
+    qs.forEach(function(w){ if(!ok) return; var best=0; [[f.nom,3],[f.ant,2.5],[f.ali,2],[f.ctx,1],[f.pas,1]].forEach(function(pr){ var m=coincide262(w, pr[0]); if(m) best=Math.max(best, pr[1]*(m===3?1.3:(m===2?1:0.7))); }); if(!best) ok=false; else sc+=best; });
+    if(!ok) return; (cer?ce:ab).push({d:x, sc:sc, cerrada:cer}); });
   var ord=function(a,b){ return b.sc-a.sc || _n179(a.d.nombre).localeCompare(_n179(b.d.nombre)); };
   ab.sort(ord); ce.sort(ord);
   return ab.length?{lista:ab, cerradas:false}:{lista:ce, cerradas:true};
 }
-function ordenVinc259(oid, simIds){
+/* búsqueda por significado con el cerebro ligero (si hay menos de 3 resultados con 3+ letras); caché por texto */
+function semBusca262(q, excl, cb){
+  window.__sem262=window.__sem262||{}; var k=_n179(q), c=window.__sem262[k]; if(c && Date.now()-c.ts<10*60000){ cb(c.ids); return; }
+  if(typeof preguntaAClaude!=="function") return;
+  var C=candidatas262(excl).slice(0,80); if(!C.length) return;
+  var L=C.map(function(d){ var cx=""; try{ cx=contextoDe(d)||""; }catch(e){} return d.id+" | "+(d.nombre||"")+" | "+String(cx||d.contexto||"").replace(/\s+/g," ").slice(0,100); }).join("\n");
+  var prompt="Salvador busca una tarea con estas palabras: “"+String(q||"").slice(0,120)+"”.\n\nTAREAS ABIERTAS (id | nombre | contexto):\n"+L+"\n\nDevuelve SOLO las que tratan de lo que busca, entendiendo el significado (sinónimos, otras palabras para lo mismo), de la más a la menos parecida, máx 5; puede ser ninguna. Contesta SOLO JSON: {\"ids\":[\"id\",…]}";
+  try{ preguntaAClaude([{role:"user",content:prompt}],"rapido",function(txt,err){ if(err) return; var ids=null; try{ var j=JSON.parse(String(txt||"").replace(/^[^{]*/,"").replace(/[^}]*$/,"")); ids=Array.isArray(j.ids)?j.ids.map(String):null; }catch(e){} if(!ids) return;
+    var ok={}; C.forEach(function(d){ ok[d.id]=1; }); ids=ids.filter(function(id){ return ok[id]; }).slice(0,5); window.__sem262[k]={ts:Date.now(), ids:ids}; cb(ids); }); }catch(e){}
+}
+function buscaVinc259(q, excl){ return buscaVinc262(q, excl); }   /* build 262: un solo motor */
+function ordenVinc259(oid, simIds){   /* compat: sin motor de parecidas cae a lo que se le pase; las hojas usan sugeridasPara262 */
   var cand=enlazaCandidatas(oid), sims=[], vis={};
   (simIds||[]).forEach(function(id){ var d=cand.filter(function(x){ return x.id===id; })[0]; if(d && !vis[id]){ vis[id]=1; sims.push(d); } });
   var rest=cand.filter(function(x){ return !vis[x.id]; }).sort(function(a,b){ return _n179(a.nombre).localeCompare(_n179(b.nombre)); });
@@ -5793,7 +5903,7 @@ function abreEnlazar(oid, op){
   op=op||{};   /* build 229: desde "Vincular" de una tarea nueva: parecidas primero y "Tarea nueva" */
   var o=tareas.filter(function(x){return x.id===oid})[0]; if(!o) return;
   cierraEnlazar();
-  var simIds=op.similares; if(!simIds){ try{ simIds=similares229(o).map(function(d){ return d.id; }); }catch(e){ simIds=[]; } }
+  var S=sugeridasPara262(o, null), RF=null, EXTRA=[];   /* build 262: un solo motor; op.similares ya no manda */
   var v=document.createElement("div"); v.className="hoja-velo"; v.id="enlv";
   v.innerHTML='<div class="enlh"><div class="enlg">'+
     '<div class="enlt"><b>Vincular · Nueva</b>Elige a cuál pasar todo lo de “'+esc(corta40(o.nombre))+'”, o crea una tarea nueva</div>'+
@@ -5808,11 +5918,14 @@ function abreEnlazar(oid, op){
   var fila=function(x, sim, cer){ return '<button class="enlr'+(cer?' enlcer':'')+'" data-d="'+esc(x.id)+'"><span class="enln">'+esc(x.nombre)+(sim?'<small class="enlsim">parecida</small>':'')+(cer?'<small class="enlcerr">cerrada</small>':'')+'</span><span class="vinc">'+(cer?'Reabrir y vincular':'Vincular')+'</span></button>'; };
   function pinta(){
     var txt=_n179(q.value);
-    if(!txt){ var O=ordenVinc259(oid, simIds);
+    if(!txt){ var O=RF||S;
       lista.innerHTML=(O.sims.length||O.rest.length)?O.sims.map(function(x){ return fila(x,true,false); }).join("")+O.rest.slice(0,300).map(function(x){ return fila(x,false,false); }).join(""):'<div class="enlv">No hay otras tareas abiertas.</div>'; return; }
-    var R=buscaVinc259(q.value, oid), L=R.lista.slice(0,60);
-    lista.innerHTML=L.length?L.map(function(o2){ return fila(o2.d, simIds.indexOf(o2.d.id)>=0, o2.cerrada); }).join("")+(R.lista.length>L.length?'<div class="enlv">Escribe más para acotar · '+R.lista.length+' tareas</div>':''):'<div class="enlv">No encontré nada con eso.</div>';
+    var R=buscaVinc262(q.value, oid), L=R.lista.slice(0,60), vis={}; L.forEach(function(o2){ vis[o2.d.id]=1; });
+    var ex=EXTRA.filter(function(d){ return !vis[d.id]; });
+    lista.innerHTML=(L.length||ex.length)?L.map(function(o2){ return fila(o2.d, false, o2.cerrada); }).join("")+ex.map(function(d){ return fila(d, true, false); }).join("")+(R.lista.length>L.length?'<div class="enlv">Escribe más para acotar · '+R.lista.length+' tareas</div>':''):'<div class="enlv">No encontré nada con eso.</div>';
+    if(R.lista.length<3 && txt.length>=3) semDeb262(q.value, oid, function(ids){ if(q.value!==ids.q || !document.getElementById("enlv")) return; EXTRA=ids.d; pinta(true); }, sem);
   }
+  var sem={t:null};
   v.querySelector("#enlcrea").onclick=function(){
     if(op.tareaNueva){ cierraEnlazar(); op.tareaNueva(); return; }   /* build 229: la propia tarea ya es la nueva */
     cierraEnlazar();
@@ -5828,8 +5941,13 @@ function abreEnlazar(oid, op){
       accion:(cer?"Reabrir y pasar todo a ":"Pasar todo a ")+corta40(d.nombre), cb:function(){ if(cer) reabre(d, "vinculada desde “"+corta40(o.nombre)+"”"); enlazaTareas(oid,did); }});
   };
   if(op.q) q.value=op.q;   /* build 236: "vincúlala a X" por voz */
-  q.oninput=pinta; pinta();
+  q.oninput=function(){ EXTRA=[]; pinta(); }; pinta();
+  refinaSug262(S, function(ids){ if(!document.getElementById("enlv")) return; RF=aplicaRefino262(S, ids); if(!_n179(q.value)) pinta(); });
   setTimeout(function(){ try{ q.focus() }catch(e){} }, 60);
+}
+/* build 262: búsqueda semántica con debounce de 600 ms; devuelve {q, d:[tareas]} */
+function semDeb262(qv, excl, cb, st){
+  clearTimeout(st.t); st.t=setTimeout(function(){ if(!document.getElementById("enlv") && !document.getElementById("mov225")) return; semBusca262(qv, excl, function(ids){ var d=ids.map(function(id){ return tareas.filter(function(x){ return x.id===id; })[0]; }).filter(Boolean); if(d.length){ var r={q:qv, d:d}; cb(r); } }); }, 600);
 }
 function corta40(s){ s=String(s||"").trim(); return s.length>40 ? s.slice(0,39)+"\u2026" : s; }
 function enlazaTareas(oid,did,propuso){
@@ -9713,9 +9831,17 @@ function nombreLimpio(n){ return String(n||"").replace(/\s*\(.*?\)\s*/g," ").rep
 function buscaTareasMover253(q, t){   /* build 259: misma búsqueda que "Vincular · Nueva" (abiertas; si no hay, cerradas) */
   var R=buscaVinc259(q, t&&t.id); return R.lista.slice(0,20).map(function(o){ return {d:o.d, sc:o.sc, cerrada:o.cerrada}; });
 }
+/* build 262: la lista de "¿A dónde va?" con el MISMO formato que Vincular: parecidas (marca "parecida") y luego todas alfabético; la de origen en gris "aquí cayó" */
+function listaMover262(t, S){
+  var f=function(d, par, aqui){ return '<button class="opt226'+(par?' sim262':'')+(aqui?' aqui262':'')+'" data-movto="'+esc(d.id)+'">'+ico("folder",20)+'<span class="ot">'+esc(d.nombre||"(sin nombre)")+'</span>'+(par?'<span class="tag">parecida</span>':(aqui?'<span class="tag aqui262">aquí cayó</span>':''))+'</button>'; };
+  var rest=S.rest.slice(); if(!rest.some(function(d){ return d.id===t.id; })) rest.push(t);
+  rest.sort(function(a,b){ return _n179(a.nombre)<_n179(b.nombre)?-1:(_n179(a.nombre)>_n179(b.nombre)?1:0); });
+  return S.sims.map(function(d){ return f(d,true,false); }).join("")+rest.slice(0,300).map(function(d){ return f(d,false,d.id===t.id); }).join("");
+}
 function abreMover225(t, ix, ixs, opts){
   var x=(t.msgs||[])[ix]; if(!x) return; ixs=(ixs&&ixs.length)?ixs:null; opts=opts||{};   /* build 237: con ixs mueve toda la plática */
-  var ops=opcionesMover(t, x), q=nombreLimpio(x.wa_c||((PERSONAS[x.de]||{}).nombre)||""), tx=_txMsg(x).replace(/^[^:\n]{1,40}:\s*/,"");
+  var S=sugeridasPara262(t, ixs||[ix]), RF=null, EXTRA=[];   /* build 262: el mismo motor que Vincular */
+  var q=nombreLimpio(x.wa_c||((PERSONAS[x.de]||{}).nombre)||""), tx=_txMsg(x).replace(/^[^:\n]{1,40}:\s*/,"");
   var v=document.createElement("div"); v.className="leemask"; v.id="mov225";
   v.innerHTML='<div class="mov225" role="dialog" aria-label="Vincular · Nueva"><div class="h225g"></div>'+
     '<div class="mvctx"><span class="av226">'+esc(inicialesDe(q))+'</span><span class="mvt"><small>'+esc((q||"Mensaje")+(x.h?" · "+x.h:"")+(ixs&&ixs.length>1?" · "+ixs.length+" mensajes":""))+'</small><span>'+htmlTx245(tx, x)+'</span></span><button class="h225b" data-movx="1" aria-label="Cerrar">'+ico("x",14)+'</button></div>'+
@@ -9724,8 +9850,7 @@ function abreMover225(t, ix, ixs, opts){
     '<div class="h225c">'+
     (opts.soloNg?'<button class="opt226 plain" data-movplatica="1">'+ico("bubble",20)+'<span class="two"><span id="ngt245">No guardar '+(ixs?ixs.length:1)+' mensajes</span><small>no va a ninguna tarea; queda oculto, no borrado</small></span></button></div></div>':
     '<div class="bus253"><button type="button" class="lupa" data-lupa253="1" aria-label="Buscar tarea">'+ico("lupa",20,1.8)+'</button><input id="mbus253" type="search" placeholder="Buscar tarea…" autocomplete="off" autocapitalize="none" enterkeyhint="search"></div><button class="opt226 plain nueva259" data-movnueva="1">'+ico("plus",20)+'<span class="two"><span>+ Crear tarea nueva</span><small>“'+esc(nombreSugerido(x))+'”</small></span></button><div id="mres253"></div><div id="mops253">'+
-    ops.map(function(o){ return '<button class="opt226'+(o.best?' best':'')+'" data-movto="'+esc(o.d.id)+'">'+ico("folder",20)+'<span class="ot">'+esc(o.d.nombre||"(sin nombre)")+'</span>'+(o.tag?'<span class="tag">'+esc(o.tag)+'</span>':'')+'</button>'; }).join("")+
-    ordenVinc259(t.id, []).rest.filter(function(d){ return !ops.some(function(o){ return o.d.id===d.id; }); }).map(function(d){ return '<button class="opt226 alf259" data-movto="'+esc(d.id)+'">'+ico("folder",20)+'<span class="ot">'+esc(d.nombre||"(sin nombre)")+'</span></button>'; }).join("")+
+    listaMover262(t, S)+
     '</div><div class="sep226"></div>'+
     '<button class="opt226 plain" data-movplatica="1">'+ico("bubble",20)+'<span class="two"><span>Solo plática</span><small>saludo o charla, no va a ninguna tarea</small></span></button></div></div>');
   document.body.appendChild(v);
@@ -9733,10 +9858,14 @@ function abreMover225(t, ix, ixs, opts){
   function usa245(){ var f=(v.querySelector("#desde245")||{}).value, d=f?new Date(f+"T00:00:00").getTime():0; return (ixs||[ix]).filter(function(i){ var m=(t.msgs||[])[i]; return m && !m.oculto && (!d || (+m.ts||0)>=d); }); }
   var _de=v.querySelector("#desde245"); if(_de) _de.onchange=function(){ var n=usa245().length; v.querySelector("#nd245").textContent=n+" mensaje"+(n===1?"":"s"); var g=v.querySelector("#ngt245"); if(g) g.textContent="No guardar "+n+" mensajes"; };
   /* build 253: buscador. La lupa enfoca el campo DENTRO del toque (iOS); los resultados son botones data-movto como las propuestas */
-  var _bi=v.querySelector("#mbus253"), _br=v.querySelector("#mres253"), _bo=v.querySelector("#mops253");
-  if(_bi) _bi.addEventListener("input", function(){ var q=_bi.value, L=buscaTareasMover253(q, t), hay=!!_n179(q);
+  var _bi=v.querySelector("#mbus253"), _br=v.querySelector("#mres253"), _bo=v.querySelector("#mops253"), _sem={t:null};
+  var fila262=function(d, cer, par){ return '<button class="opt226'+(cer?' cer259':'')+(par?' sim262':'')+'" data-movto="'+esc(d.id)+'">'+ico("folder",20)+'<span class="ot">'+esc(d.nombre||"(sin nombre)")+'</span>'+(cer?'<span class="tag">cerrada</span>':(par?'<span class="tag">parecida</span>':''))+'</button>'; };
+  function pintaBus262(){ var q=_bi.value, L=buscaTareasMover253(q, t), hay=!!_n179(q), vis={}; L.forEach(function(o){ vis[o.d.id]=1; }); var ex=EXTRA.filter(function(d){ return !vis[d.id]; });
     if(_bo) _bo.style.display=hay?"none":"";
-    _br.innerHTML=!hay?"":(L.length?L.map(function(o){ return '<button class="opt226'+(o.cerrada?' cer259':'')+'" data-movto="'+esc(o.d.id)+'">'+ico("folder",20)+'<span class="ot">'+esc(o.d.nombre||"(sin nombre)")+'</span>'+(o.cerrada?'<span class="tag">cerrada</span>':'')+'</button>'; }).join(""):'<div class="bus253x">No encontré “'+esc(q.trim())+'” en tus tareas.</div>'); });
+    _br.innerHTML=!hay?"":((L.length||ex.length)?L.map(function(o){ return fila262(o.d, o.cerrada, false); }).join("")+ex.map(function(d){ return fila262(d, false, true); }).join(""):'<div class="bus253x">No encontré “'+esc(q.trim())+'” en tus tareas.</div>');
+    if(hay && L.length<3 && _n179(q).length>=3) semDeb262(q, t.id, function(r){ if(!document.getElementById("mov225") || _bi.value!==r.q) return; EXTRA=r.d; pintaBus262(); }, _sem); }
+  if(_bi) _bi.addEventListener("input", function(){ EXTRA=[]; pintaBus262(); });
+  if(!opts.soloNg) refinaSug262(S, function(ids){ if(!document.getElementById("mov225") || !_bo) return; RF=aplicaRefino262(S, ids); _bo.innerHTML=listaMover262(t, RF); });
   v.addEventListener("click", function(ev){ ev.stopPropagation(); if(ev.target.closest("[data-lupa253]")){ if(_bi) enfoca252(_bi); return; }
     var b=ev.target.closest("[data-movto],[data-movnueva],[data-movplatica]"), r="";
     if(b && b.hasAttribute("data-movnueva")){   /* build 249: Nueva pide el nombre; al crear, se va a la tarea nueva */

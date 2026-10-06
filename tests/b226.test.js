@@ -83,8 +83,8 @@ si("iconos: trazo 1.5 fijo", /var s=px\|\|18, w=1\.5, p=\{/.test(html));
     eq("sin emojis: la nota del sistema se pinta sin 📝; chips con iconos de línea", [r.sinEmojiNota, r.chipsSinEmoji], [true, true]);
     eq("todos los iconos de la pantalla con trazo 1.5", r.svgTrazo, true);
     eq("encabezado con el título compacto original", r.tituloCompacto, true);
-    eq("Mover: hoja '¿A dónde va?' — más probable resaltada, aquí cayó, otras, Tarea nueva con nombre sugerido, Solo plática", r.hoja,
-      { titulo: "Vincular · Nueva", ops: ["+ Crear tarea nueva“Mesa Comedor Alt Brillo con Manuel”", "*Comedor Nuevomás probable", "Mantenimiento Casa Lerdo/Eloísaaquí cayó", "Vestidores Carpintería", "Solo pláticasaludo o charla, no va a ninguna tarea"] });
+    eq("Mover: hoja '¿A dónde va?' — parecida, aquí cayó, otras, Tarea nueva con nombre sugerido, Solo plática", r.hoja,
+      { titulo: "Vincular · Nueva", ops: ["+ Crear tarea nueva“Mesa Comedor Alt Brillo con Manuel”", "Comedor Nuevoparecida", "Mantenimiento Casa Lerdo/Eloísaaquí cayó", "Vestidores Carpintería", "Solo pláticasaludo o charla, no va a ninguna tarea"] });
     eq("Mover: oculto en el origen (no borrado) y NUEVO en el destino", r.mover, [true, "tCOMEDOR_NUEVO_300926", 0, true, 2]);
     eq("censo de aprendizaje: contacto, origen -> destino, texto corto", r.censo, [["Manuel Parra", "tIAMUVF22TRJF", "tCOMEDOR_NUEVO_300926", "mover", "Tema 2... Mesa Comedor"]]);
     eq("OK: quita la duda, cuenta como acierto y no oculta nada", r.ok, ["esta", 1, "ok", 0, false]);

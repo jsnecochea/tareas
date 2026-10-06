@@ -61,7 +61,7 @@ eq("versión >= 259", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     /* 5) la hoja de Mover (¿A dónde va?) comparte título, buscador y orden */
     await limpia();
     var r5 = await p.evaluate(function () { tareas = MUNDO(); abierta = "tORI"; vista = "hilo"; render(); abreMover225(tareas[0], 0); var m = document.getElementById("mov225"); var tit = m.querySelector(".mvh").textContent, primero = m.querySelector(".nueva259 .two span").textContent;
-      var alf = [].map.call(m.querySelectorAll(".alf259 .ot"), function (x) { return x.textContent; }); var i = document.getElementById("mbus253"); i.value = "moric"; i.dispatchEvent(new Event("input", { bubbles: true }));
+      var alf = [].map.call(m.querySelectorAll("#mops253 .opt226:not(.sim262) .ot"), function (x) { return x.textContent; }); var i = document.getElementById("mbus253"); i.value = "moric"; i.dispatchEvent(new Event("input", { bubbles: true }));
       return { tit: tit, primero: primero, alf: alf, res: [].map.call(m.querySelectorAll("#mres253 .ot"), function (x) { return x.textContent; }) }; });
     eq("Mover: mismo título, '+ Crear tarea nueva' primero, el resto alfabético y el mismo buscador", [r5.tit, r5.primero, r5.alf.length > 0, JSON.stringify(r5.alf) === JSON.stringify(r5.alf.slice().sort(function (a, b) { return a.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() < b.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() ? -1 : 1; })), r5.res], ["Vincular · Nueva", "+ Crear tarea nueva", true, true, ["Cobranza Moric Pádel Draw"]]);
     await limpia();

@@ -50,7 +50,7 @@ eq("versión 227 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
       document.querySelector(".ptmini227").click(); o.ptAbre = !!document.querySelector(".ptcard .ac226");
       document.querySelector(".ptcard [data-acok]").click(); o.ptOk = [!!document.querySelector(".ptcard"), document.querySelectorAll(".ptcard .ac226").length, tareas[0].msgs[3].duda_resuelta];
       tareas = [FIESTA(), { id: "tPADEL", nombre: "Pádel miércoles", duenio: "salvador", estado: "abierta", msgs: [] }]; render();
-      document.querySelector(".ptcard [data-acmov]").click(); var mv = document.getElementById("mov225"); o.mover = (mv.querySelector(".opt226.best") || {}).textContent;
+      document.querySelector(".ptcard [data-acmov]").click(); var mv = document.getElementById("mov225"); o.mover = (mv.querySelector("#mops253 .opt226.sim262") || {}).textContent;
       mv.querySelector('[data-movto="tPADEL"]').click(); o.moverSale = [!!document.querySelector(".ptcard"), !!tareas[0].msgs[3].oculto, tareas[1].msgs.length];
       tareas = [FIESTA(), { id: "tPADEL", nombre: "Pádel miércoles", duenio: "salvador", estado: "abierta", msgs: [] }]; render();
       var _va = vaATareaNueva249; vaATareaNueva249 = function () { render(); }; document.querySelector(".ptcard [data-acnueva]").click(); (function(){ var ok=document.querySelector('[data-nom249="ok"]'); if(ok) ok.click(); })(); o.nuevaSale = [!!document.querySelector(".ptcard"), tareas.length]; vaATareaNueva249 = _va;
@@ -69,7 +69,7 @@ eq("versión 227 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
     eq("se recuerda por tarea", r.ptRecuerda, true);
     eq("se vuelve a abrir", r.ptAbre, true);
     eq("OK: desaparecen los botones, la tarjeta sigue", r.ptOk, [true, 0, "esta"]);
-    eq("Mover: hoja '¿A dónde va?' (mismo flujo del 226) y la tarjeta sale de la tarea", [r.mover, r.moverSale], ["Pádel miércolesmás probable", [false, true, 1]]);
+    eq("Mover: hoja '¿A dónde va?' (mismo flujo del 226) y la tarjeta sale de la tarea", [r.mover, r.moverSale], ["Pádel miércolesparecida", [false, true, 1]]);
     eq("Nueva: la tarjeta sale y hay tarea nueva", r.nuevaSale, [false, 3]);
     eq("Resumen (231): ya no es ficha; vive en Importante (filtro)", [r.rvAbierto, r.rvMin], [[false, false], ["Importante", true]]);
     eq("sin emojis en el encabezado", r.sinEmoji, true);
