@@ -64,7 +64,7 @@ eq("versión 227 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
     eq("UNA sola ficha 'Todo' en la fila de fichas (231: sin ficha Resumen)", r.pastilla, [1, "Todo", true, true, 0]);
     eq("hoja: Todo · Claude · cada integrante (con avatar) · integrantes", [r.hoja, r.hojaAv], [["imp", "todo", "claude", "ext:Arturo Tijerina", "ext:Javier Fernández", "ext:Eduardo Madero", "__int"], ["AT", "JF", "EM"]]);
     eq("lo elegido reemplaza el texto: Eduardo / Claude / Todo", [r.eligeEduardo, r.eligeClaude, r.eligeTodo], [["Eduardo", "ext:Eduardo Madero"], ["Claude", true], "Todo"]);
-    eq("Te pregunta con OK · Mover · Nueva (y no repetidos en la burbuja)", r.pt, [true, ["OK", "Mover", "Nueva", "Dato"], 0]);
+    eq("Te pregunta con OK · Mover · Nueva (y no repetidos en la burbuja)", r.pt, [true, ["OK", "Mover", "Nueva", "Dato", "No guardar"], 0]);
     eq("minimizar: una línea 'Te pregunta · Eduardo' (242: los botones van en la hoja del globo, no debajo)", r.ptMin, [false, "Te pregunta · Eduardo", 0]);
     eq("se recuerda por tarea", r.ptRecuerda, true);
     eq("se vuelve a abrir", r.ptAbre, true);

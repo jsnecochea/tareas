@@ -53,14 +53,14 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
     if (process.env.CAP) await p.screenshot({ path: path.join(process.env.CAP, "b240-acomodo-dato-sinimportancia.png") });
     var r3 = await p.evaluate(function () { var o = {}, FI = tareas[0];
       function card(re) { return [].filter.call(document.querySelectorAll(".aco226 .acor.g237"), function (f) { return re.test(f.textContent); })[0]; }
-      __ESCR.length = 0; card(/Javier/).querySelector("[data-actriv]").click();
-      var x = FI.msgs[0]; o.triv = [x.acomodo && x.acomodo.trivial, FI.msg_imp && FI.msg_imp[msgId230(x)], __ESCR.filter(function (e) { return e[0] === "bitacora_personas" && e[2].acomodo_reglas; }).map(function (e) { var r = e[2].acomodo_reglas[Object.keys(e[2].acomodo_reglas)[0]]; return [r.tipo, r.tarea_destino]; })];
+      __ESCR.length = 0;   /* 243: ya no hay "OK · sin importancia" */
+      var x = FI.msgs[0]; o.triv = [!!card(/Javier/).querySelector("[data-actriv]")];
       card(/Rogelio/).querySelector(":scope > .acob > .ac226 [data-acdato]").click(); var n = tareas[tareas.length - 1];
       o.dato = [n.tipo_item, n.es_dato, n.tipo_elegido, n.msgs.filter(function (x) { return x.movido_de; }).length, FI.msgs[1].oculto];
       /* en la hoja ¿A dónde va? */
       var G = { id: "tG", nombre: "Comedor nuevo", duenio: "salvador", estado: "abierta", msgs: [{ k: "bi", wa_in: 1, wa_c: "Lalo", t: "Lalo: jajaja igualmente", ts: Date.now() - 1000, h: "21:00", wa_id: "zz" }] };
       tareas.push(G); abreMover225(G, 0); o.hoja = [].map.call(document.querySelectorAll("#mov225 .opt226.plain .two > span"), function (x) { return x.textContent; });
-      document.querySelector("#mov225 [data-movtriv]").click(); o.hojaTriv = [G.msgs[0].acomodo && G.msgs[0].acomodo.trivial, G.msg_imp && G.msg_imp.zz];
+      o.hojaTriv = [!!document.querySelector("#mov225 [data-movtriv]")]; document.querySelector("#mov225 [data-movx]").click();
       return o; });
     /* ---- Historial ---- */
     var r4 = await p.evaluate(function () { var o = {};
@@ -89,11 +89,11 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
     eq("quedan: el dictado de Salvador, Garza con contenido y el archivo", [/OK prográmame el recordatorio/.test(vis), (vis.match(/Garza/g) || []).length >= 2, /Requisitos testamen/.test(vis)], [true, true, true]);
     eq("tarea hecha a mano: no pide Tarea · Dato · Vincular", r.toggle, 0);
     eq("a mano sin tipo: clasificada; la de la IA sin elegir: pide clasificar", [r2.mano, r2.ia], [[0, true], [1, false]]);
-    eq("Acomodo: OK · Mover · Nueva · Dato y el atajo 'OK · sin importancia'", r2.botones, ["OK", "Mover", "Nueva", "Dato", "OK · sin importancia"]);
-    eq("sin importancia: se queda con msg_imp 0 y regla 'trivial'", r3.triv, [1, 0, [["trivial", "tFIESTA"]]]);
+    eq("Acomodo (243): OK · Mover · Nueva · Dato · No guardar", r2.botones, ["OK", "Mover", "Nueva", "Dato", "No guardar"]);
+    eq("243: ya no existe 'OK · sin importancia' (regla trivial y atajo quitados)", r3.triv, [false]);
     eq("Dato: un dato nuevo con el mensaje", r3.dato, ["dato", true, true, 1, true]);
-    eq("hoja ¿A dónde va?: 'Bien, pero sin importancia' antes de 'Solo plática'", r3.hoja.slice(-2), ["Bien, pero sin importancia", "Solo plática"]);
-    eq("y desde la hoja también", r3.hojaTriv, [1, 0]);
+    eq("243: hoja ¿A dónde va? sin 'Bien, pero sin importancia'; termina en 'Solo plática'", [r3.hoja.indexOf("Bien, pero sin importancia"), r3.hoja.slice(-1)], [-1, ["Solo plática"]]);
+    eq("243: ni botón de sin importancia en la hoja", r3.hojaTriv, [false]);
     eq("Historial: lo más reciente arriba, con Deshacer donde se puede", r4.renglones.slice(0, 4), [["Comprar Regalo", "Ya está (la cerró)", true], ["Comprar Regalo", "Movió un mensaje a “Fiesta”", true], ["Comprar Regalo", "Movió la fecha del sáb 10 oct al lun 12 oct", true], ["Comprar regalo", "Abrió la tarea", false]]);
     eq("se guarda también en bitacora_personas/salvador.historial_acciones", r5.guardado, true);
     eq("Deshacer: reabre, regresa el mensaje, restaura la fecha", [r5.reabierta, r5.regreso, r5.fecha, r5.deshecho], [[true, "abierta"], [true, 0], "2026-10-10", 3]);

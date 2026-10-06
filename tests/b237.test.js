@@ -98,7 +98,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
     eq("Nueva: tarea nueva con toda la plática", r3.nueva, [true, 2, 2]);
     eq("ya no queda nada por revisar", r3.quedan, 0);
     eq("en la tarea (238 por MENSAJE): botones en cada mensaje con duda (Lalo por la nota de la Mac en Te pregunta, Manuel) e iconito de Claude en los acomodados con contenido", [r3.dentro.botones, r3.dentro.marquitas], [[1],   /* 242: solo la tarjeta Te pregunta; los demás en la hoja del globo */ ["Lo acomodó Claude", "Lo acomodó Claude", "Lo acomodó Claude", "Lo acomodó Claude", "Lo acomodó Claude"]]);
-    eq("tocar el globo con el iconito abre OK · Mover · Nueva para ese mensaje", r4.abierta, [1, 4]);   /* 240: + Dato */
+    eq("tocar el globo con el iconito abre OK · Mover · Nueva para ese mensaje", r4.abierta, [1, 5]);   /* 243: + No guardar */   /* 240: + Dato */
     eq("OK desde el globo confirma ese mensaje y le quita el iconito", r5[0], 1);
     eq("tarea limpia: globo tocado abierto", r6, [1]);
     eq("sin errores de página", errs, []);

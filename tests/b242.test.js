@@ -10,7 +10,7 @@ var ok = 0, n = 0, malas = [];
 function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
 var FX = JSON.parse(fs.readFileSync(path.join(__dirname, "fx-navidena-242.json"), "utf8"));
 var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
-eq("versión 242", /var VERSION_APP = "build 242/.test(html), true);
+eq("versión >= 242", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[1] >= 242, true);
 eq("versión >= 233", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[1] >= 233, true);
 
 eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Archivo|Barlow);/g) || []).length, 0);
@@ -59,7 +59,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
     eq("Todo: HILO y la nota de Chuy son nota gris; el original de Chuy es su globo", [/NOTA HILO \(WhatsApp, Chuy Cumbres Zatarain\)/.test(T), /Chuy: Ya nomas me dise cuales árboles/.test(T), /NOTA Chuy Cumbres Zatarain: Chuy pregunta \(3:22pm\)/.test(T)], [true, true, true]);
     eq("Todo: separadores de día solo cuando cambia", [r2.todo.filter(function (x) { return /^DIA /.test(x); }).length >= 3, r2.todo.some(function (x, i) { return /^DIA /.test(x) && /^DIA /.test(r2.todo[i + 1] || ""); })], [true, false]);
     eq("globos limpios: sin 'Salvador · 17:20' ni 'acomodó Claude'", [r2.metaTexto, r2.sinTextoAcomodo], [0, true]);
-    eq("tocar el globo: canal, fecha, de quién, entrega, quién lo acomodó y OK · Mover · Nueva · Dato", [r3.det.map(function (x) { return x.split(":")[0]; }), r3.det[0], r3.det[2], r3.det[3], r3.det[4], r3.botones], [["Canal", "Fecha", "De", "Entrega", "Lo acomodó"], "Canal: WhatsApp", "De: Chuy Cumbres Zatarain", "Entrega: Recibido", "Lo acomodó: Claude", ["OK", "Mover", "Nueva", "Dato"]]);
+    eq("tocar el globo: canal, fecha, de quién, entrega, quién lo acomodó y OK · Mover · Nueva · Dato", [r3.det.map(function (x) { return x.split(":")[0]; }), r3.det[0], r3.det[2], r3.det[3], r3.det[4], r3.botones], [["Canal", "Fecha", "De", "Entrega", "Lo acomodó"], "Canal: WhatsApp", "De: Chuy Cumbres Zatarain", "Entrega: Recibido", "Lo acomodó: Claude", ["OK", "Mover", "Nueva", "Dato", "No guardar"]]);
     eq("Pasos en su hoja", r4.pasos, ["Pasos", true]);
     eq("detecta notas de la IA aunque vengan con otro autor", r4.nia, [true, true, true, false, false]);
     eq("sin errores de página", errs, []);
