@@ -28,7 +28,7 @@ eq("versión 229 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
       function LIMP() { return { id: "tLIMP", nombre: "Limpieza y mantenimiento lotes Cumbres", duenio: "salvador", estado: "abierta", contexto: "Limpieza de lotes con Samuel", msgs: [{ k: "bo", de: "salvador", t: "Samuel, ¿cómo vas?", ts: NOW - 9e6, h: "08:00" }] }; }
       var EVI = [{ tipo: "texto", fuente: "correo", titulo: "Invitación Blue Cup BBVA", fecha: "2026-09-19", de: "BBVA Eventos", texto: "Fecha límite para confirmar renta de equipo: 9 de octubre." },
         { tipo: "imagen", fuente: "whatsapp", titulo: "Itinerario del torneo", fecha: "2026-09-20", de: "Rogelio Sada", url: "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=" }];
-      function BLUE(evi, enDatos) { var t = { id: "tBLUE", nombre: "Blue Cup BBVA", duenio: "salvador", tipo_item: "tarea" /* 236: la franja sale ya clasificada */, creada_por: "ia_revisor", por_autorizar: true, estado: "abierta", indefinida: true,
+      function BLUE(evi, enDatos) { var t = { id: "tBLUE", nombre: "Blue Cup BBVA", duenio: "salvador", tipo_item: "tarea", tipo_elegido: true /* 236/237: la franja sale ya clasificada por Salvador */, creada_por: "ia_revisor", por_autorizar: true, estado: "abierta", indefinida: true,
         contexto: "Torneo de golf Blue Cup BBVA en Riviera Maya del 21 al 23 de octubre; hay que confirmar la renta de equipo a más tardar el viernes 9 de octubre",
         evento: { titulo: "Límite confirmar renta de equipo", fecha: "2026-10-09", hora: "", lugar: "", todo_dia: false }, msgs: [{ k: "bi", t: "IA: creada desde correo", ts: NOW - 5e6, h: "09:00" }] };
         if (enDatos) t.datos = { evidencia: evi }; else t.evidencia = evi; return t; }

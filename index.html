@@ -736,6 +736,10 @@ button{font:inherit;color:inherit}
 .mov225{position:fixed;left:0;right:0;bottom:0;max-height:70vh;background:#1c1c1e;border-radius:22px 22px 0 0;padding:12px 14px calc(18px + env(safe-area-inset-bottom));display:flex;flex-direction:column;box-shadow:0 -10px 40px rgba(0,0,0,.7)}
 /* build 226: acomodo (OK · Mover · Nueva), hoja "¿A dónde va?", seccion Acomodo del Inicio */
 .ac226{display:flex;align-items:center;gap:6px;margin:-2px 0 6px 10px;font-size:13.5px;color:var(--ink-3)}
+.mq237{display:block;border:0;background:none;font:inherit;font-size:12px;color:var(--ink-3);margin:-2px 0 6px 12px;padding:2px 0;cursor:pointer}
+.ac226.mq237ab{margin-left:12px}.acor.g237{cursor:pointer}.acow .n237{color:var(--ink-3);font-size:13.5px;margin-left:6px;font-weight:400}.acow time{margin-left:auto}
+.acom.x237{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.msgs237{display:flex;flex-direction:column;gap:4px;margin:6px 0 2px;padding:6px 0 0;border-top:.5px solid var(--line)}.m237{font-size:14px;color:var(--ink-2)}.m237.tenue{color:var(--ink-3)}.m237 time{color:var(--ink-3);font-size:12px;margin-right:6px}
 .ac226 button{border:0;background:none;font:inherit;font-size:13.5px;font-weight:600;color:var(--fi-blue);padding:3px 2px}
 .av226{width:40px;height:40px;border-radius:50%;background:var(--surface-2);border:1px solid #444;color:var(--ink);display:grid;place-items:center;font-size:15px;font-weight:600;flex:none}
 .mov225 .mvctx{display:flex;gap:12px;align-items:center;padding:0 2px 10px}.mvt{flex:1;min-width:0;display:flex;flex-direction:column}
@@ -1443,7 +1447,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 236 · Tarea · Dato · Vincular grandes (contorno azul/blanco/morado) · sin clasificar solo pide elegir · vincúlala por voz";
+var VERSION_APP = "build 237 · Acomodo por plática (no por mensaje) · marquita acomodó Claude · reglas de acomodo";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -4785,7 +4789,9 @@ function _leeAgenda229(t){
 }
 /* build 236 (Salvador 19:24): Tarea · Dato · Vincular vuelven a ser botones GRANDES (48 px, mismo ancho, todo el ancho), solo contorno:
    Tarea azul, Dato blanco, Vincular morado; elegido = relleno suave del mismo color. Van justo debajo de la fila de fichas. */
-function clasif236(t){ return !!t && (t.tipo_item==="tarea" || t.tipo_item==="dato"); }
+function clasif236(t){ if(!t || !(t.tipo_item==="tarea" || t.tipo_item==="dato")) return false;
+  /* build 237: la Mac (armaTarea) pone tipo_item al crear; eso NO es elegir. Clasificada = la eligio Salvador (tipo_elegido) o no la creo la IA */
+  return t.tipo_elegido===true || !(t.creada_por==="ia_revisor" || /_revisor$/.test(String(t.origen||""))); }
 function vTipoToggle(t){
   var tp=clasif236(t)?t.tipo_item:"";
   return '<div class="typep229 tp236"><button data-tipoi="tarea" class="tp-t'+(tp==="tarea"?" on":"")+'">Tarea</button>'+
@@ -8942,12 +8948,12 @@ function opcionesMover(t, x){
 function inicialesDe(n){ var w=nombreCorto(String(n||"")).replace(/\(.*?\)/g,"").replace(/[^\wáéíóúñü ]+/gi," ").trim().split(/\s+/).filter(Boolean); return ((w[0]||"?").charAt(0)+((w[1]||"").charAt(0)||"")).toUpperCase(); }
 function nombreLimpio(n){ return String(n||"").replace(/\s*\(.*?\)\s*/g," ").replace(/[☀-➿️‍]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uD83E[\uDC00-\uDFFF]/g,"").replace(/\s+/g," ").trim(); }
 /* hoja "¿A donde va?" */
-function abreMover225(t, ix){
-  var x=(t.msgs||[])[ix]; if(!x) return;
+function abreMover225(t, ix, ixs){
+  var x=(t.msgs||[])[ix]; if(!x) return; ixs=(ixs&&ixs.length)?ixs:null;   /* build 237: con ixs mueve toda la plática */
   var ops=opcionesMover(t, x), q=nombreLimpio(x.wa_c||((PERSONAS[x.de]||{}).nombre)||""), tx=_txMsg(x).replace(/^[^:\n]{1,40}:\s*/,"");
   var v=document.createElement("div"); v.className="leemask"; v.id="mov225";
   v.innerHTML='<div class="mov225" role="dialog" aria-label="¿A dónde va?"><div class="h225g"></div>'+
-    '<div class="mvctx"><span class="av226">'+esc(inicialesDe(q))+'</span><span class="mvt"><small>'+esc((q||"Mensaje")+(x.h?" · "+x.h:""))+'</small><span>'+esc(tx)+'</span></span><button class="h225b" data-movx="1" aria-label="Cerrar">'+ico("x",14)+'</button></div>'+
+    '<div class="mvctx"><span class="av226">'+esc(inicialesDe(q))+'</span><span class="mvt"><small>'+esc((q||"Mensaje")+(x.h?" · "+x.h:"")+(ixs&&ixs.length>1?" · "+ixs.length+" mensajes":""))+'</small><span>'+esc(tx)+'</span></span><button class="h225b" data-movx="1" aria-label="Cerrar">'+ico("x",14)+'</button></div>'+
     '<h3 class="mvh">¿A dónde va?</h3><div class="h225c">'+
     ops.map(function(o){ return '<button class="opt226'+(o.best?' best':'')+'" data-movto="'+esc(o.d.id)+'">'+ico("folder",20)+'<span class="ot">'+esc(o.d.nombre||"(sin nombre)")+'</span>'+(o.tag?'<span class="tag">'+esc(o.tag)+'</span>':'')+'</button>'; }).join("")+
     '<div class="sep226"></div>'+
@@ -8955,25 +8961,123 @@ function abreMover225(t, ix){
     '<button class="opt226 plain" data-movplatica="1">'+ico("bubble",20)+'<span class="two"><span>Solo plática</span><small>no guardar en tarea</small></span></button></div></div>';
   document.body.appendChild(v);
   v.addEventListener("click", function(ev){ ev.stopPropagation(); var b=ev.target.closest("[data-movto],[data-movnueva],[data-movplatica]"), r="";
-    if(b){ if(b.hasAttribute("data-movnueva")){ var n=nuevaDesdeMsg(t, ix); r=n?"Tarea nueva “"+n.nombre+"” en Falta info; el mensaje pasó ahí.":""; }
-      else if(b.hasAttribute("data-movplatica")) r=soloPlatica(t, ix);
-      else { var id=b.getAttribute("data-movto"); r=(id===t.id)?acomodoOk(t, ix):mueveMensaje(t, ix, id); }
+    if(b){ if(b.hasAttribute("data-movnueva")){ var n=ixs?nuevaG237(t, ixs):nuevaDesdeMsg(t, ix); if(n && !ixs) guardaRegla237("nueva", t, [ix], n); r=n?"Tarea nueva “"+n.nombre+"” en Falta info; "+(ixs&&ixs.length>1?"la plática pasó":"el mensaje pasó")+" ahí.":""; }
+      else if(b.hasAttribute("data-movplatica")){ (ixs||[ix]).forEach(function(i){ var rr=soloPlatica(t, i); if(rr) r=rr; }); guardaRegla237("platica", t, ixs||[ix], null); }
+      else { var id=b.getAttribute("data-movto"); r=(id===t.id)?okG237(t, ixs||[ix]):(ixs?moverG237(t, ixs, id):(guardaRegla237("mover", t, [ix], tareas.filter(function(z){ return z.id===id; })[0]), mueveMensaje(t, ix, id))); }
       v.remove(); if(r) toast(r); render(); return; }
     if(ev.target===v || ev.target.closest("[data-movx]")) v.remove(); });
 }
-/* abajo de la burbuja con duda: OK · Mover · Nueva (sin pregunta) */
+/* ===================== build 237 (Salvador 19:42): ACOMODO POR PLÁTICA, NO POR MENSAJE =====================
+   Plática = mensajes de WhatsApp del mismo contacto en la misma tarea con menos de 30 min entre uno y otro. En el Inicio, UNA tarjeta
+   por plática con duda (duda_tarea, o tarea que creó la IA y que Salvador aún no clasifica): contacto · "N mensajes" (sin la pura
+   plática: regla del 230) · extracto (el de más contenido) · "creo que es: <tarea>" · OK · Mover · Nueva para TODA la plática; al
+   tocarla se despliegan sus mensajes. Dentro de la tarea: lo que acomodó Claude lleva "acomodó Claude" (al tocar: OK · Mover · Nueva);
+   con duda, los botones van visibles UNA vez por plática. Cada OK/Mover/Nueva deja una regla en bitacora_personas/<usuario>.acomodo_reglas.
+   OJO (encontrado 237): el servidor (push.php wa_multimedia) NO guarda el campo duda_tarea que manda la Mac 18q; la Mac sí deja su
+   nota privada "no estoy seguro del tema del mensaje de X de las HH:MM; … puede ser de «Y»". Mientras se arregla el servidor, la duda
+   se recupera de esa nota. */
+var DUDA_NOTA_RE=/no estoy seguro del tema del mensaje de (.+?) de las (\d{1,2}:\d{2});[^«]*«([^»]+)»/i;
+function dudasDeNotas237(t){
+  var out=[]; (t&&t.msgs||[]).forEach(function(n){ if(!n || !(n.nota_ia || /Nota IA/.test(String(n.t||"")))) return; var m=String(n.t||"").match(DUDA_NOTA_RE); if(m) out.push({c:m[1].trim(), h:m[2].length===4?"0"+m[2]:m[2], alt:m[3].trim()}); });
+  return out;
+}
+/* pone duda_tarea (de_nota:1) en el mensaje que dice la nota de la Mac; no toca lo ya resuelto */
+function aplicaDudasNota237(t){
+  var D=dudasDeNotas237(t); if(!D.length) return 0; var n=0;
+  D.forEach(function(d){ var c=_nn(d.c); (t.msgs||[]).forEach(function(x){ if(!x || x.duda_tarea || x.duda_resuelta || !x.wa_in || !x.wa_c) return;
+      var h=String(x.h||""); if(h.length===4) h="0"+h; if(h!==d.h || _nn(String(x.wa_c)).indexOf(c)<0 && c.indexOf(_nn(String(x.wa_c)))<0) return;
+      var a=tareas.filter(function(z){ return z && z.id!==t.id && _nn(z.nombre)===_nn(d.alt); })[0];
+      x.duda_tarea={alternativa_id:a?a.id:"", alternativa_nombre:d.alt, de_nota:1}; n++; }); });
+  return n;
+}
+function confirmado237(x){ return !!(x && ((x.acomodo && typeof x.acomodo==="object") || x.duda_resuelta)); }
+/* ¿lo acomodo Claude solo? marca explicita (acomodo/por:"ia") o entrante de WhatsApp que cayo solo (no movido ni arrastrado a mano) */
+function acomodoIA237(x){
+  if(!x || x.oculto || x.eliminado || confirmado237(x)) return false;
+  if(x.acomodo==="ia" || x.por==="ia" || x.acomodado_por==="ia") return true;
+  return !!(+x.wa_in===1 && x.wa_c && !x.movido_de && x.origen!=="arrastrado" && x.k!=="bo");
+}
+function esPlatica237(t, x){ try{ return !esImp230(t, x); }catch(e){ return false; } }
+function platicas237(t){
+  var L=[]; (t&&t.msgs||[]).forEach(function(x,ix){ if(msgVisible225(x) && +x.wa_in===1 && x.wa_c) L.push({x:x, ix:ix, ts:+x.ts||0}); });
+  L.sort(function(a,b){ return a.ts-b.ts; });
+  var ult={}, G=[];
+  L.forEach(function(o){ var c=nombreLimpio(o.x.wa_c), g=ult[c];
+    if(g && o.ts-g.ts1<30*60000){ g.ixs.push(o.ix); g.ts1=o.ts; } else { g={t:t, contacto:c, ixs:[o.ix], ts0:o.ts, ts1:o.ts}; ult[c]=g; G.push(g); } });
+  G.forEach(function(g){ var xs=g.ixs.map(function(i){ return t.msgs[i]; });
+    g.duda=xs.filter(function(x){ return x.duda_tarea && !x.duda_resuelta; })[0]||null;
+    g.ia=xs.some(acomodoIA237); g.listos=xs.every(confirmado237);
+    var imp=xs.filter(function(x){ return !esPlatica237(t, x); }); g.n=imp.length;
+    var base=imp.length?imp:xs; g.extracto=base.map(function(x){ return _txMsg(x).replace(/^[^:\n]{1,40}:\s*/,""); }).sort(function(a,b){ return b.length-a.length; })[0]||""; });
+  return G;
+}
+function grupoDe237(t, ix){ var G=platicas237(t); for(var i=0;i<G.length;i++) if(G[i].ixs.indexOf(ix)>=0) return G[i]; return null; }
+/* tarea que creo la IA y Salvador aun no clasifica */
+function sinClasificarIA237(t){ return !!t && t.creada_por==="ia_revisor" && t.por_autorizar===true && !clasif236(t) && !t.cierre; }
+function botonesG237(ix, ixs, extra){ var g=esc(ixs.join(","));
+  return '<div class="ac226'+(extra||"")+'" data-acix="'+ix+'" data-acg="'+g+'"><button data-acok="'+ix+'">OK</button><span>·</span><button data-acmov="'+ix+'">Mover</button><span>·</span><button data-acnueva="'+ix+'">Nueva</button></div>'; }
+/* abajo de la burbuja: UNA vez por plática (en el primer mensaje que se ve). Con duda: los botones; acomodado por Claude: la marquita */
 function vDudaTarea(t, x, ix){
-  var d=x && x.duda_tarea; if(!d || x.duda_resuelta || x.oculto) return "";
-  return '<div class="ac226" data-acix="'+ix+'"><button data-acok="'+ix+'">OK</button><span>·</span><button data-acmov="'+ix+'">Mover</button><span>·</span><button data-acnueva="'+ix+'">Nueva</button></div>';
+  if(!x || x.oculto) return "";
+  var g=grupoDe237(t, ix); if(!g || g.listos) return "";
+  var R=window.__g237r=window.__g237r||{}, k=t.id+"|"+g.ixs[0]; if(R[k] && R[k]!==ix) return ""; R[k]=ix;
+  if(g.duda) return botonesG237(ix, g.ixs);
+  if(!g.ia) return "";
+  var ab=(window.__mq237||{})[k];
+  return ab?botonesG237(ix, g.ixs, " mq237ab"):'<button class="mq237" data-mq237="'+esc(k)+'">acomodó Claude</button>';
+}
+/* acciones sobre TODA la plática */
+function ixsDe237(el, ix){ var c=el && el.closest && el.closest("[data-acg]"); var v=c?String(c.getAttribute("data-acg")||""):""; var l=v?v.split(",").map(function(n){ return +n; }).filter(function(n){ return !isNaN(n); }):[]; return l.length?l:[ix]; }
+function palabrasRegla237(xs){
+  var cnt={}, ord=[]; xs.forEach(function(x){ _nn(_txMsg(x).replace(/^[^:\n]{1,40}:\s*/,"")).replace(/[^a-z0-9ñ ]+/g," ").split(/\s+/).forEach(function(w){
+    if(w.length<4 || META_VACIAS.indexOf(w)>=0 || /^(para|como|esta|este|esto|pero|porque|gracias|buenos|buenas|dias|tardes|noches|salvador|manana|ahorita|tengo|tiene|hacer|listo|favor|solo|nada|algo|bien|claro|saludos|espero|encuentres|mande|mando|quedo|creo)$/.test(w)) return;
+    if(!cnt[w]){ cnt[w]=0; ord.push(w); } cnt[w]++; }); });
+  return ord.sort(function(a,b){ return (cnt[b]-cnt[a]) || (b.length-a.length); }).slice(0,5);
+}
+/* APRENDIZAJE: bitacora_personas/<usuario> campo acomodo_reglas (mapa id -> regla), merge: no se lee ni se pisa lo anterior */
+function guardaRegla237(tipo, t, ixs, dest){
+  var xs=ixs.map(function(i){ return (t.msgs||[])[i]; }).filter(Boolean); if(!xs.length) return null;
+  var r={contacto:nombreLimpio(xs[0].wa_c||((PERSONAS[xs[0].de]||{}).nombre)||""), palabras_clave:palabrasRegla237(xs), tarea_destino:dest?dest.id:"",
+    tarea_destino_nombre:dest?String(dest.nombre||""):"", tarea_origen:t.id, tipo:tipo, fecha:new Date().toISOString(), mensajes:xs.length, por:yo||""};
+  var id="r"+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36), o={}; o[id]=r;
+  window.__reglas237=(window.__reglas237||[]).concat([r]).slice(-50);
+  try{ if(db) db.collection(COLP).doc(yo).set({acomodo_reglas:o},{merge:true}).catch(function(){}); }catch(e){}
+  return r;
+}
+function okG237(t, ixs){
+  var n=0; ixs.forEach(function(ix){ var x=(t.msgs||[])[ix]; if(!x || x.oculto) return; x.duda_resuelta="esta"; x.duda_ts=Date.now(); x.acomodo={ok:1, ts:Date.now(), por:yo||""}; n++; });
+  if(!n) return ""; censoAcomodo(t, t.msgs[ixs[0]], t.id, t.id, "ok"); guardaRegla237("ok", t, ixs, t); guarda(t);
+  return "Listo: "+(n===1?"se queda":"los "+n+" se quedan")+" en “"+(t.nombre||"esta tarea")+"”.";
+}
+function moverG237(t, ixs, did){
+  var d=tareas.filter(function(z){ return z.id===did; })[0]; if(!d) return "";
+  guardaRegla237("mover", t, ixs, d); var n=0; ixs.forEach(function(ix){ if(mueveMensaje(t, ix, did, "mover")) n++; });
+  return n?(n===1?"Lo moví":"Moví los "+n)+" a “"+(d.nombre||"la otra tarea")+"”. Aquí quedan ocultos, no borrados.":"";
+}
+function nuevaG237(t, ixs){
+  var xs=ixs.filter(function(i){ var x=(t.msgs||[])[i]; return x && !x.oculto; }); if(!xs.length) return null;
+  var best=xs.slice().sort(function(a,b){ return _txMsg(t.msgs[b]).length-_txMsg(t.msgs[a]).length; })[0];
+  var n=nuevaDesdeMsg(t, best); if(!n) return null;
+  xs.forEach(function(i){ if(i!==best) mueveMensaje(t, i, n.id, "nueva"); });
+  guardaRegla237("nueva", t, xs, n); return n;
 }
 function bindAcomodo(raiz, tareaDe){
   function q(sel, fn){ Array.prototype.forEach.call(raiz.querySelectorAll(sel), function(el){ el.onclick=function(ev){ ev.stopPropagation(); var ix=+el.getAttribute(sel.slice(1,-1)), t=tareaDe(el); if(!t) return; fn(t, ix); }; }); }
-  q("[data-acok]", function(t, ix){ var r=acomodoOk(t, ix); if(r) toast(r); render(); });
-  q("[data-acmov]", function(t, ix){ abreMover225(t, ix); });
-  q("[data-acnueva]", function(t, ix){ var n=nuevaDesdeMsg(t, ix); if(n) toast("Tarea nueva “"+n.nombre+"” en Falta info; el mensaje pasó ahí."); render(); });
+  /* build 237: el botón aplica a TODA la plática (data-acg) */
+  function q2(sel, fn){ Array.prototype.forEach.call(raiz.querySelectorAll(sel), function(el){ el.onclick=function(ev){ ev.stopPropagation(); var ix=+el.getAttribute(sel.slice(1,-1)), t=tareaDe(el); if(!t) return; fn(t, ix, ixsDe237(el, ix)); }; }); }
+  q2("[data-acok]", function(t, ix, ixs){ var r=okG237(t, ixs); if(r) toast(r); render(); });
+  q2("[data-acmov]", function(t, ix, ixs){ abreMover225(t, ix, ixs); });
+  q2("[data-acnueva]", function(t, ix, ixs){ var n=nuevaG237(t, ixs); if(n) toast("Tarea nueva “"+n.nombre+"” en Falta info; "+(ixs.length===1?"el mensaje pasó":"la plática pasó")+" ahí."); render(); });
+  Array.prototype.forEach.call(raiz.querySelectorAll("[data-mq237]"), function(el){ el.onclick=function(ev){ ev.stopPropagation(); window.__mq237=window.__mq237||{}; var k=el.getAttribute("data-mq237"); window.__mq237[k]=!window.__mq237[k]; render(); }; });
 }
 /* ---- Inicio: seccion Acomodo ---- */
 function abiertaVisible(t){ return t && !t.cierre && !t.fusionada_en && !t.es_recordatorio && estadoReal(t)!=="cerrada" && (t.duenio===yo || (PERSONAS[yo]&&PERSONAS[yo].jefe)); }
+/* build 237: pláticas por acomodar (solo las que tienen duda o están en una tarea de la IA sin clasificar), la más reciente primero */
+function platicasAcomodo237(){
+  var out=[]; tareas.forEach(function(t){ if(!abiertaVisible(t)) return; try{ aplicaDudasNota237(t); }catch(e){}
+    var sc=sinClasificarIA237(t); platicas237(t).forEach(function(g){ if(g.listos) return; if(g.duda || sc){ g.sinClasificar=sc && !g.duda; out.push(g); } }); });
+  return out.sort(function(a,b){ return b.ts1-a.ts1; });
+}
 function dudasAcomodo(){
   var out=[]; tareas.forEach(function(t){ if(!abiertaVisible(t)) return;
     (t.msgs||[]).forEach(function(x,ix){ if(x && x.duda_tarea && !x.duda_resuelta && !x.oculto && !x.eliminado) out.push({t:t, ix:ix, x:x}); }); });
@@ -8990,13 +9094,13 @@ function acomodoHoy(){
   return {n:n, ok:n-mal, lista:L.sort(function(a,b){ return (b.x.ts||0)-(a.x.ts||0); })};
 }
 function vAcomodo(){
-  var D=dudasAcomodo(), A=acomodoHoy(); if(!D.length && !A.n) return "";
-  var h='<div class="aco226"><div class="acoh"><b>Acomodo</b><span>'+(D.length?D.length+' por revisar':'al día')+'</span></div>';
-  if(D.length) h+='<div class="acog">'+D.slice(0,8).map(function(o){ var q=nombreLimpio(o.x.wa_c||""), tx=_txMsg(o.x).replace(/^[^:\n]{1,40}:\s*/,"");
-    return '<div class="acor" data-acot="'+esc(o.t.id)+'" data-acoix="'+o.ix+'"><span class="av226">'+esc(inicialesDe(q))+'</span><span class="acob"><span class="acow"><b>'+esc(q||"Contacto")+'</b><time>'+esc(o.x.h||"")+'</time></span>'+
-      '<span class="acom">'+esc(tx)+'</span><span class="pill226">'+ico("folder",14)+esc(tareaCorta(o.t))+'<span class="q">?</span></span>'+
-      '<span class="ac226" data-acix="'+o.ix+'"><button data-acok="'+o.ix+'">OK</button><span>·</span><button data-acmov="'+o.ix+'">Mover</button><span>·</span><button data-acnueva="'+o.ix+'">Nueva</button></span></span></div>'; }).join("")+'</div>'+
-    '<div class="acohint">Desliza: derecha OK · izquierda Mover</div>';
+  var D=platicasAcomodo237(), A=acomodoHoy(); if(!D.length && !A.n) return "";   /* build 237: UNA tarjeta por plática */
+  var h='<div class="aco226"><div class="acoh"><b>Acomodo</b><span>'+(D.length?D.length+(D.length===1?' plática':' pláticas')+' por revisar':'al día')+'</span></div>';
+  if(D.length) h+='<div class="acog">'+D.slice(0,8).map(function(g){ var t=g.t, ix0=g.ixs[0], x0=t.msgs[g.ixs[g.ixs.length-1]], k=t.id+"|"+ix0, ab=!!(window.__g237open||{})[k];
+    return '<div class="acor g237'+(ab?' ab':'')+'" data-acot="'+esc(t.id)+'" data-acoix="'+ix0+'" data-acg="'+esc(g.ixs.join(","))+'" data-g237="'+esc(k)+'"><span class="av226">'+esc(inicialesDe(g.contacto))+'</span><span class="acob"><span class="acow"><b>'+esc(g.contacto||"Contacto")+'</b><span class="n237">'+(g.n||g.ixs.length)+' mensaje'+((g.n||g.ixs.length)===1?'':'s')+'</span><time>'+esc(x0.h||"")+'</time></span>'+
+      '<span class="acom x237">'+esc(g.extracto)+'</span><span class="pill226">'+ico("folder",14)+'creo que es: '+esc(tareaCorta(t))+(g.sinClasificar?'<span class="q"> · sin clasificar</span>':'')+'</span>'+
+      (ab?'<span class="msgs237">'+g.ixs.map(function(i){ var x=t.msgs[i]; return '<span class="m237'+(esPlatica237(t,x)?' tenue':'')+'"><time>'+esc(x.h||"")+'</time>'+esc(_txMsg(x).replace(/^[^:\n]{1,40}:\s*/,""))+'</span>'; }).join("")+'</span>':'')+
+      '<span class="ac226" data-acix="'+ix0+'" data-acg="'+esc(g.ixs.join(","))+'"><button data-acok="'+ix0+'">OK</button><span>·</span><button data-acmov="'+ix0+'">Mover</button><span>·</span><button data-acnueva="'+ix0+'">Nueva</button></span></span></div>'; }).join("")+'</div>';
   var ab=!!window.__aco226;
   if(A.n){ h+='<button class="acof" id="bacof">'+ico("check",18)+'<span>Acomodé solo hoy · '+A.n+'</span><span class="r">acerté '+A.ok+'/'+A.n+'</span>'+ico(ab?"down":"chev",16)+'</button>';
     if(ab) h+='<div class="acol">'+A.lista.slice(0,30).map(function(o){ return '<button class="acoli" data-id="'+esc(o.t.id)+'"><span>'+esc(nombreLimpio(o.x.wa_c||""))+'</span><span class="'+(o.mal?'tenue':'')+'">'+esc(tareaCorta(o.t))+(o.mal?' · corregido':'')+'</span></button>'; }).join("")+'</div>'; }
@@ -9006,6 +9110,7 @@ function bindAcomodoInicio(){
   var r=document.querySelector(".aco226"); if(!r) return;
   var tDe=function(el){ var c=el.closest("[data-acot]"); return c?tareas.filter(function(z){ return z.id===c.getAttribute("data-acot"); })[0]:null; };
   bindAcomodo(r, tDe);
+  Array.prototype.forEach.call(r.querySelectorAll("[data-g237]"), function(el){ el.addEventListener("click", function(ev){ if(ev.target.closest("button")) return; window.__g237open=window.__g237open||{}; var k=el.getAttribute("data-g237"); window.__g237open[k]=!window.__g237open[k]; render(); }); });   /* build 237: tocar = desplegar */
   var bf=$("bacof"); if(bf) bf.onclick=function(){ window.__aco226=!window.__aco226; render(); };
   Array.prototype.forEach.call(r.querySelectorAll(".acoli[data-id]"), function(el){ el.onclick=function(){ abierta=el.getAttribute("data-id"); vista="hilo"; fichaOpen=false; detOpen={}; menuOpen=false; editaNombre=null; render(); }; });
   /* deslizar: derecha = OK, izquierda = Mover (como en Mail) */
@@ -9013,7 +9118,7 @@ function bindAcomodoInicio(){
     el.addEventListener("touchstart", function(e){ var p=e.touches[0]; x0=p.clientX; y0=p.clientY; dx=0; va=false; }, {passive:true});
     el.addEventListener("touchmove", function(e){ var p=e.touches[0]; dx=p.clientX-x0; if(!va && Math.abs(dx)>12 && Math.abs(dx)>Math.abs(p.clientY-y0)*1.7) va=true; if(va) el.style.transform="translateX("+dx+"px)"; }, {passive:true});
     el.addEventListener("touchend", function(){ el.style.transform=""; if(!va) return; var t=tDe(el), ix=+el.getAttribute("data-acoix"); if(!t) return;
-      if(dx>80){ var s=acomodoOk(t, ix); if(s) toast(s); render(); } else if(dx<-80) abreMover225(t, ix); });
+      var _gx=ixsDe237(el, ix); if(dx>80){ var s=okG237(t, _gx); if(s) toast(s); render(); } else if(dx<-80) abreMover225(t, ix, _gx); });   /* build 237: toda la plática */
   });
 }
 /* sin emojis en la interfaz: los avisos del sistema ("📝 Nota IA", "✉️ Enviado", "🎙️ Audio enviado") se pintan sin el dibujito */
@@ -9075,6 +9180,7 @@ function nombreVisible230(nom, t){
 function vHilo(){
   var t=tareas.filter(function(x){return x.id===abierta})[0];
   if(!t){vista="lista";return vLista()}
+  window.__g237r={}; try{ aplicaDudasNota237(t); }catch(e){}   /* build 237 */
   /* si es una REVISION ligada, su hilo es el de la tarea que revisa */
   if(t.revisa_a){
     var _org=tareas.filter(function(x){return x.id===t.revisa_a})[0];
@@ -9195,6 +9301,7 @@ function vHilo(){
   if(window.__visitaDe!==t.id){ window.__visitaDe=t.id; window.__visitaIni=Date.now(); }
   var _mf225=filtroMeta(t);
   var _pq227=-1; try{ var _pp227=preguntaParaMi(t); if(_pp227 && !min225(t.id,"pt")) _pq227=_pp227.ix; }catch(e){}   /* build 227: OK·Mover·Nueva van en la tarjeta */
+  if(_pq227>=0){ try{ var _g237=grupoDe237(t,_pq227); if(_g237) window.__g237r[t.id+"|"+_g237.ixs[0]]=-1; }catch(e){} }   /* build 237: esa plática ya trae sus botones en la tarjeta */
   var _v230=vista230(t);   /* build 230: Importante / Claude */
   var _todo=modoChat(t)==="todo", _rmp=_todo?{set:{}}:avisosReemplazados(t), _vistoNuevo=false, _ocultos=0, _visibles=0;
   var _plg=_todo?{set:{},ult:-1,n:0}:avisosPlegados(t), _cn=canalActual(t),
@@ -13953,8 +14060,8 @@ function bindHilo(){
     var val=(b.querySelector(".ffv")||{}).textContent||""; if(val==="—") val="";
     tx.value=et+": "+val.replace(/ \(no vinculado\)$/,""); try{ tx.focus(); tx.setSelectionRange(et.length+2, tx.value.length); }catch(e){} }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-tipoi]"),function(b){ b.onclick=function(){ var k=b.getAttribute("data-tipoi");
-    if(k==="vincular"){ abreEnlazar(t.id, {similares:similares229(t).map(function(d){ return d.id; }), tareaNueva:function(){ t.tipo_item="tarea"; t.es_dato=false; guarda(t); if(!revisaCompleta(t)) render(); }}); return; }   /* build 229 */
-    t.tipo_item=k; t.es_dato=(k==="dato"); guarda(t); if(!revisaCompleta(t)) render(); }; });   /* build 195 */
+    if(k==="vincular"){ abreEnlazar(t.id, {similares:similares229(t).map(function(d){ return d.id; }), tareaNueva:function(){ t.tipo_item="tarea"; t.es_dato=false; t.tipo_elegido=true; guarda(t); if(!revisaCompleta(t)) render(); }}); return; }   /* build 229 */
+    t.tipo_item=k; t.es_dato=(k==="dato"); t.tipo_elegido=true; guarda(t); if(!revisaCompleta(t)) render(); }; });   /* build 195; 237: tipo_elegido */
   Array.prototype.forEach.call(document.querySelectorAll("[data-agenda]"),function(b){ b.onclick=function(){ if(b.getAttribute("data-agenda")==="si"){ var _ev=eventoDe(t); agendaEvento(t, "", !(_ev&&_ev.hora)); } else noAgendar(t); }; });   /* build 202/203; 229: sin hora = todo el dia (lo que propone la franja) */
   Array.prototype.forEach.call(document.querySelectorAll("[data-agmenu]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); menuAgenda229(t, b); }; });   /* build 229 */
   Array.prototype.forEach.call(document.querySelectorAll("[data-evid]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); abreEvidencia(t); }; });   /* build 229 */
@@ -13995,7 +14102,7 @@ function bindHilo(){
     /* build 225: "me mezclaste / esto es de otra tarea / esto es de <tarea>" -> se mueven los mensajes; NUNCA se tocan metas ni lista */
     /* build 236: en una tarea por clasificar, "vincúlala a X" hace lo mismo que el botón Vincular (la hoja, con X ya buscado) */
     var _vin236=tipoRevisar(t)==="falta"?vincDicho236(v):null;
-    if(_vin236!==null){ $("txt").value=""; marcaEnvio("tenv",""); abreEnlazar(t.id, {similares:similares229(t).map(function(d){ return d.id; }), q:_vin236, tareaNueva:function(){ t.tipo_item="tarea"; t.es_dato=false; guarda(t); if(!revisaCompleta(t)) render(); }}); return; }
+    if(_vin236!==null){ $("txt").value=""; marcaEnvio("tenv",""); abreEnlazar(t.id, {similares:similares229(t).map(function(d){ return d.id; }), q:_vin236, tareaNueva:function(){ t.tipo_item="tarea"; t.es_dato=false; t.tipo_elegido=true; guarda(t); if(!revisaCompleta(t)) render(); }}); return; }
     if(mezclaDicho(v, t)){ $("txt").value=""; marcaEnvio("tenv",""); var _am=arreglaMezcla(t, v); render(); if(_am.movidos) toast("Moví "+_am.movidos+" mensaje"+(_am.movidos===1?"":"s")); else if(_am.pregunta!=null) abreMover225(t, _am.pregunta); return; }
     if(msjEnCurso(t, v)){ $("txt").value=""; marcaEnvio("tenv",""); return; }
     var _md225=mensajeDicho(v), _pg225=null; if(_md225){ try{ _pg225=programaWA(v); }catch(e){} }
@@ -14014,7 +14121,7 @@ function bindHilo(){
     if(tipoRevisar(t)==="falta" && !ordenClaraClaude(v) && (tipoItem(t)==="dato" || (!detectaLista(v) && listaNumerada(v).length<2)) && !(tipoDicho(v) && _corto205) &&
        !/^\s*(autor[ií]za(la|lo)?|aut[oó]rizal[ao])\s+(as[ií]|como\s+est[aá])\b/i.test(v)){
       $("txt").value=""; marcaEnvio("tenv","");
-      var _tp205=tipoDicho(v); if(_tp205){ t.tipo_item=_tp205; t.es_dato=(_tp205==="dato"); }   /* "Esto es una tarea en contexto…" tambien fija el tipo */
+      var _tp205=tipoDicho(v); if(_tp205){ t.tipo_item=_tp205; t.es_dato=(_tp205==="dato"); t.tipo_elegido=true; }   /* "Esto es una tarea en contexto…" tambien fija el tipo */
       completaRevision(t, sinPrefijoClaude(v)); return; }
     if(typeof esNotaClaude==="function" && esNotaClaude(v)){ $("txt").value=""; marcaEnvio("tenv",""); notaClaude(t, v); return; }
     /* build 193: con el canal naranja "Claude" puesto, todo lo dictado es indicacion para Claude */
@@ -14033,7 +14140,7 @@ function bindHilo(){
        "autorízala así" la autoriza y deja lo que falte pendiente. */
     if(tipoRevisar(t)==="falta"){
       var _tpv=tipoDicho(v);
-      if(_tpv){ $("txt").value=""; marcaEnvio("tenv",""); t.tipo_item=_tpv; if(_tpv==="dato") t.es_dato=true; else t.es_dato=false; guarda(t); revisaCompleta(t); render(); return; }
+      if(_tpv){ $("txt").value=""; marcaEnvio("tenv",""); t.tipo_item=_tpv; t.tipo_elegido=true; if(_tpv==="dato") t.es_dato=true; else t.es_dato=false; guarda(t); revisaCompleta(t); render(); return; }
       if(/^\s*(autor[ií]za(la|lo)?|aut[oó]rizal[ao])\s+(as[ií]|como\s+est[aá])\b/i.test(v)){ $("txt").value=""; marcaEnvio("tenv","");
         t.autorizada=true; t.autorizada_ts=Date.now(); t.autorizada_asi=true;
         t.pendiente_aut=completitud(t).items.filter(function(x){ return !x.ok; }).map(function(x){ return x.k; });
@@ -15155,7 +15262,7 @@ function vParaTi(t){
   /* build 227: se minimiza a una linea delgada (se recuerda por tarea); si el mensaje no tiene acomodo confirmado, OK · Mover · Nueva aqui */
   var _tit=(p.todos?"Piden a todos · ":"Te pregunta · ")+p.de;
   if(min225(t.id,"pt")) return '<button class="ptmini227" data-min225="pt" aria-expanded="false">'+esc(_tit)+ico("der",13)+'</button>';
-  var _x=(t.msgs||[])[p.ix], _ac=(_x && _x.duda_tarea && !_x.duda_resuelta && !_x.oculto)?'<div class="ac226 pt227"><button data-acok="'+p.ix+'">OK</button><span>·</span><button data-acmov="'+p.ix+'">Mover</button><span>·</span><button data-acnueva="'+p.ix+'">Nueva</button></div>':'';
+  var _x=(t.msgs||[])[p.ix], _ac=(_x && _x.duda_tarea && !_x.duda_resuelta && !_x.oculto)?(function(){ var g=null; try{ g=grupoDe237(t,p.ix); }catch(e){} return botonesG237(p.ix, g?g.ixs:[p.ix], " pt227"); })():'';   /* build 237: para toda la plática */
   var h='<div class="ptcard'+(_ab?' ab':'')+'"><span class="pth">'+esc((p.todos?"PIDEN A TODOS · ":"TE PREGUNTA · ")+p.de)+'<button class="ptmin227" data-min225="pt" aria-label="Minimizar">'+ico("down",15)+'</button></span><span class="ptq" data-irmsg="'+p.ix+'">“'+esc(p.t)+'”</span>'+_ac;
   if(!_ab) return h+'<button class="ptmas" data-ptab="1">ver todo ▾</button></div>';
   if(r && !r.err){

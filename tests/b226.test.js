@@ -91,13 +91,13 @@ si("iconos: trazo 1.5 fijo", /var s=px\|\|18, w=1\.5, p=\{/.test(html));
     eq("Solo plática: oculto con motivo, censo, sin tarea nueva", r.platica, [true, "platica", "platica", 3]);
     eq("Nueva: crea la tarea con nombre sugerido, queda en Falta info y el mensaje pasa ahí", r.nueva, [4, "Mesa Comedor Alt Brillo con Manuel", "falta", true, true, "nueva"]);
     eq("Inicio · Acomodo arriba: solo lo dudoso, 1 renglón por mensaje con iniciales, nombre, pastilla y OK·Mover·Nueva", r.inicio && [r.inicio.cab, r.inicio.filas],
-      ["Acomodo2 por revisar", [["LM", "Lalo Madero", "Casa Lerdo?", "OK·Mover·Nueva"], ["MP", "Manuel Parra", "Casa Lerdo?", "OK·Mover·Nueva"]]]);
+      ["Acomodo2 pláticas por revisar", [["LM", "Lalo Madero", "creo que es: Casa Lerdo", "OK·Mover·Nueva"], ["MP", "Manuel Parra", "creo que es: Casa Lerdo", "OK·Mover·Nueva"]]]);
     eq("plegado: 'Acomodé solo hoy · 3' y 'acerté 2/3' (el movido cuenta como fallo)", r.inicio && [r.inicio.plegado, r.inicio.lista], ["Acomodé solo hoy · 3acerté 2/3", false]);
     eq("se despliega la lista de hoy", r.abre, 3);
     eq("OK desde el Inicio quita el renglón", r.okInicio, [1, 1]);
     eq("nombre sugerido de tarea nueva", r.sugerido, ["Mesa Comedor Alt Brillo con Manuel", "Miercolitos Semana con Lalo"]);
     eq("sin emojis en la interfaz (los del sistema al inicio se quitan; los del contacto se respetan)", r.emojiUI, ["Nota IA 11:52: x", "Enviado: hola", "Gracias 👍"]);
-    si("deslizar en el Inicio: derecha OK, izquierda Mover", /if\(dx>80\)\{ var s=acomodoOk\(t, ix\);[^}]*\} else if\(dx<-80\) abreMover225\(t, ix\);/.test(html));
+    si("deslizar en el Inicio: derecha OK, izquierda Mover (237: toda la plática)", /if\(dx>80\)\{ var s=okG237\(t, _gx\);[^}]*\} else if\(dx<-80\) abreMover225\(t, ix, _gx\);/.test(html));
     eq("sin errores de página", errs, []);
     await p.screenshot({ path: require("os").tmpdir() + "/b226-inicio.png" });
   } finally { await b.close(); }
