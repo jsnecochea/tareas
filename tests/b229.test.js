@@ -28,7 +28,7 @@ eq("versión 229 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
       function LIMP() { return { id: "tLIMP", nombre: "Limpieza y mantenimiento lotes Cumbres", duenio: "salvador", estado: "abierta", contexto: "Limpieza de lotes con Samuel", msgs: [{ k: "bo", de: "salvador", t: "Samuel, ¿cómo vas?", ts: NOW - 9e6, h: "08:00" }] }; }
       var EVI = [{ tipo: "texto", fuente: "correo", titulo: "Invitación Blue Cup BBVA", fecha: "2026-09-19", de: "BBVA Eventos", texto: "Fecha límite para confirmar renta de equipo: 9 de octubre." },
         { tipo: "imagen", fuente: "whatsapp", titulo: "Itinerario del torneo", fecha: "2026-09-20", de: "Rogelio Sada", url: "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=" }];
-      function BLUE(evi, enDatos) { var t = { id: "tBLUE", nombre: "Blue Cup BBVA", duenio: "salvador", creada_por: "ia_revisor", por_autorizar: true, estado: "abierta", indefinida: true,
+      function BLUE(evi, enDatos) { var t = { id: "tBLUE", nombre: "Blue Cup BBVA", duenio: "salvador", tipo_item: "tarea" /* 236: la franja sale ya clasificada */, creada_por: "ia_revisor", por_autorizar: true, estado: "abierta", indefinida: true,
         contexto: "Torneo de golf Blue Cup BBVA en Riviera Maya del 21 al 23 de octubre; hay que confirmar la renta de equipo a más tardar el viernes 9 de octubre",
         evento: { titulo: "Límite confirmar renta de equipo", fecha: "2026-10-09", hora: "", lugar: "", todo_dia: false }, msgs: [{ k: "bi", t: "IA: creada desde correo", ts: NOW - 5e6, h: "09:00" }] };
         if (enDatos) t.datos = { evidencia: evi }; else t.evidencia = evi; return t; }
@@ -36,7 +36,7 @@ eq("versión 229 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
       /* A */
       abre([LOTE(), LIMP(), { id: "tGOLF", nombre: "Golf simulador", duenio: "salvador", estado: "abierta", msgs: [] }]);
       var tb = [].map.call(document.querySelectorAll(".typep229 button"), function (x) { return [x.textContent, Math.round(x.getBoundingClientRect().top), Math.round(x.getBoundingClientRect().height)]; });
-      o.tres = [tb.map(function (x) { return x[0]; }), tb.every(function (x) { return x[1] === tb[0][1]; }), tb.every(function (x) { return x[2] <= 34; })];
+      o.tres = [tb.map(function (x) { return x[0]; }), tb.every(function (x) { return x[1] === tb[0][1]; }), tb.every(function (x) { return x[2] >= 46 && x[2] <= 50; })];   /* 236: grandes otra vez */
       o.encabezado = [document.querySelectorAll(".cnlwrap,#cnlclaude,#intbtn").length, !!document.querySelector(".chips225 #cnlpill")];
       document.querySelector('[data-tipoi="vincular"]').click();
       o.hoja = [!!document.getElementById("enlq"), [].map.call(document.querySelectorAll("#enll .enlr"), function (x) { return x.querySelector(".enln").textContent; })];
@@ -64,7 +64,7 @@ eq("versión 229 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
       abre([BLUE(EVI, true)]); o.enDatos = [document.querySelector(".agenda229 .evclip").textContent, document.querySelector(".agenda229 .agp").classList.contains("ambar")];
       var B2 = BLUE([{ tipo: "texto", fuente: "drive", titulo: "Hoja de costos", fecha: "2026-09-01", texto: "Sin fechas aquí" }]); abre([B2]); o.noRespalda = document.querySelector(".agenda229 .agp").classList.contains("ambar");
       return o; });
-    eq("A) Tarea · Dato · Vincular, chicos y en una fila", r.tres, [["Tarea", "Dato", "Vincular"], true, true]);
+    eq("A) Tarea · Dato · Vincular en una fila (236: grandes, 48 px)", r.tres, [["Tarea", "Dato", "Vincular"], true, true]);
     eq("encabezado del 228 (sin pastillas viejas; Todo ⌄ en las fichas)", r.encabezado, [0, true]);
     eq("Vincular = la hoja que ya existía (lupa), con Tarea nueva y la parecida primero", r.hoja, [true, [" Tarea nueva", "Limpieza y mantenimiento lotes Cumbresparecida", "Golf simulador"]]);
     eq("al vincular: los mensajes pasan y la suelta queda apartada (no borrada)", r.vincula, ["fusionada", "tLIMP", 1, true]);

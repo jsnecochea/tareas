@@ -37,6 +37,7 @@ var c = { Date: FakeDate, console: console, Math: Math, JSON: JSON, String: Stri
   selloYSigue: function (t, o) { sellos.push(o.tipo); }, sincronizaAvisos: function () {}, cierraHecha: function () {}, completaPendiente: function () {}, nuevoAviso: function () {},
   setTimeout: function (f) { f(); }, esEjemplo: function () { return false; }, contactosWA: function () { return []; }, posibleDup: function () { return []; }, estadoReal: function (t) { return t.estado || "abierta"; } };
 vm.createContext(c); vm.runInContext(codigo, c);
+c.clasif236 = function () { return true; };   /* build 236: estas pruebas son de la tarea YA clasificada (Tarea o Dato) */
 var ok = 0, n = 0, malas = [];
 function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
 function si(nom, v) { eq(nom, !!v, true); }

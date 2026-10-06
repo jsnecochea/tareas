@@ -782,6 +782,12 @@ button{font:inherit;color:inherit}
 .top:has(.ttl227) #bback{width:34px;height:34px}
 .typep229{display:flex;align-items:center;justify-content:center;gap:6px;margin:4px 12px 6px;flex:none;color:var(--ink-3)}
 .typep229 button{border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font:inherit;font-size:14px;font-weight:600;border-radius:14px;padding:5px 14px}
+.typep229.tp236{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:6px 12px 8px}
+.typep229.tp236 button{height:48px;border-radius:12px;background:transparent;font-size:16px;font-weight:600;padding:0;border:1.5px solid}
+.tp236 .tp-t{color:var(--azul);border-color:var(--azul)}.tp236 .tp-t.on{background:rgba(10,132,255,.18);color:var(--azul);border-color:var(--azul)}
+.tp236 .tp-d{color:#fff;border-color:#fff}.tp236 .tp-d.on{background:rgba(255,255,255,.16);color:#fff;border-color:#fff}
+.tp236 button.tp-v,.typep229.tp236 button[data-tipoi="vincular"]{color:var(--morado);border-color:var(--morado)}.tp236 .tp-v:active{background:rgba(124,100,255,.18)}
+.fic.ctx236{display:flex;align-items:center;gap:8px;white-space:nowrap}.fic.ctx236 .ctxc{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}.fic.ctx236 .ctxc.vac{color:var(--ink-3)}
 .typep229 button.on{color:var(--ink);background:#3a3a3c;border-color:#3a3a3c}.typep229 button[data-tipoi="vincular"]{color:#7cc0ff}
 .fic.agenda229{padding:10px 12px;margin:6px 12px;background:var(--surface);border-radius:14px}.agr{display:flex;align-items:center;gap:8px}.agr>svg{color:var(--ink-2);flex:none}
 .agk{font-weight:700;font-size:15px;flex:none}.agp{flex:1;min-width:0;font-size:14.5px;line-height:1.3;color:var(--ink-2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.agp.ambar{color:#ffd60a}
@@ -1437,7 +1443,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 235 · Filtro arranca en Importante · ficha Claves n/m (ámbar ≤7 días, rojo vencida) con su hoja";
+var VERSION_APP = "build 236 · Tarea · Dato · Vincular grandes (contorno azul/blanco/morado) · sin clasificar solo pide elegir · vincúlala por voz";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -4413,6 +4419,8 @@ function vFaltaInfo(t){
     c.hechos=c.items.filter(function(x){ return x.ok; }).length; c.datosPct=Math.round(c.hechos*100/(c.items.length||1)); }
   /* build 205: arriba "Solo me falta: …"; lo ya completo se pone tenue y plegado */
   var _sf=_P?[]:soloMeFalta(t), h=_sf.length?'<div class="solofalta"><b>Solo me falta:</b> '+esc(_sf.join(" · "))+'</div>':'';
+  /* build 236: mientras NO este clasificada se ocultan "Solo me falta", "Datos de la tarea" y "Agendar": solo el Contexto en una linea con su clip */
+  if(!clasif236(t) && !_P){ return '<div class="fic ctx hecho ctx236"><span class="ok">Contexto</span><span class="ctxc'+(ctx?'':' vac')+'">'+esc(ctx?(ctx.length>90?ctx.slice(0,89)+"…":ctx):"sin contexto todavía")+'</span>'+vClipEvid(t,"ctx")+'</div>'; }
   if(t._leyendo && Date.now()-t._leyendo<60000) h='<div class="solofalta leyendo">Claude está leyendo lo que dictaste…</div>'+h;   /* build 207 */
   var _pd207=t.dup_resuelto?[]:posibleDup(t);   /* build 207: vinculos que propuso Claude, solo propuestos */
   if(_pd207.length) h+='<div class="revc c-vincular"><button class="rvx" data-rvx="1" aria-label="Cerrar sugerencia">✕</button><span class="rct">POSIBLE VINCULACIÓN</span><span class="rcp">Propuesta de Claude; no la vinculé.</span>'+
@@ -4775,11 +4783,13 @@ function _leeAgenda229(t){
   try{ if(!eventoPendiente(t)) return null; var p=propuestaAgenda(t); if(!p) return null;
     return {tx:"Para agendar: "+limpiaHabla(p.txt.replace(/ · /g,", "))+"."+(p.respaldada?"":" Ojo: esa fecha no viene en ninguna fuente.")+" ¿Lo agendo?"}; }catch(e){ return null; }
 }
-/* A) tres botones chicos */
+/* build 236 (Salvador 19:24): Tarea · Dato · Vincular vuelven a ser botones GRANDES (48 px, mismo ancho, todo el ancho), solo contorno:
+   Tarea azul, Dato blanco, Vincular morado; elegido = relleno suave del mismo color. Van justo debajo de la fila de fichas. */
+function clasif236(t){ return !!t && (t.tipo_item==="tarea" || t.tipo_item==="dato"); }
 function vTipoToggle(t){
-  var tp=tipoItem(t);
-  return '<div class="typep229"><button data-tipoi="tarea" class="'+(tp==="tarea"?"on":"")+'">Tarea</button><span>·</span>'+
-    '<button data-tipoi="dato" class="'+(tp==="dato"?"on":"")+'">Dato</button><span>·</span><button data-tipoi="vincular">Vincular</button></div>';
+  var tp=clasif236(t)?t.tipo_item:"";
+  return '<div class="typep229 tp236"><button data-tipoi="tarea" class="tp-t'+(tp==="tarea"?" on":"")+'">Tarea</button>'+
+    '<button data-tipoi="dato" class="tp-d'+(tp==="dato"?" on":"")+'">Dato</button><button data-tipoi="vincular" class="tp-v">Vincular</button></div>';
 }
 /* parecidas primero: las que propuso Claude (posibleDup) y las que comparten palabras del nombre/contexto */
 function similares229(t){
@@ -5617,6 +5627,7 @@ function abreEnlazar(oid, op){
       sub:"Lo de \u201c"+corta40(o.nombre)+"\u201d se junta all\u00e1 y esta tarea sale de tu lista.",
       accion:"Pasar todo a "+corta40(d.nombre), cb:function(){ enlazaTareas(oid,did); }});
   };
+  if(op.q) q.value=op.q;   /* build 236: "vincúlala a X" por voz */
   q.oninput=pinta; pinta();
   setTimeout(function(){ try{ q.focus() }catch(e){} }, 60);
 }
@@ -7434,6 +7445,11 @@ function respondeAuto(t, v, contacto, cita){
 }
 /* contestar "falta informacion": Claude saca nombre, fecha, ritmo, avisos y contexto */
 /* build 195: "es dato" / "es tarea" (o "no, es información") */
+/* build 236: "vincúlala a X" / "vincúlalo con X" / "vincular a X" al inicio del dictado -> la hoja de Vincular con X ya buscado ("" si no dijo a cuál) */
+function vincDicho236(v){
+  var m=String(v||"").trim().match(/^(?:no,?\s+)?(?:v[ií]nc[uú]la(?:la|lo)?|vincular(?:la|lo)?|v[ií]ncula(?:la|lo)|ligal[ao]|j[uú]ntal[ao])(?:\s+(?:a|al|con|en)\s+(?:(?:la|el)\s+)?(?:tarea\s+)?(?:del?\s+)?(.+?))?[.!]?\s*$/i);
+  return m?String(m[1]||"").trim():null;
+}
 function tipoDicho(v){
   var s=_nn(v);
   if(/^(no,?\s+)?(es|era|esto es|eso es)\s+(un\s+)?(dato|informacion|info)\b/.test(s) || /^(es\s+)?solo\s+(dato|informacion)\b/.test(s)) return "dato";
@@ -8613,7 +8629,7 @@ function personas225(t){
 function chipsTarea(t){
   if(esDato(t)) return "";
   var ch=chipEncabezado(t), h='<div class="chips225">', falta=[];
-  try{ if(tipoRevisar(t)==="falta" && !vistaSup(t)) falta=soloMeFalta(t); }catch(e){}
+  try{ if(tipoRevisar(t)==="falta" && !vistaSup(t) && clasif236(t)) falta=soloMeFalta(t); }catch(e){}   /* 236: sin clasificar no pide nada mas */
   if(falta.length) h+='<button class="chip225 falta" data-chip="falta">Falta '+falta.length+' ›</button>';
   var ftx=ch.cls==="ind"?ch.txt.replace(/ · próx\. .*/,""):(ch.cls==="sin"?"Sin fecha":ch.txt.replace(/^Finiquito:\s*/,""));   /* 226: sin emojis */
   /* build 234 (Salvador 18:56): sin ficha "Agendado": se fusiona con la de FECHA. Calendario siempre; VERDE (icono y texto) si el evento
@@ -9151,9 +9167,9 @@ function vHilo(){
   var _ch=chipEncabezado(t);
   /* build 225: chips en una linea (cada uno abre su hoja) + "Resumen vivo · Claude". El ▾ y su detalle viven en ⓘ Detalles */
   h+=chipsTarea(t);   /* build 228/230: una fila de fichas; el resumen vive en la vista Importante */
+  if(tipoRevisar(t)==="falta" && !vistaSup(t)) h+=vTipoToggle(t);   /* build 236: lo primero que se ve, justo debajo de las fichas */
   /* build 228: el renglon "Agendado ✓ · Calendario…" ahora es la ficha "Agendado" (lineaAgenda queda para otras vistas) */
   h+=vDecisionMeta(t)+vDecisionDato(t)+vQuienDudas(t)+vBorradorMsj(t);   /* build 225: mensaje por confirmar; "Se comparte con" va en 👥 */   /* build 221; 222: decisión de meta atrasada */
-  if(tipoRevisar(t)==="falta" && !vistaSup(t)) h+=vTipoToggle(t);   /* build 224: el supervisor no ve Tarea|Dato */
 
   /* Si esta tarea es MI REVISION de algo que ejecuta otro, aqui va el acceso
      directo a su tarea: ahi vive su evidencia. Salvador 2026-09-04. */
@@ -13977,6 +13993,9 @@ function bindHilo(){
     var _qT=pideBuscar(v); if(_qT){ $("txt").value=""; marcaEnvio("tenv",""); abreBusqueda(_qT, v, buscaTodo(_qT)); return; }
     /* build 225: mensaje en curso (lo que faltaba decirle, o el cambio al borrador) y "ponle un mensaje a X para…" */
     /* build 225: "me mezclaste / esto es de otra tarea / esto es de <tarea>" -> se mueven los mensajes; NUNCA se tocan metas ni lista */
+    /* build 236: en una tarea por clasificar, "vincúlala a X" hace lo mismo que el botón Vincular (la hoja, con X ya buscado) */
+    var _vin236=tipoRevisar(t)==="falta"?vincDicho236(v):null;
+    if(_vin236!==null){ $("txt").value=""; marcaEnvio("tenv",""); abreEnlazar(t.id, {similares:similares229(t).map(function(d){ return d.id; }), q:_vin236, tareaNueva:function(){ t.tipo_item="tarea"; t.es_dato=false; guarda(t); if(!revisaCompleta(t)) render(); }}); return; }
     if(mezclaDicho(v, t)){ $("txt").value=""; marcaEnvio("tenv",""); var _am=arreglaMezcla(t, v); render(); if(_am.movidos) toast("Moví "+_am.movidos+" mensaje"+(_am.movidos===1?"":"s")); else if(_am.pregunta!=null) abreMover225(t, _am.pregunta); return; }
     if(msjEnCurso(t, v)){ $("txt").value=""; marcaEnvio("tenv",""); return; }
     var _md225=mensajeDicho(v), _pg225=null; if(_md225){ try{ _pg225=programaWA(v); }catch(e){} }
