@@ -31,7 +31,7 @@ eq("versión 227 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
           { k: "bi", wa_in: 1, wa_c: "Javier Fernández", t: "Javier Fernández: Muy bien, fecha separada", ts: NOW - 7e6, h: "10:10" },
           { k: "bi", wa_in: 1, wa_c: "Eduardo Madero", t: "Eduardo Madero: ¿Hay miercolitos esta semana?", ts: NOW - 6e6, h: "13:50", duda_tarea: { alternativa_id: "tPADEL", alternativa_nombre: "Pádel miércoles" } }] }; }
       function pinta() { [].forEach.call(document.body.children, function (x) { if (x.id !== "app" && !/cnl|mov225|leemask/.test(x.className + x.id)) x.style.display = "none"; }); var A = document.getElementById("app"); A.style.display = "flex"; }
-      tareas = [FIESTA(), { id: "tPADEL", nombre: "Pádel miércoles", duenio: "salvador", estado: "abierta", msgs: [] }]; abierta = "tIAMUUK9ZCWJW"; vista = "hilo"; render(); pinta();
+      tareas = [FIESTA(), { id: "tPADEL", nombre: "Pádel miércoles", duenio: "salvador", estado: "abierta", msgs: [] }]; abierta = "tIAMUUK9ZCWJW"; vista = "hilo"; render(); poneVista230(tareas[0], ""); render(); pinta();   /* 235: elige Todo */
       var tt = document.querySelector(".top .t"), cs = getComputedStyle(tt);
       o.titulo = [cs.whiteSpace, tt.scrollWidth > tt.clientWidth, Math.round(tt.getBoundingClientRect().height) < 40, !document.querySelector(".top .d")];
       tt.click(); var t2 = document.querySelector(".top .t"); o.tituloFull = [getComputedStyle(t2).whiteSpace, t2.textContent];
@@ -62,7 +62,7 @@ eq("versión 227 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
     eq("título en UNA línea con …, sin el renglón de personas", r.titulo, ["nowrap", true, true, true]);
     eq("al tocar el título sale completo", r.tituloFull, ["normal", "Fiesta Cumpleaños Papá con comida en casa de Lerdo para toda la familia"]);
     eq("UNA sola ficha 'Todo' en la fila de fichas (231: sin ficha Resumen)", r.pastilla, [1, "Todo", true, true, 0]);
-    eq("hoja: Todo · Claude · cada integrante (con avatar) · integrantes", [r.hoja, r.hojaAv], [["todo", "imp", "claude", "ext:Arturo Tijerina", "ext:Javier Fernández", "ext:Eduardo Madero", "__int"], ["AT", "JF", "EM"]]);
+    eq("hoja: Todo · Claude · cada integrante (con avatar) · integrantes", [r.hoja, r.hojaAv], [["imp", "todo", "claude", "ext:Arturo Tijerina", "ext:Javier Fernández", "ext:Eduardo Madero", "__int"], ["AT", "JF", "EM"]]);
     eq("lo elegido reemplaza el texto: Eduardo / Claude / Todo", [r.eligeEduardo, r.eligeClaude, r.eligeTodo], [["Eduardo", "ext:Eduardo Madero"], ["Claude", true], "Todo"]);
     eq("Te pregunta con OK · Mover · Nueva (y no repetidos en la burbuja)", r.pt, [true, ["OK", "Mover", "Nueva"], 0]);
     eq("minimizar: una línea 'Te pregunta · Eduardo' y los botones vuelven a la burbuja", r.ptMin, [false, "Te pregunta · Eduardo", 1]);

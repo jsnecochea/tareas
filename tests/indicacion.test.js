@@ -36,7 +36,8 @@ function ctx() {
     yo: "salvador",
     PERSONAS: { salvador: { nombre: "Salvador", ini: "S", jefe: true }, samuel: { nombre: "Samuel", ini: "SM" },
       cynthia: { nombre: "Cynthia", ini: "C" }, josue: { nombre: "Josué", ini: "J", jefe: true } },
-    window: {}, soySupervisor: function () { return false; }, esc: function (s) { return String(s); },
+    /* build 235: el filtro arranca en Importante; estas pruebas son del canal (como si ya hubiera elegido Todo) */
+    window: { __vf230: new Proxy({}, { getOwnPropertyDescriptor: function (o, k) { return Object.getOwnPropertyDescriptor(o, k) || { value: "", writable: true, enumerable: true, configurable: true }; }, get: function (o, k) { return k in o ? o[k] : ""; } }) }, soySupervisor: function () { return false; }, esc: function (s) { return String(s); },
     msg: function (t, k, tx) { (t.msgs = t.msgs || []).push({ k: k, t: tx, ts: Date.now() }); },
     guarda: function () {}, render: function () {}, _ejecutadas: [], _wa: [],
     pideWhatsApp: function (cpo) { c._wa.push(cpo); return Promise.resolve({}); },

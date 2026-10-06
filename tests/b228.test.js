@@ -32,7 +32,7 @@ eq("versión 228 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
           { k: "bi", wa_in: 1, wa_c: "Arturo Tijerina", t: "Arturo Tijerina: Ahí estaremos", ts: NOW - 8e6, h: "09:40" },
           { k: "bi", wa_in: 1, wa_c: "Javier Fernández", t: "Javier Fernández: Muy bien, fecha separada", ts: NOW - 7e6, h: "10:10" },
           { k: "bi", wa_in: 1, wa_c: "Eduardo Madero", t: "Eduardo Madero: ¿Hay miercolitos esta semana?", ts: NOW - 6e6, h: "13:50", duda_tarea: { alternativa_id: "tPADEL", alternativa_nombre: "Pádel miércoles" } }] }; }
-      function abre(t) { tareas = [t, { id: "tPADEL", nombre: "Pádel miércoles", duenio: "salvador", estado: "abierta", msgs: [] }]; abierta = t.id; vista = "hilo"; window.__hoja225 = null; render();
+      function abre(t) { tareas = [t, { id: "tPADEL", nombre: "Pádel miércoles", duenio: "salvador", estado: "abierta", msgs: [] }]; abierta = t.id; vista = "hilo"; window.__hoja225 = null; render(); poneVista230(t, ""); render();
         [].forEach.call(document.body.children, function (x) { if (x.id !== "app" && !/cnl|mov225|leemask/.test(x.className + x.id)) x.style.display = "none"; }); document.getElementById("app").style.display = "flex"; }
       function fichas() { return [].map.call(document.querySelectorAll(".chips225 > button"), function (x) { return x.textContent + (x.classList.contains("verde") ? "[verde]" : ""); }); }
       abre(FIESTA(true, true));

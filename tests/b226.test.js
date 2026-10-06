@@ -36,7 +36,7 @@ si("iconos: trazo 1.5 fijo", /var s=px\|\|18, w=1\.5, p=\{/.test(html));
       function VEST() { return { id: "tVEST", nombre: "Vestidores Carpintería", duenio: "salvador", estado: "abierta", msgs: [] }; }
       function pinta() { [].forEach.call(document.body.children, function (x) { if (x.id !== "app") x.style.display = "none"; }); var A = document.getElementById("app"); A.style.display = "flex"; document.body.style.height = "844px"; }
       /* ---- dentro de la tarea ---- */
-      tareas = [LERDO(), COMEDOR(), VEST()]; abierta = "tIAMUVF22TRJF"; vista = "hilo"; render(); pinta();
+      tareas = [LERDO(), COMEDOR(), VEST()]; abierta = "tIAMUVF22TRJF"; vista = "hilo"; render(); poneVista230(tareas[0], ""); render(); pinta();   /* 235: elige Todo */
       var ac = document.querySelector(".msgs .ac226");
       o.botones = ac ? [].map.call(ac.querySelectorAll("button"), function (x) { return x.textContent; }) : null;
       o.debajo = !!(ac && ac.previousElementSibling && ac.previousElementSibling.classList.contains("b") && !ac.closest(".b"));

@@ -105,7 +105,7 @@ var pagina = '<!doctype html><meta charset="utf-8"><style>' + css + '</style><bo
   'var yo="salvador", vista="lista", PUSH="push.php", APP_TOKEN="tok", PERSONAS={salvador:{nombre:"Salvador",jefe:true}, samuel:{nombre:"Samuel",apellido:"Gámez"}, cynthia:{nombre:"Cynthia"}}, CLAUDE_COL="#D97757", FETCH=0, AG=null;' +
   'function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;"); } function ico(){ return "<svg width=18 height=18></svg>"; } function guarda(){} function render(){} function toast(){} function jefeDe(){ return false; }' +
   'var INTS=[{k:"salvador",rol:"hace"}]; function integrantesDe(){ return INTS; } var CNL={id:"ext:x", nom:"Eduardo Madero \\"Lalo\\" (padel Verde) LNN", col:"#30d158", wa:"Eduardo"}; function canalActual(){ return CNL; } function canalesDe(){ return [1,2,3,4]; } function modoClaude(){ return false; }' +
-  'var tareas=[{id:"a", msgs:[{wa_c:"Eduardo Madero \\"Lalo\\" (padel Verde) LNN", ts:Date.now()-86400000}, {wa_c:"Rogelio Sada", ts:Date.now()}]}];' +
+  'window.__vf230={a:""};var tareas=[{id:"a", msgs:[{wa_c:"Eduardo Madero \\"Lalo\\" (padel Verde) LNN", ts:Date.now()-86400000}, {wa_c:"Rogelio Sada", ts:Date.now()}]}];' +
   'window.fetch=function(u){ FETCH++; return Promise.resolve({ok:true,status:200,json:function(){ return Promise.resolve(AG); }}); };' +
   UF.map(function (f) { return saca("function", f); }).join("\n").replace(/<\/script>/g, "<\\/script>") + '</script>';
 var tmp = path.join(os.tmpdir(), "b219-" + process.pid + ".html"); fs.writeFileSync(tmp, pagina);

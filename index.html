@@ -803,7 +803,11 @@ button{font:inherit;color:inherit}
 .res230.vacio span{color:var(--ink-3);font-size:14.5px}
 .vac230{text-align:center;color:var(--ink-3);font-size:14px;padding:24px 16px}
 .chips225{gap:4px;padding:2px 8px 6px}.chip225{font-size:13px;padding:5px 7px;gap:3px}.chip225 svg{width:14px;height:14px}.chip225.det231{padding:5px 7px}.chip225.det231 svg{width:17px;height:17px}
-.chip225.fecha234.amb234 svg{color:#FF9F0A}.chip225.res234{font-weight:500}.mfr .v.amb234{color:#FF9F0A}.cit234 .mfr{display:block}.cit234 .mfr .k{display:flex;gap:6px;align-items:center;width:auto;max-width:none;color:var(--ink)}.cit234 .mfr .v{display:block;margin:2px 0 0 21px;text-align:left}
+.chip225.fecha234.amb234 svg{color:#FF9F0A}.chip225.clv235.amb235{color:#FF9F0A}.chip225.clv235.red{color:#FF453A}
+.clv235r{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:.5px solid var(--line)}.clv235r .clvk{background:none;border:0;color:var(--ink-3);padding:0;width:26px;height:26px;display:grid;place-items:center;cursor:pointer}
+.clv235r.ok .clvk{color:#30d158}.clv235r .clvt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.clv235r .clvt small{color:var(--ink-3);font-size:13px}.clv235r .clvt small.amb235{color:#FF9F0A}.clv235r .clvt small.red{color:#FF453A}
+.clv235r .clvc{background:none;border:0;color:var(--azul);padding:4px;cursor:pointer}.clvadd{display:flex;gap:8px;margin-top:12px}.clvadd input{flex:1;min-width:0;background:var(--surface-2);border:0;border-radius:10px;padding:10px 12px;color:var(--ink);font:inherit;font-size:15px}
+.clvaddb{background:none;border:0;color:var(--azul);font:inherit;font-size:15px;cursor:pointer}.vt235{display:block;margin:6px auto 4px;background:var(--surface-2);border:0;border-radius:14px;padding:5px 12px;color:var(--ink-2);font:inherit;font-size:13px;cursor:pointer}.chip225.res234{font-weight:500}.mfr .v.amb234{color:#FF9F0A}.cit234 .mfr{display:block}.cit234 .mfr .k{display:flex;gap:6px;align-items:center;width:auto;max-width:none;color:var(--ink)}.cit234 .mfr .v{display:block;margin:2px 0 0 21px;text-align:left}
 .fbt234{margin-top:10px}.fbt234 .hop{width:100%}
 .top .t,.top .t.uno227,.top .tin{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Inter,system-ui,sans-serif}
 /* build 233: botones del encabezado sin fondo ni borde, 30 px, juntos; renglon de propietario en una sola linea */
@@ -1433,7 +1437,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 234 · Fecha y Agendado en una sola ficha (verde si está completo) · ficha Resumen · fila desliza";
+var VERSION_APP = "build 235 · Filtro arranca en Importante · ficha Claves n/m (ámbar ≤7 días, rojo vencida) con su hoja";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -6136,6 +6140,8 @@ function bindFicha(primera){
 function render(){
   cierraDudaHilo();
   if(vista!=="hilo" && vista!=="galeria") window.__visitaDe=null;   /* build 197: salir de la tarea termina la visita */
+  /* build 235: cada vez que se abre una tarea, el filtro arranca en Importante */
+  var _ab235=(vista==="hilo"||vista==="galeria")?abierta:null; if(_ab235!==window.__ab235){ if(_ab235 && window.__vf230) delete window.__vf230[_ab235]; window.__ab235=_ab235; }
   var a=$("app");
   /* LA PUERTA DE LA FICHA. Solo se cruza cuando Firestore ya contesto: si esta
      sin internet NO se le pide nada, porque no se podria guardar. */
@@ -7102,7 +7108,7 @@ function vPastilla(t){
 function abreFiltro227(t){
   var c=canalActual(t), cl=modoClaude(t), vv=vista230(t);
   /* build 230: Todo · Importante · Claude · integrantes · agregar o quitar */
-  var ops=[{id:"todo",nom:"Todo",sub:"todo junto",on:!cl&&!vv&&c.id==="todo"},{id:"imp",nom:"Importante",sub:"acuerdos y conclusiones",on:vv==="imp"},{id:"claude",nom:"Claude",sub:"lo que le pediste y lo que contestó",on:cl||vv==="claude"}];
+  var ops=[{id:"imp",nom:"Importante",sub:"acuerdos y conclusiones",on:vv==="imp"},{id:"todo",nom:"Todo",sub:"todo junto",on:!cl&&!vv&&c.id==="todo"},   /* build 235: Importante primero */{id:"claude",nom:"Claude",sub:"lo que le pediste y lo que contestó",on:cl||vv==="claude"}];
   canalesDe(t).forEach(function(x){ if(x.id==="todo" || (x.id==="equipo" && !hayEquipo(t))) return; var nv=nombreVisible230(x.nom, t); ops.push({id:x.id,nom:nv,sub:/^Contacto sin nombre/.test(nv)?"no está en tu agenda":x.sub,on:!cl&&!vv&&x.id===c.id,av:x.id.indexOf("dm:")===0||x.id.indexOf("ext:")===0}); });
   var bg=document.createElement("div"); bg.className="cnlbg";
   var sh=document.createElement("div"); sh.className="cnlsheet fil227h";
@@ -8035,7 +8041,7 @@ function ico(n,px,gr){
     calx:'<path d="M7 3h8l3 3v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M9 9l6 6M15 9l-6 6"/>',
     hoja:'<path d="M7 3h10v18l-5-3-5 3V3Z"/><path d="M9 8h6M9 11.5h6"/>',
     /* palomita sola (cintillo "Hecha · Deshacer", 2026-09-24) */
-    check:'<path d="M5 12.5l4.5 4.5L19 7"/>',
+    check:'<path d="M5 12.5l4.5 4.5L19 7"/>', llave:'<circle cx="7.5" cy="12" r="3.5"/><path d="M11 12h10M17.5 12v3M20.5 12v2.5"/>', circ:'<circle cx="12" cy="12" r="8"/>',
     /* circulo con "i" — build 148: icono de "análisis" en mensajes de IA */
     info:'<circle cx="12" cy="12" r="8.5"/><path d="M12 11.6v4.6M12 8.1v.01"/>'
   }[n]||"";
@@ -8616,6 +8622,7 @@ function chipsTarea(t){
   var ag=estadoAgenda228(t), cz=citas234(t), cok=cz.some(function(c){ return c.ok; }), cfa=cz.length && !cz.every(function(c){ return c.ok; });
   var verde=ch.cls==="ind"?cok:!!(ag&&ag.ok&&!cfa), amb=!verde && !!(ag||cz.length);
   h+='<button class="chip225 fecha234'+(verde?' verde':'')+(amb?' amb234':'')+'" data-chip="fecha">'+(ch.cls==="ind"&&!verde&&!amb?ico("recur",15):ico("cal",15))+'<span class="ftx234">'+esc(ftx)+'</span></button>';
+  h+=vChipClaves235(t);   /* build 235: Claves n/m despues de la fecha */
   if(esMetas(t)){ var pe=metasEnCurso(t), rj=pe.filter(function(m){ return (+m.estado||0)===0 && semaforoMeta(m).k==="rojo"; }).length;
     var mt=metasDe(t), fm=filtroMeta(t), fmm=fm&&fm!=="otro"?mt.filter(function(m){ return m.id===fm; })[0]:null;   /* build 232: con filtro, el nombre de la meta */
     h+='<button class="chip225'+(rj&&!fm?' red':'')+(fm?' on232':'')+'" data-chip="metas">'+ico("list",15)+(fm?esc(fmm?metaCorta(fmm):"Otro")+ico("down",13):'Metas '+mt.filter(metaCumplida).length+'/'+mt.length)+'</button>'; }   /* build 231: n/m */
@@ -8635,6 +8642,35 @@ function estadoAgenda228(t){
   if(!alerta && !cal && t.agendar===false) return null;   /* dijo que no se agenda */
   var txt=alerta&&cal?"Agendado":(!alerta&&!cal?"Sin agendar":(alerta?"Falta calendario":"Falta alerta"));
   return {ok:alerta&&cal, alerta:alerta, cal:cal, gcalPend:t.gcal==="pendiente", txt:txt, ev:ev};
+}
+/* ===== build 235 (Salvador 18:58): CLAVES = lo indispensable que hay que tener asegurado (viaje: vuelo ida, vuelo regreso, hotel noche 1...).
+   t.claves=[{id, t, ok, fecha_limite?, evidencia_ref? (indice o id en t.evidencia), nota?}]. Ficha "Claves 3/4" despues de la fecha:
+   ÁMBAR si falta alguna y su limite (o la fecha de la tarea) esta a 7 dias o menos; ROJO si ya paso; todas completas: normal con palomita.
+   Salvador palomea a mano; Claude la palomea cuando encuentra la confirmacion (eso lo hace la Mac). ===== */
+function claves235(t){ return (Array.isArray(t&&t.claves)?t.claves:[]).filter(function(c){ return c && String(c.t||"").trim() && !c.apartado; }); }
+function semClaves235(t){
+  var L=claves235(t), fal=L.filter(function(c){ return !c.ok; }); if(!L.length) return null;
+  var k="", h=hoy();
+  fal.forEach(function(c){ var f=/^\d{4}-\d{2}-\d{2}$/.test(c.fecha_limite||"")?c.fecha_limite:(/^\d{4}-\d{2}-\d{2}$/.test(t.f_vigente||"")?t.f_vigente:""); if(!f) return;
+    var d=dDif(h, f); if(d<0) k="rojo"; else if(d<=7 && k!=="rojo") k="ambar"; });
+  return {n:L.length, ok:L.length-fal.length, todas:!fal.length, k:k};
+}
+function vChipClaves235(t){
+  var S=semClaves235(t); if(!S) return "";
+  return '<button class="chip225 clv235'+(S.k==="rojo"?' red':(S.k==="ambar"?' amb235':''))+'" data-chip="claves">'+ico(S.todas?"check":"llave",15)+'Claves '+S.ok+'/'+S.n+'</button>';
+}
+function evidClave235(t, c){
+  var r=c&&c.evidencia_ref; if(r===undefined || r===null || r==="") return -1; var L=evidenciaDe(t);
+  if(typeof r==="number" || /^\d+$/.test(String(r))){ var i=+r; return L[i]?i:-1; }
+  for(var j=0;j<L.length;j++) if(String(L[j].id||"")===String(r)) return j; return -1;
+}
+function vClaves235(t){
+  var L=claves235(t), h=hoy(), fc=function(f){ return typeof fechaMovCorta==="function"?fechaMovCorta(f):f; };
+  return '<div class="clv235l">'+L.map(function(c){ var ei=evidClave235(t,c), f=c.fecha_limite||"", d=(!c.ok && /^\d{4}-\d{2}-\d{2}$/.test(f))?dDif(h,f):null;
+      return '<div class="clv235r'+(c.ok?' ok':'')+'"><button class="clvk" data-clv="'+esc(c.id)+'" aria-label="'+(c.ok?'Quitar palomita':'Palomear')+'">'+ico(c.ok?"check":"circ",18)+'</button>'+
+        '<span class="clvt"><span>'+esc(c.t)+'</span>'+((f||c.nota)?'<small'+(d!==null&&d<0?' class="red"':(d!==null&&d<=7?' class="amb235"':''))+'>'+esc([f?(c.ok?"":"límite ")+fc(f):"", c.nota||""].filter(Boolean).join(" · "))+'</small>':'')+'</span>'+
+        (ei>=0?'<button class="clvc" data-clvev="'+ei+'" aria-label="Ver la confirmación">'+ico("clip",17)+'</button>':'')+'</div>'; }).join("")+
+    '</div><div class="clvadd"><input id="clvnew" placeholder="Agregar clave" autocapitalize="sentences" enterkeyhint="done"><button class="clvaddb" data-clvadd="1">Agregar</button></div>';
 }
 /* build 234: las citas/reuniones de la tarea, cada una con su estado. t.citas=[{titulo,fecha,hora,lugar,alerta,gcal_id}] si viene;
    si no, las alertas de Doit con fecha (t.avisos); el evento de Google Calendar de la tarea (t.gcal_id) cuenta para todas. */
@@ -8762,6 +8798,7 @@ function vHoja225(t){
   else if(H.k==="lista"){ tit=(t.checklist&&t.checklist.titulo)||"Lista"; window.__chkOpen=window.__chkOpen||{}; var _ab=window.__chkOpen[t.id]; window.__chkOpen[t.id]=true; cuerpo=vChecklist(t); window.__chkOpen[t.id]=_ab; }
   else if(H.k==="personas"){ tit="Personas"; cuerpo=vPersonas225(t); }
   else if(H.k==="agenda"){ var _a228=estadoAgenda228(t); tit=_a228?_a228.txt:"Agenda"; cuerpo=vAgenda228(t); }   /* build 228 */
+  else if(H.k==="claves"){ var _S=semClaves235(t); tit="Claves"; sub=_S?(_S.todas?"Todo asegurado":(_S.n-_S.ok)+" por asegurar"+(_S.k==="rojo"?" · ya pasó el límite":(_S.k==="ambar"?" · 7 días o menos":""))):""; cuerpo=vClaves235(t); }   /* build 235 */
   else if(H.k==="fecha"){ var _ch=chipEncabezado(t); tit=_ch.cls==="ind"?"Indefinida":(_ch.cls==="sin"?"Sin fecha":_ch.txt.replace(/^Finiquito:\s*/,"")); var _ag=estadoAgenda228(t), _cz=citas234(t);
     sub=_cz.length>1?_cz.length+" citas":(_ag?_ag.txt:"Sin evento agendado"); cuerpo=vFecha234(t); }   /* build 234 */
   else { tit="Resumen"; cuerpo=vDetalles225(t); }   /* build 234: antes "Detalles" */
@@ -8972,7 +9009,8 @@ function sinEmojiUI(s){ return String(s==null?"":s).replace(/^(\s*(?:[☀-➿⭐
    menos de 60 letras sin cifra, fecha, archivo ni pregunta). La ficha "Resumen" abre esta vista (un solo resumen). CLAUDE: solo lo
    que le pediste a Claude y lo que contestó; las "Nota IA" automaticas no. Integrantes con nombre de puro numero: se busca en la
    agenda o en otro mensaje del mismo numero; si no, "Contacto sin nombre ·1884" (nunca el numero completo). */
-function vista230(t){ var v=(window.__vf230||{})[t&&t.id]||""; return v==="imp"||v==="claude"?v:""; }
+function vista230(t){ var o=window.__vf230||{}; if(t && !Object.prototype.hasOwnProperty.call(o, t.id)) return "imp";   /* build 235: al abrir, SIEMPRE en Importante */
+  var v=o[t&&t.id]||""; return v==="imp"||v==="claude"?v:""; }
 function poneVista230(t, v){ window.__vf230=window.__vf230||{}; window.__vf230[t.id]=v||""; window.__cnlClaude=window.__cnlClaude||{}; window.__cnlClaude[t.id]=(v==="claude")?1:0; }
 function msgId230(x){ return String((x&&(x.id||x.msg_id||x.wa_id||x.nid))||((x&&x.ts)?"ts"+x.ts:"")); }
 /* ¿es importante? 1/0 si Claude ya lo clasificó en msg_imp; si no, la regla de respaldo */
@@ -9319,7 +9357,7 @@ function vHilo(){
   /* build 198: si en Importante el chat queda vacio, una pista chiquita para que no parezca roto */
   if(_v230==="claude" && !_visibles) m+='<div class="vac230">Aquí sale lo que le pidas a Claude y lo que te conteste.</div>';
   if(!_v230 && !_todo && !_visibles && _ocultos && !(t.evidencias||[]).length) m+='<button class="avfold" data-cmodo="todo">Hay '+_ocultos+' mensaje'+(_ocultos===1?'':'s')+' oculto'+(_ocultos===1?'':'s')+' · Todo</button>';
-  m=_v230==='imp'?vResumen230(t)+m:m;   /* build 230: Importante arriba con su Resumen; 232: sin el selector "Importante | Todo" (Importante vive en el filtro) */
+  m=_v230==='imp'?vResumen230(t)+(!_visibles && /res230 vacio/.test(vResumen230(t))?'<button class="vt235" data-vt235="1">Ver todo</button>':'')+m:m;   /* build 235: sin nada importante ni resumen, "Ver todo" */   /* build 230: Importante arriba con su Resumen; 232: sin el selector "Importante | Todo" (Importante vive en el filtro) */
   return h+(esDato(t)?vDatoCuerpo(t):vDatosTarea(t))+vVuelta(t)+vPasos(t)+vEntregas(t)+bannerDecision(t)+_pre179+'<div class="scroll'+(_conPill?' cnl" style="--cc:'+_cc:'')+'"><div class="msgs">'+m+pre+'</div></div>'+vTarjetaRev(t)+
     /* LA MISMA BARRA DE TODAS LAS VISTAS — 2026-09-04. Antes el hilo tenia la
        camara a la IZQUIERDA y una flecha de enviar a la derecha, distinto de la
@@ -13716,6 +13754,16 @@ function bindHilo(){
     abreHoja225(t, k); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-min225]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); togMin225(t.id, el.getAttribute("data-min225")); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-mfil]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); window.__mfil225=window.__mfil225||{}; window.__mfil225[t.id]=el.getAttribute("data-mfil"); if(el.closest(".h225")) window.__hoja225=null; render(); }; });   /* build 232: desde la hoja de Metas: filtra y cierra */
+  /* build 235: claves (palomear a mano, ver la confirmacion, agregar) y "Ver todo" de Importante */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-clv]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var id=el.getAttribute("data-clv");
+    (t.claves||[]).forEach(function(c){ if(c && String(c.id)===id){ c.ok=!c.ok; c.por=c.ok?yo:null; c.ok_ts=c.ok?Date.now():null; } }); guarda(t); render(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-clvev]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var i=el.getAttribute("data-clvev");
+    abreEvidencia(t); var b=document.querySelector('#evi229 [data-evi="'+i+'"]'); if(b) b.click(); }; });
+  var _cad=function(){ var inp=$("clvnew"), v=inp?String(inp.value||"").trim():""; if(!v) return; t.claves=Array.isArray(t.claves)?t.claves:[];
+    var id="c"+Date.now().toString(36); t.claves.push({id:id, t:v.charAt(0).toUpperCase()+v.slice(1), ok:false, por:yo, creado:Date.now()}); guarda(t); render(); };
+  Array.prototype.forEach.call(document.querySelectorAll("[data-clvadd]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); _cad(); }; });
+  var _cin=$("clvnew"); if(_cin) _cin.onkeydown=function(ev){ if(ev.key==="Enter"){ ev.preventDefault(); _cad(); } };
+  Array.prototype.forEach.call(document.querySelectorAll("[data-vt235]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); poneVista230(t, ""); window.__cnl=window.__cnl||{}; render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-f234]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); window.__hoja225=null; menuOpen=false;   /* build 234: igual que ⋯ > Mover la fecha */
     t.pide_fecha=true; msg(t,"bi","¿Para cuándo la muevo? Dime por ejemplo: el viernes, en 15 días o a fin de mes."); guarda(t); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-h225x]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); window.__hoja225=null; render(); }; });
