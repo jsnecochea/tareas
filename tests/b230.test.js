@@ -45,7 +45,7 @@ eq("versión 230 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
       document.getElementById("cnlpill").click(); o.hoja = txt(".fil227h [data-fil]").map(function (x) { return x.replace(/^(JO|CS)/, ""); });
       document.querySelector('.fil227h [data-fil="imp"]').click();
       o.imp = [document.getElementById("cnlpill").textContent, ids(), !!document.querySelector(".msgs .cmodo"), document.querySelector(".scroll").scrollTop];
-      var rc = document.querySelector(".res230"); o.res = [rc.querySelector(".rtx").textContent, txt(".res230 .racu li"), rc.querySelector(".rfal").textContent, /^act\. \d\d:\d\d$/.test(rc.querySelector(".ract").textContent)];
+      var rc = document.querySelector(".res230"); o.res = [rc.querySelector(".rtx").textContent, txt(".res230 .racu li"), rc.querySelector(".qtx").textContent, /^act\. \d\d:\d\d$/.test(rc.querySelector(".ract").textContent)];
       (function(){ document.getElementById("cnlpill").click(); document.querySelector('.fil227h [data-fil="todo"]').click(); })(); o.resCierra = [document.getElementById("cnlpill").textContent, !!document.querySelector(".res230")];
       (function(){ document.getElementById("cnlpill").click(); document.querySelector('.fil227h [data-fil="imp"]').click(); })(); o.resAbre = [document.getElementById("cnlpill").textContent, !!document.querySelector(".res230")];
       document.getElementById("cnlpill").click(); document.querySelector('.fil227h [data-fil="claude"]').click();
@@ -62,7 +62,7 @@ eq("versión 230 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
       ["Importanteacuerdos y conclusiones", "Todotodo junto", "Claudelo que le pediste y lo que contestó", "Javier Ortiz BBVAexterno · por WhatsApp · solo ve lo suyo", "Contacto sin nombre ·1884no está en tu agenda", "Invitar a nuevo miembroagregar o quitar integrantes"]);
     eq("Importante: msg_imp manda (w2=1 aunque sea corto, w5=0) y lo demás por la regla (fuera 'Ok', 'Ahorita salí a comer…', notas y plática con Claude); arriba el Resumen", r.imp, ["Importante", ["w1", "w2", "w6"], false, 0]);
     eq("tarjeta Resumen: texto, acuerdos con palomita y fecha, Falta y act.", r.res,
-      ["Se reinvierte el pagaré en fondo de deuda a 28 días; falta la tasa final y el contrato del fondo.", ["Reinvertir $2,500,000 del pagaré en fondo de deudalun 5 oct", "Javier manda el contrato del fondolun 5 oct"], "Falta: Tasa final del fondo (Javier) · Firmar contrato", true]);
+      ["Se reinvierte el pagaré en fondo de deuda a 28 días; falta la tasa final y el contrato del fondo.", ["Reinvertir $2,500,000 del pagaré en fondo de deudalun 5 oct", "Javier manda el contrato del fondolun 5 oct"], "Tasa final del fondo (Javier) · Firmar contrato", true]);
     eq("Todo / Importante desde el filtro (el Resumen vive en Importante)", [r.resCierra, r.resAbre], [["Todo", false], ["Importante", true]]);
     eq("Claude: solo lo que le pediste y lo que contestó (sin Nota IA); la caja es para Claude", r.claude, ["Claude", ["c1", "c2"], "Indicación para Claude…"]);
     eq("vuelve a Todo", r.vuelveTodo, ["Todo", 9]);

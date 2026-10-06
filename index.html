@@ -845,6 +845,9 @@ button{font:inherit;color:inherit}
 .res230 .racu li svg{color:#30d158;flex:none;margin-top:2px}.res230 .racu li span{flex:1}.res230 .racu small{color:var(--ink-3);font-size:12.5px;flex:none}
 .res230 .rfal{font-size:14px;color:var(--ink-2)}.res230 .rfal b{color:var(--ink)}.res230 .ract{align-self:flex-end;font-size:11.5px;color:var(--ink-3)}
 .res230.vacio span{color:var(--ink-3);font-size:14.5px}
+.res230 .qtx{margin:0;font-size:16px;line-height:1.42;color:var(--ink);font-weight:500}.res230.qt246 .rtx{-webkit-line-clamp:3}
+.res230 .sub246{font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);margin-top:2px}
+.res230 .rsm246>summary{font-size:13.5px;color:var(--ink-3);cursor:pointer;list-style:none;padding:2px 0}.res230 .rsm246>summary::-webkit-details-marker{display:none}.res230 .rsm246[open]>summary{margin-bottom:4px}
 .vac230{text-align:center;color:var(--ink-3);font-size:14px;padding:24px 16px}
 .chips225{gap:4px;padding:2px 8px 6px}.chip225{font-size:13px;padding:5px 7px;gap:3px}.chip225 svg{width:14px;height:14px}.chip225.det231{padding:5px 7px}.chip225.det231 svg{width:17px;height:17px}
 .chip225.fecha234.amb234 svg{color:#FF9F0A}.chip225.clv235.amb235{color:#FF9F0A}.chip225.clv235.red{color:#FF453A}
@@ -1481,7 +1484,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 245 · Imágenes en amarillo con visor · Confirmación de No guardar grande · Lo que mandé va a la derecha · Mover todos y selección en lote";
+var VERSION_APP = "build 246 · Hoy: primero lo que tiene recordatorio · Importante: Qué toca primero · Importante más estricto";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -6462,6 +6465,7 @@ function vLista(){
   var recs=misRecordatorios();
   resto=resto.concat(recs);
   var hoyYa=resto.filter(function(t){var c=campanaDe(t); return dDif(t.f_vigente||hoy(),hoy())>=0 || !!(c&&!c.fut)});
+  hoyYa=ordenHoy246(hoyYa);   /* build 246: primero las que tienen aviso (hoy o con hora), por hora del aviso; luego las demás en su orden */
   var futuras=resto.filter(function(t){var c=campanaDe(t); return dDif(t.f_vigente||hoy(),hoy())<0 && !(c&&!c.fut)})
                    .sort(function(a,b){return (a.f_vigente||"").localeCompare(b.f_vigente||"")});
 
@@ -6598,6 +6602,21 @@ function horaChica(h){ return String(horaBonita(h)||"").toLowerCase(); }
 /* build 141 (Salvador 2026-09-25): LA CAMPANITA DEL RENGLON, en vez del punto.
    roja = ya sono y no la atiendes > naranja = suena hoy mas tarde > azul = ritmo
    (toca revisar, la entrega es otro dia). Solo en lo abierto. */
+/* build 246 (Salvador 6-oct 07:01): en "Hoy" van primero las tareas con recordatorio (aviso de hoy, o ya sonado con hora), ordenadas por la hora
+   del aviso; las demás siguen en su orden de antes (orden estable). Un aviso de hoy sin hora va después de los que sí tienen hora. */
+function claveAviso246(t){
+  try{ var H=hoy(), k=null;
+    avisosDe(t).forEach(function(a){ if(!a || !a.fecha || a.fecha>H) return;
+      var c=a.fecha<H?"00:00 "+(a.hora||"00:00"):(a.hora||"23:59 sin"); if(a.fecha<H && !a.hora) c="00:00 00:00";
+      if(k===null || c<k) k=c; });
+    return k;
+  }catch(e){ return null; }
+}
+function ordenHoy246(L){
+  var ks=L.map(function(t,i){ return {t:t, i:i, k:claveAviso246(t)}; });
+  ks.sort(function(a,b){ if((a.k===null)!==(b.k===null)) return a.k===null?1:-1; if(a.k!==null && a.k!==b.k) return a.k<b.k?-1:1; return a.i-b.i; });
+  return ks.map(function(x){ return x.t; });
+}
 function campanaDe(t){
   /* build 148 (Salvador 2026-09-28): blindaje — un documento con un campo mal
      formado (p. ej. un encargado guardado como texto suelto en vez de objeto,
@@ -9656,7 +9675,27 @@ function poneVista230(t, v){ window.__vf230=window.__vf230||{}; window.__vf230[t
 function msgId230(x){ return String((x&&(x.id||x.msg_id||x.wa_id||x.nid))||((x&&x.ts)?"ts"+x.ts:"")); }
 /* ¿es importante? 1/0 si Claude ya lo clasificó en msg_imp; si no, la regla de respaldo */
 function esOrdenFecha240(tx){ var s=_fsa(tx); return s.length<200 && (/\b(modific\w*|muev\w*|mueve|reprogram\w*|recorr\w*|para cuando|vencid\w*|ritmo|recuerdame|avisame|ejecutar? para|ejecutada para|esta tarea es para|fecha)\b/.test(s) || /^\s*para el\b/.test(s)); }   /* 242: "deben estar listos para el próximo miércoles" es contenido */
+/* build 246 (Salvador 6-oct 07:15, "Importante más estricto"): las indicaciones de Salvador a Claude ya cumplidas o superadas no salen en Importante.
+   Es indicación: k "bo" con nota_claude/indicacion_ts, dictado (hab), completa_info o dict238 cortos, o texto que empieza con "Claude…", "prográmame",
+   "recuérdame", "muévela", "Es: Tarea/Dato". Sale de Importante si tiene más de 24 h o si Claude ya contestó después ("Anotado", "Movida", "Reprogramada", "Listo"). */
+function esIndicacion246(x){
+  if(!x || x.k!=="bo") return false;
+  if(x.nota_claude || x.indicacion_ts || x.hab) return true;
+  var tx=String(x.tr||x.t||"").trim();
+  if(/^\s*(ok[,.\s]+)?(claude\b|progr[aá]ma\w*|recu[eé]rda\w*|m[uú]eve\w*|m[uú]ev[eé]la\w*|es\s*:\s*(tarea|dato)\b)/i.test(tx)) return true;
+  if((x.completa_info || x.dict238) && tx.length<140) return true;
+  return false;
+}
+function indicacionCaduca246(t, x){
+  if(!esIndicacion246(x)) return false;
+  var ts=+x.ts||0;
+  if(ts && Date.now()-ts>24*3600000) return true;
+  if(!ts) return false;
+  return (t&&t.msgs||[]).some(function(y){ return y && y!==x && y.k==="bi" && !(+y.wa_in) && !y.wa_c && (+y.ts||0)>=ts && /^\s*(anotad[oa]|anot[eé]|movid[ao]|reprogramad[ao]|list[oa])(?![a-záéíóúñ])/i.test(String(y.t||"")); });
+}
 function esImp230(t, x){
+  if(x && x.oculto) return false;                                  /* build 246: lo oculto nunca sale */
+  if(indicacionCaduca246(t, x)) return false;                      /* build 246 */
   var mi=(t && t.msg_imp && typeof t.msg_imp==="object")?t.msg_imp:{}, k=msgId230(x);
   if(k && Object.prototype.hasOwnProperty.call(mi,k)) return +mi[k]===1;
   if(x.nota_ia || /^\s*(📝\s*)?Nota IA\b/i.test(String(x.t||""))) return false;   /* las notas automaticas solo si Claude las marcó */
@@ -9672,9 +9711,12 @@ function esImp230(t, x){
   if(x.nota_claude || x.indicacion_ts) return false;   /* la platica con Claude vive en la vista Claude (salvo que la marque importante) */
   var tx=String(x.tr||x.t||"").replace(/^[^:\n]{1,40}:\s*/,"").trim();
   if(x.url || x.tipo==="foto" || x.tipo==="documento" || x.img || x.data) return true;
-  if(tx.length>=60) return true;
-  if(/\d/.test(tx) || /\?/.test(tx)) return true;
-  if(/\b(lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo|hoy|ma[ñn]ana|enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\b/i.test(tx)) return true;
+  /* build 246: pasa la regla de contenido Y es reciente (7 días) o trae cifra, fecha o decisión */
+  var _ts=+x.ts||0, _viejo=_ts && Date.now()-_ts>7*864e5;
+  var _cifra=/\d/.test(tx), _fecha=/\b(lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo|hoy|ma[ñn]ana|enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\b/i.test(tx),
+      _decide=/\b(decid\w*|acord\w*|aprob\w*|autoriz\w*|confirmad[oa]s?|quedamos|queda(do|ron)?\b|vamos a|se va a)\b/i.test(tx);
+  if(_cifra || _fecha || _decide) return true;
+  if(tx.length>=60 || /\?/.test(tx)) return !_viejo;
   return false;
 }
 /* ¿va en la vista Claude? lo que se le pidió a Claude y lo que contestó (no las notas automaticas de seguimiento) */
@@ -9686,7 +9728,7 @@ function esClaude230(x){
 }
 function vResumen230(t){
   var r=(t.resumen && typeof t.resumen==="object")?t.resumen:null;
-  if(!r || !(String(r.texto||"").trim() || (r.acuerdos||[]).length || (r.pendientes||[]).length)){
+  if(!r || !(String(r.texto||"").trim() || String(r.que_toca||"").trim() || (r.acuerdos||[]).length || (r.pendientes||[]).length)){
     /* build 240: sin resumen de Claude se arma uno local (2 o 3 líneas: contexto, lo que sigue y el último dato real) */
     var L=[], cx=String(contextoDe(t)||"").replace(/\s+/g," ").trim(); if(cx) L.push(cx.length>140?cx.slice(0,139).replace(/\s+\S*$/,"")+"…":cx);
     try{ (resumenVivo(t).partes||[]).forEach(function(p){ if(L.length<3 && p && p.tx) L.push(p.tx); }); }catch(e){}
@@ -9694,9 +9736,18 @@ function vResumen230(t){
     return '<div class="res230 local240"><b>Resumen</b>'+L.map(function(x){ return '<p class="rtx">'+esc(x)+'</p>'; }).join("")+'</div>'; }
   var fc=function(f){ return /^\d{4}-\d{2}-\d{2}/.test(f||"")?fechaMovCorta(String(f).slice(0,10)):String(f||""); };
   var hm=""; try{ var d=new Date(typeof r.actualizado==="number"?r.actualizado:Date.parse(r.actualizado)); if(!isNaN(d)) hm=hhmm(d); }catch(e){}
-  return '<div class="res230"><b>Resumen</b>'+(String(r.texto||"").trim()?'<p class="rtx">'+esc(r.texto)+'</p>':'')+
+  /* build 246 (Salvador 6-oct 07:01): PRIMERO "Qué toca" (resumen.que_toca; sin él, se arma con resumen.pendientes: lo que sigue y de quién se espera);
+     DEBAJO el resumen (2-3 renglones), plegado con "ver resumen" si no agrega nada a Qué toca. */
+  var qt=String(r.que_toca||"").replace(/\s+/g," ").trim(), qtLocal=false, tx=String(r.texto||"").trim();
+  if(!qt && (r.pendientes||[]).length){ qtLocal=true;
+    qt=r.pendientes.map(function(p){ var a=String(p.t||p.texto||"").trim().replace(/[.\s]+$/,""); return a+((p.de && a.toLowerCase().indexOf(String(p.de).toLowerCase())<0)?" ("+p.de+")":""); }).filter(Boolean).join(" · "); }
+  var plegar=false;
+  if(qt && tx){ var pk=function(z){ var o={}; _nn(String(z)).replace(/[^a-z0-9ñ ]+/g," ").split(/\s+/).forEach(function(w){ if(w.length>=4) o[w.slice(0,6)]=1; }); return o; };
+    var A=pk(qt), B=pk(tx), nb=Object.keys(B).length, en=Object.keys(B).filter(function(w){ return A[w]; }).length; plegar=nb===0 || en/nb>=0.7; }
+  return '<div class="res230'+(qt?' qt246':'')+'">'+
+    (qt?'<b>Qué toca</b><p class="qtx">'+esc(qt)+'</p>':'<b>Resumen</b>')+
+    (tx?(qt&&plegar?'<details class="rsm246"><summary>ver resumen</summary><p class="rtx">'+esc(tx)+'</p></details>':(qt?'<b class="sub246">Resumen</b>':'')+'<p class="rtx">'+esc(tx)+'</p>'):'')+
     ((r.acuerdos||[]).length?'<ul class="racu">'+r.acuerdos.map(function(a){ return '<li>'+ico("check",14)+'<span>'+esc(a.t||a.texto||"")+'</span>'+(a.fecha?'<small>'+esc(fc(a.fecha))+'</small>':'')+'</li>'; }).join("")+'</ul>':'')+
-    ((r.pendientes||[]).length?'<div class="rfal"><b>Falta:</b> '+r.pendientes.map(function(p){ return esc((p.t||p.texto||"")+(p.de?" ("+p.de+")":"")); }).join(" · ")+'</div>':'')+
     (hm?'<small class="ract">act. '+esc(hm)+'</small>':'')+'</div>';
 }
 /* nombre que se puede mostrar: un "nombre" de puro numero se busca en la agenda o en otro mensaje del mismo numero */

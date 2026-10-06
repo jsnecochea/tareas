@@ -86,7 +86,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
     var vis = r.visibles.join(" | ");
     eq("Importante (arranca así)", r.filtro, "Importante");
     eq("sin toques automáticos, avisos del sistema ni cambios de fecha", [/Van \d|Llevas 9|toques|Ya venció|Segunda vez|Movida del|Anotado|Para cuándo|No le entendí|Modifícame|Quiero que me la mandas|Para el 2 de octubre|Se va ejecutar|para el 15 de noviembre/.test(vis)], [false]);
-    eq("quedan: el dictado de Salvador, Garza con contenido y el archivo", [/OK prográmame el recordatorio/.test(vis), (vis.match(/Garza/g) || []).length >= 2, /Requisitos testamen/.test(vis)], [true, true, true]);
+    eq("quedan: el dictado de Salvador, Garza con contenido y el archivo", [/OK prográmame el recordatorio/.test(vis), (vis.match(/Garza/g) || []).length >= 2, /Requisitos testamen/.test(vis)], [false, true, true]);   /* 246: la indicación vieja a Claude ya no sale */
     eq("tarea hecha a mano: no pide Tarea · Dato · Vincular", r.toggle, 0);
     eq("a mano sin tipo: clasificada; la de la IA sin elegir: pide clasificar", [r2.mano, r2.ia], [[0, true], [1, false]]);
     eq("Acomodo (243): OK · Mover · Nueva · Dato · No guardar", r2.botones, ["OK", "Mover", "Nueva", "Dato", "No guardar"]);
