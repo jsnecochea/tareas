@@ -1529,7 +1529,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 257 · tareas nuevas de la IA = propuestas: no salen en las listas, se aprueban en Acomodo";
+var VERSION_APP = "build 258 · notificaciones: tipo Claude necesita tu respuesta y atajo Solo lo que necesita mi respuesta";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -1554,6 +1554,7 @@ function urlTarea(id){ return "https://doit.ok-doit.com/?recordatorio="+encodeUR
    (k = clave que viaja en el aviso como "tipo"; nivel = en que atajo entra: urgente < normal < todas). ===== */
 var NOTIF_VERSION=1;
 var NOTIF_TIPOS=[
+  {k:"te_necesito", grupo:"Urgente",  nivel:"urgente", ico:"alerta", tx:"Claude necesita tu respuesta",        sub:"Solo lo que requiere tu sí o tu dato para seguir avanzando"},
   {k:"recordatorio", grupo:"Urgente",  nivel:"urgente", ico:"reloj",  tx:"Recordatorios y alarmas",            sub:"Cuando suena un recordatorio que te toca"},
   {k:"espera",       grupo:"Urgente",  nivel:"urgente", ico:"pers",   tx:"Alguien te espera o está atorado",    sub:"Una persona espera tu respuesta o algo se detuvo"},
   {k:"falla",        grupo:"Urgente",  nivel:"urgente", ico:"alerta", tx:"Falla del sistema",                   sub:"La Mac sin señal o un WhatsApp que no salió"},
@@ -1563,11 +1564,12 @@ var NOTIF_TIPOS=[
   {k:"wa_tarea",     grupo:"WhatsApp", nivel:"normal",  ico:"msj",    tx:"Mensaje de una persona de una tarea", sub:"Solo chats ligados a tus tareas"},
   {k:"wa_todo",      grupo:"WhatsApp", nivel:"todas",   ico:"msj",    tx:"Cualquier WhatsApp",                  sub:"Incluye grupos y plática"}
 ];
-var NOTIF_PRESETS=[{k:"ninguna",tx:"Ninguna",n:0},{k:"urgente",tx:"Solo urgente",n:1},{k:"normal",tx:"Normal",n:2},{k:"todas",tx:"Todas",n:3}];
+var NOTIF_PRESETS=[{k:"ninguna",tx:"Ninguna",n:0},{k:"respuesta",tx:"Solo lo que necesita mi respuesta",n:0.5},{k:"urgente",tx:"Solo urgente",n:1},{k:"normal",tx:"Normal",n:2},{k:"todas",tx:"Todas",n:3}];
 var NOTIF_NIVEL={urgente:1, normal:2, todas:3};
 var NOTIF_DEFECTO="urgente";   /* la maqueta: "Solo urgente" queda de inicio */
 function notifDePreset(pk){
   var n=(NOTIF_PRESETS.filter(function(x){ return x.k===pk; })[0]||{n:1}).n, o={};
+  if(pk==="respuesta"){ NOTIF_TIPOS.forEach(function(t){ o[t.k]=(t.k==="te_necesito"); }); return o; }   /* build 258: caso explícito, no es un nivel */
   NOTIF_TIPOS.forEach(function(t){ o[t.k]=NOTIF_NIVEL[t.nivel]<=n; });
   return o;
 }
@@ -1575,6 +1577,8 @@ function notifDePreset(pk){
 function notifPrefs(k){
   var p=(PERSONAS[k]||{}).notif, base=notifDePreset(NOTIF_DEFECTO), o={};
   NOTIF_TIPOS.forEach(function(t){ o[t.k]=(p && p.tipos && typeof p.tipos[t.k]==="boolean")?p.tipos[t.k]:base[t.k]; });
+  /* build 258: migración — quien ya guardó sus preferencias recibe te_necesito encendido, salvo que su preset sea "ninguna" */
+  if(p && p.tipos && typeof p.tipos.te_necesito!=="boolean") o.te_necesito=(p.preset!=="ninguna");
   return o;
 }
 function notifGuardadas(k){ var p=(PERSONAS[k]||{}).notif; return !!(p && p.v && p.tipos); }
@@ -1593,6 +1597,7 @@ function notifPermite(k, tipo){
 /* el tipo de un aviso que manda la app, por su titulo (los que no se reconocen suenan como siempre) */
 function tipoDePush(titulo, cuerpo){
   var s=_nn(String(titulo||"")+" | "+String(cuerpo||""));
+  if(/necesita tu respuesta|necesito tu (respuesta|si\b|dato)|requiere tu (si|dato)/.test(s)) return "te_necesito";   /* build 258 */
   if(/^urgente|requiere tu (accion|decision)|te espera|esperan tu decision|atorad/.test(s)) return "espera";
   if(/atrasad|no ha cumplido|vencid|sin avance|tocaba/.test(s)) return "seguimiento";
   if(/recordatorio|alarma/.test(s)) return "recordatorio";

@@ -39,16 +39,16 @@ function si(nom, v) { eq(nom, !!v, true); }
 function prendidos(o) { return Object.keys(o).filter(function (k) { return o[k]; }); }
 
 /* catalogo */
-eq("catalogo: 8 tipos en 3 grupos, como la maqueta", c.NOTIF_TIPOS.map(function (t) { return t.grupo + ":" + t.k; }),
-  ["Urgente:recordatorio", "Urgente:espera", "Urgente:falla", "Trabajo:falta_info", "Trabajo:seguimiento", "Trabajo:asignado", "WhatsApp:wa_tarea", "WhatsApp:wa_todo"]);
+eq("catalogo: 9 tipos en 3 grupos, como la maqueta", c.NOTIF_TIPOS.map(function (t) { return t.grupo + ":" + t.k; }),
+  ["Urgente:te_necesito", "Urgente:recordatorio", "Urgente:espera", "Urgente:falla", "Trabajo:falta_info", "Trabajo:seguimiento", "Trabajo:asignado", "WhatsApp:wa_tarea", "WhatsApp:wa_todo"]);
 si("cada tipo trae clave, grupo, nivel, icono, titulo y subtitulo", c.NOTIF_TIPOS.every(function (t) { return t.k && t.grupo && c.NOTIF_NIVEL[t.nivel] && t.ico && t.tx && t.sub; }));
 eq("claves unicas", new Set(c.NOTIF_TIPOS.map(function (t) { return t.k; })).size, c.NOTIF_TIPOS.length);
 
 /* atajos */
 eq("Ninguna", prendidos(c.notifDePreset("ninguna")), []);
-eq("Solo urgente (defecto de la maqueta)", prendidos(c.notifDePreset("urgente")), ["recordatorio", "espera", "falla"]);
-eq("Normal", prendidos(c.notifDePreset("normal")), ["recordatorio", "espera", "falla", "falta_info", "seguimiento", "asignado", "wa_tarea"]);
-eq("Todas", prendidos(c.notifDePreset("todas")).length, 8);
+eq("Solo urgente (defecto de la maqueta)", prendidos(c.notifDePreset("urgente")), ["te_necesito", "recordatorio", "espera", "falla"]);
+eq("Normal", prendidos(c.notifDePreset("normal")), ["te_necesito", "recordatorio", "espera", "falla", "falta_info", "seguimiento", "asignado", "wa_tarea"]);
+eq("Todas", prendidos(c.notifDePreset("todas")).length, 9);
 eq("defecto = Solo urgente", c.NOTIF_DEFECTO, "urgente");
 eq("atajo que coincide", c.notifPresetDe(c.notifDePreset("normal")), "normal");
 var pers = c.notifDePreset("urgente"); pers.wa_tarea = true;
@@ -83,8 +83,8 @@ var h = c.vNotif();
 eq("al abrir sin nada guardado, se guarda lo que se ve (Solo urgente)", [escritos.length, escritos[0][2].notif.preset], [1, "urgente"]);
 si("titulo y subtitulo", /Notificaciones/.test(h) && /Qué hace sonar tu celular/.test(h));
 eq("4 atajos, 'Solo urgente' marcado", (h.match(/data-npre="(\w+)" class="on"/) || [])[1], "urgente");
-eq("8 interruptores", (h.match(/data-ntipo=/g) || []).length, 8);
-eq("prendidos los 3 urgentes", (h.match(/class="tg on"/g) || []).length, 3);
+eq("9 interruptores", (h.match(/data-ntipo=/g) || []).length, 9);
+eq("prendidos los 4 urgentes", (h.match(/class="tg on"/g) || []).length, 4);
 si("titulos con Mayúscula Inicial salvo conectores", /Recordatorios y Alarmas/.test(h) && /Mensaje de una Persona de una Tarea/.test(h) && /Falla del Sistema/.test(h));
 si("iconos de linea", /data-i="reloj"/.test(h) && /data-i="msj"/.test(h));
 si("⋯ del inicio abre Notificaciones", /id="bhmas"/.test(html) && /vista="notif"/.test(html) && /if\(vista==="notif"\)\{a\.innerHTML=vNotif\(\);bindNotif\(\);return\}/.test(html));
