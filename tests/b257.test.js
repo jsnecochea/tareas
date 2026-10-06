@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* PRUEBAS build 257: tareas nuevas de la IA = PROPUESTAS (Acomodo). 390 px. Correr: node tests/b256.test.js */
+/* PRUEBAS build 257: tareas nuevas de la IA = PROPUESTAS (Acomodo). 390 px. Correr: node tests/b257.test.js */
 "use strict";
 var fs = require("fs"), path = require("path");
 var ok = 0, n = 0, malas = [];
