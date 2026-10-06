@@ -99,7 +99,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
       
       return o; });
     if (process.env.CAP) await p.screenshot({ path: path.join(process.env.CAP, "b238-globo-menu.png") });
-    eq("el mismo cerebro (promptRevision, modelo 'rapido') pide ordenes y dudas, con la fecha de Monterrey", r2.modelo, ["rapido", true, true, true]);
+    eq("el mismo cerebro (promptRevision, modelo 'pesado') pide ordenes y dudas, con la fecha de Monterrey", r2.modelo, ["pesado", true, true, true]);
     eq("dueño SIN cambio (aunque Claude dijo quien/responsable Cynthia)", r2.duenio, ["salvador", "", null]);
     eq("mensaje a Cynthia por la cola de WhatsApp, con 'IA: ' y de parte de Salvador", r2.wa, [["Cynthia Contadora GrupoNec Rangel", true, "tIAMUVUZNUD1K"]]);
     eq("encargo a Claude: revisar los testamentos MAÑANA (t.encargos)", r2.encargos, [[true, true, "dictado", "pendiente", "number"]]);

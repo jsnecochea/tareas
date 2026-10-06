@@ -73,7 +73,7 @@ eq("versión >= 250", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       completaRevision(T, D, { sinRevision: true }); await espera(2700);
       var V = tareas[0], m = document.getElementById("preg249"), filas = m ? [].map.call(m.querySelectorAll(".q249 .qt"), function (x) { return x.textContent; }) : [], ops = m ? [].map.call(m.querySelectorAll(".qop"), function (x) { return x.textContent; }) : [];
       return { wa: __WA.length, nEnc: (V.encargos || []).length, hay: !!m, filas: filas, ops: ops, falta: ((V.hecho238 || {}).falta || []).map(function (f) { return [f.k, f.lado]; }) }; }, TXT);
-    eq("Varias Karina: no manda nada y pregunta cuál (tarjeta de preguntas), con las dos opciones", [rB.wa, rB.nEnc, rB.hay, rB.falta, rB.ops.sort()], [0, 0, true, [["cond", "A"]], ["Karina", "Karina GP", "Karina Gomez"].sort()]);
+    eq("Varias Karina: no manda nada y pregunta cuál (tarjeta de preguntas), con las dos opciones", [rB.wa, rB.nEnc, rB.hay, rB.falta, rB.ops.sort()], [0, 0, true, [["cond", "A"]], ["Karina GP", "Karina Gomez"].sort()]);
     eq("Varias Karina: el renglón dice cuál", /¿Cuál Karina es\?/.test(rB.filas[0] || ""), true);
     await foto("b250-2-cual-karina.png");
     var rB2 = await p.evaluate(async function () { var b = [].filter.call(document.querySelectorAll("#preg249 .qop"), function (x) { return x.textContent === "Karina GP"; })[0]; b.click(); await espera(30);

@@ -1507,7 +1507,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 250 · Órdenes condicionales: pregúntale a A y si dice que sí, dile a B (encargo que la Mac continúa) · Si el nombre es de varios contactos, pregunta cuál antes de mandar";
+var VERSION_APP = "build 251 · Todo el cerebro en modo pesado · Nada se atora: reintenta y si no, pregunta · Contactos dudosos: pregunta cuál en todo mensaje y guarda el nombre exacto de WhatsApp";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -1756,6 +1756,8 @@ function bannerAvisos(){
     '</div>';
 }
 
+var MODO_CEREBRO="pesado";   /* build 251: dictados, indicaciones a Claude y respuestas de la tarjeta de preguntas; el servidor (claude.php) decide qué modelo es cada modo */
+window.__MODELO_CLAUDE=window.__MODELO_CLAUDE||{};
 /* Pregunta al Claude de la app. modelo: "rapido" o "pesado".
    cb(textoRespuesta, error) */
 function preguntaAClaude(mensajes, modelo, cb){
@@ -1788,6 +1790,7 @@ function preguntaAClaude(mensajes, modelo, cb){
        if(tOut) clearTimeout(tOut);
        entregado = true;
        if(!res.ok){ cb(null,(res.j&&res.j.error)||"No se pudo preguntar."); return }
+       try{ if(res.j && res.j.model) window.__MODELO_CLAUDE[modelo||"rapido"]=String(res.j.model); }catch(_m){}   /* build 251: el modelo que dice el servidor */
        cb((res.j.content&&res.j.content[0]&&res.j.content[0].text)||"",null);
      }).catch(function(e){
        if(tOut) clearTimeout(tOut);
@@ -7646,7 +7649,7 @@ function agregaContexto(t, v, sigue){
   var sys="Eres el asistente de una app de tareas. El usuario tiene abierto el detalle de \""+(t.nombre||"")+"\" y dicto algo. "+
     "Si es informacion o una instruccion sobre la tarea (de que se trata, para que, quien, datos), accion contexto: reescribe el contexto COMPLETO (lo que ya habia + lo nuevo) en 1 a 3 frases y hasta 5 palabras para encontrarla. "+
     "Si claramente es un mensaje para otra persona, accion mensaje. No inventes fechas. Contesta SOLO JSON: {\"accion\":\"contexto|mensaje\",\"contexto\":\"\",\"palabras\":[]}";
-  preguntaAClaude([{role:"user",content:sys+"\n\nCONTEXTO ACTUAL: "+(t.contexto||"(nada)")+"\nDICTADO: "+v}],"rapido",function(txt,err){
+  preguntaAClaude([{role:"user",content:sys+"\n\nCONTEXTO ACTUAL: "+(t.contexto||"(nada)")+"\nDICTADO: "+v}],MODO_CEREBRO,function(txt,err){
     var j={}; try{ var mm=String(txt||"").match(/\{[\s\S]*\}/); j=mm?JSON.parse(mm[0]):{}; }catch(e){ j={}; }
     if(!err && j.accion==="mensaje"){
       /* era un mensaje: se quita la nota y sigue el camino normal */
@@ -7892,6 +7895,7 @@ var SEG_HORA_DEFECTO="10:00";
 function programaSeguimiento(t, persona, pl){
   var k=persona.id.indexOf("ext:")===0?null:persona.id, canon=String(persona.nombre).trim();
   if(k && PERSONAS[k]){ var G=null; try{ G=contactosWA(t).filter(function(g){ return g.eq===k; })[0]; }catch(e){} canon=G?G.nombre:PERSONAS[k].nombre; }
+  else canon=nombreWA251(canon);   /* build 251: nombre exacto de WhatsApp */
   var corto=nombreCorto(canon), meta=String(pl.meta||"").trim();
   t.seg_a=Object.assign({}, t.seg_a||{}, {contacto:canon, meta:meta||((t.seg_a||{}).meta||""), dicho:String(pl.dicho||"").slice(0,400), ts:Date.now()});
   t.wa_contactos=t.wa_contactos||[];
@@ -7963,7 +7967,7 @@ function aplicaSeguimientoA(t, v, j){
   var pl={meta:String(sa.meta||"").replace(/\s+/g," ").trim().slice(0,200), cada:cadaOk?String(sa.cada||"").trim():"", cadaOk:cadaOk,
     hora:horaOk?String(+mh[1]).padStart(2,"0")+":"+mh[2]:"", fechas:Array.isArray(sa.fechas)?sa.fechas:[], local:cadaOk?fechasDeCada(s):[],
     texto:String(sa.texto||""), dicho:String(v).slice(0,400), pasos:pasosSeguimiento248(v, sa)};
-  var r=resuelvePersona(t, quien);
+  var r=personasPara250(t, quien);   /* build 251 */
   if(r.estado!=="uno") return {hecho:"", duda:nuevaDudaPersona(t, quien, "seguimiento", r.cands, pl)};
   return programaSeguimiento(t, r.persona, pl);
 }
@@ -8055,12 +8059,13 @@ function borradorMensaje(t, persona, md){
 }
 function pideMensaje(t, v, md){
   _notaPriv(t,"bo",v);
-  var r=resuelveDestino(t, md.quien);
+  var r=personasPara250(t, md.quien);   /* build 251 */
   if(r.estado==="uno") borradorMensaje(t, r.persona, md);
   else { _notaPriv(t,"bi",nuevaDudaPersona(t, md.quien, "mensaje", r.cands, {quien:md.quien, cuerpo:md.cuerpo||"", pregunta:!!md.pregunta}));
     if(!window.AGENDA_WA && !window.__agendaNo){ try{ cargaAgendaWA(function(){ var d=(t.quien_dudas||[]).filter(function(x){ return x.rol==="mensaje" && x.dicho===String(md.quien).trim(); })[0];
-      if(d){ d.cands=resuelveDestino(t, md.quien).cands.slice(0,40).map(function(c){ return {id:c.id, nombre:c.nombre, sub:c.sub||""}; }); guarda(t); if(vista==="hilo" && abierta===t.id) render(); } }); }catch(e){} } }
+      if(d){ d.cands=personasPara250(t, md.quien).cands.slice(0,40).map(function(c){ return {id:c.id, nombre:c.nombre, sub:c.sub||""}; }); guarda(t); if(vista==="hilo" && abierta===t.id) render(); } }); }catch(e){} } }
   guarda(t); render();
+  if((t.quien_dudas||[]).length) setTimeout(function(){ try{ if(vista==="hilo" && abierta===t.id) abrePreguntas249(t.id); }catch(e){} }, 60);   /* build 251: la tarjeta sale en el acto */
 }
 /* lo dictado en la tarea mientras hay un mensaje en curso: el texto que faltaba, o el cambio al borrador */
 function msjEnCurso(t, v){
@@ -8221,8 +8226,9 @@ function mandaOrden238(T, persona, texto, alId){
   if(PERSONAS[persona.id]){ var G=null; try{ G=contactosWA(T).filter(function(g){ return g.eq===persona.id; })[0]; }catch(e){}
     if(G && G.nombre){ mandaAExterno(T, G.nombre, tx, null, "dm:"+persona.id, alId); return "por WhatsApp"; }
     mandaDM(T, persona.id, tx); return "en Doit"; }
-  T.wa_contactos=T.wa_contactos||[]; if(!T.wa_contactos.some(function(c){ return _nn(String(c.nombre||c))===_nn(persona.nombre); })) T.wa_contactos.push({nombre:persona.nombre, desde:Date.now()});
-  mandaAExterno(T, persona.nombre, tx, null, null, alId); return "por WhatsApp";
+  var nomWA=nombreWA251(persona.nombre);   /* build 251 */
+  T.wa_contactos=T.wa_contactos||[]; if(!T.wa_contactos.some(function(c){ return _nn(String(c.nombre||c))===_nn(nomWA); })) T.wa_contactos.push({nombre:nomWA, desde:Date.now()});
+  mandaAExterno(T, nomWA, tx, null, null, alId); return "por WhatsApp";
 }
 function ejecutaOrdenes238(t, v, j, abiertas){
   var L=(Array.isArray(j&&j.ordenes)?j.ordenes:[]).filter(function(o){ return o && typeof o==="object"; }).slice(0,8), hecho=[], falta=[], T=t, hm=horaMty238();
@@ -8234,9 +8240,9 @@ function ejecutaOrdenes238(t, v, j, abiertas){
     if(tp==="clasificar"){ var ti=String(o.tipo_item||"").toLowerCase(); if(ti==="tarea"||ti==="dato"){ T.tipo_item=ti; T.es_dato=(ti==="dato"); T.tipo_elegido=true; hecho.push(ti==="dato"?"Es dato":"Es tarea"); } }
     else if(tp==="mensaje"){ var a=String(o.a||"").trim(), tx=String(o.texto||"").trim(); if(!a || !tx) return;
       if(String(o.canal||"").toLowerCase()==="correo"){ falta.push({k:"txt", q:"El correo a "+a+" no lo mando desde aquí: ¿se lo mando por WhatsApp?", ops:[]}); return; }
-      var r=resuelveDestino(T, a);
+      var r=personasPara250(T, a);   /* build 251: nombre repetido o sin coincidencia = pregunta cuál, no se manda nada */
       if(r.estado==="uno"){ var por=mandaOrden238(T, r.persona, tx); hecho.push("Le escribí a "+nombreCorto(r.persona.nombre).split(" ")[0]+" "+por+": “"+corto238(tx.replace(/^IA:\s*/i,""))+"”"); }
-      else falta.push({k:"msg", q:"¿A quién le mando “"+tx+"”? "+(r.cands.length?"Hay varios "+a+":":"No encontré a "+a+"."), texto:tx, ops:r.cands.slice(0,4).map(function(c){ return {id:c.id, label:c.nombre}; })}); }
+      else falta.push({k:"msg", q:"¿A quién le mando “"+tx+"”? "+(r.cands.length?"Hay varios "+a+":":"No encontré a "+a+": escribe el nombre."), texto:tx, ops:r.cands.slice(0,4).map(function(c){ return {id:c.id, label:c.nombre}; })}); }
     else if(tp==="claude"){ var que=String(o.que||o.texto||"").trim(); if(!que) return; var f=fechaOrden238(o, "");
       if(!f){ var sv=_fsa(v); if(/\bmanana\b/.test(sv) && !/\bpasado manana\b/.test(sv)) f=fechaMty238(1); }
       /* t.encargos: lo que Claude tiene que hacer (la Mac los procesa). cuando = ISO con hora de Monterrey (9:00 si no dijo hora) */
@@ -8260,6 +8266,8 @@ function personasPara250(T, dicho){
   var r={cands:[]}; try{ r=resuelveDestino(T, dicho); }catch(e){}
   var out=(r.cands||[]).slice(), vis={}; out.forEach(function(c){ vis[_n179(c.nombre)]=1; });
   try{ buscaContactos249(dicho, 10).forEach(function(c){ var k=_n179(c.nombre); if(!vis[k]){ vis[k]=1; out.push({id:c.id, nombre:c.nombre, sub:c.sub||"", prio:0}); } }); }catch(e){}
+  /* una persona de Doit y su propio contacto de WhatsApp ("Cynthia" y "Cynthia Contadora…") son la misma: se queda el contacto */
+  out=out.filter(function(c){ if(!PERSONAS[c.id]) return true; var t0=_tokPer(c.nombre)[0]; return !out.some(function(o){ var to=_tokPer(o.nombre); return !PERSONAS[o.id] && to.length>1 && to[0]===t0; }); });
   var ws=_tokPer(dicho), ex=out.filter(function(c){ return _tokPer(c.nombre).join(" ")===ws.join(" "); });
   if(ex.length===1 && (ws.length>=2 || out.length===1)) return {estado:"uno", persona:ex[0], cands:out};   /* un solo nombre ("Karina") con varios contactos que lo comparten: se pregunta cuál */
   if(out.length===1) return {estado:"uno", persona:out[0], cands:out};
@@ -8281,17 +8289,16 @@ function ordenCondicional250(T, v, o, hecho, falta){
   var cid="cd"+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36), rA=personasPara250(T, aN), rB=personasPara250(T, bN);
   var P={cid:cid, aN:aN, bN:bN, txA:txA, txB:txB, vence:venceCond250(o, v), dicho:String(v||"").slice(0,300), A:null, B:null};
   if(rA.estado==="uno") P.A={id:rA.persona.id, nombre:rA.persona.nombre};
-  if(rB.estado==="uno") P.B={id:rB.persona.id, nombre:rB.persona.nombre}; else if(rB.estado==="ninguno") P.B={id:"ext:"+bN, nombre:bN};
-  if(rA.estado==="ninguno"){ falta.push({k:"txt", q:"No encontré a "+aN+" para preguntarle: ¿cómo se llama o a quién le escribo?", ops:[]}); return; }
+  if(rB.estado==="uno") P.B={id:rB.persona.id, nombre:rB.persona.nombre};
   var dudas=false;
-  if(!P.A){ dudas=true; falta.push({k:"cond", lado:"A", cid:cid, q:"¿Cuál "+aN+" es? Le pregunto a ella/él antes de mandar nada.", ops:rA.cands.slice(0,5).map(function(c){ return {id:c.id, label:c.nombre}; })}); }
-  if(!P.B){ dudas=true; falta.push({k:"cond", lado:"B", cid:cid, q:"¿Cuál "+bN+" es? Es a quien le confirmo si "+nombreCorto(aN).split(" ")[0]+" dice que sí.", ops:rB.cands.slice(0,5).map(function(c){ return {id:c.id, label:c.nombre}; })}); }
+  if(!P.A){ dudas=true; falta.push({k:"cond", lado:"A", cid:cid, q:(rA.estado==="ninguno"?"¿A quién le pregunto? No encontré a "+aN+": escribe el nombre.":"¿Cuál "+aN+" es? Le pregunto a ella/él antes de mandar nada."), ops:rA.cands.slice(0,5).map(function(c){ return {id:c.id, label:c.nombre}; })}); }
+  if(!P.B){ dudas=true; falta.push({k:"cond", lado:"B", cid:cid, q:(rB.estado==="ninguno"?"¿A quién le confirmo? No encontré a "+bN+": escribe el nombre.":"¿Cuál "+bN+" es? Es a quien le confirmo si "+nombreCorto(aN).split(" ")[0]+" dice que sí."), ops:rB.cands.slice(0,5).map(function(c){ return {id:c.id, label:c.nombre}; })}); }
   if(dudas){ T.cond_pend250=T.cond_pend250||{}; T.cond_pend250[cid]=P; return; }
   hecho.push(ejecutaCond250(T, P));
 }
 function ejecutaCond250(T, P){
   var enc={id:"enc"+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36), tipo:"condicional", estado:"esperando", t:"Esperar respuesta de "+P.A.nombre+" y, si dice que sí, confirmar a "+P.B.nombre,
-    pregunta:{contacto:P.A.nombre, pedido_id:""}, si_si:{contacto:P.B.nombre, texto:conIA(String(P.B.nombre||"").split(/\s+/)[0]+", de parte de "+(((PERSONAS[yo]||{}).nombre)||"Salvador")+": "+String(P.txB).replace(/^IA:\s*/i,"").trim())},
+    pregunta:{contacto:(PERSONAS[P.A.id]?P.A.nombre:nombreWA251(P.A.nombre)), pedido_id:""}, si_si:{contacto:(PERSONAS[P.B.id]?P.B.nombre:nombreWA251(P.B.nombre)), texto:conIA(String(P.B.nombre||"").split(/\s+/)[0]+", de parte de "+(((PERSONAS[yo]||{}).nombre)||"Salvador")+": "+String(P.txB).replace(/^IA:\s*/i,"").trim())},
     si_no:{accion:"nota"}, vence:P.vence, creado:Date.now(), por:yo||"", origen:"dictado", tarea_id:T.id};
   T.encargos=(Array.isArray(T.encargos)?T.encargos:[]).concat([enc]); var tid=T.id;
   mandaOrden238(T, P.A, P.txA, function(pid){ var V=viva249(T)||T, e=(V.encargos||[]).filter(function(x){ return x.id===enc.id; })[0]; if(e){ e.pregunta.pedido_id=pid; guarda(V); } });
@@ -8310,6 +8317,48 @@ function vCondicional250(t){
   var L=(t&&Array.isArray(t.encargos)?t.encargos:[]).filter(function(e){ return e && e.tipo==="condicional" && e.pregunta && e.si_si; }); if(!L.length) return "";
   return '<div class="cond250">'+L.map(function(e){ var est=ESTADO_COND250[e.estado]||String(e.estado||"");
     return '<div class="cd250 e-'+esc(String(e.estado||""))+'"><span class="cdt">Esperando respuesta de '+esc(nombreCorto(e.pregunta.contacto).split(" ")[0])+' → confirmar a '+esc(nombreCorto(e.si_si.contacto).split(" ")[0])+'</span><span class="cde">'+esc(est)+(e.vence&&e.estado==="esperando"?' · vence '+esc(fechaBonita(String(e.vence).slice(0,10)))+' '+esc(String(e.vence).slice(11,16)):'')+'</span></div>'; }).join("")+'</div>';
+}
+
+/* ===== build 251: NADA SE QUEDA ATORADO =====
+   Si el cerebro no dejó ninguna orden ni dato ("No cambié nada", "no me quedó claro") o la acción es imposible, se reintenta UNA vez
+   (mismo modo pesado) con el prompt reforzado: contexto completo de la tarea y los últimos 10 mensajes. Si aun así no queda claro,
+   sale en el acto la tarjeta de preguntas del 249 con una pregunta concreta. Nunca más un "dímelo otra vez" sin pregunta. */
+var TIPOS_ORDEN251=["vincular","mensaje","claude","agendar","seguimiento","clasificar","condicional"];
+function ordenesImposibles251(j){ var L=(Array.isArray(j&&j.ordenes)?j.ordenes:[]).filter(function(o){ return o && typeof o==="object"; });
+  return L.length>0 && L.every(function(o){ return TIPOS_ORDEN251.indexOf(String(o.tipo||"").toLowerCase())<0; }); }
+function sinResultado251(t, v, j, r, or, err){
+  var pal=String(v||"").trim().split(/\s+/).filter(Boolean).length; if(pal<3) return false;
+  if(err || ordenesImposibles251(j)) return true;
+  var vacio=!(r.hecho||[]).length && !(r.dudas||[]).length && !(r.vinc||[]).length && !(or.hecho||[]).length && !(or.falta||[]).length && !String((j&&j.pregunta)||"").trim();
+  if(!vacio) return false;
+  var comp=true; try{ comp=!!completitud(t).completa; }catch(e){}
+  return !comp || ordenesDichas238(v);
+}
+function ultimos10_251(t){ return (t.msgs||[]).filter(function(m){ return m && !m.oculto && String(m.t||"").trim() && !m.res238; }).slice(-10).map(function(m){
+  var q=m.wa_c||(m.de&&PERSONAS[m.de]&&PERSONAS[m.de].nombre)||(m.k==="bo"?"Salvador":"Claude"); return q+": "+String(m.t).replace(/\s+/g," ").slice(0,300); }).join("\n"); }
+function refuerzo251(t, v){
+  return "\n\nREINTENTO (build 251): tu respuesta anterior no dejó ninguna orden ni dato aplicable. Vuelve a leer con calma lo dictado y lo que ya hay en la tarea. Devuelve ORDENES concretas (mensaje, condicional, claude, agendar, seguimiento, vincular o clasificar) o los datos que corresponden. Solo si de verdad es imposible, llena \"pregunta\" con UNA pregunta corta y concreta. Nunca contestes que no cambiaste nada.\n"+
+    "CONTEXTO COMPLETO DE LA TAREA: "+String(contextoDe(t)||t.contexto||"(nada)").slice(0,3000)+"\nNOMBRE: "+(t.nombre||"")+" · FECHA: "+(t.f_vigente||"sin fecha")+"\nÚLTIMOS 10 MENSAJES:\n"+(ultimos10_251(t)||"(ninguno)")+"\nLO DICTADO AHORA: "+String(v||"").slice(0,1500);
+}
+function preguntaConcreta251(v, t){
+  var s=_fsa(v), q;
+  if(/\b(dile|diles|pidele|pideles|escribele|mandale|avisale|preguntale|pregunta|manda|avisa)\b/.test(s)) return {k:"txt", q:"¿A quién se lo mando y qué le digo exactamente?", ops:[]};
+  if(/\b(agend\w*|recuerdame|avisame|recordatorio|fecha|cuando|para el)\b/.test(s)) return {k:"txt", q:"¿Para qué día y a qué hora lo agendo?", ops:[]};
+  var corto=String(v||"").replace(/\s+/g," ").trim(); corto=corto.length>60?corto.slice(0,59)+"…":corto;
+  return {k:"resp", q:"No me quedó claro qué hacer con «"+corto+"». ¿Qué es?", ops:[{id:"dato", label:"Es un dato para anotar"},{id:"msg", label:"Mándale un mensaje a alguien"},{id:"agenda", label:"Agéndame un aviso"}]};
+}
+/* nombre EXACTO como lo usa WhatsApp (el de contactos o la agenda), no el alias con paréntesis que arma la app: la Mac lo busca tal cual */
+function nombresExactosWA251(){
+  var L=[]; try{ (window.AGENDA_WA||[]).forEach(function(a){ if(a && a.nombre) L.push(String(a.nombre).replace(/\s+/g," ").trim()); }); }catch(e){}
+  (tareas||[]).forEach(function(t){ if(!t) return; (t.msgs||[]).forEach(function(x){ if(x && x.wa_c) L.push(String(x.wa_c).replace(/\s+/g," ").trim()); }); });
+  return L.filter(Boolean);
+}
+function nombreWA251(nombre){
+  var n=String(nombre||"").replace(/\s+/g," ").trim(), m=n.match(/^(.*\S)\s*\(([^()]*)\)\s*$/); if(!m) return n;
+  var base=m[1].trim(), L=nombresExactosWA251(), nn=_n179(n), nb=_n179(base);
+  var ex=L.filter(function(x){ return _n179(x)===nn; })[0]; if(ex) return ex;   /* así se llama de verdad en WhatsApp */
+  var eb=L.filter(function(x){ return _n179(x)===nb; })[0]; if(eb) return eb;
+  return base;   /* el alias entre paréntesis lo puso la app, no WhatsApp */
 }
 /* ¿es un dictado con órdenes? (largo, o dirigido a Claude) — un mensaje corto a una persona sigue su camino */
 function ordenesDichas238(v){
@@ -8355,7 +8404,7 @@ function liberaAcomoda249(tid){
    campo autocompleta mientras se escribe, buscando en TODOS los contactos de la app (equipo, wa_contactos de todas las tareas,
    quienes escriben por WhatsApp, responsables y seguimientos, y la agenda cuando el servidor la suba). Al contestar todas se aplican
    (las de persona al momento; el resto junto al cerebro) y la tarea queda programada y refrescada. */
-function esPersonaQ249(q){ return /qui[eé]n\s+es\b|a\s+qui[eé]n\b|con\s+qui[eé]n\b/i.test(String(q||"")); }
+function esPersonaQ249(q){ return /cu[aá]l\s+\S+\s+es\b|qui[eé]n\s+es\b|a\s+qui[eé]n\b|con\s+qui[eé]n\b/i.test(String(q||"")); }
 function preguntas249(t){
   var P=[]; if(!t) return P;
   (t.quien_dudas||[]).forEach(function(d){ P.push({k:"persona", id:d.id, q:"¿Quién es "+d.dicho+"?", dicho:d.dicho, cands:(d.cands||[]).slice(0,5)}); });
@@ -8428,6 +8477,7 @@ function enviaPreguntas249(tid, P, A){
     if(p.hi!=null) quitar.push(p.hi);
     if(p.k==="vinc" && a.opt){ var pc=t.encargos; enlazaTareas(t.id, a.opt.id, "dictado"); var d=tareas.filter(function(x){ return x.id===a.opt.id; })[0];
       if(d && t.fusionada_en===d.id){ if(Array.isArray(pc) && pc.length) d.encargos=(Array.isArray(d.encargos)?d.encargos:[]).concat(pc); if(H){ H.hecho=(H.hecho||[]).concat(["Vinculada a “"+(d.nombre||"")+"”"]); d.hecho238=H; guarda(d); } } aplicadas++; return; }
+    if((p.k==="cond"||p.k==="msg") && !a.opt && tx){ a.opt=a.persona?{id:a.persona.id, label:a.persona.nombre}:{id:"ext:"+tx, label:tx}; }   /* build 251: elegido del autocompletar o escrito */
     if(p.k==="cond" && a.opt){ var fc=(H&&H.falta||[])[p.hi]; if(fc){ var h250=resuelveCond250(t, fc, a.opt); if(h250 && H) H.hecho=(H.hecho||[]).concat([h250]); } aplicadas++; return; }
     if(p.k==="msg" && a.opt){ var per2=(candidatosPersona(t).filter(function(c){ return c.id===a.opt.id; })[0])||{id:a.opt.id, nombre:a.opt.label}; var por=mandaOrden238(t, per2, p.texto);
       if(H) H.hecho=(H.hecho||[]).concat(["Le escribí a "+nombreCorto(per2.nombre)+" "+por+": “"+p.texto+"”"]); aplicadas++; return; }
@@ -8454,7 +8504,7 @@ function completaRevision(t, v, op){
     if(!op.sinRevision) revisaCompleta(t);
     var f=op.sinRevision?[]:soloMeFalta(t), _lista=!op.sinRevision && !f.length && completitud(t).completa;
     var tx=[hecho.length?"Anoté: "+hecho.join(", ")+".":"", (dudas||[]).join(" "), f.length?"Solo me falta: "+f.join(", ")+".":""].filter(Boolean).join(" ")+_vx;
-    if(!hecho.length && !(dudas||[]).length && !_vx && !_or238.hecho.length) tx=_lista?"":"No pesqué datos nuevos; dímelo otra vez.";
+    if(!hecho.length && !(dudas||[]).length && !_vx && !_or238.hecho.length && !(_or238.falta||[]).length) tx=_lista?"":"No pesqué datos nuevos; dímelo otra vez.";
     if(_lista) tx=(tx?tx+" ":"")+"Revisa la ficha y pica Autorizar.";
     t=viva249(t); if(_T238 && _T238.id===t.id) _T238=t;   /* build 249: la tarea viva, no la que el snapshot ya reemplazó */
     msg(t,"bi",tx.trim()); var _mr238=t.msgs[t.msgs.length-1]; _mr238.res238=1; _mr238.canal="priv:"+yo;   /* build 238: queda en el historial; en la vista va la tarjeta */
@@ -8469,18 +8519,26 @@ function completaRevision(t, v, op){
   /* respaldo SIN red (o respuesta ilegible): la extraccion local del 205 */
   var _respaldo=function(){ t=viva249(t); _T238=t; var loc=extraeLocal(t, v); if(t.pendiente_info && !loc.length){ delete t._leyendo; completaPendiente(t.id, v); ocultaAcomoda249(); if(op.alTerminar) try{ op.alTerminar({hecho:[], dudas:[], vinc:[], falta:soloMeFalta(t)}); }catch(e){} return; } _fin(loc, [], []); };
   var _ab=abiertasParaVincular(t, v, 30);
+  var _lanza251=function(prompt, intento){
   try{
-    preguntaAClaude([{role:"user",content:promptRevision(t, v, _ab)}],"rapido",function(txt,err){
+    preguntaAClaude([{role:"user",content:prompt}],MODO_CEREBRO,function(txt,err){
       if(err){ _respaldo(); return; }
       var j=null; try{ var mm=String(txt||"").match(/\{[\s\S]*\}/); j=mm?JSON.parse(mm[0]):null; }catch(e){ j=null; }
-      if(!j){ _respaldo(); return; }
+      if(!j){ if(intento<1){ _lanza251(promptRevision(t, v, _ab)+refuerzo251(t, v), 1); return; } _respaldo(); return; }
       t=viva249(t); _T238=t;   /* build 249 */
       var r=aplicaRevisionClaude(t, v, j, _ab); _j238=j;
-      try{ if(!r.yaHecha){ _or238=ejecutaOrdenes238(t, v, j, _ab); _T238=_or238.T||t; } }catch(e238){ try{ console.warn("ordenes238", e238); }catch(_e){} }
+      var _err251=false;
+      try{ if(!r.yaHecha){ _or238=ejecutaOrdenes238(t, v, j, _ab); _T238=_or238.T||t; } }catch(e238){ _err251=true; try{ console.warn("ordenes238", e238); }catch(_e){} }
+      /* build 251: NADA SE QUEDA ATORADO. Sin órdenes ni datos (o una acción imposible): UNA vez más con el prompt reforzado; si aun así no, pregunta concreta en la tarjeta del 249 */
+      if(!r.yaHecha && sinResultado251(t, v, j, r, _or238, _err251)){
+        if(intento<1){ _lanza251(promptRevision(t, v, _ab)+refuerzo251(t, v), 1); return; }
+        _or238.falta=(_or238.falta||[]).concat([preguntaConcreta251(v, t)]); }
       if(r.yaHecha){ delete t._leyendo; t.pendiente_info=""; t.pendiente_tipo=""; t.falta_fecha=false; t.autorizada=true; cierraHecha(t); render(); ocultaAcomoda249(); if(op.alTerminar) try{ op.alTerminar({hecho:["la cerré como hecha"], dudas:[], vinc:[], falta:[], cerrada:true}); }catch(e){} return; }
       _fin(r.hecho, r.dudas, r.vinc);
     });
   }catch(e){ _respaldo(); }
+  };
+  _lanza251(promptRevision(t, v, _ab), 0);
 }
 function loQueDetengo(){
   var a=tareas.filter(function(t){ return meDetiene(t) && !t.pendiente_info && !esDecisionSal(t) });
@@ -11157,7 +11215,7 @@ function barraEnviar(texto,completo){
     if(barraEstado===_esteEstado && vista==="barra")
       caeALocal(texto,"Claude no contestó a tiempo — busqué local");
   }, 60000);
-  preguntaAClaude([{role:"user", content: prompt}],"rapido",function(txt,err){
+  preguntaAClaude([{role:"user", content: prompt}],MODO_CEREBRO,function(txt,err){
     clearTimeout(_vigia);
     if(err){ caeALocal(texto,"No alcance a Claude ("+err+") — busque local"); return }
     var j=null;
@@ -16534,7 +16592,7 @@ function contestaEntrevista(t, v){
     "Propon de 2 a 5 entregas intermedias con fecha entre hoy y la fecha final (la primera puede ser lo que el jefe pidio primero). "+
     "Contesta SOLO JSON: {\"entregable\":\"...\",\"como\":\"...\",\"fecha_final\":\"AAAA-MM-DD o null\",\"presupuestos\":n o null,\"entregas\":[{\"fecha\":\"AAAA-MM-DD\",\"que\":\"corto\"}]}\n\nLO QUE DIJO: "+v;
   try{
-    preguntaAClaude([{role:"user",content:sys}],"rapido",function(txt,err){
+    preguntaAClaude([{role:"user",content:sys}],MODO_CEREBRO,function(txt,err){
       var j=null; try{ var mm=String(txt||"").match(/\{[\s\S]*\}/); j=mm?JSON.parse(mm[0]):null; }catch(e){ j=null; }
       if(!j){ msg(t,"bi","No pude leer tu respuesta ahorita; quedó anotada. Dímela otra vez cuando puedas."); t.msgs[t.msgs.length-1].canal="sup"; guarda(t); render(); return; }
       aplicaMedida(t, j, v);
@@ -17488,7 +17546,7 @@ function ejecutaNotaClaude(t, v){
     try{ if(_c206.hecho.length && _falta206 && revisaCompleta(t)) return; }catch(e){}
     if(vista==="hilo"&&abierta===t.id) render(); };
   try{
-    preguntaAClaude([{role:"user",content:p}],"rapido",function(txt,err){
+    preguntaAClaude([{role:"user",content:p}],MODO_CEREBRO,function(txt,err){
       var j=null; try{ var mm=String(txt||"").match(/\{[\s\S]*\}/); if(mm) j=JSON.parse(mm[0]); }catch(e){}
       /* build 206: primero se aplica todo lo que dijo (contexto, ritmo, indefinida/recurrente, fecha); sin IA, lo local */
       try{ _c206=aplicaCamposNota(t, v, j||{}); if(t.indefinida===true && j && String(j.accion||"").toLowerCase()==="fecha"){ j.accion="nada"; j.fecha=null; }   /* build 222: continua: la fecha es meta */
