@@ -1453,7 +1453,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 238 · El dictado obedece todo (órdenes) · tarjeta Hecho / Me falta · iconito de Claude por globo";
+var VERSION_APP = "build 239 · El Acomodo ya no muestra saludos: las pláticas de puro saludo se marcan solas como plática";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -9065,7 +9065,7 @@ function abreMover225(t, ix, ixs){
     ops.map(function(o){ return '<button class="opt226'+(o.best?' best':'')+'" data-movto="'+esc(o.d.id)+'">'+ico("folder",20)+'<span class="ot">'+esc(o.d.nombre||"(sin nombre)")+'</span>'+(o.tag?'<span class="tag">'+esc(o.tag)+'</span>':'')+'</button>'; }).join("")+
     '<div class="sep226"></div>'+
     '<button class="opt226 plain" data-movnueva="1">'+ico("plus",20)+'<span class="two"><span>Tarea nueva</span><small>“'+esc(nombreSugerido(x))+'”</small></span></button>'+
-    '<button class="opt226 plain" data-movplatica="1">'+ico("bubble",20)+'<span class="two"><span>Solo plática</span><small>no guardar en tarea</small></span></button></div></div>';
+    '<button class="opt226 plain" data-movplatica="1">'+ico("bubble",20)+'<span class="two"><span>Solo plática</span><small>saludo o charla, no va a ninguna tarea</small></span></button></div></div>';
   document.body.appendChild(v);
   v.addEventListener("click", function(ev){ ev.stopPropagation(); var b=ev.target.closest("[data-movto],[data-movnueva],[data-movplatica]"), r="";
     if(b){ if(b.hasAttribute("data-movnueva")){ var n=ixs?nuevaG237(t, ixs):nuevaDesdeMsg(t, ix); if(n && !ixs) guardaRegla237("nueva", t, [ix], n); r=n?"Tarea nueva “"+n.nombre+"” en Falta info; "+(ixs&&ixs.length>1?"la plática pasó":"el mensaje pasó")+" ahí.":""; }
@@ -9114,7 +9114,7 @@ function platicas237(t){
   G.forEach(function(g){ var xs=g.ixs.map(function(i){ return t.msgs[i]; });
     g.duda=xs.filter(function(x){ return x.duda_tarea && !x.duda_resuelta && !x.oculto; })[0]||null; g.tuvoDuda=xs.some(function(x){ return !!x.duda_tarea; });
     g.ia=xs.some(acomodoIA237); g.listos=xs.every(function(x){ return confirmado237(x) || x.oculto; });
-    var imp=xs.filter(function(x){ return !esPlatica237(t, x); }); g.n=imp.length;
+    var imp=xs.filter(function(x){ return !x.oculto && !esSaludo239(t, x); }); g.n=imp.length; g.soloSaludo=!imp.length && xs.some(function(x){ return !x.oculto && !confirmado237(x); });   /* 239 */
     var base=imp.length?imp:xs; g.extracto=base.map(function(x){ return _txMsg(x).replace(/^[^:\n]{1,40}:\s*/,""); }).sort(function(a,b){ return b.length-a.length; })[0]||""; });
   return G;
 }
@@ -9133,6 +9133,19 @@ function esSaludo238(t, x){
   if(!w.length) return true; if(/\d/.test(tx)) return false;
   if(w.length<=6 && /^(hola|ok|okay|oki|va|vale|sale|gracias|muchas gracias|mil gracias|de nada|buen dia|buenos dias|buenas|buenas tardes|buenas noches|saludos|ahi estaremos|ahi nos vemos|perfecto|listo|si|sip|claro|excelente|enterado|enterada|de acuerdo|esta bien|muy bien|que bien|igualmente|con gusto|gusto en saludarte|hola salvador|jaja\w*|ja ja)( [a-z]+)?( [a-z]+)?$/.test(tx)) return true;
   return w.length<=2;
+}
+/* build 239 (Salvador): en el Acomodo, saludo = la regla del 230 (menos de 60 letras, sin cifra, fecha, pregunta ni archivo) o la
+   lista ampliada (igualmente, jaja, emojis solos, saludos, abrazo, bonita semana, va, sale, ok, gracias, de nada, perfecto, listo,
+   ahí estaremos). Lo que Claude marcó importante (msg_imp 1) nunca es saludo. */
+var SALUDO239=/^(igualmente|ja(ja)+j?a?|je(je)+|ji(ji)+|jajaja\w*|hola|ola|buen dia|buenos dias|buenas|buenas tardes|buenas noches|saludos|un abrazo|abrazo|abrazos|bonita semana|bonito dia|bonita noche|feliz noche|feliz dia|que descanses|va|vale|sale|ok|okay|oki|gracias|muchas gracias|mil gracias|de nada|perfecto|listo|ahi estaremos|ahi nos vemos|si|sip|claro|excelente|enterado|enterada|de acuerdo|con gusto|igual|igualmente \w+|gracias \w+|ok \w+|sale \w+|va \w+)$/;
+function esSaludo239(t, x){
+  if(!x) return true;
+  var mi=(t && t.msg_imp && typeof t.msg_imp==="object")?t.msg_imp:{}, k=msgId230(x); if(k && Object.prototype.hasOwnProperty.call(mi,k) && +mi[k]===1) return false;
+  if(x.url || x.tipo==="foto" || x.tipo==="documento" || x.img || x.data) return false;
+  var raw=_txMsg(x).replace(/^[^:\n]{1,40}:\s*/,""), tx=_fsa(raw).replace(/[^a-z0-9ñ ]+/g," ").replace(/\s+/g," ").trim();
+  if(!tx) return true;                                  /* emojis o signos solos */
+  if(SALUDO239.test(tx)) return true;
+  return esPlatica237(t, x);                            /* la regla del 230 */
 }
 function claudeAcomodo238(t, x){ return !!x && acomodoIA237(x) && !esSaludo238(t, x); }
 function icoCl238(t, x, ix){
@@ -9201,8 +9214,20 @@ function abiertaVisible(t){ return t && !t.cierre && !t.fusionada_en && !t.es_re
 /* build 237: pláticas por acomodar (solo las que tienen duda o están en una tarea de la IA sin clasificar), la más reciente primero */
 function platicasAcomodo237(){
   var out=[]; tareas.forEach(function(t){ if(!abiertaVisible(t)) return; try{ aplicaDudasNota237(t); }catch(e){}
-    var sc=sinClasificarIA237(t); platicas237(t).forEach(function(g){ if(g.listos) return; if(g.duda || sc || g.tuvoDuda){ g.sinClasificar=sc && !g.duda; out.push(g); }   /* 238: si ya tocó uno por uno, la tarjeta sigue hasta acomodar el resto */ }); });
+    var sc=sinClasificarIA237(t); platicas237(t).forEach(function(g){ if(g.listos) return; if(g.duda || sc || g.tuvoDuda){
+      if(g.soloSaludo){ (window.__plat239=window.__plat239||[]).push(g); return; }   /* build 239: puro saludo: no sale; se marca sola como plática */
+      g.sinClasificar=sc && !g.duda; out.push(g); } }); });
+  if((window.__plat239||[]).length && !window.__plat239T) window.__plat239T=setTimeout(platicaSola239, 0);
   return out.sort(function(a,b){ return b.ts1-a.ts1; });
+}
+/* marca como "Solo plática" (como el botón) las pláticas de puro saludo; sin regla de aprendizaje */
+function platicaSola239(){
+  var L=window.__plat239||[]; window.__plat239=[]; window.__plat239T=null; var tocadas=[];
+  L.forEach(function(g){ var t=g.t, n=0; g.ixs.forEach(function(ix){ var x=(t.msgs||[])[ix]; if(!x || x.oculto || confirmado237(x)) return;
+      x.oculto=true; x.oculto_ts=Date.now(); x.oculto_por="auto"; x.oculto_motivo="platica"; x.duda_resuelta="platica"; x.acomodo={ok:0, ts:Date.now(), por:"auto", platica:1}; n++; });
+    if(n){ censoAcomodo(t, t.msgs[g.ixs[0]], t.id, "", "platica_auto"); if(tocadas.indexOf(t)<0) tocadas.push(t); } });
+  tocadas.forEach(function(t){ guarda(t); });
+  if(tocadas.length && db) render();
 }
 function dudasAcomodo(){
   var out=[]; tareas.forEach(function(t){ if(!abiertaVisible(t)) return;
@@ -9215,6 +9240,7 @@ function acomodoHoy(){
   tareas.forEach(function(t){ if(!t || t.es_recordatorio) return;
     (t.msgs||[]).forEach(function(x){ if(!x || !x.wa_in || x.movido_de || x.nota_ia || !x.ts) return; var f=""; try{ f=iso(x.ts); }catch(e){} if(f!==H) return;
       if(x.duda_tarea && !x.duda_resuelta) return;   /* lo dudoso va arriba, todavia no cuenta */
+      if(x.acomodo && x.acomodo.por==="auto") return;   /* build 239: el saludo que se marcó solo como plática no cuenta ni como acierto ni como error */
       n++; var m=!!(x.movido_a || x.duda_resuelta==="otra" || x.duda_resuelta==="platica" || (x.acomodo && x.acomodo.ok===0)); if(m) mal++;
       L.push({t:t, x:x, mal:m}); }); });
   return {n:n, ok:n-mal, lista:L.sort(function(a,b){ return (b.x.ts||0)-(a.x.ts||0); })};
@@ -9225,7 +9251,7 @@ function vAcomodo(){
   if(D.length) h+='<div class="acog">'+D.slice(0,8).map(function(g){ var t=g.t, ix0=g.ixs[0], x0=t.msgs[g.ixs[g.ixs.length-1]], k=t.id+"|"+ix0, ab=!!(window.__g237open||{})[k];
     return '<div class="acor g237'+(ab?' ab':'')+'" data-acot="'+esc(t.id)+'" data-acoix="'+ix0+'" data-acg="'+esc(g.ixs.join(","))+'" data-g237="'+esc(k)+'"><span class="av226">'+esc(inicialesDe(g.contacto))+'</span><span class="acob"><span class="acow"><b>'+esc(g.contacto||"Contacto")+'</b><span class="n237">'+(g.n||g.ixs.length)+' mensaje'+((g.n||g.ixs.length)===1?'':'s')+'</span><time>'+esc(x0.h||"")+'</time></span>'+
       '<span class="acom x237">'+esc(g.extracto)+'</span><span class="pill226">'+ico("folder",14)+'creo que es: '+esc(tareaCorta(t))+(g.sinClasificar?'<span class="q"> · sin clasificar</span>':'')+'</span>'+
-      (ab?'<span class="msgs237">'+g.ixs.map(function(i){ var x=t.msgs[i], pl=esSaludo238(t,x), ok=confirmado237(x)||x.oculto; return '<span class="m237'+(pl?' tenue':'')+(ok?' listo':'')+'"><span class="mtx"><time>'+esc(x.h||"")+'</time>'+esc(_txMsg(x).replace(/^[^:\n]{1,40}:\s*/,""))+'</span>'+(pl||ok?'':'<span class="prop238">creo que es: '+esc(tareaCorta(t))+(x.duda_tarea&&x.duda_tarea.alternativa_nombre&&!x.duda_resuelta?' · ¿o '+esc(x.duda_tarea.alternativa_nombre)+'?':'')+'</span>'+botonesG237(i, [i], " m238"))+'</span>';   /* build 238: su propia propuesta */ }).join("")+'</span>':'')+
+      (ab?'<span class="msgs237">'+g.ixs.map(function(i){ var x=t.msgs[i], pl=esSaludo239(t,x), ok=confirmado237(x)||x.oculto; return '<span class="m237'+(pl?' tenue':'')+(ok?' listo':'')+'"><span class="mtx"><time>'+esc(x.h||"")+'</time>'+esc(_txMsg(x).replace(/^[^:\n]{1,40}:\s*/,""))+'</span>'+(pl||ok?'':'<span class="prop238">creo que es: '+esc(tareaCorta(t))+(x.duda_tarea&&x.duda_tarea.alternativa_nombre&&!x.duda_resuelta?' · ¿o '+esc(x.duda_tarea.alternativa_nombre)+'?':'')+'</span>'+botonesG237(i, [i], " m238"))+'</span>';   /* build 238: su propia propuesta */ }).join("")+'</span>':'')+
       '<span class="ac226" data-acix="'+ix0+'" data-acg="'+esc(g.ixs.join(","))+'"><button data-acok="'+ix0+'">OK</button><span>·</span><button data-acmov="'+ix0+'">Mover</button><span>·</span><button data-acnueva="'+ix0+'">Nueva</button></span></span></div>'; }).join("")+'</div>';
   var ab=!!window.__aco226;
   if(A.n){ h+='<button class="acof" id="bacof">'+ico("check",18)+'<span>Acomodé solo hoy · '+A.n+'</span><span class="r">acerté '+A.ok+'/'+A.n+'</span>'+ico(ab?"down":"chev",16)+'</button>';

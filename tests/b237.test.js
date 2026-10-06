@@ -90,7 +90,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
       ["Manuel Parra", "2 mensajes", "Tema 2… Mesa comedor alto brillo: mañana te dejo la muestra de melamina para que la veas en tu casa", "creo que es: Casa Lerdo", 2],
       ["Lalo Madero", "1 mensaje", "¿Hay miercolitos esta semana? Reservé la cancha 3 de 8 a 9:30 en el club", "creo que es: Casa Lerdo", 6],
       ["Toldos Laguna", "1 mensaje", "Le comparto la cotización del toldo retráctil de 4x3 m: $38,500 con instalación", "creo que es: Cotización toldo terraza · sin clasificar", 2]]);
-    eq("desplegada: los 6 mensajes, la pura plática en tenue", r2.desplegada.map(function (x) { return x[1]; }), [true, true, false, false, true, true]);   /* 238: tenue = saludos ("va Nestor y el Pollo" sí tiene contenido) */
+    eq("desplegada: los 6 mensajes, la pura plática en tenue", r2.desplegada.map(function (x) { return x[1]; }), [true, true, false, true, true, true]);   /* 239: tenue = saludo por la regla del 230 ("va Nestor y el Pollo" es corto y sin cifra) */
     eq("OK aplica a TODA la plática (6) y la tarjeta se va", r3.ok, [6, 2]);
     eq("regla en bitacora_personas/salvador · acomodo_reglas (merge)", r3.regla, ["salvador", '{"merge":true}', "Lalo Madero", "ok", "tLERDO", true, true]);
     eq("Mover: la hoja dice '2 mensajes' y pasan los 2", [r3.hojaMover, r3.mover], ["2 mensajes", [2, 2]]);
