@@ -146,7 +146,7 @@ t = LERDO(); c.aplicaRevisionClaude(t, "que quede la azotea el 9", { aviso_inmed
 eq("candado: sin pedirlo, no se pone", t.aviso_inmediato || false, false);
 /* nota a Claude y lugares */
 si("nota a Claude: metas; 'fecha' en una continua no mueve el finiquito", /var _mt222=aplicaMetasClaude\(t, v, j\|\|\{\}\)/.test(html) && /if\(t\.indefinida===true && j && String\(j\.accion\|\|""\)\.toLowerCase\(\)==="fecha"\)/.test(html) && /if\(a!=="fecha" && j\.fecha && t\.indefinida!==true\)/.test(html));
-si("la supervisión de metas corre con los hitos", /chequeoHitos\(\); try\{ chequeoMetas\(\); \}/.test(html));
+si("build 267: la supervisión de metas (empujones por WhatsApp) YA NO corre sola con los hitos", /chequeoHitos\(\);/.test(html) && !/chequeoHitos\(\); try\{ chequeoMetas\(\); \}/.test(html));
 si("vChecklist pinta Metas cuando la lista es de metas", /if\(esMetas\(t\)\) return vMetas\(t\);/.test(html));
 /* UI */
 var css = (html.match(/<style[^>]*>([\s\S]*?)<\/style>/) || [])[1] || "";

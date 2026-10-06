@@ -1532,7 +1532,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 266 · toda pregunta de Claude en texto (sin fichas de botones), la respuesta dictada la cierra · build 265 · chip Falta rojo y ancho, micrófono sin autoarranque · build 264 · expedientes: Ya está los deja dormidos, despiertan solos, cerradas y dormidas siempre en búsqueda · recordatorios una vez, siguiente en orden, Hoy solo lo de Salvador, esperas con fecha, falta info coherente, dictado oculto, WhatsApp sin contacto basura";
+var VERSION_APP = "build 267 · sin bucle de preguntas (Ninguno cierra), sin repreguntas automáticas a terceros · build 266 · toda pregunta de Claude en texto (sin fichas de botones), la respuesta dictada la cierra · build 265 · chip Falta rojo y ancho, micrófono sin autoarranque · build 264 · expedientes: Ya está los deja dormidos, despiertan solos, cerradas y dormidas siempre en búsqueda · recordatorios una vez, siguiente en orden, Hoy solo lo de Salvador, esperas con fecha, falta info coherente, dictado oculto, WhatsApp sin contacto basura";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -4810,7 +4810,7 @@ function completitud(t){
   } else {
     var q=t.duenio && PERSONAS[t.duenio];
     var fin=t.indefinida===true || esRecurrente(t) || !!(t.f_vigente && !t.falta_fecha && !fechaPuestaSola(t));   /* build 201: la fecha que puso el sistema no cuenta */
-    var seg=(t.avisos||[]).some(function(a){ return a && a.fecha; }) || !!(t.seg_a && ((t.seg_a.programados||[]).length || String(t.seg_a.cada||"").trim())) || !!String(t.ritmo||"").trim() || esRecurrente(t) || (t.indefinida===true && !!t.f_vigente);
+    var seg=(typeof permiteGenerica267==="function" && !permiteGenerica267(t)) || (t.avisos||[]).some(function(a){ return a && a.fecha; }) || !!(t.seg_a && ((t.seg_a.programados||[]).length || String(t.seg_a.cada||"").trim())) || !!String(t.ritmo||"").trim() || esRecurrente(t) || (t.indefinida===true && !!t.f_vigente);
     it.push({k:"quien", ok:!!q, tx:q?"Quién: "+(t.revisa_ext&&t.duenio===yo?nombreCorto(t.revisa_ext)+" · tú supervisas":(t.duenio===yo?"tú":PERSONAS[t.duenio].nombre)):"Quién lo hace"});   /* build 219 */
     it.push({k:"finiquito", ok:fin, tx:fin?(t.indefinida===true||esRecurrente(t)?"Finiquito: indefinida":"Finiquito: "+fechaMovCorta(t.f_vigente)):"Finiquito: ¿fecha o indefinida?"});
     it.push({k:"seguimiento", ok:seg, tx:seg?"Próximo seguimiento listo":"Próximo seguimiento"});
@@ -6898,7 +6898,7 @@ function vLista(){
   /* ===== build 179 (Salvador 20:29): "TE TOCA" — una sola lista arriba con todo lo que te pide
      algo (primero lo de Por revisar: te espera/atorados, falta informacion, vinculacion, por
      autorizar; luego vencidas, mensajes nuevos y hoy). Abajo Proximas y "Compartidas · N". ===== */
-  try{ if(!window.__hitoChk || Date.now()-window.__hitoChk>60000){ window.__hitoChk=Date.now(); chequeoHitos(); try{ chequeoMetas(); }catch(e2){ console.warn("metas",e2); } try{ revisaClaridadTodas(); }catch(e3){ console.warn("claridad",e3); } } }catch(e){ console.warn("hitos",e); }   /* build 222: metas */
+  try{ if(!window.__hitoChk || Date.now()-window.__hitoChk>60000){ window.__hitoChk=Date.now(); chequeoHitos(); /* build 267: chequeoMetas (empujones por WhatsApp al ejecutor) y revisaClaridadTodas (repreguntas) APAGADOS: solo la Mac manda a terceros */ } }catch(e){ console.warn("hitos",e); }   /* build 222: metas */
   var _tt=armaTeToca(_rev, det, mias_venc, msgs, hoyYa);
   h+=vAcomodo()+vTeToca(_tt)+vClaudeLleva263(_cl263)+hMis;   /* build 226: Acomodo arriba (solo lo dudoso); 263: Claude las lleva, plegado */
 
@@ -8743,8 +8743,38 @@ function liberaAcomoda249(tid){
    quienes escriben por WhatsApp, responsables y seguimientos, y la agenda cuando el servidor la suba). Al contestar todas se aplican
    (las de persona al momento; el resto junto al cerebro) y la tarea queda programada y refrescada. */
 function esPersonaQ249(q){ return /cu[aá]l\s+\S+\s+es\b|qui[eé]n\s+es\b|a\s+qui[eé]n\b|con\s+qui[eé]n\b/i.test(String(q||"")); }
+/* ===== build 267: SIN BUCLE DE PREGUNTAS =====
+   · "Ninguno / no / nada / no hace falta / sin seguimiento / no quiero" es una respuesta VÁLIDA: cierra la pregunta (campo "ninguno").
+   · Nunca se genera una pregunta sobre la respuesta de Salvador a otra pregunta: si el cerebro no la entiende, se aplica lo más razonable, se anota "Entendí: …" y se cierra.
+   · Cada pregunta contestada queda en t.resp267 y no se vuelve a hacer.
+   · Las de relleno ("¿Cuándo te recuerdo…?", "¿El próximo seguimiento?") solo salen si hay fecha límite real Y seguimiento con terceros. */
+var NEG267=/^(ninguno|ninguna|ningun|no|nel|nada|nada mas|no hace falta|no hay|sin seguimiento|sin fecha|sin recordatorio|no quiero|no gracias|no por ahora|por ahora no|ahorita no)$/;
+function esNegativa267(tx){ var s=_n179(String(tx||"")).replace(/[^a-z0-9ñ ]+/g," ").replace(/\s+/g," ").trim(); return NEG267.test(s); }
+function normQ267(q){ return _n179(String(q||"")).replace(/[^a-z0-9ñ ]+/g," ").replace(/\s+/g," ").trim().slice(0,90); }
+var GENERICA267=/cu[aá]ndo te recuerdo|pr[oó]ximo seguimiento|darle seguimiento|antes de la fecha l[ií]mite/i;
+function permiteGenerica267(t){
+  var fecha=!!(t && t.f_vigente && t.indefinida!==true && !t.falta_fecha && !(typeof fechaPuestaSola==="function" && fechaPuestaSola(t)));
+  var terceros=!!(t && ((t.wa_contactos||[]).length || (t.seg_a && t.seg_a.contacto) || t.revisa_ext || (t.duenio && t.duenio!==yo) || (t.revisores||[]).length));
+  return fecha && terceros;
+}
+function respondida267(t, q){ var n=normQ267(q); return !!n && (t.resp267||[]).indexOf(n)>=0; }
+function bloqueaQ267(t, q){ return (GENERICA267.test(String(q||"")) && !permiteGenerica267(t)) || respondida267(t, q) || /^No me quedó claro qué hacer con «Respuesta a/.test(String(q||"")); }
+function purga267(t){
+  if(!t) return false; var cambio=false;
+  if(t.hecho238 && Array.isArray(t.hecho238.falta)){ var a=t.hecho238.falta.length; t.hecho238.falta=t.hecho238.falta.filter(function(f){ return !(f && f.q && (bloqueaQ267(t,f.q))); }); if(t.hecho238.falta.length!==a) cambio=true; }
+  if(Array.isArray(t.falta263)){ var b=t.falta263.length; t.falta263=t.falta263.filter(function(f){ return !(f && f.q && bloqueaQ267(t,f.q)); }); if(t.falta263.length!==b){ cambio=true; if(!t.falta263.length) delete t.falta263; } }
+  return cambio;
+}
+function purgaViejo267(t){
+  var cambio=false;
+  /* lo que escribía el viejo "respuesta no clara": ya no existe (la Mac lleva el seguimiento con plan[]) */
+  if((t.decision_dato||[]).length || (t.repreg||[]).length){ t.decision_dato=[]; delete t.repreg; cambio=true; if(t.pendiente_dato){ t.pendiente_info=""; t.pendiente_tipo=""; delete t.pendiente_dato; } }
+  return cambio;
+}
+function purga267Todas(){ var n=0; (tareas||[]).forEach(function(t){ try{ var c1=purga267(t), c2=purgaViejo267(t); if(c1||c2){ n++; guarda(t); } }catch(e){} }); return n; }
 function preguntas249(t){
   var P=[]; if(!t) return P;
+  try{ purga267(t); }catch(e){}
   (t.quien_dudas||[]).forEach(function(d){ P.push({k:"persona", id:d.id, q:"¿Quién es "+d.dicho+"?", dicho:d.dicho, cands:(d.cands||[]).slice(0,5)}); });
   ((t.hecho238||{}).falta||[]).forEach(function(f, i){ if(!f || !f.q) return;
     if(f.k==="txt" && /^¿Quién es .*Te dejé/.test(String(f.q))) return;   /* ya va como renglón de persona */
@@ -8823,7 +8853,13 @@ function enviaPreguntas249(tid, P, A){
   P.forEach(function(p, i){ var a=A[i], tx=String(a.texto||"").replace(/\s+/g," ").trim(); if(!tx) return;
     if(p.k==="persona"){ var per=a.persona; if(!per){ var r=resuelvePersona(t, tx); per=(r.estado==="uno")?{id:r.persona.id, nombre:r.persona.nombre}:{id:"ext:"+tx, nombre:tx}; }
       try{ resuelveDudaPersona(t, p.id, per); aplicadas++; }catch(e){} return; }
+    if(!p.reg && p.k!=="persona"){ t.resp267=(t.resp267||[]).concat([normQ267(p.q)]).slice(-60); }   /* build 267: contestada = no se vuelve a preguntar */
     if(p.hi!=null) quitar.push(p.hi);
+    if(esNegativa267(tx) && !p.reg && ["cond","msg","vinc","contradice259"].indexOf(p.k)<0){   /* build 267: "Ninguno" es respuesta válida */
+      if(/seguimiento/i.test(p.q)){ t.ritmo=t.ritmo||"ninguno"; t.seg_ninguno=true; }
+      if(/recuerdo/i.test(p.q)){ t.recordar_ninguno=true; }
+      if(p.d263 && Array.isArray(t.falta263)) t.falta263=t.falta263.filter(function(f){ return !(f && f.q===p.q); });
+      msg(t,"bi","Entendí: «"+corto238(p.q)+"» → ninguno."); var _mn=t.msgs[t.msgs.length-1]; _mn.canal="priv:"+yo; _mn.nota_ia=1; aplicadas++; return; }
     if(p.k==="contradice259"){ var fc9=(H&&H.falta||[])[p.hi]; var op9=a.opt||(/\b(cambi\w+|esta)\b/.test(_n179(tx))&&!/\bnueva\b/.test(_n179(tx))?{id:"cambiar"}:(/\b(si|nueva|crea\w*)\b/.test(_n179(tx))?{id:"nueva"}:null));
       if(fc9 && op9){ var h9=resuelveContradice259(t, fc9, op9); if(h9 && H) H.hecho=(H.hecho||[]).concat([h9]); aplicadas++; } else if(p.hi!=null){ quitar.pop(); } return; }
     if(p.k==="vinc" && a.opt){ var pc=t.encargos; enlazaTareas(t.id, a.opt.id, "dictado"); var d=tareas.filter(function(x){ return x.id===a.opt.id; })[0];
@@ -8873,8 +8909,9 @@ function completaRevision(t, v, op){
     /* build 238: tarjeta "Hecho:" / "Me falta:" (en la tarea donde quedó, si se vinculó) */
     var _dio=dioFecha238(v, _j238), _fx=(op.sinRevision?[]:soloMeFalta(_T238)).filter(function(x){ return !(_dio && /fecha|finiquito|indefinid/i.test(x)); });
     _T238.hecho238={ts:Date.now(), hecho:(hecho||[]).filter(function(x){ return !/^etiquetas$/i.test(String(x)); }).map(function(x){ return conMayuscula(String(x)); }).concat(_or238.hecho),
-      falta:_or238.falta.concat((Array.isArray(_j238&&_j238.dudas)?_j238.dudas:[]).filter(function(d){ return d && d.pregunta && !preguntaQuienYaResuelta248(t, d.pregunta); }).slice(0,3).map(function(d){ return {k:"resp", q:String(d.pregunta), ops:(Array.isArray(d.opciones)?d.opciones:[]).slice(0,4).map(function(x){ return {id:String(x), label:String(x)}; })}; })).concat((dudas||[]).map(function(d){ return {k:"txt", q:String(d), ops:[]}; })).concat(_fx.map(function(x){ return {k:"txt", q:"¿"+conMayuscula(String(x).replace(/[.?¿]+$/,""))+"?", ops:[]}; }))};
-    if(op.conservaFalta && op.conservaFalta.length){ var _qs255=_T238.hecho238.falta.map(function(f){ return f.q; }); op.conservaFalta.forEach(function(f){ if(f && _qs255.indexOf(f.q)<0) _T238.hecho238.falta.push(f); }); }   /* build 255: lo que no contestó se queda */
+      falta:_or238.falta.concat(((!/^Respuesta a «/.test(String(v||"")) && Array.isArray(_j238&&_j238.dudas))?_j238.dudas:[]).filter(function(d){ return d && d.pregunta && !preguntaQuienYaResuelta248(t, d.pregunta); }).slice(0,3).map(function(d){ return {k:"resp", q:String(d.pregunta), ops:(Array.isArray(d.opciones)?d.opciones:[]).slice(0,4).map(function(x){ return {id:String(x), label:String(x)}; })}; })).concat((/^Respuesta a «/.test(String(v||"")) ? [] : (dudas||[])).map(function(d){ return {k:"txt", q:String(d), ops:[]}; })).concat(_fx.map(function(x){ return {k:"txt", q:"¿"+conMayuscula(String(x).replace(/[.?¿]+$/,""))+"?", ops:[]}; }))};
+    try{ _T238.hecho238.falta=(_T238.hecho238.falta||[]).filter(function(f){ return f && !bloqueaQ267(_T238, f.q); }); }catch(e267){}   /* build 267: una respuesta no genera preguntas nuevas; las de relleno no salen */
+    if(op.conservaFalta && op.conservaFalta.length){ var _qs255=_T238.hecho238.falta.map(function(f){ return f.q; }); op.conservaFalta.forEach(function(f){ if(f && !bloqueaQ267(_T238, f.q) && _qs255.indexOf(f.q)<0) _T238.hecho238.falta.push(f); }); }   /* build 255: lo que no contestó se queda */
     if(_T238!==t) guarda(_T238);
     guarda(t); render();
     if(_ov249) liberaAcomoda249((_T238||t).id); else ocultaAcomoda249();   /* build 249: se libera YA REFRESCADA y, si hay dudas, sale su ventanita */
@@ -8896,7 +8933,8 @@ function completaRevision(t, v, op){
       /* build 251: NADA SE QUEDA ATORADO. Sin órdenes ni datos (o una acción imposible): UNA vez más con el prompt reforzado; si aun así no, pregunta concreta en la tarjeta del 249 */
       if(!r.yaHecha && sinResultado251(t, v, j, r, _or238, _err251)){
         if(intento<1){ _lanza251(promptRevision(t, v, _ab)+refuerzo251(t, v), 1); return; }
-        _or238.falta=(_or238.falta||[]).concat([preguntaConcreta251(v, t)]); }
+        if(/^Respuesta a «/.test(String(v||""))){ _or238.hecho=(_or238.hecho||[]).concat(["Entendí: "+String(v).replace(/Respuesta a «[^»]*»:\s*/g,"").replace(/\s+/g," ").trim().slice(0,160)]); }   /* build 267: nunca una pregunta sobre una respuesta */
+        else _or238.falta=(_or238.falta||[]).concat([preguntaConcreta251(v, t)]); }
       if(r.yaHecha){ delete t._leyendo; t.pendiente_info=""; t.pendiente_tipo=""; t.falta_fecha=false; t.autorizada=true; cierraHecha(t); render(); ocultaAcomoda249(); if(op.alTerminar) try{ op.alTerminar({hecho:["la cerré como hecha"], dudas:[], vinc:[], falta:[], cerrada:true}); }catch(e){} return; }
       _fin(r.hecho, r.dudas, r.vinc);
     });
@@ -13276,6 +13314,7 @@ function candidatoClaridad(t, ahora){
 function _raizDato(s){ return _nn(s).replace(/[^a-z0-9ñ ]+/g," ").split(/\s+/).filter(function(w){ return w.length>=5; }).map(function(w){ return w.slice(0,6); }); }
 /* aplica el criterio con lo que dijo Claude: info {clara, pregunta, falta, texto} */
 function aplicaNoClara(t, cand, info, ahora){
+  return "";   /* build 267: APAGADO. Ya no escribe repreguntas ni registros (repreg, decision_dato, decision_salvador); la Mac lleva el seguimiento con plan[] (18z8/18z15) */
   ahora=ahora||Date.now(); var x=(t.msgs||[])[cand.ix]; if(!x) return "";
   if(!info || info.clara!==false){ x.claridad="ok"; return "clara"; }
   x.claridad="no";
@@ -13315,6 +13354,7 @@ function promptClaridad(cand){
     "Contesta SOLO JSON: {\"clara\":true|false,\"pregunta\":\"la pregunta concreta, corta\",\"falta\":\"el dato concreto que falta, corto\",\"texto\":\"IA: Gracias, <nombre>. Para poder decidir necesito el dato concreto: <una sola pregunta concreta>\"}";
 }
 function revisaClaridadTodas(ahora){
+  return;   /* build 267: apagado, ver aplicaNoClara */
   ahora=ahora||Date.now(); if(window.__clarPend) return; var n=0;
   tareas.forEach(function(t){
     if(n>=2 || t.cierre || estadoReal(t)==="cerrada") return;
@@ -17400,7 +17440,7 @@ function faltaPreciso263(t){
   var pi=String(t.pendiente_info||"").trim();
   if(pi && !esDecisionSal(t)) Q.push(pi.length>160?pi.slice(0,159)+"…":pi);
   var M={quien:"¿Quién la hace?", finiquito:"¿Para cuándo la quieres terminar, o es indefinida?", seguimiento:"¿Cuándo te recuerdo para darle seguimiento?", que:"¿Qué es esto?", de:"¿De quién o de qué proyecto es?", cifras:"¿Cuáles son las cifras?"};
-  c.items.forEach(function(x){ if(x.ok || x.k==="agenda") return; var q=M[x.k]; if(q && Q.indexOf(q)<0) Q.push(q); });
+  c.items.forEach(function(x){ if(x.ok || x.k==="agenda") return; var q=M[x.k]; if(q && Q.indexOf(q)<0 && !bloqueaQ267(t, q)) Q.push(q); });
   if(!c.ctxOk && Q.length<4) Q.push("¿De qué se trata? Dame un poco más de contexto.");
   return Q.slice(0,4);
 }
@@ -17417,7 +17457,7 @@ function recalculaFalta263(t){
   return true;
 }
 function refrescaFalta263(){
-  var n=0; (tareas||[]).forEach(function(t){ if(!t || t.cierre || esEjemplo(t) || !(t.duenio===yo || t.creada_por===yo)) return; try{ if(recalculaFalta263(t)){ n++; guarda(t); } }catch(e){} });
+  var n=0; try{ n+=purga267Todas(); }catch(e){} (tareas||[]).forEach(function(t){ if(!t || t.cierre || esEjemplo(t) || !(t.duenio===yo || t.creada_por===yo)) return; try{ if(recalculaFalta263(t)){ n++; guarda(t); } }catch(e){} });
   return n;
 }
 

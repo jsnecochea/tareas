@@ -28,54 +28,16 @@ function LERDO(extra) {
     { k: "bi", wa_in: 1, wa_c: "Manuel Parra", ts: H(10, 48), t: "Manuel Parra: Hablé con Esteban y él mismo con Martín cortarán las ramas, dicen que no se alcanza a apreciar panal, por todo el ramerío, pero que ellos se avientan la misión con serrucho y tijeras de jardinería" }].concat(extra || []) };
 }
 var NOCLARA = { clara: false, pregunta: "¿sí es panal?", falta: "si hay o no hay panal (foto donde se vea)", texto: "IA: Gracias, Manuel. Para poder decidir necesito el dato concreto: ¿sí hay o no hay panal? (foto donde se vea)" };
-/* caso real: Salvador ya repreguntó con audio 11:21 -> solo anotar */
-var t = LERDO([{ k: "bo", de: "salvador", hab: 1, t: "[audio] Manuel, ¿entonces sí es panal o no? mándame la foto", ts: H(11, 21) }]);
-c.AHORA = H(11, 30);
+/* build 267: el mecanismo de "respuesta no clara" está APAGADO; el seguimiento a terceros lo lleva la Mac con plan[] */
+var t = LERDO(); c.AHORA = H(11, 30);
 var cand = c.candidatoClaridad(t, H(11, 30));
-eq("encuentra la respuesta de Manuel a la pregunta '¿Sí es panal?'", [cand.ix, cand.qix, cand.contacto, cand.pregunta], [1, 0, "Manuel Parra", "¿Sí es panal? Mándame foto"]);
-var r = c.aplicaNoClara(t, cand, NOCLARA, H(11, 30));
-eq("caso real: Salvador ya repreguntó (audio) -> NO se repregunta; solo nota y espera", [r, c.WA.length, t.msgs.slice(-2).map(function (x) { return [x.t, x.canal, x.nota_ia]; })],
-  ["espera", 0, [["📝 Nota IA: respuesta no clara a «¿sí es panal?» — falta: si hay o no hay panal (foto donde se vea)", "priv:salvador", 1], ["📝 Nota IA: ya le repreguntaste a Manuel Parra; no repregunto, espero su respuesta.", "priv:salvador", 1]]]);
-eq("y esa respuesta ya no se vuelve a revisar", c.candidatoClaridad(t, H(12, 0)), null);
-/* espera 10 min (la Mac va primero) */
-t = LERDO(); eq("antes de 10 min no se revisa (la Mac va primero)", c.candidatoClaridad(t, H(10, 55)), null);
-/* la Mac ya lo anotó */
-t = LERDO([{ k: "bi", t: "📝 Nota IA 10:49: respuesta no clara a «¿sí es panal?» — falta: foto", ts: H(10, 49), nota_ia: 1 }]);
-r = c.aplicaNoClara(t, c.candidatoClaridad(t, H(11, 0)), NOCLARA, H(11, 0));
-eq("si la Mac ya lo anotó: nada (nunca doble repregunta)", [r, c.WA.length, t.msgs.length], ["mac", 0, 3]);
-/* sin repregunta de Salvador: repregunta por la cola */
-t = LERDO(); c.WA.length = 0; c.AHORA = H(11, 0);
-r = c.aplicaNoClara(t, c.candidatoClaridad(t, H(11, 0)), NOCLARA, H(11, 0));
-eq("repregunta positiva pero firme, por la cola", [r, c.WA.map(function (x) { return [x.contacto, x.texto]; })], ["repregunto", [["Manuel Parra", "IA: Gracias, Manuel. Para poder decidir necesito el dato concreto: ¿sí hay o no hay panal? (foto donde se vea)"]]]);
-si("queda en la tarea '→ Manuel Parra: … · en cola'", /^→ Manuel Parra: “Gracias, Manuel/.test(t.msgs.slice(-1)[0].t));
-/* otra evasiva antes de 4 h */
-t.msgs.push({ k: "bi", wa_in: 1, wa_c: "Manuel Parra", ts: H(11, 30), t: "Manuel Parra: ahorita lo checo" });
-r = c.aplicaNoClara(t, c.candidatoClaridad(t, H(12, 0)), NOCLARA, H(12, 0));
-eq("máx 1 repregunta cada 4 h por el mismo dato", [r, c.WA.length], ["esperando", 1]);
-t.msgs.push({ k: "bi", wa_in: 1, wa_c: "Manuel Parra", ts: H(15, 30), t: "Manuel Parra: creo que sí" });
-r = c.aplicaNoClara(t, c.candidatoClaridad(t, H(15, 45)), { clara: false, pregunta: "¿hay panal?", falta: "foto del panal" }, H(15, 45));
-eq("pasadas 4 h: 2ª repregunta (mismo dato aunque dicho distinto)", [r, c.WA.length], ["repregunto", 2]);
-t.msgs.push({ k: "bi", wa_in: 1, wa_c: "Manuel Parra", ts: H(20, 0), t: "Manuel Parra: luego te digo" });
-r = c.aplicaNoClara(t, c.candidatoClaridad(t, H(20, 15)), NOCLARA, H(20, 15));
-var D = t.decision_dato && t.decision_dato[0];
-eq("tras 2 repreguntas: tarjeta de decisión con todo el contexto (no más repreguntas)", [r, c.WA.length, D.contacto, D.pregunta, D.falta, D.n, D.resp.length, t.pendiente_tipo],
-  ["escalado", 2, "Manuel Parra", "¿sí es panal?", "si hay o no hay panal (foto donde se vea)", 2, 4, "decision_salvador"]);
-var vh = c.vDecisionDato(t);
-si("tarjeta: pregunta, falta, respuestas y botones", /Manuel Parra no contesta: «¿sí es panal\?»/.test(vh) && /“luego te digo”/.test(vh) && />Hablo yo con él</.test(vh) && />Repregúntale otra vez</.test(vh) && />Ya no hace falta</.test(vh));
-eq("Hablo yo con él: se limpia y ya no se le repregunta", [c.decideDato(t, D.id, "hablo"), t.pendiente_tipo, (t.decision_dato || []).length], ["Tú hablas con Manuel Parra; ya no le repregunto.", "", 0]);
-t.msgs.push({ k: "bi", wa_in: 1, wa_c: "Manuel Parra", ts: H(22, 0), t: "Manuel Parra: mañana" });
-eq("y en adelante: pausa", c.aplicaNoClara(t, c.candidatoClaridad(t, H(23, 0)), NOCLARA, H(23, 0)), "pausa");
-/* respuesta clara: nada */
-t = LERDO(); c.WA.length = 0;
-eq("respuesta clara: nada", [c.aplicaNoClara(t, c.candidatoClaridad(t, H(11, 0)), { clara: true }, H(11, 0)), c.WA.length, t.msgs.length], ["clara", 0, 2]);
-/* sin pregunta antes: no aplica */
-t = { id: "x", nombre: "x", msgs: [{ k: "bo", de: "salvador", t: "Gracias Manuel", wa_auto: "Manuel Parra", ts: H(10, 0) }, { k: "bi", wa_in: 1, wa_c: "Manuel Parra", ts: H(10, 5), t: "Manuel Parra: de nada" }] };
-eq("sin pregunta concreta antes: no se revisa", c.candidatoClaridad(t, H(11, 0)), null);
-/* ciclo con Claude */
+eq("sigue detectando la respuesta (función pura), pero ya no se aplica", [cand.contacto, cand.pregunta], ["Manuel Parra", "¿Sí es panal? Mándame foto"]);
+var n0 = t.msgs.length, r = c.aplicaNoClara(t, cand, NOCLARA, H(11, 30));
+eq("aplicaNoClara ya no escribe nada: ni nota, ni repregunta, ni registros", [r, c.WA.length, t.msgs.length - n0, t.repreg || null, t.decision_dato || null, t.pendiente_tipo || "", t.msgs[1].claridad || null], ["", 0, 0, null, null, "", null]);
 c.WA.length = 0; c.LLAMADAS = 0; c.IA = NOCLARA; c.tareas = [LERDO()];
 c.revisaClaridadTodas(H(11, 0));
-eq("ciclo: una llamada a Claude con pregunta y respuesta, y aplica", [c.LLAMADAS, /«¿Sí es panal\? Mándame foto»/.test(c.PROMPT), /no se alcanza a apreciar panal/.test(c.PROMPT), c.WA.length], [1, true, true, 1]);
-si("corre junto a hitos y metas", /try\{ revisaClaridadTodas\(\); \}catch\(e3\)/.test(html));
+eq("revisaClaridadTodas no llama a Claude ni manda WhatsApp", [c.LLAMADAS, c.WA.length], [0, 0]);
+si("ya no corre junto a hitos y metas", !/try\{ revisaClaridadTodas\(\); \}catch\(e3\)/.test(html));
 si("build 266: la ficha de botones ya no sale en la tarea; es pregunta en texto (registroPreg266)", !/h\+=vDecisionMeta\(t\)\+vDecisionDato\(t\)/.test(html) && /registroPreg266/.test(html));
 console.log((malas.length ? malas.map(function (x) { return "  X " + x; }).join("\n") + "\n" : "") + "RESULTADO " + ok + "/" + n);
 process.exit(malas.length ? 1 : 0);
