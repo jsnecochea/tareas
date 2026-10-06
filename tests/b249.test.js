@@ -43,7 +43,7 @@ eq("versión >= 249", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     var r1 = await p.evaluate(async function () { var T = ORIGEN(); abre(T); abreMover225(T, 0); document.querySelector("[data-movnueva]").click(); await espera(60);
       var d = document.getElementById("nom249"), i = d && d.querySelector("#nom249i"), nTar = tareas.length, mov = !!document.getElementById("mov225");
       return { hay: !!d, etiqueta: d ? /Nombre de la tarea nueva/.test(d.textContent) : false, valor: i ? i.value : "", botones: d ? [].map.call(d.querySelectorAll("button"), function (x) { return x.textContent; }) : [], nTar: nTar, hojaMover: mov, origen: T.nombre }; });
-    eq("Nueva: sale la ventanita con el campo y la sugerencia", [r1.hay, r1.etiqueta, r1.botones], [true, true, ["Cancelar", "Crear"]]);
+    eq("Nueva: sale la ventanita con el campo y la sugerencia", [r1.hay, r1.etiqueta, r1.botones.filter(Boolean)], [true, true, ["Cancelar", "Crear"]]);
     eq("Nueva: la sugerencia sale del mensaje, no del nombre de la tarea de origen", [r1.valor !== "" && r1.valor.toLowerCase() !== r1.origen.toLowerCase(), /material|port[oó]n|carlos/i.test(r1.valor)], [true, true]);
     eq("Nueva: aún no se creó nada y la hoja de mover se cerró", [r1.nTar, r1.hojaMover], [1, false]);
     await foto("b249-1-nombre-nueva.png");

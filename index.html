@@ -1457,6 +1457,15 @@ button{font:inherit;color:inherit}
 .preg249 .pie249{display:flex;gap:10px;margin-top:6px}.preg249 .pie249 button{flex:1;min-height:48px;border:0;border-radius:14px;font:inherit;font-size:17px;font-weight:700;background:var(--surface-2,#2c2c2e);color:var(--ink,#fff)}
 .preg249 .pie249 .go{background:#0a84ff;color:#fff}.preg249 .pie249 .go:disabled{opacity:.4}
 .cond250{margin:6px 12px 8px}.cd250{padding:10px 14px;border-radius:14px;background:var(--surface-2);border-left:4px solid #ff9f0a;display:flex;flex-direction:column;gap:2px;margin-bottom:6px}.cd250 .cdt{font-size:15.5px;font-weight:600}.cd250 .cde{font-size:13.5px;color:var(--ink-3)}.cd250.e-contesto_si,.cd250.e-confirmado{border-left-color:#30d158}.cd250.e-contesto_no,.cd250.e-vencido{border-left-color:#8e8e93}
+.mic252{flex:0 0 auto;width:46px;min-height:46px;border:0;border-radius:12px;background:var(--surface-2,#2c2c2e);color:var(--ink,#fff);display:flex;align-items:center;justify-content:center}.mic252.on{background:#ff453a;color:#fff}
+.row252{display:flex;gap:8px;align-items:stretch}.row252>input,.row252>textarea{flex:1;min-width:0}
+.plat252{position:fixed;inset:0;z-index:940;background:var(--bg,#000);overflow:auto;padding:0 0 calc(24px + env(safe-area-inset-bottom))}
+.plat252 .ph{position:sticky;top:0;background:var(--bg,#000);padding:calc(14px + env(safe-area-inset-top)) 16px 10px;border-bottom:1px solid var(--line,#38383a);display:flex;gap:10px;align-items:flex-start;z-index:2}
+.plat252 .ph b{display:block;font-size:21px}.plat252 .ph small{display:block;font-size:13.5px;color:var(--ink-3,#9a9aa0);margin-top:2px}.plat252 .ph button{margin-left:auto;border:0;border-radius:12px;min-width:44px;min-height:44px;background:var(--surface-2,#2c2c2e);color:var(--ink,#fff);font:inherit;font-size:16px}
+.pl252{margin:10px 14px 0;padding:10px 12px;border-radius:16px;background:var(--surface-2,#1c1c1e);font-size:16px;line-height:1.35}.pl252.yo{background:#0b3d75}.pl252.of{opacity:.6;border:1px dashed var(--line,#48484a)}
+.pl252 .pq{font-size:13px;color:var(--ink-3,#9a9aa0);margin-bottom:2px}.pl252 .pt{display:block;width:100%;text-align:left;border:0;background:none;color:inherit;font:inherit;padding:0}
+.pl252 .pm{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap;font-size:13px;color:var(--ink-3,#9a9aa0)}.pl252 .pg{border:0;border-radius:10px;padding:5px 9px;min-height:30px;background:#1d3b5c;color:#9ecbff;font:inherit;font-size:13px;font-weight:600}.pl252 .pg.sa{background:#5c3d12;color:#ffc982}.pl252 .pg.ng{background:#3a3a3c;color:#c7c7cc}
+.plat252 .pie{margin:16px 16px 0;font-size:13.5px;color:var(--ink-3,#9a9aa0)}
 .hc238 .hc249{display:block;width:100%;margin-top:6px;min-height:42px;border:0;border-radius:12px;background:#0a84ff;color:#fff;font:inherit;font-size:16px;font-weight:700}
 
 .leemenu{position:fixed;width:230px;background:#2a2a33;border-radius:14px;padding:4px 0;box-shadow:0 10px 30px rgba(0,0,0,.5)}
@@ -1507,7 +1516,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 251 · Todo el cerebro en modo pesado · Nada se atora: reintenta y si no, pregunta · Contactos dudosos: pregunta cuál en todo mensaje y guarda el nombre exacto de WhatsApp";
+var VERSION_APP = "build 252 · Teclado en las ventanitas (focus en el toque) y micrófono propio que dicta al campo · Ver toda la plática con <persona> (7 días, todas las tareas, ocultos y no guardados)";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -8434,7 +8443,7 @@ function buscaContactos249(q, max){
     return ws.every(function(w){ return toks.some(function(x){ return x===w || x.indexOf(w)===0; }); }); })
     .sort(function(a,b){ return (a.id.indexOf("ext:")===0)-(b.id.indexOf("ext:")===0) || String(a.nombre).localeCompare(String(b.nombre)); }).slice(0, max||8);
 }
-function abrePreguntas249(tid){
+function abrePreguntas249(tid, opt){
   var t=(tareas||[]).filter(function(z){ return z.id===tid; })[0]; if(!t) return;
   var P=preguntas249(t); if(!P.length) return;
   var ya=document.getElementById("preg249"); if(ya) ya.remove();
@@ -8444,7 +8453,7 @@ function abrePreguntas249(tid){
     P.map(function(p, i){ var pers=(p.k==="persona")||p.persona, ops=(p.k==="persona")?(p.cands||[]).map(function(c){ return {id:c.id, label:c.nombre}; }):(p.ops||[]);
       return '<div class="q249" data-qi="'+i+'"><span class="qt">'+esc(p.q)+'</span>'+
         (ops.length?'<div class="qo">'+ops.map(function(o, j){ return '<button class="qop" data-qo="'+i+'|'+j+'">'+esc(o.label)+'</button>'; }).join("")+'</div>':'')+
-        '<input class="qi" data-qin="'+i+'" type="text" placeholder="'+(pers?"Escribe el nombre":"Escribe o dicta tu respuesta")+'" autocomplete="off" autocapitalize="sentences" enterkeyhint="next">'+
+        '<div class="row252"><input class="qi" data-qin="'+i+'" type="text" placeholder="'+(pers?"Escribe el nombre":"Escribe o dicta tu respuesta")+'" autocomplete="off" autocapitalize="sentences" enterkeyhint="next">'+micBtn252(i)+'</div>'+
         (pers?'<div class="qs" data-qs="'+i+'"></div>':'')+'</div>'; }).join("")+
     '<div class="pie249"><button data-q249="later">Después</button><button class="go" data-q249="go" disabled>Listo</button></div></div>';
   document.body.appendChild(v);
@@ -8458,15 +8467,17 @@ function abrePreguntas249(tid){
     if(sg){ var l=buscaContactos249(inp.value, 8); sg.innerHTML=l.map(function(c, j){ return '<button class="qsg" data-qsg="'+i+'|'+j+'"><b>'+esc(c.nombre)+'</b><small>'+esc(c.sub||"")+'</small></button>'; }).join(""); sg.__l=l; }
     Array.prototype.forEach.call(v.querySelectorAll('[data-qo^="'+i+'|"]'), function(b){ b.classList.remove("on"); }); refresca(); });
   v.addEventListener("click", function(ev){ ev.stopPropagation();
+    var mb=ev.target.closest("[data-mic252]"); if(mb){ dictaACampo252(mb, v.querySelector('[data-qin="'+mb.getAttribute("data-mic252")+'"]')); return; }
     var b=ev.target.closest("[data-qo]"); if(b){ var a=b.getAttribute("data-qo").split("|"), i=+a[0], o=opsDe(i)[+a[1]]; if(!o) return;
       Array.prototype.forEach.call(v.querySelectorAll('[data-qo^="'+i+'|"]'), function(x){ x.classList.toggle("on", x===b); });
       pon(i, o.label, (P[i].k==="persona")?{id:o.id, nombre:o.label}:null, (P[i].k==="persona")?null:o); b.classList.add("on"); return; }
     var g=ev.target.closest("[data-qsg]"); if(g){ var a2=g.getAttribute("data-qsg").split("|"), i2=+a2[0], sg=v.querySelector('[data-qs="'+i2+'"]'), c=sg&&sg.__l&&sg.__l[+a2[1]]; if(c) pon(i2, c.nombre, {id:c.id, nombre:c.nombre}, null); return; }
     var x=ev.target.closest("[data-q249]"); if(x){ var k=x.getAttribute("data-q249");
-      if(k==="later"){ v.remove(); return; }
-      if(k==="go" && !x.disabled){ v.remove(); enviaPreguntas249(tid, P, A); return; } return; }
-    if(ev.target===v) v.remove(); });
-  setTimeout(function(){ var f=v.querySelector(".qi"); try{ if(f) f.focus(); }catch(e){} }, 40);
+      if(k==="later"){ paraDictadosCampo252(v); v.remove(); return; }
+      if(k==="go" && !x.disabled){ paraDictadosCampo252(v); v.remove(); enviaPreguntas249(tid, P, A); return; } return; }
+    if(ev.target===v){ paraDictadosCampo252(v); v.remove(); } });
+  /* build 252: el teclado solo se pide si la ventanita se abrió con un toque (en iOS un focus fuera del toque deja el campo "enfocado" sin teclado y ya no hay cómo sacarlo) */
+  if(opt && opt.gesto){ var f0=v.querySelector(".qi"); if(f0) enfoca252(f0); }
 }
 function enviaPreguntas249(tid, P, A){
   var t=(tareas||[]).filter(function(z){ return z.id===tid; })[0]; if(!t) return;
@@ -9499,6 +9510,30 @@ function nombreSugerido(x){
    de "Nueva" (globo, Acomodo, Te pregunta, mover en lote, barra de selección) sale al instante una ventanita: "Nombre de la
    tarea nueva", con una sugerencia ya escrita sacada del MENSAJE (nunca el nombre de la tarea de origen), Crear y Cancelar.
    Al crear, la app lleva a la tarea nueva, con el mensaje ya adentro. */
+
+/* ===== build 252: VENTANITAS CON CAMPO DE TEXTO =====
+   iOS solo abre el teclado si focus() ocurre DENTRO del mismo toque que abre la ventanita: el input ya existe y se enfoca en el acto,
+   sin setTimeout ni await. Cada ventanita lleva su propio micrófono que dicta AL CAMPO (no a la caja principal) y no la cierra. */
+function micBtn252(i){ return '<button type="button" class="mic252" data-mic252="'+(i==null?"":i)+'" aria-label="Dictar en este campo">'+ico("mic",22,1.8)+'</button>'; }
+function enfoca252(inp){ try{ inp.focus({preventScroll:false}); }catch(e){ try{ inp.focus(); }catch(_e){} } }
+function dictaACampo252(btn, inp){
+  if(!btn || !inp) return;
+  if(btn.__r252){ try{ btn.__r252.stop(); }catch(e){} return; }
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ toast("Este navegador no dicta"); enfoca252(inp); return; }
+  var r; try{ r=new SR(); }catch(e){ toast("No se pudo abrir el micrófono"); return; }
+  var previo=String(inp.value||"").replace(/\s+$/,""); previo=previo?previo+" ":"";
+  r.lang="es-MX"; r.continuous=true; r.interimResults=true;
+  var fin=function(){ btn.__r252=null; try{ btn.classList.remove("on"); }catch(e){} };
+  r.onresult=function(ev){ if(!document.body.contains(inp)){ try{ r.stop(); }catch(e){} return; }
+    var f="", p="", L=(ev&&ev.results)||[]; for(var i=0;i<L.length;i++){ var x=L[i]; if(!x||!x[0]) continue; if(x.isFinal) f+=x[0].transcript+" "; else p+=x[0].transcript; }
+    inp.value=(previo+f+p).replace(/\s+/g," ").replace(/^\s+|\s+$/g,""); try{ inp.dispatchEvent(new Event("input",{bubbles:true})); }catch(e){} };
+  r.onerror=function(ev){ var e=(ev&&ev.error)||""; if(e==="not-allowed"||e==="service-not-allowed") toast("El micrófono está bloqueado para Doit"); else if(e==="network") toast("El dictado necesita internet"); fin(); };
+  r.onend=fin;
+  btn.__r252=r; btn.classList.add("on");
+  try{ r.start(); }catch(e){ fin(); toast("No se pudo abrir el micrófono"); }
+}
+function paraDictadosCampo252(v){ try{ Array.prototype.forEach.call((v||document).querySelectorAll("[data-mic252]"), function(b){ if(b.__r252){ try{ b.__r252.abort(); }catch(e){} } }); }catch(e){} }
 function sugerenciaNombre249(t, ixs){
   var xs=(ixs||[]).map(function(i){ return (t.msgs||[])[i]; }).filter(function(x){ return x && !x.oculto; });
   var x=xs.slice().sort(function(a,b){ return _txMsg(b).length-_txMsg(a).length; })[0]||null, n=x?nombreSugerido(x):"";
@@ -9513,15 +9548,15 @@ function pideNombreNueva249(t, ixs, alCrear){
   var ya=document.getElementById("nom249"); if(ya) ya.remove();
   var v=document.createElement("div"); v.className="leemask"; v.id="nom249";
   v.innerHTML='<div class="nom249" role="dialog" aria-label="Tarea nueva"><h3>Tarea nueva</h3><label for="nom249i">Nombre de la tarea nueva</label>'+
-    '<input id="nom249i" type="text" maxlength="80" autocomplete="off" autocapitalize="sentences" enterkeyhint="done">'+
+    '<div class="row252"><input id="nom249i" type="text" maxlength="80" autocomplete="off" autocapitalize="sentences" enterkeyhint="done">'+micBtn252()+'</div>'+
     '<div class="nom249b"><button class="no" data-nom249="x">Cancelar</button><button class="si" data-nom249="ok">Crear</button></div></div>';
   document.body.appendChild(v);
   var inp=v.querySelector("#nom249i"); inp.value=sugerenciaNombre249(t, ixs);
-  function crea(){ var nm=String(inp.value||"").replace(/\s+/g," ").trim(); if(!nm){ toast("Ponle un nombre"); return; } v.remove(); alCrear(nm.slice(0,80)); }
-  v.addEventListener("click", function(ev){ ev.stopPropagation(); var b=ev.target.closest("[data-nom249]");
-    if(b){ if(b.getAttribute("data-nom249")==="ok") crea(); else v.remove(); return; } if(ev.target===v) v.remove(); });
+  enfoca252(inp); try{ inp.setSelectionRange(inp.value.length, inp.value.length); }catch(e){}   /* build 252: focus SÍNCRONO, dentro del toque que abrió la ventanita (iOS) */
+  function crea(){ var nm=String(inp.value||"").replace(/\s+/g," ").trim(); if(!nm){ toast("Ponle un nombre"); return; } paraDictadosCampo252(v); v.remove(); alCrear(nm.slice(0,80)); }
+  v.addEventListener("click", function(ev){ ev.stopPropagation(); var mb=ev.target.closest("[data-mic252]"); if(mb){ dictaACampo252(mb, inp); return; } var b=ev.target.closest("[data-nom249]");
+    if(b){ if(b.getAttribute("data-nom249")==="ok") crea(); else { paraDictadosCampo252(v); v.remove(); } return; } if(ev.target===v){ paraDictadosCampo252(v); v.remove(); } });
   inp.addEventListener("keydown", function(ev){ if(ev.key==="Enter"){ ev.preventDefault(); crea(); } });
-  setTimeout(function(){ try{ inp.focus(); inp.select(); }catch(e){} }, 30);
 }
 function tareaNuevaDe249(t, ixs){ for(var i=0;i<ixs.length;i++){ var m=(t.msgs||[])[ixs[i]]; if(m && m.movido_a && m.movido_a.id){ var d=tareas.filter(function(z){ return z.id===m.movido_a.id; })[0]; if(d) return d; } } return null; }
 function vaATareaNueva249(n){ if(!n) return; abierta=n.id; vista="hilo"; try{ render(); }catch(e){} }
@@ -9778,9 +9813,9 @@ function noEsDeAqui247(t, ix){
 function accion247(t, ix, a, v){
   var x=(t.msgs||[])[ix]; if(!x) return;
   if(a==="edit"){ if(v.querySelector(".ed247")) return; var c=v.querySelector(".h225c"), d=document.createElement("div"); d.className="ed247";
-    d.innerHTML='<textarea id="ed247t" rows="4"></textarea><div class="ed247b"><button class="hop" data-d247="save">Guardar</button><button class="hop" data-d247="cancel">Cancelar</button></div>';
-    c.appendChild(d); var ta=d.querySelector("textarea"); ta.value=String(x.t||""); try{ ta.focus(); }catch(e){} return; }
-  if(a==="cancel"){ var e0=v.querySelector(".ed247"); if(e0) e0.remove(); return; }
+    d.innerHTML='<div class="row252"><textarea id="ed247t" rows="4"></textarea>'+micBtn252()+'</div><div class="ed247b"><button class="hop" data-d247="save">Guardar</button><button class="hop" data-d247="cancel">Cancelar</button></div>';
+    c.appendChild(d); var ta=d.querySelector("textarea"); ta.value=String(x.t||""); enfoca252(ta); var mb0=d.querySelector("[data-mic252]"); if(mb0) mb0.onclick=function(ev){ ev.stopPropagation(); dictaACampo252(mb0, ta); }; return; }
+  if(a==="cancel"){ var e0=v.querySelector(".ed247"); if(e0){ paraDictadosCampo252(e0); e0.remove(); } return; }
   if(a==="save"){ var ta2=v.querySelector("#ed247t"), nv=ta2?String(ta2.value||"").trim():""; if(!nv){ toast("El texto no puede quedar vacío"); return; }
     if(nv!==String(x.t||"")){ x.t_original=x.t_original||x.t; x.t=nv; x.editado=Date.now(); guarda(t); }
     var enviado=yaSalio247(x); v.remove(); render(); toast(enviado?"Ya se envió, solo se corrige aquí":"Corregido"); return; }
@@ -9831,16 +9866,79 @@ function abreDetalle242(t, ix){
     (tieneImg245(x.t)?'<p class="h225v0">'+htmlTx245(textoSinAutor242(x), x)+'</p>':'')+   /* build 245: la foto se abre desde aquí */
     (x.analisis?'<p class="h225v0">'+esc(x.analisis)+'</p>':'')+
     (!x.oculto?'<div class="det242b det247">'+(((+x.wa_in===1 || x.wa_c) && !confirmado237(x))?botonesG237(ix, [ix], " hj242"):botones247(ix))+(propio247(x)?botonesPropio247():'')+'</div>':'')+   /* build 247: menú completo en todos los globos */
+    ((x.oculto && puedeRestaurar252(x))?'<button class="hop" data-d252="restaura">Volver a mostrarlo en “'+esc(tareaCorta(t))+'”</button>':'')+
+    (contactoDeMsg252(x)?'<button class="hop" data-d252="plat">Ver toda la plática con '+esc(nombreCorto(contactoDeMsg252(x)).split(" ")[0])+'</button>':'')+
     ((hay("[data-mdel]")||hay("[data-wacan]"))?'<button class="hop det242x" data-detdel="1">'+(hay("[data-wacan]")?"Cancelar este WhatsApp":"Borrar este mensaje")+'</button>':'')+
     '</div></div>';
   document.body.appendChild(v);
   bindAcomodo(v, function(){ return t; });
   v.addEventListener("click", function(ev){
+    var _b252=ev.target.closest("[data-d252]"); if(_b252){ ev.stopPropagation(); var _k252=_b252.getAttribute("data-d252");
+      if(_k252==="plat"){ v.remove(); abrePlatica252(contactoDeMsg252(x)); return; }
+      if(_k252==="restaura"){ if(restaura252(t, ix)){ v.remove(); if(vista==="hilo" && abierta===t.id) render(); abreDetalle242(t, ix); toast("Volvió a la tarea"); } return; } }
     var _b247=ev.target.closest("[data-d247]"); if(_b247){ ev.stopPropagation(); accion247(t, ix, _b247.getAttribute("data-d247"), v); return; }
     if(ev.target.closest("[data-detdel]")){ var b=document.querySelector('.msgs [data-mix="'+ix+'"] [data-wacan], .msgs [data-mix="'+ix+'"] [data-mdel]'); v.remove(); if(b) b.click(); return; }
     if(ev.target.closest(".ac226 button")){ if(v.parentNode) v.remove(); return; }
     if(ev.target===v || ev.target.closest("[data-detx]")) v.remove(); });
 }
+
+/* ===== build 252: "¿A DÓNDE SE FUE EL RESTO DE LA PLÁTICA?" =====
+   En el detalle de cualquier globo de una persona: "Ver toda la plática con <persona>": los mensajes de ese contacto de los últimos 7 días,
+   en orden de hora, de TODAS las tareas, con los ocultos y los de "no guardar" marcados. Cada uno con una etiqueta de dónde quedó (nombre
+   de la tarea, "sin acomodar" o "no guardado"); al tocarla se abre esa tarea en ese mensaje. Tocar el mensaje abre su detalle (Mover · Nueva ·
+   No guardar). Fuente: solo lo que está en tareas (la app aún no consulta la bandeja del servidor). */
+function contactoDeMsg252(x){
+  if(!x) return ""; var c=x.wa_c||x.wa_auto||"";
+  if(!c){ var m=String(x.canal||"").match(/^ext:(.+)$/); if(m) c=m[1]; }
+  if(!c && x.prog && x.prog.contacto) c=x.prog.contacto;
+  return nombreLimpio(c||"");
+}
+function mismoContacto252(a, b){ var na=_n179(a), nb=_n179(b); if(!na||!nb) return false; return na===nb || na.indexOf(nb+" ")===0 || nb.indexOf(na+" ")===0; }
+function platicaDe252(nombre, dias){
+  var desde=Date.now()-(dias||7)*864e5, out=[], vis={};
+  (tareas||[]).forEach(function(t){ if(!t || t.fusionada_en) return;
+    (t.msgs||[]).forEach(function(x, ix){
+      if(!x || x.nota_claude || x.res238 || x.dict238 || String(x.canal||"").indexOf("priv:")===0) return;
+      var c=contactoDeMsg252(x); if(!c || !mismoContacto252(c, nombre)) return;
+      var ts=+(x.movido_de&&x.movido_de.ts)||+x.ts||0; if(!ts || ts<desde) return;
+      if(x.oculto && x.movido_a) return;   /* el que cuenta es la copia en la tarea de destino */
+      var txt=_txMsg(x).replace(/^Movido desde [^:]*:\s*/,""); if(c && txt.toLowerCase().indexOf(String(x.wa_c||c).toLowerCase()+":")===0) txt=txt.slice(String(x.wa_c||c).length+1).trim(); if(!txt) return;   /* sin el "Nombre:" del inicio */
+      var kind, tag;
+      if(x.oculto){ var mo=String(x.oculto_motivo||"");
+        if(mo==="platica"||mo==="no_es_de_aqui"){ kind="ng"; tag="no guardado"; } else if(mo==="eliminado"){ kind="ng"; tag="eliminado"; } else if(mo==="es_para_claude"){ kind="ng"; tag="para Claude"; } else { kind="ng"; tag="no guardado"; } }
+      else { var sa=false; try{ sa=(!!x.duda_tarea && !x.duda_resuelta) || tipoRevisar(t)==="falta"; }catch(e){}
+        if(sa){ kind="sa"; tag="sin acomodar"; } else { kind="t"; tag=String(t.nombre||"Tarea"); } }
+      var key=String(x.wa_id||"")||(Math.round(ts/60000)+"|"+_n179(txt).slice(0,60)), o=vis[key];
+      var it={t:t, ix:ix, x:x, ts:ts, txt:txt, kind:kind, tag:tag, yo:(+x.wa_in!==1 && x.k==="bo"), de:(+x.wa_in===1||x.wa_c)?c:"Tú", oculto:!!x.oculto};
+      if(o){ if(o.oculto && !it.oculto){ out[out.indexOf(o)]=it; vis[key]=it; } return; }
+      vis[key]=it; out.push(it); }); });
+  out.sort(function(a,b){ return a.ts-b.ts; }); return out;
+}
+function abrePlatica252(nombre){
+  var ya=document.getElementById("plat252"); if(ya) ya.remove();
+  var v=document.createElement("div"); v.id="plat252"; v.className="plat252"; v.setAttribute("role","dialog"); v.setAttribute("aria-label","Plática con "+nombre);
+  document.body.appendChild(v); var L=[];
+  function pinta(){ L=platicaDe252(nombre, 7); var corto=nombreCorto(nombre).split(" ")[0], dia="";
+    var h='<div class="ph"><div><b>Plática con '+esc(corto)+'</b><small>'+esc(nombre)+' · últimos 7 días · '+L.length+' mensaje'+(L.length===1?"":"s")+', de todas las tareas</small></div><button data-pl252="x" aria-label="Cerrar">'+ico("x",16)+'</button></div>';
+    if(!L.length) h+='<p class="pie">No hay mensajes de '+esc(corto)+' en los últimos 7 días en tus tareas.</p>';
+    L.forEach(function(it, i){ var d=new Date(it.ts), f=fechaBonita(iso(d)); if(f!==dia){ dia=f; h+='<div class="pie" style="margin:14px 16px 0"><b>'+esc(f)+'</b></div>'; }
+      var hh=it.x.h||(("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2));
+      h+='<div class="pl252'+(it.yo?' yo':'')+(it.oculto?' of':'')+'" data-pli="'+i+'"><div class="pq">'+esc(it.de)+'</div><button class="pt" data-plm="'+i+'">'+esc(it.txt.length>600?it.txt.slice(0,600)+"…":it.txt)+'</button>'+
+        '<div class="pm"><span>'+esc(hh)+'</span><button class="pg '+(it.kind==="sa"?'sa':(it.kind==="ng"?'ng':''))+'" data-plt="'+i+'">'+esc(it.tag)+'</button></div></div>'; });
+    h+='<p class="pie">Aquí sale lo que está en tus tareas (con los escondidos y los de “no guardar” marcados). La bandeja del servidor aún no se consulta desde la app: lo que no esté en ninguna tarea no aparece.</p>';
+    var sc=v.scrollTop; v.innerHTML=h; v.scrollTop=sc; }
+  pinta(); v.scrollTop=v.scrollHeight;
+  var sig=function(){ return JSON.stringify(platicaDe252(nombre, 7).map(function(i){ return [i.ts, i.tag, i.oculto]; })); }, sg=sig(), iv=setInterval(function(){ if(!document.getElementById("plat252")){ clearInterval(iv); return; } if(document.getElementById("det242") || document.getElementById("nom249") || document.getElementById("mov225")) return; var n=sig(); if(n!==sg){ sg=n; pinta(); } }, 400);   /* se repinta sola cuando Mover · Nueva · No guardar cambian algo */
+  v.addEventListener("click", function(ev){ ev.stopPropagation();
+    if(ev.target.closest('[data-pl252="x"]')){ clearInterval(iv); v.remove(); return; }
+    var g=ev.target.closest("[data-plt]"); if(g){ var it=L[+g.getAttribute("data-plt")]; if(!it) return; clearInterval(iv); v.remove();
+      abierta=it.t.id; vista="hilo"; render();   /* al abrir, la app siempre arranca en Importante... */
+      try{ poneVista230(it.t, ""); window.__cnl=window.__cnl||{}; window.__cnl[it.t.id]="todo"; render(); }catch(e){}   /* ...así que se pasa a Todo para que el mensaje se vea */ setTimeout(function(){ var o=document.querySelector('.msgs [data-mix="'+it.ix+'"]'); if(o){ try{ o.scrollIntoView({behavior:"smooth",block:"center"}); }catch(e){} o.classList.add("flash"); setTimeout(function(){ o.classList.remove("flash"); },1400); } else if(it.oculto){ toast("Ese mensaje está escondido en esta tarea"); } }, 80); return; }
+    var m=ev.target.closest("[data-plm]"); if(m){ var it2=L[+m.getAttribute("data-plm")]; if(!it2) return; abreDetalle242(it2.t, it2.ix); } });
+}
+function puedeRestaurar252(x){ return !!x && x.oculto && !x.movido_a && /^(platica|no_es_de_aqui|es_para_claude)$/.test(String(x.oculto_motivo||"")); }
+function restaura252(t, ix){ var x=(t.msgs||[])[ix]; if(!puedeRestaurar252(x)) return false;
+  x.oculto=false; delete x.oculto_ts; delete x.oculto_por; delete x.oculto_motivo; if(x.duda_resuelta==="platica") delete x.duda_resuelta; delete x.acomodo; guarda(t); return true; }
 function claudeAcomodo238(t, x){ return !!x && acomodoIA237(x) && !esSaludo238(t, x); }
 function icoCl238(t, x, ix){
   if(!claudeAcomodo238(t, x)) return "";
@@ -10000,7 +10098,7 @@ function nuevaG237(t, ixs, comoDato, nombre){
 function bindAcomodo(raiz, tareaDe){
   function q(sel, fn){ Array.prototype.forEach.call(raiz.querySelectorAll(sel), function(el){ el.onclick=function(ev){ ev.stopPropagation(); var ix=+el.getAttribute(sel.slice(1,-1)), t=tareaDe(el); if(!t) return; fn(t, ix); }; }); }
   /* build 237: el botón aplica a TODA la plática (data-acg) */
-  function q2(sel, fn){ Array.prototype.forEach.call(raiz.querySelectorAll(sel), function(el){ el.onclick=function(ev){ ev.stopPropagation(); try{ var _rc=el.getBoundingClientRect(); window.__tap245={l:_rc.left, t:_rc.top, w:_rc.width, h:_rc.height, ts:Date.now()}; }catch(e){} var ix=+el.getAttribute(sel.slice(1,-1)), t=tareaDe(el); if(!t) return; fn(t, ix, ixsDe237(el, ix)); }; }); }
+  function q2(sel, fn){ Array.prototype.forEach.call(raiz.querySelectorAll(sel), function(el){ el.onclick=function(ev){ ev.stopPropagation(); try{ var _rc=el.getBoundingClientRect(); window.__tap245={l:_rc.left, t:_rc.top, w:_rc.width, h:_rc.height, ts:Date.now()}; }catch(e){} var ix=+el.getAttribute(sel.slice(1,-1)), t=tareaDe(el); if(!t) return; fn(t, ix, ixsDe237(el, ix)); if(raiz.id==="det242" && raiz.parentNode) raiz.remove(); }; }); }   /* build 252: la hoja de detalle se cierra al usar su botón */
   q2("[data-acok]", function(t, ix, ixs){ var r=okG237(t, ixs); if(r) toast(r); render(); });
   q2("[data-acmov]", function(t, ix, ixs){ abreMover225(t, ix, ixs); });
   q2("[data-acdato]", function(t, ix, ixs){ var n=datoG240(t, ixs); if(n) toast("Dato nuevo “"+n.nombre+"”; "+(ixs.length===1?"el mensaje pasó":"la plática pasó")+" ahí."); render(); });
@@ -14994,7 +15092,7 @@ function bindHilo(){
   Array.prototype.forEach.call(document.querySelectorAll("[data-mfil]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); window.__mfil225=window.__mfil225||{}; window.__mfil225[t.id]=el.getAttribute("data-mfil"); if(el.closest(".h225")) window.__hoja225=null; render(); }; });   /* build 232: desde la hoja de Metas: filtra y cierra */
   /* build 235: claves (palomear a mano, ver la confirmacion, agregar) y "Ver todo" de Importante */
   /* build 238: tarjeta Hecho / Me falta */
-  Array.prototype.forEach.call(document.querySelectorAll("[data-hc249]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); abrePreguntas249(t.id); }; });   /* build 249 */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-hc249]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); abrePreguntas249(t.id, {gesto:true}); }; });   /* build 249 */
   Array.prototype.forEach.call(document.querySelectorAll("[data-hc238x]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); t.hecho238=null; guarda(t); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-hc238]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var a=el.getAttribute("data-hc238").split("|"), H=t.hecho238; if(!H) return; var f=(H.falta||[])[+a[0]], o=f&&f.ops[+a[1]]; if(!o) return;
     H.falta.splice(+a[0],1);
