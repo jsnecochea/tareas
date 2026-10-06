@@ -8,6 +8,7 @@ var fs = require("fs"), path = require("path");
 var ok = 0, n = 0, malas = [];
 function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
 var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+eq("versión 239", /var VERSION_APP = "build 23[9]|build 24\d/.test(html), true);
 eq("versión >= 233", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[1] >= 233, true);
 
 eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Archivo|Barlow);/g) || []).length, 0);
@@ -32,7 +33,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
         m("Manuel Parra", "Mañana te dejo la muestra de melamina para la cubierta del comedor, a las 10", 30 * 60000, { duda_tarea: { alternativa_id: "tCOM", alternativa_nombre: "Comedor nuevo" } })] };
       tareas = [PAD, { id: "tFIESTA", nombre: "Fiesta Cumpleaños Papá", duenio: "salvador", estado: "abierta", msgs: [] }, { id: "tCOM", nombre: "Comedor nuevo", duenio: "salvador", estado: "abierta", msgs: [] }];
       abierta = null; vista = "lista"; render();
-      o.saludos = ["Igualmente pollo", "Jajaja", "👍", "Buenas noches", "Bonita semana", "Un abrazo", "ahí estaremos", "va", "¿Vienes el miércoles?", "Te mando la cotización: $38,500"].map(function (tx) { return esSaludo239(PAD, { t: "X: " + tx, k: "bi" }); });
+      o.saludos = ["Igualmente pollo", "Jajaja", "👍", "Buenas noches", "Bonita semana", "Un abrazo", "ahí estaremos", "va", "¿Vienes el miércoles?", "Te mando la cotización: $38,500"].map(function (tx) { return esSaludo239(PAD, { t: "X: " + tx, k: "bi", wa_in: 1, wa_c: "X" }); });
       return o; });
     await p.waitForTimeout(300);
     var r2 = await p.evaluate(function () { var o = {}; render(); [].forEach.call(document.body.children, function (x) { if (x.id !== "app") x.style.display = "none"; }); document.getElementById("app").style.display = "flex";

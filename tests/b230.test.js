@@ -66,7 +66,7 @@ eq("versión 230 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
     eq("Todo / Importante desde el filtro (el Resumen vive en Importante)", [r.resCierra, r.resAbre], [["Todo", false], ["Importante", true]]);
     eq("Claude: solo lo que le pediste y lo que contestó (sin Nota IA); la caja es para Claude", r.claude, ["Claude", ["c1", "c2"], "Indicación para Claude…"]);
     eq("vuelve a Todo", r.vuelveTodo, ["Todo", 9]);
-    eq("sin resumen: 'Claude está preparando el resumen'", r.sinRes, ["ResumenClaude está preparando el resumen"]);
+    eq("sin resumen (240): se arma uno local con el contexto", r.sinRes, ["ResumenInversiones con el asesor de BBVA: pagarés, fondos y el fideicomiso; Salvador decide los montos"]);
     eq("número sin nombre: 'Contacto sin nombre ·1884' y nunca el número completo", r.numero, [["Contacto sin nombre ·1884:"], false]);
     eq("si la agenda lo tiene, su nombre", r.agenda, ["Laura Mendoza:"]);
     eq("231: sin ficha Resumen suelta", r.indef, true);

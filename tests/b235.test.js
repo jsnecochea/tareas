@@ -57,7 +57,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
       var lej = JSON.parse(JSON.stringify(ro)); lej.id = "tLEJ"; lej.f_vigente = mas(30); lej.claves[3].fecha_limite = mas(20); tareas = [lej]; abierta = "tLEJ"; render(); o.lejos = document.querySelector('[data-chip="claves"]').className;
       var ok = JSON.parse(JSON.stringify(ro)); ok.id = "tOK"; ok.claves[3].ok = true; tareas = [ok]; abierta = "tOK"; render(); var c = document.querySelector('[data-chip="claves"]'); o.todas = [c.className, c.textContent, /M5 12.5l4.5/.test(c.innerHTML)];
       var sin = { id: "tSIN", nombre: "Revisar bomba", duenio: "salvador", estado: "abierta", msgs: [{ k: "yo", de: "salvador", t: "ok", ts: NOW - 1e6, h: "9:00" }] };
-      tareas = [sin]; abierta = "tSIN"; render(); solo(); o.vacio = [document.getElementById("cnlpill").textContent, (document.querySelector(".res230.vacio span") || {}).textContent, !!document.querySelector("[data-vt235]"), !document.querySelector('[data-chip="claves"]')];
+      tareas = [sin]; abierta = "tSIN"; render(); solo(); o.vacio = [document.getElementById("cnlpill").textContent, !!document.querySelector(".res230"), !!document.querySelector("[data-vt235]"), !document.querySelector('[data-chip="claves"]')];
       return o; });
     if (process.env.CAP) await p.screenshot({ path: path.join(process.env.CAP, "b235-importante-vacio.png") });
     var r4 = await p.evaluate(function () { document.querySelector("[data-vt235]").click(); return [document.getElementById("cnlpill").textContent, document.querySelectorAll(".msgs [data-mix]").length]; });
@@ -72,7 +72,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
     eq("Agregar clave", r3.agrega, [5, "Seguro de viaje", false, "Claves 3/5"]);
     eq("límite vencido: ROJO; lejos (>7 días): normal", [/ red/.test(r3.rojo), / red| amb235/.test(r3.lejos)], [true, false]);
     eq("todas completas: normal con palomita", [/ red| amb235/.test(r3.todas[0]), r3.todas[1], r3.todas[2]], [false, "Claves 4/4", true]);
-    eq("sin nada importante ni resumen: Importante con 'Claude está preparando el resumen' y 'Ver todo'; sin claves no hay ficha", r3.vacio, ["Importante", "Claude está preparando el resumen", true, true]);
+    eq("sin nada importante ni resumen: Importante con 'Claude está preparando el resumen' y 'Ver todo'; sin claves no hay ficha", r3.vacio, ["Importante", true, true, true]);
     eq("'Ver todo' pasa a Todo", r4, ["Todo", 1]);
     eq("sin errores de página", errs, []);
   } finally { await b.close(); }

@@ -79,19 +79,19 @@ si("iconos: trazo 1.5 fijo", /var s=px\|\|18, w=1\.5, p=\{/.test(html));
       o.sugerido = [nombreSugerido({ wa_c: "Manuel Parra", t: "Manuel Parra: Tema 2... Mesa Comedor Alt Brillo. Maribel González…" }), nombreSugerido({ wa_c: "Lalo Madero", t: "Lalo Madero: ¿Hay miercolitos esta semana?" })];
       o.emojiUI = [sinEmojiUI("📝 Nota IA 11:52: x"), sinEmojiUI("✉️ Enviado: hola"), sinEmojiUI("Gracias 👍")];
       return o; });
-    eq("en la tarea: abajo de la burbuja, una línea OK · Mover · Nueva, sin '¿Es de esta tarea?'", [r.botones, r.debajo, r.sinPregunta, r.unaVez], [["OK", "Mover", "Nueva"], true, true, 1]);
+    eq("en la tarea: abajo de la burbuja, una línea OK · Mover · Nueva, sin '¿Es de esta tarea?'", [r.botones, r.debajo, r.sinPregunta, r.unaVez], [["OK", "Mover", "Nueva", "Dato"], true, true, 1]);
     eq("sin emojis: la nota del sistema se pinta sin 📝; chips con iconos de línea", [r.sinEmojiNota, r.chipsSinEmoji], [true, true]);
     eq("todos los iconos de la pantalla con trazo 1.5", r.svgTrazo, true);
     eq("encabezado con el título compacto original", r.tituloCompacto, true);
     eq("Mover: hoja '¿A dónde va?' — más probable resaltada, aquí cayó, otras, Tarea nueva con nombre sugerido, Solo plática", r.hoja,
-      { titulo: "¿A dónde va?", ops: ["*Comedor Nuevomás probable", "Mantenimiento Casa Lerdo/Eloísaaquí cayó", "Vestidores Carpintería", "Tarea nueva“Mesa Comedor Alt Brillo con Manuel”", "Solo pláticasaludo o charla, no va a ninguna tarea"] });
+      { titulo: "¿A dónde va?", ops: ["*Comedor Nuevomás probable", "Mantenimiento Casa Lerdo/Eloísaaquí cayó", "Vestidores Carpintería", "Tarea nueva“Mesa Comedor Alt Brillo con Manuel”", "Bien, pero sin importanciase queda en “Casa Lerdo”, no es relevante", "Solo pláticasaludo o charla, no va a ninguna tarea"] });
     eq("Mover: oculto en el origen (no borrado) y NUEVO en el destino", r.mover, [true, "tCOMEDOR_NUEVO_300926", 0, true, 2]);
     eq("censo de aprendizaje: contacto, origen -> destino, texto corto", r.censo, [["Manuel Parra", "tIAMUVF22TRJF", "tCOMEDOR_NUEVO_300926", "mover", "Tema 2... Mesa Comedor"]]);
     eq("OK: quita la duda, cuenta como acierto y no oculta nada", r.ok, ["esta", 1, "ok", 0, false]);
     eq("Solo plática: oculto con motivo, censo, sin tarea nueva", r.platica, [true, "platica", "platica", 3]);
     eq("Nueva: crea la tarea con nombre sugerido, queda en Falta info y el mensaje pasa ahí", r.nueva, [4, "Mesa Comedor Alt Brillo con Manuel", "falta", true, true, "nueva"]);
     eq("Inicio · Acomodo arriba: solo lo dudoso, 1 renglón por mensaje con iniciales, nombre, pastilla y OK·Mover·Nueva", r.inicio && [r.inicio.cab, r.inicio.filas],
-      ["Acomodo2 pláticas por revisar", [["LM", "Lalo Madero", "creo que es: Casa Lerdo", "OK·Mover·Nueva"], ["MP", "Manuel Parra", "creo que es: Casa Lerdo", "OK·Mover·Nueva"]]]);
+      ["Acomodo2 pláticas por revisar", [["LM", "Lalo Madero", "creo que es: Casa Lerdo", "OK·Mover·Nueva·Dato·OK · sin importancia"], ["MP", "Manuel Parra", "creo que es: Casa Lerdo", "OK·Mover·Nueva·Dato·OK · sin importancia"]]]);
     eq("plegado: 'Acomodé solo hoy · 3' y 'acerté 2/3' (el movido cuenta como fallo)", r.inicio && [r.inicio.plegado, r.inicio.lista], ["Acomodé solo hoy · 3acerté 2/3", false]);
     eq("se despliega la lista de hoy", r.abre, 3);
     eq("OK desde el Inicio quita el renglón", r.okInicio, [1, 1]);

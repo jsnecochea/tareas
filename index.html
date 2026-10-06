@@ -737,11 +737,15 @@ button{font:inherit;color:inherit}
 /* build 226: acomodo (OK · Mover · Nueva), hoja "¿A dónde va?", seccion Acomodo del Inicio */
 .ac226{display:flex;align-items:center;gap:6px;margin:-2px 0 6px 10px;font-size:13.5px;color:var(--ink-3)}
 .cl238{display:inline-flex;width:16px;height:16px;color:var(--ink-2);vertical-align:-3px;margin-right:4px}.cl238 svg{width:15px;height:15px}.cl238.on{color:var(--azul)}
-.b[data-mix]{cursor:default}.ac226.m238{margin:2px 0 4px 0}.prop238{font-size:12.5px;color:var(--ink-3);margin-top:2px}.m237{display:flex;flex-direction:column}.m237.listo{opacity:.5}
+.b[data-mix]{cursor:default}.ac226.m238{margin:2px 0 4px 0}.ac226.triv240{margin-top:0}.ac226.triv240 button{color:var(--ink-3);font-weight:500}.prop238{font-size:12.5px;color:var(--ink-3);margin-top:2px}.m237{display:flex;flex-direction:column}.m237.listo{opacity:.5}
 .hc238{position:relative;margin:6px 12px 8px;padding:12px 14px 10px;background:var(--surface-2);border-radius:14px;font-size:15.5px;line-height:1.4}
 .hc238>b{display:block;font-size:13px;color:var(--ink-3);font-weight:600;margin:2px 0 4px}.hc238 ul{list-style:none;margin:0 0 6px;padding:0}.hc238 li{display:flex;gap:7px;align-items:flex-start;padding:3px 0}
 .hch li svg{color:#30d158;flex:none;margin-top:3px}.hcf li{flex-direction:column;gap:6px}.hco{display:flex;flex-wrap:wrap;gap:6px}.hco button{border:1px solid var(--azul);color:var(--azul);background:transparent;border-radius:12px;padding:5px 11px;font:inherit;font-size:14px}
 .hcx{position:absolute;top:8px;right:8px;border:0;background:none;color:var(--ink-3);width:24px;height:24px;display:grid;place-items:center}
+.hist240{list-style:none;margin:0;padding:6px 0}.hist240 li{display:flex;align-items:center;gap:8px;padding:0 14px;border-bottom:.5px solid var(--line)}.hist240 li.vac{padding:20px 16px;color:var(--ink-3)}
+.hrow240{flex:1;min-width:0;display:flex;gap:10px;align-items:flex-start;text-align:left;background:none;border:0;color:var(--ink);font:inherit;padding:11px 0}.hrow240 time{color:var(--ink-3);font-size:13.5px;min-width:44px;margin-top:2px}
+.hrow240 .ht{display:flex;flex-direction:column;min-width:0}.hrow240 .ht b{font-size:15.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hrow240 .ht span{font-size:14.5px;color:var(--ink-2)}
+.hund240{flex:none;border:1px solid var(--azul);color:var(--azul);background:none;border-radius:12px;padding:4px 10px;font:inherit;font-size:13.5px}.hok{color:var(--ink-3);font-size:12.5px}
 .mq237{display:block;border:0;background:none;font:inherit;font-size:12px;color:var(--ink-3);margin:-2px 0 6px 12px;padding:2px 0;cursor:pointer}
 .ac226.mq237ab{margin-left:12px}.acor.g237{cursor:pointer}.acow .n237{color:var(--ink-3);font-size:13.5px;margin-left:6px;font-weight:400}.acow time{margin-left:auto}
 .acom.x237{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -1453,7 +1457,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 239 · El Acomodo ya no muestra saludos: las pláticas de puro saludo se marcan solas como plática";
+var VERSION_APP = "build 240 · Importante sin toques automáticos ni cambios de fecha · clasificar solo lo de la IA · Acomodo con Dato y sin importancia · Historial";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -3837,6 +3841,7 @@ function arranca(){
         if(o.reporta_a) p.reporta_a=o.reporta_a;            /* build 179: organigrama dictado */
         if(o.notif && typeof o.notif==="object") p.notif=o.notif;   /* build 200: notificaciones de cada quien */
         if(Array.isArray(o.apodos)) p.apodos=o.apodos;
+        if(d.id===yo && Array.isArray(o.historial_acciones)) window.__histRemoto240=o.historial_acciones;   /* build 240 */
         if(o.nombre&&o.apellido) p.ini=iniciales(o.nombre,o.apellido);
       });
       fichasLeidas=true;
@@ -4796,7 +4801,9 @@ function _leeAgenda229(t){
 }
 /* build 236 (Salvador 19:24): Tarea · Dato · Vincular vuelven a ser botones GRANDES (48 px, mismo ancho, todo el ancho), solo contorno:
    Tarea azul, Dato blanco, Vincular morado; elegido = relleno suave del mismo color. Van justo debajo de la fila de fichas. */
-function clasif236(t){ if(!t || !(t.tipo_item==="tarea" || t.tipo_item==="dato")) return false;
+function esIA240(t){ return !!t && (t.creada_por==="ia_revisor" || /_revisor$/.test(String(t.origen||""))); }
+function clasif236(t){ if(t && !esIA240(t)) return true;   /* build 240: a mano o con historia: nunca pide clasificar */
+  if(!t || !(t.tipo_item==="tarea" || t.tipo_item==="dato")) return false;
   /* build 237: la Mac (armaTarea) pone tipo_item al crear; eso NO es elegir. Clasificada = la eligio Salvador (tipo_elegido) o no la creo la IA */
   return t.tipo_elegido===true || !(t.creada_por==="ia_revisor" || /_revisor$/.test(String(t.origen||""))); }
 function vTipoToggle(t){
@@ -6165,7 +6172,7 @@ function render(){
   cierraDudaHilo();
   if(vista!=="hilo" && vista!=="galeria") window.__visitaDe=null;   /* build 197: salir de la tarea termina la visita */
   /* build 235: cada vez que se abre una tarea, el filtro arranca en Importante */
-  var _ab235=(vista==="hilo"||vista==="galeria")?abierta:null; if(_ab235!==window.__ab235){ if(_ab235 && window.__vf230) delete window.__vf230[_ab235]; window.__ab235=_ab235; }
+  var _ab235=(vista==="hilo"||vista==="galeria")?abierta:null; if(_ab235!==window.__ab235){ if(_ab235 && window.__vf230) delete window.__vf230[_ab235]; window.__ab235=_ab235; if(_ab235){ try{ hist240("Abrió la tarea", tareaId240(_ab235), null); }catch(e){} } }
   var a=$("app");
   /* LA PUERTA DE LA FICHA. Solo se cruza cuando Firestore ya contesto: si esta
      sin internet NO se le pide nada, porque no se podria guardar. */
@@ -6177,6 +6184,7 @@ function render(){
   if(vista==="admin"){a.innerHTML=vAdmin();bindAdmin();return}
   if(vista==="yo"){a.innerHTML=vYo();bindYo();return}
   if(vista==="notif"){a.innerHTML=vNotif();bindNotif();return}   /* build 200 */
+  if(vista==="historial"){a.innerHTML=vHistorial240();bindHistorial240();return}   /* build 240 */
   if(vista==="encargo"){a.innerHTML=vEncargo();bindEncargo();return}
   if(vista==="encargar"){a.innerHTML=vEncargar();bindPedir(abierta);return}
   if(vista==="suelto"){a.innerHTML=vSuelto();bindPedir(null);return}
@@ -9065,10 +9073,12 @@ function abreMover225(t, ix, ixs){
     ops.map(function(o){ return '<button class="opt226'+(o.best?' best':'')+'" data-movto="'+esc(o.d.id)+'">'+ico("folder",20)+'<span class="ot">'+esc(o.d.nombre||"(sin nombre)")+'</span>'+(o.tag?'<span class="tag">'+esc(o.tag)+'</span>':'')+'</button>'; }).join("")+
     '<div class="sep226"></div>'+
     '<button class="opt226 plain" data-movnueva="1">'+ico("plus",20)+'<span class="two"><span>Tarea nueva</span><small>“'+esc(nombreSugerido(x))+'”</small></span></button>'+
+    '<button class="opt226 plain" data-movtriv="1">'+ico("check",20)+'<span class="two"><span>Bien, pero sin importancia</span><small>se queda en “'+esc(tareaCorta(t))+'”, no es relevante</small></span></button>'+
     '<button class="opt226 plain" data-movplatica="1">'+ico("bubble",20)+'<span class="two"><span>Solo plática</span><small>saludo o charla, no va a ninguna tarea</small></span></button></div></div>';
   document.body.appendChild(v);
-  v.addEventListener("click", function(ev){ ev.stopPropagation(); var b=ev.target.closest("[data-movto],[data-movnueva],[data-movplatica]"), r="";
-    if(b){ if(b.hasAttribute("data-movnueva")){ var n=ixs?nuevaG237(t, ixs):nuevaDesdeMsg(t, ix); if(n && !ixs) guardaRegla237("nueva", t, [ix], n); r=n?"Tarea nueva “"+n.nombre+"” en Falta info; "+(ixs&&ixs.length>1?"la plática pasó":"el mensaje pasó")+" ahí.":""; }
+  v.addEventListener("click", function(ev){ ev.stopPropagation(); var b=ev.target.closest("[data-movto],[data-movnueva],[data-movplatica],[data-movtriv]"), r="";
+    if(b){ if(b.hasAttribute("data-movtriv")) r=trivialG240(t, ixs||[ix]);
+      else if(b.hasAttribute("data-movnueva")){ var n=ixs?nuevaG237(t, ixs):nuevaDesdeMsg(t, ix); if(n && !ixs) guardaRegla237("nueva", t, [ix], n); r=n?"Tarea nueva “"+n.nombre+"” en Falta info; "+(ixs&&ixs.length>1?"la plática pasó":"el mensaje pasó")+" ahí.":""; }
       else if(b.hasAttribute("data-movplatica")){ (ixs||[ix]).forEach(function(i){ var rr=soloPlatica(t, i); if(rr) r=rr; }); reglasPorMsg238("platica", t, ixs||[ix], null); }
       else { var id=b.getAttribute("data-movto"); r=(id===t.id)?okG237(t, ixs||[ix]):(ixs?moverG237(t, ixs, id):(guardaRegla237("mover", t, [ix], tareas.filter(function(z){ return z.id===id; })[0]), mueveMensaje(t, ix, id))); }
       v.remove(); if(r) toast(r); render(); return; }
@@ -9122,7 +9132,7 @@ function grupoDe237(t, ix){ var G=platicas237(t); for(var i=0;i<G.length;i++) if
 /* tarea que creo la IA y Salvador aun no clasifica */
 function sinClasificarIA237(t){ return !!t && t.creada_por==="ia_revisor" && t.por_autorizar===true && !clasif236(t) && !t.cierre; }
 function botonesG237(ix, ixs, extra){ var g=esc(ixs.join(","));
-  return '<div class="ac226'+(extra||"")+'" data-acix="'+ix+'" data-acg="'+g+'"><button data-acok="'+ix+'">OK</button><span>·</span><button data-acmov="'+ix+'">Mover</button><span>·</span><button data-acnueva="'+ix+'">Nueva</button></div>'; }
+  return '<div class="ac226'+(extra||"")+'" data-acix="'+ix+'" data-acg="'+g+'"><button data-acok="'+ix+'">OK</button><span>·</span><button data-acmov="'+ix+'">Mover</button><span>·</span><button data-acnueva="'+ix+'">Nueva</button><span>·</span><button data-acdato="'+ix+'">Dato</button></div>'; }
 /* build 238 (Salvador 20:17): el acomodo es por MENSAJE. Cada globo que acomodó Claude lleva el iconito de Claude en su esquina
    (los saludos y la plática sin contenido, no); al tocar ESE globo: OK · Mover · Nueva para ese mensaje solo. Con duda: visibles. */
 /* saludo / plática sin contenido: Claude ya la clasificó (msg_imp 0) o es un saludo o acuse corto */
@@ -9189,12 +9199,25 @@ function moverG237(t, ixs, did){
   reglasPorMsg238("mover", t, vivos, d); var n=0; vivos.forEach(function(ix){ if(mueveMensaje(t, ix, did, "mover")) n++; });
   return n?(n===1?"Lo moví":"Moví los "+n)+" a “"+(d.nombre||"la otra tarea")+"”. Aquí quedan ocultos, no borrados.":"";
 }
-function nuevaG237(t, ixs){
+/* build 240: Dato = un dato nuevo con ese mensaje (el mismo "Dato" de la tarea nueva); sin importancia = se queda aquí con msg_imp 0 */
+function datoG240(t, ixs){
+  var n=nuevaG237(t, ixs, true); if(!n) return null;
+  n.tipo_item="dato"; n.es_dato=true; n.tipo_elegido=true; n.falta_fecha=false; guarda(n); return n;
+}
+function trivialG240(t, ixs){
+  var hechos=[]; t.msg_imp=(t.msg_imp && typeof t.msg_imp==="object")?t.msg_imp:{};
+  ixs.forEach(function(ix){ var x=(t.msgs||[])[ix]; if(!x || x.oculto) return; var k=msgId230(x)||("ts"+(x.ts||ix)); t.msg_imp[k]=0;
+    x.duda_resuelta="esta"; x.duda_ts=Date.now(); x.acomodo={ok:1, ts:Date.now(), por:yo||"", trivial:1}; hechos.push(ix); });
+  if(!hechos.length) return ""; hechos.forEach(function(i){ guardaRegla237("trivial", t, [i], t); }); guarda(t);
+  try{ hist240("Acomodo: OK sin importancia", t, null); }catch(e){}
+  return "Listo: se queda en “"+(t.nombre||"esta tarea")+"”, sin importancia.";
+}
+function nuevaG237(t, ixs, comoDato){
   var xs=ixs.filter(function(i){ var x=(t.msgs||[])[i]; return x && !x.oculto && !confirmado237(x); }); if(!xs.length) xs=ixs.filter(function(i){ var x=(t.msgs||[])[i]; return x && !x.oculto; }); if(!xs.length) return null;
   var best=xs.slice().sort(function(a,b){ return _txMsg(t.msgs[b]).length-_txMsg(t.msgs[a]).length; })[0];
   var n=nuevaDesdeMsg(t, best); if(!n) return null;
   xs.forEach(function(i){ if(i!==best) mueveMensaje(t, i, n.id, "nueva"); });
-  reglasPorMsg238("nueva", t, xs, n); return n;
+  reglasPorMsg238(comoDato?"dato":"nueva", t, xs, n); return n;
 }
 function bindAcomodo(raiz, tareaDe){
   function q(sel, fn){ Array.prototype.forEach.call(raiz.querySelectorAll(sel), function(el){ el.onclick=function(ev){ ev.stopPropagation(); var ix=+el.getAttribute(sel.slice(1,-1)), t=tareaDe(el); if(!t) return; fn(t, ix); }; }); }
@@ -9202,6 +9225,8 @@ function bindAcomodo(raiz, tareaDe){
   function q2(sel, fn){ Array.prototype.forEach.call(raiz.querySelectorAll(sel), function(el){ el.onclick=function(ev){ ev.stopPropagation(); var ix=+el.getAttribute(sel.slice(1,-1)), t=tareaDe(el); if(!t) return; fn(t, ix, ixsDe237(el, ix)); }; }); }
   q2("[data-acok]", function(t, ix, ixs){ var r=okG237(t, ixs); if(r) toast(r); render(); });
   q2("[data-acmov]", function(t, ix, ixs){ abreMover225(t, ix, ixs); });
+  q2("[data-acdato]", function(t, ix, ixs){ var n=datoG240(t, ixs); if(n) toast("Dato nuevo “"+n.nombre+"”; "+(ixs.length===1?"el mensaje pasó":"la plática pasó")+" ahí."); render(); });
+  q2("[data-actriv]", function(t, ix, ixs){ var r=trivialG240(t, ixs); if(r) toast(r); render(); });
   q2("[data-acnueva]", function(t, ix, ixs){ var n=nuevaG237(t, ixs); if(n) toast("Tarea nueva “"+n.nombre+"” en Falta info; "+(ixs.length===1?"el mensaje pasó":"la plática pasó")+" ahí."); render(); });
   /* build 238: tocar el globo con el iconito de Claude = OK · Mover · Nueva para ese mensaje */
   Array.prototype.forEach.call(raiz.querySelectorAll(".msgs [data-mix]"), function(el){ if(!el.querySelector("[data-cl238]")) return; el.addEventListener("click", function(ev){
@@ -9221,6 +9246,71 @@ function platicasAcomodo237(){
   return out.sort(function(a,b){ return b.ts1-a.ts1; });
 }
 /* marca como "Solo plática" (como el botón) las pláticas de puro saludo; sin regla de aprendizaje */
+/* ===================== build 240: HISTORIAL de lo que tocó Salvador (últimas 50 en el Inicio · ⋯ · Historial) =====================
+   localStorage doit_hist240 + bitacora_personas/<usuario>.historial_acciones (las últimas 200). Cada renglón: hora · tarea · qué hizo;
+   tocarlo abre la tarea; "Deshacer" cuando se puede: reabrir, regresar lo movido, quitar el vínculo, restaurar fecha, despalomear. */
+var HIST240_K="doit_hist240";
+function histLee240(){ var l=[]; try{ l=JSON.parse(localStorage.getItem(HIST240_K)||"[]"); }catch(e){} if(!Array.isArray(l)) l=[];
+  (Array.isArray(window.__histRemoto240)?window.__histRemoto240:[]).forEach(function(r){ if(r && r.id && !l.some(function(x){ return x.id===r.id; })) l.push(r); });
+  return l.sort(function(a,b){ return (b.ts||0)-(a.ts||0); }); }
+function hist240(que, t, undo){
+  if(!yo) return;
+  var e={id:"h"+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36), ts:Date.now(), tid:t?t.id:"", tnom:t?String(t.nombre||""):"", que:String(que||""), undo:undo||null, hecho:false, por:yo};
+  var l=histLee240(); l.unshift(e); l=l.slice(0,200);
+  try{ localStorage.setItem(HIST240_K, JSON.stringify(l)); }catch(er){}
+  if(window.__histT240) clearTimeout(window.__histT240);
+  window.__histT240=setTimeout(function(){ window.__histT240=null; try{ if(db) db.collection(COLP).doc(yo).set({historial_acciones:histLee240().slice(0,200)},{merge:true}).catch(function(){}); }catch(er){} }, 1500);
+  return e;
+}
+function histMarca240(id){ var l=histLee240(); l.forEach(function(x){ if(x.id===id) x.hecho=true; }); try{ localStorage.setItem(HIST240_K, JSON.stringify(l)); }catch(e){}
+  window.__histRemoto240=(window.__histRemoto240||[]).map(function(x){ if(x.id===id) x.hecho=true; return x; });
+  try{ if(db) db.collection(COLP).doc(yo).set({historial_acciones:l.slice(0,200)},{merge:true}).catch(function(){}); }catch(e){} }
+function tareaId240(id){ return tareas.filter(function(x){ return x.id===id; })[0]||null; }
+function deshaz240(e){
+  var u=e&&e.undo; if(!u || e.hecho) return "";
+  var t=tareaId240(e.tid);
+  if(u.tipo==="reabrir" && t && t.cierre){ reabre(t, "deshacer desde el historial"); }
+  else if(u.tipo==="fecha" && t){ t.f_vigente=u.f||""; t.movidas=Math.max(0,(t.movidas||1)-1); msg(t,"bi","Regresada al "+(u.f?fechaMovCorta(u.f):"sin fecha")+"."); sincronizaAvisos(t); guarda(t); }
+  else if(u.tipo==="mover" && t){ var x=(t.msgs||[]).filter(function(m){ return m && m.ts===u.ts && m.movido_a && m.movido_a.id===u.did; })[0], d=tareaId240(u.did);
+    if(x){ x.oculto=false; delete x.movido_a; delete x.oculto_ts; delete x.oculto_por; if(x.duda_resuelta==="otra") delete x.duda_resuelta; delete x.acomodo; }
+    if(d) d.msgs=(d.msgs||[]).filter(function(m){ return !(m && m.movido_de && m.movido_de.id===t.id && m.movido_de.ts===u.ts); });
+    guarda(t); if(d) guarda(d); }
+  else if(u.tipo==="vincular"){ var sn=(window.__undo240||{})[e.id]; if(!sn) return "Este vínculo ya no se puede deshacer desde este teléfono.";
+    var o=sn.o, d2=tareaId240(sn.did); if(d2){ d2.msgs=sn.dmsgs; d2.enlazadas=sn.denl; guarda(d2); } if(!tareaId240(o.id)) tareas.push(o); guarda(o); }
+  else if(u.tipo==="palomita" && t){ if(u.clave){ (t.claves||[]).forEach(function(c){ if(c && String(c.id)===u.clave) c.ok=!!u.prev; }); }
+    else if(t.checklist){ (t.checklist.items||[]).forEach(function(it){ if(it && it.id===u.item) it.estado=u.prev; }); } guarda(t); }
+  else if(u.tipo==="tipo" && t){ t.tipo_item=u.prev||""; t.es_dato=(u.prev==="dato"); if(u.elegido) t.tipo_elegido=true; else delete t.tipo_elegido; guarda(t); }
+  else return "";
+  histMarca240(e.id); return "Deshecho: "+e.que;
+}
+function vHistorial240(){
+  var l=histLee240().slice(0,50), h='<div class="top"><button class="iconbtn" id="bback">‹</button><div><div class="tnm"><span class="t">Historial</span></div><div class="d">Lo último que tocaste</div></div></div><div class="scroll"><ul class="hist240">';
+  if(!l.length) h+='<li class="vac">Todavía no hay nada.</li>';
+  l.forEach(function(e){ var d=new Date(e.ts||0), hh=("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2), dia=iso(d)===hoy()?"":fechaMovCorta(iso(d))+" ";
+    h+='<li><button class="hrow240" data-hid="'+esc(e.tid||"")+'"><time>'+esc(dia+hh)+'</time><span class="ht"><b>'+esc(e.tnom||"—")+'</b><span>'+esc(e.que)+'</span></span></button>'+
+      (e.undo && !e.hecho?'<button class="hund240" data-hund="'+esc(e.id)+'">Deshacer</button>':(e.hecho?'<small class="hok">deshecho</small>':''))+'</li>'; });
+  return h+'</ul></div>';
+}
+function bindHistorial240(){
+  var b=$("bback"); if(b) b.onclick=function(){ vista="lista"; render(); };
+  Array.prototype.forEach.call(document.querySelectorAll("[data-hid]"), function(el){ el.onclick=function(){ var id=el.getAttribute("data-hid"); if(!id || !tareaId240(id)){ toast("Esa tarea ya no está abierta"); return; } abierta=id; vista="hilo"; render(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-hund]"), function(el){ el.onclick=function(ev){ ev.stopPropagation(); var e=histLee240().filter(function(x){ return x.id===el.getAttribute("data-hund"); })[0]; var r=deshaz240(e); if(r) toast(r); render(); }; });
+}
+/* envoltorios del historial: lo que ya hacen estas funciones no cambia, solo se anota */
+(function(){
+  if(typeof window==="undefined" || window.__envueltas240) return; window.__envueltas240=1;
+  var _ch=cierraHecha; cierraHecha=function(t){ var r=_ch.apply(this, arguments); try{ if(t && t.cierre) hist240("Ya está (la cerró)", t, {tipo:"reabrir"}); }catch(e){} return r; };
+  var _mf=mueveFecha; mueveFecha=function(t, nueva){ var de=t&&t.f_vigente; var r=_mf.apply(this, arguments); try{ if(r && r.ok!==false && t.f_vigente===nueva) hist240("Movió la fecha "+(de?"del "+fechaMovCorta(de)+" ":"")+"al "+fechaMovCorta(nueva), t, {tipo:"fecha", f:de||""}); }catch(e){} return r; };
+  var _mm=mueveMensaje; mueveMensaje=function(t, ix, did){ var x=t&&(t.msgs||[])[ix]; var r=_mm.apply(this, arguments); try{ if(r && x){ var d=tareaId240(did); hist240("Movió un mensaje a “"+((d&&d.nombre)||"otra tarea")+"”", t, {tipo:"mover", ts:x.ts, did:did}); } }catch(e){} return r; };
+  var _en=enlazaTareas; enlazaTareas=function(oid, did){ var o=tareaId240(oid), d=tareaId240(did), sn=(o&&d)?{o:JSON.parse(JSON.stringify(o)), did:did, dmsgs:JSON.parse(JSON.stringify(d.msgs||[])), denl:JSON.parse(JSON.stringify(d.enlazadas||[]))}:null;
+    var r=_en.apply(this, arguments); try{ if(o && o.fusionada_en===did){ var e=hist240("Vinculó a “"+((d&&d.nombre)||"")+"”", o, {tipo:"vincular", did:did}); if(e && sn){ window.__undo240=window.__undo240||{}; window.__undo240[e.id]=sn; } } }catch(er){} return r; };
+  var _ok=okG237; okG237=function(t, ixs){ var r=_ok.apply(this, arguments); try{ if(r) hist240("Acomodo: OK", t, null); }catch(e){} return r; };
+  var _nv=nuevaG237; nuevaG237=function(t, ixs, comoDato){ var n=_nv.apply(this, arguments); try{ if(n) hist240("Acomodo: "+(comoDato?"Dato":"Nueva")+" “"+n.nombre+"”", t, null); }catch(e){} return n; };
+  var _cr=completaRevision; completaRevision=function(t, v){ try{ hist240("Dictado: “"+String(v||"").replace(/\s+/g," ").slice(0,60)+(String(v||"").length>60?"…":"")+"”", t, null); }catch(e){} return _cr.apply(this, arguments); };
+  var _nc=notaClaude; notaClaude=function(t, v){ try{ hist240("Indicación a Claude: “"+String(v||"").replace(/\s+/g," ").slice(0,60)+"”", t, null); }catch(e){} return _nc.apply(this, arguments); };
+  var _ma=mandaAExterno; mandaAExterno=function(t, nombre, v){ try{ hist240("Mensaje a "+nombreCorto(nombre).split(" ")[0]+": “"+String(v||"").replace(/\s+/g," ").slice(0,50)+"”", t, null); }catch(e){} return _ma.apply(this, arguments); };
+  var _md=mandaDM; mandaDM=function(t, k, v){ try{ hist240("Mensaje a "+((PERSONAS[k]||{}).nombre||k)+": “"+String(v||"").replace(/\s+/g," ").slice(0,50)+"”", t, null); }catch(e){} return _md.apply(this, arguments); };
+})();
 function platicaSola239(){
   var L=window.__plat239||[]; window.__plat239=[]; window.__plat239T=null; var tocadas=[];
   L.forEach(function(g){ var t=g.t, n=0; g.ixs.forEach(function(ix){ var x=(t.msgs||[])[ix]; if(!x || x.oculto || confirmado237(x)) return;
@@ -9252,7 +9342,8 @@ function vAcomodo(){
     return '<div class="acor g237'+(ab?' ab':'')+'" data-acot="'+esc(t.id)+'" data-acoix="'+ix0+'" data-acg="'+esc(g.ixs.join(","))+'" data-g237="'+esc(k)+'"><span class="av226">'+esc(inicialesDe(g.contacto))+'</span><span class="acob"><span class="acow"><b>'+esc(g.contacto||"Contacto")+'</b><span class="n237">'+(g.n||g.ixs.length)+' mensaje'+((g.n||g.ixs.length)===1?'':'s')+'</span><time>'+esc(x0.h||"")+'</time></span>'+
       '<span class="acom x237">'+esc(g.extracto)+'</span><span class="pill226">'+ico("folder",14)+'creo que es: '+esc(tareaCorta(t))+(g.sinClasificar?'<span class="q"> · sin clasificar</span>':'')+'</span>'+
       (ab?'<span class="msgs237">'+g.ixs.map(function(i){ var x=t.msgs[i], pl=esSaludo239(t,x), ok=confirmado237(x)||x.oculto; return '<span class="m237'+(pl?' tenue':'')+(ok?' listo':'')+'"><span class="mtx"><time>'+esc(x.h||"")+'</time>'+esc(_txMsg(x).replace(/^[^:\n]{1,40}:\s*/,""))+'</span>'+(pl||ok?'':'<span class="prop238">creo que es: '+esc(tareaCorta(t))+(x.duda_tarea&&x.duda_tarea.alternativa_nombre&&!x.duda_resuelta?' · ¿o '+esc(x.duda_tarea.alternativa_nombre)+'?':'')+'</span>'+botonesG237(i, [i], " m238"))+'</span>';   /* build 238: su propia propuesta */ }).join("")+'</span>':'')+
-      '<span class="ac226" data-acix="'+ix0+'" data-acg="'+esc(g.ixs.join(","))+'"><button data-acok="'+ix0+'">OK</button><span>·</span><button data-acmov="'+ix0+'">Mover</button><span>·</span><button data-acnueva="'+ix0+'">Nueva</button></span></span></div>'; }).join("")+'</div>';
+      '<span class="ac226" data-acix="'+ix0+'" data-acg="'+esc(g.ixs.join(","))+'"><button data-acok="'+ix0+'">OK</button><span>·</span><button data-acmov="'+ix0+'">Mover</button><span>·</span><button data-acnueva="'+ix0+'">Nueva</button><span>·</span><button data-acdato="'+ix0+'">Dato</button></span>'+
+      '<span class="ac226 triv240" data-acix="'+ix0+'" data-acg="'+esc(g.ixs.join(","))+'"><button data-actriv="'+ix0+'">OK · sin importancia</button></span></span></div>'; }).join("")+'</div>';
   var ab=!!window.__aco226;
   if(A.n){ h+='<button class="acof" id="bacof">'+ico("check",18)+'<span>Acomodé solo hoy · '+A.n+'</span><span class="r">acerté '+A.ok+'/'+A.n+'</span>'+ico(ab?"down":"chev",16)+'</button>';
     if(ab) h+='<div class="acol">'+A.lista.slice(0,30).map(function(o){ return '<button class="acoli" data-id="'+esc(o.t.id)+'"><span>'+esc(nombreLimpio(o.x.wa_c||""))+'</span><span class="'+(o.mal?'tenue':'')+'">'+esc(tareaCorta(o.t))+(o.mal?' · corregido':'')+'</span></button>'; }).join("")+'</div>'; }
@@ -9287,10 +9378,17 @@ function vista230(t){ var o=window.__vf230||{}; if(t && !Object.prototype.hasOwn
 function poneVista230(t, v){ window.__vf230=window.__vf230||{}; window.__vf230[t.id]=v||""; window.__cnlClaude=window.__cnlClaude||{}; window.__cnlClaude[t.id]=(v==="claude")?1:0; }
 function msgId230(x){ return String((x&&(x.id||x.msg_id||x.wa_id||x.nid))||((x&&x.ts)?"ts"+x.ts:"")); }
 /* ¿es importante? 1/0 si Claude ya lo clasificó en msg_imp; si no, la regla de respaldo */
+function esOrdenFecha240(tx){ var s=_fsa(tx); return s.length<200 && /\b(modific\w*|muev\w*|mueve|reprogram\w*|recorr\w*|para el (proximo |\d)|para cuando|vencid\w*|ritmo|recuerdame|avisame|ejecutar? para|ejecutada para|es para el|fecha)\b/.test(s); }
 function esImp230(t, x){
   var mi=(t && t.msg_imp && typeof t.msg_imp==="object")?t.msg_imp:{}, k=msgId230(x);
   if(k && Object.prototype.hasOwnProperty.call(mi,k)) return +mi[k]===1;
   if(x.nota_ia || /^\s*(📝\s*)?Nota IA\b/i.test(String(x.t||""))) return false;   /* las notas automaticas solo si Claude las marcó */
+  /* build 240 (Salvador 21:31 "NO LIMPIA NADA"): nunca en Importante (solo en Todo): los toques automáticos de seguimiento o presión
+     ("Van 9 veces…", "Ya venció…"), los avisos del sistema ("Movida del… al…", "Anotado. Te aviso…", "¿Para cuándo…?") y las órdenes de
+     fecha o ritmo de Salvador ("muévela para el viernes", "recuérdame martes y jueves"). */
+  if(x.k==="bal" || x.aviso || x.empujon) return false;
+  if(x.k==="bi" && !(+x.wa_in) && !x.wa_c && !x.de && !x.hab && !x.url && !x.tipo) return false;
+  if(x.k==="bo" && esOrdenFecha240(String(x.tr||x.t||""))) return false;
   if(x.nota_claude || x.indicacion_ts) return false;   /* la platica con Claude vive en la vista Claude (salvo que la marque importante) */
   var tx=String(x.tr||x.t||"").replace(/^[^:\n]{1,40}:\s*/,"").trim();
   if(x.url || x.tipo==="foto" || x.tipo==="documento" || x.img || x.data) return true;
@@ -9308,8 +9406,12 @@ function esClaude230(x){
 }
 function vResumen230(t){
   var r=(t.resumen && typeof t.resumen==="object")?t.resumen:null;
-  if(!r || !(String(r.texto||"").trim() || (r.acuerdos||[]).length || (r.pendientes||[]).length))
-    return '<div class="res230 vacio"><b>Resumen</b><span>Claude está preparando el resumen</span></div>';
+  if(!r || !(String(r.texto||"").trim() || (r.acuerdos||[]).length || (r.pendientes||[]).length)){
+    /* build 240: sin resumen de Claude se arma uno local (2 o 3 líneas: contexto, lo que sigue y el último dato real) */
+    var L=[], cx=String(contextoDe(t)||"").replace(/\s+/g," ").trim(); if(cx) L.push(cx.length>140?cx.slice(0,139).replace(/\s+\S*$/,"")+"…":cx);
+    try{ (resumenVivo(t).partes||[]).forEach(function(p){ if(L.length<3 && p && p.tx) L.push(p.tx); }); }catch(e){}
+    if(!L.length) return '<div class="res230 vacio"><b>Resumen</b><span>Claude está preparando el resumen</span></div>';
+    return '<div class="res230 local240"><b>Resumen</b>'+L.map(function(x){ return '<p class="rtx">'+esc(x)+'</p>'; }).join("")+'</div>'; }
   var fc=function(f){ return /^\d{4}-\d{2}-\d{2}/.test(f||"")?fechaMovCorta(String(f).slice(0,10)):String(f||""); };
   var hm=""; try{ var d=new Date(typeof r.actualizado==="number"?r.actualizado:Date.parse(r.actualizado)); if(!isNaN(d)) hm=hhmm(d); }catch(e){}
   return '<div class="res230"><b>Resumen</b>'+(String(r.texto||"").trim()?'<p class="rtx">'+esc(r.texto)+'</p>':'')+
@@ -9426,7 +9528,7 @@ function vHilo(){
   /* build 225: chips en una linea (cada uno abre su hoja) + "Resumen vivo · Claude". El ▾ y su detalle viven en ⓘ Detalles */
   h+=chipsTarea(t);   /* build 228/230: una fila de fichas; el resumen vive en la vista Importante */
   h+=vHecho238(t);   /* build 238: Hecho / Me falta */
-  if(tipoRevisar(t)==="falta" && !vistaSup(t)) h+=vTipoToggle(t);   /* build 236: lo primero que se ve, justo debajo de las fichas */
+  if(tipoRevisar(t)==="falta" && !vistaSup(t) && esIA240(t)) h+=vTipoToggle(t);   /* build 240: solo las que creó la IA */   /* build 236: lo primero que se ve, justo debajo de las fichas */
   /* build 228: el renglon "Agendado ✓ · Calendario…" ahora es la ficha "Agendado" (lineaAgenda queda para otras vistas) */
   h+=vDecisionMeta(t)+vDecisionDato(t)+vQuienDudas(t)+vBorradorMsj(t);   /* build 225: mensaje por confirmar; "Se comparte con" va en 👥 */   /* build 221; 222: decisión de meta atrasada */
 
@@ -9633,7 +9735,7 @@ function vHilo(){
   /* build 198: si en Importante el chat queda vacio, una pista chiquita para que no parezca roto */
   if(_v230==="claude" && !_visibles) m+='<div class="vac230">Aquí sale lo que le pidas a Claude y lo que te conteste.</div>';
   if(!_v230 && !_todo && !_visibles && _ocultos && !(t.evidencias||[]).length) m+='<button class="avfold" data-cmodo="todo">Hay '+_ocultos+' mensaje'+(_ocultos===1?'':'s')+' oculto'+(_ocultos===1?'':'s')+' · Todo</button>';
-  m=_v230==='imp'?vResumen230(t)+(!_visibles && /res230 vacio/.test(vResumen230(t))?'<button class="vt235" data-vt235="1">Ver todo</button>':'')+m:m;   /* build 235: sin nada importante ni resumen, "Ver todo" */   /* build 230: Importante arriba con su Resumen; 232: sin el selector "Importante | Todo" (Importante vive en el filtro) */
+  m=_v230==='imp'?vResumen230(t)+(!_visibles && /res230 (vacio|local240)/.test(vResumen230(t))?'<button class="vt235" data-vt235="1">Ver todo</button>':'')+m:m;   /* build 235: sin nada importante ni resumen, "Ver todo" */   /* build 230: Importante arriba con su Resumen; 232: sin el selector "Importante | Todo" (Importante vive en el filtro) */
   return h+(esDato(t)?vDatoCuerpo(t):vDatosTarea(t))+vVuelta(t)+vPasos(t)+vEntregas(t)+bannerDecision(t)+_pre179+'<div class="scroll'+(_conPill?' cnl" style="--cc:'+_cc:'')+'"><div class="msgs">'+m+pre+'</div></div>'+vTarjetaRev(t)+
     /* LA MISMA BARRA DE TODAS LAS VISTAS — 2026-09-04. Antes el hilo tenia la
        camara a la IZQUIERDA y una flecha de enviar a la derecha, distinto de la
@@ -13703,11 +13805,12 @@ function bindLista(){
   var b=$("badm"); if(b) b.onclick=function(){vista="admin";render()};
   var _hm=$("bhmas"); if(_hm) _hm.onclick=function(){   /* build 200 */
     var v=document.createElement("div"); v.className="hoja-velo"; v.id="hojav";
-    v.innerHTML='<div class="hoja"><div class="grp"><button id="hmnotif">'+ico("campana",18,1.9)+' Notificaciones</button></div><button class="cancel" id="hojano">Cancelar</button></div>';
+    v.innerHTML='<div class="hoja"><div class="grp"><button id="hmhist">'+ico("reloj",18,1.9)+' Historial</button><button id="hmnotif">'+ico("campana",18,1.9)+' Notificaciones</button></div><button class="cancel" id="hojano">Cancelar</button></div>';
     document.body.appendChild(v);
     v.onclick=function(e){ if(e.target===v) cierraHoja(); };
     $("hojano").onclick=cierraHoja;
     $("hmnotif").onclick=function(){ cierraHoja(); vista="notif"; render(); };
+    $("hmhist").onclick=function(){ cierraHoja(); vista="historial"; render(); };   /* build 240 */
   };
   var by=$("byo");  if(by) by.onclick=function(){vista="yo";render()};
   bindBotonAvisos();
@@ -14042,7 +14145,7 @@ function bindHilo(){
     if(f.k==="msg"){ var per=(candidatosPersona(t).filter(function(c){ return c.id===o.id; })[0])||{id:o.id, nombre:o.label}; var por=mandaOrden238(t, per, f.texto); H.hecho=(H.hecho||[]).concat(["Le escribí a "+nombreCorto(per.nombre)+" "+por+": “"+f.texto+"”"]); }
     guarda(t); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-clv]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var id=el.getAttribute("data-clv");
-    (t.claves||[]).forEach(function(c){ if(c && String(c.id)===id){ c.ok=!c.ok; c.por=c.ok?yo:null; c.ok_ts=c.ok?Date.now():null; } }); guarda(t); render(); }; });
+    (t.claves||[]).forEach(function(c){ if(c && String(c.id)===id){ try{ hist240((c.ok?"Quitó la palomita: ":"Palomeó: ")+c.t, t, {tipo:"palomita", clave:id, prev:!!c.ok}); }catch(e){} c.ok=!c.ok; c.por=c.ok?yo:null; c.ok_ts=c.ok?Date.now():null; } }); guarda(t); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-clvev]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var i=el.getAttribute("data-clvev");
     abreEvidencia(t); var b=document.querySelector('#evi229 [data-evi="'+i+'"]'); if(b) b.click(); }; });
   var _cad=function(){ var inp=$("clvnew"), v=inp?String(inp.value||"").trim():""; if(!v) return; t.claves=Array.isArray(t.claves)?t.claves:[];
@@ -14097,6 +14200,7 @@ function bindHilo(){
   var bck=$("bchkl"); if(bck) bck.onclick=function(ev){ ev.stopPropagation(); window.__chkOpen=window.__chkOpen||{}; window.__chkOpen[t.id]=!window.__chkOpen[t.id]; render(); };   /* build 214 */
   Array.prototype.forEach.call(document.querySelectorAll("[data-chk]"),function(el){ el.onclick=function(ev){ ev.stopPropagation();
     var it=(t.checklist.items||[]).filter(function(x){ return x.id===el.getAttribute("data-chk"); })[0]; if(!it) return;
+    try{ hist240("Palomeó en la lista: "+it.tx, t, {tipo:"palomita", item:it.id, prev:+it.estado||0}); }catch(e){}   /* build 240 */
     it.estado=((it.estado||0)+1)%3; it.ts=Date.now(); it.fuente="lo tocó "+((PERSONAS[yo]||{}).nombre||""); guarda(t); render(); }; });
   var bps=$("bpasos"); if(bps) bps.onclick=function(ev){ ev.stopPropagation();
     window.__pasosOpen=window.__pasosOpen||{}; window.__pasosOpen[t.id]=!window.__pasosOpen[t.id]; render(); };
@@ -14224,6 +14328,7 @@ function bindHilo(){
     tx.value=et+": "+val.replace(/ \(no vinculado\)$/,""); try{ tx.focus(); tx.setSelectionRange(et.length+2, tx.value.length); }catch(e){} }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-tipoi]"),function(b){ b.onclick=function(){ var k=b.getAttribute("data-tipoi");
     if(k==="vincular"){ abreEnlazar(t.id, {similares:similares229(t).map(function(d){ return d.id; }), tareaNueva:function(){ t.tipo_item="tarea"; t.es_dato=false; t.tipo_elegido=true; guarda(t); if(!revisaCompleta(t)) render(); }}); return; }   /* build 229 */
+    try{ hist240("Tocó “"+(k==="dato"?"Dato":"Tarea")+"”", t, {tipo:"tipo", prev:t.tipo_item||"", elegido:!!t.tipo_elegido}); }catch(e){}
     t.tipo_item=k; t.es_dato=(k==="dato"); t.tipo_elegido=true; guarda(t); if(!revisaCompleta(t)) render(); }; });   /* build 195; 237: tipo_elegido */
   Array.prototype.forEach.call(document.querySelectorAll("[data-agenda]"),function(b){ b.onclick=function(){ if(b.getAttribute("data-agenda")==="si"){ var _ev=eventoDe(t); agendaEvento(t, "", !(_ev&&_ev.hora)); } else noAgendar(t); }; });   /* build 202/203; 229: sin hora = todo el dia (lo que propone la franja) */
   Array.prototype.forEach.call(document.querySelectorAll("[data-agmenu]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); menuAgenda229(t, b); }; });   /* build 229 */
