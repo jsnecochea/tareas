@@ -11,7 +11,7 @@ var ok = 0, n = 0, malas = [];
 function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
 var FX = JSON.parse(fs.readFileSync(path.join(__dirname, "fx-testamentos-240.json"), "utf8"));
 var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
-eq("versión 240", /var VERSION_APP = "build 240/.test(html), true);
+eq("versión >= 240", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[1] >= 240, true);
 eq("versión >= 233", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[1] >= 233, true);
 
 eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Archivo|Barlow);/g) || []).length, 0);

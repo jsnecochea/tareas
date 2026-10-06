@@ -1457,7 +1457,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 240 · Importante sin toques automáticos ni cambios de fecha · clasificar solo lo de la IA · Acomodo con Dato y sin importancia · Historial";
+var VERSION_APP = "build 241 · Salvador cierra siempre (la condición de la IA no frena) · sin respuestas duplicadas · cierra_sugerido";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -2721,6 +2721,7 @@ function vVuelta(t){
   return h+'</div></div>';
 }
 function cierraHecha(t){
+  if(t && t.__cerradaSin241){ var _cs=t.__cerradaSin241; delete t.__cerradaSin241; t.cerrada_sin=_cs; if(!esRecurrente(t)) msg(t,"bi","Cerrada sin "+_cs+" por orden tuya."); }
   /* build 164: una recurrente no se cierra, arranca su siguiente vuelta */
   if(esRecurrente(t)){ siguienteVuelta(t); return; }
   t.cierre={tipo:"hecha",motivo:"",f:hoy()};
@@ -5422,7 +5423,10 @@ function dotc(t){
    guarda. Desde el 2026-09-22 18:50 cada mensaje del sistema llevaba de:undefined
    y por eso los recordatorios y tareas nuevas no se guardaban y la pantalla se
    quedaba en "Leyendo lo que dijiste…". */
-function msg(t,k,txt){ t.msgs=t.msgs||[]; var o={k:k,t:txt,h:hhmm(),ts:Date.now()}; if(k==="bo" && yo) o.de=yo; t.msgs.push(o); }
+function msg(t,k,txt){ t.msgs=t.msgs||[]; var o={k:k,t:txt,h:hhmm(),ts:Date.now()}; if(k==="bo" && yo) o.de=yo;
+  /* build 241: la misma respuesta de la app no sale dos veces seguidas (21:52 salió duplicada) */
+  if(k!=="bo"){ var u=t.msgs[t.msgs.length-1]; if(u && u.k===k && String(u.t)===String(txt) && Date.now()-(+u.ts||0)<120000) return; }
+  t.msgs.push(o); }
 /* ===== LO HABLADO LARGO NO SE HACE CHORIZO (Salvador 2026-09-17) =====
    Se guarda COMPLETO (transcript) pero se muestra un resumen mío de 2-3
    renglones; a un toque sale el texto exacto. Un dictado corto se muestra tal
@@ -5960,7 +5964,17 @@ function jefeResponde(t,txt){
 /* ---- cerrar: el criterio manda, no el botón ---- */
 /* build 151: que falta para cerrar. Ticket = 1 evidencia basta (antes pedia 2);
    si toda la lista de pasos esta palomeada (Costco), la evidencia no se exige. */
+/* build 241 (Salvador 21:52, "Foto Anuario Colegio"): una orden de cerrar de Salvador (o del dueño que es jefe) cierra SIEMPRE.
+   La condición de cierre solo frena cuando cierra OTRA persona o la IA en automático. Si la puso la IA, se ignora; si la puso
+   Salvador, cierra igual y se anota "cerrada sin <condición> por orden tuya". */
+function cierreLibre241(t){ var p=PERSONAS[yo]||{}; return !!yo && (yo==="salvador" || (p.jefe && !p.prueba) || (t && t.duenio===yo && p.jefe)); }
+function condicionDeIA241(t){ return !!t && (!!t.cierra_sugerido || t.creada_por==="ia_revisor" || t.creada_por==="claude" || /_revisor$/.test(String(t.origen||""))); }
 function faltanParaCerrar(t){
+  var f=faltanParaCerrar0(t); if(!f.length || !cierreLibre241(t)) return f;
+  if(!condicionDeIA241(t)) t.__cerradaSin241=f.map(function(x){ return String(x).replace(/^faltan? /,""); }).join(" y ");
+  return [];
+}
+function faltanParaCerrar0(t){
   var faltan=[];
   var lp=t.lista_pasos||[];
   var todoPalomeado=lp.length>0 && lp.every(function(p){return p.hecho});
@@ -12357,6 +12371,11 @@ function quitaHoraNombre(n){
 
 /* CREAR TAREA — campos reales del motor. La fecha ya viene de Claude (si faltaba,
    se pregunto); si de plano no hay, hoy. */
+/* build 241: la condición de cierre solo es obligación si Salvador la dijo (sus palabras están en lo dictado); si la inventó la IA, es sugerencia */
+function cierraDicho241(d){ var c=String((d&&d.cierra)||"").trim(); if(!c) return true; var s=_fsa((d&&(d.dicho||d.texto))||"");
+  var ws=_fsa(c).replace(/[^a-z0-9ñ ]+/g," ").split(/\s+/).filter(function(w){ return w.length>=4 && !/^(para|como|esta|este|cuando|donde|quede|queda|hecho|hecha|listo|lista)$/.test(w); });
+  return !!s.trim() && ws.length>0 && ws.some(function(w){ return s.indexOf(" "+w.slice(0,5))>=0; }) &&
+    /\b(se cierra|cierra con|cerrarla|cerrarlo|para cerrar|la cierras?|lo cierras?|hasta que|cuando (me )?(mande|manden|entregue|entreguen|llegue|traiga)|con (la|el|su|una|un) (foto|comprobante|ticket|evidencia|recibo|factura|firma))\b/.test(s); }
 function creaTarea(d){
   var f=(d.fecha&&/^\d{4}-\d{2}-\d{2}$/.test(d.fecha))?d.fecha:hoy();
   var per=(["semanal","mensual"].indexOf(d.periodicidad)>=0)?d.periodicidad:null;
@@ -12367,7 +12386,7 @@ function creaTarea(d){
     f_original:f, f_vigente:f, movidas:0,
     recuperable:(d.recuperable===false?false:true),
     criticidad:(["diario","normal","lento"].indexOf(d.criticidad)>=0?d.criticidad:"normal"),
-    periodicidad:per, cierra:d.cierra||"", revisar:d.revisar||"", ritmo:d.ritmo||"", gasto:d.gasto||"",
+    periodicidad:per, cierra:cierraDicho241(d)?(d.cierra||""):"", cierra_sugerido:cierraDicho241(d)?"":(d.cierra||""), revisar:d.revisar||"", ritmo:d.ritmo||"", gasto:d.gasto||"",   /* build 241 */
     estado:"abierta", detenido:null, cierre:null, encargado:null,
     /* REVISION: esta tarea es el respaldo de otra que ejecuta alguien mas.
        revisa_a = id de la tarea del que ejecuta; revisa_ext = nombre, si el que
