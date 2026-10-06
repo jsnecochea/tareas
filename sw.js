@@ -21,6 +21,55 @@ self.addEventListener('fetch', function(e){
   }
 });
 
+/* ===== build 268: SIN NOTIFICACIONES REPETIDAS =====
+   Toda notificación lleva un TAG estable del origen ("q:<tareaId>:<idPregunta>", "acuerdo:<id>", "rec:<tareaId>:<avisoId>") y renotify:false:
+   una nueva con el mismo tag REEMPLAZA a la vieja en vez de apilarse. Sin tag en el push, se arma uno con tipo + url + cuerpo.
+   Además un registro corto (IndexedDB; si falla, memoria) de los tags de las últimas 24 h: mismo tag + mismo cuerpo = no se vuelve a mostrar.
+   OJO iOS: si un push no muestra nada, iOS puede castigar la suscripción; por eso, tras 2 duplicados seguidos del mismo tag, el tercero sí se muestra. */
+var REG_MS = 24 * 3600 * 1000, MAX_SALTOS = 2, REG_MEM = {};
+function hash268(s) { var h = 5381; s = String(s || ''); for (var i = 0; i < s.length; i++) { h = ((h << 5) + h + s.charCodeAt(i)) | 0; } return (h >>> 0).toString(36); }
+function tagDe268(payload, data) {
+  var t = (payload && payload.tag) || (data && data.tag);
+  if (t) return String(t).slice(0, 200);
+  var tipo = (payload && payload.tipo) || (data && data.tipo) || '';
+  var url = (data && (data.url || data.tag_url)) || (payload && payload.url) || '';
+  return 'p:' + tipo + '|' + url + '|' + hash268((payload && payload.body) || '');
+}
+function idb268() {
+  return new Promise(function (ok, no) {
+    try {
+      var r = indexedDB.open('doit-push-268', 1);
+      r.onupgradeneeded = function () { try { r.result.createObjectStore('tags', { keyPath: 'tag' }); } catch (e) {} };
+      r.onsuccess = function () { ok(r.result); };
+      r.onerror = function () { no(r.error); };
+    } catch (e) { no(e); }
+  });
+}
+function lee268(tag) {
+  return idb268().then(function (db) { return new Promise(function (ok) {
+    try { var q = db.transaction('tags', 'readonly').objectStore('tags').get(tag); q.onsuccess = function () { ok(q.result || null); }; q.onerror = function () { ok(REG_MEM[tag] || null); }; } catch (e) { ok(REG_MEM[tag] || null); } }); })
+    .catch(function () { return REG_MEM[tag] || null; });
+}
+function guarda268(rec) {
+  REG_MEM[rec.tag] = rec;
+  return idb268().then(function (db) { return new Promise(function (ok) {
+    try {
+      var tx = db.transaction('tags', 'readwrite'), st = tx.objectStore('tags'); st.put(rec);
+      var cr = st.openCursor(); cr.onsuccess = function () { var c = cr.result; if (!c) return; if (Date.now() - (c.value.ts || 0) > REG_MS) c.delete(); c.continue(); };
+      tx.oncomplete = function () { ok(); }; tx.onerror = function () { ok(); };
+    } catch (e) { ok(); } }); }).catch(function () {});
+}
+/* true = mostrar; false = duplicado (mismo tag y mismo cuerpo en 24 h) */
+function debeMostrar268(tag, body) {
+  return lee268(tag).then(function (r) {
+    var ahora = Date.now();
+    if (r && ahora - (r.ts || 0) < REG_MS && r.body === body && (r.saltos || 0) < MAX_SALTOS) {
+      r.saltos = (r.saltos || 0) + 1; return guarda268(r).then(function () { return false; });
+    }
+    return guarda268({ tag: tag, body: body, ts: ahora, saltos: 0 }).then(function () { return true; });
+  }).catch(function () { return true; });
+}
+
 self.addEventListener('push', function(event) {
   if (!event.data) return;
 
@@ -31,11 +80,16 @@ self.addEventListener('push', function(event) {
     payload = { title: 'Recordatorio', body: event.data.text() };
   }
 
+  const data268 = payload.data || {};
+  const tag268 = tagDe268(payload, data268);
+  data268.tag = tag268;
   const options = {
     body: payload.body || '',
     icon: '/icon-192.png',
     badge: '/badge.png',
-    data: payload.data || {}
+    data: data268,
+    tag: tag268,
+    renotify: false
   };
 
   // Botones: si el SERVIDOR los manda en el payload (payload.actions) se usan
@@ -55,7 +109,10 @@ self.addEventListener('push', function(event) {
   }
 
   event.waitUntil(
-    self.registration.showNotification(payload.title || 'Recordatorio', options)
+    debeMostrar268(tag268, options.body).then(function (mostrar) {
+      if (!mostrar) return null;
+      return self.registration.showNotification(payload.title || 'Recordatorio', options);
+    })
   );
 });
 
@@ -65,6 +122,8 @@ self.addEventListener('notificationclick', function(event) {
   const data = notification.data || {};
 
   notification.close();
+  /* build 268: al tocar una, se cierran las demás con el mismo tag */
+  try { if (notification.tag) event.waitUntil(self.registration.getNotifications({ tag: notification.tag }).then(function (L) { L.forEach(function (n) { try { n.close(); } catch (e) {} }); }).catch(function () {})); } catch (e) {}
 
   if (action === 'del') {
     event.waitUntil(

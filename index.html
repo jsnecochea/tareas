@@ -1532,7 +1532,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 267 · sin bucle de preguntas (Ninguno cierra), sin repreguntas automáticas a terceros · build 266 · toda pregunta de Claude en texto (sin fichas de botones), la respuesta dictada la cierra · build 265 · chip Falta rojo y ancho, micrófono sin autoarranque · build 264 · expedientes: Ya está los deja dormidos, despiertan solos, cerradas y dormidas siempre en búsqueda · recordatorios una vez, siguiente en orden, Hoy solo lo de Salvador, esperas con fecha, falta info coherente, dictado oculto, WhatsApp sin contacto basura";
+var VERSION_APP = "build 268 · notificaciones con tag (sin repetidas) y cerradas al resolver · build 267 · sin bucle de preguntas (Ninguno cierra), sin repreguntas automáticas a terceros · build 266 · toda pregunta de Claude en texto (sin fichas de botones), la respuesta dictada la cierra · build 265 · chip Falta rojo y ancho, micrófono sin autoarranque · build 264 · expedientes: Ya está los deja dormidos, despiertan solos, cerradas y dormidas siempre en búsqueda · recordatorios una vez, siguiente en orden, Hoy solo lo de Salvador, esperas con fecha, falta info coherente, dictado oculto, WhatsApp sin contacto basura";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -1639,8 +1639,39 @@ function bindNotif(){
   Array.prototype.forEach.call(document.querySelectorAll("[data-npre]"),function(b){ b.onclick=function(){ guardaNotif(notifDePreset(b.getAttribute("data-npre"))); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-ntipo]"),function(b){ b.onclick=function(){ var pr=notifPrefs(yo), k=b.getAttribute("data-ntipo"); pr[k]=!pr[k]; guardaNotif(pr); render(); }; });
 }
-function disparaPushInstantaneo(para, titulo, cuerpo, url, tipo) {
+/* ===== build 268: TAG ESTABLE de cada notificación y cierre de las resueltas =====
+   Tags: "q:<tareaId>:<idPregunta>" · "acuerdo:<id>" · "rec:<tareaId>:<avisoId>". Sin origen conocido: tipo|url|hash del cuerpo.
+   El sw.js reemplaza (mismo tag) y no repite (mismo tag + mismo cuerpo en 24 h); aquí se cierran las que ya se resolvieron. */
+function hash268(s){ var h=5381; s=String(s||""); for(var i=0;i<s.length;i++){ h=((h<<5)+h+s.charCodeAt(i))|0; } return (h>>>0).toString(36); }
+function tagDe268(tipo, url, cuerpo){ return "p:"+(tipo||"")+"|"+(url||"")+"|"+hash268(cuerpo); }
+function tidDeUrl268(url){ var m=String(url||"").match(/[?&](?:recordatorio|tarea|id)=([^&#]+)/); try{ return m?decodeURIComponent(m[1]):""; }catch(e){ return m?m[1]:""; } }
+function tareaResuelta268(t){ return !!t && (!!t.cierre || t.estado==="dormida" || t.estado==="cerrada" || !!t.fusionada_en || (typeof estadoReal==="function" && estadoReal(t)==="cerrada")); }
+function pendientePreg268(t){
+  try{ if(preguntas249(t).length) return true; }catch(e){}
+  try{ if(preguntaParaMi(t)) return true; }catch(e){}
+  try{ if(esDecisionSal(t)) return true; }catch(e){}
+  return false;
+}
+/* ¿esta notificación ya es de algo resuelto? (n: {tag, data}) */
+function resueltaNotif268(n){
+  var tag=String((n&&n.tag)||(n&&n.data&&n.data.tag)||""), m, L=(typeof tareas!=="undefined"&&tareas)||[], tt=function(id){ return L.filter(function(x){ return x && x.id===id; })[0]; };
+  if((m=tag.match(/^q:([^:]+):(.*)$/))){ var t=tt(m[1]); return !!t && (tareaResuelta268(t) || !pendientePreg268(t)); }
+  if((m=tag.match(/^rec:([^:]+):(.*)$/))){ var t2=tt(m[1]); if(!t2) return false; if(tareaResuelta268(t2)) return true;
+    try{ return !avisosDe(t2).some(function(a){ return a && (a.id===m[2] || (a.self && m[2]==="self")); }); }catch(e){ return false; } }
+  var id=String((n&&n.data&&(n.data.id||n.data.tarea_id||n.data.tareaId))||tidDeUrl268(n&&n.data&&n.data.url)||""); if(id && !/^acuerdo:/.test(tag)){ var t3=tt(id); if(t3 && tareaResuelta268(t3)) return true; }
+  return false;
+}
+function swReg268(){ try{ if(!("serviceWorker" in navigator)) return Promise.resolve(null); return navigator.serviceWorker.ready.catch(function(){ return null; }); }catch(e){ return Promise.resolve(null); } }
+/* barre las notificaciones abiertas y cierra las de cosas resueltas. force = sin esperar el respiro de 20 s */
+function barreNotifs268(force){
+  try{ if(!force && window.__barreN268 && Date.now()-window.__barreN268<20000) return Promise.resolve(0); window.__barreN268=Date.now();
+    return swReg268().then(function(reg){ if(!reg || !reg.getNotifications) return 0; return reg.getNotifications().then(function(L){ var n=0; L.forEach(function(x){ try{ if(resueltaNotif268(x)){ x.close(); n++; } }catch(e){} }); return n; }); }).catch(function(){ return 0; });
+  }catch(e){ return Promise.resolve(0); }
+}
+function disparaPushInstantaneo(para, titulo, cuerpo, url, tipo, tag) {
   if (!para || para === yo) return; // No auto-notificar si la acción la hace uno mismo
+  /* build 268: no se dispara el push de un recordatorio o una pregunta que ya está resuelto */
+  try{ if(/^(recordatorio|espera|te_necesito|pregunta)$/.test(tipo||"") && typeof tareas!=="undefined"){ var _tid=tidDeUrl268(url), _tr=tareas.filter(function(x){ return x && x.id===_tid; })[0]; if(_tr && tareaResuelta268(_tr)) return; } }catch(e){}
   /* build 200: lo que esa persona apago en Notificaciones no se le manda; el tipo viaja al servidor */
   tipo = tipo || tipoDePush(titulo, cuerpo);
   if (!notifPermite(para, tipo)) return;
@@ -1656,7 +1687,8 @@ function disparaPushInstantaneo(para, titulo, cuerpo, url, tipo) {
       title: titulo || 'Doit',
       body: cuerpo || 'Tienes una nueva notificación',
       url: url || '',
-      tipo: tipo || ''
+      tipo: tipo || '',
+      tag: tag || (typeof tagDe268==="function"?tagDe268(tipo, url, cuerpo):"")   /* build 268: la Mac manda el suyo (q:/acuerdo:/rec:) */
     })
   }).then(function(r){ return r.json(); })
     .then(function(res){
@@ -2878,6 +2910,7 @@ function cierraHecha(t){
   var tarde=t.f_original&&dDif(t.f_original,hoy())>0;
   msg(t,"bi",tarde?"Cerrada. Lo importante es que ya quedó.":"Cerrada a tiempo. Bien hecho.");
   t.estado="cerrada"; t.pide_atoro=false; t.pide_tel=false; t.pide_fecha=false; guarda(t); sincronizaAvisos(t);
+  try{ barreNotifs268(true); }catch(e){}   /* build 268 */
 }
 /* REABRIR: la tarea vuelve a estar viva tal cual estaba, con su historial.
    Se anota quien y por que la reabrio. Si la fecha ya paso, se pide la nueva
@@ -2907,6 +2940,7 @@ function duerme264(t){
   msg(t,"bi","Enterado · queda viva para lo que llegue");
   t.dormida={ts:Date.now(), q:cuentaEntra264(t), e:(t.evidencias||[]).length};
   guarda(t); try{ sincronizaAvisos(t); }catch(e){}
+  try{ barreNotifs268(true); }catch(e){}   /* build 268 */
   return prev;
 }
 function restauraDormir264(t, prev){
@@ -6569,6 +6603,7 @@ function bindFicha(primera){
 
 /* ============ RENDER ============ */
 function render(){
+  try{ barreNotifs268(); }catch(e){}   /* build 268: cierra las notificaciones de lo ya resuelto (cada 20 s como mucho) */
   cierraDudaHilo();
   if(vista!=="hilo" && vista!=="galeria") window.__visitaDe=null;   /* build 197: salir de la tarea termina la visita */
   /* build 235: cada vez que se abre una tarea, el filtro arranca en Importante */
@@ -8871,7 +8906,7 @@ function enviaPreguntas249(tid, P, A){
     if(p.reg){ try{ resuelveReg266(t, p, tx); }catch(e266){ console.warn("resuelve266", e266); } }   /* build 266: cierra el registro de origen */
     textos.push("Respuesta a «"+p.q+"»: "+tx+"."); });
   if(H && quitar.length){ quitar.sort(function(a,b){ return b-a; }).forEach(function(ix){ (H.falta||[]).splice(ix,1); }); }
-  guarda(t);
+  guarda(t); try{ barreNotifs268(true); }catch(e){}   /* build 268: contestada la pregunta, se cierra su notificación */
   if(textos.length){ completaRevision(t, textos.join(" "), {sinRevision:tipoRevisar(t)!=="falta", conservaFalta:(H&&H.falta||[]).slice()}); return; }
   liberaAcomoda249(t.id);
 }
@@ -13413,6 +13448,7 @@ function resuelveReg266(t, p, tx){
   if(p.k==="dsal"){ msg(t,"bi","Ya decidiste: "+t.pendiente_info); t.pendiente_tipo=""; t.pendiente_info=""; t.decision_ts=Date.now(); guarda(t); return; }
   if(p.k==="espera"){ t.espera266=p.uo||ultimoOtroTs266(t); guarda(t); return; }
 }
+/* build 268: duerme264 / resolución también barren */
 function decideDato(t, did, accion){
   var d=(t.decision_dato||[]).filter(function(x){ return x.id===did; })[0]; if(!d) return "";
   t.decision_dato=t.decision_dato.filter(function(x){ return x.id!==did; });
@@ -14325,7 +14361,8 @@ function avisoAlServidor(t, a, key){
   if(prohibido){ if(mm[kk]){ delete mm[kk]; guardaMemAv263(); llamaPush("aviso_del", {id:kk}); } return; }
   if(!f) return;
   var cuerpo={id:kk, usuario:(t.duenio||yo), tarea:t.id,
-    texto:String(a.texto||t.nombre||"Recordatorio").slice(0,180), cuando:f+" "+a.hora+":00", tipo:"recordatorio", repite_max:1};   /* 263: una vez, y como mucho 1 más al día siguiente */
+    texto:String(a.texto||t.nombre||"Recordatorio").slice(0,180), cuando:f+" "+a.hora+":00", tipo:"recordatorio", repite_max:1,
+    tag:"rec:"+t.id+":"+(a.self?"self":a.id)};   /* build 268: tag estable del aviso */   /* 263: una vez, y como mucho 1 más al día siguiente */
   if(cada){
     cuerpo.cada=cada;
     /* build 169 (contrato con Josue 2-oct): f_fin AAAA-MM-DD o "sin_fin". El servidor deja de repetir despues de esa fecha. */
