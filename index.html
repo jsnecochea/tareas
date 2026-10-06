@@ -738,6 +738,12 @@ button{font:inherit;color:inherit}
 .ac226{display:flex;align-items:center;gap:4px;white-space:nowrap;margin:-2px 0 6px 10px;font-size:13.5px;color:var(--ink-3)}
 .ng243{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:60;display:flex;align-items:center;gap:6px;background:#2c2c2e;color:var(--ink-2);border-radius:16px;padding:7px 12px;font-size:13.5px;box-shadow:0 4px 16px rgba(0,0,0,.35);max-width:92vw}
 .ng243 button{border:0;background:none;color:var(--azul);font:inherit;font-size:13.5px;font-weight:600;padding:0 2px}.ng243 .sep{color:var(--ink-3)}
+.bfoto244{padding:4px;width:min(86%,262px);box-sizing:border-box}.bfoto244 .fn244{display:block;font-size:13.5px;margin:2px 6px 3px;color:var(--ink-2)}.bfoto244 .gf244{display:grid;gap:2px;border-radius:9px;overflow:hidden}
+.bfoto244.c1 .gf244{grid-template-columns:1fr}.bfoto244.c2 .gf244{grid-template-columns:1fr 1fr}.bfoto244.c3 .gf244{grid-template-columns:1fr 1fr 1fr}
+.ft244{position:relative;display:block;border:0;padding:0;margin:0;background:var(--surface-2);overflow:hidden;color:var(--ink-3);min-height:70px;-webkit-tap-highlight-color:transparent}
+.bfoto244.multi .ft244{aspect-ratio:1/1}.bfoto244.c1 .ft244{aspect-ratio:4/3}.ft244 img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.ft244 .fti{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:2px}.ft244 .fti small{font-size:12px;font-weight:600}
+.ft244.sin .fti,.ft244.err .fti{display:flex}.ft244.err img{display:none}.bfoto244 .st{padding:0 6px}
 .dia242{display:flex;justify-content:center;margin:10px 0 6px}.dia242 span{font-size:12px;color:var(--ink-3);font-weight:600;letter-spacing:.2px}
 .nia242{display:flex;align-items:flex-start;gap:6px;margin:4px 12px;padding:6px 10px;border-radius:12px;background:var(--surface-2);color:var(--ink-3);font-size:13.5px;line-height:1.35;max-width:92%}
 .nia242 .niai{flex:none;width:14px;height:14px;margin-top:2px}.nia242 .niai svg{width:13px;height:13px}.nia242 .niat{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nia242.ab .niat{white-space:normal}
@@ -1464,7 +1470,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 243 · La tarea destino de un vínculo no entra en revisión · Vinculada · Deshacer · No guardar en el Acomodo";
+var VERSION_APP = "build 244 · Te pregunta ya no sale si Salvador contestó por WhatsApp · Las fotos de WhatsApp salen como miniatura en cuadrícula";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -9207,6 +9213,42 @@ function sepDia242(x){
   var h=hoy(), lab=d===h?"Hoy":(dDif(d,h)===1?"Ayer":fechaMovCorta(d));
   return '<div class="dia242"><span>'+esc(lab)+'</span></div>';
 }
+/* ===================== build 244 (Salvador 6-oct 06:40): fotos de WhatsApp como miniatura, nunca como nombre de archivo =====================
+   Un mensaje cuyo texto es SOLO un nombre de imagen (wa_1791128012427.jpeg/jpg/png/webp/heic) y trae url o archivo se pinta como miniatura.
+   Varias seguidas de la misma persona (menos de 2 min entre una y otra) van en UN globo en cuadrícula, estilo iMessage; cuentan como un elemento.
+   Sin url: ícono de foto y la palabra "Foto" (nunca el nombre del archivo). Tocar una miniatura abre el visor con todas las del globo. */
+var FOTO_NOM244=/^[^\s:\/\\]+\.(?:jpe?g|png|webp|heic|heif)$/i;
+function textoFoto244(x){ return sinEmojiUI(quitaEtiquetasWA(String((x&&x.t)||""))).replace(/^[^:\n]{1,40}:\s*/,"").trim(); }
+function esFoto244(x){ return !!x && x.k!=="bal" && !x.hab && !x.prog && FOTO_NOM244.test(textoFoto244(x)); }
+function urlFoto244(x){ var u=x&&(x.url||x.archivo||x.file_url||x.src||""); return (typeof u==="string" && u)?u:""; }
+function autorFoto244(x){ var m=sinEmojiUI(String((x&&x.t)||"")).match(/^([^:\n]{1,40}):\s*/); return nombreLimpio((m&&m[1])||(x&&(x.wa_c||x.chat))||""); }
+function claveFoto244(x){ return _n179(autorFoto244(x))+"|"+(+x.wa_in===1?1:(+x.wa_in===0?0:2))+"|"+(x.k||""); }
+var SVG_FOTO244='<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="2.4"/><circle cx="9" cy="10.5" r="1.7"/><path d="M4 17l4.6-4.4 3.4 3.2 3-2.6L20 16.2"/></svg>';
+/* los índices de las fotos que siguen a la de ix y van en el mismo globo (misma persona, <2 min entre una y otra, nada en medio) */
+function grupoFotos244(t, ix, ok){
+  var ms=t.msgs||[], out=[ix], x=ms[ix], ult=x;
+  for(var j=ix+1;j<ms.length;j++){ var z=ms[j]; if(!z || z.oculto || z.eliminado) continue;
+    if(!esFoto244(z) || claveFoto244(z)!==claveFoto244(x)) break;
+    var d=(+z.ts||0)-(+ult.ts||0); if(!(+z.ts && +ult.ts) || d<0 || d>=120000) break;
+    if(ok && !ok(z, j)) break; out.push(j); ult=z; }
+  return out;
+}
+function vFotos244(t, ixs, mid){
+  var ms=t.msgs||[], x0=ms[ixs[0]], n=ixs.length, saliente=(x0.k==="bo"), nom=(+x0.wa_in===0 || x0.origen==="wa_saliente")?"":autorFoto244(x0);
+  var col=n===1?1:(n===2||n===4?2:3);
+  var tl=ixs.map(function(i){ var z=ms[i], u=urlFoto244(z);
+    return u?'<button class="ft244" data-f244="'+i+'" aria-label="Foto"><img src="'+esc(u)+'" alt="Foto" loading="lazy" onerror="this.parentNode.classList.add(\'err\')"><span class="fti">'+SVG_FOTO244+'<small>Foto</small></span></button>'
+            :'<span class="ft244 sin"><span class="fti">'+SVG_FOTO244+'<small>Foto</small></span></span>'; }).join("");
+  return '<div class="b '+(saliente?"bo":"bi")+' bfoto244 c'+col+(n>1?' multi':'')+'" data-mix="'+ixs[0]+'" data-g244="'+ixs.join(",")+'">'+
+    (nom?'<b class="cn fn244">'+esc(nombreVisible230(nom, t))+'</b>':'')+'<div class="gf244">'+tl+'</div>'+
+    '<span class="st">'+icoCl238(t,x0,ixs[0])+palomitasHTML(ms[ixs[n-1]])+'</span></div>';
+}
+function bindFotos244(raiz, t){
+  Array.prototype.forEach.call(raiz.querySelectorAll("[data-f244]"), function(el){ el.onclick=function(ev){ ev.stopPropagation();
+    var g=el.closest("[data-g244]"), ixs=g?String(g.getAttribute("data-g244")||"").split(",").map(Number):[+el.getAttribute("data-f244")], lst=[], k=0, me=+el.getAttribute("data-f244");
+    ixs.forEach(function(i){ var z=(t.msgs||[])[i], u=urlFoto244(z); if(!u) return; if(i===me) k=lst.length; lst.push({img:true, data:u, url:u, de:autorFoto244(z), ts:+z.ts||Date.now()}); });
+    if(lst.length) abreVisor(lst, k); }; });
+}
 /* la hoja del detalle del globo */
 function abreDetalle242(t, ix){
   var x=(t.msgs||[])[ix]; if(!x) return; var cx=""; try{ cx=canalDe(x,t); }catch(e){} var _v0=document.getElementById("det242"); if(_v0) _v0.remove();
@@ -9675,8 +9717,10 @@ function vHilo(){
   function _ntHasta(ts){ while(_ntI<_nts.length && (ts===Infinity || (_nts[_ntI].ts||0)<=ts)){ var n=_nts[_ntI++];
     if(_v230==="claude" || (_v230==="imp" && !esImp230(t, {id:n.id||n.nid, ts:n.ts, t:n.t, nota_ia:1}))) continue;   /* 230: las notas automaticas no van en Claude; en Importante solo si estan en msg_imp */
     m+='<div class="b bi bnota'+(n.privado?' priv':'')+'">'+esc(sinEmojiUI(n.t))+'<span class="st">'+esc((n.h||"")+(n.privado?" · solo tú":""))+'</span></div>'; } }
+  var _fc244={};   /* build 244: fotos que ya fueron en el globo de otra */
   (t.msgs||[]).forEach(function(x,ix){
     if(x && x.ts){ _evHasta(x.ts); _ntHasta(x.ts); }
+    if(_fc244[ix]) return;
     if(x && x.k==="bi" && !x.wa_in && /^Foto guardada( con ubicaci[oó]n)?\.?$/.test(String(x.t||"").trim())) return;   /* build 186: paja */
     /* build 195: "Resumen:", "Se cierra con:" y "La abriste dictando" ya no van en el chat: estan en el ▾ */
     if(x && x.k==="bi" && !x.wa_in && !x.wa_c && /^(Resumen:|Se cierra con:|La abriste dictando:)/.test(String(x.t||"").trim())) return;
@@ -9713,6 +9757,11 @@ function vHilo(){
     m+=sepDia242(x);   /* build 242: separador de día estilo iMessage, solo cuando cambia el día */
     var q=autorMsg(x,t);
     if(x.hab){ m+=burbujaHablada(x, (q||""), t.id+"|"+ix); return; }
+    if(esFoto244(x)){   /* build 244 */
+      var _g244=grupoFotos244(t, ix, function(z, jz){ return canalDe(z,t)===_cx && msgEnCanal(z,_v230?"todo":_cn.id,t) && !(_mf225 && metaDeMsg(t,z)!==_mf225) &&
+        (_v230==="imp"?esImp230(t,z):(_v230==="claude"?esClaude230(z):esImportante(z, jz, _rmp))); });
+      _g244.forEach(function(i){ if(i!==ix) _fc244[i]=1; });
+      m+=vFotos244(t, _g244, t.id+"|"+ix); return; }
     var meta=(q?esc(q)+" · ":"")+esc(x.h)+(x.wa_auto?" · → "+esc(String(x.wa_auto).split(" ")[0])+" por WhatsApp":"")+(_cx.indexOf("dm:")===0?" · privado":"")+(x.nota_mia?" · nota para ti":"")+(x.wa_eq&&x.wa_eq.length?" · por WhatsApp a "+esc(x.wa_eq.map(function(c){ return String(c).split(" ")[0]; }).join(" y ")):"");   /* build 216/217 */
     /* Salvador 2026-09-22: el ULTIMO mensaje mio trae un botecito 5 minutos,
        por si se subio mal y era otra cosa. Se borra sin preguntar. */
@@ -14159,6 +14208,7 @@ function bindHilo(){
   Array.prototype.forEach.call(document.querySelectorAll("[data-ai]"),function(el){
     el.onclick=function(){abreVisor(adj,+el.getAttribute("data-ai"))};
   });
+  bindFotos244(document, t);   /* build 244 */
   Array.prototype.forEach.call(document.querySelectorAll(".fot img"),function(el,i){
     el.style.cursor="pointer";
     el.onclick=function(){ var _ims=adj.filter(function(f){return f.img;}), s=el.getAttribute("src"), k=-1;
@@ -15633,9 +15683,34 @@ function preguntaParaMi(t){
     var meNombra=nombres.some(function(n){ return n && (" "+tx+" ").indexOf(" "+n+" ")>=0; });
     var aMi=meNombra || (y.cita && _n179(y.cita.de)===_n179((PERSONAS[yo]||{}).nombre)) || (j-1===iUlt && iUlt>=0) || (t.duenio===yo && y.wa_in===1);
     var paraTodos=/\b(todos ustedes|opinen|votemos|que opinan|que opinan todos|alguien sabe)\b/.test(tx);
-    if(aMi || paraTodos) return {ix:j, de:String(quien).split(" ")[0], t:String(y.t||"").replace(/^([^:\n]{1,24}):\s*/,""), todos:!aMi&&paraTodos};
+    if(aMi || paraTodos){
+      if(contestadoPorSalida244(ms, j, y, quien)) continue;   /* build 244: Salvador ya le contestó (desde su celular o la Mac) */
+      return {ix:j, de:String(quien).split(" ")[0], t:String(y.t||"").replace(/^([^:\n]{1,24}):\s*/,""), todos:!aMi&&paraTodos};
+    }
   }
   return null;
+}
+/* build 244 (Salvador 6-oct 06:40, "TE PREGUNTA · Jorge"): si DESPUÉS de la pregunta hay cualquier mensaje saliente de Salvador a ese mismo
+   contacto, ya no se cuenta. Salientes: wa_in 0 / origen wa_saliente (los que mandó desde su celular y la Mac registra en el hilo), o un
+   globo suyo por WhatsApp (bo con wa_c / wa_auto). Mismo contacto = mismo teléfono si ambos lo traen; si no, mismo nombre (o el nombre
+   del saliente contiene al otro); un saliente sin contacto en el hilo cuenta. Las notas, avisos, programados y cancelados no cuentan. */
+function esSalidaWA244(z){
+  if(!z || z.oculto || z.eliminado || z.nota_ia || z.aviso || z.empujon || z.prog || z.wa_can || z.hab) return false;
+  if(+z.wa_in===0 || z.origen==="wa_saliente") return true;
+  return z.k==="bo" && !!(z.wa_c || z.wa_auto) && (!z.de || z.de==="salvador");
+}
+function mismoContacto244(z, y, quien){
+  var tz=_telDe(z), ty=_telDe(y); if(tz && ty) return tz===ty;
+  var nz=_n179(z.wa_c||z.wa_auto||z.chat||""), nq=_n179((y&&y.wa_c)||quien||""); if(!nz || !nq) return true;
+  if(nz===nq || nz.indexOf(nq)===0 || nq.indexOf(nz)===0) return true;
+  return nz.split(" ")[0]===nq.split(" ")[0];
+}
+function contestadoPorSalida244(ms, j, y, quien){
+  var yts=+y.ts||0;
+  for(var k=0;k<ms.length;k++){ if(k===j) continue; var z=ms[k]; if(!esSalidaWA244(z)) continue;
+    var despues=(yts && +z.ts)?(+z.ts>yts):(k>j); if(!despues) continue;
+    if(mismoContacto244(z, y, quien)) return true; }
+  return false;
 }
 
 /* ---------- "PARA TI": la pregunta textual + resumen con fuentes ---------- */
