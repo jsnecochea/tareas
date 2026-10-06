@@ -53,7 +53,8 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
     if (process.env.CAP) await p.screenshot({ path: path.join(process.env.CAP, "b237-platica-desplegada.png") });
     var r3 = await p.evaluate(function () { var o = {};
       function card(re) { return [].filter.call(document.querySelectorAll(".aco226 .acor.g237"), function (f) { return re.test(f.textContent); })[0]; }
-      __ESCR.length = 0; card(/Lalo/).querySelector(":scope > .acob > .ac226 [data-acok]").click();   /* 238: el botón de la TARJETA (desplegada, cada mensaje trae el suyo) */
+      __ESCR.length = 0; window.__g237open = {}; render();   /* 245: desplegada, la fila del final sobra (cada mensaje trae la suya); se pliega para usar la de la TARJETA */
+      card(/Lalo/).querySelector(":scope > .acob > .ac226 [data-acok]").click();
       var L = tareas[0]; o.ok = [L.msgs.filter(function (x) { return /Lalo/.test(x.wa_c || "") && x.acomodo && x.acomodo.ok === 1; }).length, document.querySelectorAll(".aco226 .acor.g237").length];
       var w = __ESCR.filter(function (e) { return e[0] === "bitacora_personas"; })[0]; var rg = w ? w[2].acomodo_reglas[Object.keys(w[2].acomodo_reglas)[0]] : null;
       o.regla = w ? [w[1], JSON.stringify(w[3]), rg.contacto, rg.tipo, rg.tarea_destino, rg.palabras_clave.length >= 3 && rg.palabras_clave.length <= 5, /^\d{4}-\d{2}-\d{2}T/.test(rg.fecha)] : null;

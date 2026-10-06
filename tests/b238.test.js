@@ -86,7 +86,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
     var r5 = await p.evaluate(function () { var o = {}, cd = document.querySelector(".aco226 .acor.g237");
       var comedor = [].filter.call(cd.querySelectorAll(".m237"), function (x) { return /comedor/.test(x.textContent); })[0];
       comedor.querySelector("[data-acmov]").click(); document.querySelector('#mov225 [data-movto="tCOMEDOR"]').click();
-      cd = document.querySelector(".aco226 .acor.g237"); cd.querySelector(":scope > .acob > .ac226 [data-acok]").click();
+      window.__g237open = {}; render(); cd = document.querySelector(".aco226 .acor.g237"); cd.querySelector(":scope > .acob > .ac226 [data-acok]").click();   /* 245: plegada para usar la fila de la tarjeta */
       var P = tareas[0], C = tareas[1];
       o.destinos = [C.msgs.filter(function (x) { return /comedor/.test(x.t); }).length, P.msgs.filter(function (x) { return x.acomodo && x.acomodo.ok === 1; }).length, P.msgs.filter(function (x) { return x.oculto; }).length];
       o.reglas = __ESCR.filter(function (e) { return e[0] === "bitacora_personas"; }).map(function (e) { var r = e[2].acomodo_reglas[Object.keys(e[2].acomodo_reglas)[0]]; return [r.tipo, r.tarea_destino, r.mensajes]; });

@@ -736,14 +736,25 @@ button{font:inherit;color:inherit}
 .mov225{position:fixed;left:0;right:0;bottom:0;max-height:70vh;background:#1c1c1e;border-radius:22px 22px 0 0;padding:12px 14px calc(18px + env(safe-area-inset-bottom));display:flex;flex-direction:column;box-shadow:0 -10px 40px rgba(0,0,0,.7)}
 /* build 226: acomodo (OK · Mover · Nueva), hoja "¿A dónde va?", seccion Acomodo del Inicio */
 .ac226{display:flex;align-items:center;gap:4px;white-space:nowrap;margin:-2px 0 6px 10px;font-size:13.5px;color:var(--ink-3)}
-.ng243{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:60;display:flex;align-items:center;gap:6px;background:#2c2c2e;color:var(--ink-2);border-radius:16px;padding:7px 12px;font-size:13.5px;box-shadow:0 4px 16px rgba(0,0,0,.35);max-width:92vw}
-.ng243 button{border:0;background:none;color:var(--azul);font:inherit;font-size:13.5px;font-weight:600;padding:0 2px}.ng243 .sep{color:var(--ink-3)}
+.ng243{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:80;background:#2c2c2e;color:var(--ink);border-radius:16px;padding:12px 14px;font-size:17px;line-height:1.35;box-shadow:0 8px 28px rgba(0,0,0,.5);width:min(300px,calc(100vw - 24px))}
+.ng243.anc245{transform:none;bottom:auto}.ng243 .q245{display:block;margin-bottom:10px}.ng243 .b245{display:flex;gap:10px}
+.ng243 button{flex:1;min-height:44px;border:0;border-radius:12px;background:rgba(10,132,255,.2);color:var(--azul);font:inherit;font-size:17px;font-weight:600;padding:0 10px}.ng243 button:active{background:rgba(10,132,255,.36)}
+.ng243 .ar245{display:none;position:absolute;left:var(--ax,50%);margin-left:-7px;width:14px;height:14px;background:#2c2c2e;transform:rotate(45deg)}.ng243.anc245.arriba .ar245{display:block;bottom:-7px}.ng243.anc245.abajo .ar245{display:block;top:-7px}
 .bfoto244{padding:4px;width:min(86%,262px);box-sizing:border-box}.bfoto244 .fn244{display:block;font-size:13.5px;margin:2px 6px 3px;color:var(--ink-2)}.bfoto244 .gf244{display:grid;gap:2px;border-radius:9px;overflow:hidden}
 .bfoto244.c1 .gf244{grid-template-columns:1fr}.bfoto244.c2 .gf244{grid-template-columns:1fr 1fr}.bfoto244.c3 .gf244{grid-template-columns:1fr 1fr 1fr}
 .ft244{position:relative;display:block;border:0;padding:0;margin:0;background:var(--surface-2);overflow:hidden;color:var(--ink-3);min-height:70px;-webkit-tap-highlight-color:transparent}
 .bfoto244.multi .ft244{aspect-ratio:1/1}.bfoto244.c1 .ft244{aspect-ratio:4/3}.ft244 img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 .ft244 .fti{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:2px}.ft244 .fti small{font-size:12px;font-weight:600}
 .ft244.sin .fti,.ft244.err .fti{display:flex}.ft244.err img{display:none}.bfoto244 .st{padding:0 6px}
+.img245{display:inline-flex;align-items:center;gap:4px;vertical-align:middle;border:0;background:none;padding:0;font:inherit;color:var(--amar);text-decoration:underline;text-underline-offset:2px;cursor:pointer;max-width:100%}
+.img245 svg{flex:none}.img245 .in245{white-space:nowrap}.img245.sin{flex-wrap:wrap;row-gap:0}.img245 .it245{flex:none;width:34px;height:34px;object-fit:cover;border-radius:6px;margin-left:4px;text-decoration:none}
+.img245.sin{color:var(--ink-3);text-decoration:none;cursor:default}.img245.sin .in245{text-decoration:line-through;text-decoration-color:rgba(142,142,147,.5)}.img245.sin small{font-size:.85em;white-space:nowrap}
+.lote245{position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:-4px -4px 6px;padding:8px 10px;border-radius:12px;background:var(--surface);border:1px solid var(--line);box-shadow:0 2px 10px rgba(0,0,0,.25)}
+.lote245 .lq{flex:1 1 100%;font-size:13px;color:var(--ink-3);font-weight:600}.lote245 button{flex:1;min-height:40px;border:0;border-radius:11px;background:rgba(10,132,255,.2);color:var(--azul);font:inherit;font-size:14px;font-weight:600;padding:0 6px;white-space:nowrap}.lote245 button[data-lote245="ng"]{background:rgba(255,255,255,.08);color:var(--ink-2)}
+.b.sel245{outline:2.5px solid var(--azul);outline-offset:2px;position:relative}.b.sel245::after{content:"✓";position:absolute;top:-9px;left:-9px;width:22px;height:22px;border-radius:50%;background:var(--azul);color:#fff;font-size:14px;font-weight:700;display:grid;place-items:center}
+.selbar245{position:fixed;left:0;right:0;bottom:0;z-index:66;display:flex;align-items:center;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -4px 16px rgba(0,0,0,.35)}
+.selbar245 .sn{font-size:14px;color:var(--ink-2);font-weight:600;white-space:nowrap;margin-right:2px}.selbar245 button{flex:1;min-height:44px;border:0;border-radius:11px;background:rgba(10,132,255,.2);color:var(--azul);font:inherit;font-size:14px;font-weight:600;padding:0 4px;white-space:nowrap}.selbar245 button.x{flex:none;width:44px;background:rgba(255,255,255,.08);color:var(--ink-2)}
+.desde245{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 16px 10px;font-size:15px;color:var(--ink-2)}.desde245 input{font:inherit;font-size:15px;background:var(--surface-2);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:6px 8px;margin-left:6px;color-scheme:dark}.desde245 #nd245{color:var(--ink-3);font-size:13.5px}
 .dia242{display:flex;justify-content:center;margin:10px 0 6px}.dia242 span{font-size:12px;color:var(--ink-3);font-weight:600;letter-spacing:.2px}
 .nia242{display:flex;align-items:flex-start;gap:6px;margin:4px 12px;padding:6px 10px;border-radius:12px;background:var(--surface-2);color:var(--ink-3);font-size:13.5px;line-height:1.35;max-width:92%}
 .nia242 .niai{flex:none;width:14px;height:14px;margin-top:2px}.nia242 .niai svg{width:13px;height:13px}.nia242 .niat{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nia242.ab .niat{white-space:normal}
@@ -1029,7 +1040,7 @@ button{font:inherit;color:inherit}
   flex-direction:column;align-items:center;justify-content:center;padding:18px}
 .visor.on{display:flex}
 .visor .vx{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);right:16px;width:42px;height:42px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:28px;line-height:1}
-.visor img{max-width:100%;max-height:76vh;border-radius:8px;object-fit:contain}
+.visor img{width:94vw;max-width:94vw;max-height:78vh;border-radius:8px;object-fit:contain}
 .visor .info{color:#D9D3C9;font-size:17.6px;margin-top:12px;text-align:center;line-height:1.5}
 .visor .nav{display:flex;gap:10px;margin-top:14px}
 .visor .nav button{padding:9px 16px;border-radius:9px;border:1px solid #4A4540;background:#211F1C;
@@ -1470,7 +1481,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 244 · Te pregunta ya no sale si Salvador contestó por WhatsApp · Las fotos de WhatsApp salen como miniatura en cuadrícula";
+var VERSION_APP = "build 245 · Imágenes en amarillo con visor · Confirmación de No guardar grande · Lo que mandé va a la derecha · Mover todos y selección en lote";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -9094,19 +9105,27 @@ function opcionesMover(t, x){
 function inicialesDe(n){ var w=nombreCorto(String(n||"")).replace(/\(.*?\)/g,"").replace(/[^\wáéíóúñü ]+/gi," ").trim().split(/\s+/).filter(Boolean); return ((w[0]||"?").charAt(0)+((w[1]||"").charAt(0)||"")).toUpperCase(); }
 function nombreLimpio(n){ return String(n||"").replace(/\s*\(.*?\)\s*/g," ").replace(/[☀-➿️‍]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uD83E[\uDC00-\uDFFF]/g,"").replace(/\s+/g," ").trim(); }
 /* hoja "¿A donde va?" */
-function abreMover225(t, ix, ixs){
-  var x=(t.msgs||[])[ix]; if(!x) return; ixs=(ixs&&ixs.length)?ixs:null;   /* build 237: con ixs mueve toda la plática */
+function abreMover225(t, ix, ixs, opts){
+  var x=(t.msgs||[])[ix]; if(!x) return; ixs=(ixs&&ixs.length)?ixs:null; opts=opts||{};   /* build 237: con ixs mueve toda la plática */
   var ops=opcionesMover(t, x), q=nombreLimpio(x.wa_c||((PERSONAS[x.de]||{}).nombre)||""), tx=_txMsg(x).replace(/^[^:\n]{1,40}:\s*/,"");
   var v=document.createElement("div"); v.className="leemask"; v.id="mov225";
   v.innerHTML='<div class="mov225" role="dialog" aria-label="¿A dónde va?"><div class="h225g"></div>'+
-    '<div class="mvctx"><span class="av226">'+esc(inicialesDe(q))+'</span><span class="mvt"><small>'+esc((q||"Mensaje")+(x.h?" · "+x.h:"")+(ixs&&ixs.length>1?" · "+ixs.length+" mensajes":""))+'</small><span>'+esc(tx)+'</span></span><button class="h225b" data-movx="1" aria-label="Cerrar">'+ico("x",14)+'</button></div>'+
-    '<h3 class="mvh">¿A dónde va?</h3><div class="h225c">'+
+    '<div class="mvctx"><span class="av226">'+esc(inicialesDe(q))+'</span><span class="mvt"><small>'+esc((q||"Mensaje")+(x.h?" · "+x.h:"")+(ixs&&ixs.length>1?" · "+ixs.length+" mensajes":""))+'</small><span>'+htmlTx245(tx, x)+'</span></span><button class="h225b" data-movx="1" aria-label="Cerrar">'+ico("x",14)+'</button></div>'+
+    '<h3 class="mvh">'+(opts.soloNg?'No guardar':'¿A dónde va?')+'</h3>'+
+    (opts.desde?'<div class="desde245"><label>Solo desde <input type="date" id="desde245"></label><span id="nd245">'+ixs.length+' mensajes</span></div>':'')+
+    '<div class="h225c">'+
+    (opts.soloNg?'<button class="opt226 plain" data-movplatica="1">'+ico("bubble",20)+'<span class="two"><span id="ngt245">No guardar '+(ixs?ixs.length:1)+' mensajes</span><small>no va a ninguna tarea; queda oculto, no borrado</small></span></button></div></div>':
     ops.map(function(o){ return '<button class="opt226'+(o.best?' best':'')+'" data-movto="'+esc(o.d.id)+'">'+ico("folder",20)+'<span class="ot">'+esc(o.d.nombre||"(sin nombre)")+'</span>'+(o.tag?'<span class="tag">'+esc(o.tag)+'</span>':'')+'</button>'; }).join("")+
     '<div class="sep226"></div>'+
     '<button class="opt226 plain" data-movnueva="1">'+ico("plus",20)+'<span class="two"><span>Tarea nueva</span><small>“'+esc(nombreSugerido(x))+'”</small></span></button>'+
-    '<button class="opt226 plain" data-movplatica="1">'+ico("bubble",20)+'<span class="two"><span>Solo plática</span><small>saludo o charla, no va a ninguna tarea</small></span></button></div></div>';
+    '<button class="opt226 plain" data-movplatica="1">'+ico("bubble",20)+'<span class="two"><span>Solo plática</span><small>saludo o charla, no va a ninguna tarea</small></span></button></div></div>');
   document.body.appendChild(v);
+  /* build 245: en lote ("Mover todos" / selección) la hoja aplica a todos, o solo a los desde una fecha */
+  function usa245(){ var f=(v.querySelector("#desde245")||{}).value, d=f?new Date(f+"T00:00:00").getTime():0; return (ixs||[ix]).filter(function(i){ var m=(t.msgs||[])[i]; return m && !m.oculto && (!d || (+m.ts||0)>=d); }); }
+  var _de=v.querySelector("#desde245"); if(_de) _de.onchange=function(){ var n=usa245().length; v.querySelector("#nd245").textContent=n+" mensaje"+(n===1?"":"s"); var g=v.querySelector("#ngt245"); if(g) g.textContent="No guardar "+n+" mensajes"; };
   v.addEventListener("click", function(ev){ ev.stopPropagation(); var b=ev.target.closest("[data-movto],[data-movnueva],[data-movplatica]"), r="";
+    if(b && opts.lote){ var uso=usa245(); if(!uso.length){ toast("Ninguno desde esa fecha"); return; }
+      r=aplicaLote245(t, uso, b.hasAttribute("data-movnueva")?"nueva":(b.hasAttribute("data-movplatica")?"ng":"mover"), b.getAttribute("data-movto")||""); v.remove(); window.__sel245=null; if(r && r!=="ok") toast(r); render(); return; }
     if(b){ if(b.hasAttribute("data-movnueva")){ var n=ixs?nuevaG237(t, ixs):nuevaDesdeMsg(t, ix); if(n && !ixs) guardaRegla237("nueva", t, [ix], n); r=n?"Tarea nueva “"+n.nombre+"” en Falta info; "+(ixs&&ixs.length>1?"la plática pasó":"el mensaje pasó")+" ahí.":""; }
       else if(b.hasAttribute("data-movplatica")){ (ixs||[ix]).forEach(function(i){ var rr=soloPlatica(t, i); if(rr) r=rr; }); reglasPorMsg238("platica", t, ixs||[ix], null); }
       else { var id=b.getAttribute("data-movto"); r=(id===t.id)?okG237(t, ixs||[ix]):(ixs?moverG237(t, ixs, id):(guardaRegla237("mover", t, [ix], tareas.filter(function(z){ return z.id===id; })[0]), mueveMensaje(t, ix, id))); }
@@ -9145,7 +9164,8 @@ function acomodoIA237(x){
 }
 function esPlatica237(t, x){ try{ return !esImp230(t, x); }catch(e){ return false; } }
 function platicas237(t){
-  var L=[]; (t&&t.msgs||[]).forEach(function(x,ix){ if((msgVisible225(x) || (x && x.oculto && x.movido_a && !x.eliminado)) && +x.wa_in===1 && x.wa_c) L.push({x:x, ix:ix, ts:+x.ts||0}); });   /* 238: lo movido uno por uno sigue contando en su plática */
+  var L=[]; (t&&t.msgs||[]).forEach(function(x,ix){ if((msgVisible225(x) || (x && x.oculto && x.movido_a && !x.eliminado)) && +x.wa_in===1 && x.wa_c && !esNotaIA242(x)) L.push({x:x, ix:ix, ts:+x.ts||0}); });   /* 238 + 245: las notas de la IA no son mensajes del Acomodo */
+  /* 238: lo movido uno por uno sigue contando en su plática */
   L.sort(function(a,b){ return a.ts-b.ts; });
   var ult={}, G=[];
   L.forEach(function(o){ var c=nombreLimpio(o.x.wa_c), g=ult[c];
@@ -9154,7 +9174,8 @@ function platicas237(t){
     g.duda=xs.filter(function(x){ return x.duda_tarea && !x.duda_resuelta && !x.oculto; })[0]||null; g.tuvoDuda=xs.some(function(x){ return !!x.duda_tarea; });
     g.ia=xs.some(acomodoIA237); g.listos=xs.every(function(x){ return confirmado237(x) || x.oculto; });
     var imp=xs.filter(function(x){ return !x.oculto && !esSaludo239(t, x); }); g.n=imp.length; g.soloSaludo=!imp.length && xs.some(function(x){ return !x.oculto && !confirmado237(x); });   /* 239 */
-    var base=imp.length?imp:xs; g.extracto=base.map(function(x){ return _txMsg(x).replace(/^[^:\n]{1,40}:\s*/,""); }).sort(function(a,b){ return b.length-a.length; })[0]||""; });
+    var base=imp.length?imp:xs, _tx=function(x){ return _txMsg(x).replace(/^[^:\n]{1,40}:\s*/,""); };
+    var mejor=base.slice().sort(function(a,b){ return _tx(b).length-_tx(a).length; })[0]; g.extractoX=mejor||null; g.extracto=mejor?_tx(mejor):""; });   /* 245: se guarda el mensaje para mostrar su imagen */
   return G;
 }
 function grupoDe237(t, ix){ var G=platicas237(t); for(var i=0;i<G.length;i++) if(G[i].ixs.indexOf(ix)>=0) return G[i]; return null; }
@@ -9190,7 +9211,7 @@ function esSaludo239(t, x){
    Bajo el globo nada de "Salvador · 17:20" ni "acomodó Claude": solo palomitas en los enviados y el destello de Claude en los que acomodó.
    Tocar el globo = hoja con canal, fecha y hora, de quién, entrega, quién lo acomodó y OK · Mover · Nueva · Dato. Separadores de día.
    Las notas que escribió la IA (aunque traigan otro autor: "HILO (", "Nota IA", "Chuy pregunta (3:22pm)…") son nota gris de Claude. */
-var NIA242_RE=/^\s*(?:📝\s*)?(?:HILO\s*\(|IA\s+nota\b|Nota\s+IA\b|IA\s*:|Resumen\s*:|Contexto\s*:)/i;
+var NIA242_RE=/^\s*(?:📝\s*)?(?:HILO\s*\(|IA\s+nota\b|IA\s+avis[oó](?=\s|$)|Nota\s+IA\b|IA\s*:|Resumen\s*:|Contexto\s*:)/i;
 var NIA242_PAT=/^[A-ZÁÉÍÓÚÑ][\wáéíóúñÁÉÍÓÚÑ.]*(?:\s+[A-ZÁÉÍÓÚÑ][\wáéíóúñÁÉÍÓÚÑ.]*){0,3}\s+(?:(?:pregunta|dice|pide|contesta|responde|avisa)\s*\(\s*\d{1,2}:\d{2}|confirma\b)/;
 function textoSinAutor242(x){ var tx=String((x&&(x.t||""))||""); if(x && x.wa_c) tx=tx.replace(/^[^:\n]{1,40}:\s*/,""); return tx; }
 function esNotaIA242(x){
@@ -9234,7 +9255,7 @@ function grupoFotos244(t, ix, ok){
   return out;
 }
 function vFotos244(t, ixs, mid){
-  var ms=t.msgs||[], x0=ms[ixs[0]], n=ixs.length, saliente=(x0.k==="bo"), nom=(+x0.wa_in===0 || x0.origen==="wa_saliente")?"":autorFoto244(x0);
+  var ms=t.msgs||[], x0=ms[ixs[0]], n=ixs.length, saliente=(x0.k==="bo" || esSaliente245(x0)), nom=esSaliente245(x0)?"":autorFoto244(x0);
   var col=n===1?1:(n===2||n===4?2:3);
   var tl=ixs.map(function(i){ var z=ms[i], u=urlFoto244(z);
     return u?'<button class="ft244" data-f244="'+i+'" aria-label="Foto"><img src="'+esc(u)+'" alt="Foto" loading="lazy" onerror="this.parentNode.classList.add(\'err\')"><span class="fti">'+SVG_FOTO244+'<small>Foto</small></span></button>'
@@ -9249,6 +9270,41 @@ function bindFotos244(raiz, t){
     ixs.forEach(function(i){ var z=(t.msgs||[])[i], u=urlFoto244(z); if(!u) return; if(i===me) k=lst.length; lst.push({img:true, data:u, url:u, de:autorFoto244(z), ts:+z.ts||Date.now()}); });
     if(lst.length) abreVisor(lst, k); }; });
 }
+/* ===================== build 245 (Salvador 6-oct 06:47-06:56) =====================
+   1) Nombres de imagen en el texto ("wa_1791209996617.jpeg") = chip amarillo subrayado con ícono (y miniatura si hay url); tocar abre el visor
+      (el de siempre, con X). Sin url: gris y "foto no disponible".
+   4) Lo SALIENTE (wa_in 0, origen wa_saliente, fromMe, de:"salvador" con contacto) se pinta de Salvador: derecha, verde, sin el nombre del otro. */
+function esSaliente245(x){
+  if(!x) return false;
+  return x.wa_in===0 || x.wa_in==="0" || x.origen==="wa_saliente" || x.fromMe===true || x.from_me===true || x.wa_fromMe===true || x.fromme===true ||
+    (x.de==="salvador" && !!(x.wa_c || x.chat) && x.k!=="bal");
+}
+/* el "autor" de un saliente no es la otra persona: Enviado, Audio enviado, Salvador, o el nombre del propio contacto */
+function autorSalida245(x, pre){
+  var n=_n179(pre), c=_n179(x&&(x.wa_c||x.chat)||"");
+  return /^(salvador|yo|tu|enviado|audio enviado|archivo enviado|mensaje enviado|nota de voz enviada|foto enviada|tu whatsapp.*)$/.test(n) || (!!c && (n===c || c.indexOf(n)===0 || n.indexOf(c)===0));
+}
+var IMG_RE245=/(^|[\s(“"«:])([\w\-.]+\.(?:jpe?g|png|webp|heic|heif))(?=$|[\s).,;:”"»!?])/gi;
+var SVG_FOTO245='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="2.4"/><circle cx="9" cy="10.5" r="1.6"/><path d="M4 17l4.6-4.4 3.4 3.2 3-2.6L20 16.2"/></svg>';
+function tieneImg245(s){ IMG_RE245.lastIndex=0; var r=IMG_RE245.test(String(s||"")); IMG_RE245.lastIndex=0; return r; }
+/* texto a HTML (ya escapado) con los nombres de imagen convertidos en chip; x = el mensaje (de ahí sale la url si hay UN solo nombre) */
+function htmlTx245(str, x){
+  str=String(str==null?"":str); var ms=[], m; IMG_RE245.lastIndex=0;
+  while((m=IMG_RE245.exec(str))){ ms.push({i:m.index+m[1].length, n:m[2]}); }
+  IMG_RE245.lastIndex=0;
+  if(!ms.length) return esc(str);
+  var url=(ms.length===1)?urlFoto244(x):"", out="", last=0;
+  ms.forEach(function(o){ out+=esc(str.slice(last,o.i));
+    out+=url?'<button type="button" class="img245" data-img245="'+esc(url)+'" aria-label="Ver la foto">'+SVG_FOTO245+'<span class="in245">'+esc(o.n)+'</span><img class="it245" src="'+esc(url)+'" alt="" loading="lazy"></button>'
+            :'<span class="img245 sin">'+SVG_FOTO245+'<span class="in245">'+esc(o.n)+'</span><small> · foto no disponible</small></span>';
+    last=o.i+o.n.length; });
+  return out+esc(str.slice(last));
+}
+(function(){ if(typeof document==="undefined" || window.__img245) return; window.__img245=1;
+  document.addEventListener("click", function(ev){ var b=ev.target.closest && ev.target.closest("[data-img245]"); if(!b) return;
+    ev.stopPropagation(); ev.preventDefault(); var u=b.getAttribute("data-img245"); if(!u) return;
+    abreVisor([{img:true, data:u, url:u, de:"", ts:Date.now()}], 0); }, true);
+})();
 /* la hoja del detalle del globo */
 function abreDetalle242(t, ix){
   var x=(t.msgs||[])[ix]; if(!x) return; var cx=""; try{ cx=canalDe(x,t); }catch(e){} var _v0=document.getElementById("det242"); if(_v0) _v0.remove();
@@ -9263,6 +9319,7 @@ function abreDetalle242(t, ix){
   var v=document.createElement("div"); v.className="leemask"; v.id="det242";
   v.innerHTML='<div class="mov225" role="dialog" aria-label="Detalle del mensaje"><div class="h225g"></div><div class="h225h"><b>Detalle</b><button class="h225b" data-detx="1" aria-label="Cerrar">'+ico("x",14)+'</button></div>'+
     '<div class="h225c"><div class="mf225">'+fila("Canal", canal)+fila("Fecha", fecha||"—")+fila("De", de||"—")+fila("Entrega", ent)+fila("Lo acomodó", aco)+'</div>'+
+    (tieneImg245(x.t)?'<p class="h225v0">'+htmlTx245(textoSinAutor242(x), x)+'</p>':'')+   /* build 245: la foto se abre desde aquí */
     (x.analisis?'<p class="h225v0">'+esc(x.analisis)+'</p>':'')+
     ((+x.wa_in===1 || x.wa_c) && !x.oculto && !confirmado237(x)?'<div class="det242b">'+botonesG237(ix, [ix], " hj242")+'</div>':'')+
     ((hay("[data-mdel]")||hay("[data-wacan]"))?'<button class="hop det242x" data-detdel="1">'+(hay("[data-wacan]")?"Cancelar este WhatsApp":"Borrar este mensaje")+'</button>':'')+
@@ -9306,7 +9363,8 @@ function guardaRegla237(tipo, t, ixs, dest, extra){
   return r;
 }
 /* build 238: una regla por MENSAJE (los saludos no cuentan) */
-function reglasPorMsg238(tipo, t, ixs, dest){ var con=ixs.filter(function(i){ var x=(t.msgs||[])[i]; return x && !esSaludo238(t, x); }); (con.length?con:ixs.slice(0,1)).forEach(function(i){ guardaRegla237(tipo, t, [i], dest); }); }
+function reglasPorMsg238(tipo, t, ixs, dest){ var con=ixs.filter(function(i){ var x=(t.msgs||[])[i]; return x && !esSaludo238(t, x); });
+  if(window.__lote245){ reglaLote245(tipo, t, con.length?con:ixs, dest); return; }   /* build 245: en lote, UNA regla por contacto y tema */ (con.length?con:ixs.slice(0,1)).forEach(function(i){ guardaRegla237(tipo, t, [i], dest); }); }
 function okG237(t, ixs){
   var hechos=[]; ixs.forEach(function(ix){ var x=(t.msgs||[])[ix]; if(!x || x.oculto || confirmado237(x)) return; x.duda_resuelta="esta"; x.duda_ts=Date.now(); x.acomodo={ok:1, ts:Date.now(), por:yo||""}; hechos.push(ix); });
   var n=hechos.length; if(!n) return ""; censoAcomodo(t, t.msgs[hechos[0]], t.id, t.id, "ok"); reglasPorMsg238("ok", t, hechos, t); guarda(t);
@@ -9328,18 +9386,87 @@ function datoG240(t, ixs){
 function noGuardar243(t, ixs){
   var hechos=[]; ixs.forEach(function(ix){ var x=(t.msgs||[])[ix]; if(!x || x.oculto || confirmado237(x)) return; if(soloPlatica(t, ix)) hechos.push(ix); });
   if(!hechos.length) return "";
-  try{ hist240("No guardar ("+hechos.length+" mensaje"+(hechos.length===1?"":"s")+")", t, null); }catch(e){}
+  try{ hist240("No guardar ("+hechos.length+" mensaje"+(hechos.length===1?"":"s")+")", t, {tipo:"ng_lote", tss:hechos.map(function(i){ return t.msgs[i].ts; })}); }catch(e){}   /* 245: con Deshacer */
   preguntaTema243(t, hechos); return "ok";
 }
+/* ===================== build 245: LOTE ("Mover todos", "No guardar todos", selección) =====================
+   Todo entra al Historial como UN renglón con Deshacer; las reglas de aprendizaje van en lote: una por contacto y tema. */
+function reglaLote245(tipo, t, ixs, dest, extra){
+  var xs=ixs.map(function(i){ return (t.msgs||[])[i]; }).filter(Boolean); if(!xs.length) return 0;
+  var por={}, orden=[]; xs.forEach(function(x){ var c=nombreLimpio(x.wa_c||((PERSONAS[x.de]||{}).nombre)||""); if(!por[c]){ por[c]=[]; orden.push(c); } por[c].push(x); });
+  var o={}, n=0; orden.forEach(function(c){ var g=por[c];
+    var r=Object.assign({contacto:c, palabras_clave:palabrasRegla237(g), tarea_destino:dest?dest.id:"", tarea_destino_nombre:dest?String(dest.nombre||""):"", tarea_origen:t.id, tipo:tipo, fecha:new Date().toISOString(), mensajes:g.length, lote:true, por:yo||""}, extra||{});
+    o["r"+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36)+n]=r; n++; window.__reglas237=(window.__reglas237||[]).concat([r]).slice(-50); });
+  try{ if(db) db.collection(COLP).doc(yo).set({acomodo_reglas:o},{merge:true}).catch(function(){}); }catch(e){}
+  return n;
+}
+/* todos los mensajes de WhatsApp de esa persona (canal ext:/dm:) en la tarea, sin las notas de la IA */
+function ixsContacto245(t, cid){
+  var out=[]; (t.msgs||[]).forEach(function(x,i){ if(!x || x.oculto || x.eliminado || x.prog || esNotaIA242(x) || !esMsgWA(x)) return; if(canalDe(x,t)===cid) out.push(i); }); return out;
+}
+function aplicaLote245(t, ixs, accion, did){
+  ixs=ixs.filter(function(i){ var x=(t.msgs||[])[i]; return x && !x.oculto && !x.eliminado; }); if(!ixs.length) return "";
+  var L=window.__lote245={items:[]}, r="", d=did?tareaId240(did):null, c0=nombreLimpio((t.msgs[ixs[0]]||{}).wa_c||""), quien=c0?" de "+nombreCorto(c0).split(" ")[0]:"", N=ixs.length, sn="mensaje"+(N===1?"":"s");
+  try{
+    if(accion==="mover"){ r=(did===t.id)?okG237(t, ixs):moverG237(t, ixs, did); }
+    else if(accion==="nueva"){ var n=nuevaG237(t, ixs); d=n||null; r=n?"Tarea nueva “"+n.nombre+"” en Falta info; pasaron "+N+" "+sn+".":""; }
+    else if(accion==="ng"){ window.__lote245=null; r=noGuardar243(t, ixs); }
+  } finally { window.__lote245=null; }
+  if(accion==="ng") return r;
+  if(L.items.length){ hist240("Movió "+N+" "+sn+quien+" a “"+((d&&d.nombre)||"otra tarea")+"”", t, {tipo:"mover_lote", items:L.items});
+    var e=histLee240()[0]; window.__ultimoDeshacer={id:t.id, tipo:"lote", cuando:Date.now(), restaurar:function(){ if(e){ var m=deshaz240(e); if(m) toast(m); render(); } }}; muestraDeshacer("lote", "Moví "+N+" "+sn, 8000); }
+  else if(r && accion==="mover") hist240("Acomodo: OK a "+N+" "+sn+quien, t, null);
+  return r;
+}
+/* barra de arriba cuando el filtro está en UNA persona */
+function barraLote245(t, cn){
+  if(!cn || !cn.ext) return ""; var n=ixsContacto245(t, cn.id).length; if(n<2) return "";
+  return '<div class="lote245"><span class="lq">'+esc(nombreCorto(cn.nom).split(" ")[0])+' · '+n+' mensajes</span><button data-lote245="mover">Mover todos ('+n+')</button><button data-lote245="ng">No guardar todos ('+n+')</button></div>';
+}
+function bindLote245(raiz, t){
+  Array.prototype.forEach.call(raiz.querySelectorAll("[data-lote245]"), function(el){ el.onclick=function(ev){ ev.stopPropagation();
+    var cn=canalActual(t), ixs=ixsContacto245(t, cn.id); if(!ixs.length) return;
+    abreMover225(t, ixs[0], ixs, {lote:true, desde:true, soloNg:el.getAttribute("data-lote245")==="ng"}); }; });
+}
+/* selección por mantener presionado un globo */
+function ixsBurbuja245(b){ var g=b.getAttribute("data-g244"); return g?String(g).split(",").map(Number):[+b.getAttribute("data-mix")]; }
+function iniciaSel245(t, ix){ window.__sel245={tid:t.id, set:{}}; var b=document.querySelector('.msgs [data-mix="'+ix+'"]'); (b?ixsBurbuja245(b):[ix]).forEach(function(i){ window.__sel245.set[i]=1; }); pintaSel245(); }
+function pintaSel245(){
+  var S=window.__sel245, bar=document.getElementById("selbar245");
+  if(S && (vista!=="hilo" || abierta!==S.tid)){ window.__sel245=S=null; }
+  if(!S){ if(bar) bar.remove(); Array.prototype.forEach.call(document.querySelectorAll(".sel245"), function(e){ e.classList.remove("sel245"); }); return; }
+  var n=0; Array.prototype.forEach.call(document.querySelectorAll(".msgs [data-mix]"), function(b){ var ixs=ixsBurbuja245(b), on=ixs.every(function(i){ return S.set[i]; }); b.classList.toggle("sel245", on); });
+  n=Object.keys(S.set).length;
+  if(!bar){ bar=document.createElement("div"); bar.id="selbar245"; bar.className="selbar245"; document.body.appendChild(bar);
+    bar.addEventListener("click", function(ev){ var b=ev.target.closest("[data-sel245]"); if(!b) return; ev.stopPropagation(); var S2=window.__sel245; if(!S2) return; var k=b.getAttribute("data-sel245"), t=tareas.filter(function(z){ return z.id===S2.tid; })[0], ixs=Object.keys(S2.set).map(Number).sort(function(a,b2){ return a-b2; });
+      if(k==="x"){ window.__sel245=null; pintaSel245(); return; } if(!t || !ixs.length){ toast("Marca al menos un mensaje"); return; }
+      if(k==="mover"){ abreMover225(t, ixs[0], ixs, {lote:true}); return; }
+      var r=aplicaLote245(t, ixs, k==="ng"?"ng":"nueva"); window.__sel245=null; if(r && r!=="ok") toast(r); render(); }); }
+  bar.innerHTML='<span class="sn">'+n+' seleccionado'+(n===1?'':'s')+'</span><button data-sel245="mover">Mover</button><button data-sel245="ng">No guardar</button><button data-sel245="nueva">Nueva</button><button class="x" data-sel245="x" aria-label="Cancelar">✕</button>';
+}
+(function(){ if(typeof document==="undefined" || window.__selinit245) return; window.__selinit245=1;
+  document.addEventListener("click", function(ev){ var S=window.__sel245; if(!S || vista!=="hilo" || abierta!==S.tid) return;
+    var b=ev.target.closest && ev.target.closest(".msgs [data-mix]"); if(!b) return; ev.stopPropagation(); ev.preventDefault();
+    var ixs=ixsBurbuja245(b), on=!ixs.every(function(i){ return S.set[i]; }); ixs.forEach(function(i){ if(on) S.set[i]=1; else delete S.set[i]; }); pintaSel245(); }, true);
+  var _r=render; render=function(){ var r=_r.apply(this, arguments); try{ pintaSel245(); }catch(e){} return r; };
+})();
 function preguntaTema243(t, ixs){
   var viejo=document.getElementById("ng243"); if(viejo) viejo.remove(); if(window.__ngT243) clearTimeout(window.__ngT243);
   var el=document.createElement("div"); el.id="ng243"; el.className="ng243"; el.setAttribute("role","status");
-  el.innerHTML='<span>No lo guardé. ¿Sí era de “'+esc(tareaCorta(t))+'”?</span><button data-ngr="si">Sí</button><span class="sep">·</span><button data-ngr="no">No</button>';
+  el.innerHTML='<span class="q245">No lo guardé. ¿Sí era de “'+esc(tareaCorta(t))+'”?</span><span class="b245"><button data-ngr="si">Sí</button><button data-ngr="no">No</button></span><i class="ar245"></i>';
   document.body.appendChild(el);
+  /* build 245: burbuja anclada JUSTO donde se tocó "No guardar" (arriba del botón; si no cabe, abajo); 8 s o hasta que conteste */
+  var a=window.__tap245; if(a && Date.now()-a.ts>3000) a=null; window.__tap245=null;
+  if(a){ var W=window.innerWidth, H=window.innerHeight, w=Math.min(300, W-24); el.style.width=w+"px"; el.classList.add("anc245");
+    var hh=el.offsetHeight, left=Math.max(12, Math.min(W-w-12, a.l+a.w/2-w/2)), top=a.t-hh-12, abajo=false;
+    if(top<12){ top=a.t+a.h+12; abajo=true; } if(top+hh>H-8) top=Math.max(8, H-8-hh);
+    el.style.left=left+"px"; el.style.top=top+"px"; el.classList.add(abajo?"abajo":"arriba");
+    el.style.setProperty("--ax", Math.max(22, Math.min(w-22, a.l+a.w/2-left))+"px"); }
   el.onclick=function(ev){ var b=ev.target.closest("[data-ngr]"); if(!b) return; ev.stopPropagation(); var si=b.getAttribute("data-ngr")==="si";
-    var con=ixs.filter(function(i){ var x=(t.msgs||[])[i]; return x && !esSaludo238(t, x); }); (con.length?con:ixs.slice(0,1)).forEach(function(i){ guardaRegla237("no_guardar", t, [i], t, {acierto_tema:si}); });
+    var con=ixs.filter(function(i){ var x=(t.msgs||[])[i]; return x && !esSaludo238(t, x); }), usa=con.length?con:ixs.slice(0,1);
+    if(usa.length>1) reglaLote245("no_guardar", t, usa, t, {acierto_tema:si}); else usa.forEach(function(i){ guardaRegla237("no_guardar", t, [i], t, {acierto_tema:si}); });
     el.remove(); clearTimeout(window.__ngT243); toast(si?"Anotado: el tema sí era de esa tarea":"Anotado: no era de esa tarea"); };
-  window.__ngT243=setTimeout(function(){ if(el.parentNode) el.remove(); }, 6000);
+  window.__ngT243=setTimeout(function(){ if(el.parentNode) el.remove(); }, 8000);
 }
 function trivialG240(t, ixs){
   var hechos=[]; t.msg_imp=(t.msg_imp && typeof t.msg_imp==="object")?t.msg_imp:{};
@@ -9359,7 +9486,7 @@ function nuevaG237(t, ixs, comoDato){
 function bindAcomodo(raiz, tareaDe){
   function q(sel, fn){ Array.prototype.forEach.call(raiz.querySelectorAll(sel), function(el){ el.onclick=function(ev){ ev.stopPropagation(); var ix=+el.getAttribute(sel.slice(1,-1)), t=tareaDe(el); if(!t) return; fn(t, ix); }; }); }
   /* build 237: el botón aplica a TODA la plática (data-acg) */
-  function q2(sel, fn){ Array.prototype.forEach.call(raiz.querySelectorAll(sel), function(el){ el.onclick=function(ev){ ev.stopPropagation(); var ix=+el.getAttribute(sel.slice(1,-1)), t=tareaDe(el); if(!t) return; fn(t, ix, ixsDe237(el, ix)); }; }); }
+  function q2(sel, fn){ Array.prototype.forEach.call(raiz.querySelectorAll(sel), function(el){ el.onclick=function(ev){ ev.stopPropagation(); try{ var _rc=el.getBoundingClientRect(); window.__tap245={l:_rc.left, t:_rc.top, w:_rc.width, h:_rc.height, ts:Date.now()}; }catch(e){} var ix=+el.getAttribute(sel.slice(1,-1)), t=tareaDe(el); if(!t) return; fn(t, ix, ixsDe237(el, ix)); }; }); }
   q2("[data-acok]", function(t, ix, ixs){ var r=okG237(t, ixs); if(r) toast(r); render(); });
   q2("[data-acmov]", function(t, ix, ixs){ abreMover225(t, ix, ixs); });
   q2("[data-acdato]", function(t, ix, ixs){ var n=datoG240(t, ixs); if(n) toast("Dato nuevo “"+n.nombre+"”; "+(ixs.length===1?"el mensaje pasó":"la plática pasó")+" ahí."); render(); });
@@ -9413,6 +9540,13 @@ function deshaz240(e){
     if(x){ x.oculto=false; delete x.movido_a; delete x.oculto_ts; delete x.oculto_por; if(x.duda_resuelta==="otra") delete x.duda_resuelta; delete x.acomodo; }
     if(d) d.msgs=(d.msgs||[]).filter(function(m){ return !(m && m.movido_de && m.movido_de.id===t.id && m.movido_de.ts===u.ts); });
     guarda(t); if(d) guarda(d); }
+  else if(u.tipo==="mover_lote" && t){ var tocados={};
+    (u.items||[]).forEach(function(it){ var x=(t.msgs||[]).filter(function(m){ return m && m.ts===it.ts && m.oculto && m.movido_a && m.movido_a.id===it.did; })[0]; if(!x) return;
+      x.oculto=false; delete x.movido_a; delete x.oculto_ts; delete x.oculto_por; if(x.duda_resuelta==="otra") delete x.duda_resuelta; delete x.acomodo; tocados[it.did]=1; });
+    Object.keys(tocados).forEach(function(did){ var d=tareaId240(did); if(d){ d.msgs=(d.msgs||[]).filter(function(m){ return !(m && m.movido_de && m.movido_de.id===t.id && (u.items||[]).some(function(it){ return it.did===did && it.ts===m.movido_de.ts; })); }); guarda(d); } });
+    guarda(t); }
+  else if(u.tipo==="ng_lote" && t){ (u.tss||[]).forEach(function(ts){ var x=(t.msgs||[]).filter(function(m){ return m && m.ts===ts && m.oculto && m.oculto_motivo==="platica"; })[0]; if(!x) return;
+      x.oculto=false; delete x.oculto_ts; delete x.oculto_por; delete x.oculto_motivo; if(x.duda_resuelta==="platica") delete x.duda_resuelta; delete x.acomodo; }); guarda(t); }
   else if(u.tipo==="vincular"){ var sn=(window.__undo240||{})[e.id]; if(!sn) return "Este vínculo ya no se puede deshacer desde este teléfono.";
     var o=sn.o, d2=tareaId240(sn.did); if(d2){ d2.msgs=sn.dmsgs; d2.enlazadas=sn.denl; guarda(d2); } if(!tareaId240(o.id)) tareas.push(o); guarda(o); }
   else if(u.tipo==="palomita" && t){ if(u.clave){ (t.claves||[]).forEach(function(c){ if(c && String(c.id)===u.clave) c.ok=!!u.prev; }); }
@@ -9439,15 +9573,15 @@ function bindHistorial240(){
   if(typeof window==="undefined" || window.__envueltas240) return; window.__envueltas240=1;
   var _ch=cierraHecha; cierraHecha=function(t){ var r=_ch.apply(this, arguments); try{ if(t && t.cierre) hist240("Ya está (la cerró)", t, {tipo:"reabrir"}); }catch(e){} return r; };
   var _mf=mueveFecha; mueveFecha=function(t, nueva){ var de=t&&t.f_vigente; var r=_mf.apply(this, arguments); try{ if(r && r.ok!==false && t.f_vigente===nueva) hist240("Movió la fecha "+(de?"del "+fechaMovCorta(de)+" ":"")+"al "+fechaMovCorta(nueva), t, {tipo:"fecha", f:de||""}); }catch(e){} return r; };
-  var _mm=mueveMensaje; mueveMensaje=function(t, ix, did){ var x=t&&(t.msgs||[])[ix]; var r=_mm.apply(this, arguments); try{ if(r && x){ var d=tareaId240(did); hist240("Movió un mensaje a “"+((d&&d.nombre)||"otra tarea")+"”", t, {tipo:"mover", ts:x.ts, did:did}); } }catch(e){} return r; };
+  var _mm=mueveMensaje; mueveMensaje=function(t, ix, did){ var x=t&&(t.msgs||[])[ix]; var r=_mm.apply(this, arguments); try{ if(r && x){ var d=tareaId240(did); if(window.__lote245){ window.__lote245.items.push({ts:x.ts, did:did}); return r; } hist240("Movió un mensaje a “"+((d&&d.nombre)||"otra tarea")+"”", t, {tipo:"mover", ts:x.ts, did:did}); } }catch(e){} return r; };
   var _en=enlazaTareas; enlazaTareas=function(oid, did){ var o=tareaId240(oid), d=tareaId240(did), sn=(o&&d)?{o:JSON.parse(JSON.stringify(o)), did:did, dmsgs:JSON.parse(JSON.stringify(d.msgs||[])), denl:JSON.parse(JSON.stringify(d.enlazadas||[]))}:null;
     var r=_en.apply(this, arguments); try{ if(o && o.fusionada_en===did){ var e=hist240("Vinculó a “"+((d&&d.nombre)||"")+"”", o, {tipo:"vincular", did:did}); if(e && sn){ window.__undo240=window.__undo240||{}; window.__undo240[e.id]=sn; }
       /* build 243: la destino abre en su vista normal (Importante) con "Vinculada · Deshacer" */
       if(window.__vf230) delete window.__vf230[did]; window.__hoja225=null; menuOpen=false; quitaToast243();
       if(e && sn){ window.__ultimoDeshacer={id:o.id, tipo:"vinculo", cuando:Date.now(), restaurar:function(){ deshaz240(e); }}; muestraDeshacer("vinculo", "Vinculada", 6000); }
       if(vista==="hilo" && abierta===did) render(); } }catch(er){} return r; };
-  var _ok=okG237; okG237=function(t, ixs){ var r=_ok.apply(this, arguments); try{ if(r) hist240("Acomodo: OK", t, null); }catch(e){} return r; };
-  var _nv=nuevaG237; nuevaG237=function(t, ixs, comoDato){ var n=_nv.apply(this, arguments); try{ if(n) hist240("Acomodo: "+(comoDato?"Dato":"Nueva")+" “"+n.nombre+"”", t, null); }catch(e){} return n; };
+  var _ok=okG237; okG237=function(t, ixs){ var r=_ok.apply(this, arguments); try{ if(r && !window.__lote245) hist240("Acomodo: OK", t, null); }catch(e){} return r; };
+  var _nv=nuevaG237; nuevaG237=function(t, ixs, comoDato){ var n=_nv.apply(this, arguments); try{ if(n && !window.__lote245) hist240("Acomodo: "+(comoDato?"Dato":"Nueva")+" “"+n.nombre+"”", t, null); }catch(e){} return n; };
   var _cr=completaRevision; completaRevision=function(t, v){ try{ hist240("Dictado: “"+String(v||"").replace(/\s+/g," ").slice(0,60)+(String(v||"").length>60?"…":"")+"”", t, null); }catch(e){} return _cr.apply(this, arguments); };
   var _nc=notaClaude; notaClaude=function(t, v){ try{ hist240("Indicación a Claude: “"+String(v||"").replace(/\s+/g," ").slice(0,60)+"”", t, null); }catch(e){} return _nc.apply(this, arguments); };
   var _ma=mandaAExterno; mandaAExterno=function(t, nombre, v){ try{ hist240("Mensaje a "+nombreCorto(nombre).split(" ")[0]+": “"+String(v||"").replace(/\s+/g," ").slice(0,50)+"”", t, null); }catch(e){} return _ma.apply(this, arguments); };
@@ -9481,11 +9615,12 @@ function acomodoHoy(){
 function vAcomodo(){
   var D=platicasAcomodo237(), A=acomodoHoy(); if(!D.length && !A.n) return "";   /* build 237: UNA tarjeta por plática */
   var h='<div class="aco226"><div class="acoh"><b>Acomodo</b><span>'+(D.length?D.length+(D.length===1?' plática':' pláticas')+' por revisar':'al día')+'</span></div>';
-  if(D.length) h+='<div class="acog">'+D.slice(0,8).map(function(g){ var t=g.t, ix0=g.ixs[0], x0=t.msgs[g.ixs[g.ixs.length-1]], k=t.id+"|"+ix0, ab=!!(window.__g237open||{})[k];
+  if(D.length) h+='<div class="acog">'+D.slice(0,8).map(function(g){ var t=g.t, ix0=g.ixs[0], x0=t.msgs[g.ixs[g.ixs.length-1]], k=t.id+"|"+ix0, ab=!!(window.__g237open||{})[k],
+      _pm=ab && g.ixs.some(function(i){ var x=t.msgs[i]; return !(esSaludo239(t,x) || confirmado237(x) || x.oculto); });   /* build 245: con botones por mensaje, la fila del final sobra */
     return '<div class="acor g237'+(ab?' ab':'')+'" data-acot="'+esc(t.id)+'" data-acoix="'+ix0+'" data-acg="'+esc(g.ixs.join(","))+'" data-g237="'+esc(k)+'"><span class="av226">'+esc(inicialesDe(g.contacto))+'</span><span class="acob"><span class="acow"><b>'+esc(g.contacto||"Contacto")+'</b><span class="n237">'+(g.n||g.ixs.length)+' mensaje'+((g.n||g.ixs.length)===1?'':'s')+'</span><time>'+esc(x0.h||"")+'</time></span>'+
-      '<span class="acom x237">'+esc(g.extracto)+'</span><span class="pill226">'+ico("folder",14)+'creo que es: '+esc(tareaCorta(t))+(g.sinClasificar?'<span class="q"> · sin clasificar</span>':'')+'</span>'+
-      (ab?'<span class="msgs237">'+g.ixs.map(function(i){ var x=t.msgs[i], pl=esSaludo239(t,x), ok=confirmado237(x)||x.oculto; return '<span class="m237'+(pl?' tenue':'')+(ok?' listo':'')+'"><span class="mtx"><time>'+esc(x.h||"")+'</time>'+esc(_txMsg(x).replace(/^[^:\n]{1,40}:\s*/,""))+'</span>'+(pl||ok?'':'<span class="prop238">creo que es: '+esc(tareaCorta(t))+(x.duda_tarea&&x.duda_tarea.alternativa_nombre&&!x.duda_resuelta?' · ¿o '+esc(x.duda_tarea.alternativa_nombre)+'?':'')+'</span>'+botonesG237(i, [i], " m238"))+'</span>';   /* build 238: su propia propuesta */ }).join("")+'</span>':'')+
-      '<span class="ac226" data-acix="'+ix0+'" data-acg="'+esc(g.ixs.join(","))+'"><button data-acok="'+ix0+'">OK</button><span>·</span><button data-acmov="'+ix0+'">Mover</button><span>·</span><button data-acnueva="'+ix0+'">Nueva</button><span>·</span><button data-acdato="'+ix0+'">Dato</button><span>·</span><button data-acng="'+ix0+'">No guardar</button></span></span></div>'; }).join("")+'</div>';   /* build 243: "OK · sin importancia" vive solo en ¿A dónde va? */
+      '<span class="acom x237">'+htmlTx245(g.extracto, g.extractoX)+'</span><span class="pill226">'+ico("folder",14)+'creo que es: '+esc(tareaCorta(t))+(g.sinClasificar?'<span class="q"> · sin clasificar</span>':'')+'</span>'+
+      (ab?'<span class="msgs237">'+g.ixs.map(function(i){ var x=t.msgs[i], pl=esSaludo239(t,x), ok=confirmado237(x)||x.oculto; return '<span class="m237'+(pl?' tenue':'')+(ok?' listo':'')+'"><span class="mtx"><time>'+esc(x.h||"")+'</time>'+htmlTx245(_txMsg(x).replace(/^[^:\n]{1,40}:\s*/,""), x)+'</span>'+(pl||ok?'':'<span class="prop238">creo que es: '+esc(tareaCorta(t))+(x.duda_tarea&&x.duda_tarea.alternativa_nombre&&!x.duda_resuelta?' · ¿o '+esc(x.duda_tarea.alternativa_nombre)+'?':'')+'</span>'+botonesG237(i, [i], " m238"))+'</span>';   /* build 238: su propia propuesta */ }).join("")+'</span>':'')+
+      (_pm?'':'<span class="ac226" data-acix="'+ix0+'" data-acg="'+esc(g.ixs.join(","))+'"><button data-acok="'+ix0+'">OK</button><span>·</span><button data-acmov="'+ix0+'">Mover</button><span>·</span><button data-acnueva="'+ix0+'">Nueva</button><span>·</span><button data-acdato="'+ix0+'">Dato</button><span>·</span><button data-acng="'+ix0+'">No guardar</button></span>')+'</span></div>'; }).join("")+'</div>';   /* build 243: "OK · sin importancia" vive solo en ¿A dónde va? */
   var ab=!!window.__aco226;
   if(A.n){ h+='<button class="acof" id="bacof">'+ico("check",18)+'<span>Acomodé solo hoy · '+A.n+'</span><span class="r">acerté '+A.ok+'/'+A.n+'</span>'+ico(ab?"down":"chev",16)+'</button>';
     if(ab) h+='<div class="acol">'+A.lista.slice(0,30).map(function(o){ return '<button class="acoli" data-id="'+esc(o.t.id)+'"><span>'+esc(nombreLimpio(o.x.wa_c||""))+'</span><span class="'+(o.mal?'tenue':'')+'">'+esc(tareaCorta(o.t))+(o.mal?' · corregido':'')+'</span></button>'; }).join("")+'</div>'; }
@@ -9718,6 +9853,7 @@ function vHilo(){
     if(_v230==="claude" || (_v230==="imp" && !esImp230(t, {id:n.id||n.nid, ts:n.ts, t:n.t, nota_ia:1}))) continue;   /* 230: las notas automaticas no van en Claude; en Importante solo si estan en msg_imp */
     m+='<div class="b bi bnota'+(n.privado?' priv':'')+'">'+esc(sinEmojiUI(n.t))+'<span class="st">'+esc((n.h||"")+(n.privado?" · solo tú":""))+'</span></div>'; } }
   var _fc244={};   /* build 244: fotos que ya fueron en el globo de otra */
+  m+=barraLote245(t, _cn);   /* build 245: Mover todos / No guardar todos cuando el filtro está en una persona */
   (t.msgs||[]).forEach(function(x,ix){
     if(x && x.ts){ _evHasta(x.ts); _ntHasta(x.ts); }
     if(_fc244[ix]) return;
@@ -9786,7 +9922,9 @@ function vHilo(){
        solo "Nombre: texto" y un puntito tenue que despliega el detalle. */
     if(x.k==="bi" && (x.wa_in||x.wa_c||x.origen||x.tipo)){
       var tx=sinEmojiUI(quitaEtiquetasWA(String(x.t||""))), mm=tx.match(/^([^:\n]{1,40}):\s*([\s\S]*)$/);   /* 226: sin emojis */
-      var cab=mm?'<b class="cn">'+esc(nombreVisible230(nombreLimpio(mm[1]), t))+':</b> '+esc(sinEmojiUI(mm[2])):esc(tx);
+      var _sal245=esSaliente245(x);   /* build 245: lo que mandó Salvador va a la derecha, verde, sin el nombre del otro */
+      if(_sal245 && mm && autorSalida245(x, mm[1])){ tx=sinEmojiUI(mm[2]); mm=null; }
+      var cab=mm?'<b class="cn">'+esc(nombreVisible230(nombreLimpio(mm[1]), t))+':</b> '+htmlTx245(sinEmojiUI(mm[2]), x):htmlTx245(tx, x);
       var dt="";
       if(msgAn[ix]){
         var fd=x.ts?new Date(x.ts).toLocaleString("es-MX",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):(x.h||"");
@@ -9797,10 +9935,10 @@ function vHilo(){
            (x.analisis?'<br>'+esc(x.analisis):'')+'</div>';
       }
       var _xc=(_cx.indexOf("ext:")===0)?colorExt(t,_cx.slice(4)):((_cx.indexOf("dm:")===0 && nombreWADe(t,_cx))?CNL_COL.dm:"");
-      m+='<div class="b bi bcomp'+(_xc?' ext" style="--xc:'+_xc:'')+'" data-mix="'+ix+'">'+(x.movido_de?'<span class="mvnuevo">NUEVO · movido desde '+esc(tareaCorta({nombre:x.movido_de.nombre||""}))+'</span>':'')+cab+icoCl238(t,x,ix)+palomitasHTML(x)+'<button class="mdot" data-an="'+ix+'" aria-label="Ver detalle del mensaje">·</button>'+dt+'</div>'+((_pq227===ix && x.duda_tarea && !x.duda_resuelta)?'':vDudaTarea(t,x,ix));   /* build 226: OK · Mover · Nueva abajo */
+      m+='<div class="b '+(_sal245?'bo':'bi')+' bcomp'+((_xc&&!_sal245)?' ext" style="--xc:'+_xc:'')+'" data-mix="'+ix+'">'+(x.movido_de?'<span class="mvnuevo">NUEVO · movido desde '+esc(tareaCorta({nombre:x.movido_de.nombre||""}))+'</span>':'')+cab+icoCl238(t,x,ix)+palomitasHTML(x)+'<button class="mdot" data-an="'+ix+'" aria-label="Ver detalle del mensaje">·</button>'+dt+'</div>'+((_pq227===ix && x.duda_tarea && !x.duda_resuelta)?'':vDudaTarea(t,x,ix));   /* build 226: OK · Mover · Nueva abajo */
       return;
     }
-    m+='<div class="b '+(x.k==="bal"?"bal":(x.k==="bo"?"bo":"bi"))+(x.abre?' liga" data-abre="'+esc(x.abre):'')+'" data-mix="'+ix+'">'+(x.movido_de?'<span class="mvnuevo">NUEVO · movido desde '+esc(tareaCorta({nombre:x.movido_de.nombre||""}))+'</span>':'')+citaHTML(x)+esc(sinEmojiUI(quitaEtiquetasWA(x.t)))+
+    m+='<div class="b '+(x.k==="bal"?"bal":(x.k==="bo"?"bo":"bi"))+(x.abre?' liga" data-abre="'+esc(x.abre):'')+'" data-mix="'+ix+'">'+(x.movido_de?'<span class="mvnuevo">NUEVO · movido desde '+esc(tareaCorta({nombre:x.movido_de.nombre||""}))+'</span>':'')+citaHTML(x)+htmlTx245(sinEmojiUI(quitaEtiquetasWA(x.t)), x)+
        (x.abre?'<span class="abre">Abrir ›</span>':'')+'<span class="st">'+   /* build 242: sin autor ni hora (van en la hoja de detalle) */
        (tieneAn?'<button class="mdel" data-an="'+ix+'" aria-label="Ver cómo se decidió este mensaje">'+ico("info",15,1.8)+'</button>':'')+
        (waCan?'<button class="mdel" data-wacan="'+ix+'" aria-label="Cancelar este WhatsApp">'+ico("trash",15,1.8)+'</button>':'')+
@@ -14209,6 +14347,7 @@ function bindHilo(){
     el.onclick=function(){abreVisor(adj,+el.getAttribute("data-ai"))};
   });
   bindFotos244(document, t);   /* build 244 */
+  bindLote245(document, t);    /* build 245 */
   Array.prototype.forEach.call(document.querySelectorAll(".fot img"),function(el,i){
     el.style.cursor="pointer";
     el.onclick=function(){ var _ims=adj.filter(function(f){return f.img;}), s=el.getAttribute("src"), k=-1;
@@ -15696,7 +15835,7 @@ function preguntaParaMi(t){
    del saliente contiene al otro); un saliente sin contacto en el hilo cuenta. Las notas, avisos, programados y cancelados no cuentan. */
 function esSalidaWA244(z){
   if(!z || z.oculto || z.eliminado || z.nota_ia || z.aviso || z.empujon || z.prog || z.wa_can || z.hab) return false;
-  if(+z.wa_in===0 || z.origen==="wa_saliente") return true;
+  if(esSaliente245(z)) return true;
   return z.k==="bo" && !!(z.wa_c || z.wa_auto) && (!z.de || z.de==="salvador");
 }
 function mismoContacto244(z, y, quien){
@@ -16216,7 +16355,7 @@ function leeOpcionesDe(el){
   var b=el.closest(".msgs [data-mix], .msgs [data-hab]"); if(!b) return null;
   var ix=b.hasAttribute("data-mix")?+b.getAttribute("data-mix"):+String(b.getAttribute("data-hab")).split("|").pop();
   if(isNaN(ix)) return null;
-  var _ops=[["Leer desde aquí",function(){ leeDesde(t, ix); }], actual,
+  var _ops=[["Seleccionar",function(){ iniciaSel245(t, ix); }], ["Leer desde aquí",function(){ leeDesde(t, ix); }], actual,
     ["Copiar",function(){ var x=t.msgs[ix]; _leeCopia((x&&(x.tr||x.t))||""); }]];
   /* build 193: ultima opcion "Indicación": ese mensaje es para Claude (lo ejecuta y se pliega) */
   if(puedeSerIndicacion(t.msgs[ix], t)) _ops.push(["Indicación",function(){ convierteEnIndicacion(t, ix); }]);

@@ -95,7 +95,7 @@ eq("la hoja ¿A dónde va? ya no trae 'Bien, pero sin importancia' en el código
       __ESCR.length = 0; var c3 = card243(/Lalo/); c3.querySelector(":scope > .acob > .ac226 [data-acng]").click();
       o.sinContestar = [!!document.getElementById("ng243"), FI.msgs[2].oculto === true]; window.__escrAntes = __ESCR.length;
       return o; });
-    await p.waitForTimeout(6300);
+    await p.waitForTimeout(8300);   /* 245: la confirmación dura 8 s */
     var r4 = await p.evaluate(function () { return [!!document.getElementById("ng243"), __ESCR.filter(function (e) { return e[2] && e[2].acomodo_reglas; }).length]; });
     /* hoja ¿A dónde va? y detalle del globo */
     var r5 = await p.evaluate(function () { var o = {}, G = { id: "tG", nombre: "Comedor nuevo", duenio: "salvador", estado: "abierta", msgs: [{ k: "bi", wa_in: 1, wa_c: "Lalo", t: "Lalo: jajaja igualmente", ts: Date.now() - 1000, h: "21:00", wa_id: "zz" }] };
@@ -111,7 +111,7 @@ eq("la hoja ¿A dónde va? ya no trae 'Bien, pero sin importancia' en el código
     eq("No guardar = Solo plática: oculto con motivo, sin borrarse, y sale la pregunta", [r3.ng[0], r3.ng[1], r3.ng[2], /¿Sí era de/.test(r3.ng[3])], [true, "platica", true, true]);
     eq("pregunta Sí: regla no_guardar con acierto_tema true y la línea se quita", r3.si, [[["no_guardar", true, "tFIESTA"]], false]);
     eq("pregunta No: regla no_guardar con acierto_tema false (y queda oculto)", [r3.no, r3.noOculto], [[["no_guardar", false]], true]);
-    eq("sin contestar: oculto, y a los 6 s la línea se quita sola sin regla", [r3.sinContestar, r4], [[true, true], [false, 0]]);
+    eq("sin contestar: oculto, y a los 8 s se quita sola sin regla", [r3.sinContestar, r4], [[true, true], [false, 0]]);
     eq("hoja ¿A dónde va?: solo Tarea nueva y Solo plática", r5.hoja, ["Tarea nueva", "Solo plática"]);
     eq("hoja de detalle del globo: OK · Mover · Nueva · Dato · No guardar, y No guardar funciona", [r5.det, r5.detOculto, r5.detPregunta], [["OK", "Mover", "Nueva", "Dato", "No guardar"], true, true]);
     eq("sin errores de página", errs, []);
