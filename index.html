@@ -1466,7 +1466,7 @@ button{font:inherit;color:inherit}
 .pl252 .pq{font-size:13px;color:var(--ink-3,#9a9aa0);margin-bottom:2px}.pl252 .pt{display:block;width:100%;text-align:left;border:0;background:none;color:inherit;font:inherit;padding:0}
 .pl252 .pm{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap;font-size:13px;color:var(--ink-3,#9a9aa0)}.pl252 .pg{border:0;border-radius:10px;padding:5px 9px;min-height:30px;background:#1d3b5c;color:#9ecbff;font:inherit;font-size:13px;font-weight:600}.pl252 .pg.sa{background:#5c3d12;color:#ffc982}.pl252 .pg.ng{background:#3a3a3c;color:#c7c7cc}
 .plat252 .pie{margin:16px 16px 0;font-size:13.5px;color:var(--ink-3,#9a9aa0)}
-.bus253{display:flex;gap:8px;margin:2px 0 10px}.bus253 input{flex:1;min-width:0;box-sizing:border-box;border:1px solid var(--line,#38383a);border-radius:12px;padding:11px 12px;background:var(--surface,#000);color:var(--ink,#fff);font:inherit;font-size:17px}.bus253 .lupa{flex:0 0 46px;border:0;border-radius:12px;background:var(--surface-2,#2c2c2e);color:var(--ink,#fff);display:flex;align-items:center;justify-content:center}.bus253x{color:var(--ink-3,#9a9aa0);font-size:14px;padding:6px 2px}
+.bus253{display:flex;gap:8px;margin:2px 0 10px}.bus253 input{flex:1;min-width:0;box-sizing:border-box;border:1px solid var(--line,#38383a);border-radius:12px;padding:11px 12px;background:var(--surface,#000);color:var(--ink,#fff);font:inherit;font-size:17px}.bus253 .lupa{flex:0 0 46px;border:0;border-radius:12px;background:var(--surface-2,#2c2c2e);color:var(--ink,#fff);display:flex;align-items:center;justify-content:center}.caja2>button.dest254{width:auto;height:32px;border-radius:16px;padding:0 10px;font-size:13px;font-weight:600;background:var(--surface);border:.5px solid var(--line);color:#D97757;display:inline-flex;align-items:center;gap:3px;align-self:flex-end;margin-bottom:2px}.caja2>button.dest254.wa{color:#25a244}.big254{display:block;width:100%;margin:8px 0 0;padding:14px;font-size:16px;font-weight:700}.big254.pri{background:#D97757;color:#fff;border:0}.pv254{white-space:pre-wrap;margin:6px 0 4px;padding:10px 12px;background:var(--surface-2,#222);border-radius:12px;font-size:15px}.bus253x{color:var(--ink-3,#9a9aa0);font-size:14px;padding:6px 2px}
 .hc238 .hc249{display:block;width:100%;margin-top:6px;min-height:42px;border:0;border-radius:12px;background:#0a84ff;color:#fff;font:inherit;font-size:16px;font-weight:700}
 
 .leemenu{position:fixed;width:230px;background:#2a2a33;border-radius:14px;padding:4px 0;box-shadow:0 10px 30px rgba(0,0,0,.5)}
@@ -1517,7 +1517,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 253 · ¿A dónde va?: buscador de tareas (todas las abiertas y las cerradas de 30 días)";
+var VERSION_APP = "build 254 · el cuadro de abajo manda a Claude por defecto; WhatsApp directo solo con el selector, con clasificación y vista previa";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -7330,6 +7330,7 @@ function responsableExt(t){
 function phCanal(t){
   var c=canalActual(t);
   if(modoClaude(t)) return "Indicación para Claude…";   /* build 193 */
+  if(waDest254(t) && !modoWA254(t)) return "Indicación para Claude…";   /* build 254: por defecto el cuadro es para Claude */
   if(c.id==="todo"){ var _rx=responsableExt(t); if(_rx) return "Mensaje para "+nombreVisible230(_rx, t)+" por WhatsApp…"; }   /* 231: nunca el numero */
   if(c.id==="sup") return "Nota de supervisor…";
   if(c.ext) return "Mensaje a "+nombreVisible230(c.nom, t)+" por WhatsApp…";
@@ -9124,7 +9125,7 @@ function vRevision(t,org){
     '<div class="comp">'+(sug?'<div class="sug">'+sug+'</div>':'')+
     '<div class="pie">'+
       '<div class="caja2">'+
-        '<button class="mas" id="tcam" aria-label="Agregar foto">'+ico("mas",22,2)+'</button>'+
+        '<button class="mas" id="tcam" aria-label="Agregar foto">'+ico("mas",22,2)+'</button>'+chip254(t)+
         '<div id="txt" class="caja vacia" contenteditable="true" role="textbox" '+
           'data-ph="'+(window.__avAdd===t.id?"Dicta o escribe el recordatorio":(window.__pasoAdd===t.id?"Dicta o escribe el paso nuevo":esc(phCanal(t))))+'" enterkeyhint="send" '+
           'autocorrect="on" autocapitalize="sentences" spellcheck="true"></div>'+
@@ -9850,7 +9851,10 @@ function accion247(t, ix, a, v){
 function esParaClaude247(t, ix){
   var x=(t.msgs||[])[ix]; if(!x) return false; var tx=String(x.tr||x.t||"").trim(); if(!tx) return false;
   if(aparta247(t, ix, "es_para_claude")){ try{ hist240("Es para Claude: “"+(tx.length>50?tx.slice(0,49)+"…":tx)+"”", t, {tipo:"ng_lote", tss:[x.ts]}); }catch(e){} }
-  completaRevision(t, tx, {sinRevision:true}); return true;
+  var _ya254=yaSalio247(x), _con254=contactoDeMsg252(x)||(String(x.canal||"").indexOf("ext:")===0?String(x.canal).slice(4):"")||x.wa_auto||"";
+  completaRevision(t, tx, {sinRevision:true});
+  if(_ya254) avisoYaLlego254(_con254);   /* build 254: ya salió por WhatsApp: no se borra por servidor, se le dice cómo */
+  return true;
 }
 function abreMenuPregunta247(t, ixDato){
   var p=null; try{ p=preguntaParaMi(t); }catch(e){} if(!p) return;
@@ -9904,6 +9908,82 @@ function abreDetalle242(t, ix){
     if(ev.target.closest(".ac226 button")){ if(v.parentNode) v.remove(); return; }
     if(ev.target===v || ev.target.closest("[data-detx]")) v.remove(); });
 }
+
+/* ===================== build 254 (Salvador 10:29, "IQOSA Proyecto"): LO DE ABAJO ES PARA CLAUDE, NUNCA SALE SOLO POR WHATSAPP =====================
+   Un dictado con instrucciones para Claude ("…para que le comentes que… a ver si tú le puedes poner el mensaje…") salió tal cual al contacto.
+   Ahora: en toda tarea con WhatsApp el cuadro de abajo manda por defecto a CLAUDE (indicación: el flujo de dictado 249–251, modo "pesado").
+   WhatsApp directo solo con el selector (chip a la izquierda del cuadro); vuelve solo a Claude tras cada envío. Aun en WhatsApp, antes de mandar
+   se clasifica el texto (regla barata y, si duda, Claude): si suena a indicación, hoja "Esto parece indicación para Claude"; y todo directo muestra
+   su vista previa "Se va a mandar a <contacto>:" con Mandar / Cancelar. */
+window.__dest254=window.__dest254||{};
+function waDest254(t){
+  try{ if(!t || modoClaude(t)) return ""; var c=canalActual(t); if(c.id==="sup") return "";
+    if(c.ext) return c.nom; if(c.id.indexOf("dm:")===0) return c.wa||"";
+    if(c.id==="todo"){ var r=responsableExt(t); if(r) return r; var ex=externosDe(t); if(ex.length===1) return ex[0]; }
+  }catch(e){} return "";
+}
+function modoWA254(t){ return !!(t && typeof window!=="undefined" && window.__dest254 && window.__dest254[t.id]==="wa" && waDest254(t)); }
+function chip254(t){ if(!waDest254(t)) return ""; var wa=modoWA254(t); return '<button class="dest254'+(wa?' wa':'')+'" id="tdest254" aria-label="Destino: '+(wa?'WhatsApp':'Claude')+'">'+(wa?'WhatsApp':'Claude')+'<span aria-hidden="true">⌄</span></button>'; }
+function repinta254(t){ var tx=document.getElementById("txt"), d=tx?tx.value:""; try{ render(); }catch(e){} var n=document.getElementById("txt"); if(n && d) n.value=d; try{ marcaEnvio("tenv", d); }catch(e){} }
+function abreDestino254(t){
+  var d=waDest254(t); if(!d) return; var _o=document.getElementById("dest254"); if(_o) _o.remove();
+  var wa=modoWA254(t), nom=nombreVisible230(d, t);
+  var bg=document.createElement("div"); bg.className="cnlbg"; bg.id="dest254bg"; var sh=document.createElement("div"); sh.className="cnlsheet fil227h"; sh.id="dest254";
+  sh.innerHTML='<div class="hh"></div><button class="cnlop227'+(wa?'':' on')+'" data-d254="claude"><span>Claude<small>una indicación: él la ejecuta, no sale a nadie</small></span>'+(wa?'':ico("check",18))+'</button>'+
+    '<button class="cnlop227'+(wa?' on':'')+'" data-d254="wa"><span>WhatsApp a '+esc(nom)+'<small>sale directo, con vista previa</small></span>'+(wa?ico("check",18):'')+'</button>';
+  function cierra(){ if(bg.parentNode) bg.parentNode.removeChild(bg); if(sh.parentNode) sh.parentNode.removeChild(sh); }
+  bg.onclick=cierra;
+  sh.addEventListener("click", function(ev){ var b=ev.target.closest("[data-d254]"); if(!b) return; var k=b.getAttribute("data-d254"); cierra(); if(k==="wa") window.__dest254[t.id]="wa"; else delete window.__dest254[t.id]; repinta254(t); });
+  document.body.appendChild(bg); document.body.appendChild(sh);
+}
+function limpiaCaja254(){ var tx=document.getElementById("txt"); if(tx) tx.value=""; try{ marcaEnvio("tenv",""); }catch(e){} }
+/* el texto como indicación para Claude: el mismo flujo de dictado de 249–251 (blur, modo pesado, ejecutar órdenes, tarjeta de dudas) */
+function aClaude254(t, v){ limpiaCaja254(); try{ delete window.__dest254[t.id]; }catch(e){} completaRevision(t, sinPrefijoClaude(v), {sinRevision:true}); }
+/* ¿suena a indicación para Claude? "claude" seguro · "wa" seguro · "duda" (menciona al contacto en tercera persona: lo decide Claude) */
+function clasifica254(v, contacto){
+  var s=" "+_n179(v)+" ", pn=_n179(nombreCorto(contacto||"")).split(" ")[0]||"";
+  var CL=[/\b(le|les)\s+(comentes?|digas?|pidas?|preguntes?|avises?|mandes?|escribas?|expliques?|recuerdes?|pongas?|cotices?|informes?|insistas?|contestes?|respondas?|confirmes?|agradezcas?)\b/, /\bpara que\s+(le|les|me|nos)\s+\w+/, /\ba ver si (tu|usted|claude)\b/, /\btu\s+(le|me|nos)\s+(puedes|podrias|puedas|ayudas)\b/,
+    /\b(preguntale|pidele|comentale|avisale|recuerdale|escribele|mandale|insistele|contestale|respondele|dile|dile que|digale|cotizame|cotiza|recuerdame|avisame|apuntame|agendame|hazme|ponle)\b/, /\birme\s+(dando|diciendo|avisando|mandando)\b/, /\bme\s+(vayas|vaya)\s+(dando|diciendo|avisando)\b/, /\bdandome\s+(el\s+)?avance\b/, /\bclaude\b/, /\bpor favor (preguntale|dile|avisale)\b/];
+  for(var i=0;i<CL.length;i++) if(CL[i].test(s)) return "claude";
+  if(pn.length>=3 && s.indexOf(" "+pn+" ")>=0 && !/^\s*(hola|buen|buenos|buenas|gracias|que tal|saludos)/.test(s)) return "duda";
+  if(/\b(el|ella|ellos|ellas)\s+(quiere|quieren|necesita|necesitan|dice|dicen|pidio|pidieron|va a|van a|puede|pueden|tiene que|tienen que)\b/.test(s)) return "duda";
+  return "wa";
+}
+function sobreHoja254(html, onClick){
+  var _o=document.getElementById("hoja254"); if(_o) _o.remove();
+  var v=document.createElement("div"); v.className="leemask"; v.id="hoja254"; v.innerHTML=html; document.body.appendChild(v);
+  v.addEventListener("click", function(ev){ var b=ev.target.closest("[data-h254]"); if(b){ ev.stopPropagation(); var k=b.getAttribute("data-h254"); v.remove(); onClick(k); return; } if(ev.target===v || ev.target.closest("[data-hx254]")) { v.remove(); onClick("cancela"); } });
+  return v;
+}
+function salidaWA254(t, dest, v, cita, canal){
+  var nom=nombreVisible230(dest, t), corto=nombreCorto(nom).split(" ")[0]||nom;
+  var devuelve=function(){ var tx=document.getElementById("txt"); if(tx){ tx.value=v; try{ marcaEnvio("tenv", v); }catch(e){} } };
+  var manda=function(){ limpiaCaja254(); try{ delete window.__dest254[t.id]; }catch(e){}
+    candadoExterno(t, dest, v, function(){ mandaAExterno(t, dest, v, cita, canal); }); };
+  var preview=function(){
+    sobreHoja254('<div class="mov225" role="dialog" aria-label="Vista previa"><div class="h225g"></div><div class="h225h"><b>Se va a mandar a '+esc(corto)+':</b><button class="h225b" data-hx254="1" aria-label="Cerrar">'+ico("x",14)+'</button></div>'+
+      '<div class="h225c"><div class="pv254">'+esc(v)+'</div><button class="hop big254 pri" data-h254="manda">Mandar</button><button class="hop big254" data-h254="cancela">Cancelar</button></div></div>',
+      function(k){ if(k==="manda") manda(); else devuelve(); }); };
+  var hojaClaude=function(){
+    sobreHoja254('<div class="mov225" role="dialog" aria-label="Esto parece indicación para Claude"><div class="h225g"></div><div class="h225h"><b>Esto parece indicación para Claude</b><button class="h225b" data-hx254="1" aria-label="Cerrar">'+ico("x",14)+'</button></div>'+
+      '<div class="h225c"><p class="h225v0">“'+esc(v)+'”</p><button class="hop big254 pri" data-h254="claude">Es para Claude</button><button class="hop big254" data-h254="asi">Mandarlo así a '+esc(corto)+'</button></div></div>',
+      function(k){ if(k==="claude") aClaude254(t, v); else if(k==="asi") manda(); else devuelve(); }); };
+  var c=clasifica254(v, dest);
+  if(c==="claude") return hojaClaude();
+  if(c==="wa") return preview();
+  /* duda: lo decide Claude (modo pesado); si no contesta o no se entiende, se trata como indicación (lo seguro) */
+  try{ toast("Revisando a quién va…"); }catch(e){}
+  var hecho=false, fin=function(r){ if(hecho) return; hecho=true; if(r==="contacto") preview(); else hojaClaude(); };
+  try{ preguntaAClaude([{role:"user",content:"Salvador escribió este texto en el cuadro de mensaje de una tarea cuyo contacto de WhatsApp es “"+nom+"”. Decide si es un mensaje para MANDARLE a "+nom+" (le habla a él/ella, en segunda persona) o una indicación para Claude, el asistente (habla de "+nom+" en tercera persona, o le pide algo a Claude).\nTEXTO: “"+v+"”\nContesta SOLO JSON: {\"para\":\"contacto\"} o {\"para\":\"claude\"}."}], MODO_CEREBRO, function(txt,err){
+      var r="claude"; try{ var j=JSON.parse(String(txt||"").replace(/^[^{]*/,"").replace(/[^}]*$/,"")); if(j && j.para==="contacto") r="contacto"; }catch(e){} fin(err?"claude":r); }); }catch(e){ fin("claude"); }
+}
+function avisoYaLlego254(contacto){
+  var nom=nombreCorto(contacto||"").split(" ")[0]||"el contacto";
+  sobreHoja254('<div class="mov225" role="dialog" aria-label="Ya le llegó"><div class="h225g"></div><div class="h225h"><b>Este ya le llegó a '+esc(nom)+'</b><button class="h225b" data-hx254="1" aria-label="Cerrar">'+ico("x",14)+'</button></div>'+
+    '<div class="h225c"><p class="h225v0">Bórralo en tu WhatsApp: mantenlo presionado → Eliminar → Eliminar para todos.</p><button class="hop big254 pri" data-h254="ok">Entendido</button></div></div>', function(){});
+}
+/* el menú de pulsación larga abre la misma hoja de detalle y toca el mismo botón */
+function menuAcc254(t, ix, sel){ abreDetalle242(t, ix); var b=document.querySelector("#det242 "+sel); if(b) b.click(); }
 
 /* ===== build 252: "¿A DÓNDE SE FUE EL RESTO DE LA PLÁTICA?" =====
    En el detalle de cualquier globo de una persona: "Ver toda la plática con <persona>": los mensajes de ese contacto de los últimos 7 días,
@@ -10719,7 +10799,7 @@ function vHilo(){
       (sug?'<div class="sug">'+sug+'</div>':'')+
     '<div class="pie">'+
       '<div class="caja2">'+
-        '<button class="mas" id="tcam" aria-label="Agregar foto">'+ico("mas",22,2)+'</button>'+
+        '<button class="mas" id="tcam" aria-label="Agregar foto">'+ico("mas",22,2)+'</button>'+chip254(t)+
         '<div id="txt" class="caja vacia" contenteditable="true" role="textbox" '+
           'data-ph="'+(window.__avAdd===t.id?"Dicta o escribe el recordatorio":(window.__pasoAdd===t.id?"Dicta o escribe el paso nuevo":esc(phCanal(t))))+'" enterkeyhint="send" '+
           'autocorrect="on" autocapitalize="sentences" spellcheck="true"></div>'+
@@ -15319,6 +15399,7 @@ function bindHilo(){
   Array.prototype.forEach.call(document.querySelectorAll("[data-agtododia]"),function(b){ b.onclick=function(){ window.__agTodoDia=window.__agTodoDia||{}; window.__agTodoDia[t.id]=window.__agTodoDia[t.id]?0:1; render(); }; });   /* build 203 */
   Array.prototype.forEach.call(document.querySelectorAll("[data-agcambia]"),function(b){ b.onclick=function(){ window.__agEdit=window.__agEdit||{}; window.__agEdit[t.id]=1; render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-agguarda]"),function(b){ b.onclick=function(){ var f=$("agf"), h=$("agh"); if(guardaFechaEvento(t, f&&f.value, h&&h.value)) render(); }; });
+  var _d254=$("tdest254"); if(_d254) _d254.onclick=function(ev){ if(ev) ev.stopPropagation(); abreDestino254(t); };   /* build 254 */
   var _ccl=$("cnlclaude"); if(_ccl) _ccl.onclick=function(){ window.__cnlClaude=window.__cnlClaude||{}; window.__cnlClaude[t.id]=window.__cnlClaude[t.id]?0:1; render(); };   /* build 193 */
   Array.prototype.forEach.call(document.querySelectorAll("[data-progc]"),function(b){ b.onclick=function(){ var mx=(t.msgs||[])[+b.getAttribute("data-progc")]; if(!mx||!mx.prog) return;
     hojaConfirma({titulo:"Mensaje programado a "+mx.prog.contacto, sub:"“"+_corto(mx.prog.texto)+"”", accion:"Cancelar el mensaje", rojo:true, cb:function(){ cancelaProgramado(t, mx); }}); }; });   /* build 199 */
@@ -15454,17 +15535,15 @@ function bindHilo(){
        dile a, lista...) nunca se le mandan a un externo: se procesan como siempre. */
     var _cnA=canalActual(t), _esOrden=(aQuienRespondo(t,v,{tid:t.id,wa:"x"})==="" || /^\s*(recu[eé]rda(me|le)|av[ií]sa(me|le)|apunta|anota|agrega|p[oó]n(me|le)|c[aá]mbia(le)?|dile|m[aá]nda(le|me)|preg[uú]nta(le)?|abre|busca|cierra|borra|elimina|crea|hazme)\b/i.test(v));
     if(_cnA.ext && !_esOrden){
-      $("txt").value=""; marcaEnvio("tenv","");
       var _dest=_cnA.nom, _vE=v;
-      candadoExterno(t, _dest, _vE, function(){ mandaAExterno(t, _dest, _vE, _cita); });
-      return;
+      if(!modoWA254(t)){ aClaude254(t, _vE); return; }   /* build 254: lo de abajo es para Claude; WhatsApp directo solo con el selector */
+      salidaWA254(t, _dest, _vE, _cita); return;
     }
     /* build 193 (F38): alguien del equipo con WhatsApp en la tarea (Samuel): sale a su WhatsApp */
     if(_cnA.id.indexOf("dm:")===0 && _cnA.wa && !_esOrden){
-      $("txt").value=""; marcaEnvio("tenv","");
       var _dW=_cnA.wa, _vW=v, _cW=_cnA.id;
-      candadoExterno(t, _dW, _vW, function(){ mandaAExterno(t, _dW, _vW, _cita, _cW); });
-      return;
+      if(!modoWA254(t)){ aClaude254(t, _vW); return; }
+      salidaWA254(t, _dW, _vW, _cita, _cW); return;
     }
     if(_cnA.id.indexOf("dm:")===0 && !_esOrden){
       $("txt").value=""; marcaEnvio("tenv","");
@@ -15472,9 +15551,10 @@ function bindHilo(){
     }
     var _exN=(!_esOrden)?externoNombrado(t, v):null;
     if(_exN){
-      $("txt").value=""; marcaEnvio("tenv","");
       var _vN=v;
-      preguntaExterno(_exN, _vN, function(){ candadoExterno(t, _exN, _vN, function(){ mandaAExterno(t, _exN, _vN, _cita); }); },
+      if(!modoWA254(t)){ aClaude254(t, _vN); return; }   /* build 254: por defecto, para Claude */
+      $("txt").value=""; marcaEnvio("tenv","");
+      preguntaExterno(_exN, _vN, function(){ salidaWA254(t, _exN, _vN, _cita); },
         hayEquipo(t)?function(){ mandaAlEquipo(t, _vN, _cita); }:null,
         function(){ notaClaude(t, _vN); }, function(){ notaParaMi(t, _vN); });
       return;
@@ -15482,16 +15562,16 @@ function bindHilo(){
     /* build 188: si le estas contestando a lo ultimo que te mando un externo, sale directo a el (con 30 s para deshacer) */
     var _aq188=(!_esOrden && !_cita && _cnA.id==="todo")?aQuienRespondo(t,v,null):"";
     if(_aq188 && externosDe(t).some(function(n){ return _nn(n)===_nn(_aq188); })){
-      $("txt").value=""; marcaEnvio("tenv","");
       var _vA=v, _dA=externosDe(t).filter(function(n){ return _nn(n)===_nn(_aq188); })[0];
-      candadoExterno(t, _dA, _vA, function(){ mandaAExterno(t, _dA, _vA, null); });
-      return;
+      if(!modoWA254(t)){ aClaude254(t, _vA); return; }   /* build 254 */
+      salidaWA254(t, _dA, _vA, null); return;
     }
     var _rx186=(!_esOrden && !_cita && _cnA.id==="todo")?responsableExt(t):null;
     if(_rx186){
-      $("txt").value=""; marcaEnvio("tenv","");
       var _vR=v;
-      preguntaExterno(_rx186, _vR, function(){ candadoExterno(t, _rx186, _vR, function(){ mandaAExterno(t, _rx186, _vR, null); }); },
+      if(!modoWA254(t)){ aClaude254(t, _vR); return; }   /* build 254 */
+      $("txt").value=""; marcaEnvio("tenv","");
+      preguntaExterno(_rx186, _vR, function(){ salidaWA254(t, _rx186, _vR, null); },
         hayEquipo(t)?function(){ mandaAlEquipo(t, _vR, null); }:null,
         function(){ notaClaude(t, _vR); }, function(){ notaParaMi(t, _vR); });
       return;
@@ -17044,9 +17124,14 @@ function leeOpcionesDe(el){
   if(isNaN(ix)) return null;
   var _ops=[["Seleccionar",function(){ iniciaSel245(t, ix); }], ["Leer desde aquí",function(){ leeDesde(t, ix); }], actual,
     ["Copiar",function(){ var x=t.msgs[ix]; _leeCopia((x&&(x.tr||x.t))||""); }]];
-  /* build 193: ultima opcion "Indicación": ese mensaje es para Claude (lo ejecuta y se pliega) */
-  if(puedeSerIndicacion(t.msgs[ix], t)) _ops.push(["Indicación",function(){ convierteEnIndicacion(t, ix); }]);
-  if(t.msgs[ix] && !t.msgs[ix].oculto) _ops.push(["Mover a otra tarea",function(){ abreMover225(t, ix); }]);   /* build 225 */
+  /* build 254: el MISMO menú que al tocar el globo (247): Editar · Eliminar · Es para Claude · Mover · Nueva · Dato · No guardar */
+  var _x254=t.msgs[ix];
+  if(_x254 && !_x254.oculto){
+    if(propio247(_x254)){ _ops.push(["Editar",function(){ menuAcc254(t, ix, '[data-d247="edit"]'); }], ["Eliminar",function(){ accion247(t, ix, "del", document.createElement("div")); }], ["Es para Claude",function(){ accion247(t, ix, "claude", document.createElement("div")); }]); }
+    else if(puedeSerIndicacion(_x254, t)) _ops.push(["Indicación",function(){ convierteEnIndicacion(t, ix); }]);   /* build 193 */
+    _ops.push(["Mover a otra tarea",function(){ abreMover225(t, ix); }]);   /* build 225 */
+    _ops.push(["Nueva",function(){ menuAcc254(t, ix, '[data-acnueva]'); }], ["Dato",function(){ menuAcc254(t, ix, '[data-acdato]'); }], ["No guardar",function(){ menuAcc254(t, ix, '[data-acng]'); }]);
+  }
   return _ops;
 }
 (function(){

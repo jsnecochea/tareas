@@ -24,7 +24,7 @@ function saca(tipo, nombre) {
 }
 var FUNCS = ["_nn", "esDelEquipo", "_telDe", "_nomWA", "esMsgWA", "miembroDeNombre", "contactosWA", "_contactosWA",
   "_contactoDeNombre", "canalDe", "externosDe", "nombreWADe", "canalesDe", "canalActual", "msgEnCanal", "integrantesDe",
-  "responsableExt", "phCanal", "vPastilla", "vista230", "nombreVisible230", "ico", "nombreCorto", "modoClaude", "puedeSerIndicacion", "convierteEnIndicacion", "notasPlegadas",
+  "responsableExt", "waDest254", "modoWA254", "phCanal", "vPastilla", "vista230", "nombreVisible230", "ico", "nombreCorto", "modoClaude", "puedeSerIndicacion", "convierteEnIndicacion", "notasPlegadas",
   "notaClaude", "preguntaExterno", "nombreInt", "iniInt"];
 var VARS = ["CNL_COL", "CNL_EXT", "CLAUDE_COL", "_cwMemo", "SVG_DESTELLO", "SVG_CHAT"];
 var codigo = VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" +
@@ -95,7 +95,8 @@ function manuel() {
   eq("Samuel: canales", cs, ["todo", "equipo", "dm:samuel·WA"]);
   var ca = c.canalActual(t);
   eq("Samuel: abre en su canal por WhatsApp", [ca.id, ca.wa], ["dm:samuel", "Samuel Gamez ciper"]);
-  eq("Samuel: caja", c.phCanal(t), "Mensaje a Samuel por WhatsApp…");
+  eq("Samuel: caja (build 254: por defecto es para Claude)", c.phCanal(t), "Indicación para Claude…"); c.window.__dest254 = {}; c.window.__dest254[t.id] = "wa";
+  eq("Samuel: caja con el selector en WhatsApp", c.phCanal(t), "Mensaje a Samuel por WhatsApp…");
   var p = c.vPastilla(t);
   si("Samuel: UNA pastilla 'Samuel ▾' (build 227: Claude y las caritas van en su hoja)", /id="cnlpill"[^>]*>Samuel<svg/.test(p) && !/intbtn|cnlclaude/.test(p));
   eq("Samuel: integrantes", c.integrantesDe(t).map(function (x) { return x.k; }), ["salvador", "samuel"]);
@@ -109,7 +110,8 @@ function manuel() {
   eq("Manuel: externos", c.externosDe(t), ["Manuel Parra"]);
   eq("Manuel: abre en su canal", c.canalActual(t).id, "ext:Manuel Parra");
   si("Manuel: pastilla", />Manuel<svg/.test(c.vPastilla(t)));
-  eq("Manuel: caja", c.phCanal(t), "Mensaje a Manuel Parra por WhatsApp…");
+  eq("Manuel: caja (build 254: por defecto es para Claude)", c.phCanal(t), "Indicación para Claude…"); c.window.__dest254 = {}; c.window.__dest254[t.id] = "wa";
+  eq("Manuel: caja con el selector en WhatsApp", c.phCanal(t), "Mensaje a Manuel Parra por WhatsApp…");
   eq("Manuel: integrantes", c.integrantesDe(t).map(function (x) { return x.k; }), ["salvador", "ext:Manuel Parra"]);
 })();
 (function () {
@@ -149,7 +151,7 @@ function manuel() {
   eq("convertir: queda en notas_claude", td.notas_claude.length, 1);
   eq("convertir dos veces no repite", c.convierteEnIndicacion(td, 1), false);
   /* la opcion esta en el menu como ULTIMA */
-  si("menu: 'Indicación' es la ultima opcion", /_ops\.push\(\["Indicación"/.test(html) && /\["Copiar",function\(\)\{ var x=t\.msgs\[ix\][\s\S]{0,200}_ops\.push\(\["Indicación"/.test(html));
+  si("menu: 'Indicación' es la ultima opcion", /_ops\.push\(\["Indicación"/.test(html) && /\["Copiar",function\(\)\{ var x=t\.msgs\[ix\][\s\S]{0,900}_ops\.push\(\["Indicación"/.test(html));
 })();
 
 /* ---------- F36: notas plegadas ---------- */
@@ -180,7 +182,8 @@ function manuel() {
 /* ---------- 1c: canal naranja Claude ---------- */
 (function () {
   var c = ctx(), t = samuel();
-  eq("sin Claude: caja normal", c.phCanal(t), "Mensaje a Samuel por WhatsApp…");
+  c.window.__dest254 = {}; c.window.__dest254[t.id] = "wa";
+  eq("sin Claude: caja normal (selector en WhatsApp)", c.phCanal(t), "Mensaje a Samuel por WhatsApp…"); delete c.window.__dest254[t.id];
   c.window.__cnlClaude = {}; c.window.__cnlClaude[t.id] = 1;
   eq("con Claude: caja", c.phCanal(t), "Indicación para Claude…");
   si("con Claude: pastilla 'Claude' encendida", /class="chip225 fil227 on"[^>]*>Claude<svg/.test(c.vPastilla(t)));
