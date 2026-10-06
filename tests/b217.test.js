@@ -23,7 +23,7 @@ si("build 218: la opción dice 'A todo el equipo'", /data-ac="equipo">A todo el 
 eq("los dos 'A todo el equipo' usan mandaAlEquipo", (html.match(/hayEquipo\(t\)\?function\(\)\{ mandaAlEquipo\(t, _v[NR], (_cita|null)\); \}:null,/g) || []).length, 2);
 si("ya no queda el 'A todo el equipo' que solo guardaba en el canal", !/hayEquipo\(t\)\?function\(\)\{ msg\(t,"bo",_v[NR]\)/.test(html));
 si("palomitas en la burbuja normal (a la derecha, dentro de la hora)", /palomitasHTML\(x\)\+'<\/span>'\+/.test(html));
-si("palomitas en la burbuja compacta de WhatsApp", /\+cab\+palomitasHTML\(x\)\+'<button/.test(html));
+si("palomitas en la burbuja compacta de WhatsApp (238: con el iconito de Claude antes)", /\+cab\+icoCl238\(t,x,ix\)\+palomitasHTML\(x\)\+'<button/.test(html));
 si("Mandar a: tras crear el pedido pregunta su estado", /m\.wa_pid=pid; guarda\(t\); if\(vista==="hilo"&&abierta===t\.id\) render\(\); setTimeout\(function\(\)\{ consultaEstadosWA\(t\); \}, 15000\);/.test(html));
 si("lo redactado por Claude (dile a, programado, respaldo) lleva conIA", /texto:conIA\(_txPed\)/.test(html) && /texto:conIA\(etiquetasWA\(a_las, sino\)\+texto\)/.test(html) && /texto:conIA\(wp\.texto\)/.test(html));
 si("lo escrito a mano (Mandar a / contestar en el chat) va tal cual, sin conIA", /var cpo=\{usuario:yo, tarea_id:t\.id, contacto:nombre, texto:v, auto_respuesta:1/.test(html) && /cpo=\{usuario:yo, tarea_id:t\.id, contacto:contacto, texto:v, auto_respuesta:1/.test(html));

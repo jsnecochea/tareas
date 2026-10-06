@@ -53,7 +53,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
     if (process.env.CAP) await p.screenshot({ path: path.join(process.env.CAP, "b237-platica-desplegada.png") });
     var r3 = await p.evaluate(function () { var o = {};
       function card(re) { return [].filter.call(document.querySelectorAll(".aco226 .acor.g237"), function (f) { return re.test(f.textContent); })[0]; }
-      __ESCR.length = 0; card(/Lalo/).querySelector("[data-acok]").click();
+      __ESCR.length = 0; card(/Lalo/).querySelector(":scope > .acob > .ac226 [data-acok]").click();   /* 238: el botón de la TARJETA (desplegada, cada mensaje trae el suyo) */
       var L = tareas[0]; o.ok = [L.msgs.filter(function (x) { return /Lalo/.test(x.wa_c || "") && x.acomodo && x.acomodo.ok === 1; }).length, document.querySelectorAll(".aco226 .acor.g237").length];
       var w = __ESCR.filter(function (e) { return e[0] === "bitacora_personas"; })[0]; var rg = w ? w[2].acomodo_reglas[Object.keys(w[2].acomodo_reglas)[0]] : null;
       o.regla = w ? [w[1], JSON.stringify(w[3]), rg.contacto, rg.tipo, rg.tarea_destino, rg.palabras_clave.length >= 3 && rg.palabras_clave.length <= 5, /^\d{4}-\d{2}-\d{2}T/.test(rg.fecha)] : null;
@@ -66,14 +66,14 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
       /* dentro de la tarea */
       tareas = F237(); abierta = "tLERDO"; vista = "hilo"; poneVista230(tareas[0], ""); render(); poneVista230(tareas[0], ""); render();
       [].forEach.call(document.body.children, function (x) { if (x.id !== "app") x.style.display = "none"; });
-      o.dentro = { botones: [].map.call(document.querySelectorAll("#app .ac226"), function (x) { return x.getAttribute("data-acg").split(",").length; }), marquitas: [].map.call(document.querySelectorAll(".msgs .mq237"), function (x) { return x.textContent; }) };
+      o.dentro = { botones: [].map.call(document.querySelectorAll("#app .ac226"), function (x) { return x.getAttribute("data-acg").split(",").length; }), marquitas: [].map.call(document.querySelectorAll(".msgs .cl238"), function (x) { return x.getAttribute("aria-label"); }) };
       return o; });
     var r4 = await p.evaluate(function () { var o = {};
-      document.querySelector(".msgs .mq237").click(); o.abierta = [document.querySelectorAll(".msgs .ac226.mq237ab").length, document.querySelectorAll(".msgs .ac226.mq237ab button").length];
-      var el = document.querySelector(".msgs .ac226.mq237ab"); el.scrollIntoView({ block: "center" });
+      var _bb = [].filter.call(document.querySelectorAll(".msgs [data-mix]"), function (b) { return /Esteban/.test(b.textContent); })[0]; _bb.click(); o.abierta = [document.querySelectorAll(".msgs .ac226.mq237ab").length, document.querySelectorAll(".msgs .ac226.mq237ab button").length];
+      var el = document.querySelector(".msgs .ac226.mq237ab"); if (!el) return o; el.scrollIntoView({ block: "center" });
       return o; });
     var r5 = await p.evaluate(function () { document.querySelector(".msgs .ac226.mq237ab [data-acok]").click(); var L = tareas[0];
-      return [L.msgs.filter(function (x) { return /Manuel/.test(x.wa_c || "") && x.ts < Date.now() - 3600000 && x.acomodo && x.acomodo.ok === 1; }).length, document.querySelectorAll(".msgs .mq237").length]; });
+      return [L.msgs.filter(function (x) { return /Manuel/.test(x.wa_c || "") && x.ts < Date.now() - 3600000 && x.acomodo && x.acomodo.ok === 1; }).length, document.querySelectorAll(".msgs .cl238").length]; });
     var r6 = await p.evaluate(function () {   /* captura limpia: tarea ya clasificada con una plática que acomodó Claude, marquita abierta */
       var NOW = Date.now(), hm = function (ms) { var d = new Date(NOW - ms); return ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2); };
       var T = { id: "tLIMPIA", nombre: "Mantenimiento Casa Lerdo/Eloísa", duenio: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, indefinida: true, por_autorizar: false, revisa_ext: "Manuel Parra",
@@ -81,26 +81,26 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
         msgs: [{ k: "bo", de: "salvador", t: "Manuel, ¿cómo va lo del techo?", ts: NOW - 40 * 60000, h: hm(40 * 60000) },
           { k: "bi", wa_in: 1, wa_c: "Manuel Parra", t: "Manuel Parra: Esteban ya cortó las ramas del techo y mañana empiezan a impermeabilizar", ts: NOW - 30 * 60000, h: hm(30 * 60000), wa_id: "a1" },
           { k: "bi", wa_in: 1, wa_c: "Manuel Parra", t: "Manuel Parra: te mando 3 fotos del techo limpio en un rato", ts: NOW - 28 * 60000, h: hm(28 * 60000), wa_id: "a2" }] };
-      tareas = [T]; abierta = T.id; vista = "hilo"; window.__mq237 = {}; render(); poneVista230(T, ""); render();
+      tareas = [T]; abierta = T.id; vista = "hilo"; window.__cl238 = {}; render(); poneVista230(T, ""); render();
       [].forEach.call(document.body.children, function (x) { if (x.id !== "app") x.style.display = "none"; });
-      document.querySelector(".msgs .mq237").click(); return [document.querySelectorAll(".msgs .ac226.mq237ab").length]; });
+      document.querySelector(".msgs .cl238").closest("[data-mix]").click(); return [document.querySelectorAll(".msgs .ac226.mq237ab").length]; });
     if (process.env.CAP) await p.screenshot({ path: path.join(process.env.CAP, "b237-tarea-acomodo-claude.png") });
     eq("Acomodo: 3 pláticas (no 10 mensajes)", r.cab, "Acomodo3 pláticas por revisar");
     eq("tarjetas: contacto · N mensajes (sin 'ok/gracias/ahí estaremos') · extracto · creo que es · tamaño de la plática", r.tarjetas, [
       ["Manuel Parra", "2 mensajes", "Tema 2… Mesa comedor alto brillo: mañana te dejo la muestra de melamina para que la veas en tu casa", "creo que es: Casa Lerdo", 2],
       ["Lalo Madero", "1 mensaje", "¿Hay miercolitos esta semana? Reservé la cancha 3 de 8 a 9:30 en el club", "creo que es: Casa Lerdo", 6],
       ["Toldos Laguna", "1 mensaje", "Le comparto la cotización del toldo retráctil de 4x3 m: $38,500 con instalación", "creo que es: Cotización toldo terraza · sin clasificar", 2]]);
-    eq("desplegada: los 6 mensajes, la pura plática en tenue", r2.desplegada.map(function (x) { return x[1]; }), [true, true, false, true, true, true]);
+    eq("desplegada: los 6 mensajes, la pura plática en tenue", r2.desplegada.map(function (x) { return x[1]; }), [true, true, false, false, true, true]);   /* 238: tenue = saludos ("va Nestor y el Pollo" sí tiene contenido) */
     eq("OK aplica a TODA la plática (6) y la tarjeta se va", r3.ok, [6, 2]);
     eq("regla en bitacora_personas/salvador · acomodo_reglas (merge)", r3.regla, ["salvador", '{"merge":true}', "Lalo Madero", "ok", "tLERDO", true, true]);
     eq("Mover: la hoja dice '2 mensajes' y pasan los 2", [r3.hojaMover, r3.mover], ["2 mensajes", [2, 2]]);
-    eq("regla de Mover", r3.reglaMover, ["mover", "tCOMEDOR", 2]);
+    eq("regla de Mover (238: una por mensaje)", r3.reglaMover, ["mover", "tCOMEDOR", 1]);
     eq("Nueva: tarea nueva con toda la plática", r3.nueva, [true, 2, 2]);
     eq("ya no queda nada por revisar", r3.quedan, 0);
-    eq("en la tarea: botones UNA vez por plática con duda (Lalo por la nota de la Mac, Manuel; una en la tarjeta Te pregunta) y 'acomodó Claude' en la segura", [r3.dentro.botones, r3.dentro.marquitas], [[6, 2], ["acomodó Claude"]]);
-    eq("tocar 'acomodó Claude' abre OK · Mover · Nueva", r4.abierta, [1, 3]);
-    eq("OK desde la marquita confirma y la quita", r5, [1, 0]);
-    eq("tarea limpia: la marquita abierta", r6, [1]);
+    eq("en la tarea (238 por MENSAJE): botones en cada mensaje con duda (Lalo por la nota de la Mac en Te pregunta, Manuel) e iconito de Claude en los acomodados con contenido", [r3.dentro.botones, r3.dentro.marquitas], [[1, 1], ["Lo acomodó Claude", "Lo acomodó Claude", "Lo acomodó Claude", "Lo acomodó Claude", "Lo acomodó Claude"]]);
+    eq("tocar el globo con el iconito abre OK · Mover · Nueva para ese mensaje", r4.abierta, [1, 3]);
+    eq("OK desde el globo confirma ese mensaje y le quita el iconito", r5[0], 1);
+    eq("tarea limpia: globo tocado abierto", r6, [1]);
     eq("sin errores de página", errs, []);
   } finally { await b.close(); }
   console.log((malas.length ? malas.map(function (x) { return "  X " + x; }).join("\n") + "\n" : "") + "RESULTADO " + ok + "/" + n);
