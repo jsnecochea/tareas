@@ -70,7 +70,7 @@ si("iconos: trazo 1.5 fijo", /var s=px\|\|18, w=1\.5, p=\{/.test(html));
       var C3 = COMEDOR(); C3.msgs.push({ k: "bi", wa_in: 1, wa_c: "Manuel Parra", t: "Manuel Parra: algo movido", ts: NOW - 2e6, h: "12:00", oculto: true, movido_a: { id: "x" } });
       tareas = [L3, C3, VEST()]; abierta = null; vista = "lista"; render(); pinta();
       var aco = document.querySelector(".aco226");
-      o.inicio = aco ? { cab: aco.querySelector(".acoh").textContent, filas: [].map.call(aco.querySelectorAll(".acor"), function (f) { return [f.querySelector(".av226").textContent, f.querySelector(".acow b").textContent, f.querySelector(".pill226").textContent, [].map.call(f.querySelectorAll(".ac226 button"), function (x) { return x.textContent; }).join("·")]; }),
+      o.inicio = aco ? { cab: aco.querySelector(".msgh271 b").textContent + aco.querySelector(".msgh271 .ttn").textContent, filas: [].map.call(aco.querySelectorAll(".acor"), function (f) { return [f.querySelector(".av226").textContent, f.querySelector(".acow b").textContent, f.querySelector(".pill226").textContent, [].map.call(f.querySelectorAll(".ac226 button"), function (x) { return x.textContent; }).join("·")]; }),
         plegado: aco.querySelector(".acof").textContent, lista: !!aco.querySelector(".acol") } : null;
       o.primero = !!(aco && document.querySelector(".scroll").firstElementChild && aco.compareDocumentPosition(document.querySelector(".scroll").lastElementChild) & 4);
       document.getElementById("bacof").click(); o.abre = document.querySelectorAll(".aco226 .acoli").length;
@@ -91,7 +91,7 @@ si("iconos: trazo 1.5 fijo", /var s=px\|\|18, w=1\.5, p=\{/.test(html));
     eq("Solo plática: oculto con motivo, censo, sin tarea nueva", r.platica, [true, "platica", "platica", 3]);
     eq("Nueva: crea la tarea con nombre sugerido, queda en Falta info y el mensaje pasa ahí", r.nueva, [4, "Mesa Comedor Alt Brillo con Manuel", "falta", true, true, "nueva"]);
     eq("Inicio · Acomodo arriba: solo lo dudoso, 1 renglón por mensaje con iniciales, nombre, pastilla y OK·Mover·Nueva", r.inicio && [r.inicio.cab, r.inicio.filas],
-      ["Acomodo2 pláticas por revisar", [["LM", "Lalo Madero", "creo que es: Casa Lerdo", "OK·Mover·Nueva·Dato·No guardar"], ["MP", "Manuel Parra", "creo que es: Casa Lerdo", "OK·Mover·Nueva·Dato·No guardar"]]]);
+      ["Mensajes por acomodar2", [["LM", "Lalo Madero", "creo que es: Casa Lerdo", "OK·Mover·Nueva·Dato·No guardar"], ["MP", "Manuel Parra", "creo que es: Casa Lerdo", "OK·Mover·Nueva·Dato·No guardar"]]]);
     eq("plegado: 'Acomodé solo hoy · 3' y 'acerté 2/3' (el movido cuenta como fallo)", r.inicio && [r.inicio.plegado, r.inicio.lista], ["Acomodé solo hoy · 3acerté 2/3", false]);
     eq("se despliega la lista de hoy", r.abre, 3);
     eq("OK desde el Inicio quita el renglón", r.okInicio, [1, 1]);

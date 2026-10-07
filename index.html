@@ -812,6 +812,7 @@ button{font:inherit;color:inherit}
 .acom{color:var(--ink-2);font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pill226{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;border:1px solid #545458;border-radius:999px;padding:3px 11px 3px 8px;font-size:14px;color:var(--ink);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pill226 .q{color:var(--ink-3)}.acor .ac226{margin:2px 0 0}
+.msg271{margin-top:2px}.msg271 .clh263{padding:6px 4px}.msg271 .ttn.n0{background:#8e8e93}.msg271 .acog{margin-top:6px}   /* build 271 */
 .acohint{text-align:center;color:var(--ink-3);font-size:13px;margin:8px 0 0}
 .acof{display:flex;align-items:center;gap:8px;width:100%;margin-top:10px;background:var(--surface);border:0;border-radius:16px;min-height:52px;padding:0 14px;font:inherit;font-size:16px;color:var(--ink)}
 .acof svg{color:var(--ink-3)}.acof .r{margin-left:auto;color:var(--ink-3);font-size:14.5px}
@@ -1548,7 +1549,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 270 · home reacomodado: Te pregunta Doit, Vencidas mías y Hoy mías siempre a la vista; abajo Las lleva Claude con semáforo y Mías futuras · build 269 · a Salvador solo le suenan 5 tipos de push (acuerdo, llamada, atorado, IA atorada, recordatorio) · build 268 · notificaciones con tag (sin repetidas) y cerradas al resolver · build 267 · sin bucle de preguntas (Ninguno cierra), sin repreguntas automáticas a terceros · build 266 · toda pregunta de Claude en texto (sin fichas de botones), la respuesta dictada la cierra · build 265 · chip Falta rojo y ancho, micrófono sin autoarranque · build 264 · expedientes: Ya está los deja dormidos, despiertan solos, cerradas y dormidas siempre en búsqueda · recordatorios una vez, siguiente en orden, Hoy solo lo de Salvador, esperas con fecha, falta info coherente, dictado oculto, WhatsApp sin contacto basura";
+var VERSION_APP = "build 271 · mensajes por acomodar en su propia pestañita plegable (con contador, se recuerda), entre Nuevas tareas para acomodar y Te pregunta Doit · build 270 · home reacomodado: Te pregunta Doit, Vencidas mías y Hoy mías siempre a la vista; abajo Las lleva Claude con semáforo y Mías futuras · build 269 · a Salvador solo le suenan 5 tipos de push (acuerdo, llamada, atorado, IA atorada, recordatorio) · build 268 · notificaciones con tag (sin repetidas) y cerradas al resolver · build 267 · sin bucle de preguntas (Ninguno cierra), sin repreguntas automáticas a terceros · build 266 · toda pregunta de Claude en texto (sin fichas de botones), la respuesta dictada la cierra · build 265 · chip Falta rojo y ancho, micrófono sin autoarranque · build 264 · expedientes: Ya está los deja dormidos, despiertan solos, cerradas y dormidas siempre en búsqueda · recordatorios una vez, siguiente en orden, Hoy solo lo de Salvador, esperas con fecha, falta info coherente, dictado oculto, WhatsApp sin contacto basura";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -6956,7 +6957,7 @@ function vLista(){
   /* build 270: el home de arriba hacia abajo — 1 Acomodo (plegable) · 2 Te pregunta Doit · 3 Vencidas mías · 4 Hoy mías (las tres siempre
      desplegadas, sin acordeón) · 5 plegadas: Las lleva Claude (con semáforo), Mías futuras y el resto */
   var _h270=armaHome270(_rev, det, mias_venc, hoyYa, futuras);
-  h+=vAcomodo()+vHome270(_h270)+vAbajo270(_cl263, _h270, hMis, mis.length);
+  h+=vAcomodo()+vMsgs271()+vHome270(_h270)+vAbajo270(_cl263, _h270, hMis, mis.length);
 
   /* ORDEN DEL SWIPE ENTRE TAREAS — Salvador 2026-09-22: el swipe (window.
      ordenSwipe) sigue el mismo orden de las 7 secciones AUNQUE esten
@@ -10874,7 +10875,7 @@ function descartaProp256(t){
   try{ hist240("Propuesta descartada: “"+String(t.nombre||"")+"”", t, null); }catch(e){}
 }
 function bindPropuestas256(){
-  var r=document.querySelector(".aco226");
+  var r=document.querySelector(".aco226:not(.msg271)");
   var rb=$("bprop256"); if(rb) rb.onclick=function(){ poneAcoPlegado260(!acoPlegado260()); render(); };
   if(!r) return;
   var tDe=function(el){ var c=el.closest("[data-p256]"); return c?tareas.filter(function(z){ return z.id===c.getAttribute("data-p256"); })[0]:null; };
@@ -10892,10 +10893,23 @@ function bindPropuestas256(){
 function vAcomodo(){
   var P=propuestas256(), solo=(window.__aco256==="prop" && P.length);
   if(acoPlegado260() && P.length) return "";   /* build 260: el banner plegó la sección */
-  var D=solo?[]:platicasAcomodo237(), A=solo?{n:0,ok:0,lista:[]}:acomodoHoy(); if(!D.length && !A.n && !P.length) return "";   /* build 237: UNA tarjeta por plática */
+  if(!P.length) return "";   /* build 271: las pláticas (mensajes sin tarea) viven en su propia pestaña plegable, vMsgs271 */
   var _np=P.length;   /* build 260: cuenta las dos clases (propuestas y 'Creada · ¿Para cuándo?'): el número cuadra con las tarjetas */
-  var h='<div class="aco226"><div class="acoh"><b>Acomodo</b><span>'+((D.length||P.length)?[(_np?_np+(_np===1?' tarea nueva':' tareas nuevas'):''), (D.length?D.length+(D.length===1?' plática':' pláticas'):'')].filter(Boolean).join(' · ')+' por revisar':'al día')+'</span></div>';
+  var h='<div class="aco226"><div class="acoh"><b>Acomodo</b><span>'+_np+(_np===1?' tarea nueva':' tareas nuevas')+' por revisar'+'</span></div>';
   if(P.length) h+='<div class="acog">'+vPropuestas256(P)+'</div>'+(solo?'<button class="acof" id="bprop256x" onclick="window.__aco256=\'\';render()"><span>Ver todo el Acomodo</span></button>':'');
+  return h+'</div>';
+}
+/* build 271 (Salvador 7-oct): "Mensajes por acomodar" — los mensajes de WhatsApp o correo que la IA no sabe a qué tarea van (tarjetas
+   OK · Mover · Nueva · Dato · No guardar, sin cambios por dentro) salen del Acomodo a su propia pestañita plegable, justo debajo de
+   "Nuevas tareas para acomodar" y arriba de "Te pregunta Doit". El encabezado lleva el contador; el plegado se recuerda (localStorage). */
+function msgPlegado271(){ if(window.__msgPleg271===undefined){ var v=false; try{ v=localStorage.getItem("bit_msg_pleg271")==="1"; }catch(e){} window.__msgPleg271=v; } return !!window.__msgPleg271; }
+function poneMsgPlegado271(v){ window.__msgPleg271=!!v; try{ localStorage.setItem("bit_msg_pleg271", v?"1":"0"); }catch(e){} }
+function vMsgs271(){
+  if(window.__aco256==="prop" && propuestas256().length) return "";   /* "solo propuestas" (build 256) */
+  var D=platicasAcomodo237(), A=acomodoHoy(); if(!D.length && !A.n) return "";   /* build 237: UNA tarjeta por plática */
+  var pl=msgPlegado271();
+  var h='<div class="aco226 msg271"><button class="clh263 msgh271" id="bmsg271" aria-expanded="'+(pl?"false":"true")+'" aria-label="Mensajes por acomodar: '+D.length+'"><b>Mensajes por acomodar</b><span class="ttn'+(D.length?'':' n0')+'">'+D.length+'</span><span class="ttch">'+(pl?"›":"⌄")+'</span></button>';
+  if(pl) return h+'</div>';
   if(D.length) h+='<div class="acog">'+D.slice(0,8).map(function(g){ var t=g.t, ix0=g.ixs[0], x0=t.msgs[g.ixs[g.ixs.length-1]], k=t.id+"|"+ix0, ab=!!(window.__g237open||{})[k],
       _pm=ab && g.ixs.some(function(i){ var x=t.msgs[i]; return !(esSaludo239(t,x) || confirmado237(x) || x.oculto); });   /* build 245: con botones por mensaje, la fila del final sobra */
     return '<div class="acor g237'+(ab?' ab':'')+'" data-acot="'+esc(t.id)+'" data-acoix="'+ix0+'" data-acg="'+esc(g.ixs.join(","))+'" data-g237="'+esc(k)+'"><span class="av226">'+esc(inicialesDe(g.contacto))+'</span><span class="acob"><span class="acow"><b>'+esc(g.contacto||"Contacto")+'</b><span class="n237">'+(g.n||g.ixs.length)+' mensaje'+((g.n||g.ixs.length)===1?'':'s')+'</span><time>'+esc(x0.h||"")+'</time></span>'+
@@ -10908,7 +10922,10 @@ function vAcomodo(){
   return h+'</div>';
 }
 function bindAcomodoInicio(){
-  var r=document.querySelector(".aco226"); if(!r) return;
+  var bm=$("bmsg271"); if(bm) bm.onclick=function(){ poneMsgPlegado271(!msgPlegado271()); render(); };   /* build 271 */
+  Array.prototype.forEach.call(document.querySelectorAll(".aco226"), bindAcomodoUna271);
+}
+function bindAcomodoUna271(r){
   var tDe=function(el){ var c=el.closest("[data-acot]"); return c?tareas.filter(function(z){ return z.id===c.getAttribute("data-acot"); })[0]:null; };
   bindAcomodo(r, tDe);
   Array.prototype.forEach.call(r.querySelectorAll("[data-g237]"), function(el){ el.addEventListener("click", function(ev){ if(ev.target.closest("button")) return; window.__g237open=window.__g237open||{}; var k=el.getAttribute("data-g237"); window.__g237open[k]=!window.__g237open[k]; render(); }); });   /* build 237: tocar = desplegar */

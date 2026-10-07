@@ -50,9 +50,9 @@ eq("versión >= 260", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     eq("El número del banner cuadra con las tarjetas (2 propuestas + 2 'Creada')", [r2.cards, r2.creadas, /^4 tareas nuevas por revisar/.test(r2.ban), /4 tareas nuevas/.test(r2.hdr)], [4, 2, true, true]);
     await foto("b259-2-banner.png");
     var r3 = await p.evaluate(function () { var b = document.getElementById("bprop256"); b.click();
-      var plegada = { aco: !!document.querySelector(".aco226"), exp: document.getElementById("bprop256").getAttribute("aria-expanded"), ls: localStorage.getItem("bit_aco_pleg260") };
+      var plegada = { aco: !!document.querySelector(".aco226:not(.msg271)"), exp: document.getElementById("bprop256").getAttribute("aria-expanded"), ls: localStorage.getItem("bit_aco_pleg260") };
       window.__acoPleg260 = undefined; var recuerda = acoPlegado260();
-      document.getElementById("bprop256").click(); var abierta2 = { aco: !!document.querySelector(".aco226"), exp: document.getElementById("bprop256").getAttribute("aria-expanded"), ls: localStorage.getItem("bit_aco_pleg260") };
+      document.getElementById("bprop256").click(); var abierta2 = { aco: !!document.querySelector(".aco226:not(.msg271)"), exp: document.getElementById("bprop256").getAttribute("aria-expanded"), ls: localStorage.getItem("bit_aco_pleg260") };
       return { plegada: plegada, recuerda: recuerda, abierta2: abierta2 }; });
     eq("Tocar el banner PLIEGA Acomodo (se recuerda en localStorage) y volver a tocarlo lo DESPLIEGA", r3, { plegada: { aco: false, exp: "false", ls: "1" }, recuerda: true, abierta2: { aco: true, exp: "true", ls: "0" } });
     var r4 = await p.evaluate(function () { var t = tareas.filter(function (x) { return x.id === "w2"; })[0]; document.querySelector('[data-p256="w2"] .p256x').click();

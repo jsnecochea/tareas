@@ -41,7 +41,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
         return [LER, PAD, COM, TOL]; };
       tareas = F237(); abierta = null; vista = "lista"; render(); solo();
       var aco = document.querySelector(".aco226");
-      o.cab = aco.querySelector(".acoh").textContent;
+      o.cab = aco.querySelector(".msgh271 b").textContent + aco.querySelector(".msgh271 .ttn").textContent;   /* build 271: pestañita propia */
       o.tarjetas = [].map.call(aco.querySelectorAll(".acor.g237"), function (f) { return [f.querySelector(".acow b").textContent, f.querySelector(".n237").textContent, f.querySelector(".x237").textContent, f.querySelector(".pill226").textContent, f.getAttribute("data-acg").split(",").length]; });
       return o; });
     if (process.env.CAP) await p.screenshot({ path: path.join(process.env.CAP, "b237-acomodo-3-platicas.png") });
@@ -86,7 +86,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
       [].forEach.call(document.body.children, function (x) { if (x.id !== "app") x.style.display = "none"; });
       document.querySelector(".msgs .cl238").closest("[data-mix]").click(); return [document.querySelectorAll("#det242 .ac226").length]; });
     if (process.env.CAP) await p.screenshot({ path: path.join(process.env.CAP, "b237-tarea-acomodo-claude.png") });
-    eq("Acomodo: 3 pláticas (no 10 mensajes)", r.cab, "Acomodo3 pláticas por revisar");
+    eq("Acomodo: 3 pláticas (no 10 mensajes)", r.cab, "Mensajes por acomodar3");
     eq("tarjetas: contacto · N mensajes (sin 'ok/gracias/ahí estaremos') · extracto · creo que es · tamaño de la plática", r.tarjetas, [
       ["Manuel Parra", "2 mensajes", "Tema 2… Mesa comedor alto brillo: mañana te dejo la muestra de melamina para que la veas en tu casa", "creo que es: Casa Lerdo", 2],
       ["Lalo Madero", "1 mensaje", "¿Hay miercolitos esta semana? Reservé la cancha 3 de 8 a 9:30 en el club", "creo que es: Casa Lerdo", 6],
