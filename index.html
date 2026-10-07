@@ -876,6 +876,26 @@ button{font:inherit;color:inherit}
 .res230 .racu{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}.res230 .racu li{display:flex;align-items:flex-start;gap:6px;font-size:14.5px;line-height:1.35}
 .res230 .racu li svg{color:#30d158;flex:none;margin-top:2px}.res230 .racu li span{flex:1}.res230 .racu small{color:var(--ink-3);font-size:12.5px;flex:none}
 .res230 .rfal{font-size:14px;color:var(--ink-2)}.res230 .rfal b{color:var(--ink)}.res230 .ract{align-self:flex-end;font-size:11.5px;color:var(--ink-3)}
+/* build 274: MODO CAMINATA — botón grande en el home y pantalla mínima (título, círculo hablando/escuchando, Pausa y Siguiente) */
+.cam274b{display:flex;align-items:center;gap:14px;width:calc(100% - 8px);margin:6px 4px 10px;padding:14px 16px;border:0;border-radius:18px;background:var(--azul);color:#fff;font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;min-height:64px}
+.cam274b:active{opacity:.85}.cam274i{flex:none;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.18);display:grid;place-items:center}
+.cam274t{display:flex;flex-direction:column;min-width:0}.cam274t b{font-size:19px;font-weight:700;line-height:1.2}.cam274t small{font-size:13.5px;opacity:.85;line-height:1.3}
+html.cam274on,html.cam274on body{overflow:hidden}
+.cam274{position:fixed;inset:0;z-index:9999;background:#000;color:#fff;display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px calc(env(safe-area-inset-bottom,0px) + 16px);box-sizing:border-box}
+.c274top{display:flex;align-items:center;justify-content:space-between;font-size:15px;color:#aeaeb2}
+.c274top button{width:44px;height:44px;border:0;border-radius:50%;background:#1c1c1e;color:#fff;font-size:18px;cursor:pointer}
+.cam274 h2{margin:18px 0 0;font-size:28px;line-height:1.2;font-weight:700;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.c274mid{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;min-height:0}
+.c274o{position:relative;width:150px;height:150px;border-radius:50%;background:#1c1c1e;display:grid;place-items:center}
+.c274o i{position:absolute;inset:0;border-radius:50%;border:3px solid transparent}
+.c274o.habla{background:#0a84ff}.c274o.habla.vb{background:#5e5ce6}.c274o.oye{background:#30d158}.c274o.pausa{background:#3a3a3c}
+.c274o.habla i,.c274o.oye i{border-color:currentColor;color:rgba(255,255,255,.55);animation:c274pul 1.8s ease-out infinite}
+.c274o.habla i:nth-child(2),.c274o.oye i:nth-child(2){animation-delay:.6s}.c274o.habla i:nth-child(3),.c274o.oye i:nth-child(3){animation-delay:1.2s}
+@keyframes c274pul{0%{transform:scale(1);opacity:.9}100%{transform:scale(1.6);opacity:0}}
+@media (prefers-reduced-motion:reduce){.c274o i{animation:none!important}}
+#c274st{margin:0;font-size:18px;font-weight:600;text-align:center}#c274oy{margin:0;font-size:15px;color:#aeaeb2;text-align:center;min-height:2.6em;max-width:100%;overflow-wrap:anywhere}
+.c274bt{display:flex;gap:12px}.c274big{flex:1;min-height:76px;border:0;border-radius:20px;background:#2c2c2e;color:#fff;font-size:22px;font-weight:700;cursor:pointer}
+.c274big.sig{background:#0a84ff}.c274big:active{opacity:.8}
 /* build 273: la tarea en 4 capas (En qué vamos · Decide tú · Lo que sabemos · Plática) */
 .cp273w4{display:flex;flex-direction:column;gap:10px;margin:4px 2px 8px}
 .cp273{padding:13px 15px;border-radius:16px;background:var(--surface-2);display:flex;flex-direction:column;gap:7px;min-width:0}
@@ -1593,7 +1613,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 273 · la tarea en 4 capas: En qué vamos, Decide tú, Lo que sabemos y Plática (lo archivado plegado); la ficha Falta siempre abre el cuestionario · build 272 · home minimalista: línea de estado con contadores, secciones vacías fuera, preguntas de una tarea en un renglón, lo que espera a un tercero pasa a Las lleva Claude, Ya está con la siguiente subiendo · build 271 · mensajes por acomodar en su propia pestañita plegable (con contador, se recuerda), entre Nuevas tareas para acomodar y Te pregunta Doit · build 270 · home reacomodado: Te pregunta Doit, Vencidas mías y Hoy mías siempre a la vista; abajo Las lleva Claude con semáforo y Mías futuras · build 269 · a Salvador solo le suenan 5 tipos de push (acuerdo, llamada, atorado, IA atorada, recordatorio) · build 268 · notificaciones con tag (sin repetidas) y cerradas al resolver · build 267 · sin bucle de preguntas (Ninguno cierra), sin repreguntas automáticas a terceros · build 266 · toda pregunta de Claude en texto (sin fichas de botones), la respuesta dictada la cierra · build 265 · chip Falta rojo y ancho, micrófono sin autoarranque · build 264 · expedientes: Ya está los deja dormidos, despiertan solos, cerradas y dormidas siempre en búsqueda · recordatorios una vez, siguiente en orden, Hoy solo lo de Salvador, esperas con fecha, falta info coherente, dictado oculto, WhatsApp sin contacto basura";
+var VERSION_APP = "build 274 · modo Caminata: botón grande en el home, recorre decisiones, llamadas de hoy y vencidas/hoy a dos voces tipo podcast; escucha sin cortar (el silencio no envía: pregunta ¿Terminaste o sigues?; «terminé» envía), comandos repite/más detalle/siguiente/atrás/pausa/salir, la respuesta va al hilo · build 273 · la tarea en 4 capas: En qué vamos, Decide tú, Lo que sabemos y Plática (lo archivado plegado); la ficha Falta siempre abre el cuestionario · build 272 · home minimalista: línea de estado con contadores, secciones vacías fuera, preguntas de una tarea en un renglón, lo que espera a un tercero pasa a Las lleva Claude, Ya está con la siguiente subiendo · build 271 · mensajes por acomodar en su propia pestañita plegable (con contador, se recuerda), entre Nuevas tareas para acomodar y Te pregunta Doit · build 270 · home reacomodado: Te pregunta Doit, Vencidas mías y Hoy mías siempre a la vista; abajo Las lleva Claude con semáforo y Mías futuras · build 269 · a Salvador solo le suenan 5 tipos de push (acuerdo, llamada, atorado, IA atorada, recordatorio) · build 268 · notificaciones con tag (sin repetidas) y cerradas al resolver · build 267 · sin bucle de preguntas (Ninguno cierra), sin repreguntas automáticas a terceros · build 266 · toda pregunta de Claude en texto (sin fichas de botones), la respuesta dictada la cierra · build 265 · chip Falta rojo y ancho, micrófono sin autoarranque · build 264 · expedientes: Ya está los deja dormidos, despiertan solos, cerradas y dormidas siempre en búsqueda · recordatorios una vez, siguiente en orden, Hoy solo lo de Salvador, esperas con fecha, falta info coherente, dictado oculto, WhatsApp sin contacto basura";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -7003,7 +7023,8 @@ function vLista(){
      desplegadas, sin acordeón) · 5 plegadas: Las lleva Claude (con semáforo), Mías futuras y el resto */
   var _h270=armaHome270(_rev, det, mias_venc, hoyYa, futuras);
   h+=vAcomodo()+vMsgs271()+vHome270(_h270)+vAbajo270(_cl263, _h270, hMis, mis.length);
-  h=h.replace('<!--est272-->', vEstado272(_h270));   /* build 272: línea de estado arriba del todo */
+  window.__H274=_h270;   /* build 274: la caminata sigue el orden del home */
+  h=h.replace('<!--est272-->', vCaminata274()+vEstado272(_h270));   /* build 274: botón grande Caminata arriba de la línea de estado */   /* build 272: línea de estado arriba del todo */
 
   /* ORDEN DEL SWIPE ENTRE TAREAS — Salvador 2026-09-22: el swipe (window.
      ordenSwipe) sigue el mismo orden de las 7 secciones AUNQUE esten
@@ -15716,6 +15737,7 @@ function bindLista(){
   var bcp=$("bcomp"); if(bcp) bcp.onclick=function(){ window.__verComp=!window.__verComp; render(); };
   var bcl=$("bcl263"); if(bcl) bcl.onclick=function(){ window.__clL263=!window.__clL263; render(); };
   try{ bindHome272(); }catch(e){ console.warn("home272", e); }   /* build 272 */
+  try{ bindCam274(); }catch(e){ console.warn("cam274", e); }   /* build 274 */
   var be270=$("benc270"); if(be270) be270.onclick=function(){ window.__verEnc270=!window.__verEnc270; render(); };   /* build 270 */
   var br270=$("brev270"); if(br270) br270.onclick=function(){ window.__verRev270=!window.__verRev270; render(); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-ttmas]"),function(b){ b.onclick=function(){ window.__ttMas=window.__ttMas||{}; var g=b.getAttribute("data-ttmas"); window.__ttMas[g]=!window.__ttMas[g]; render(); }; }); var bkc=$("bback"); if(bkc && consulta) bkc.onclick=function(){ consulta=""; render() };
@@ -17901,6 +17923,342 @@ function vAbajo270(claudeL, H, hMis, nMis){
 }
 
 
+/* ===================== build 274 (Salvador 7-oct): MODO CAMINATA =====================
+   Para usarlo caminando o manejando, sin ver la pantalla. Reemplaza al modo audífonos (que se cortaba a los 5 s).
+   1 Botón grande "Caminata" en el home: recorre UNA POR UNA sus pendientes, en este orden: decisiones (t.decision / esperan tu
+     decisión) · llamadas de hoy · vencidas y de hoy (el mismo orden del home).
+   2 Formato PODCAST a DOS VOCES (speechSynthesis, es-MX > es-US > es-ES): A presentadora ("Tarea 2 de 7: Reloj checador."),
+     B analista (contexto en 2-3 frases cortas, "Lo que hay que decidir: …", "Yo haría: … porque …"); A cierra con la pregunta.
+     Si solo hay una voz en español, se distinguen por tono y velocidad. Frases cortas; nunca bloques largos ni código.
+   3 ESCUCHA SIN CORTAR: continuous + interimResults, se reabre sola si el motor se cae. El SILENCIO NUNCA ENVÍA: a los 2.5 s
+     la voz A pregunta bajito "¿Terminaste o sigues?" ("sigo"/"espera" = sigue escuchando y acumula; "terminé"/"listo"/"ya" = envía).
+     Decir "terminé" al final de la respuesta también envía. La primera vez de la sesión explica: "Cuando acabes de contestar, di 'terminé'."
+   4 Comandos de voz: repite · más detalle · siguiente · atrás · pausa · salir (y "la dejamos para después" = siguiente sin anotar).
+   5 La respuesta va al hilo de la tarea como mensaje de Salvador (nota para Claude; la Mac la procesa). Si la tarea trae una decisión
+     pendiente, queda además como su respuesta (contestaDecision273). Voz A: "Anotado." y pasa a la siguiente.
+   6 Pantalla mínima: título, círculo que indica hablando / escuchando, botones grandes Pausa y Siguiente; pantalla encendida (Wake Lock). */
+var CAM_SILENCIO=2500, CAM_ESPERA_VACIO=20000;
+var CAM={on:false, L:[], i:0, fase:"", pausa:false, tok:0, explicado:false, rec:null, buf:"", par:"", modo:"", tSil:null, tVac:null, wl:null, n:0};
+function _camNv(s){ return String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[¿?¡!.,;:"'«»“”]/g," ").replace(/\s+/g," ").trim(); }
+function _camVivo(t){ try{ return !!t && !t.cierre && !t.fusionada_en && !esDormida264(t) && !esPropuesta256(t) && estadoReal(t)!=="cerrada"; }catch(e){ return !!t && !t.cierre; } }
+var CAM_LLAMA=/\b(llama|llamar|llamale|llamarle|llamada|llamadas|marcale|marcarle|telefonea|telefonear|hablale por telefono)\b/;
+function esLlamada274(t){
+  var s=_camNv(t && t.nombre); if(CAM_LLAMA.test(s)) return true;
+  try{ var v=vamos273(t); if(v && CAM_LLAMA.test(_camNv(v.tx))) return true; }catch(e){}
+  return false;
+}
+/* el orden de la caminata: decisiones · llamadas de hoy · vencidas y de hoy */
+function camLista274(){
+  var H=window.__H274||{preg:[], venc:[], hoy:[]}, out=[], ya={}, h=hoy();
+  var pon=function(t){ if(t && !ya[t.id] && _camVivo(t)){ ya[t.id]=1; out.push(t.id); } };
+  (tareas||[]).forEach(function(t){ var d=null; try{ d=decision273(t); }catch(e){} var ds=false; try{ ds=esDecisionSal(t); }catch(e){} if(d || ds) pon(t); });
+  var vh=(H.venc||[]).concat(H.hoy||[]).map(function(x){ return x.t; });
+  vh.forEach(function(t){ if(esLlamada274(t) && (t.f_vigente===h || (H.hoy||[]).some(function(x){ return x.t===t; }))) pon(t); });
+  (tareas||[]).forEach(function(t){ if(t && t.f_vigente===h && !t.es_recordatorio && (t.duenio===yo || !t.duenio) && esLlamada274(t)) pon(t); });
+  vh.forEach(pon);
+  return out;
+}
+/* ---------- texto hablado: frases cortas, sin código ni ligas ---------- */
+function _camCodigo(s){ return /[{}<>;=\\]|=>|\bfunction\b|\bvar\b|\bconst\b|\breturn\b|\.(js|html|php|json|py)\b|`/.test(s); }
+function camFrases(s, max){
+  s=limpiaHabla(String(s||"").replace(/```[\s\S]*?```/g," ").replace(/`[^`]*`/g," ")).replace(/\s*…\s*y sigue un texto largo\.?$/,"");
+  var F=(s.match(/[^.!?]+[.!?]*/g)||[]).map(function(x){ return x.trim(); }).filter(function(x){ return x.length>2 && !_camCodigo(x); });
+  return F.slice(0, max||2).map(function(x){ return camCorta(x, 150); });
+}
+function camCorta(s, n){ s=String(s||"").replace(/\s+/g," ").trim(); if(s.length<=n) return s;
+  var c=s.slice(0,n), p=Math.max(c.lastIndexOf(", "), c.lastIndexOf("; ")); return (p>n*0.5?c.slice(0,p):c.replace(/\s+\S*$/,""))+"."; }
+function camPunto(s){ s=String(s||"").trim().replace(/[\s,;:]+$/,""); return s && !/[.!?]$/.test(s)?s+".":s; }
+function camNombre(t){ return camCorta(limpiaHabla((t && t.nombre)||"Sin nombre"), 90).replace(/[.\s]+$/,""); }
+/* el guion de una tarea: [{v:"A"|"B", t:"…"}] */
+function camGuion274(t, i, n){
+  var G=[], d=null; try{ d=decision273(t); }catch(e){}
+  G.push({v:"A", t:"Tarea "+(i+1)+" de "+n+": "+camNombre(t)+"."});
+  /* contexto: 2 o 3 frases (resumen de Claude o contexto, y el siguiente paso) */
+  var R=(t.resumen && typeof t.resumen==="object")?t.resumen:{}, ctx=camFrases(R.texto, 2);
+  if(!ctx.length){ var cx=""; try{ cx=contextoDe(t); }catch(e){} ctx=camFrases(cx, 2); }
+  var v={}; try{ v=vamos273(t)||{}; }catch(e){}
+  if(v.tx && !_camCodigo(v.tx)){
+    var q=v.quien==="Tú"?"te toca a ti":(v.quien==="Claude"?"lo lleva Claude":(v.quien?"lo tiene "+v.quien:"")), f=v.fecha?(fechaChip(v.fecha)||""):"";
+    ctx.push(camPunto("En qué vamos: "+camCorta(limpiaHabla(v.tx), 140))+(q||f?" "+camPunto(q?(q.charAt(0).toUpperCase()+q.slice(1))+(f?", para "+f:""):"Para "+f):""));
+  }
+  if(ctx.length<2){ var S=[]; try{ S=sabemos273(t); }catch(e){} if(S.length) ctx.push(camPunto(camCorta(limpiaHabla(S[0].t), 140))); }
+  ctx.slice(0,3).forEach(function(x){ G.push({v:"B", t:camPunto(x)}); });
+  if(d){
+    if(d.pregunta) G.push({v:"B", t:camPunto("Lo que hay que decidir: "+camCorta(limpiaHabla(d.pregunta), 160))});
+    if(d.recomendacion){ var rec=camCorta(limpiaHabla(d.recomendacion), 170).replace(/[.\s]+$/,""), pq=camPorque274(d);
+      G.push({v:"B", t:"Yo haría: "+rec+(pq && !/\bporque\b/i.test(rec)?", porque "+pq:"")+"."}); }
+  } else {
+    var Q=[]; try{ Q=preguntas249(t); }catch(e){}
+    var ds=false; try{ ds=esDecisionSal(t); }catch(e){}
+    if(Q.length && Q[0].q) G.push({v:"B", t:camPunto("Lo que hay que decidir: "+camCorta(limpiaHabla(Q[0].q), 160))});
+    else if(ds && t.pendiente_info) G.push({v:"B", t:camPunto("Lo que hay que decidir: "+camCorta(limpiaHabla(t.pendiente_info), 160))});
+  }
+  if(G.length===1) G.push({v:"B", t:"No tengo más contexto de esta tarea."});
+  return G;
+}
+/* "porque": de la opción recomendada, lo que cumple (solo con los datos de la decisión; si no hay, no se inventa) */
+function camPorque274(d){
+  var ops=d.opciones||[], r=ops.filter(function(o){ return o.recomendada===true; })[0];
+  if(!r){ var rn=_camNv(d.recomendacion); r=ops.filter(function(o){ var n=_camNv(o.nombre); return n && n.length>=3 && rn.indexOf(n)>=0; })[0]; }
+  if(!r || !r.cumple || typeof r.cumple!=="object") return "";
+  var si=Object.keys(r.cumple).filter(function(k){ return r.cumple[k]===true; }).map(function(k){ return limpiaHabla(k).toLowerCase(); });
+  if(!si.length) return "";
+  return "cumple con "+juntaY(si.slice(0,3))+(r.precio!=null && String(r.precio).trim()?" y cuesta "+limpiaHabla(String(r.precio)):"");
+}
+/* "más detalle": las viñetas de Lo que sabemos y la comparativa, resumidas */
+function camDetalle274(t){
+  var G=[], S=[], d=null; try{ S=sabemos273(t); }catch(e){} try{ d=decision273(t); }catch(e){}
+  if(S.length){ G.push({v:"B", t:"Lo que sabemos."}); S.slice(0,5).forEach(function(x){ var s=camCorta(limpiaHabla(x.t), 140); if(!s || _camCodigo(s)) return; G.push({v:"B", t:camPunto((x.tipo==="descartado"?"Descartado: ":"")+s)}); }); }
+  if(d && d.opciones && d.opciones.length){
+    G.push({v:"B", t:"Las opciones."});
+    d.opciones.slice(0,4).forEach(function(o){ var c=(o.cumple && typeof o.cumple==="object")?o.cumple:{}, si=[], no=[];
+      Object.keys(c).forEach(function(k){ if(c[k]===true) si.push(limpiaHabla(k).toLowerCase()); else if(c[k]===false) no.push(limpiaHabla(k).toLowerCase()); });
+      var s=limpiaHabla(o.nombre)+(o.precio!=null && String(o.precio).trim()?", "+limpiaHabla(String(o.precio)):"");
+      if(si.length) s+=". Cumple con "+juntaY(si.slice(0,3)); if(no.length) s+=". No cumple con "+juntaY(no.slice(0,3));
+      G.push({v:"B", t:camPunto(camCorta(s, 200))}); });
+  }
+  if(!G.length) G.push({v:"B", t:"No tengo más detalle de esta tarea."});
+  return G;
+}
+/* ---------- las dos voces ---------- */
+function camVoces274(){
+  var vs=[]; try{ vs=speechSynthesis.getVoices()||[]; }catch(e){}
+  var de=function(re){ return vs.filter(function(x){ return re.test(x.lang||""); }); };
+  var L=de(/^es[-_]MX/i); if(!L.length) L=de(/^es[-_](US|419)/i); if(!L.length) L=de(/^es[-_]ES/i); if(!L.length) L=de(/^es/i);
+  var a=L[0]||null, b=L.length>1?L[1]:null;
+  /* una sola voz en español: B usa otra variante de español si la hay (es-US / es-ES); si no, la misma con otro tono */
+  if(a && !b){ var o=de(/^es/i).filter(function(x){ return x!==a; }); b=o[0]||null; }
+  return {A:a, B:b, distintas:!!(a && b && a!==b)};
+}
+function camDi274(G, done){
+  var tok=++CAM.tok, k=0, V=camVoces274();
+  CAM.fase="hablando"; camPinta274();
+  try{ if(speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel(); }catch(e){}
+  var uno=function(){
+    if(tok!==CAM.tok) return;
+    if(k>=G.length){ CAM.fase=""; camPinta274(); if(done) done(); return; }
+    var g=G[k++], u=null, listo=false;
+    var sig=function(){ if(listo) return; listo=true; clearTimeout(CAM.wd); if(tok===CAM.tok) setTimeout(uno, 120); };
+    try{ u=new SpeechSynthesisUtterance(g.t); }catch(e){ return sig(); }
+    var rate=1.0; try{ rate=_leeRate(); }catch(e){}
+    if(g.v==="A"){ u.voice=V.A||null; u.lang=(V.A&&V.A.lang)||"es-MX"; u.pitch=V.distintas?1.05:1.25; u.rate=rate*1.02; }
+    else { u.voice=V.B||V.A||null; u.lang=((V.B||V.A)&&(V.B||V.A).lang)||"es-MX"; u.pitch=V.distintas?0.95:0.75; u.rate=rate*(V.distintas?0.97:0.9); }
+    u.volume=g.bajito?0.55:1;
+    u.onend=sig; u.onerror=function(e){ if(e && (e.error==="interrupted"||e.error==="canceled") && tok!==CAM.tok) return; sig(); };
+    CAM.voz=g.v; CAM.dicho=g.t; camPinta274();
+    clearTimeout(CAM.wd); CAM.wd=setTimeout(sig, 3500+String(g.t).length*95/rate);
+    try{ speechSynthesis.speak(u); }catch(e){ sig(); }
+  };
+  uno();
+}
+/* ---------- escucha sin cortar ---------- */
+function camCallaMic(){ clearTimeout(CAM.tSil); clearTimeout(CAM.tVac); var r=CAM.rec; CAM.rec=null; CAM.oye=false; if(r){ r.__muerto=true; try{ r.abort ? r.abort() : r.stop(); }catch(e){ try{ r.stop(); }catch(e2){} } } }
+function camEscucha274(modo){
+  camCallaMic();
+  if(!CAM.on || CAM.pausa) return;
+  CAM.modo=modo||"resp"; CAM.fase="escuchando"; CAM.par=""; if(CAM.modo==="resp" && CAM.limpia){ CAM.buf=""; CAM.limpia=false; }
+  CAM.oidoModo="";   /* lo dicho en la pregunta "¿Terminaste o sigues?" */
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ CAM.sinMic=true; camPinta274(); return; }
+  var abre=function(){
+    if(!CAM.on || CAM.pausa || CAM.fase!=="escuchando") return;
+    var r=null; try{ r=new SR(); }catch(e){} if(!r){ CAM.sinMic=true; camPinta274(); return; }
+    r.lang="es-MX"; r.continuous=true; r.interimResults=true; try{ r.maxAlternatives=1; }catch(e){}
+    var finR="";
+    r.onresult=function(e){ if(r.__muerto) return; var fin="", par="";
+      for(var j=0;j<e.results.length;j++){ var x=e.results[j]; if(x.isFinal) fin+=x[0].transcript+" "; else par+=x[0].transcript; }
+      /* lo final de ESTA sesión del motor se suma a lo acumulado de antes */
+      if(fin!==finR){ var nuevo=fin.slice(finR.length); finR=fin; camOye274(nuevo, true); }
+      CAM.par=par.trim(); camPinta274();
+      /* iOS a veces nunca marca isFinal en continuo: "terminé" al final de lo que va a medias también envía */
+      if(CAM.par && CAM.modo==="resp" && CAM_FIN.test(_camNv(CAM.par))){ var pp=CAM.par; CAM.par=""; r.__muerto=true; return camOye274(pp, true); }
+      if(CAM.par || fin) camRelojSilencio(); };
+    r.onerror=function(ev){ var er=(ev&&ev.error)||""; if(er==="not-allowed"||er==="service-not-allowed"||er==="audio-capture"){ r.__muerto=true; CAM.sinMic=true; camPinta274(); } };
+    r.onend=function(){ if(r.__muerto || CAM.rec!==r) return;
+      if(CAM.par){ camOye274(CAM.par, true); CAM.par=""; }   /* lo que iba a medias no se pierde */
+      setTimeout(function(){ if(CAM.rec===r && CAM.on && !CAM.pausa && CAM.fase==="escuchando") abre(); }, 200); };
+    CAM.rec=r; CAM.oye=true;
+    try{ r.start(); }catch(e){ CAM.sinMic=true; }
+    camPinta274();
+  };
+  abre();
+  clearTimeout(CAM.tVac); CAM.tVac=setTimeout(function(){ if(CAM.on && CAM.fase==="escuchando" && !CAM.buf && !CAM.par && CAM.modo==="resp" && !CAM.vacioDicho){ CAM.vacioDicho=true; camDi274([{v:"A", t:"Te escucho. Si quieres pasar, di siguiente.", bajito:true}], function(){ camEscucha274("resp"); }); } }, CAM_ESPERA_VACIO);
+}
+function camRelojSilencio(){
+  clearTimeout(CAM.tSil);
+  CAM.tSil=setTimeout(function(){
+    if(!CAM.on || CAM.fase!=="escuchando") return;
+    var pp=CAM.par; CAM.par="";
+    if(CAM.modo==="check"){   /* la respuesta a "¿Terminaste o sigues?" (en iPhone a veces llega solo a medias) */
+      if(!pp) return;
+      camCallaMic(); camOye274(pp, true);
+      if(CAM.on && CAM.fase==="escuchando" && !CAM.rec) camEscucha274(CAM.modo);
+      return;
+    }
+    var todo=(CAM.buf+" "+pp).trim();
+    var c=camComando274(todo); if(c){ CAM.buf=""; return camHaz274(c); }   /* un comando dicho solo, aunque no llegue como final */
+    CAM.buf=todo;
+    if(CAM.buf){   /* 2.5 s callado con algo dicho: NO se envía, se pregunta bajito */
+      camCallaMic(); CAM.modo="check";
+      camDi274([{v:"A", t:"¿Terminaste o sigues?", bajito:true}], function(){ camEscucha274("check"); });
+    }
+  }, CAM.modo==="check"?1200:CAM_SILENCIO);
+}
+var CAM_CMD=[
+  ["repite", /^(repite|repitelo|repitela|repitemelo|repitemela|otra vez|de nuevo|no te entendi|no entendi)$/],
+  ["detalle", /^((dame |quiero )?mas detalles?|detalles?|cuentame mas|explicame mas)$/],
+  ["despues", /^((la |lo )?(dejamos|dejo|deja|dejala|dejalo) para (despues|luego|mas tarde)|para (despues|luego)|despues|luego)$/],
+  ["siguiente", /^(siguiente|la siguiente|sigue la otra|otra|pasa|pasala|salta|saltala|adelante|next)$/],
+  ["atras", /^(atras|anterior|la anterior|regresa|regresate|vuelve a la anterior)$/],
+  ["pausa", /^(pausa|pausala|ponle pausa|pon pausa|deten|detente|alto)$/],
+  ["salir", /^(salir|sal|salte|termina la caminata|terminar caminata|cierra|cierra la caminata|adios|ya no|basta)$/]
+];
+function camComando274(s){ s=_camNv(s).replace(/^(oye|doit|claude)\s+/,"").replace(/\s+(por favor|porfa)$/,""); for(var i=0;i<CAM_CMD.length;i++) if(CAM_CMD[i][1].test(s)) return CAM_CMD[i][0]; return ""; }
+var CAM_FIN=/(?:^|\s)(ya\s+)?(termine|terminado|he terminado)$/;
+/* llega un pedazo final de lo dictado */
+function camOye274(txt, esFinal){
+  txt=String(txt||"").replace(/\s+/g," ").trim(); if(!txt || !CAM.on) return;
+  clearTimeout(CAM.tVac);
+  if(CAM.modo==="check"){
+    var s=_camNv(txt), c=camComando274(s);
+    if(c) return camHaz274(c);
+    if(/^(si\s+)?(ya\s+)?(termine|listo|ya|ya esta|eso es todo|es todo|si|manda(lo)?|envia(lo)?)$/.test(s)) return camEnvia274();
+    if(/^(sigo|sigue|espera|esperame|no|todavia no|aun no|no he terminado|todavia|un momento|dejame pensar)$/.test(s)){ CAM.modo="resp"; camPinta274(); return; }
+    /* otra cosa: es más respuesta; se acumula y se sigue escuchando */
+    CAM.modo="resp";
+  }
+  var todo=(CAM.buf+" "+txt).trim();
+  var cmd=camComando274(todo.replace(CAM_FIN,"").trim()) || (!CAM.buf?camComando274(txt):"");
+  if(cmd){ CAM.buf=""; return camHaz274(cmd); }
+  CAM.buf=todo; camPinta274();
+  var n=_camNv(todo);
+  if(CAM_FIN.test(n)) return camEnvia274();
+}
+function camQuitaFin(s){ var w=String(s||"").replace(/\s+/g," ").trim().split(" "), k=w.length;
+  while(k>0 && /^(termine|terminado|he|ya)$/.test(_camNv(w[k-1]))) k--; return w.slice(0,k).join(" ").replace(/[\s,;:]+$/,""); }
+function camEnvia274(){
+  var v=camQuitaFin((CAM.buf+" "+CAM.par).trim()); CAM.buf=""; CAM.par=""; camCallaMic();
+  if(!v){ return camDi274([{v:"A", t:"No alcancé a oír nada. ¿Me lo repites?"}], function(){ camEscucha274("resp"); }); }
+  var t=camTarea274(); if(!t) return camSiguiente274(1);
+  try{ camGuarda274(t, v); }catch(e){ console.warn("caminata guarda", e); }
+  camDi274([{v:"A", t:"Anotado."}], function(){ camSiguiente274(1); });
+}
+/* la respuesta dictada va al hilo como mensaje de Salvador (nota para Claude, la procesa la Mac) */
+function camGuarda274(t, v){
+  var d=null; try{ d=decision273(t); }catch(e){}
+  if(d && contestaDecision273(t, v)){ var m0=t.msgs[t.msgs.length-1]; if(m0){ m0.caminata274=1; m0.dictado=1; } guarda(t); }
+  else {
+    msg(t,"bo",v); var m=t.msgs[t.msgs.length-1]; m.de=yo; m.canal="priv:"+yo; m.nota_claude=1; m.caminata274=1; m.dictado=1;
+    t.notas_claude=(t.notas_claude||[]).concat([{t:"Caminata (dictado de "+((PERSONAS[yo]||{}).nombre||yo)+"): "+v, ts:Date.now()}]).slice(-30);
+    try{ t.ultima=((PERSONAS[yo]||{}).nombre||"")+": "+v; }catch(e){}
+    try{ hist240("Contestó en caminata: "+v, t, null); }catch(e){}
+    guarda(t);
+  }
+  CAM.anotadas=(CAM.anotadas||0)+1;
+}
+function camTarea274(){ var id=CAM.L[CAM.i]; return (tareas||[]).filter(function(x){ return x.id===id; })[0]||null; }
+function camHaz274(c){
+  camCallaMic(); CAM.buf=""; CAM.par="";
+  if(c==="repite") return camPresenta274(true);
+  if(c==="detalle"){ var t=camTarea274(); if(!t) return camSiguiente274(1);
+    return camDi274(camDetalle274(t).concat([{v:"A", t:"¿Lo hacemos, quieres más detalle o la dejamos para después?"}]), function(){ camEscucha274("resp"); }); }
+  if(c==="despues") return camDi274([{v:"A", t:"Va, la dejamos para después."}], function(){ camSiguiente274(1); });
+  if(c==="siguiente") return camSiguiente274(1);
+  if(c==="atras") return camSiguiente274(-1);
+  if(c==="pausa") return camPausa274(true);
+  if(c==="salir") return camSal274(true);
+}
+function camPresenta274(repite){
+  var t=camTarea274(); if(!t) return camSiguiente274(1);
+  CAM.limpia=true; CAM.vacioDicho=false; camPinta274();
+  var G=camGuion274(t, CAM.i, CAM.L.length);
+  if(!CAM.explicado){ CAM.explicado=true; G.push({v:"A", t:"Cuando acabes de contestar, di: terminé."}); }
+  G.push({v:"A", t:"¿Lo hacemos, quieres más detalle o la dejamos para después?"});
+  camDi274(G, function(){ camEscucha274("resp"); });
+}
+function camSiguiente274(dir){
+  camCallaMic();
+  var j=CAM.i+dir;
+  while(j>=0 && j<CAM.L.length && !_camVivo((tareas||[]).filter(function(x){ return x.id===CAM.L[j]; })[0])) j+=dir>=0?1:-1;
+  if(j<0){ CAM.i=0; return camDi274([{v:"A", t:"Esta es la primera."}], function(){ camPresenta274(); }); }
+  if(j>=CAM.L.length){ var n=CAM.anotadas||0; return camDi274([{v:"A", t:"Terminamos la caminata."+(n?" Anoté "+n+(n===1?" respuesta.":" respuestas."):"")}], function(){ camSal274(false); }); }
+  CAM.i=j; camPresenta274();
+}
+function camPausa274(dicho){
+  if(!CAM.on) return;
+  if(CAM.pausa){ CAM.pausa=false; camPinta274(); return camPresenta274(); }
+  CAM.pausa=true; camCallaMic(); CAM.tok++; try{ speechSynthesis.cancel(); }catch(e){} CAM.fase=""; camPinta274();
+  if(dicho){ try{ var u=new SpeechSynthesisUtterance("En pausa."); u.lang="es-MX"; var V=camVoces274(); if(V.A) u.voice=V.A; speechSynthesis.speak(u); }catch(e){} }
+}
+function camEmpieza274(desdeId){
+  if(CAM.on) return;
+  try{ if(typeof leePara==="function" && (LEE.act||LEE.charla)) leePara(); }catch(e){}
+  if(!window.speechSynthesis){ toast("Este teléfono no lee en voz alta"); return; }
+  var L=camLista274();
+  if(desdeId){ L=L.filter(function(x){ return x!==desdeId; }); L.unshift(desdeId); }
+  CAM.on=true; CAM.L=L; CAM.i=0; CAM.pausa=false; CAM.explicado=!!window.__camExplicado274; CAM.buf=""; CAM.par=""; CAM.anotadas=0; CAM.sinMic=false;
+  window.__camExplicado274=true;   /* "di terminé" se explica una vez por sesión de la app */
+  camAbreUI274(); camWake274(true);
+  if(!L.length) return camDi274([{v:"A", t:"No tienes pendientes para la caminata. Buen día."}], function(){ camSal274(false); });
+  camDi274([{v:"A", t:"Caminata. Son "+L.length+(L.length===1?" tarea.":" tareas.")}], function(){ camPresenta274(); });
+}
+function camSal274(dicho){
+  camCallaMic(); CAM.tok++; clearTimeout(CAM.wd);
+  try{ speechSynthesis.cancel(); }catch(e){}
+  if(dicho){ try{ var u=new SpeechSynthesisUtterance("Listo, salimos de la caminata."); u.lang="es-MX"; var V=camVoces274(); if(V.A) u.voice=V.A; speechSynthesis.speak(u); }catch(e){} }
+  CAM.on=false; CAM.pausa=false; CAM.fase="";
+  camWake274(false);
+  var o=document.getElementById("cam274"); if(o) o.remove();
+  document.documentElement.classList.remove("cam274on");
+  try{ render(); }catch(e){}
+}
+/* pantalla encendida mientras corre (Wake Lock; iOS 16.4+; en PWA instalada desde iOS 18.4) */
+function camWake274(on){
+  try{
+    if(on && navigator.wakeLock && navigator.wakeLock.request){ navigator.wakeLock.request("screen").then(function(w){ CAM.wl=w; }).catch(function(){}); }
+    if(!on && CAM.wl){ CAM.wl.release().catch(function(){}); CAM.wl=null; }
+  }catch(e){}
+}
+document.addEventListener("visibilitychange", function(){
+  if(!CAM.on) return;
+  if(document.visibilityState==="visible"){ camWake274(true); if(CAM.fase==="escuchando" && !CAM.oye) camEscucha274(CAM.modo||"resp"); }
+});
+/* ---------- pantalla mínima ---------- */
+function vCaminata274(){
+  if(!window.SpeechSynthesisUtterance && !window.speechSynthesis) return "";
+  var n=0; try{ n=camLista274().length; }catch(e){}
+  if(!n) return "";
+  return '<button class="cam274b" id="bcam274" aria-label="Caminata: escuchar tus pendientes uno por uno">'+
+    '<span class="cam274i" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"/><path d="M10.5 21l1.5-6-2.5-2.5 1.5-5 3.5 3 3 1"/><path d="M9.5 8l-3 1.5-1 3.5"/><path d="M12 15l3 2 1 4"/></svg></span>'+
+    '<span class="cam274t"><b>Caminata</b><small>'+n+(n===1?' pendiente':' pendientes')+' en voz, sin ver la pantalla</small></span></button>';
+}
+function camAbreUI274(){
+  var o=document.getElementById("cam274"); if(o) o.remove();
+  o=document.createElement("div"); o.id="cam274"; o.className="cam274"; o.setAttribute("role","dialog"); o.setAttribute("aria-label","Caminata");
+  o.innerHTML='<div class="c274top"><span id="c274n"></span><button id="c274x" aria-label="Salir de la caminata">✕</button></div>'+
+    '<h2 id="c274tit"></h2>'+
+    '<div class="c274mid"><div id="c274o" class="c274o" aria-hidden="true"><i></i><i></i><i></i></div><p id="c274st" aria-live="polite"></p><p id="c274oy"></p></div>'+
+    '<div class="c274bt"><button id="c274p" class="c274big">Pausa</button><button id="c274s" class="c274big sig">Siguiente</button></div>';
+  document.body.appendChild(o); document.documentElement.classList.add("cam274on");
+  document.getElementById("c274x").onclick=function(){ camSal274(false); };
+  document.getElementById("c274p").onclick=function(){ camPausa274(false); };
+  document.getElementById("c274s").onclick=function(){ CAM.pausa=false; camHaz274("siguiente"); };
+  camPinta274();
+}
+function camPinta274(){
+  var o=document.getElementById("cam274"); if(!o) return;
+  var t=camTarea274(), n=CAM.L.length;
+  var s=function(id, x){ var e=document.getElementById(id); if(e && e.textContent!==x) e.textContent=x; };
+  s("c274n", n?("Caminata · "+Math.min(CAM.i+1,n)+" de "+n):"Caminata");
+  s("c274tit", t?(t.nombre||"Sin nombre"):"");
+  var est=CAM.pausa?"En pausa":(CAM.fase==="hablando"?(CAM.voz==="B"?"Analista":"Doit"):(CAM.fase==="escuchando"?(CAM.sinMic?"Sin micrófono: usa los botones":(CAM.modo==="check"?"¿Terminaste o sigues?":"Te escucho · di «terminé» al acabar")):""));
+  s("c274st", est);
+  s("c274oy", CAM.fase==="escuchando"?camCorta((CAM.buf+" "+CAM.par).trim(), 160):"");
+  var c=document.getElementById("c274o"); if(c) c.className="c274o"+(CAM.pausa?" pausa":(CAM.fase==="hablando"?" habla"+(CAM.voz==="B"?" vb":""):(CAM.fase==="escuchando"?" oye":"")));
+  s("c274p", CAM.pausa?"Seguir":"Pausa");
+}
+function bindCam274(){ var b=document.getElementById("bcam274"); if(b) b.onclick=function(){ camEmpieza274(); }; }
+
 /* ===================== build 272 (Salvador 7-oct): HOME SÚPER MINIMALISTA =====================
    1 Línea de estado arriba del todo: "3 te preguntan · 2 vencidas · 5 hoy"; cada contador lleva con scroll suave a su sección; en cero no sale.
    2 Sección vacía = no existe (ni su título).
@@ -18447,11 +18805,11 @@ function leeExtras(){
     if(g && !document.getElementById("bleeh")){
       var b=document.createElement("button"); b.className="iconbtn"; b.id="bleeh"; b.setAttribute("aria-label","Escuchar esta tarea"); b.innerHTML=_icoAudif();
       g.parentNode.insertBefore(b, g.nextSibling);
-      b.onclick=function(ev){ ev.stopPropagation(); var t=_leeTareaAbierta(); if(!t) return; if(LEE.act && LEE.t && LEE.t.id===t.id) return leePara(); leeNuevo(t); };
+      b.onclick=function(ev){ ev.stopPropagation(); var t=_leeTareaAbierta(); if(!t) return; if(CAM.on) return camSal274(false); camEmpieza274(t.id); };   /* build 274: el audífono de la tarea abre la Caminata desde esta tarea */
     }
   }
   var bt=document.getElementById("bttlee");
-  if(bt) bt.onclick=function(ev){ ev.stopPropagation(); var ord=leeOrdenTT(); if(!ord.length) return; var tt=leeAbre(ord[0]); if(tt) leeNuevo(tt); };
+  if(bt) bt.onclick=function(ev){ ev.stopPropagation(); camEmpieza274(); };   /* build 274: el audífono del home abre la Caminata */
 }
 
 /* ===== build 185 (Salvador 2026-10-03 06:47): LECTURA = PODCAST EN VIVO =====
