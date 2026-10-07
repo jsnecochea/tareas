@@ -50,7 +50,7 @@ eq("sw.js con versión build ≥ 272", +((/var SW_VERSION = 'build (\d+)'/.exec(
       home(fx());
       var est = document.querySelector(".est272");
       r.est = est ? est.textContent.replace(/\s*·\s*/g, " · ").replace(/\s+/g, " ").trim() : null;
-      r.estArriba = (function () { var e = est.getBoundingClientRect().top, s = document.querySelector(".h270 .sep270").getBoundingClientRect().top; return e < s; })();
+      r.estArriba = (function () { var e = est.getBoundingClientRect().top, s = document.querySelector(".h270 .sep270").getBoundingClientRect().top; return e > s; })();   /* build 279: la línea de estado va hasta abajo */
       r.secs = secs();
       r.grupo = (function () { var b = document.querySelector('.l-preg [data-id="tP3"]'); return b ? [b.getAttribute("data-preg272"), b.querySelector("small").textContent, document.querySelectorAll('.l-preg [data-id="tP3"]').length] : null; })();
       r.sola = document.querySelector('.l-preg [data-id="tP1"] small').textContent;
@@ -71,7 +71,7 @@ eq("sw.js con versión build ≥ 272", +((/var SW_VERSION = 'build (\d+)'/.exec(
       return r; });
     if (process.env.CAP) { await p.evaluate(function () { var L = fx272(); L.push(T("tCL", "La lleva Claude", "", { encargos: [{ id: "e", estado: "pendiente" }] })); home(L); }); await foto("b272-inicio.png"); }
     eq("Línea de estado: contadores chicos", A.est, "2 te preguntan · 2 vencidas · 3 hoy");
-    eq("La línea de estado va arriba de las secciones", A.estArriba, true);
+    eq("La línea de estado va abajo de las secciones (build 279)", A.estArriba, true);
     eq("Secciones del home", A.secs, { "Te pregunta Doit": ["Junta con el banco", "Pregunta sola"], "Vencidas mías": ["Vencida uno", "Vencida dos"], "Hoy mías": ["Hoy uno", "Hoy dos", "Hoy tres"] });
     eq("3 preguntas de una tarea = un renglón 'N preguntas'", A.grupo, ["3", "3 preguntas", 1]);
     eq("Una sola pregunta se ve como antes (su texto)", [A.sola, A.solaSinGrupo], ["¿Cuál es la dirección?", false]);

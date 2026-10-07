@@ -687,6 +687,7 @@ button{font:inherit;color:inherit}
 /* build 272: home minimalista — línea de estado arriba, preguntas agrupadas, "Ya está" con la siguiente subiendo, Las lleva Claude en gris tenue */
 .est272{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:2px 4px;margin:10px 16px 2px;font-size:14.5px;font-weight:500;color:var(--ink-3)}
 .est272 button{border:0;background:none;font:inherit;color:inherit;padding:6px 6px;border-radius:10px;min-height:32px}.est272 button b{font-weight:700}
+.est279{margin:18px 16px 8px}
 .est272 .e-preg b{color:#FF7A00}.est272 .e-venc b{color:#FF453A}.est272 .e-hoy b{color:var(--ink-2)}.est272 .dot272{opacity:.5}
 .sep270{scroll-margin-top:12px}
 .ttr.sale272{pointer-events:none;overflow:hidden;transition:height .25s ease,opacity .25s ease,padding .25s ease}
@@ -7031,8 +7032,11 @@ function vLista(){
      desplegadas, sin acordeón) · 5 plegadas: Las lleva Claude (con semáforo), Mías futuras y el resto */
   var _h270=armaHome270(_rev, det, mias_venc, hoyYa, futuras);
   h+=vAcomodo()+vMsgs271()+vHome270(_h270)+vAbajo270(_cl263, _h270, hMis, mis.length);
+  /* build 279 (Salvador 7-oct): el resumen "N te preguntan · N vencidas · N hoy" baja hasta el FINAL del home, debajo de todas las
+     secciones (Las lleva Claude incluida), para que el home arranque limpio. Sus contadores siguen llevando con scroll a su sección. */
+  h+=vEstado272(_h270).replace('class="est272"', 'class="est272 est279"');
   window.__H274=_h270;   /* build 274: la caminata sigue el orden del home */
-  h=h.replace('<!--est272-->', vEstado272(_h270)).replace('<!--cam277-->', vCamIco277());   /* build 277: sin barra grande; ícono chico junto al ⋯ */   /* build 274: botón grande Caminata arriba de la línea de estado */   /* build 272: línea de estado arriba del todo */
+  h=h.replace('<!--est272-->', '').replace('<!--cam277-->', vCamIco277());   /* build 279 sobre 277: la línea de estado ya no va arriba (va al final, ver línea de arriba); arriba solo el ícono chico de Caminata junto al ⋯ */
 
   /* ORDEN DEL SWIPE ENTRE TAREAS — Salvador 2026-09-22: el swipe (window.
      ordenSwipe) sigue el mismo orden de las 7 secciones AUNQUE esten
