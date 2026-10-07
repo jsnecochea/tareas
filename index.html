@@ -1621,7 +1621,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 278 · caminata: solo vincula a la tarea que tú nombras (todas las palabras de su nombre o sinónimo), nunca a una que negaste («no tiene que ver con…»); «¿es esta tarea?» / «es la tarea de X» manda sobre lo que entendió; en cada tarea, ↩ junto al ⋯ deshace lo último que se hizo en ella (pide un toque más). Antes, build 277 · caminata: «confírmame» / «¿entendiste bien?» repite la orden y cómo la entendió y espera tu sí antes de hacerla; «deshazlo», «cancela eso», «retrocede», «esa no era» deshacen la última acción; «repíteme» repite lo último y «regresa un poco» relee desde un par de frases antes; en el home, ícono chico de caminata junto al ⋯ en vez de la barra grande";
+var VERSION_APP = "build 280 · une 277, 278, 279 y el hotfix de la caminata: lo que dices en la Caminata se escribe en la tarea al instante y el cuestionario se guarda aunque se cierre la app (ya no se pierde); deshacer nunca borra lo que dijiste; el resumen (te preguntan · vencidas · hoy) va hasta abajo del home y arriba solo el ícono de Caminata · build 279 · el resumen de lo que te toca va hasta abajo del home · build 278 · caminata: solo vincula a la tarea que tú nombras (todas las palabras de su nombre o sinónimo), nunca a una que negaste («no tiene que ver con…»); «¿es esta tarea?» / «es la tarea de X» manda sobre lo que entendió; en cada tarea, ↩ junto al ⋯ deshace lo último que se hizo en ella (pide un toque más). Antes, build 277 · caminata: «confírmame» / «¿entendiste bien?» repite la orden y cómo la entendió y espera tu sí antes de hacerla; «deshazlo», «cancela eso», «retrocede», «esa no era» deshacen la última acción; «repíteme» repite lo último y «regresa un poco» relee desde un par de frases antes; en el home, ícono chico de caminata junto al ⋯ en vez de la barra grande";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -18177,6 +18177,7 @@ function camEnvia274(){
   if(!v){ return camDi274([{v:"A", t:"No alcancé a oír nada. ¿Me lo repites?"}], function(){ camEscucha274("resp"); }); }
   var t=camTarea274(); if(!t) return camSiguiente274(1);
   CAM.espera276=false;
+  camCrudo276(t, v);   /* hotfix 276 (7-oct): lo que dijo queda escrito en la tarea YA, antes de la IA y del cuestionario */
   if(CAM.conf) return camConfResp277(v);   /* build 277: contesta «¿Lo hago?» */
   if(!CAM.qz){ CAM.pideConf277=camPideConf277(v) || !!CAM.confSig277 || !!(CAM.aclara && CAM.pideConf277); CAM.confSig277=false; }   /* build 277: «confírmame» / «¿entendiste bien?» = repetir y esperar su sí */
   if(CAM.qz) return camQuizResp276(v);   /* build 276: contesta una pregunta del cuestionario */
@@ -18196,6 +18197,37 @@ function camGuarda274(t, v){
   }
   CAM.anotadas=(CAM.anotadas||0)+1;
 }
+/* ===== hotfix 276 (Salvador 7-oct, caminata 07:00): contestó 4-5 cosas y solo 1 llegó a la base.
+   Huecos: (a) el cuestionario guardaba las respuestas SOLO en memoria (CAM.qz.A) hasta la última pregunta: si iOS
+   suspendía o cerraba la app a media tanda, se perdían; (b) si la IA lo leía como "después" o "detalle", o como
+   vincular / aprobar una tarea nueva / dato, lo que dijo no se escribía en ningún lado aunque la voz dijera "Anotado".
+   Ahora: (1) cada cosa que dice se escribe en la tarea al instante (caminata_dichos, crudo, con la pregunta);
+   (2) al esconderse la app, lo contestado del cuestionario se aplica; (3) en después / vincular / aprobar nueva / dato,
+   si dijo algo con contenido, va como nota para Claude. ===== */
+function camCrudo276(t, v){
+  try{ if(!t || !String(v||"").trim()) return; var T=tareaId240(t.id)||t, z=CAM.qz, q="";
+    if(z && z.id===T.id && z.Q && z.Q[z.i]) q=String(z.Q[z.i].q||"");
+    T.caminata_dichos=(T.caminata_dichos||[]).concat([{ts:Date.now(), de:yo, t:String(v).slice(0,2000), k:camK276()||"", q:q}]).slice(-60);
+    if(esEjemplo(T) || !db) return;
+    /* solo este campo (merge): no toca nombre ni nada más; sin red queda en la cola de Firestore y sube sola */
+    db.collection(COL).doc(T.id).set({caminata_dichos:limpiaUndef(T.caminata_dichos)}, {merge:true})
+      .catch(function(e){ try{ console.error("caminata crudo", e); }catch(_e){} toast("No se pudo guardar lo que dijiste"); });
+  }catch(e){ try{ console.warn("caminata crudo", e); }catch(_e){} }
+}
+function camConContenido276(v){ var s=_camNv(v); return !!s && s.split(" ").length>=4; }
+function camNota276(t, v, pre){
+  try{ if(!t || !camConContenido276(v)) return; var T=tareaId240(t.id)||t;
+    msg(T,"bo",v); var m=T.msgs[T.msgs.length-1]; m.de=yo; m.canal="priv:"+yo; m.nota_claude=1; m.caminata274=1; m.dictado=1;
+    T.notas_claude=(T.notas_claude||[]).concat([{t:"Caminata ("+(pre||"dictado")+" de "+((PERSONAS[yo]||{}).nombre||yo)+"): "+v, ts:Date.now()}]).slice(-30);
+    guarda(T);
+  }catch(e){ try{ console.warn("caminata nota", e); }catch(_e){} }
+}
+function camQuizFlush276(){
+  var z=CAM.qz; if(!z || !z.A || !z.A.length) return;
+  var A=z.A; z.A=[]; z.aplicadas=(z.aplicadas||[]).concat(A);
+  try{ camAplicaQuiz276(tareaId240(z.id), A); }catch(e){ try{ console.warn("caminata flush", e); }catch(_e){} }
+}
+window.addEventListener("pagehide", function(){ try{ if(CAM.on) camQuizFlush276(); }catch(e){} });
 function camTarea274(){ var id=CAM.L[CAM.i]; if(String(id||"").indexOf("msg:")===0){ var gr=(CAM.mg||{})[id]; id=gr?gr.t.id:""; }   /* build 276: un mensaje por acomodar vive en una tarea */
   return (tareas||[]).filter(function(x){ return x.id===id; })[0]||null; }
 function camHaz274(c){
@@ -18276,6 +18308,7 @@ function camWake274(on){
 }
 document.addEventListener("visibilitychange", function(){
   if(!CAM.on) return;
+  if(document.visibilityState==="hidden"){ camQuizFlush276(); return; }   /* hotfix 276: iOS puede matar la app escondida */
   if(document.visibilityState==="visible"){ camWake274(true); if(CAM.fase==="escuchando" && !CAM.oye) camEscucha274(CAM.modo||"resp"); }
 });
 /* ---------- pantalla mínima ---------- */
@@ -18512,7 +18545,8 @@ function camResuelve275(t, j, v, vivo, confirmado){
   if(a==="aclarar"){ if(!vivo) return; CAM.fase=""; CAM.aclara={id:t.id, v:v};
     return camDi274([{v:"A", t:camCorta(dh && /\?/.test(dh)?dh:"¿Me lo dices de otra forma?", 140)}], function(){ camEscucha274("resp"); }); }
   if(a==="detalle"){ if(vivo){ CAM.fase=""; camHaz274("detalle"); } return; }
-  if(a==="despues"){ if(vivo){ CAM.fase=""; camHaz274("despues"); } return; }
+  if(a==="despues"){ camNota276(t, v, "la dejó para después; dijo");   /* hotfix 276 */
+    if(vivo){ CAM.fase=""; camHaz274("despues"); } return; }
   var r=camEjecuta275(t, a, j, v);
   if(!r.falta){ CAM.pideConf277=false; if(CAM.ult){ CAM.ult.desc=_d7; try{ ultRegistra278(CAM.ult, _d7); }catch(e){} } }   /* build 277: para «¿qué hiciste?» · 278: queda el ↩ en la tarea */
   if(!vivo) return; CAM.fase="";
@@ -18527,7 +18561,8 @@ function camFoto275(L){ var cp=function(x){ return JSON.parse(JSON.stringify(x))
   return {copias:L.filter(Boolean).map(cp), p256f:L.filter(Boolean).map(function(x){ return [x.id, !!(window.__p256f||{})[x.id]]; })}; }
 function camRestaura275(F){
   (F.copias||[]).forEach(function(c){ var x=JSON.parse(JSON.stringify(c)), vivo=tareaId240(c.id);
-    if(vivo){ Object.keys(vivo).forEach(function(k){ delete vivo[k]; }); for(var k in x) vivo[k]=x[k]; } else { vivo=x; tareas.push(x); }
+    var dich=vivo && vivo.caminata_dichos;   /* build 280: deshacer NUNCA borra lo que Salvador dijo (hotfix 276, caminata_dichos solo crece) */
+    if(vivo){ Object.keys(vivo).forEach(function(k){ delete vivo[k]; }); for(var k in x) vivo[k]=x[k]; if(dich) vivo.caminata_dichos=dich; } else { vivo=x; tareas.push(x); }
     guarda(vivo); });
   (F.p256f||[]).forEach(function(p){ window.__p256f=window.__p256f||{}; if(p[1]) window.__p256f[p[0]]=1; else delete window.__p256f[p[0]]; });
 }
@@ -18544,13 +18579,13 @@ function camEjecuta275(t, a, j, v){
   if(a==="vincular"){ dest=camDestino275(t, j.destino); if(!dest) return {falta:"¿Con cuál tarea la junto?"}; }
   var F=camFoto275([t, dest]), dicho="Listo.", vw={a:abierta, v:vista};
   try{
-    if(a==="aprobar"){ if(nue){ okProp256(t); dicho=camVar275("ok", ["Listo, va.","Va, quedó creada.","Hecho."]); } else if(d){ contestaDecision273(t, tx); dicho=camVar275("ok", ["Listo.","Va, hecho.","Perfecto, quedó."]); } else { camGuarda274(t, tx); dicho=camVar275("ok", ["Listo.","Va, hecho."]); } }
+    if(a==="aprobar"){ if(nue){ okProp256(t); camNota276(t, v); dicho=camVar275("ok", ["Listo, va.","Va, quedó creada.","Hecho."]); } else if(d){ contestaDecision273(t, tx); dicho=camVar275("ok", ["Listo.","Va, hecho.","Perfecto, quedó."]); } else { camGuarda274(t, tx); dicho=camVar275("ok", ["Listo.","Va, hecho."]); } }
     else if(a==="rechazar" && !nue && vincPend278(t)){ rechazaVinc278(t, vincPend278(t), "Salvador, caminata"); camGuarda274(t, tx); dicho=camVar275("no", ["Va, no la junto.","Entendido, se queda aparte."]); }   /* build 278 */
     else if(a==="rechazar"){ if(nue){ descartaProp256(t); dicho=camVar275("no", ["Va, la quité.","Listo, fuera."]); } else if(d){ contestaDecision273(t, tx); dicho=camVar275("no", ["Entendido, no va.","Va, no se hace."]); } else { camGuarda274(t, tx); dicho="Entendido."; } }
-    else if(a==="vincular"){ enlazaTareas(t.id, dest.id, "caminata"); dicho="Listo, la junté con "+camCorta(limpiaHabla(dest.nombre), 50).replace(/[.\s]+$/,"")+"."; }
+    else if(a==="vincular"){ enlazaTareas(t.id, dest.id, "caminata"); camNota276(dest, v, "al juntar «"+String(t.nombre||"")+"»; dijo"); dicho="Listo, la junté con "+camCorta(limpiaHabla(dest.nombre), 50).replace(/[.\s]+$/,"")+"."; }
     else if(a==="eliminar"){ if(nue) descartaProp256(t); else { t.estado="cerrada"; t.cierre={tipo:"cancelado", motivo:"caminata", f:hoy()}; msg(t,"bi","Eliminada en la caminata: "+tx); guarda(t); try{ sincronizaAvisos(t); }catch(e){} }
       dicho=camVar275("del", ["Listo, eliminada.","Hecho, la quité."]); }
-    else if(a==="dato"){ t.tipo_item="dato"; t.es_dato=true; t.tipo_elegido=true; t.autorizada=true; t.autorizada_ts=Date.now(); t.por_autorizar=false; t.falta_fecha=false; guarda(t);
+    else if(a==="dato"){ t.tipo_item="dato"; t.es_dato=true; t.tipo_elegido=true; t.autorizada=true; t.autorizada_ts=Date.now(); t.por_autorizar=false; t.falta_fecha=false; guarda(t); camNota276(t, v);
       try{ hist240("Caminata: como dato “"+String(t.nombre||"")+"”", t, null); }catch(e){} dicho=camVar275("dato", ["Va, queda como dato.","Listo, es dato."]); }
     else { camGuarda274(t, tx); dicho=camVar275("ins", ["Anotado.","Listo, se lo paso a Claude.","Va, hecho."]); }
   }catch(e){ console.warn("caminata 275 ejecuta", e); }
