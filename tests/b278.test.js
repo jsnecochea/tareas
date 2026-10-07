@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-/* PRUEBAS build 277: CAMINATA — «confírmame» / «¿entendiste bien?» (repite la orden y cómo la entendió y espera su sí; no / corrección),
-   «deshazlo» / «cancela eso» / «retrocede» / frases sueltas y la acción "deshacer" de la IA, «repíteme» y «regresa un poco»,
-   y el ícono chico de caminata junto al ⋯ del home (sin barra grande ni audífono). Mismos mocks que b276. */
+/* PRUEBAS build 278: el caso real del 7-oct («Estado de Cuenta Inversión Septiembre» quedó juntada con «Inversiones BBVA» aunque
+   Salvador dijo que no tenía nada que ver): nombres estrictos, negación, su corrección manda, confirmación si no nombró la tarea;
+   y el ↩ de la tarea (deshace lo último en ESA tarea, con un toque más), con la MISMA función que el «deshazlo» de voz. Mocks de b277. */
 "use strict";
 var fs = require("fs"), path = require("path");
 var ok = 0, n = 0, malas = [];
 function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
 var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
-eq("versión >= 277", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[1] >= 277, true);   /* build 278: sube con cada build */
-eq("sw.js con versión >= 277", +((fs.readFileSync(path.join(__dirname, "..", "sw.js"), "utf8").match(/var SW_VERSION = 'build (\d+)'/) || [0, 0])[1]) >= 277, true);
+eq("versión >= 278", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[1] >= 278, true);
+eq("sw.js con versión >= 278", +((fs.readFileSync(path.join(__dirname, "..", "sw.js"), "utf8").match(/var SW_VERSION = 'build (\d+)'/) || [0, 0])[1]) >= 278, true);
 (async function () {
   var pw = require("/opt/node22/lib/node_modules/playwright"), b = await pw.chromium.launch(), p = await b.newPage({ viewport: { width: 390, height: 844 }, timezoneId: "America/Monterrey" }), errs = [];
   p.on("pageerror", function (e) { if (!/firebase is not defined/.test(e.message)) errs.push(e.message); });
@@ -99,138 +99,133 @@ eq("sw.js con versión >= 277", +((fs.readFileSync(path.join(__dirname, "..", "s
       window.hablando = function () { return CAM.fase === "hablando"; };
     });
 
-    /* ---------- 0 · comandos (sin voz) ---------- */
+    /* fixtures del caso real */
+    await p.evaluate(function () {
+      var N = Date.now();
+      window.fx8 = function () { var L = fx6();
+        L.push(T("tBBVA", "Inversiones BBVA", { f_vigente: "2026-10-20", msgs: [{ k: "bi", wa_in: 1, wa_c: "Hernando UHN Bbva", t: "Hernando UHN Bbva: ya se asignaron", ts: N - 800000, h: "09:00" }] }));
+        L.push(T("tEDC", "Estado de Cuenta Inversión Septiembre", { f_vigente: "2026-11-05", wa_contactos: [{ nombre: "Perlita Chi Contadora GrupoNec" }],
+          hecho238: { hecho: ["Ritmo: cada mes"], falta: [{ k: "vinc", mac: 1, q: "¿Es el mismo tema que «Inversiones BBVA»? Si sí, la vinculo.", ops: [{ id: "tBBVA", label: "Inversiones BBVA" }] }] },
+          msgs: [{ k: "bi", wa_in: 1, wa_c: "Perlita Chi Contadora GrupoNec", t: "Perlita: le encargo el edo. de cta. de la inversión de septiembre", ts: N - 700000, h: "10:00" }] }));
+        return L; };
+    });
+
+    /* ---------- 0 · nombres, negación y corrección (sin voz) ---------- */
     var Z = await p.evaluate(function () {
-      var F = ["deshazlo", "cancela eso", "retrocede", "no, deshazlo, la juntaste con otra", "esa no era", "la vinculaste mal", "regresa un poco", "regrésate tantito", "más atrás",
-        "repíteme", "repite", "regresa", "¿entendiste bien?", "confírmame", "dile a Rubén que hay que deshacer el muro", "anula la factura de Rubén", "no lo deshagas", "cancela la cita con Rubén"];
-      return { cmd: F.map(function (f) { return camComando274(f); }),
-        pide: [camPideConf277("Júntala con Vestidores, ¿entendiste bien?"), camPideConf277("la de huella confírmame"), camPideConf277("Júntala con Vestidores")],
-        sin: camSinConf277("Júntala con Vestidores, ¿entendiste bien?") }; });
-    eq("comandos: deshacer · regresa un poco · repíteme · ¿entendiste? (y órdenes que NO son deshacer)", Z.cmd,
-      ["deshaz", "deshaz", "deshaz", "deshaz", "deshaz", "deshaz", "rebobina", "rebobina", "rebobina", "ultimo", "repite", "deshaz", "entendiste", "entendiste", "", "", "", ""]);
-    eq("detecta el pedido de confirmación dentro de la orden", Z.pide, [true, true, false]);
-    eq("lo que dijo sin el «¿entendiste bien?»", Z.sin, "Júntala con Vestidores");
+      home(fx8()); var t = tid("tEDC"), bb = tid("tBBVA"), C = camCandidatas275(t);
+      var frase = "No tiene nada que ver con mis inversiones de BBVA. Esa es la tarea de estado de cuenta inversiones";
+      var c1 = correccion278(t, frase), c2 = correccion278(t, "¿es esta tarea?"), c3 = correccion278(t, "no, es la tarea de comedor"), c4 = correccion278(t, "no es la tarea de comedor");
+      return {
+        dest: [camDestino275(t, "inversiones"), (camDestino275(t, "inversiones bbva") || {}).id || null, (camDestino275(t, "tBBVA") || {}).id || null, camDestino275(t, "estado de cuenta inversiones")],
+        nom: (resuelveNombre278("estado de cuenta inversiones", C.concat([t])) || {}).id,
+        niega: [niega278(frase, bb), niega278(frase, t), niega278("no es la de BBVA, es la de estado de cuenta inversiones", t), niega278("júntala con inversiones bbva", bb), niega278("no, júntala con inversiones bbva", bb)],
+        corr: [c1 && c1.misma, c2 && c2.misma, c3 && c3.x.id, c4] }; });
+    eq("destino: una palabra suelta ya NO alcanza; el nombre completo o el id sí; el nombre de ESTA tarea no es destino", Z.dest, [null, "tBBVA", "tBBVA", null]);
+    eq("«estado de cuenta inversiones» = la tarea de Septiembre (singular/plural, sin el mes)", Z.nom, "tEDC");
+    eq("negación: «no tiene nada que ver con mis inversiones de BBVA» niega BBVA y no niega la otra", Z.niega, [true, false, false, false, false]);
+    eq("corrección: «esa es la tarea de …» y «¿es esta tarea?» = esta misma; «es la tarea de comedor» = Comedor; sin la coma («no es la tarea de comedor») es negación, no corrección", Z.corr, [true, true, "tCOM", null]);
 
-    /* ---------- 1 · home: ícono chico junto al ⋯, sin barra grande ni audífono ---------- */
-    var A = await p.evaluate(function () {
-      home(fx6()); var b = document.getElementById("bcam274");
-      return { enEnc: !!(b && b.closest("#enc .r1")), sig: b && b.nextElementSibling ? b.nextElementSibling.id : "", svg: !!(b && b.querySelector("svg")), texto: b ? b.textContent.trim() : null,
-        barra: !!document.querySelector(".cam274b"), audif: !!document.getElementById("bttlee"), aria: b && b.getAttribute("aria-label") }; });
-    eq("ícono de caminata en el encabezado, justo antes del ⋯", [A.enEnc, A.sig, A.svg, A.texto], [true, "bhmas", true, ""]);
-    eq("sin barra grande ni audífono en el título de la sección", [A.barra, A.audif], [false, false]);
-    eq("el total va en el aria-label", A.aria, "Caminata: 6 pendientes en voz");
-    await foto("277-home.png");
-
-    /* ---------- 2 · «confírmame»: repite, NO ejecuta; «no» no hace nada; la siguiente también se confirma; «sí» ejecuta ---------- */
-    var B = await p.evaluate(async function () {
+    /* ---------- 1 · el caso real: la IA dice vincular a BBVA, pero él lo negó → NO se junta ---------- */
+    var A = await p.evaluate(async function () {
       var r = {}; window.__nivel276 = 0.2;
       document.getElementById("bcam274").click(); await esp2();
-      __iaMap["la de huella confírmame"] = { accion: "aprobar", texto_para_tarea: "Va con el ZKTeco de huella.", respuesta_hablada: "Listo." };
-      var d0 = __dichos.length; di("la de huella confírmame", true); di("terminé", true);
-      await hasta(function () { return CAM.conf && !!srViva() && !hablando(); }, 5000);
-      r.conf = dichos(d0); r.sinEjecutar = !tid("tDEC").decision.respuesta;
-      var d1 = __dichos.length; di("no", true);
-      await hasta(function () { return __dichos.length > d1 && !!srViva() && !hablando(); }, 5000);
-      r.no = dichos(d1); r.sigueSin = !tid("tDEC").decision.respuesta && !CAM.conf;
-      __iaMap["la de tarjeta"] = { accion: "aprobar", texto_para_tarea: "Va con el Steren de tarjeta.", respuesta_hablada: "Listo." };
-      var d2 = __dichos.length; di("la de tarjeta", true); di("terminé", true);
-      await hasta(function () { return CAM.conf && !!srViva() && !hablando(); }, 5000);
-      r.conf2 = dichos(d2);
-      di("sí", true);
-      await hasta(function () { return document.getElementById("c274tit").textContent === "Llamar a Rogelio por la cotización"; }, 5000);
-      r.hecho = tid("tDEC").decision.respuesta ? tid("tDEC").decision.respuesta.t : null;
-      return r; });
-    eq("confírmame: repite lo que dijo, cómo lo entendió y pregunta", B.conf,
-      ["Me dijiste: la de huella.", "Entendí: contestar la decisión de Reloj checador: Va con el ZKTeco de huella.", "¿Lo hago? Dime sí o no."]);
-    eq("…y NO ejecuta todavía", B.sinEjecutar, true);
-    eq("«no»: no hace nada y pide la orden otra vez", [["Va, no hice nada. Dímelo otra vez.", "Sale, no lo hago. ¿Cómo sería?"].indexOf(B.no[0]) >= 0, B.sigueSin], [true, true]);
-    eq("la orden que sigue al «no» también se confirma", B.conf2, ["Me dijiste: la de tarjeta.", "Entendí: contestar la decisión de Reloj checador: Va con el Steren de tarjeta.", "¿Lo hago?"]);
-    eq("«sí»: ahora sí se ejecuta", B.hecho, "Va con el Steren de tarjeta.");
-
-    /* ---------- 3 · «¿qué hiciste?» y «no, deshazlo, la juntaste con otra» ---------- */
-    var C = await p.evaluate(async function () {
-      var r = {}; await esp2();
-      var d0 = __dichos.length; di("qué hiciste", true);
-      await hasta(function () { return __dichos.length >= d0 + 2 && !!srViva() && !hablando(); }, 5000);
-      r.que = dichos(d0);
-      var d1 = __dichos.length; di("no, deshazlo, la juntaste con otra", true);
-      await hasta(function () { return document.getElementById("c274tit").textContent === "Reloj checador" && !!srViva() && !hablando(); }, 5000);
-      r.undo = dichos(d1)[0]; r.sinResp = !tid("tDEC").decision.respuesta;
-      return r; });
-    eq("«¿qué hiciste?» dice lo último que hizo", C.que, ["Lo último que hice: contestar la decisión de Reloj checador: Va con el Steren de tarjeta.", "Si está mal, di deshazlo."]);
-    eq("frase natural de deshacer: lo deshace y lo dice", [["Va, lo deshice.", "Listo, lo regresé.", "Sale, como estaba."].indexOf(C.undo) >= 0, C.sinResp], [true, true]);
-
-    /* ---------- 4 · la IA entiende "deshacer" ("no oye esa no era la buena") ---------- */
-    var D = await p.evaluate(async function () {
-      var r = {};
-      __iaMap["la de huella"] = { accion: "aprobar", texto_para_tarea: "Va con el ZKTeco de huella.", respuesta_hablada: "Listo." };
-      di("la de huella", true); di("terminé", true);
-      await hasta(function () { return document.getElementById("c274tit").textContent === "Llamar a Rogelio por la cotización"; }, 5000);
-      r.antes = tid("tDEC").decision.respuesta ? tid("tDEC").decision.respuesta.t : null;
-      await esp2();
-      __iaMap["oye esa no era la buena"] = { accion: "deshacer", respuesta_hablada: "" };
-      di("oye esa no era la buena", true); di("terminé", true);
-      await hasta(function () { return document.getElementById("c274tit").textContent === "Reloj checador"; }, 5000);
-      r.despues = !tid("tDEC").decision.respuesta;
+      if (CAM.L.indexOf("tEDC") < 0) { CAM.L.push("tEDC"); CAM.g.tEDC = "dec"; }
+      CAM.i = CAM.L.indexOf("tEDC"); camPresenta274(); await esp2();
+      var frase = "No tiene nada que ver con mis inversiones de BBVA. Esa es la tarea de estado de cuenta inversiones";
+      __iaMap[frase] = { accion: "vincular", destino: "tBBVA", texto_para_tarea: "", respuesta_hablada: "Hecho, la junté." };
+      var nB = tid("tBBVA").msgs.length, d0 = __dichos.length;
+      di(frase, true); di("terminé", true);
+      await hasta(function () { return __dichos.slice(d0).some(function (d) { return /no la junto/i.test(d.t); }); }, 6000);
+      var t = tid("tEDC");
+      r.dicho = dichos(d0).filter(function (x) { return /no la junto/i.test(x); })[0];
+      r.datos = [tid("tBBVA").msgs.length === nB, !!t && !t.fusionada_en && _camVivo(t), ((t.hecho238 || {}).falta || []).filter(function (f) { return f.k === "vinc"; }).length, !!(t.censo_vinc_no && t.censo_vinc_no.propuestas[0].id === "tBBVA")];
       var ia = __ia.filter(function (x) { return /LO QUE DIJO/.test(x.c); }).slice(-1)[0];
-      r.prompt = /- deshacer:/.test(ia.c) && /pide_confirmar/.test(ia.c);
+      r.prompt = [/ESTA TAREA: id tEDC/.test(ia.c), /REGLAS DE VINCULAR/.test(ia.c)];
+      r.ult = !!ultDe278("tEDC");
       return r; });
-    eq("la IA devuelve deshacer y se deshace", [D.antes, D.despues], ["Va con el ZKTeco de huella.", true]);
-    eq("el prompt trae la acción deshacer y pide_confirmar", D.prompt, true);
+    eq("lo dice: no la junta con Inversiones BBVA", A.dicho, "Va, no la junto con Inversiones BBVA. Se queda aparte.");
+    eq("BBVA intacta · la tarea sigue viva · sin la pregunta de vincular · queda el rechazo", A.datos, [true, true, 0, true]);
+    eq("el prompt trae ESTA TAREA y las reglas de vincular", A.prompt, [true, true]);
+    eq("…y se puede deshacer (↩ en la tarea)", A.ult, true);
 
-    /* ---------- 5 · vincular a la tarea equivocada y «cancela eso» ---------- */
-    var E = await p.evaluate(async function () {
-      var r = {}; await esp2();
+    /* ---------- 2 · la IA quiere vincular a una tarea que él NO nombró → primero confirma ---------- */
+    var B = await p.evaluate(async function () {
+      var r = {};
       CAM.i = CAM.L.indexOf("tNUE"); camPresenta274(); await esp2();
-      var nV = tid("tVES").msgs.length;
-      __iaMap["júntala con vestidores"] = { accion: "vincular", destino: "tVES", texto_para_tarea: "", respuesta_hablada: "Hecho, la junté." };
-      di("júntala con vestidores", true); di("terminé", true);
-      await hasta(function () { return document.getElementById("c274tit").textContent !== "Cotizar cámaras extra"; }, 5000);
-      var tn = tid("tNUE"); r.junto = [tid("tVES").msgs.length > nV, !tn || !!tn.fusionada_en || !_camVivo(tn)];
-      await esp2();
-      var d1 = __dichos.length; di("cancela eso", true);
-      await hasta(function () { return document.getElementById("c274tit").textContent === "Cotizar cámaras extra" && !!srViva() && !hablando(); }, 5000);
-      r.undo = dichos(d1)[0];
-      var tn2 = tid("tNUE"); r.regreso = [tid("tVES").msgs.length === nV, !!tn2 && !tn2.fusionada_en, !!tn2 && esPropuesta256(tn2)];
+      __iaMap["júntala con la otra de los lockers"] = { accion: "vincular", destino: "tVES", texto_para_tarea: "", respuesta_hablada: "Hecho." };
+      var nV = tid("tVES").msgs.length, d0 = __dichos.length;
+      di("júntala con la otra de los lockers", true); di("terminé", true);
+      await hasta(function () { return CAM.conf && !!srViva() && !hablando(); }, 6000);
+      r.conf = dichos(d0).slice(-2); r.sin = tid("tVES").msgs.length === nV && !tid("tNUE").fusionada_en;
+      di("no", true); await hasta(function () { return !CAM.conf && !!srViva() && !hablando(); }, 5000);
       return r; });
-    eq("vinculó (a la equivocada)", E.junto, [true, true]);
-    eq("«cancela eso» (aunque ya esté en el cuestionario de la siguiente) lo deshace", ["Va, lo deshice.", "Listo, lo regresé.", "Sale, como estaba."].indexOf(E.undo) >= 0, true);
-    eq("…y las dos tareas quedan como estaban", E.regreso, [true, true, true]);
+    eq("confirma antes de juntar a una tarea que no nombró", B.conf, ["Entendí: juntar Cotizar cámaras extra con la tarea Vestidores.", "¿Lo hago? Dime sí o no."]);
+    eq("…y no la juntó", B.sin, true);
 
-    /* ---------- 6 · mensaje por acomodar con «confírmame» ---------- */
+    /* ---------- 3 · su corrección manda sobre la IA ---------- */
+    var C = await p.evaluate(async function () {
+      var r = {};
+      __iaMap["no, es la tarea de comedor"] = { accion: "vincular", destino: "tVES", texto_para_tarea: "", respuesta_hablada: "Hecho." };
+      var nV = tid("tVES").msgs.length;
+      var d0 = __dichos.length; di("no, es la tarea de comedor", true); di("terminé", true);
+      await hasta(function () { return CAM.conf && !!srViva() && !hablando(); }, 6000);   /* venía de un «no»: la siguiente orden se confirma (277) */
+      r.conf = dichos(d0).filter(function (x) { return /^Entendí/.test(x); })[0];
+      di("sí", true);
+      await hasta(function () { var x = tid("tNUE"); return !x || !!x.fusionada_en; }, 6000);
+      r.r = [tid("tVES").msgs.length === nV, (tid("tCOM").enlazadas || []).some(function (e) { return e.id === "tNUE"; })];
+      camSal274(false); return r; });
+    eq("«no, es la tarea de comedor»: lo que se confirma es Comedor, aunque la IA dijo Vestidores", C.conf, "Entendí: juntar Cotizar cámaras extra con la tarea Comedor.");
+    eq("…y con su sí va a Comedor", C.r, [true, true]);
+
+    /* ---------- 4 · el ↩ de la tarea: fecha ---------- */
+    var D = await p.evaluate(async function () {
+      var r = {}; home(fx8()); try { localStorage.removeItem("doit_ult278"); } catch (e) {} window.__ult278 = null;
+      abierta = "tCER"; vista = "hilo"; render();
+      r.sinNada = !document.getElementById("bund278");
+      var t = tid("tCER"); mueveFecha(t, "2026-10-30", "prueba"); render();
+      var b = document.getElementById("bund278");
+      r.ico = [!!b, b && b.nextElementSibling && b.nextElementSibling.id, !!(b && b.querySelector("svg")), b && b.textContent.trim()];
+      b.click(); await espera(30);
+      var l = document.getElementById("und278"); r.linea = l ? l.querySelector("span").textContent : null; r.aunNo = tid("tCER").f_vigente;
+      var N = Date.now(); t.msgs.push({ k: "bi", wa_in: 1, wa_c: "Rubén Garza", t: "Rubén Garza: llego a las 5", ts: N + 5000, h: "12:00" });
+      document.getElementById("bund278ok").click(); await espera(30);
+      var t2 = tid("tCER");
+      r.despues = [t2.f_vigente, !document.getElementById("bund278"), t2.msgs.some(function (m) { return /llego a las 5/.test(m.t); })];
+      return r; });
+    eq("sin acciones no hay ↩", D.sinNada, true);
+    eq("↩ junto al ⋯, ícono de línea sin texto", D.ico, [true, "bmenu", true, ""]);
+    eq("primer toque: dice qué se va a deshacer y todavía no deshace", [D.linea, D.aunNo], ["Se deshace: se movió la fecha al " + (await p.evaluate(function () { return fechaMovCorta("2026-10-30"); })), "2026-10-30"]);
+    eq("segundo toque: regresa la fecha, se va el ↩ y lo que llegó después se conserva", D.despues, ["2026-10-21", true, true]);
+
+    /* ---------- 5 · el ↩ de la tarea: vínculo (desde la tarea destino) ---------- */
+    var E = await p.evaluate(async function () {
+      var r = {}; var nP = tid("tPOR").msgs.length;
+      enlazaTareas("tCER", "tPOR"); abierta = "tPOR"; vista = "hilo"; render();
+      document.getElementById("bund278").click(); await espera(30);
+      r.linea = document.getElementById("und278").querySelector("span").textContent;
+      document.getElementById("bund278ok").click(); await espera(30);
+      var c = tid("tCER"); r.despues = [!!c && !c.fusionada_en, tid("tPOR").msgs.length === nP, (tid("tPOR").enlazadas || []).length]; r.dbg = [nP, tid("tPOR").msgs.map(function (m) { return m.t; })]; r.nom = c && c.nombre;
+      return r; });
+    eq("↩ en la destino: «se juntó aquí «…»» con el nombre de la que se juntó", E.linea, "Se deshace: se juntó aquí «" + E.nom + "»");
+    eq("…y las dos regresan como estaban", E.despues, [true, true, 0]);
+
+    /* ---------- 6 · una sola función; lo enviado por WhatsApp no deja ↩; tocar ↩ otra vez = no ---------- */
     var F = await p.evaluate(async function () {
       var r = {};
-      CAM.i = CAM.L.filter(function (k) { return /^msg:tVES/.test(k); }).map(function (k) { return CAM.L.indexOf(k); })[0]; camPresenta274(); await esp2();
-      var d0 = __dichos.length; di("a comedor confírmame", true); di("terminé", true);
-      await hasta(function () { return CAM.conf && !!srViva() && !hablando(); }, 5000);
-      r.conf = dichos(d0);
-      r.sinMover = !tid("tCOM").msgs.some(function (m) { return /lockers/.test(m.t); });
-      di("correcto", true);
-      await hasta(function () { return tid("tCOM").msgs.some(function (m) { return /lockers/.test(m.t); }); }, 5000);
-      r.movido = true;
+      r.misma = [/function camDeshaz275\(\)\{[\s\S]*?deshazUlt278\(u\)/.test(document.documentElement.innerHTML), typeof deshazUlt278];
+      var f = ultEnvuelve278(function (t) { window.__ultPila278.env = true; t.x8 = 1; }, function (t) { return [t]; }, function () { return "algo"; }, 1);
+      f(tid("tCOM")); r.wa = !ultDe278("tCOM");
+      mueveFecha(tid("tCOM"), "2026-10-29", "prueba"); abierta = "tCOM"; vista = "hilo"; render();
+      document.getElementById("bund278").click(); await espera(20); var on = !!document.getElementById("und278");
+      document.getElementById("bund278").click(); await espera(20);
+      r.toggle = [on, !document.getElementById("und278"), tid("tCOM").f_vigente];
+      r.sinHist = !document.querySelector("[data-mn='historial']") && !/Historial de deshacer/.test(document.body.innerHTML);
       return r; });
-    eq("mensaje: repite y pregunta antes de moverlo", F.conf, ["Me dijiste: a comedor.", "Entendí: mandar el mensaje de Josué Treviño a la tarea Comedor.", "¿Lo hago?"]);
-    eq("…no lo movió antes del sí; con «correcto» sí", [F.sinMover, F.movido], [true, true]);
-
-    /* ---------- 7 · «regrésate un poco» y «repíteme» a media lectura ---------- */
-    var G = await p.evaluate(async function () {
-      var r = {}; window.__lento = 600;
-      CAM.i = CAM.L.indexOf("tDEC"); camPresenta274(true);
-      await hasta(function () { return hablando() && !!srBarge() && CAM.rest && CAM.rest.k >= 3; }, 6000);
-      var R = CAM.rest, esp = R.G.slice(R.k - 2, R.k + 1).map(function (x) { return x.t; }), d0 = __dichos.length;
-      diB("regrésate un poco", true);
-      await hasta(function () { return __dichos.length >= d0 + 3; }, 5000);
-      r.reb = [dichos(d0).slice(0, 3), esp];
-      await hasta(function () { return hablando() && !!srBarge() && CAM.rest && CAM.rest.k >= 1; }, 5000);
-      var R2 = CAM.rest, esp2_ = [R2.G[R2.k - 1].t, R2.G[R2.k].t], d1 = __dichos.length;
-      diB("repíteme", true);
-      await hasta(function () { return __dichos.length >= d1 + 2; }, 5000);
-      r.rep = [dichos(d1).slice(0, 2), esp2_];
-      window.__lento = 5; camSal274(false);
-      return r; });
-    eq("«regrésate un poco» relee desde dos frases antes", G.reb[0], G.reb[1]);
-    eq("«repíteme» repite lo último (la anterior y la que iba)", G.rep[0], G.rep[1]);
-    await foto("277-caminata.png");
+    eq("voz y ↩ usan la MISMA función (deshazUlt278)", F.misma, [true, "function"]);
+    eq("si se mandó algo por WhatsApp no queda ↩", F.wa, true);
+    eq("tocar ↩ otra vez cierra la línea sin deshacer", F.toggle, [true, true, "2026-10-29"]);
+    eq("no se agregó ningún historial", F.sinHist, true);
+    await foto("278-undo.png");
     eq("sin errores de página", errs, []);
   } catch (e) { malas.push("EXCEPCIÓN " + (e && e.stack || e)); }
   await b.close();
