@@ -119,6 +119,11 @@ eq("sw.js con versión build 277", /var SW_VERSION = 'build 277'/.test(fs.readFi
     eq("ícono de caminata en el encabezado, justo antes del ⋯", [A.enEnc, A.sig, A.svg, A.texto], [true, "bhmas", true, ""]);
     eq("sin barra grande ni audífono en el título de la sección", [A.barra, A.audif], [false, false]);
     eq("el total va en el aria-label", A.aria, "Caminata: 6 pendientes en voz");
+    /* 277b: silueta SÓLIDA en zancada (cabeza rellena, trazo grueso), ya no la de línea delgada */
+    var S = await p.evaluate(function () { var v = document.querySelector("#bcam274 svg"), c = v && v.querySelector("circle");
+      var ws = [].map.call(v ? v.querySelectorAll("path") : [], function (e) { return +e.getAttribute("stroke-width"); });
+      return { cabeza: c ? c.getAttribute("fill") : null, minTrazo: Math.min.apply(null, ws), color: v ? v.getAttribute("stroke") : null, caja: v ? [v.getAttribute("viewBox"), v.getAttribute("width")] : null }; });
+    eq("ícono sólido: cabeza rellena, trazo ≥ 2.5, currentColor, misma caja 24/22", [S.cabeza, S.minTrazo >= 2.5, S.color, S.caja], ["currentColor", true, "currentColor", ["0 0 24 24", "22"]]);
     await foto("277-home.png");
 
     /* ---------- 2 · «confírmame»: repite, NO ejecuta; «no» no hace nada; la siguiente también se confirma; «sí» ejecuta ---------- */
