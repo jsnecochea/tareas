@@ -90,14 +90,14 @@ eq("sw.js con versión >= 275", +((fs.readFileSync(path.join(__dirname, "..", "s
     /* ---------- 1 · orden y frase de arranque ---------- */
     var A = await p.evaluate(async function () {
       home(fx5()); var r = {}, b = document.getElementById("bcam274");
-      r.boton = b ? b.querySelector("small").textContent : null;
+      r.boton = b ? b.getAttribute("aria-label") : null;   /* build 277: ícono chico junto al ⋯ (el total va en el aria-label) */
       var C = camLista275(); r.orden = C.L; r.grupos = C.L.map(function (id) { return C.g[id]; });
       b.click(); await esp2();
       r.dichos = dichos(); r.ia = __ia.map(function (x) { return [/GUION DE LLAMADA/.test(x.c), x.mod]; });
       r.tit = document.getElementById("c274tit").textContent;
       return r; });
     eq("orden: decisión · llamada de MAÑANA · tareas nuevas (sin vencidas, hoy ni llamadas de hoy)", [A.orden, A.grupos], [["tDEC", "tLLA", "tNUE", "tNUE2"], ["dec", "lla", "nue", "nue"]]);
-    eq("botón del home con el total", A.boton, "4 pendientes en voz, sin ver la pantalla");
+    eq("botón del home con el total", A.boton, "Caminata: 4 pendientes en voz");
     eq("arranca con UNA frase de resumen", A.dichos[0], "Tienes 1 decisión, 1 llamada para mañana y 2 tareas nuevas. Empezamos.");
     eq("el guion de la llamada se pide a la IA desde el arranque, modo rápido", A.ia, [[true, "rapido"]]);
     eq("primera: la decisión, plantea tema y recomendación", [A.dichos[1], A.dichos.indexOf("Lo que hay que decidir: ¿Cuál reloj compramos?") > 0, A.dichos.some(function (x) { return /^Yo haría: El ZKTeco/.test(x); }), A.tit], ["Primera: Reloj checador.", true, true, "Reloj checador"]);

@@ -1614,7 +1614,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 276 · caminata con interrupción: el micrófono sigue abierto mientras habla, si hablas se calla y te escucha (repíteme lo último, espera, a ver voy); no se escucha a sí misma (eco, volumen); orden completo para dejar la bandeja limpia: decisiones, llamadas de mañana, tareas nuevas con su cuestionario, fichas Falta con cuestionario y mensajes por acomodar con 2 tareas probables; al final «Bandeja limpia» o lo que quedó · build 275 · caminata como plática: decisiones, llamadas de mañana con su guion y tareas nuevas; sin menús (lo que dices lo entiende la IA), sin reconfirmar, «no, eso no» deshace, sonido de pensando, «va»/«sí» se envían al instante · build 274 · modo Caminata: botón grande en el home, recorre decisiones, llamadas de hoy y vencidas/hoy a dos voces tipo podcast; escucha sin cortar (el silencio no envía: pregunta ¿Terminaste o sigues?; «terminé» envía), comandos repite/más detalle/siguiente/atrás/pausa/salir, la respuesta va al hilo · build 273 · la tarea en 4 capas: En qué vamos, Decide tú, Lo que sabemos y Plática (lo archivado plegado); la ficha Falta siempre abre el cuestionario · build 272 · home minimalista: línea de estado con contadores, secciones vacías fuera, preguntas de una tarea en un renglón, lo que espera a un tercero pasa a Las lleva Claude, Ya está con la siguiente subiendo · build 271 · mensajes por acomodar en su propia pestañita plegable (con contador, se recuerda), entre Nuevas tareas para acomodar y Te pregunta Doit · build 270 · home reacomodado: Te pregunta Doit, Vencidas mías y Hoy mías siempre a la vista; abajo Las lleva Claude con semáforo y Mías futuras · build 269 · a Salvador solo le suenan 5 tipos de push (acuerdo, llamada, atorado, IA atorada, recordatorio) · build 268 · notificaciones con tag (sin repetidas) y cerradas al resolver · build 267 · sin bucle de preguntas (Ninguno cierra), sin repreguntas automáticas a terceros · build 266 · toda pregunta de Claude en texto (sin fichas de botones), la respuesta dictada la cierra · build 265 · chip Falta rojo y ancho, micrófono sin autoarranque · build 264 · expedientes: Ya está los deja dormidos, despiertan solos, cerradas y dormidas siempre en búsqueda · recordatorios una vez, siguiente en orden, Hoy solo lo de Salvador, esperas con fecha, falta info coherente, dictado oculto, WhatsApp sin contacto basura";
+var VERSION_APP = "build 277 · caminata: «confírmame» / «¿entendiste bien?» repite la orden y cómo la entendió y espera tu sí antes de hacerla; «deshazlo», «cancela eso», «retrocede», «esa no era» deshacen la última acción; «repíteme» repite lo último y «regresa un poco» relee desde un par de frases antes; en el home, ícono chico de caminata junto al ⋯ en vez de la barra grande";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -6872,6 +6872,7 @@ function vLista(){
   h='<div class="enc" id="enc">'+
     '<div class="r1">'+(consulta?'<button class="iconbtn" id="bback" aria-label="Volver">\u2039</button>':'')+'<div class="nom" id="byo" role="button">'+esc(PERSONAS[yo].nombre)+'</div>'+
     '<div class="grow"></div>'+
+    '<!--cam277-->'+   /* build 277: ícono de Caminata junto al ⋯ (se llena al final de vLista) */
     '<button class="iconbtn" id="bhmas" aria-label="Más opciones">'+ico("more",22)+'</button>'+   /* build 200: ⋯ del inicio */
     (esJefe?'<button class="eng" id="badm" aria-label="Ajustes">'+ico("eng",24,1.6)+'</button>':'')+'</div>'+
     '</div>';
@@ -7025,7 +7026,7 @@ function vLista(){
   var _h270=armaHome270(_rev, det, mias_venc, hoyYa, futuras);
   h+=vAcomodo()+vMsgs271()+vHome270(_h270)+vAbajo270(_cl263, _h270, hMis, mis.length);
   window.__H274=_h270;   /* build 274: la caminata sigue el orden del home */
-  h=h.replace('<!--est272-->', vCaminata274()+vEstado272(_h270));   /* build 274: botón grande Caminata arriba de la línea de estado */   /* build 272: línea de estado arriba del todo */
+  h=h.replace('<!--est272-->', vEstado272(_h270)).replace('<!--cam277-->', vCamIco277());   /* build 277: sin barra grande; ícono chico junto al ⋯ */   /* build 274: botón grande Caminata arriba de la línea de estado */   /* build 272: línea de estado arriba del todo */
 
   /* ORDEN DEL SWIPE ENTRE TAREAS — Salvador 2026-09-22: el swipe (window.
      ordenSwipe) sigue el mismo orden de las 7 secciones AUNQUE esten
@@ -17899,7 +17900,7 @@ function vHome270(H){
   if(!ord.length){ window.__sale272=null; try{ foto272(H); }catch(e){} return '<div class="sep270 s-ok"><span>Todo al día</span></div>'; }
   var h='<div class="h270">', primero=true;
   function sec(k, label, L){ if(!L.length) return;
-    h+='<div class="sep270 s-'+k+'" id="sec272-'+k+'"><span>'+label+'</span><em>'+L.length+'</em>'+(primero?'<button class="ttlee" id="bttlee" aria-label="Escuchar lo que te toca">'+_icoAudif()+'</button>':'')+'</div>'; primero=false;
+    h+='<div class="sep270 s-'+k+'" id="sec272-'+k+'"><span>'+label+'</span><em>'+L.length+'</em>'+'</div>'; primero=false;   /* build 277: sin audífono aquí (la Caminata se abre con el ícono junto al ⋯) */
     h+='<div class="revl ttl l270 l-'+k+'">'+filas272(k, L, function(x){ return '<button class="revr ttr" data-id="'+esc(x.t.id)+'"><i style="background:'+COL270[k]+'"></i><span class="ttx"><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span>'+(x.why?'<small>'+esc(x.why)+'</small>':'')+'</span></button>'; })+'</div>'; }
   sec("preg", "Te pregunta Doit", H.preg); sec("venc", "Vencidas mías", H.venc); sec("hoy", "Hoy mías", H.hoy);
   try{ foto272(H); }catch(e){}
@@ -18104,16 +18105,19 @@ function camRelojSilencio(){
     var todo=(CAM.buf+" "+pp).trim();
     var c=camComando274(todo); if(c){ CAM.buf=""; return camHaz274(c); }   /* un comando dicho solo, aunque no llegue como final */
     CAM.buf=todo;
+    if(CAM.buf && CAM.conf && camConfCorto277(CAM.buf)) return camEnvia274();   /* build 277: sí / no a la confirmación */
     if(CAM.buf && CAM_CORTO.test(_camNv(CAM.buf))) return camEnvia274();   /* build 275: corto y claro = se envía ya */
     if(CAM.buf && (CAM.qz || camK276()==="msg") && _camNv(CAM.buf).split(" ").length<=CAM_QZ_CORTO) return camEnvia274();   /* build 276: en el cuestionario y en mensajes, lo corto se envía sin "¿Terminaste?" */
     if(CAM.buf){   /* 2.5 s callado con algo dicho: NO se envía, se pregunta bajito */
       camCallaMic(); CAM.modo="check";
       camDi274(camAux276([{v:"A", t:"¿Terminaste o sigues?", bajito:true}]), function(){ camEscucha274("check"); });
     }
-  }, CAM.modo==="check"?1200:((CAM.modo==="resp" && !CAM.buf && CAM_CORTO.test(_camNv(CAM.par)))?700:CAM_SILENCIO));   /* build 275: "va"/"sí" a medias no espera 2.5 s */
+  }, CAM.modo==="check"?1200:((CAM.modo==="resp" && !CAM.buf && (CAM_CORTO.test(_camNv(CAM.par)) || (CAM.conf && camConfCorto277(CAM.par))))?700:CAM_SILENCIO));   /* build 275: "va"/"sí" a medias no espera 2.5 s */
 }
 var CAM_CMD=[
-  ["ultimo", /^((repiteme|repite|repetir|repitemelo|dime|di) (otra vez |de nuevo )?lo ultimo( que dijiste)?|lo ultimo otra vez|que dijiste|como dijiste|perdon que dijiste|que dijiste perdon)$/],   /* build 276 */
+  ["ultimo", /^((repiteme|repite|repetir|repitemelo|dime|di) (otra vez |de nuevo )?lo ultimo( que dijiste)?|lo ultimo otra vez|que dijiste|como dijiste|perdon que dijiste|que dijiste perdon|repiteme|repitemelo|repitemela|repiteme eso|repiteme otra vez|repitemelo otra vez)$/],   /* build 276 */   /* build 277: «repíteme» solo = lo último que dijo */
+  ["rebobina", /^((regresa|regresate|regresale|retrocede|retrocedele|vuelve|echate|ve|hazte) (un poco|tantito|un poquito|poquito|un poco mas|mas)( (para )?atras)?|(un poco |tantito )?mas atras|un poco (mas )?(para )?atras|rebobina|rebobinale)$/],   /* build 277: «regresa un poco» = vuelve a leer desde un par de frases antes */
+  ["entendiste", /^((me )?entendiste( bien)?|que entendiste|dime (si|que|lo que) (me )?entendiste|que (hiciste|acabas de hacer)|que vas a hacer|confirmame|confirmamelo|me confirmas|confirma|confirmalo)$/],   /* build 277 */
   ["espera", /^(espera|esperame|esperate|espera tantito|un momento|un segundo|dame un segundo|aguanta|aguantame|para|para tantito)$/],   /* build 276 */
   ["voy", /^((a ver|haber|aver) ?voy|a ver|haber|aver|voy|ahi voy|dejame ver|a ver dejame ver|a ver espera|a ver a ver|mira)$/],   /* build 276 */
   ["continua", /^(sigue|continua|continuale|sigamos|ya sigue|puedes seguir|sigue hablando|sigue sigue)$/],   /* build 276: después de "espera" */
@@ -18122,16 +18126,20 @@ var CAM_CMD=[
   ["despues", /^((la |lo )?(dejamos|dejo|deja|dejala|dejalo) para (despues|luego|mas tarde)|para (despues|luego)|despues|luego)$/],
   ["siguiente", /^(siguiente|la siguiente|sigue la otra|otra|pasa|pasala|salta|saltala|adelante|next)$/],
   ["deshaz", /^(no eso no|eso no|no no eso no|no no|regresa|regresate|deshaz|deshazlo|deshacer|me equivoque|no era eso)$/],   /* build 275: deshace la última acción (si no hay, es atrás) */
+  ["deshaz", /^(no |no no |oye no |ay no |no espera )?(deshaz|deshazlo|deshaz eso|deshazla|deshacer|deshazlo ya|cancela|cancela eso|cancelalo|cancelala|retrocede|retrocedelo|revierte|revierte eso|reviertelo|anula|anulalo|anula eso|quita eso|quitalo|regresalo|regresa eso|regresalo como estaba|dejalo como estaba|como estaba|esta mal|eso esta mal|lo hiciste mal|te equivocaste|no era esa|esa no era|esa no es|no es esa|la vinculaste mal|la juntaste mal|no la juntes|no era esa tarea|no era ahi|ahi no)( por favor)?$/],   /* build 277: más formas naturales de deshacer */
   ["atras", /^(atras|anterior|la anterior|vuelve a la anterior)$/],
   ["pausa", /^(pausa|pausala|ponle pausa|pon pausa|deten|detente|alto)$/],
   ["salir", /^(salir|sal|salte|termina la caminata|terminar caminata|cierra|cierra la caminata|adios|ya no|basta)$/]
 ];
-function camComando274(s){ s=_camNv(s).replace(/^(oye|doit|claude)\s+/,"").replace(/\s+(por favor|porfa)$/,""); for(var i=0;i<CAM_CMD.length;i++) if(CAM_CMD[i][1].test(s)) return CAM_CMD[i][0]; return ""; }
+function camComando274(s){ s=_camNv(s).replace(/^(oye|doit|claude)\s+/,"").replace(/\s+(por favor|porfa)$/,""); for(var i=0;i<CAM_CMD.length;i++) if(CAM_CMD[i][1].test(s)) return CAM_CMD[i][0];
+  if(camDeshazSuelto277(s)) return "deshaz";   /* build 277: «no, deshazlo, la juntaste con otra» */
+  return ""; }
 var CAM_FIN=/(?:^|\s)(ya\s+)?(termine|terminado|he terminado)$/;
 /* llega un pedazo final de lo dictado */
 function camOye274(txt, esFinal){
   txt=String(txt||"").replace(/\s+/g," ").trim(); if(!txt || !CAM.on) return;
   clearTimeout(CAM.tVac);
+  if(CAM.conf && CAM.modo==="resp" && !CAM.buf && camConfCorto277(txt)){ CAM.buf=txt; return camEnvia274(); }   /* build 277: «sí» / «no» a la confirmación, al instante */
   if(CAM.modo==="check"){
     var s=_camNv(txt);
     if(/^(sigo|sigue|espera|esperame|no|todavia no|aun no|no he terminado|todavia|un momento|dejame pensar|a ver|voy|a ver voy)$/.test(s)){ CAM.modo="resp"; camPinta274(); return; }   /* build 276: antes de los comandos (espera/a ver aquí = sigo) */
@@ -18156,6 +18164,8 @@ function camEnvia274(){
   if(!v){ return camDi274([{v:"A", t:"No alcancé a oír nada. ¿Me lo repites?"}], function(){ camEscucha274("resp"); }); }
   var t=camTarea274(); if(!t) return camSiguiente274(1);
   CAM.espera276=false;
+  if(CAM.conf) return camConfResp277(v);   /* build 277: contesta «¿Lo hago?» */
+  if(!CAM.qz){ CAM.pideConf277=camPideConf277(v) || !!CAM.confSig277 || !!(CAM.aclara && CAM.pideConf277); CAM.confSig277=false; }   /* build 277: «confírmame» / «¿entendiste bien?» = repetir y esperar su sí */
   if(CAM.qz) return camQuizResp276(v);   /* build 276: contesta una pregunta del cuestionario */
   if(camK276()==="msg") return camMsgEntiende276(v);   /* build 276: a qué tarea va el mensaje */
   camEntiende275(t, v);   /* build 275: lo que dijo va a la IA (sin palabras clave), se ejecuta sin reconfirmar */
@@ -18176,7 +18186,9 @@ function camGuarda274(t, v){
 function camTarea274(){ var id=CAM.L[CAM.i]; if(String(id||"").indexOf("msg:")===0){ var gr=(CAM.mg||{})[id]; id=gr?gr.t.id:""; }   /* build 276: un mensaje por acomodar vive en una tarea */
   return (tareas||[]).filter(function(x){ return x.id===id; })[0]||null; }
 function camHaz274(c){
+  if(c==="entendiste" && (CAM.buf||"").trim() && !CAM.conf){ CAM.confSig277=true; return camEnvia274(); }   /* build 277: «…¿entendiste bien?» al final de una orden = confírmamela antes */
   camCallaMic(); CAM.buf=""; CAM.par="";
+  if(camHaz277(c)) return;   /* build 277: confirmación pendiente · regresa un poco · ¿entendiste? */
   if(camHaz276(c)) return;   /* build 276: lo último · espera · a ver voy · sigue · cuestionario · mensajes */
   if(c==="repite") return camPresenta274(true);
   if(c==="detalle"){ var t=camTarea274(); if(!t) return camSiguiente274(1);
@@ -18190,7 +18202,7 @@ function camHaz274(c){
 }
 function camPresenta274(repite){
   var t=camTarea274(); if(!t) return camSiguiente274(1);
-  CAM.qz=null; CAM.espera276=false;
+  CAM.qz=null; CAM.espera276=false; CAM.conf=null;   /* build 277 */
   var _k6=camK276(); if(_k6==="msg") return camMsgPresenta276(!!repite); if(_k6==="fal") return camFalPresenta276(!!repite);   /* build 276 */
   CAM.limpia=true; CAM.vacioDicho=false; CAM.aclara=null; camPinta274();
   camGuion275(t, !!repite, function(G){   /* build 275: por tipo (decisión · llamada con su guion · tarea nueva), sin menú */
@@ -18201,7 +18213,7 @@ function camPresenta274(repite){
   });
 }
 function camSiguiente274(dir){
-  camCallaMic();
+  camCallaMic(); CAM.conf=null;   /* build 277 */
   var j=CAM.i+dir;
   while(j>=0 && j<CAM.L.length && !camSigue275(CAM.L[j])) j+=dir>=0?1:-1;   /* build 275: las tareas nuevas (propuestas) también cuentan */
   if(j<0){ CAM.i=0; return camDi274([{v:"A", t:"Esta es la primera."}], function(){ camPresenta274(); }); }
@@ -18221,7 +18233,7 @@ function camEmpieza274(desdeId){
   var C=camLista276(), L=C.L;   /* build 276: + ficha Falta y mensajes por acomodar */
   CAM.mg=C.mg||{}; CAM.res276={}; CAM.pendQ=[]; CAM.qz=null; CAM.rest=null; CAM.habla276=[]; CAM.espera276=false; CAM.bargeNo=false;
   if(desdeId){ L=L.filter(function(x){ return x!==desdeId; }); L.unshift(desdeId); if(!C.g[desdeId]){ C.g[desdeId]="dec"; C.n.dec++; } }
-  CAM.on=true; CAM.L=L; CAM.g=C.g; CAM.i=0; CAM.pausa=false; CAM.explicado=!!window.__camExplicado274; CAM.buf=""; CAM.par=""; CAM.anotadas=0; CAM.hechas275=0; CAM.ult=null; CAM.aclara=null; CAM.sinMic=false; CAM.gl=CAM.gl||{};
+  CAM.on=true; CAM.L=L; CAM.g=C.g; CAM.i=0; CAM.pausa=false; CAM.explicado=!!window.__camExplicado274; CAM.buf=""; CAM.par=""; CAM.anotadas=0; CAM.hechas275=0; CAM.ult=null; CAM.aclara=null; CAM.sinMic=false; CAM.gl=CAM.gl||{}; CAM.conf=null; CAM.pideConf277=false; CAM.confSig277=false;   /* build 277 */
   window.__camExplicado274=true;   /* "di terminé" se explica una vez por sesión de la app */
   camAudio275();   /* build 275: el sonido de "pensando" se desbloquea con este toque (iOS) */
   camMedidor276();   /* build 276: medidor de volumen (getUserMedia con echoCancellation), pedido dentro del toque */
@@ -18236,7 +18248,7 @@ function camSal274(dicho){
   camMedidorApaga276();
   try{ speechSynthesis.cancel(); }catch(e){}
   if(dicho){ try{ var u=new SpeechSynthesisUtterance("Listo, salimos de la caminata."); u.lang="es-MX"; var V=camVoces274(); if(V.A) u.voice=V.A; speechSynthesis.speak(u); }catch(e){} }
-  CAM.on=false; CAM.pausa=false; CAM.fase="";
+  CAM.on=false; CAM.pausa=false; CAM.fase=""; CAM.conf=null; CAM.pideConf277=false; CAM.confSig277=false;   /* build 277 */
   camWake274(false);
   var o=document.getElementById("cam274"); if(o) o.remove();
   document.documentElement.classList.remove("cam274on");
@@ -18442,7 +18454,8 @@ function camPrompt275(t, v){
   L.push("LO QUE DIJO: “"+v+"”");
   L.push("ACCIONES:\n- aprobar: está de acuerdo (con la recomendación, con la tarea nueva, con el guion).\n- rechazar: no se hace / no está de acuerdo.\n- detalle: pide más información.\n- despues: la deja para después.\n- vincular: va junto con otra tarea; destino = el id de esa tarea de la lista.\n- eliminar: borrarla, no sirve.\n- dato: no es tarea, solo un dato para guardar.\n- instruccion: da una indicación, elige otra opción o pide algo concreto (\"dile a Rubén que…\", \"que sea el jueves\").\n- aclarar: SOLO si de verdad no se entiende; respuesta_hablada = UNA pregunta concreta y corta.");
   L.push("texto_para_tarea: lo que queda anotado en la tarea, claro y completo, con su decisión (ej. \"Va con la de Dahua.\", \"Que la llamada sea el jueves a las 10.\").\nrespuesta_hablada: confirmación de 2 a 5 palabras, natural, como un amigo (ej. \"Listo, va con Rubén.\", \"Hecho, la junté.\", \"Va, queda como dato.\"). Nunca pidas confirmación ni repitas la pregunta.");
-  L.push("Contesta SOLO JSON: {\"accion\":\"...\",\"destino\":\"\",\"texto_para_tarea\":\"...\",\"respuesta_hablada\":\"...\"}");
+  L.push(CAM_PROMPT277);   /* build 277: deshacer · pide_confirmar */
+  L.push("Contesta SOLO JSON: {\"accion\":\"...\",\"destino\":\"\",\"texto_para_tarea\":\"...\",\"respuesta_hablada\":\"...\",\"pide_confirmar\":false}");
   return L.join("\n");
 }
 function camEntiende275(t, v){
@@ -18464,15 +18477,22 @@ function camEntiende275(t, v){
   try{ preguntaAClaude([{role:"user", content:camPrompt275(t, v)}], "rapido", function(txt, err){ if(err) return fin(null, err); var j=_camJSON275(txt); fin(j && j.accion?j:null, j?"":"sin JSON"); }); }
   catch(e){ fin(null, e && e.message); }
 }
-var CAM_ACC=/^(aprobar|rechazar|detalle|despues|vincular|eliminar|dato|instruccion|aclarar)$/;
-function camResuelve275(t, j, v, vivo){
+var CAM_ACC=/^(aprobar|rechazar|detalle|despues|vincular|eliminar|dato|instruccion|aclarar|deshacer)$/;   /* build 277: + deshacer */
+function camResuelve275(t, j, v, vivo, confirmado){
   var a=_camNv(j.accion).replace(/\s+/g,""); if(!CAM_ACC.test(a)) a="instruccion";
   var dh=String(j.respuesta_hablada||"").replace(/\s+/g," ").trim();
+  if(a==="deshacer"){ CAM.pideConf277=false; if(vivo){ CAM.fase=""; camHaz274("deshaz"); } return; }   /* build 277: «no, esa no era» lo entiende la IA */
+  if(!confirmado && a!=="aclarar" && a!=="detalle" && a!=="despues" && (CAM.pideConf277 || j.pide_confirmar===true)){   /* build 277: repetir y esperar su sí */
+    var dc=(a==="vincular")?camDestino275(t, j.destino):null;
+    if(a!=="vincular" || dc){ CAM.pideConf277=false; if(!vivo) return; CAM.fase=""; return camConfPide277({k:"tarea", id:CAM.L[CAM.i], t:t, j:j, v:v, a:a, desc:camDescribe277(t, a, j, dc)}); }
+  }
+  var _d7=""; try{ _d7=camDescribe277(t, a, j, a==="vincular"?camDestino275(t, j.destino):null); }catch(e){}
   if(a==="aclarar"){ if(!vivo) return; CAM.fase=""; CAM.aclara={id:t.id, v:v};
     return camDi274([{v:"A", t:camCorta(dh && /\?/.test(dh)?dh:"¿Me lo dices de otra forma?", 140)}], function(){ camEscucha274("resp"); }); }
   if(a==="detalle"){ if(vivo){ CAM.fase=""; camHaz274("detalle"); } return; }
   if(a==="despues"){ if(vivo){ CAM.fase=""; camHaz274("despues"); } return; }
   var r=camEjecuta275(t, a, j, v);
+  if(!r.falta){ CAM.pideConf277=false; if(CAM.ult) CAM.ult.desc=_d7; }   /* build 277: para «¿qué hiciste?» */
   if(!vivo) return; CAM.fase="";
   if(r.falta){ CAM.aclara={id:t.id, v:v}; return camDi274([{v:"A", t:r.falta}], function(){ camEscucha274("resp"); }); }
   var w=dh.split(" ").filter(Boolean).length, dicho=(dh && w<=8 && !/\?/.test(dh) && !_camCodigo(dh))?camPunto(dh):r.dicho;
@@ -18617,7 +18637,7 @@ function camBargeFalla276(por){
   try{ localStorage.setItem("doit_barge276", JSON.stringify(window.__barge276)); }catch(e){}
   try{ console.warn("caminata 276: interrupción apagada en esta sesión — "+por); }catch(e){}
 }
-var CAM_BARGE_CMD=/^(espera|esperame|esperate|un momento|para|a ver|voy|a ver voy|ahi voy|oye|no|no no|repite|repiteme lo ultimo|que dijiste|siguiente|pausa|alto)$/;
+var CAM_BARGE_CMD=/^(espera|esperame|esperate|un momento|para|a ver|voy|a ver voy|ahi voy|oye|no|no no|repite|repiteme lo ultimo|que dijiste|siguiente|pausa|alto|repiteme|deshaz|deshazlo|cancela|retrocede|regresa|si|confirmame)$/;   /* build 277: + repíteme, deshazlo, cancela, retrocede, sí */
 function camBargeOye276(tx, tok, fin){
   var n=_camNv(tx); if(!n || !CAM.on || CAM.fase!=="hablando") return;
   if(camEco276(n)){ window.__eco276=(window.__eco276||0)+1; return; }   /* es su propia voz */
@@ -18635,7 +18655,7 @@ function camInterrumpido276(tx){
   var c=camComando274(tx);
   if(c) return camHaz274(c);
   CAM.limpia=false; CAM.buf=String(tx||"").trim(); CAM.par="";   /* es el inicio de su respuesta: se queda y se sigue escuchando */
-  if(CAM_CORTO.test(_camNv(CAM.buf))) return camEnvia274();
+  if(CAM_CORTO.test(_camNv(CAM.buf)) || (CAM.conf && camConfCorto277(CAM.buf))) return camEnvia274();   /* build 277: sí / no a la confirmación */
   camEscucha274("resp"); camPinta274(); camRelojSilencio();
 }
 /* tocar el círculo mientras habla también interrumpe (respaldo si iOS no deja escuchar mientras habla) */
@@ -18662,7 +18682,7 @@ function camHaz276(c){
     if(c==="repite"){ camQuizPregunta276(true); return true; }
     if(c==="atras"){ if(z.i>0){ z.i--; var q=z.Q[z.i]; z.A=z.A.filter(function(o){ return o.q!==q; }); z.salt=z.salt.filter(function(o){ return o!==q; }); } camQuizPregunta276(true); return true; }
     if(c==="despues"){ camQuizFin276(true); return true; }
-    if(c==="deshaz"){ if(z.desdeNue && CAM.ult){ CAM.qz=null; camDeshaz275(); } else { CAM.qz=null; camPresenta274(true); } return true; }
+    if(c==="deshaz"){ if(CAM.ult && (z.desdeNue || !z.A.length)){ CAM.qz=null; camDeshaz275(); } else { CAM.qz=null; camPresenta274(true); } return true; }   /* build 277: sin respuestas aún, "deshazlo" deshace lo de la tarea anterior */
     if(c==="detalle"){ var t=camTarea274(); if(t) camDi274(camDetalle275(t), function(){ camQuizPregunta276(true); }); return true; }
   }
   if(camK276()==="msg"){
@@ -18863,7 +18883,8 @@ function camMsgPrompt276(gr, t, C, v){
   L.push("LO QUE DIJO: “"+v+"”");
   L.push("ACCIONES:\n- a_tarea: va a una tarea; destino = el id (de las 2 o de la lista).\n- nueva: es una tarea nueva; nombre = nombre corto.\n- dato: es solo un dato.\n- no_guardar: plática, no va a ninguna.\n- despues: lo deja para después.\n- aclarar: SOLO si de verdad no se entiende; respuesta_hablada = UNA pregunta corta.");
   L.push("respuesta_hablada: 2 a 5 palabras, como un amigo (ej. \"Listo, a Vestidores.\"). Nunca pidas confirmación.");
-  L.push("Contesta SOLO JSON: {\"accion\":\"...\",\"destino\":\"\",\"nombre\":\"\",\"respuesta_hablada\":\"...\"}");
+  L.push(CAM_PROMPT277);   /* build 277 */
+  L.push("Contesta SOLO JSON: {\"accion\":\"...\",\"destino\":\"\",\"nombre\":\"\",\"respuesta_hablada\":\"...\",\"pide_confirmar\":false}");
   return L.join("\n");
 }
 function camMsgEntiende276(v){
@@ -18882,8 +18903,9 @@ function camMsgEntiende276(v){
   try{ preguntaAClaude([{role:"user", content:camMsgPrompt276(gr, t, C, v)}], "rapido", function(txt, err){ if(err) return fin(null); var j=_camJSON275(txt); fin(j && j.accion?j:null); }); }
   catch(e){ fin(null); }
 }
-function camMsgEjecuta276(gr, t, j, v, vivo){
+function camMsgEjecuta276(gr, t, j, v, vivo, confirmado){
   var a=_camNv(j.accion).replace(/\s+/g,"_"), key=CAM.L[CAM.i], dh=String(j.respuesta_hablada||"").replace(/\s+/g," ").trim(), C=CAM.mc||[];
+  if(a==="deshacer"){ CAM.pideConf277=false; return camHaz274("deshaz"); }   /* build 277 */
   if(a==="aclarar"){ CAM.aclara={id:key, v:v}; return camDi274([{v:"A", t:camCorta(dh && /\?/.test(dh)?dh:"¿A cuál de las dos?", 140)}], function(){ CAM.limpia=false; camEscucha274("resp"); }); }
   if(a==="despues") return camHaz274("despues");
   if(a==="detalle") return camHaz274("detalle");
@@ -18893,6 +18915,10 @@ function camMsgEjecuta276(gr, t, j, v, vivo){
     if(!dest && dd){ dest=C.filter(function(x){ return _camNv(x.nombre).indexOf(_camNv(dd))>=0; })[0]||null; }
     if(!dest){ CAM.aclara={id:key, v:v}; return camDi274([{v:"A", t:C.length>=2?"¿A "+camNomT276(C[0])+" o a "+camNomT276(C[1])+"?":"¿A cuál tarea?"}], function(){ CAM.limpia=false; camEscucha274("resp"); }); } }
   if(!/^(a_tarea|nueva|dato|no_guardar)$/.test(a)){ CAM.aclara={id:key, v:v}; return camDi274([{v:"A", t:"¿A qué tarea lo mando?"}], function(){ CAM.limpia=false; camEscucha274("resp"); }); }
+  var _d7=camDescribeMsg277(gr, a, dest, j);   /* build 277 */
+  if(!confirmado && (CAM.pideConf277 || j.pide_confirmar===true)){ CAM.pideConf277=false; var jj={}; for(var _k in j) jj[_k]=j[_k]; jj.accion=a; if(dest) jj.destino=dest.id;
+    return camConfPide277({k:"msg", id:key, gr:gr, t:t, j:jj, v:v, a:a, desc:_d7}); }
+  CAM.pideConf277=false;
   var F=camFoto275([t, dest]), nueva=null, dicho="Listo.", vw={a:abierta, v:vista};
   try{
     if(a==="a_tarea"){ if(dest.id===t.id) okG237(t, gr.ixs); else moverG237(t, gr.ixs, dest.id); dicho="Listo, a "+camNomT276(dest)+"."; }
@@ -18901,7 +18927,7 @@ function camMsgEjecuta276(gr, t, j, v, vivo){
     else { gr.ixs.forEach(function(ix){ soloPlatica(t, ix); }); try{ reglasPorMsg238("platica", t, gr.ixs, null); }catch(e){} dicho=camVar275("mng", ["Va, no lo guardo.","Listo, fuera."]); }
   }catch(e){ console.warn("caminata 276 mensaje", e); }
   abierta=vw.a; vista=vw.v;
-  CAM.ult={foto:F, i:CAM.i, a:"msg_"+a, nueva:nueva?nueva.id:""}; CAM.hechas275=(CAM.hechas275||0)+1;
+  CAM.ult={foto:F, i:CAM.i, a:"msg_"+a, nueva:nueva?nueva.id:"", desc:_d7}; CAM.hechas275=(CAM.hechas275||0)+1;
   CAM.res276=CAM.res276||{}; CAM.res276[key]=1;
   try{ render(); }catch(e){}
   var w=dh.split(" ").filter(Boolean).length; if(dh && w<=8 && !/\?/.test(dh) && !_camCodigo(dh)) dicho=camPunto(dh);
@@ -18920,6 +18946,121 @@ function camFin276(){
   if(!P.length) return "Bandeja limpia.";
   var L=P.slice(0,5).join(". ")+(P.length>5?". Y "+(P.length-5)+" más":"");
   return (P.length===1?"Quedó 1 pendiente: ":"Quedaron "+P.length+" pendientes: ")+L+".";
+}
+
+/* ===================== build 277 (Salvador 7-oct): CAMINATA — CONFÍRMAME, DESHAZLO, REPÍTEME / REGRESA UN POCO, ÍCONO CHICO =====================
+   Sobre el 276, con lo que encontró al estrenarla caminando.
+   1 CONFÍRMAME: si en la orden dice "confírmame", "¿entendiste bien?", "dime qué entendiste", "repíteme qué vas a hacer"… (o la IA marca
+     pide_confirmar), NO se ejecuta: repite lo que dijo ("Me dijiste: …"), cómo lo entendió ("Entendí: juntar X con la tarea Y.") y pregunta
+     "¿Lo hago?". Sí / va / hazlo / correcto = ejecuta. No / cancela / eso no = no hace nada y le pide la orden otra vez (esa siguiente
+     también se confirma). Cualquier otra cosa = es la corrección: se vuelve a entender y se vuelve a confirmar. Vale para tareas y para
+     mensajes por acomodar. "¿Qué hiciste?" / "¿entendiste?" después de una acción: dice lo último que hizo y cómo deshacerlo.
+   2 DESHAZLO: además de las frases del 275, "deshazlo", "cancela eso", "retrocede", "revierte", "está mal", "la juntaste mal", "esa no era"
+     (solas o con "no," delante), y frases cortas que traigan un verbo de deshacer. Si la IA recibe algo como "no, la vinculaste mal",
+     devuelve accion "deshacer". Deshace la última acción (CAM.ult, foto de las tareas antes) y lo dice: "Va, lo deshice."
+   3 REPÍTEME = lo último que dijo (la frase anterior y la que iba). REGRESA UN POCO / más atrás / retrocede un poco = vuelve a leer desde
+     dos frases antes. "Repite" (sin -me) sigue siendo la tarea completa otra vez.
+   4 HOME: sin la barra grande de Caminata; un ícono chico de persona caminando (línea, estilo SF Symbols) junto al ⋯ de arriba.
+     El audífono que estaba en el título de la primera sección (abría lo mismo) se quita. */
+var CAM_CONF_PIDE=/(^|\s)(confirmame|confirmamelo|confirmamela|me confirmas|confirma (antes|primero)|confirmame (antes|primero)|antes de hacerlo|antes de que lo hagas|(me )?entendiste( bien)?|dime (si|que|lo que) (me )?entendiste|dime que vas a hacer|repiteme (lo )?que (vas a hacer|entendiste|te dije)|que vas a hacer|no lo hagas todavia|espera mi (ok|visto bueno|autorizacion)|pideme (confirmacion|autorizacion))(\s|$)/;
+var CAM_CONF_SI=/^((si |va |sale |ok |okey )?(si|va|sale|dale|ok|okey|orale|andale|claro|de acuerdo|perfecto|esta bien|hazlo|hazle|adelante|procede|correcto|asi es|exacto|eso|eso es|confirmo|confirmado|afirmativo|si hazlo|si adelante|si correcto|si eso|si asi|si eso es|si esta bien|sale hazlo|va hazlo|si si|si por favor|si va|si dale|va que va|dale pues|hazlo ya|si procede|asi|tal cual))$/;
+var CAM_CONF_NO=/^(no|nel|no no|no gracias|negativo|mejor no|asi no|no asi no|no lo hagas|no hagas nada|no hagas eso|esta mal|eso no|no es eso|no era eso|cancela|cancela eso|cancelalo|olvidalo|olvidate|te equivocaste|no entendiste|no me entendiste|para nada|nada|no espera)$/;
+var CAM_PROMPT277="- deshacer: quiere deshacer o cancelar lo que acabas de hacer en la tarea ANTERIOR (\"no, esa no era\", \"la vinculaste mal\", \"regrésalo como estaba\").\n"+
+  "pide_confirmar: true SOLO si te pide que le confirmes o le repitas lo que entendiste ANTES de hacerlo (\"confírmame\", \"¿entendiste bien?\", \"dime qué vas a hacer\"); esa parte NO es parte de la orden. Si no, false.";
+function _camNv277(s){ return _camNv(s).replace(/^(oye|doit|claude)\s+/,"").replace(/\s+(por favor|porfa)$/,""); }
+function camPideConf277(v){ return CAM_CONF_PIDE.test(_camNv(v)); }
+function camConfCorto277(txt){ var n=_camNv277(camQuitaFin(txt)); return !!n && (CAM_CORTO.test(n) || CAM_CONF_SI.test(n) || CAM_CONF_NO.test(n)); }
+/* frase corta con un verbo de deshacer ("no, deshazlo, la juntaste con otra", "cancela lo que hiciste") */
+function camDeshazSuelto277(n){
+  n=String(n||""); var w=n.split(" ").filter(Boolean); if(!w.length || w.length>9) return false;
+  if(/\b(un poco|tantito|un poquito|poquito)\b/.test(n)) return false;   /* "regresa un poco" es releer, no deshacer */
+  if(/\bno (lo |la )?(deshagas|reviertas|canceles|anules)\b/.test(n)) return false;
+  return /^(\S+ ){0,2}(deshaz|deshazlo|deshazla|deshacer|reviertelo|anulalo)\b/.test(n) ||   /* al principio de la frase ("dile que hay que deshacer el muro" es orden); "anula la factura" también */
+    /\b(cancela|cancelalo|cancelala|retrocede|regresalo|regresala|revierte|anula) (eso|lo que hiciste|lo que acabas de hacer|lo ultimo|la ultima|lo de antes|esa accion)\b/.test(n) ||
+    /\b(lo hiciste mal|la (vinculaste|juntaste|mandaste|pusiste) (mal|en otra|con otra|a otra)|te equivocaste de tarea|no era esa tarea)\b/.test(n);
+}
+/* lo dicho sin el "confírmame" (para repetírselo) */
+function camSinConf277(v){
+  var s=String(v||"").replace(/[,.;:\s]*¿?\s*(conf[ií]rm(amelo|amela|ame|a)( antes| primero)?|me confirmas|(me )?entendiste( bien)?|dime (si|qu[eé]|lo que) (me )?entendiste|dime qu[eé] vas a hacer|rep[ií]teme (lo )?qu[eé] (vas a hacer|entendiste|te dije)|qu[eé] vas a hacer|antes de hacerlo|antes de que lo hagas|no lo hagas todav[ií]a)\s*\??[.,;!]*/gi, " ");
+  return s.replace(/\s+/g," ").replace(/^[\s,.;:]+|[\s,.;:]+$/g,"").trim();
+}
+function _camMay277(s){ s=String(s||""); return s.charAt(0).toUpperCase()+s.slice(1); }
+/* cómo entendió la orden, en palabras (sin ejecutar nada) */
+function camDescribe277(t, a, j, dest){
+  var nom=camNombre(t), tx=camCorta(limpiaHabla(String((j&&j.texto_para_tarea)||"").replace(/\s+/g," ").trim()), 160).replace(/[.\s]+$/,""), nue=false, d=null;
+  try{ nue=((CAM.g||{})[t.id]==="nue") || esPropuesta256(t); }catch(e){} try{ d=decision273(t); }catch(e){}
+  if(a==="vincular") return dest?"juntar "+nom+" con la tarea "+camCorta(limpiaHabla(dest.nombre||""), 60).replace(/[.\s]+$/,""):"juntar "+nom+" con otra tarea";
+  if(a==="aprobar") return nue?"crear la tarea nueva "+nom:(d?"contestar la decisión de "+nom+(tx?": "+tx:" con lo que recomiendo"):"anotar en "+nom+(tx?": "+tx:" que va"));
+  if(a==="rechazar") return nue?"quitar la tarea nueva "+nom:"anotar en "+nom+" que no va"+(tx?": "+tx:"");
+  if(a==="eliminar") return "eliminar la tarea "+nom;
+  if(a==="dato") return "guardar "+nom+" como dato, no como tarea";
+  return "anotar en "+nom+(tx?": "+tx:" lo que me dijiste");
+}
+function camDescribeMsg277(gr, a, dest, j){
+  var q=limpiaHabla(nombreCorto((gr&&gr.contacto)||"")||(gr&&gr.contacto)||"el contacto"), de="el mensaje de "+q;
+  if(a==="a_tarea") return "mandar "+de+" a la tarea "+(dest?camNomT276(dest):"que dijiste");
+  if(a==="nueva") return "crear una tarea nueva con "+de+(j && j.nombre?": "+camCorta(limpiaHabla(String(j.nombre)), 60).replace(/[.\s]+$/,""):"");
+  if(a==="dato") return "guardar "+de+" como dato";
+  return "no guardar "+de;
+}
+/* repite la orden y cómo la entendió, y espera su sí */
+function camConfPide277(c){
+  CAM.conf=c; CAM.aclara=null;
+  var dijo=camSinConf277(c.v), G=[];
+  if(dijo) G.push({v:"A", t:camPunto("Me dijiste: "+camCorta(dijo, 170))});
+  G.push({v:"A", t:camPunto("Entendí: "+c.desc)});
+  G.push({v:"A", t:CAM.confExpl277?"¿Lo hago?":"¿Lo hago? Dime sí o no."}); CAM.confExpl277=true;
+  camDi274(G, function(){ CAM.limpia=true; camEscucha274("resp"); });
+}
+function camConfResp277(v){
+  var c=CAM.conf; CAM.conf=null; if(!c) return camEscucha274("resp");
+  var n=_camNv277(v);
+  if(CAM_CORTO.test(n) || CAM_CONF_SI.test(n)){   /* sí: ahora sí se ejecuta, tal cual lo entendió */
+    window.__conf277=(window.__conf277||[]).concat([{id:c.id, a:c.a, ok:true, ts:Date.now()}]).slice(-20);
+    if(c.k==="msg") return camMsgEjecuta276(c.gr, c.t, c.j, c.v, true, true);
+    return camResuelve275(c.t, c.j, c.v, true, true);
+  }
+  var v2=String(v||"").replace(/^\s*(no|nel)\b[\s,.;:]*/i,"").trim();
+  if(CAM_CONF_NO.test(n) || !_camNv277(v2) || CAM_CONF_NO.test(_camNv277(v2))){   /* no: no se hace nada */
+    window.__conf277=(window.__conf277||[]).concat([{id:c.id, a:c.a, ok:false, ts:Date.now()}]).slice(-20);
+    CAM.confSig277=true;   /* la orden que sigue también se confirma */
+    return camDi274([{v:"A", t:camVar275("confno", ["Va, no hice nada. Dímelo otra vez.","Sale, no lo hago. ¿Cómo sería?"])}], function(){ CAM.limpia=true; camEscucha274("resp"); });
+  }
+  /* otra cosa: es la corrección; se vuelve a entender y se vuelve a confirmar */
+  CAM.pideConf277=true;
+  if(c.k==="msg") return camMsgEntiende276(v2);
+  return camEntiende275(c.t, v2);
+}
+/* "regresa un poco": vuelve a leer desde dos frases antes de donde iba */
+function camRebobina277(){
+  var R=CAM.rest; if(!R || !R.G || !R.G.length) return camPresenta274(true);
+  var from=Math.max(0, Math.min(R.k, R.G.length-1)-2);
+  camDi274(R.G.slice(from), R.done);
+}
+/* los comandos del 277; true = ya lo atendió */
+function camHaz277(c){
+  if(CAM.conf){
+    if(c==="deshaz"){ camConfResp277("no"); return true; }   /* "eso no" / "cancela" a la confirmación = no */
+    if(c==="entendiste" || c==="repite"){ var cc=CAM.conf; CAM.conf=null; camConfPide277(cc); return true; }
+    if(/^(siguiente|despues|atras|salir|pausa)$/.test(c)){ CAM.conf=null; CAM.pideConf277=false; return false; }
+  }
+  if(c==="rebobina"){ camRebobina277(); return true; }
+  if(c==="entendiste"){
+    if(CAM.qz){ camQuizPregunta276(true); return true; }
+    var u=CAM.ult;
+    if(u && u.desc) camDi274([{v:"A", t:camPunto("Lo último que hice: "+u.desc)}, {v:"A", t:"Si está mal, di deshazlo."}], function(){ CAM.limpia=true; camEscucha274("resp"); });
+    else { CAM.confSig277=true; camDi274([{v:"A", t:"Todavía no hago nada. Dime qué hacemos y te lo confirmo antes de hacerlo."}], function(){ CAM.limpia=true; camEscucha274("resp"); }); }
+    return true;
+  }
+  return false;
+}
+/* ---------- 4 · el ícono chico del home (junto al ⋯) ---------- */
+function _icoCamina277(){ return '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="13.5" cy="4.2" r="1.9"/><path d="M10.6 21l1.6-6.2-2.4-2.4 1.3-4.6 3.2 2.8 3.1 1.1"/><path d="M10.9 7.9l-3.1 1.5-1.1 3.4"/><path d="M12.2 14.8l3 2.1 1 4.1"/></svg>'; }
+function vCamIco277(){
+  if(!window.SpeechSynthesisUtterance && !window.speechSynthesis) return "";
+  var n=0; try{ n=camLista274().length; }catch(e){}
+  if(!n) return "";
+  return '<button class="iconbtn cam277" id="bcam274" aria-label="Caminata: '+n+(n===1?' pendiente':' pendientes')+' en voz">'+_icoCamina277()+'</button>';
 }
 
 /* ===================== build 272 (Salvador 7-oct): HOME SÚPER MINIMALISTA =====================

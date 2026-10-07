@@ -67,7 +67,7 @@ eq("sw.js con versión build ≥ 270", +((/var SW_VERSION = 'build (\d+)'/.exec(
       var css = function (sel, prop) { var e = document.querySelector(sel); return e ? getComputedStyle(e)[prop] : ""; };
       r.colores = [css(".l-preg .ttr i", "backgroundColor"), css(".l-venc .ttr i", "backgroundColor"), css(".l-hoy .ttr i", "backgroundColor"), css(".sep270.s-preg span", "color")];
       r.fondoPreg = css(".l-preg", "backgroundColor") !== css(".l-hoy", "backgroundColor");
-      r.lee = [!!document.querySelector(".h270 .sep270 #bttlee"), (window.__ttOrden || []).join(",")];
+      r.lee = [!document.querySelector(".h270 .sep270 #bttlee"), (window.__ttOrden || []).join(",")];   /* build 277: el audífono del separador se quitó (la Caminata va con el ícono junto al ⋯) */
       r.swipe = (window.ordenSwipe || []).slice(0, 8).join(",");
       r.ancho = [document.documentElement.scrollWidth, document.querySelector("#app").scrollWidth];
       /* Acomodo sigue plegándose como antes */
@@ -83,7 +83,7 @@ eq("sw.js con versión build ≥ 270", +((/var SW_VERSION = 'build (\d+)'/.exec(
     eq("Puntitos: naranja vivo, rojo y gris; etiqueta de Te pregunta Doit en naranja vivo", A.colores, ["rgb(255, 122, 0)", "rgb(255, 59, 48)", "rgb(142, 142, 147)", "rgb(255, 122, 0)"]);
     eq("Te pregunta Doit lleva su fondo naranja tenue", A.fondoPreg, true);
     eq("Abajo, plegadas y en orden: Mías futuras · Las revisas tú · y hasta abajo Las lleva Claude (build 272)", A.abajo, ["bfut", "brev270", "bcl263"]);
-    eq("Escuchar: el botón vive en el primer separador y lee en el orden del home", A.lee, [true, "tNEC,tVEN,tEXP,tHOY"]);
+    eq("build 277: sin audífono en el separador; el orden del home se conserva", A.lee, [true, "tNEC,tVEN,tEXP,tHOY"]);
     eq("El swipe entre tareas sigue el orden del home (2, 3, 4 y luego Claude)", A.swipe.split(",").slice(0, 4).join(","), "tNEC,tVEN,tEXP,tHOY");
     eq("Sin scroll horizontal a 390 px", A.ancho.every(function (w) { return w <= 390; }), true);
     eq("Acomodo (Nuevas tareas para acomodar) se pliega y se despliega como antes", [A.acoPleg, A.acoDesp], [[true, false], [false, true]]);

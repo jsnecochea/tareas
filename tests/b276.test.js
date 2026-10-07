@@ -8,8 +8,8 @@ var fs = require("fs"), path = require("path");
 var ok = 0, n = 0, malas = [];
 function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
 var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
-eq("versión = 276", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[1], 276);
-eq("sw.js con versión build 276", /var SW_VERSION = 'build 276'/.test(fs.readFileSync(path.join(__dirname, "..", "sw.js"), "utf8")), true);
+eq("versión >= 276", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[1] >= 276, true);   /* build 277: sube con cada build */
+eq("sw.js con versión >= 276", +((fs.readFileSync(path.join(__dirname, "..", "sw.js"), "utf8").match(/var SW_VERSION = 'build (\d+)'/) || [0, 0])[1]) >= 276, true);
 (async function () {
   var pw = require("/opt/node22/lib/node_modules/playwright"), b = await pw.chromium.launch(), p = await b.newPage({ viewport: { width: 390, height: 844 }, timezoneId: "America/Monterrey" }), errs = [];
   p.on("pageerror", function (e) { if (!/firebase is not defined/.test(e.message)) errs.push(e.message); });
@@ -104,7 +104,7 @@ eq("sw.js con versión build 276", /var SW_VERSION = 'build 276'/.test(fs.readFi
     var A = await p.evaluate(async function () {
       home(fx6()); var C = camLista276(), r = {};
       r.grupos = C.L.map(function (id) { return [id.replace(/\|\d+$/, ""), C.g[id]]; });
-      r.boton = document.getElementById("bcam274").querySelector("small").textContent;
+      r.boton = document.getElementById("bcam274").getAttribute("aria-label");   /* build 277: ícono chico junto al ⋯ */
       window.__nivel276 = 0.2;
       document.getElementById("bcam274").click(); await espera(30);
       r.resumen = dichos()[0];
@@ -112,7 +112,7 @@ eq("sw.js con versión build 276", /var SW_VERSION = 'build 276'/.test(fs.readFi
       return r; });
     eq("orden: decisiones · llamadas de mañana · tareas nuevas · ficha Falta · mensajes por acomodar", A.grupos,
       [["tDEC", "dec"], ["tLLA", "lla"], ["tNUE", "nue"], ["tFAL", "fal"], ["msg:tPOR", "msg"], ["msg:tVES", "msg"]]);
-    eq("botón con el total", A.boton, "6 pendientes en voz, sin ver la pantalla");
+    eq("botón con el total", A.boton, "Caminata: 6 pendientes en voz");
     eq("frase de arranque con los 5 grupos", A.resumen, "Tienes 1 decisión, 1 llamada para mañana, 1 tarea nueva, 1 con datos que faltan y 2 mensajes por acomodar. Empezamos.");
     eq("mientras habla, el micrófono de interrupción está abierto", A.barge, true);
 
