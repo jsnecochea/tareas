@@ -18977,7 +18977,7 @@ function camFin276(){
      devuelve accion "deshacer". Deshace la última acción (CAM.ult, foto de las tareas antes) y lo dice: "Va, lo deshice."
    3 REPÍTEME = lo último que dijo (la frase anterior y la que iba). REGRESA UN POCO / más atrás / retrocede un poco = vuelve a leer desde
      dos frases antes. "Repite" (sin -me) sigue siendo la tarea completa otra vez.
-   4 HOME: sin la barra grande de Caminata; un ícono chico de persona caminando (línea, estilo SF Symbols) junto al ⋯ de arriba.
+   4 HOME: sin la barra grande de Caminata; un ícono chico de persona caminando (silueta sólida en zancada, dibujo propio) junto al ⋯ de arriba.
      El audífono que estaba en el título de la primera sección (abría lo mismo) se quita. */
 var CAM_CONF_PIDE=/(^|\s)(confirmame|confirmamelo|confirmamela|me confirmas|confirma (antes|primero)|confirmame (antes|primero)|antes de hacerlo|antes de que lo hagas|(me )?entendiste( bien)?|dime (si|que|lo que) (me )?entendiste|dime que vas a hacer|repiteme (lo )?que (vas a hacer|entendiste|te dije)|que vas a hacer|no lo hagas todavia|espera mi (ok|visto bueno|autorizacion)|pideme (confirmacion|autorizacion))(\s|$)/;
 var CAM_CONF_SI=/^((si |va |sale |ok |okey )?(si|va|sale|dale|ok|okey|orale|andale|claro|de acuerdo|perfecto|esta bien|hazlo|hazle|adelante|procede|correcto|asi es|exacto|eso|eso es|confirmo|confirmado|afirmativo|si hazlo|si adelante|si correcto|si eso|si asi|si eso es|si esta bien|sale hazlo|va hazlo|si si|si por favor|si va|si dale|va que va|dale pues|hazlo ya|si procede|asi|tal cual))$/;
@@ -19271,7 +19271,8 @@ function bindUndo278(t){
 }
 
 /* ---------- 4 · el ícono chico del home (junto al ⋯) ---------- */
-function _icoCamina277(){ return '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="13.5" cy="4.2" r="1.9"/><path d="M10.6 21l1.6-6.2-2.4-2.4 1.3-4.6 3.2 2.8 3.1 1.1"/><path d="M10.9 7.9l-3.1 1.5-1.1 3.4"/><path d="M12.2 14.8l3 2.1 1 4.1"/></svg>'; }
+/* build 277b (Salvador 7-oct): silueta SÓLIDA en zancada (tipo peatón), trazo propio — no es copia de ningún ícono de terceros */
+function _icoCamina277(){ return '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="13.6" cy="3.2" r="2.3" fill="currentColor" stroke="none"/><path d="M12.9 7.4L11.5 12.9" stroke-width="3.9"/><path d="M12.2 8.5L9.2 10 7.7 12.9M13.1 8.7L15.3 11 17.9 9.9M11.7 13.3L15.3 15.6 16.6 20.7M11.1 13.6L9.6 17.4 5.6 19.9" stroke-width="2.6"/></svg>'; }
 function vCamIco277(){
   if(!window.SpeechSynthesisUtterance && !window.speechSynthesis) return "";
   var n=0; try{ n=camLista274().length; }catch(e){}
