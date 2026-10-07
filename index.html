@@ -888,6 +888,7 @@ html.cam274on,html.cam274on body{overflow:hidden}
 .c274mid{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;min-height:0}
 .c274o{position:relative;width:150px;height:150px;border-radius:50%;background:#1c1c1e;display:grid;place-items:center}
 .c274o i{position:absolute;inset:0;border-radius:50%;border:3px solid transparent}
+.c274o.piensa{background:#5e5ce6}.c274o.piensa i{border-color:currentColor;color:rgba(255,255,255,.35);animation:c274pul 1.2s ease-out infinite}   /* build 275: pensando */
 .c274o.habla{background:#0a84ff}.c274o.habla.vb{background:#5e5ce6}.c274o.oye{background:#30d158}.c274o.pausa{background:#3a3a3c}
 .c274o.habla i,.c274o.oye i{border-color:currentColor;color:rgba(255,255,255,.55);animation:c274pul 1.8s ease-out infinite}
 .c274o.habla i:nth-child(2),.c274o.oye i:nth-child(2){animation-delay:.6s}.c274o.habla i:nth-child(3),.c274o.oye i:nth-child(3){animation-delay:1.2s}
@@ -1613,7 +1614,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 274 · modo Caminata: botón grande en el home, recorre decisiones, llamadas de hoy y vencidas/hoy a dos voces tipo podcast; escucha sin cortar (el silencio no envía: pregunta ¿Terminaste o sigues?; «terminé» envía), comandos repite/más detalle/siguiente/atrás/pausa/salir, la respuesta va al hilo · build 273 · la tarea en 4 capas: En qué vamos, Decide tú, Lo que sabemos y Plática (lo archivado plegado); la ficha Falta siempre abre el cuestionario · build 272 · home minimalista: línea de estado con contadores, secciones vacías fuera, preguntas de una tarea en un renglón, lo que espera a un tercero pasa a Las lleva Claude, Ya está con la siguiente subiendo · build 271 · mensajes por acomodar en su propia pestañita plegable (con contador, se recuerda), entre Nuevas tareas para acomodar y Te pregunta Doit · build 270 · home reacomodado: Te pregunta Doit, Vencidas mías y Hoy mías siempre a la vista; abajo Las lleva Claude con semáforo y Mías futuras · build 269 · a Salvador solo le suenan 5 tipos de push (acuerdo, llamada, atorado, IA atorada, recordatorio) · build 268 · notificaciones con tag (sin repetidas) y cerradas al resolver · build 267 · sin bucle de preguntas (Ninguno cierra), sin repreguntas automáticas a terceros · build 266 · toda pregunta de Claude en texto (sin fichas de botones), la respuesta dictada la cierra · build 265 · chip Falta rojo y ancho, micrófono sin autoarranque · build 264 · expedientes: Ya está los deja dormidos, despiertan solos, cerradas y dormidas siempre en búsqueda · recordatorios una vez, siguiente en orden, Hoy solo lo de Salvador, esperas con fecha, falta info coherente, dictado oculto, WhatsApp sin contacto basura";
+var VERSION_APP = "build 275 · caminata como plática: decisiones, llamadas de mañana con su guion y tareas nuevas; sin menús (lo que dices lo entiende la IA), sin reconfirmar, «no, eso no» deshace, sonido de pensando, «va»/«sí» se envían al instante · build 274 · modo Caminata: botón grande en el home, recorre decisiones, llamadas de hoy y vencidas/hoy a dos voces tipo podcast; escucha sin cortar (el silencio no envía: pregunta ¿Terminaste o sigues?; «terminé» envía), comandos repite/más detalle/siguiente/atrás/pausa/salir, la respuesta va al hilo · build 273 · la tarea en 4 capas: En qué vamos, Decide tú, Lo que sabemos y Plática (lo archivado plegado); la ficha Falta siempre abre el cuestionario · build 272 · home minimalista: línea de estado con contadores, secciones vacías fuera, preguntas de una tarea en un renglón, lo que espera a un tercero pasa a Las lleva Claude, Ya está con la siguiente subiendo · build 271 · mensajes por acomodar en su propia pestañita plegable (con contador, se recuerda), entre Nuevas tareas para acomodar y Te pregunta Doit · build 270 · home reacomodado: Te pregunta Doit, Vencidas mías y Hoy mías siempre a la vista; abajo Las lleva Claude con semáforo y Mías futuras · build 269 · a Salvador solo le suenan 5 tipos de push (acuerdo, llamada, atorado, IA atorada, recordatorio) · build 268 · notificaciones con tag (sin repetidas) y cerradas al resolver · build 267 · sin bucle de preguntas (Ninguno cierra), sin repreguntas automáticas a terceros · build 266 · toda pregunta de Claude en texto (sin fichas de botones), la respuesta dictada la cierra · build 265 · chip Falta rojo y ancho, micrófono sin autoarranque · build 264 · expedientes: Ya está los deja dormidos, despiertan solos, cerradas y dormidas siempre en búsqueda · recordatorios una vez, siguiente en orden, Hoy solo lo de Salvador, esperas con fecha, falta info coherente, dictado oculto, WhatsApp sin contacto basura";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -17948,7 +17949,8 @@ function esLlamada274(t){
   return false;
 }
 /* el orden de la caminata: decisiones · llamadas de hoy · vencidas y de hoy */
-function camLista274(){
+function camLista274(){ return camLista275().L; }   /* build 275: decisiones · llamadas de MAÑANA · tareas nuevas de Acomodo */
+function camLista274v(){
   var H=window.__H274||{preg:[], venc:[], hoy:[]}, out=[], ya={}, h=hoy();
   var pon=function(t){ if(t && !ya[t.id] && _camVivo(t)){ ya[t.id]=1; out.push(t.id); } };
   (tareas||[]).forEach(function(t){ var d=null; try{ d=decision273(t); }catch(e){} var ds=false; try{ ds=esDecisionSal(t); }catch(e){} if(d || ds) pon(t); });
@@ -18098,18 +18100,20 @@ function camRelojSilencio(){
     var todo=(CAM.buf+" "+pp).trim();
     var c=camComando274(todo); if(c){ CAM.buf=""; return camHaz274(c); }   /* un comando dicho solo, aunque no llegue como final */
     CAM.buf=todo;
+    if(CAM.buf && CAM_CORTO.test(_camNv(CAM.buf))) return camEnvia274();   /* build 275: corto y claro = se envía ya */
     if(CAM.buf){   /* 2.5 s callado con algo dicho: NO se envía, se pregunta bajito */
       camCallaMic(); CAM.modo="check";
       camDi274([{v:"A", t:"¿Terminaste o sigues?", bajito:true}], function(){ camEscucha274("check"); });
     }
-  }, CAM.modo==="check"?1200:CAM_SILENCIO);
+  }, CAM.modo==="check"?1200:((CAM.modo==="resp" && !CAM.buf && CAM_CORTO.test(_camNv(CAM.par)))?700:CAM_SILENCIO));   /* build 275: "va"/"sí" a medias no espera 2.5 s */
 }
 var CAM_CMD=[
   ["repite", /^(repite|repitelo|repitela|repitemelo|repitemela|otra vez|de nuevo|no te entendi|no entendi)$/],
   ["detalle", /^((dame |quiero )?mas detalles?|detalles?|cuentame mas|explicame mas)$/],
   ["despues", /^((la |lo )?(dejamos|dejo|deja|dejala|dejalo) para (despues|luego|mas tarde)|para (despues|luego)|despues|luego)$/],
   ["siguiente", /^(siguiente|la siguiente|sigue la otra|otra|pasa|pasala|salta|saltala|adelante|next)$/],
-  ["atras", /^(atras|anterior|la anterior|regresa|regresate|vuelve a la anterior)$/],
+  ["deshaz", /^(no eso no|eso no|no no eso no|no no|regresa|regresate|deshaz|deshazlo|deshacer|me equivoque|no era eso)$/],   /* build 275: deshace la última acción (si no hay, es atrás) */
+  ["atras", /^(atras|anterior|la anterior|vuelve a la anterior)$/],
   ["pausa", /^(pausa|pausala|ponle pausa|pon pausa|deten|detente|alto)$/],
   ["salir", /^(salir|sal|salte|termina la caminata|terminar caminata|cierra|cierra la caminata|adios|ya no|basta)$/]
 ];
@@ -18130,8 +18134,9 @@ function camOye274(txt, esFinal){
   var todo=(CAM.buf+" "+txt).trim();
   var cmd=camComando274(todo.replace(CAM_FIN,"").trim()) || (!CAM.buf?camComando274(txt):"");
   if(cmd){ CAM.buf=""; return camHaz274(cmd); }
-  CAM.buf=todo; camPinta274();
+  var _b0=!CAM.buf; CAM.buf=todo; camPinta274();
   var n=_camNv(todo);
+  if(_b0 && CAM_CORTO.test(n)) return camEnvia274();   /* build 275: "va", "sí", "dale"… dicho solo = se envía al instante */
   if(CAM_FIN.test(n)) return camEnvia274();
 }
 function camQuitaFin(s){ var w=String(s||"").replace(/\s+/g," ").trim().split(" "), k=w.length;
@@ -18140,8 +18145,7 @@ function camEnvia274(){
   var v=camQuitaFin((CAM.buf+" "+CAM.par).trim()); CAM.buf=""; CAM.par=""; camCallaMic();
   if(!v){ return camDi274([{v:"A", t:"No alcancé a oír nada. ¿Me lo repites?"}], function(){ camEscucha274("resp"); }); }
   var t=camTarea274(); if(!t) return camSiguiente274(1);
-  try{ camGuarda274(t, v); }catch(e){ console.warn("caminata guarda", e); }
-  camDi274([{v:"A", t:"Anotado."}], function(){ camSiguiente274(1); });
+  camEntiende275(t, v);   /* build 275: lo que dijo va a la IA (sin palabras clave), se ejecuta sin reconfirmar */
 }
 /* la respuesta dictada va al hilo como mensaje de Salvador (nota para Claude, la procesa la Mac) */
 function camGuarda274(t, v){
@@ -18161,8 +18165,9 @@ function camHaz274(c){
   camCallaMic(); CAM.buf=""; CAM.par="";
   if(c==="repite") return camPresenta274(true);
   if(c==="detalle"){ var t=camTarea274(); if(!t) return camSiguiente274(1);
-    return camDi274(camDetalle274(t).concat([{v:"A", t:"¿Lo hacemos, quieres más detalle o la dejamos para después?"}]), function(){ camEscucha274("resp"); }); }
-  if(c==="despues") return camDi274([{v:"A", t:"Va, la dejamos para después."}], function(){ camSiguiente274(1); });
+    return camDi274(camDetalle275(t).concat([{v:"A", t:camVar275("cierra", ["¿Qué hacemos?","¿Cómo la ves?","Tú dime."])}]), function(){ camEscucha274("resp"); }); }
+  if(c==="despues") return camDi274([{v:"A", t:camVar275("despues", ["Va, la dejamos para después.","Sale, luego la vemos.","Va, para después."])}], function(){ camSiguiente274(1); });
+  if(c==="deshaz") return CAM.ult ? camDeshaz275() : camSiguiente274(-1);   /* build 275 */
   if(c==="siguiente") return camSiguiente274(1);
   if(c==="atras") return camSiguiente274(-1);
   if(c==="pausa") return camPausa274(true);
@@ -18170,40 +18175,44 @@ function camHaz274(c){
 }
 function camPresenta274(repite){
   var t=camTarea274(); if(!t) return camSiguiente274(1);
-  CAM.limpia=true; CAM.vacioDicho=false; camPinta274();
-  var G=camGuion274(t, CAM.i, CAM.L.length);
-  if(!CAM.explicado){ CAM.explicado=true; G.push({v:"A", t:"Cuando acabes de contestar, di: terminé."}); }
-  G.push({v:"A", t:"¿Lo hacemos, quieres más detalle o la dejamos para después?"});
-  camDi274(G, function(){ camEscucha274("resp"); });
+  CAM.limpia=true; CAM.vacioDicho=false; CAM.aclara=null; camPinta274();
+  camGuion275(t, !!repite, function(G){   /* build 275: por tipo (decisión · llamada con su guion · tarea nueva), sin menú */
+    if(camTarea274()!==t || !CAM.on) return;
+    if(!CAM.explicado){ CAM.explicado=true; G.push({v:"A", t:"Contéstame como quieras. Cuando acabes, di terminé."}); }
+    G.push({v:"A", t:camVar275("cierra"+(CAM.g[t.id]||""), CAM.g[t.id]==="nue"?["¿Qué hacemos con ella?","¿Qué hacemos?","¿Cómo la ves?"]:["¿Qué hacemos?","¿Cómo la ves?","¿Qué decides?"])});
+    camDi274(G, function(){ camEscucha274("resp"); });
+  });
 }
 function camSiguiente274(dir){
   camCallaMic();
   var j=CAM.i+dir;
-  while(j>=0 && j<CAM.L.length && !_camVivo((tareas||[]).filter(function(x){ return x.id===CAM.L[j]; })[0])) j+=dir>=0?1:-1;
+  while(j>=0 && j<CAM.L.length && !camSigue275(CAM.L[j])) j+=dir>=0?1:-1;   /* build 275: las tareas nuevas (propuestas) también cuentan */
   if(j<0){ CAM.i=0; return camDi274([{v:"A", t:"Esta es la primera."}], function(){ camPresenta274(); }); }
-  if(j>=CAM.L.length){ var n=CAM.anotadas||0; return camDi274([{v:"A", t:"Terminamos la caminata."+(n?" Anoté "+n+(n===1?" respuesta.":" respuestas."):"")}], function(){ camSal274(false); }); }
+  if(j>=CAM.L.length){ var n=CAM.hechas275||0; return camDi274([{v:"A", t:camVar275("fin", ["Eso es todo.","Listo, terminamos.","Ya quedó todo."])+(n?" Resolvimos "+n+".":"")}], function(){ camSal274(false); }); }
   CAM.i=j; camPresenta274();
 }
 function camPausa274(dicho){
   if(!CAM.on) return;
   if(CAM.pausa){ CAM.pausa=false; camPinta274(); return camPresenta274(); }
-  CAM.pausa=true; camCallaMic(); CAM.tok++; try{ speechSynthesis.cancel(); }catch(e){} CAM.fase=""; camPinta274();
+  CAM.pausa=true; camCallaMic(); CAM.tok++; camPiensa275(false); try{ speechSynthesis.cancel(); }catch(e){} CAM.fase=""; camPinta274();
   if(dicho){ try{ var u=new SpeechSynthesisUtterance("En pausa."); u.lang="es-MX"; var V=camVoces274(); if(V.A) u.voice=V.A; speechSynthesis.speak(u); }catch(e){} }
 }
 function camEmpieza274(desdeId){
   if(CAM.on) return;
   try{ if(typeof leePara==="function" && (LEE.act||LEE.charla)) leePara(); }catch(e){}
   if(!window.speechSynthesis){ toast("Este teléfono no lee en voz alta"); return; }
-  var L=camLista274();
-  if(desdeId){ L=L.filter(function(x){ return x!==desdeId; }); L.unshift(desdeId); }
-  CAM.on=true; CAM.L=L; CAM.i=0; CAM.pausa=false; CAM.explicado=!!window.__camExplicado274; CAM.buf=""; CAM.par=""; CAM.anotadas=0; CAM.sinMic=false;
+  var C=camLista275(), L=C.L;
+  if(desdeId){ L=L.filter(function(x){ return x!==desdeId; }); L.unshift(desdeId); if(!C.g[desdeId]){ C.g[desdeId]="dec"; C.n.dec++; } }
+  CAM.on=true; CAM.L=L; CAM.g=C.g; CAM.i=0; CAM.pausa=false; CAM.explicado=!!window.__camExplicado274; CAM.buf=""; CAM.par=""; CAM.anotadas=0; CAM.hechas275=0; CAM.ult=null; CAM.aclara=null; CAM.sinMic=false; CAM.gl=CAM.gl||{};
   window.__camExplicado274=true;   /* "di terminé" se explica una vez por sesión de la app */
+  camAudio275();   /* build 275: el sonido de "pensando" se desbloquea con este toque (iOS) */
+  L.forEach(function(id){ if(C.g[id]==="lla"){ var t=tareaId240(id); if(t) camPideGuion275(t); } });   /* los guiones se piden desde ya, en paralelo */
   camAbreUI274(); camWake274(true);
   if(!L.length) return camDi274([{v:"A", t:"No tienes pendientes para la caminata. Buen día."}], function(){ camSal274(false); });
-  camDi274([{v:"A", t:"Caminata. Son "+L.length+(L.length===1?" tarea.":" tareas.")}], function(){ camPresenta274(); });
+  camDi274([{v:"A", t:camResumen275(C.n)}], function(){ camPresenta274(); });
 }
 function camSal274(dicho){
-  camCallaMic(); CAM.tok++; clearTimeout(CAM.wd);
+  camCallaMic(); CAM.tok++; clearTimeout(CAM.wd); camPiensa275(false);
   try{ speechSynthesis.cancel(); }catch(e){}
   if(dicho){ try{ var u=new SpeechSynthesisUtterance("Listo, salimos de la caminata."); u.lang="es-MX"; var V=camVoces274(); if(V.A) u.voice=V.A; speechSynthesis.speak(u); }catch(e){} }
   CAM.on=false; CAM.pausa=false; CAM.fase="";
@@ -18251,13 +18260,246 @@ function camPinta274(){
   var s=function(id, x){ var e=document.getElementById(id); if(e && e.textContent!==x) e.textContent=x; };
   s("c274n", n?("Caminata · "+Math.min(CAM.i+1,n)+" de "+n):"Caminata");
   s("c274tit", t?(t.nombre||"Sin nombre"):"");
-  var est=CAM.pausa?"En pausa":(CAM.fase==="hablando"?(CAM.voz==="B"?"Analista":"Doit"):(CAM.fase==="escuchando"?(CAM.sinMic?"Sin micrófono: usa los botones":(CAM.modo==="check"?"¿Terminaste o sigues?":"Te escucho · di «terminé» al acabar")):""));
+  var est=CAM.pausa?"En pausa":(CAM.fase==="pensando"?"Pensando…":CAM.fase==="hablando"?(CAM.voz==="B"?"Analista":"Doit"):(CAM.fase==="escuchando"?(CAM.sinMic?"Sin micrófono: usa los botones":(CAM.modo==="check"?"¿Terminaste o sigues?":"Te escucho · di «terminé» al acabar")):""));
   s("c274st", est);
   s("c274oy", CAM.fase==="escuchando"?camCorta((CAM.buf+" "+CAM.par).trim(), 160):"");
-  var c=document.getElementById("c274o"); if(c) c.className="c274o"+(CAM.pausa?" pausa":(CAM.fase==="hablando"?" habla"+(CAM.voz==="B"?" vb":""):(CAM.fase==="escuchando"?" oye":"")));
+  var c=document.getElementById("c274o"); if(c) c.className="c274o"+(CAM.pausa?" pausa":(CAM.fase==="pensando"?" piensa":CAM.fase==="hablando"?" habla"+(CAM.voz==="B"?" vb":""):(CAM.fase==="escuchando"?" oye":"")));
   s("c274p", CAM.pausa?"Seguir":"Pausa");
 }
 function bindCam274(){ var b=document.getElementById("bcam274"); if(b) b.onclick=function(){ camEmpieza274(); }; }
+
+/* ===================== build 275 (Salvador 7-oct): CAMINATA COMO PLÁTICA CON UN ASISTENTE =====================
+   Sobre el 274. Que se sienta como platicar con un asistente real, no como VoiceOver.
+   1 ORDEN: (1) lo del home que requiere su decisión (decisiones y "Te pregunta Doit") · (2) llamadas de MAÑANA, cada una con su
+     guion ("IA: Guion de llamada", se pide a la IA al arrancar, en paralelo, y queda en el hilo) · (3) tareas NUEVAS de Acomodo.
+     Al empezar, una sola frase: "Tienes 4 decisiones, 3 llamadas para mañana y 2 tareas nuevas. Empezamos."
+   2 NADA DE MENÚS: se plantea el tema y la recomendación y se pregunta abierto ("¿Qué hacemos?"). Lo que él diga, como lo diga,
+     va a la IA (sin palabras clave). VÍA: el mismo proxy del servidor (claude.php vía preguntaAClaude) que usa el composer "para
+     Claude", pero en modo "rapido" (no "pesado") y sin pasar por la Mac: es la vía más rápida que hay. Se pide un JSON corto
+     {accion: aprobar|rechazar|detalle|despues|vincular|eliminar|dato|instruccion|aclarar, destino, texto_para_tarea, respuesta_hablada}.
+     Mientras responde suena un "pensando" suave (WebAudio), nada de silencio. Si la IA no contesta en 12 s, NO se pierde:
+     queda anotado en la tarea como nota para Claude (la Mac lo procesa) y se dice.
+   3 SIN RECONFIRMAR: se ejecuta y se confirma en 3-4 palabras ("Listo, va con Rubén.") y sigue. Solo si de verdad no entendió,
+     UNA pregunta concreta (accion "aclarar"). "No, eso no" / "regrésate" deshace la última acción y vuelve a esa tarea.
+   4 Tono de amigo: frases cortas y variadas; las dos voces del 274.
+   5 Escucha del 274 intacta; además "va", "sí", "dale"… dichos solos se envían al instante. */
+var CAM_IA_MS=12000, CAM_GUION_ESPERA=6000;
+CAM.g={}; CAM.gl={};
+var CAM_CORTO=/^(va|si|sale|dale|ok|okey|orale|andale|claro|de acuerdo|perfecto|esta bien|va que va|si va|si dale|si si|hazlo|adelante con eso)$/;
+function _camManiana(){ var d=new Date(hoy()+"T12:00:00"); d.setDate(d.getDate()+1); return iso(d); }
+/* frases variadas: no repite la última de cada tipo */
+function camVar275(k, L){ CAM.uv=CAM.uv||{}; var i=Math.floor(Math.random()*L.length); if(L.length>1 && L[i]===CAM.uv[k]) i=(i+1)%L.length; CAM.uv[k]=L[i]; return L[i]; }
+/* la lista: {L:[ids], g:{id:"dec"|"lla"|"nue"}, n:{dec, lla, nue}} */
+function camLista275(){
+  var H=window.__H274||{preg:[], venc:[], hoy:[]}, ya={}, g={}, G={dec:[], lla:[], nue:[]}, m=_camManiana();
+  var pon=function(k, t){ if(!t || ya[t.id]) return; var ok=false; try{ ok=(k==="nue")?esPropuesta256(t):_camVivo(t); }catch(e){} if(!ok) return; ya[t.id]=1; g[t.id]=k; G[k].push(t.id); };
+  (tareas||[]).forEach(function(t){ var d=null, ds=false; try{ d=decision273(t); }catch(e){} try{ ds=esDecisionSal(t); }catch(e){} if(d || ds) pon("dec", t); });
+  (H.preg||[]).forEach(function(x){ pon("dec", x && x.t); });
+  (tareas||[]).forEach(function(t){ if(t && t.f_vigente===m && (t.duenio===yo || !t.duenio) && esLlamada274(t)) pon("lla", t); });
+  var P=[]; try{ P=propuestas256(); }catch(e){} P.forEach(function(t){ pon("nue", t); });
+  return {L:G.dec.concat(G.lla, G.nue), g:g, n:{dec:G.dec.length, lla:G.lla.length, nue:G.nue.length}};
+}
+function camResumen275(n){
+  var P=[];
+  if(n.dec) P.push(n.dec+(n.dec===1?" decisión":" decisiones"));
+  if(n.lla) P.push(n.lla+(n.lla===1?" llamada":" llamadas")+" para mañana");
+  if(n.nue) P.push(n.nue+(n.nue===1?" tarea nueva":" tareas nuevas"));
+  return P.length?"Tienes "+juntaY(P)+". Empezamos.":"No tienes pendientes para la caminata.";
+}
+/* ---------- el guion de cada tarea ---------- */
+function camGuion275(t, repite, cb){
+  var k=CAM.g[t.id]||"dec", G=[], pos=CAM.i, n=CAM.L.length, nom=camNombre(t), prevK=pos>0?CAM.g[CAM.L[pos-1]]:"";
+  if(repite) G.push({v:"A", t:camVar275("otra", ["Otra vez: ","De nuevo: "])+nom+"."});
+  else {
+    if(pos>0 && k!==prevK) G.push({v:"A", t:k==="lla"?camVar275("gl", ["Ahora las llamadas de mañana.","Vamos con las llamadas de mañana."]):(k==="nue"?camVar275("gn", ["Y ahora las tareas nuevas.","Ahora, las tareas nuevas."]):"Ahora lo que te toca decidir.")});
+    var ab=(k==="lla")?["Llamada: ","Le toca a: ","Sigue la llamada: "]:(k==="nue")?["Tarea nueva: ","Llegó esta: ","Nueva: "]:["Sigue: ","Ahora: ","Otra: "];
+    G.push({v:"A", t:(pos===0 && k!=="lla" && k!=="nue"?"Primera: ":(pos===n-1 && n>1?"La última: ":camVar275("ab"+k, ab)))+nom+"."});
+  }
+  if(k==="nue"){ camOrigen275(t).forEach(function(x){ G.push(x); }); return cb(G); }
+  if(k==="lla"){
+    return camEsperaGuion275(t, function(txt){
+      var F=txt?camFrases(txt, 4):[];
+      if(F.length){ G.push({v:"B", t:"Guion de llamada."}); F.forEach(function(x){ G.push({v:"B", t:camPunto(x)}); }); }
+      else { G.push({v:"B", t:"No tengo guion todavía."}); camGuion274(t, 0, 1).slice(1, 3).forEach(function(x){ G.push(x); }); }
+      cb(G); });
+  }
+  camGuion274(t, 0, 1).slice(1).forEach(function(x){ G.push(x); });
+  cb(G);
+}
+/* tarea nueva: de dónde llegó y por qué se propuso (solo con lo que hay) */
+function camOrigen275(t){
+  var G=[], og=null; try{ og=origenProp256(t); }catch(e){} if(!og) return [{v:"B", t:"No tengo más contexto de esta tarea."}];
+  G.push({v:"B", t:og.canal==="Dictado"?"La dictaste tú.":camPunto("Llegó por "+og.canal+(og.quien && og.quien!=="la IA"?" de "+limpiaHabla(og.quien):""))});
+  var f=(og.frase||[])[0]; if(f){ var ff=camFrases(f, 1)[0]; if(ff) G.push({v:"B", t:camPunto("Dice: "+ff)}); }
+  if(og.porque && !/^La IA detectó un pendiente/.test(og.porque)){ var pq=camFrases(og.porque, 1)[0]; if(pq) G.push({v:"B", t:camPunto(pq)}); }
+  return G;
+}
+function camDetalle275(t){
+  if((CAM.g[t.id]||"")==="nue") return camOrigen275(t).concat(camDetalle274(t).filter(function(x){ return !/^No tengo más detalle/.test(x.t); }));
+  return camDetalle274(t);
+}
+/* ---------- guion de llamada: del hilo o del campo; si no hay, lo escribe la IA y queda en el hilo como "IA: Guion de llamada: …" ---------- */
+function camGuionHay275(t){
+  var g=t && t.guion_llamada; if(g && typeof g==="object") g=g.t; if(g && String(g).trim()) return String(g).trim();
+  var ms=(t && t.msgs)||[]; for(var i=ms.length-1;i>=0;i--){ var x=ms[i]; var m=x && String(x.t||"").match(/^\s*(?:📝\s*)?(?:Nota\s+)?IA:\s*Guion de llamada:\s*([\s\S]+)$/i); if(m) return m[1].trim(); }
+  return "";
+}
+function camDatos275(t){
+  var L=[];
+  var R=(t.resumen && typeof t.resumen==="object")?t.resumen:{}; if(R.texto) L.push("RESUMEN: "+String(R.texto).slice(0,600));
+  var cx=""; try{ cx=contextoDe(t); }catch(e){} if(cx) L.push("CONTEXTO: "+String(cx).slice(0,600));
+  try{ var v=vamos273(t); if(v && v.tx) L.push("EN QUÉ VAMOS: "+v.tx+(v.quien?" ("+v.quien+")":"")); }catch(e){}
+  try{ var S=sabemos273(t); if(S.length) L.push("LO QUE SABEMOS: "+S.slice(0,6).map(function(x){ return x.t; }).join(" | ")); }catch(e){}
+  var ms=(t.msgs||[]).filter(function(x){ return x && String(x.t||"").trim() && !x.oculto && !x.eliminado; }).slice(-6);
+  if(ms.length) L.push("ÚLTIMOS MENSAJES:\n"+ms.map(function(x){ return "- "+String(x.t).replace(/\s+/g," ").slice(0,220); }).join("\n"));
+  return L.join("\n");
+}
+function camPideGuion275(t){
+  CAM.gl=CAM.gl||{}; var hay=camGuionHay275(t); if(hay){ CAM.gl[t.id]={st:"listo", txt:hay, cbs:[]}; return; }
+  if(CAM.gl[t.id] && CAM.gl[t.id].st==="pide") return;
+  var E=CAM.gl[t.id]={st:"pide", txt:"", cbs:[]}, t0=Date.now();
+  var P="Eres Doit, el asistente de Salvador. Mañana él tiene que hacer esta llamada y va a oír el guion caminando.\n"+
+    "Escribe un GUION DE LLAMADA muy corto: 3 o 4 frases cortas, en segunda persona (para qué llama, qué decir, qué preguntar, qué dejar acordado).\n"+
+    "Usa SOLO estos datos; si falta algo, no lo inventes. Sin listas, sin markdown, sin ligas.\n"+
+    "TAREA: "+String(t.nombre||"")+"\n"+camDatos275(t)+"\n"+
+    "Contesta SOLO JSON: {\"guion\":\"...\"}";
+  var fin=function(txt){ if(E.st!=="pide") return; E.st=txt?"listo":"falla"; E.txt=txt||""; E.ms=Date.now()-t0; camLat275("guion", E.ms, !!txt);
+    if(txt){ try{ var T=tareaId240(t.id)||t; msg(T,"bi","IA: Guion de llamada: "+txt); var m=T.msgs[T.msgs.length-1]; m.nota_ia=1; m.priv=1; m.canal="priv:"+yo; m.caminata275=1;
+      T.guion_llamada={t:txt, ts:Date.now(), por:"ia"}; guarda(T); }catch(e){ console.warn("guion 275", e); } }
+    var c=E.cbs; E.cbs=[]; c.forEach(function(f){ try{ f(E.txt); }catch(e){} }); };
+  var to=setTimeout(function(){ fin(""); }, CAM_IA_MS);
+  try{ preguntaAClaude([{role:"user", content:P}], "rapido", function(txt, err){ clearTimeout(to); if(err){ console.warn("guion 275", err); return fin(""); }
+    var j=_camJSON275(txt), g=j && String(j.guion||"").replace(/\s+/g," ").trim(); fin(g && !_camCodigo(g)?g:""); }); }catch(e){ clearTimeout(to); fin(""); }
+}
+function camEsperaGuion275(t, cb){
+  CAM.gl=CAM.gl||{}; if(!CAM.gl[t.id]) camPideGuion275(t);
+  var E=CAM.gl[t.id]; if(E.st!=="pide") return cb(E.txt);
+  var tok=CAM.tok, listo=false;
+  CAM.fase="pensando"; camPinta274(); camPiensa275(true);
+  var sal=function(txt){ if(listo) return; listo=true; clearTimeout(w); camPiensa275(false); if(tok!==CAM.tok || !CAM.on) return; CAM.fase=""; cb(txt); };
+  var w=setTimeout(function(){ sal(""); }, CAM_GUION_ESPERA);
+  E.cbs.push(sal);
+}
+function _camJSON275(txt){ try{ return JSON.parse(String(txt||"").replace(/^[^{]*/,"").replace(/[^}]*$/,"")); }catch(e){ return null; } }
+/* latencias medidas (ms) de la IA en esta sesión de la app: window.__lat275 */
+function camLat275(k, ms, ok){ window.__lat275=(window.__lat275||[]).concat([{k:k, ms:ms, ok:!!ok, ts:Date.now()}]).slice(-50); try{ console.info("caminata IA "+k+": "+ms+" ms"+(ok?"":" (falló)")); }catch(e){} }
+/* ---------- el sonido de "pensando": dos notas suaves que se alternan, muy bajito ---------- */
+function camAudio275(){ try{ var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return null; if(!CAM.ac) CAM.ac=new AC(); if(CAM.ac.state==="suspended" && CAM.ac.resume) CAM.ac.resume(); return CAM.ac; }catch(e){ return null; } }
+function camPiensa275(on){
+  clearInterval(CAM.tPi); CAM.tPi=null;
+  if(!on){ CAM.pensando=false; return; }
+  CAM.pensando=true; window.__piensa275=(window.__piensa275||0)+1;
+  var ac=camAudio275(); if(!ac) return;
+  var k=0, toca=function(){ try{ var o=ac.createOscillator(), g=ac.createGain(), t0=ac.currentTime;
+    o.type="sine"; o.frequency.setValueAtTime((k++%2)?523.25:659.25, t0);
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.05, t0+0.08); g.gain.exponentialRampToValueAtTime(0.0001, t0+0.5);
+    o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0+0.55); }catch(e){} };
+  toca(); CAM.tPi=setInterval(toca, 750);
+}
+/* ---------- lo que dijo -> IA -> acción ---------- */
+function camCandidatas275(t){
+  return (tareas||[]).filter(function(x){ return x && x!==t && x.id!==t.id && !x.es_recordatorio && _camVivo(x); })
+    .sort(function(a, b){ return (b.ultimo_ts||b.tocada||0)-(a.ultimo_ts||a.tocada||0); }).slice(0, 60);
+}
+function camPrompt275(t, v){
+  var k=CAM.g[t.id]||"dec", L=[];
+  L.push("Eres Doit, el asistente de Salvador. Van caminando y él te contesta por voz: viene dictado, puede ser impreciso o traer errores de transcripción. Entiende lo que QUIERE y conviértelo en UNA acción. No busques palabras clave: entiende la intención.");
+  L.push("TIPO: "+(k==="lla"?"llamada de mañana (con su guion)":(k==="nue"?"tarea NUEVA propuesta por la IA (Acomodo): él decide si va, si se vincula a otra tarea, si se elimina o si es solo un dato":"tarea que requiere su decisión")));
+  L.push("TAREA: "+String(t.nombre||""));
+  var d=null; try{ d=decision273(t); }catch(e){}
+  if(d){ if(d.pregunta) L.push("PREGUNTA: "+d.pregunta); if(d.recomendacion) L.push("RECOMENDACIÓN: "+d.recomendacion);
+    if(d.opciones.length) L.push("OPCIONES: "+d.opciones.map(function(o){ return o.nombre+(o.precio?" ("+o.precio+")":""); }).join(" | ")); }
+  else { try{ var Q=preguntas249(t); if(Q.length && Q[0].q) L.push("PREGUNTA: "+Q[0].q); }catch(e){} if(t.pendiente_info) L.push("PENDIENTE: "+t.pendiente_info); }
+  if(k==="lla"){ var g=(CAM.gl&&CAM.gl[t.id]&&CAM.gl[t.id].txt)||camGuionHay275(t); if(g) L.push("GUION: "+g); }
+  if(k==="nue"){ try{ var og=origenProp256(t); L.push("ORIGEN: "+og.canal+" · "+og.quien+(og.frase.length?" · "+og.frase.join(" ").slice(0,300):"")); }catch(e){} }
+  var R=(t.resumen && typeof t.resumen==="object")?t.resumen:{}; if(R.texto) L.push("RESUMEN: "+String(R.texto).slice(0,400));
+  L.push("TAREAS ABIERTAS (para vincular; destino = el id):\n"+camCandidatas275(t).map(function(x){ return x.id+" · "+String(x.nombre||"").slice(0,80); }).join("\n"));
+  L.push("LO QUE DIJO: “"+v+"”");
+  L.push("ACCIONES:\n- aprobar: está de acuerdo (con la recomendación, con la tarea nueva, con el guion).\n- rechazar: no se hace / no está de acuerdo.\n- detalle: pide más información.\n- despues: la deja para después.\n- vincular: va junto con otra tarea; destino = el id de esa tarea de la lista.\n- eliminar: borrarla, no sirve.\n- dato: no es tarea, solo un dato para guardar.\n- instruccion: da una indicación, elige otra opción o pide algo concreto (\"dile a Rubén que…\", \"que sea el jueves\").\n- aclarar: SOLO si de verdad no se entiende; respuesta_hablada = UNA pregunta concreta y corta.");
+  L.push("texto_para_tarea: lo que queda anotado en la tarea, claro y completo, con su decisión (ej. \"Va con la de Dahua.\", \"Que la llamada sea el jueves a las 10.\").\nrespuesta_hablada: confirmación de 2 a 5 palabras, natural, como un amigo (ej. \"Listo, va con Rubén.\", \"Hecho, la junté.\", \"Va, queda como dato.\"). Nunca pidas confirmación ni repitas la pregunta.");
+  L.push("Contesta SOLO JSON: {\"accion\":\"...\",\"destino\":\"\",\"texto_para_tarea\":\"...\",\"respuesta_hablada\":\"...\"}");
+  return L.join("\n");
+}
+function camEntiende275(t, v){
+  if(CAM.aclara && CAM.aclara.id===t.id) v=CAM.aclara.v+". "+v;   /* contesta la aclaración: va junto con lo de antes */
+  CAM.aclara=null;
+  var tok=++CAM.tok, t0=Date.now(), listo=false;
+  try{ speechSynthesis.cancel(); }catch(e){}
+  CAM.fase="pensando"; CAM.oyeTx=v; camPinta274(); camPiensa275(true);
+  var fin=function(j, err){ if(listo) return; listo=true; clearTimeout(to); camPiensa275(false); camLat275("decide", Date.now()-t0, !!j);
+    var vivo=(tok===CAM.tok && CAM.on);
+    if(!j){   /* la IA no contestó: no se pierde, queda como nota para Claude */
+      var u=camFoto275([t]); try{ camGuarda274(t, v); }catch(e){ console.warn("caminata guarda", e); } CAM.ult={foto:u, i:CAM.L.indexOf(t.id)}; CAM.hechas275=(CAM.hechas275||0)+1;
+      try{ console.warn("caminata 275: IA sin respuesta", err); }catch(e){}
+      if(!vivo) return; CAM.fase="";
+      return camDi274([{v:"A", t:"No me contestó la IA. Lo dejé anotado para Claude."}], function(){ camSiguiente274(1); });
+    }
+    camResuelve275(t, j, v, vivo); };
+  var to=setTimeout(function(){ fin(null, "tiempo"); }, CAM_IA_MS);
+  try{ preguntaAClaude([{role:"user", content:camPrompt275(t, v)}], "rapido", function(txt, err){ if(err) return fin(null, err); var j=_camJSON275(txt); fin(j && j.accion?j:null, j?"":"sin JSON"); }); }
+  catch(e){ fin(null, e && e.message); }
+}
+var CAM_ACC=/^(aprobar|rechazar|detalle|despues|vincular|eliminar|dato|instruccion|aclarar)$/;
+function camResuelve275(t, j, v, vivo){
+  var a=_camNv(j.accion).replace(/\s+/g,""); if(!CAM_ACC.test(a)) a="instruccion";
+  var dh=String(j.respuesta_hablada||"").replace(/\s+/g," ").trim();
+  if(a==="aclarar"){ if(!vivo) return; CAM.fase=""; CAM.aclara={id:t.id, v:v};
+    return camDi274([{v:"A", t:camCorta(dh && /\?/.test(dh)?dh:"¿Me lo dices de otra forma?", 140)}], function(){ camEscucha274("resp"); }); }
+  if(a==="detalle"){ if(vivo){ CAM.fase=""; camHaz274("detalle"); } return; }
+  if(a==="despues"){ if(vivo){ CAM.fase=""; camHaz274("despues"); } return; }
+  var r=camEjecuta275(t, a, j, v);
+  if(!vivo) return; CAM.fase="";
+  if(r.falta){ CAM.aclara={id:t.id, v:v}; return camDi274([{v:"A", t:r.falta}], function(){ camEscucha274("resp"); }); }
+  var w=dh.split(" ").filter(Boolean).length, dicho=(dh && w<=8 && !/\?/.test(dh) && !_camCodigo(dh))?camPunto(dh):r.dicho;
+  camDi274([{v:"A", t:dicho}], function(){ camSiguiente274(1); });
+}
+/* foto de las tareas antes de la acción, para deshacer */
+function camFoto275(L){ var cp=function(x){ return JSON.parse(JSON.stringify(x)); };
+  return {copias:L.filter(Boolean).map(cp), p256f:L.filter(Boolean).map(function(x){ return [x.id, !!(window.__p256f||{})[x.id]]; })}; }
+function camRestaura275(F){
+  (F.copias||[]).forEach(function(c){ var x=JSON.parse(JSON.stringify(c)), vivo=tareaId240(c.id);
+    if(vivo){ Object.keys(vivo).forEach(function(k){ delete vivo[k]; }); for(var k in x) vivo[k]=x[k]; } else { vivo=x; tareas.push(x); }
+    guarda(vivo); });
+  (F.p256f||[]).forEach(function(p){ window.__p256f=window.__p256f||{}; if(p[1]) window.__p256f[p[0]]=1; else delete window.__p256f[p[0]]; });
+}
+/* a qué tarea se vincula: el id que dio la IA o, si dio un nombre, la que mejor coincide */
+function camDestino275(t, d){
+  d=String(d||"").trim(); if(!d) return null;
+  var C=camCandidatas275(t), x=C.filter(function(z){ return z.id===d; })[0]; if(x) return x;
+  var nd=_camNv(d), mejor=null, pm=0;
+  C.forEach(function(z){ var nz=_camNv(z.nombre); if(!nz) return; if(nz===nd) { mejor=z; pm=9; return; }
+    var a=nd.split(" ").filter(function(w){ return w.length>2; }), b=nz.split(" "), c=a.filter(function(w){ return b.indexOf(w)>=0; }).length, p=a.length?c/a.length:0;
+    if(nz.indexOf(nd)>=0 || nd.indexOf(nz)>=0) p=Math.max(p, 0.9);
+    if(p>pm){ pm=p; mejor=z; } });
+  return pm>=0.6?mejor:null;
+}
+function camEjecuta275(t, a, j, v){
+  var k=CAM.g[t.id]||"dec", tx=String(j.texto_para_tarea||"").replace(/\s+/g," ").trim()||v, dest=null, nue=(k==="nue"||esPropuesta256(t)), d=null; try{ d=decision273(t); }catch(e){}
+  if(a==="vincular"){ dest=camDestino275(t, j.destino); if(!dest) return {falta:"¿Con cuál tarea la junto?"}; }
+  var F=camFoto275([t, dest]), dicho="Listo.", vw={a:abierta, v:vista};
+  try{
+    if(a==="aprobar"){ if(nue){ okProp256(t); dicho=camVar275("ok", ["Listo, va.","Va, quedó creada.","Hecho."]); } else if(d){ contestaDecision273(t, tx); dicho=camVar275("ok", ["Listo.","Va, hecho.","Perfecto, quedó."]); } else { camGuarda274(t, tx); dicho=camVar275("ok", ["Listo.","Va, hecho."]); } }
+    else if(a==="rechazar"){ if(nue){ descartaProp256(t); dicho=camVar275("no", ["Va, la quité.","Listo, fuera."]); } else if(d){ contestaDecision273(t, tx); dicho=camVar275("no", ["Entendido, no va.","Va, no se hace."]); } else { camGuarda274(t, tx); dicho="Entendido."; } }
+    else if(a==="vincular"){ enlazaTareas(t.id, dest.id, "caminata"); dicho="Listo, la junté con "+camCorta(limpiaHabla(dest.nombre), 50).replace(/[.\s]+$/,"")+"."; }
+    else if(a==="eliminar"){ if(nue) descartaProp256(t); else { t.estado="cerrada"; t.cierre={tipo:"cancelado", motivo:"caminata", f:hoy()}; msg(t,"bi","Eliminada en la caminata: "+tx); guarda(t); try{ sincronizaAvisos(t); }catch(e){} }
+      dicho=camVar275("del", ["Listo, eliminada.","Hecho, la quité."]); }
+    else if(a==="dato"){ t.tipo_item="dato"; t.es_dato=true; t.tipo_elegido=true; t.autorizada=true; t.autorizada_ts=Date.now(); t.por_autorizar=false; t.falta_fecha=false; guarda(t);
+      try{ hist240("Caminata: como dato “"+String(t.nombre||"")+"”", t, null); }catch(e){} dicho=camVar275("dato", ["Va, queda como dato.","Listo, es dato."]); }
+    else { camGuarda274(t, tx); dicho=camVar275("ins", ["Anotado.","Listo, se lo paso a Claude.","Va, hecho."]); }
+  }catch(e){ console.warn("caminata 275 ejecuta", e); }
+  abierta=vw.a; vista=vw.v;   /* vincular abre la tarea destino: la caminata se queda donde estaba */
+  CAM.ult={foto:F, i:CAM.L.indexOf(t.id), a:a}; CAM.hechas275=(CAM.hechas275||0)+1;
+  return {dicho:dicho};
+}
+function camSigue275(id){ var t=tareaId240(id); if(!t) return false; try{ return (CAM.g||{})[id]==="nue"?esPropuesta256(t):_camVivo(t); }catch(e){ return false; } }
+function camDeshaz275(){
+  var u=CAM.ult; CAM.ult=null; if(!u) return camSiguiente274(-1);
+  try{ camRestaura275(u.foto); }catch(e){ console.warn("caminata 275 deshaz", e); }
+  CAM.hechas275=Math.max(0, (CAM.hechas275||1)-1);
+  if(u.i>=0) CAM.i=u.i;
+  try{ render(); }catch(e){}
+  camDi274([{v:"A", t:camVar275("undo", ["Va, lo deshice.","Listo, lo regresé.","Sale, como estaba."])}], function(){ camPresenta274(true); });
+}
 
 /* ===================== build 272 (Salvador 7-oct): HOME SÚPER MINIMALISTA =====================
    1 Línea de estado arriba del todo: "3 te preguntan · 2 vencidas · 5 hoy"; cada contador lleva con scroll suave a su sección; en cero no sale.
