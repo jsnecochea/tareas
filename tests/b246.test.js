@@ -61,7 +61,8 @@ eq("versión >= 246", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     eq("sigue la lista de acuerdos", r2.acu, 2);
     var r2b = await p.evaluate(function () { var T = JSON.parse(JSON.stringify(T246)), o = {};
       T.resumen.texto = "La Notaría 14 manda los borradores de los dos testamentos; Claude los revisa contra el reparto."; tareas = [T]; render(); solo();
-      var c = document.querySelector(".res230"); o.plegado = [!!c.querySelector("details.rsm246"), c.querySelector("summary") && c.querySelector("summary").textContent, getComputedStyle(c.querySelector(".rtx")).display];
+      var c = document.querySelector(".res230"), dd = c.closest("details.cp273r") || c.querySelector("details.rsm246");   /* build 273: el resumen completo va plegado en "Ver resumen" de En qué vamos */
+      o.plegado = [!!dd, dd && dd.querySelector("summary").textContent.toLowerCase(), getComputedStyle(c.querySelector(".rtx")).display];
       /* sin que_toca: se arma con resumen.pendientes */
       T.resumen.que_toca = ""; T.resumen.texto = ""; tareas = [T]; render(); solo(); c = document.querySelector(".res230");
       o.local = [c.firstElementChild.textContent, c.querySelector(".qtx").textContent];

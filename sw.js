@@ -4,7 +4,7 @@
 
 /* build 270: versión del service worker. Cambiar este número cambia los bytes de sw.js, y el navegador instala el SW nuevo
    (skipWaiting + clients.claim abajo) y borra los caches viejos en 'activate'. */
-var SW_VERSION = 'build 272';
+var SW_VERSION = 'build 273';
 
 self.addEventListener('install', function(e){ self.skipWaiting(); });
 
