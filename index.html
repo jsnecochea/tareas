@@ -1614,7 +1614,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 275 · caminata como plática: decisiones, llamadas de mañana con su guion y tareas nuevas; sin menús (lo que dices lo entiende la IA), sin reconfirmar, «no, eso no» deshace, sonido de pensando, «va»/«sí» se envían al instante · build 274 · modo Caminata: botón grande en el home, recorre decisiones, llamadas de hoy y vencidas/hoy a dos voces tipo podcast; escucha sin cortar (el silencio no envía: pregunta ¿Terminaste o sigues?; «terminé» envía), comandos repite/más detalle/siguiente/atrás/pausa/salir, la respuesta va al hilo · build 273 · la tarea en 4 capas: En qué vamos, Decide tú, Lo que sabemos y Plática (lo archivado plegado); la ficha Falta siempre abre el cuestionario · build 272 · home minimalista: línea de estado con contadores, secciones vacías fuera, preguntas de una tarea en un renglón, lo que espera a un tercero pasa a Las lleva Claude, Ya está con la siguiente subiendo · build 271 · mensajes por acomodar en su propia pestañita plegable (con contador, se recuerda), entre Nuevas tareas para acomodar y Te pregunta Doit · build 270 · home reacomodado: Te pregunta Doit, Vencidas mías y Hoy mías siempre a la vista; abajo Las lleva Claude con semáforo y Mías futuras · build 269 · a Salvador solo le suenan 5 tipos de push (acuerdo, llamada, atorado, IA atorada, recordatorio) · build 268 · notificaciones con tag (sin repetidas) y cerradas al resolver · build 267 · sin bucle de preguntas (Ninguno cierra), sin repreguntas automáticas a terceros · build 266 · toda pregunta de Claude en texto (sin fichas de botones), la respuesta dictada la cierra · build 265 · chip Falta rojo y ancho, micrófono sin autoarranque · build 264 · expedientes: Ya está los deja dormidos, despiertan solos, cerradas y dormidas siempre en búsqueda · recordatorios una vez, siguiente en orden, Hoy solo lo de Salvador, esperas con fecha, falta info coherente, dictado oculto, WhatsApp sin contacto basura";
+var VERSION_APP = "build 276 · caminata con interrupción: el micrófono sigue abierto mientras habla, si hablas se calla y te escucha (repíteme lo último, espera, a ver voy); no se escucha a sí misma (eco, volumen); orden completo para dejar la bandeja limpia: decisiones, llamadas de mañana, tareas nuevas con su cuestionario, fichas Falta con cuestionario y mensajes por acomodar con 2 tareas probables; al final «Bandeja limpia» o lo que quedó · build 275 · caminata como plática: decisiones, llamadas de mañana con su guion y tareas nuevas; sin menús (lo que dices lo entiende la IA), sin reconfirmar, «no, eso no» deshace, sonido de pensando, «va»/«sí» se envían al instante · build 274 · modo Caminata: botón grande en el home, recorre decisiones, llamadas de hoy y vencidas/hoy a dos voces tipo podcast; escucha sin cortar (el silencio no envía: pregunta ¿Terminaste o sigues?; «terminé» envía), comandos repite/más detalle/siguiente/atrás/pausa/salir, la respuesta va al hilo · build 273 · la tarea en 4 capas: En qué vamos, Decide tú, Lo que sabemos y Plática (lo archivado plegado); la ficha Falta siempre abre el cuestionario · build 272 · home minimalista: línea de estado con contadores, secciones vacías fuera, preguntas de una tarea en un renglón, lo que espera a un tercero pasa a Las lleva Claude, Ya está con la siguiente subiendo · build 271 · mensajes por acomodar en su propia pestañita plegable (con contador, se recuerda), entre Nuevas tareas para acomodar y Te pregunta Doit · build 270 · home reacomodado: Te pregunta Doit, Vencidas mías y Hoy mías siempre a la vista; abajo Las lleva Claude con semáforo y Mías futuras · build 269 · a Salvador solo le suenan 5 tipos de push (acuerdo, llamada, atorado, IA atorada, recordatorio) · build 268 · notificaciones con tag (sin repetidas) y cerradas al resolver · build 267 · sin bucle de preguntas (Ninguno cierra), sin repreguntas automáticas a terceros · build 266 · toda pregunta de Claude en texto (sin fichas de botones), la respuesta dictada la cierra · build 265 · chip Falta rojo y ancho, micrófono sin autoarranque · build 264 · expedientes: Ya está los deja dormidos, despiertan solos, cerradas y dormidas siempre en búsqueda · recordatorios una vez, siguiente en orden, Hoy solo lo de Salvador, esperas con fecha, falta info coherente, dictado oculto, WhatsApp sin contacto basura";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -17949,7 +17949,7 @@ function esLlamada274(t){
   return false;
 }
 /* el orden de la caminata: decisiones · llamadas de hoy · vencidas y de hoy */
-function camLista274(){ return camLista275().L; }   /* build 275: decisiones · llamadas de MAÑANA · tareas nuevas de Acomodo */
+function camLista274(){ return camLista276().L; }   /* build 276: + ficha Falta · mensajes por acomodar */   /* build 275: decisiones · llamadas de MAÑANA · tareas nuevas de Acomodo */
 function camLista274v(){
   var H=window.__H274||{preg:[], venc:[], hoy:[]}, out=[], ya={}, h=hoy();
   var pon=function(t){ if(t && !ya[t.id] && _camVivo(t)){ ya[t.id]=1; out.push(t.id); } };
@@ -18036,9 +18036,11 @@ function camDi274(G, done){
   var tok=++CAM.tok, k=0, V=camVoces274();
   CAM.fase="hablando"; camPinta274();
   try{ if(speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel(); }catch(e){}
+  camBargeAbre276(tok);   /* build 276: el micrófono sigue abierto mientras habla (interrupción) */
   var uno=function(){
     if(tok!==CAM.tok) return;
-    if(k>=G.length){ CAM.fase=""; camPinta274(); if(done) done(); return; }
+    if(k>=G.length){ camBargeCierra276(); camHablo276(); CAM.fase=""; camPinta274(); if(done) done(); return; }
+    if(!G.aux) CAM.rest={G:G, k:k, done:done};   /* build 276: dónde va (para "repíteme lo último" y "sigue" después de "espera") */
     var g=G[k++], u=null, listo=false;
     var sig=function(){ if(listo) return; listo=true; clearTimeout(CAM.wd); if(tok===CAM.tok) setTimeout(uno, 120); };
     try{ u=new SpeechSynthesisUtterance(g.t); }catch(e){ return sig(); }
@@ -18046,8 +18048,10 @@ function camDi274(G, done){
     if(g.v==="A"){ u.voice=V.A||null; u.lang=(V.A&&V.A.lang)||"es-MX"; u.pitch=V.distintas?1.05:1.25; u.rate=rate*1.02; }
     else { u.voice=V.B||V.A||null; u.lang=((V.B||V.A)&&(V.B||V.A).lang)||"es-MX"; u.pitch=V.distintas?0.95:0.75; u.rate=rate*(V.distintas?0.97:0.9); }
     u.volume=g.bajito?0.55:1;
-    u.onend=sig; u.onerror=function(e){ if(e && (e.error==="interrupted"||e.error==="canceled") && tok!==CAM.tok) return; sig(); };
-    CAM.voz=g.v; CAM.dicho=g.t; camPinta274();
+    u.onend=sig; u.onerror=function(e){ if(e && (e.error==="interrupted"||e.error==="canceled") && tok!==CAM.tok) return;
+      if(e && (e.error==="interrupted"||e.error==="canceled") && tok===CAM.tok && CAM.brec){ camBargeFalla276("la voz se cortó al abrir el micrófono ("+e.error+")"); k--; }   /* build 276: iOS no deja hablar y escuchar a la vez: se apaga la interrupción y se repite la frase */
+      sig(); };
+    CAM.voz=g.v; CAM.dicho=g.t; camHablo276(g.t); camPinta274();
     clearTimeout(CAM.wd); CAM.wd=setTimeout(sig, 3500+String(g.t).length*95/rate);
     try{ speechSynthesis.speak(u); }catch(e){ sig(); }
   };
@@ -18084,7 +18088,7 @@ function camEscucha274(modo){
     camPinta274();
   };
   abre();
-  clearTimeout(CAM.tVac); CAM.tVac=setTimeout(function(){ if(CAM.on && CAM.fase==="escuchando" && !CAM.buf && !CAM.par && CAM.modo==="resp" && !CAM.vacioDicho){ CAM.vacioDicho=true; camDi274([{v:"A", t:"Te escucho. Si quieres pasar, di siguiente.", bajito:true}], function(){ camEscucha274("resp"); }); } }, CAM_ESPERA_VACIO);
+  clearTimeout(CAM.tVac); CAM.tVac=setTimeout(function(){ if(CAM.on && CAM.fase==="escuchando" && !CAM.buf && !CAM.par && CAM.modo==="resp" && !CAM.vacioDicho){ CAM.vacioDicho=true; camDi274(camAux276([{v:"A", t:"Te escucho. Si quieres pasar, di siguiente.", bajito:true}]), function(){ camEscucha274("resp"); }); } }, CAM_ESPERA_VACIO);
 }
 function camRelojSilencio(){
   clearTimeout(CAM.tSil);
@@ -18101,13 +18105,18 @@ function camRelojSilencio(){
     var c=camComando274(todo); if(c){ CAM.buf=""; return camHaz274(c); }   /* un comando dicho solo, aunque no llegue como final */
     CAM.buf=todo;
     if(CAM.buf && CAM_CORTO.test(_camNv(CAM.buf))) return camEnvia274();   /* build 275: corto y claro = se envía ya */
+    if(CAM.buf && (CAM.qz || camK276()==="msg") && _camNv(CAM.buf).split(" ").length<=CAM_QZ_CORTO) return camEnvia274();   /* build 276: en el cuestionario y en mensajes, lo corto se envía sin "¿Terminaste?" */
     if(CAM.buf){   /* 2.5 s callado con algo dicho: NO se envía, se pregunta bajito */
       camCallaMic(); CAM.modo="check";
-      camDi274([{v:"A", t:"¿Terminaste o sigues?", bajito:true}], function(){ camEscucha274("check"); });
+      camDi274(camAux276([{v:"A", t:"¿Terminaste o sigues?", bajito:true}]), function(){ camEscucha274("check"); });
     }
   }, CAM.modo==="check"?1200:((CAM.modo==="resp" && !CAM.buf && CAM_CORTO.test(_camNv(CAM.par)))?700:CAM_SILENCIO));   /* build 275: "va"/"sí" a medias no espera 2.5 s */
 }
 var CAM_CMD=[
+  ["ultimo", /^((repiteme|repite|repetir|repitemelo|dime|di) (otra vez |de nuevo )?lo ultimo( que dijiste)?|lo ultimo otra vez|que dijiste|como dijiste|perdon que dijiste|que dijiste perdon)$/],   /* build 276 */
+  ["espera", /^(espera|esperame|esperate|espera tantito|un momento|un segundo|dame un segundo|aguanta|aguantame|para|para tantito)$/],   /* build 276 */
+  ["voy", /^((a ver|haber|aver) ?voy|a ver|haber|aver|voy|ahi voy|dejame ver|a ver dejame ver|a ver espera|a ver a ver|mira)$/],   /* build 276 */
+  ["continua", /^(sigue|continua|continuale|sigamos|ya sigue|puedes seguir|sigue hablando|sigue sigue)$/],   /* build 276: después de "espera" */
   ["repite", /^(repite|repitelo|repitela|repitemelo|repitemela|otra vez|de nuevo|no te entendi|no entendi)$/],
   ["detalle", /^((dame |quiero )?mas detalles?|detalles?|cuentame mas|explicame mas)$/],
   ["despues", /^((la |lo )?(dejamos|dejo|deja|dejala|dejalo) para (despues|luego|mas tarde)|para (despues|luego)|despues|luego)$/],
@@ -18124,10 +18133,11 @@ function camOye274(txt, esFinal){
   txt=String(txt||"").replace(/\s+/g," ").trim(); if(!txt || !CAM.on) return;
   clearTimeout(CAM.tVac);
   if(CAM.modo==="check"){
-    var s=_camNv(txt), c=camComando274(s);
+    var s=_camNv(txt);
+    if(/^(sigo|sigue|espera|esperame|no|todavia no|aun no|no he terminado|todavia|un momento|dejame pensar|a ver|voy|a ver voy)$/.test(s)){ CAM.modo="resp"; camPinta274(); return; }   /* build 276: antes de los comandos (espera/a ver aquí = sigo) */
+    var c=camComando274(s);
     if(c) return camHaz274(c);
     if(/^(si\s+)?(ya\s+)?(termine|listo|ya|ya esta|eso es todo|es todo|si|manda(lo)?|envia(lo)?)$/.test(s)) return camEnvia274();
-    if(/^(sigo|sigue|espera|esperame|no|todavia no|aun no|no he terminado|todavia|un momento|dejame pensar)$/.test(s)){ CAM.modo="resp"; camPinta274(); return; }
     /* otra cosa: es más respuesta; se acumula y se sigue escuchando */
     CAM.modo="resp";
   }
@@ -18145,6 +18155,9 @@ function camEnvia274(){
   var v=camQuitaFin((CAM.buf+" "+CAM.par).trim()); CAM.buf=""; CAM.par=""; camCallaMic();
   if(!v){ return camDi274([{v:"A", t:"No alcancé a oír nada. ¿Me lo repites?"}], function(){ camEscucha274("resp"); }); }
   var t=camTarea274(); if(!t) return camSiguiente274(1);
+  CAM.espera276=false;
+  if(CAM.qz) return camQuizResp276(v);   /* build 276: contesta una pregunta del cuestionario */
+  if(camK276()==="msg") return camMsgEntiende276(v);   /* build 276: a qué tarea va el mensaje */
   camEntiende275(t, v);   /* build 275: lo que dijo va a la IA (sin palabras clave), se ejecuta sin reconfirmar */
 }
 /* la respuesta dictada va al hilo como mensaje de Salvador (nota para Claude, la procesa la Mac) */
@@ -18160,9 +18173,11 @@ function camGuarda274(t, v){
   }
   CAM.anotadas=(CAM.anotadas||0)+1;
 }
-function camTarea274(){ var id=CAM.L[CAM.i]; return (tareas||[]).filter(function(x){ return x.id===id; })[0]||null; }
+function camTarea274(){ var id=CAM.L[CAM.i]; if(String(id||"").indexOf("msg:")===0){ var gr=(CAM.mg||{})[id]; id=gr?gr.t.id:""; }   /* build 276: un mensaje por acomodar vive en una tarea */
+  return (tareas||[]).filter(function(x){ return x.id===id; })[0]||null; }
 function camHaz274(c){
   camCallaMic(); CAM.buf=""; CAM.par="";
+  if(camHaz276(c)) return;   /* build 276: lo último · espera · a ver voy · sigue · cuestionario · mensajes */
   if(c==="repite") return camPresenta274(true);
   if(c==="detalle"){ var t=camTarea274(); if(!t) return camSiguiente274(1);
     return camDi274(camDetalle275(t).concat([{v:"A", t:camVar275("cierra", ["¿Qué hacemos?","¿Cómo la ves?","Tú dime."])}]), function(){ camEscucha274("resp"); }); }
@@ -18175,6 +18190,8 @@ function camHaz274(c){
 }
 function camPresenta274(repite){
   var t=camTarea274(); if(!t) return camSiguiente274(1);
+  CAM.qz=null; CAM.espera276=false;
+  var _k6=camK276(); if(_k6==="msg") return camMsgPresenta276(!!repite); if(_k6==="fal") return camFalPresenta276(!!repite);   /* build 276 */
   CAM.limpia=true; CAM.vacioDicho=false; CAM.aclara=null; camPinta274();
   camGuion275(t, !!repite, function(G){   /* build 275: por tipo (decisión · llamada con su guion · tarea nueva), sin menú */
     if(camTarea274()!==t || !CAM.on) return;
@@ -18188,7 +18205,7 @@ function camSiguiente274(dir){
   var j=CAM.i+dir;
   while(j>=0 && j<CAM.L.length && !camSigue275(CAM.L[j])) j+=dir>=0?1:-1;   /* build 275: las tareas nuevas (propuestas) también cuentan */
   if(j<0){ CAM.i=0; return camDi274([{v:"A", t:"Esta es la primera."}], function(){ camPresenta274(); }); }
-  if(j>=CAM.L.length){ var n=CAM.hechas275||0; return camDi274([{v:"A", t:camVar275("fin", ["Eso es todo.","Listo, terminamos.","Ya quedó todo."])+(n?" Resolvimos "+n+".":"")}], function(){ camSal274(false); }); }
+  if(j>=CAM.L.length){ CAM.i=CAM.L.length-1; return camDi274([{v:"A", t:camFin276()}], function(){ camSal274(false); }); }   /* build 276: "Bandeja limpia." o "Quedaron N pendientes: …" */
   CAM.i=j; camPresenta274();
 }
 function camPausa274(dicho){
@@ -18201,18 +18218,22 @@ function camEmpieza274(desdeId){
   if(CAM.on) return;
   try{ if(typeof leePara==="function" && (LEE.act||LEE.charla)) leePara(); }catch(e){}
   if(!window.speechSynthesis){ toast("Este teléfono no lee en voz alta"); return; }
-  var C=camLista275(), L=C.L;
+  var C=camLista276(), L=C.L;   /* build 276: + ficha Falta y mensajes por acomodar */
+  CAM.mg=C.mg||{}; CAM.res276={}; CAM.pendQ=[]; CAM.qz=null; CAM.rest=null; CAM.habla276=[]; CAM.espera276=false; CAM.bargeNo=false;
   if(desdeId){ L=L.filter(function(x){ return x!==desdeId; }); L.unshift(desdeId); if(!C.g[desdeId]){ C.g[desdeId]="dec"; C.n.dec++; } }
   CAM.on=true; CAM.L=L; CAM.g=C.g; CAM.i=0; CAM.pausa=false; CAM.explicado=!!window.__camExplicado274; CAM.buf=""; CAM.par=""; CAM.anotadas=0; CAM.hechas275=0; CAM.ult=null; CAM.aclara=null; CAM.sinMic=false; CAM.gl=CAM.gl||{};
   window.__camExplicado274=true;   /* "di terminé" se explica una vez por sesión de la app */
   camAudio275();   /* build 275: el sonido de "pensando" se desbloquea con este toque (iOS) */
+  camMedidor276();   /* build 276: medidor de volumen (getUserMedia con echoCancellation), pedido dentro del toque */
   L.forEach(function(id){ if(C.g[id]==="lla"){ var t=tareaId240(id); if(t) camPideGuion275(t); } });   /* los guiones se piden desde ya, en paralelo */
   camAbreUI274(); camWake274(true);
   if(!L.length) return camDi274([{v:"A", t:"No tienes pendientes para la caminata. Buen día."}], function(){ camSal274(false); });
   camDi274([{v:"A", t:camResumen275(C.n)}], function(){ camPresenta274(); });
 }
 function camSal274(dicho){
-  camCallaMic(); CAM.tok++; clearTimeout(CAM.wd); camPiensa275(false);
+  camCallaMic(); camBargeCierra276(); CAM.tok++; clearTimeout(CAM.wd); camPiensa275(false);
+  try{ if(CAM.qz && CAM.qz.A.length) camAplicaQuiz276(tareaId240(CAM.qz.id), CAM.qz.A); }catch(e){} CAM.qz=null;   /* build 276: lo contestado no se pierde */
+  camMedidorApaga276();
   try{ speechSynthesis.cancel(); }catch(e){}
   if(dicho){ try{ var u=new SpeechSynthesisUtterance("Listo, salimos de la caminata."); u.lang="es-MX"; var V=camVoces274(); if(V.A) u.voice=V.A; speechSynthesis.speak(u); }catch(e){} }
   CAM.on=false; CAM.pausa=false; CAM.fase="";
@@ -18252,6 +18273,7 @@ function camAbreUI274(){
   document.getElementById("c274x").onclick=function(){ camSal274(false); };
   document.getElementById("c274p").onclick=function(){ camPausa274(false); };
   document.getElementById("c274s").onclick=function(){ CAM.pausa=false; camHaz274("siguiente"); };
+  document.getElementById("c274o").onclick=camToca276; document.getElementById("c274tit").onclick=camToca276;   /* build 276: tocar = interrumpir */
   camPinta274();
 }
 function camPinta274(){
@@ -18259,8 +18281,9 @@ function camPinta274(){
   var t=camTarea274(), n=CAM.L.length;
   var s=function(id, x){ var e=document.getElementById(id); if(e && e.textContent!==x) e.textContent=x; };
   s("c274n", n?("Caminata · "+Math.min(CAM.i+1,n)+" de "+n):"Caminata");
-  s("c274tit", t?(t.nombre||"Sin nombre"):"");
-  var est=CAM.pausa?"En pausa":(CAM.fase==="pensando"?"Pensando…":CAM.fase==="hablando"?(CAM.voz==="B"?"Analista":"Doit"):(CAM.fase==="escuchando"?(CAM.sinMic?"Sin micrófono: usa los botones":(CAM.modo==="check"?"¿Terminaste o sigues?":"Te escucho · di «terminé» al acabar")):""));
+  var _gr6=camK276()==="msg"?(CAM.mg||{})[CAM.L[CAM.i]]:null;
+  s("c274tit", _gr6?("Mensaje de "+(_gr6.contacto||"contacto")):(t?(t.nombre||"Sin nombre"):""));   /* build 276 */
+  var est=CAM.pausa?"En pausa":(CAM.fase==="pensando"?"Pensando…":CAM.fase==="hablando"?(CAM.voz==="B"?"Analista":"Doit"):(CAM.fase==="escuchando"?(CAM.sinMic?"Sin micrófono: usa los botones":(CAM.modo==="check"?"¿Terminaste o sigues?":(CAM.qz?"Pregunta "+Math.min(CAM.qz.i+1,CAM.qz.Q.length)+" de "+CAM.qz.Q.length+" · di «paso» si no sabes":"Te escucho · di «terminé» al acabar"))):""));
   s("c274st", est);
   s("c274oy", CAM.fase==="escuchando"?camCorta((CAM.buf+" "+CAM.par).trim(), 160):"");
   var c=document.getElementById("c274o"); if(c) c.className="c274o"+(CAM.pausa?" pausa":(CAM.fase==="pensando"?" piensa":CAM.fase==="hablando"?" habla"+(CAM.voz==="B"?" vb":""):(CAM.fase==="escuchando"?" oye":"")));
@@ -18304,6 +18327,8 @@ function camResumen275(n){
   if(n.dec) P.push(n.dec+(n.dec===1?" decisión":" decisiones"));
   if(n.lla) P.push(n.lla+(n.lla===1?" llamada":" llamadas")+" para mañana");
   if(n.nue) P.push(n.nue+(n.nue===1?" tarea nueva":" tareas nuevas"));
+  if(n.fal) P.push(n.fal+(n.fal===1?" con datos que faltan":" con datos que faltan"));   /* build 276 */
+  if(n.msg) P.push(n.msg+(n.msg===1?" mensaje por acomodar":" mensajes por acomodar"));
   return P.length?"Tienes "+juntaY(P)+". Empezamos.":"No tienes pendientes para la caminata.";
 }
 /* ---------- el guion de cada tarea ---------- */
@@ -18429,7 +18454,7 @@ function camEntiende275(t, v){
   var fin=function(j, err){ if(listo) return; listo=true; clearTimeout(to); camPiensa275(false); camLat275("decide", Date.now()-t0, !!j);
     var vivo=(tok===CAM.tok && CAM.on);
     if(!j){   /* la IA no contestó: no se pierde, queda como nota para Claude */
-      var u=camFoto275([t]); try{ camGuarda274(t, v); }catch(e){ console.warn("caminata guarda", e); } CAM.ult={foto:u, i:CAM.L.indexOf(t.id)}; CAM.hechas275=(CAM.hechas275||0)+1;
+      var u=camFoto275([t]); try{ camGuarda274(t, v); }catch(e){ console.warn("caminata guarda", e); } CAM.ult={foto:u, i:CAM.L.indexOf(t.id)}; CAM.hechas275=(CAM.hechas275||0)+1; CAM.res276=CAM.res276||{}; CAM.res276[t.id]=1;
       try{ console.warn("caminata 275: IA sin respuesta", err); }catch(e){}
       if(!vivo) return; CAM.fase="";
       return camDi274([{v:"A", t:"No me contestó la IA. Lo dejé anotado para Claude."}], function(){ camSiguiente274(1); });
@@ -18451,6 +18476,8 @@ function camResuelve275(t, j, v, vivo){
   if(!vivo) return; CAM.fase="";
   if(r.falta){ CAM.aclara={id:t.id, v:v}; return camDi274([{v:"A", t:r.falta}], function(){ camEscucha274("resp"); }); }
   var w=dh.split(" ").filter(Boolean).length, dicho=(dh && w<=8 && !/\?/.test(dh) && !_camCodigo(dh))?camPunto(dh):r.dicho;
+  var _Q6=camQuizTrasAcomodar276(t, a);   /* build 276: al acomodar una tarea nueva, de inmediato el cuestionario de lo que le falta */
+  if(_Q6.length) return camQuizEmpieza276(t, _Q6, [{v:"A", t:dicho}], {desdeNue:true});
   camDi274([{v:"A", t:dicho}], function(){ camSiguiente274(1); });
 }
 /* foto de las tareas antes de la acción, para deshacer */
@@ -18489,16 +18516,410 @@ function camEjecuta275(t, a, j, v){
   }catch(e){ console.warn("caminata 275 ejecuta", e); }
   abierta=vw.a; vista=vw.v;   /* vincular abre la tarea destino: la caminata se queda donde estaba */
   CAM.ult={foto:F, i:CAM.L.indexOf(t.id), a:a}; CAM.hechas275=(CAM.hechas275||0)+1;
+  CAM.res276=CAM.res276||{}; CAM.res276[t.id]=1;   /* build 276 */
   return {dicho:dicho};
 }
-function camSigue275(id){ var t=tareaId240(id); if(!t) return false; try{ return (CAM.g||{})[id]==="nue"?esPropuesta256(t):_camVivo(t); }catch(e){ return false; } }
+function camSigue275(id){ var k6=(CAM.g||{})[id]; if(k6==="msg") return camMsgVivo276(id); var t=tareaId240(id); if(!t) return false;
+  if(k6==="fal"){ try{ return _camVivo(t) && camPreguntas276(t).length>0; }catch(e){ return false; } }   /* build 276 */ try{ return (CAM.g||{})[id]==="nue"?esPropuesta256(t):_camVivo(t); }catch(e){ return false; } }
 function camDeshaz275(){
   var u=CAM.ult; CAM.ult=null; if(!u) return camSiguiente274(-1);
   try{ camRestaura275(u.foto); }catch(e){ console.warn("caminata 275 deshaz", e); }
+  if(u.nueva){ try{ borraTarea(u.nueva); }catch(e){} }   /* build 276: la tarea o dato que nació de un mensaje */
+  CAM.qz=null; try{ if(u.i>=0) delete CAM.res276[CAM.L[u.i]]; }catch(e){}
   CAM.hechas275=Math.max(0, (CAM.hechas275||1)-1);
   if(u.i>=0) CAM.i=u.i;
   try{ render(); }catch(e){}
   camDi274([{v:"A", t:camVar275("undo", ["Va, lo deshice.","Listo, lo regresé.","Sale, como estaba."])}], function(){ camPresenta274(true); });
+}
+
+/* ===================== build 276 (Salvador 7-oct): CAMINATA CON INTERRUPCIÓN Y BANDEJA LIMPIA =====================
+   Sobre el 275.
+   1 INTERRUPCIÓN (barge-in, como el modo de voz de Claude): mientras la app habla, un segundo reconocedor queda abierto
+     (camBargeAbre276). Si Salvador empieza a hablar, la voz se calla al instante (speechSynthesis.cancel + CAM.tok++) y lo escucha.
+     Entiende al momento, sin botones: "repíteme lo último" (repite la frase anterior y la que iba y sigue), "espera" ("Va, te espero."
+     y escucha; "sigue" retoma donde se quedó), "a ver, voy" ("Te escucho."). Cualquier otra cosa es el inicio de su respuesta.
+     Para que no se escuche a sí misma: (a) getUserMedia con echoCancellation/noiseSuppression para el medidor de volumen;
+     (b) se ignora lo reconocido que coincide con lo que la app está diciendo o dijo hace < 1.5 s (la frase tal cual, o ≥ 70 % de
+     palabras si son 4 o más);
+     (c) umbral de volumen: el pico de los últimos 700 ms debe pasar 0.03 RMS y 2.5 veces el ruido de fondo medido mientras habla.
+     iOS: si al abrir el micrófono la voz se corta sola (utterance "interrupted" que no pedimos), se apaga la interrupción en esa
+     sesión, se repite la frase y queda como el 275 (micrófono cerrado mientras habla) + tocar el círculo interrumpe. Motivo en
+     localStorage doit_barge276 y en window.__barge276.
+   2 ORDEN para dejar la bandeja limpia: (1) decisiones · (2) llamadas de mañana · (3) tareas nuevas por acomodar, y al acomodar
+     cada una, de inmediato el CUESTIONARIO de lo que le falta (contexto, fecha, quién, seguimiento, monto), una pregunta a la vez;
+     al terminar dice qué datos quedaron pendientes · (4) tareas con la ficha roja "Falta": el mismo cuestionario · (5) mensajes por
+     acomodar (pláticas de WhatsApp sin tarea segura): quién, qué dice en una línea y las 2 tareas más probables ("¿Va a Vestidores
+     o a Comedor?"); contesta libre. Al final: "Bandeja limpia." o "Quedaron N pendientes: …".
+   3 Sin menús ni reconfirmar: lo que contesta lo interpreta la IA (modo rápido) o, si nombra una de las dos candidatas, se aplica
+     directo. Las respuestas del cuestionario van juntas a completaRevision (como la tarjeta de preguntas) sin esperar al cerebro. */
+var CAM_ECO_MS=1500, CAM_BARGE_UMBRAL=0.03, CAM_QZ_CORTO=6, CAM_QZ_MAX=5;
+function camK276(){ return ((CAM.g||{})[CAM.L[CAM.i]])||""; }
+/* ---------- 1 · interrupción ---------- */
+function camBargeOk276(){
+  if(window.__sinBarge276 || CAM.bargeNo || !CAM.on || CAM.pausa) return false;
+  try{ if(localStorage.getItem("doit_barge276_off")==="1") return false; }catch(e){}
+  return !!(window.SpeechRecognition||window.webkitSpeechRecognition);
+}
+/* lo que la app va diciendo (para no escucharse a sí misma) */
+function camHablo276(t){ var now=Date.now(), H=CAM.habla276=CAM.habla276||[];
+  if(H.length && !H[H.length-1].fin) H[H.length-1].fin=now;
+  if(t) H.push({n:_camNv(t), ini:now, fin:0}); CAM.habla276=H.slice(-6); }
+function camEco276(n){
+  var w=n.split(" ").filter(function(x){ return x.length>=2; }); if(!w.length) return true;
+  var now=Date.now();
+  return (CAM.habla276||[]).some(function(h){ if(h.fin && now-h.fin>CAM_ECO_MS) return false; if(!h.n) return false;
+    if((" "+h.n+" ").indexOf(" "+n+" ")>=0) return true;   /* la frase tal cual dentro de lo que dice */
+    if(w.length<=3) return false;   /* corto y no contiguo: puede ser él repitiendo una palabra ("el de huella") */
+    var hw=h.n.split(" "), c=w.filter(function(x){ return hw.indexOf(x)>=0; }).length; return c/w.length>=0.7; });
+}
+/* medidor de volumen: getUserMedia con cancelación de eco; si no hay, decide el filtro de texto */
+function camMedidor276(){
+  if(CAM.med || window.__sinMedidor276 || CAM.bargeNo) return;
+  try{ if(localStorage.getItem("doit_medidor276_off")==="1") return; }catch(e){}   /* apagador por si en el iPhone el medidor baja el volumen de la voz */
+  CAM.med={ok:false, picos:[], base:0};
+  try{ var md=navigator.mediaDevices; if(!md || !md.getUserMedia){ CAM.med.err="sin getUserMedia"; return; }
+    md.getUserMedia({audio:{echoCancellation:true, noiseSuppression:true, autoGainControl:false}}).then(function(st){
+      var ac=camAudio275(); if(!ac || !CAM.on){ st.getTracks().forEach(function(x){ x.stop(); }); CAM.med=null; return; }
+      var src=ac.createMediaStreamSource(st), an=ac.createAnalyser(); an.fftSize=1024; src.connect(an);
+      var buf=new Float32Array(an.fftSize), M={ok:true, st:st, picos:[], base:0, ec:null};
+      try{ var se=st.getAudioTracks()[0].getSettings(); M.ec=se.echoCancellation; }catch(e){}
+      M.iv=setInterval(function(){ try{ an.getFloatTimeDomainData(buf); }catch(e){ return; } var q=0; for(var i=0;i<buf.length;i++) q+=buf[i]*buf[i];
+        var r=Math.sqrt(q/buf.length); M.picos.push({r:r, ts:Date.now()}); if(M.picos.length>30) M.picos.shift();
+        if(CAM.fase==="hablando" && !CAM.oyeBarge) M.base=M.base?M.base*0.95+r*0.05:r; }, 100);   /* ruido de fondo + eco que se cuela mientras habla */
+      CAM.med=M;
+    }).catch(function(e){ CAM.med={ok:false, picos:[], base:0, err:String((e&&e.name)||e)}; });
+  }catch(e){ CAM.med={ok:false, picos:[], base:0, err:String(e&&e.message)}; }
+}
+function camMedidorApaga276(){ var M=CAM.med; CAM.med=null; if(M){ clearInterval(M.iv); try{ M.st.getTracks().forEach(function(x){ x.stop(); }); }catch(e){} } }
+function camNivelOk276(){
+  if(typeof window.__nivel276==="number") return window.__nivel276>=CAM_BARGE_UMBRAL;   /* pruebas */
+  var M=CAM.med; if(!M || !M.ok) return true;
+  var now=Date.now(), pico=0; M.picos.forEach(function(p){ if(now-p.ts<=700 && p.r>pico) pico=p.r; });
+  return pico>=Math.max(CAM_BARGE_UMBRAL, (M.base||0)*2.5);
+}
+function camBargeAbre276(tok){
+  camBargeCierra276();
+  if(!camBargeOk276()) return;
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition, r=null; try{ r=new SR(); }catch(e){} if(!r) return;
+  r.__barge=true; r.lang="es-MX"; r.continuous=true; r.interimResults=true; try{ r.maxAlternatives=1; }catch(e){}
+  r.onresult=function(e){ if(r.__muerto || tok!==CAM.tok) return; var tx="", fin=false;
+    for(var j=0;j<e.results.length;j++){ var x=e.results[j]; tx+=x[0].transcript+" "; if(x.isFinal) fin=true; }
+    camBargeOye276(tx.replace(/\s+/g," ").trim(), tok, fin); };
+  r.onerror=function(ev){ var er=(ev&&ev.error)||""; if(er==="not-allowed"||er==="service-not-allowed"||er==="audio-capture"){ r.__muerto=true; if(CAM.brec===r) camBargeFalla276("micrófono mientras habla: "+er); } };
+  r.onend=function(){ if(r.__muerto || CAM.brec!==r) return; setTimeout(function(){ if(CAM.brec===r && CAM.fase==="hablando" && tok===CAM.tok) camBargeAbre276(tok); }, 150); };
+  CAM.brec=r;
+  try{ r.start(); }catch(e){ CAM.brec=null; }
+}
+function camBargeCierra276(){ var r=CAM.brec; CAM.brec=null; CAM.oyeBarge=false; if(r){ r.__muerto=true; try{ r.abort ? r.abort() : r.stop(); }catch(e){ try{ r.stop(); }catch(e2){} } } }
+function camBargeFalla276(por){
+  camBargeCierra276(); CAM.bargeNo=true; camMedidorApaga276();   /* sin interrupción el medidor no sirve: se suelta el micrófono */
+  window.__barge276={off:true, por:por, ts:Date.now()};
+  try{ localStorage.setItem("doit_barge276", JSON.stringify(window.__barge276)); }catch(e){}
+  try{ console.warn("caminata 276: interrupción apagada en esta sesión — "+por); }catch(e){}
+}
+var CAM_BARGE_CMD=/^(espera|esperame|esperate|un momento|para|a ver|voy|a ver voy|ahi voy|oye|no|no no|repite|repiteme lo ultimo|que dijiste|siguiente|pausa|alto)$/;
+function camBargeOye276(tx, tok, fin){
+  var n=_camNv(tx); if(!n || !CAM.on || CAM.fase!=="hablando") return;
+  if(camEco276(n)){ window.__eco276=(window.__eco276||0)+1; return; }   /* es su propia voz */
+  if(!camNivelOk276()){ window.__bajo276=(window.__bajo276||0)+1; return; }   /* muy bajito: no es él */
+  CAM.oyeBarge=true;
+  if(!fin && n.split(" ").length<2 && !CAM_BARGE_CMD.test(n)) return;   /* una palabra suelta a medias: espera a confirmar */
+  window.__barge276n=(window.__barge276n||0)+1;
+  CAM.tok++; clearTimeout(CAM.wd); camBargeCierra276();
+  try{ speechSynthesis.cancel(); }catch(e){}
+  if(CAM.rest) CAM.rest.cortado=true;
+  camHablo276(); CAM.fase=""; camPinta274();
+  camInterrumpido276(tx);
+}
+function camInterrumpido276(tx){
+  var c=camComando274(tx);
+  if(c) return camHaz274(c);
+  CAM.limpia=false; CAM.buf=String(tx||"").trim(); CAM.par="";   /* es el inicio de su respuesta: se queda y se sigue escuchando */
+  if(CAM_CORTO.test(_camNv(CAM.buf))) return camEnvia274();
+  camEscucha274("resp"); camPinta274(); camRelojSilencio();
+}
+/* tocar el círculo mientras habla también interrumpe (respaldo si iOS no deja escuchar mientras habla) */
+function camToca276(){ if(!CAM.on || CAM.pausa || CAM.fase!=="hablando") return;
+  CAM.tok++; clearTimeout(CAM.wd); camBargeCierra276(); try{ speechSynthesis.cancel(); }catch(e){} if(CAM.rest) CAM.rest.cortado=true;
+  camHablo276(); CAM.fase=""; CAM.limpia=true; camEscucha274("resp"); camPinta274(); }
+function camRepiteUlt276(){
+  var R=CAM.rest; if(!R || !R.G || !R.G.length) return camPresenta274(true);
+  var from=Math.max(0, Math.min(R.k, R.G.length-1)-1);
+  camDi274(R.G.slice(from), R.done);
+}
+/* los comandos nuevos; true = ya lo atendió */
+function camAux276(G){ G.aux=true; return G; }   /* frases de servicio: no cambian "lo último" ni dónde iba */
+function camHaz276(c){
+  if(c==="ultimo"){ camRepiteUlt276(); return true; }
+  if(c==="espera"){ CAM.espera276=true; camDi274(camAux276([{v:"A", t:camVar275("espera", ["Va, te espero.","Sale, aquí estoy."]), bajito:true}]), function(){ CAM.limpia=false; camEscucha274("resp"); }); return true; }
+  if(c==="voy"){ camDi274(camAux276([{v:"A", t:camVar275("voy", ["Te escucho.","Dime."]), bajito:true}]), function(){ CAM.limpia=true; camEscucha274("resp"); }); return true; }
+  if(c==="continua"){ var R=CAM.rest; CAM.espera276=false;
+    if(R && R.cortado && R.k<R.G.length){ camDi274(R.G.slice(R.k), R.done); return true; }
+    CAM.limpia=true; camEscucha274("resp"); return true; }
+  if(CAM.qz){   /* dentro del cuestionario */
+    var z=CAM.qz;
+    if(c==="siguiente"){ camQuizResp276("paso"); return true; }
+    if(c==="repite"){ camQuizPregunta276(true); return true; }
+    if(c==="atras"){ if(z.i>0){ z.i--; var q=z.Q[z.i]; z.A=z.A.filter(function(o){ return o.q!==q; }); z.salt=z.salt.filter(function(o){ return o!==q; }); } camQuizPregunta276(true); return true; }
+    if(c==="despues"){ camQuizFin276(true); return true; }
+    if(c==="deshaz"){ if(z.desdeNue && CAM.ult){ CAM.qz=null; camDeshaz275(); } else { CAM.qz=null; camPresenta274(true); } return true; }
+    if(c==="detalle"){ var t=camTarea274(); if(t) camDi274(camDetalle275(t), function(){ camQuizPregunta276(true); }); return true; }
+  }
+  if(camK276()==="msg"){
+    if(c==="detalle"){ camDi274(camMsgDetalle276(), function(){ CAM.limpia=true; camEscucha274("resp"); }); return true; }
+    if(c==="deshaz" && !CAM.ult){ camSiguiente274(-1); return true; }
+  }
+  return false;
+}
+/* ---------- 2 · la lista completa ---------- */
+function camEsFalta276(t){
+  if(!t || t.es_recordatorio || !_camVivo(t)) return false;
+  if(!(t.duenio===yo || (!t.duenio && t.creada_por===yo))) return false;
+  try{ if(esDato(t)) return false; }catch(e){}
+  return camPreguntas276(t).length>0 && camChipFalta276(t);
+}
+/* la ficha roja "Falta N" de la tarea (la misma regla de chipsTarea) */
+function camChipFalta276(t){
+  var f=[], np=0; try{ if(tipoRevisar(t)==="falta" && !vistaSup(t) && clasif236(t)) f=soloMeFalta(t); }catch(e){}
+  try{ np=preguntas249(t).length; }catch(e){}
+  return !!(np || f.length);
+}
+function camLista276(){
+  var C=camLista275(), ya={}, F=[], M=[], mg={}, conMsg={};
+  var D=[]; try{ D=platicasAcomodo237(); }catch(e){}
+  D.forEach(function(gr){ if(!gr || !gr.t || !gr.ixs || !gr.ixs.length) return; var k="msg:"+gr.t.id+"|"+gr.ixs[0]; if(mg[k]) return; mg[k]=gr; C.g[k]="msg"; M.push(k); conMsg[gr.t.id]=1; });
+  /* "Te pregunta Doit" que NO es decisión: si lo que falta son datos, va al cuestionario (4); si son mensajes, a los mensajes (5) */
+  var dec=[]; C.L.forEach(function(id){ var t=tareaId240(id); if(C.g[id]!=="dec" || !t){ dec.push(id); return; }
+    var real=false; try{ real=!!decision273(t) || esDecisionSal(t) || registroPreg266(t).length>0; }catch(e){ real=true; }
+    if(real){ dec.push(id); return; }
+    var fa=false; try{ fa=camEsFalta276(t); }catch(e){}
+    if(fa){ C.g[id]="fal"; F.push(id); return; }
+    if(conMsg[id]){ delete C.g[id]; return; }
+    dec.push(id); });
+  C.L=dec; dec.forEach(function(id){ ya[id]=1; }); F.forEach(function(id){ ya[id]=1; });
+  (tareas||[]).forEach(function(t){ if(!t || ya[t.id]) return; var ok=false; try{ ok=camEsFalta276(t); }catch(e){} if(ok){ ya[t.id]=1; C.g[t.id]="fal"; F.push(t.id); } });
+  var n={dec:0, lla:0, nue:0}; C.L.forEach(function(id){ n[C.g[id]]=(n[C.g[id]]||0)+1; });
+  C.L=C.L.concat(F, M); n.fal=F.length; n.msg=M.length; C.n=n; C.mg=mg;
+  return C;
+}
+/* ---------- el cuestionario ---------- */
+var CAM_QM={quien:"¿Quién la hace?", finiquito:"¿Para cuándo la quieres terminar, o es indefinida?", seguimiento:"¿Cuándo te recuerdo para darle seguimiento?", que:"¿Qué es esto?", de:"¿De quién o de qué proyecto es?", cifras:"¿Cuáles son las cifras?"};
+var CAM_MONTO=/\b(cotiz\w*|pag[oa]r?|pagos?|precio|costo|cuesta|monto|presupuesto|factura\w*|cobr\w*|abono|anticipo|renta|deposit\w*|transfer\w*)\b|\$/;
+function camPreguntas276(t){
+  var Q=[], ya={}; if(!t) return Q;
+  var pon=function(o){ var k=_camNv(o.q); if(!k || ya[k]) return; try{ if(!o.reg && o.k!=="persona" && bloqueaQ267(t, o.q)) return; }catch(e){} ya[k]=1; Q.push(o); };
+  try{ preguntas249(t).forEach(function(p){ if(p && p.q && !p.reg && ["txt","persona","resp","falta273"].indexOf(p.k||"txt")>=0) pon(p); }); }catch(e){}
+  var c=null; try{ c=completitud(t); }catch(e){}
+  if(c){
+    if(!c.ctxOk) pon({k:"txt", q:"¿De qué se trata? Dame un poco de contexto.", c276:"ctx"});
+    c.items.forEach(function(x){ if(x.ok || x.k==="agenda") return; var q=CAM_QM[x.k]; if(q) pon({k:"txt", q:q, c276:x.k}); });
+    var txt=_camNv([t.nombre, t.contexto, (t.resumen&&t.resumen.texto)||""].join(" "));
+    var hayMonto=/\d/.test(String(t.gasto||"")) || /no\s*gasta/i.test(String(t.gasto||"")) || (t.datos_corregidos||[]).some(function(d){ return /\d/.test(String((d&&d.t)||d||"")); }) || /\$\s?\d|\d[\d,.]*\s*(pesos|mil|mxn|dlls?|dolares)/.test(txt);
+    if(c.tipo!=="dato" && !hayMonto && CAM_MONTO.test(txt)) pon({k:"txt", q:"¿De cuánto es el monto?", c276:"monto"});
+  }
+  return Q.slice(0, CAM_QZ_MAX);
+}
+function camEtiqueta276(q){
+  var s=String((q&&q.q)||q||""), k=q&&q.c276;
+  if(k==="ctx" || /contexto|de qu[eé] se trata/i.test(s)) return "el contexto";
+  if(k==="finiquito" || /finiquito|para cu[aá]ndo|cu[aá]ndo termina|fecha/i.test(s)) return "la fecha";
+  if(k==="quien" || /^¿?qui[eé]n la hace/i.test(s)) return "quién la hace";
+  if(k==="seguimiento" || /seguimiento|te recuerdo/i.test(s)) return "el seguimiento";
+  if(k==="monto" || /monto|cifras|cu[aá]nto/i.test(s)) return "el monto";
+  if(k==="de" || /de qui[eé]n o de qu[eé] proyecto/i.test(s)) return "de quién es";
+  return camCorta(s.replace(/[¿?]/g,"").trim(), 60).replace(/[.\s]+$/,"");
+}
+var CAM_QZ_SALTA=/^(paso|lo paso|no se|no lo se|no se todavia|todavia no se|ni idea|no tengo ese dato|no tengo idea|no sabria decirte|luego te digo|despues te digo|no tengo|sin dato|ahorita no se)$/;
+function camQuizTrasAcomodar276(t, a){
+  if(!t || (CAM.g[t.id]||"")!=="nue" || a!=="aprobar") return [];
+  try{ if(esPropuesta256(t) || esDato(t) || t.fusionada_en || t.cierre) return []; }catch(e){ return []; }
+  return camPreguntas276(t);
+}
+function camQuizEmpieza276(t, Q, G0, op){
+  op=op||{};
+  CAM.qz={id:t.id, Q:Q, i:0, A:[], salt:[], desdeNue:!!op.desdeNue};
+  var G=(G0||[]).slice();
+  if(op.desdeNue) G.push({v:"A", t:Q.length===1?"Le falta un dato.":"Le faltan "+Q.length+" datos."});
+  if(!CAM.qzExpl){ CAM.qzExpl=true; G.push({v:"A", t:"Una por una. Si no lo sabes, di paso."}); }
+  camQuizPregunta276(false, G);
+}
+function camQuizPregunta276(rep, G0){
+  var z=CAM.qz; if(!z) return camSiguiente274(1);
+  if(z.i>=z.Q.length) return camQuizFin276(false);
+  var G=(G0||[]).slice(); G.push({v:"A", t:z.Q[z.i].q});
+  CAM.limpia=true; CAM.vacioDicho=false; camPinta274();
+  camDi274(G, function(){ camEscucha274("resp"); });
+}
+function camQuizResp276(v){
+  var z=CAM.qz; if(!z) return camSiguiente274(1);
+  var q=z.Q[z.i], n=_camNv(v), salta=CAM_QZ_SALTA.test(n);
+  if(salta) z.salt.push(q); else z.A.push({q:q, a:String(v).replace(/\s+/g," ").trim()});
+  z.i++;
+  var ack=salta?camVar275("qsal", ["Va, queda pendiente.","Sale, lo dejamos."]):camVar275("qok", ["Va.","Anotado.","Sale."]);
+  if(z.i>=z.Q.length) return camQuizFin276(false, ack);
+  camQuizPregunta276(false, [{v:"A", t:ack}]);
+}
+function camQuizFin276(abandona, ack){
+  var z=CAM.qz; CAM.qz=null; if(!z) return camSiguiente274(1);
+  var t=tareaId240(z.id);
+  if(abandona) z.salt=z.salt.concat(z.Q.slice(z.i));
+  var pend=[], ya={}; z.salt.forEach(function(q){ var e=camEtiqueta276(q); if(!ya[e]){ ya[e]=1; pend.push(e); } });
+  if(t && z.A.length){ try{ camAplicaQuiz276(t, z.A); }catch(e){ console.warn("caminata 276 cuestionario", e); } }
+  CAM.res276=CAM.res276||{}; if(t) CAM.res276[t.id]=1;
+  if(pend.length && t) CAM.pendQ=(CAM.pendQ||[]).concat([juntaY(pend.slice(0,3))+" de "+camNombre(t)]);
+  var tx=!pend.length?camVar275("qfin", ["Listo, ya tiene todo.","Quedó completa."]):(pend.length===1?"Quedó pendiente: ":"Quedaron pendientes: ")+juntaY(pend.slice(0,4))+".";
+  var G=[]; if(ack && !pend.length) G.push({v:"A", t:ack}); G.push({v:"A", t:tx});
+  camDi274(G, function(){ camSiguiente274(1); });
+}
+/* las respuestas van a la tarea como la tarjeta de preguntas (enviaPreguntas249): persona, "ninguno", y lo demás junto a completaRevision.
+   No se espera al cerebro: la caminata sigue; lo que él no alcance queda en la ficha Falta. */
+function camAplicaQuiz276(t, A, cb){
+  if(!t) return; var T=tareaId240(t.id)||t, textos=[], quita=[], H=T.hecho238;
+  A.forEach(function(o){ var p=o.q, tx=String(o.a||"").replace(/\s+/g," ").trim(); if(!tx) return;
+    if(p.k==="persona"){ var r=null; try{ r=resuelvePersona(T, tx); }catch(e){} var per=(r && r.estado==="uno")?{id:r.persona.id, nombre:r.persona.nombre}:{id:"ext:"+tx, nombre:tx}; try{ resuelveDudaPersona(T, p.id, per); }catch(e){} return; }
+    try{ T.resp267=(T.resp267||[]).concat([normQ267(p.q)]).slice(-60); }catch(e){}
+    if(p.hi!=null) quita.push(p.hi);
+    if(p.d263 && Array.isArray(T.falta263)) T.falta263=T.falta263.filter(function(f){ return !(f && f.q===p.q); });
+    var neg=false; try{ neg=esNegativa267(tx); }catch(e){}
+    if(neg){ if(/seguimiento/i.test(p.q)){ T.ritmo=T.ritmo||"ninguno"; T.seg_ninguno=true; } if(/recuerdo/i.test(p.q)) T.recordar_ninguno=true;
+      if(/finiquito|para cu[aá]ndo/i.test(p.q) && /indefinid/i.test(_camNv(tx))) T.indefinida=true;
+      msg(T,"bi","Entendí: «"+camCorta(p.q, 80)+"» → ninguno."); var mn=T.msgs[T.msgs.length-1]; mn.canal="priv:"+yo; mn.nota_ia=1; return; }
+    textos.push("Respuesta a «"+p.q+"»: "+tx+"."); });
+  if(H && quita.length){ quita.sort(function(a,b){ return b-a; }).forEach(function(ix){ (H.falta||[]).splice(ix,1); }); }
+  guarda(T);
+  if(!textos.length){ if(cb) cb(true); return; }
+  var sinRev=true; try{ sinRev=tipoRevisar(T)!=="falta"; }catch(e){}
+  try{ completaRevision(T, textos.join(" "), {sinRevision:sinRev, caminata276:1, alTerminar:function(r){
+      var X=tareaId240(T.id); if(X && X.f_vigente && window.__p256f) delete window.__p256f[X.id];
+      window.__qz276=(window.__qz276||[]).concat([{id:T.id, r:r, ts:Date.now()}]).slice(-20); if(cb) cb(true, r); }}); }
+  catch(e){ console.warn("caminata 276 completaRevision", e); if(cb) cb(false); }
+}
+function camFalPresenta276(repite){
+  var t=camTarea274(); if(!t) return camSiguiente274(1);
+  var Q=camPreguntas276(t); if(!Q.length) return camSiguiente274(1);
+  CAM.limpia=true; CAM.vacioDicho=false; CAM.aclara=null;
+  var G=[], pos=CAM.i, prevK=pos>0?CAM.g[CAM.L[pos-1]]:"";
+  if(!repite && pos>0 && prevK!=="fal") G.push({v:"A", t:camVar275("gf", ["Ahora las que tienen datos pendientes.","Vamos con las que les faltan datos."])});
+  G.push({v:"A", t:(repite?camVar275("otra", ["Otra vez: ","De nuevo: "]):camVar275("abfal", ["Le faltan datos a: ","Sigue: ","Ahora: "]))+camNombre(t)+"."});
+  G.push({v:"B", t:Q.length===1?"Es una pregunta.":"Son "+Q.length+" preguntas."});
+  camQuizEmpieza276(t, Q, G);
+}
+/* ---------- 5 · mensajes por acomodar ---------- */
+function camMsgGr276(){ return (CAM.mg||{})[CAM.L[CAM.i]]||null; }
+function camMsgVivo276(id){
+  var gr=(CAM.mg||{})[id]; if(!gr) return false; var t=tareaId240(gr.t.id); if(!t) return false;
+  return gr.ixs.some(function(ix){ var x=(t.msgs||[])[ix]; return x && !x.oculto && !x.eliminado && !confirmado237(x); });
+}
+function camNomT276(x){ return camCorta(limpiaHabla(tareaCorta(x)||x.nombre||""), 60).replace(/[.\s]+$/,""); }
+/* las 2 tareas más probables: la que adivinó la IA, la alternativa de su duda y si no, la mejor parecida (motor de Vincular) */
+function camMsgCands276(gr){
+  var t=tareaId240(gr.t.id), C=[]; if(!t) return C; C.push(t);
+  var d=gr.duda && gr.duda.duda_tarea;
+  if(d){ var a=d.alternativa_id?tareaId240(d.alternativa_id):null;
+    if(!a && d.alternativa_nombre) a=(tareas||[]).filter(function(x){ return x && x.id!==t.id && _camNv(x.nombre)===_camNv(d.alternativa_nombre); })[0]||null;
+    if(a && a.id!==t.id) C.push(a); }
+  if(C.length<2){ try{ var S=sugeridasPara262(t, gr.ixs); (S.sims||[]).some(function(x){ if(x && x.id!==t.id && _camVivo(x)){ C.push(x); return true; } return false; }); }catch(e){} }
+  return C.slice(0,2);
+}
+function camMsgPresenta276(repite){
+  var gr=camMsgGr276(), t=camTarea274(); if(!gr || !t) return camSiguiente274(1);
+  CAM.limpia=true; CAM.vacioDicho=false; CAM.aclara=null;
+  var C=camMsgCands276(gr); CAM.mc=C;
+  var G=[], pos=CAM.i, prevK=pos>0?CAM.g[CAM.L[pos-1]]:"";
+  if(!repite && pos>0 && prevK!=="msg") G.push({v:"A", t:camVar275("gm", ["Y ahora, los mensajes por acomodar.","Ahora los mensajes sin tarea."])});
+  var quien=limpiaHabla(nombreCorto(gr.contacto||"")||gr.contacto||"alguien");
+  G.push({v:"A", t:(repite?camVar275("otra", ["Otra vez: ","De nuevo: "]):"")+(repite?"mensaje":"Mensaje")+" de "+quien+"."});
+  var ex=camFrases(gr.extracto, 1)[0]||camCorta(limpiaHabla(gr.extracto||""), 150);
+  if(ex) G.push({v:"B", t:camPunto("Dice: "+ex)});
+  var preg=C.length>=2?"¿Va a "+camNomT276(C[0])+" o a "+camNomT276(C[1])+"?":(C.length?"¿Va a "+camNomT276(C[0])+"?":"¿A qué tarea va?");
+  G.push({v:"A", t:preg});
+  camDi274(G, function(){ camEscucha274("resp"); });
+}
+function camMsgDetalle276(){
+  var gr=camMsgGr276(), t=camTarea274(), G=[]; if(!gr || !t) return [{v:"B", t:"No tengo más."}];
+  gr.ixs.slice(0,4).forEach(function(ix){ var x=t.msgs[ix]; if(!x) return; var s=camFrases(_txMsg(x).replace(/^[^:\n]{1,40}:\s*/,""), 2).join(" "); if(s) G.push({v:"B", t:camPunto(s)}); });
+  if(!G.length) G.push({v:"B", t:"No tengo más."});
+  G.push({v:"A", t:"¿A dónde va?"});
+  return G;
+}
+/* sin IA: "la primera", "la segunda", o el nombre de UNA de las dos */
+function camMsgLocal276(v, C){
+  var n=_camNv(v).replace(/^(a|al|va a|va al|va en|en|es de|es|a la|la de|lo de|el de|pa|para)\s+/,"");
+  if(/^(la )?(primera|1|uno|la primera opcion)$/.test(n) && C[0]) return {accion:"a_tarea", destino:C[0].id};
+  if(/^(la )?(segunda|2|dos|otra|la otra|la segunda opcion)$/.test(n) && C[1]) return {accion:"a_tarea", destino:C[1].id};
+  var pal=function(x){ return _camNv(camNomT276(x)+" "+(x.nombre||"")).split(" ").filter(function(w){ return w.length>3 && !/^(para|con|del|las|los|una|unos|tarea|llamar|revisar|hacer|pagar|ver)$/.test(w); }); };
+  var hit=C.map(function(x){ return pal(x).some(function(w){ return (" "+_camNv(v)+" ").indexOf(" "+w+" ")>=0; }); });
+  if(hit.filter(Boolean).length===1){ var i=hit.indexOf(true); if(_camNv(v).split(" ").length<=6) return {accion:"a_tarea", destino:C[i].id}; }
+  if(/^(no lo guardes|no guardar|no se guarda|es platica|solo platica|ninguna|a ninguna|no va|no va a ninguna|borralo|bórralo|no sirve)$/.test(n)) return {accion:"no_guardar"};
+  if(/^(es (un )?dato|dato|como dato|solo un dato)$/.test(n)) return {accion:"dato"};
+  return null;
+}
+function camMsgPrompt276(gr, t, C, v){
+  var L=[];
+  L.push("Eres Doit, el asistente de Salvador. Van caminando y él te contesta por voz (puede venir impreciso). Hay un MENSAJE que no se sabe a qué tarea va. Entiende a dónde lo manda y conviértelo en UNA acción.");
+  L.push("MENSAJE de "+String(gr.contacto||"")+": “"+gr.ixs.map(function(ix){ var x=t.msgs[ix]; return x?_txMsg(x).replace(/^[^:\n]{1,40}:\s*/,""):""; }).join(" / ").slice(0,700)+"”");
+  L.push("LAS 2 MÁS PROBABLES:\n"+C.map(function(x, i){ return (i+1)+") "+x.id+" · "+String(x.nombre||""); }).join("\n"));
+  L.push("OTRAS TAREAS ABIERTAS (destino = el id):\n"+camCandidatas275(t).filter(function(x){ return !C.some(function(c){ return c.id===x.id; }); }).map(function(x){ return x.id+" · "+String(x.nombre||"").slice(0,80); }).join("\n"));
+  L.push("LO QUE DIJO: “"+v+"”");
+  L.push("ACCIONES:\n- a_tarea: va a una tarea; destino = el id (de las 2 o de la lista).\n- nueva: es una tarea nueva; nombre = nombre corto.\n- dato: es solo un dato.\n- no_guardar: plática, no va a ninguna.\n- despues: lo deja para después.\n- aclarar: SOLO si de verdad no se entiende; respuesta_hablada = UNA pregunta corta.");
+  L.push("respuesta_hablada: 2 a 5 palabras, como un amigo (ej. \"Listo, a Vestidores.\"). Nunca pidas confirmación.");
+  L.push("Contesta SOLO JSON: {\"accion\":\"...\",\"destino\":\"\",\"nombre\":\"\",\"respuesta_hablada\":\"...\"}");
+  return L.join("\n");
+}
+function camMsgEntiende276(v){
+  var gr=camMsgGr276(), t=camTarea274(), key=CAM.L[CAM.i]; if(!gr || !t) return camSiguiente274(1);
+  if(CAM.aclara && CAM.aclara.id===key) v=CAM.aclara.v+". "+v; CAM.aclara=null;
+  var C=CAM.mc||camMsgCands276(gr), loc=camMsgLocal276(v, C);
+  if(loc) return camMsgEjecuta276(gr, t, loc, v, true);
+  var tok=++CAM.tok, t0=Date.now(), listo=false;
+  try{ speechSynthesis.cancel(); }catch(e){}
+  CAM.fase="pensando"; camPinta274(); camPiensa275(true);
+  var fin=function(j){ if(listo) return; listo=true; clearTimeout(to); camPiensa275(false); camLat275("mensaje", Date.now()-t0, !!j);
+    if(tok!==CAM.tok || !CAM.on) return; CAM.fase="";
+    if(!j) return camDi274([{v:"A", t:"No me contestó la IA. Lo dejo pendiente."}], function(){ camSiguiente274(1); });
+    camMsgEjecuta276(gr, t, j, v, true); };
+  var to=setTimeout(function(){ fin(null); }, CAM_IA_MS);
+  try{ preguntaAClaude([{role:"user", content:camMsgPrompt276(gr, t, C, v)}], "rapido", function(txt, err){ if(err) return fin(null); var j=_camJSON275(txt); fin(j && j.accion?j:null); }); }
+  catch(e){ fin(null); }
+}
+function camMsgEjecuta276(gr, t, j, v, vivo){
+  var a=_camNv(j.accion).replace(/\s+/g,"_"), key=CAM.L[CAM.i], dh=String(j.respuesta_hablada||"").replace(/\s+/g," ").trim(), C=CAM.mc||[];
+  if(a==="aclarar"){ CAM.aclara={id:key, v:v}; return camDi274([{v:"A", t:camCorta(dh && /\?/.test(dh)?dh:"¿A cuál de las dos?", 140)}], function(){ CAM.limpia=false; camEscucha274("resp"); }); }
+  if(a==="despues") return camHaz274("despues");
+  if(a==="detalle") return camHaz274("detalle");
+  var dest=null;
+  if(a==="a_tarea" || a==="mover" || a==="vincular"){ a="a_tarea"; var dd=String(j.destino||"").trim();
+    dest=tareaId240(dd); if(!dest){ try{ dest=camDestino275(t, dd); }catch(e){} }
+    if(!dest && dd){ dest=C.filter(function(x){ return _camNv(x.nombre).indexOf(_camNv(dd))>=0; })[0]||null; }
+    if(!dest){ CAM.aclara={id:key, v:v}; return camDi274([{v:"A", t:C.length>=2?"¿A "+camNomT276(C[0])+" o a "+camNomT276(C[1])+"?":"¿A cuál tarea?"}], function(){ CAM.limpia=false; camEscucha274("resp"); }); } }
+  if(!/^(a_tarea|nueva|dato|no_guardar)$/.test(a)){ CAM.aclara={id:key, v:v}; return camDi274([{v:"A", t:"¿A qué tarea lo mando?"}], function(){ CAM.limpia=false; camEscucha274("resp"); }); }
+  var F=camFoto275([t, dest]), nueva=null, dicho="Listo.", vw={a:abierta, v:vista};
+  try{
+    if(a==="a_tarea"){ if(dest.id===t.id) okG237(t, gr.ixs); else moverG237(t, gr.ixs, dest.id); dicho="Listo, a "+camNomT276(dest)+"."; }
+    else if(a==="nueva"){ nueva=nuevaG237(t, gr.ixs, false, String(j.nombre||"").trim()||undefined); dicho=camVar275("mnu", ["Listo, tarea nueva.","Va, la creé."]); }
+    else if(a==="dato"){ nueva=datoG240(t, gr.ixs); dicho="Va, queda como dato."; }
+    else { gr.ixs.forEach(function(ix){ soloPlatica(t, ix); }); try{ reglasPorMsg238("platica", t, gr.ixs, null); }catch(e){} dicho=camVar275("mng", ["Va, no lo guardo.","Listo, fuera."]); }
+  }catch(e){ console.warn("caminata 276 mensaje", e); }
+  abierta=vw.a; vista=vw.v;
+  CAM.ult={foto:F, i:CAM.i, a:"msg_"+a, nueva:nueva?nueva.id:""}; CAM.hechas275=(CAM.hechas275||0)+1;
+  CAM.res276=CAM.res276||{}; CAM.res276[key]=1;
+  try{ render(); }catch(e){}
+  var w=dh.split(" ").filter(Boolean).length; if(dh && w<=8 && !/\?/.test(dh) && !_camCodigo(dh)) dicho=camPunto(dh);
+  camDi274([{v:"A", t:dicho}], function(){ camSiguiente274(1); });
+}
+/* ---------- el cierre ---------- */
+function camEtiq276(id){
+  var k=(CAM.g||{})[id];
+  if(k==="msg"){ var gr=(CAM.mg||{})[id]; var c=gr?limpiaHabla(nombreCorto(gr.contacto||"")||gr.contacto||""):""; return "el mensaje de "+(String(c).split(" ")[0]||"un contacto"); }
+  var t=tareaId240(id); return t?camCorta(camNombre(t), 50).replace(/[.\s]+$/,""):"una tarea";
+}
+function camFin276(){
+  var P=[]; (CAM.L||[]).forEach(function(id){ if((CAM.res276||{})[id]) return; var vivo=false; try{ vivo=camSigue275(id); }catch(e){} if(vivo) P.push(camEtiq276(id)); });
+  (CAM.pendQ||[]).forEach(function(s){ P.push(s); });
+  window.__fin276=P.slice();
+  if(!P.length) return "Bandeja limpia.";
+  var L=P.slice(0,5).join(". ")+(P.length>5?". Y "+(P.length-5)+" más":"");
+  return (P.length===1?"Quedó 1 pendiente: ":"Quedaron "+P.length+" pendientes: ")+L+".";
 }
 
 /* ===================== build 272 (Salvador 7-oct): HOME SÚPER MINIMALISTA =====================

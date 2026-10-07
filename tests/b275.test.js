@@ -7,8 +7,8 @@ var fs = require("fs"), path = require("path");
 var ok = 0, n = 0, malas = [];
 function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
 var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
-eq("versión = 275", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[1], 275);
-eq("sw.js con versión build 275", /var SW_VERSION = 'build 275'/.test(fs.readFileSync(path.join(__dirname, "..", "sw.js"), "utf8")), true);
+eq("versión >= 275", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[1] >= 275, true);   /* build 276: sube con cada build */
+eq("sw.js con versión >= 275", +((fs.readFileSync(path.join(__dirname, "..", "sw.js"), "utf8").match(/var SW_VERSION = 'build (\d+)'/) || [0, 0])[1]) >= 275, true);
 (async function () {
   var pw = require("/opt/node22/lib/node_modules/playwright"), b = await pw.chromium.launch(), p = await b.newPage({ viewport: { width: 390, height: 844 }, timezoneId: "America/Monterrey" }), errs = [];
   p.on("pageerror", function (e) { if (!/firebase is not defined/.test(e.message)) errs.push(e.message); });
@@ -33,7 +33,7 @@ eq("sw.js con versión build 275", /var SW_VERSION = 'build 275'/.test(fs.readFi
     SR.prototype.start = function () { this.vivo = true; window.__srs.push(this); };
     SR.prototype.stop = SR.prototype.abort = function () { var s = this; if (!s.vivo) return; s.vivo = false; setTimeout(function () { if (s.onend) s.onend(); }, 0); };
     window.SpeechRecognition = window.webkitSpeechRecognition = SR;
-    window.srViva = function () { for (var i = window.__srs.length - 1; i >= 0; i--) if (window.__srs[i].vivo) return window.__srs[i]; return null; };
+    window.srViva = function () { for (var i = window.__srs.length - 1; i >= 0; i--) if (window.__srs[i].vivo && !window.__srs[i].__barge) return window.__srs[i]; return null; };   /* build 276: el reconocedor de interrupción (mientras habla) no cuenta */
     window.di = function (txt, fin) { var s = srViva(); if (!s) return false; if (fin) { s.fin.push(txt); s.inter = ""; } else s.inter = txt;
       var R = s.fin.map(function (x) { var r = [{ transcript: x }]; r.isFinal = true; return r; }); if (s.inter) { var q = [{ transcript: s.inter }]; q.isFinal = false; R.push(q); }
       s.onresult({ resultIndex: 0, results: R }); return true; };
@@ -180,7 +180,7 @@ eq("sw.js con versión build 275", /var SW_VERSION = 'build 275'/.test(fs.readFi
       return r; });
     eq("aclarar: UNA pregunta concreta y se queda en la tarea", F.pregunta, [["¿Es tarea o solo un dato?"], "Teléfono del cerrajero"]);
     eq("la respuesta a la aclaración va junto con lo de antes -> dato", F.dato, ["dato", true, true]);
-    eq("al final: frase corta con lo resuelto", /^(Eso es todo\.|Listo, terminamos\.|Ya quedó todo\.) Resolvimos 4\.$/.test(F.fin), true);
+    eq("al final: frase corta (build 276: «Bandeja limpia.» o lo que quedó)", F.fin, "Bandeja limpia.");
 
     /* ---------- 6 · IA caída: no se pierde; mecánica del 274 intacta (2.5 s pregunta, pausa, salir) ---------- */
     var G = await p.evaluate(async function () {
