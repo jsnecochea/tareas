@@ -33,7 +33,7 @@ eq("versión >= 257", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       return { esP: [esPropuesta256(tareas[0]), esPropuesta256(tareas[1]), esPropuesta256(tareas[2]), esPropuesta256(tareas[3])], mias: mias().map(function (t) { return t.id; }), card: !!document.querySelector('[data-p256="p1"]'), txt: (document.querySelector('[data-p256="p1"]') || { innerText: "" }).innerText, fila: !!document.getElementById("bprop256"), filaTxt: (document.getElementById("bprop256") || { innerText: "" }).innerText.replace(/\s+/g, " "), enLista: /Plano de la azotea/.test(Array.prototype.map.call(document.querySelectorAll(".fila,.tar,.row"), function (x) { return x.innerText; }).join(" ")), ab: abiertaVisible(tareas[0]) }; });
     eq("Solo la de la IA sin tipo_elegido es propuesta; no entra en mias() ni abiertaVisible", [r1.esP, r1.mias.indexOf("p1") < 0, r1.ab], [[true, false, false, false], true, false]);
     eq("Acomodo muestra la tarjeta con título, contacto y mensaje", [r1.card, /Tarea nueva propuesta: Plano de la azotea/.test(r1.txt), /WhatsApp · Ing\. Pedro/.test(r1.txt), /plano de la azotea/.test(r1.txt), /OK/.test(r1.txt), /Vincular/.test(r1.txt), /Dato/.test(r1.txt), /No guardar/.test(r1.txt)], [true, true, true, true, true, true, true, true]);
-    eq("Fila superior '1 tarea nueva por revisar' y la propuesta no sale en las listas", [r1.fila, /1 tarea nueva por revisar/.test(r1.filaTxt), r1.enLista], [true, true, false]);
+    eq("Fila superior 'Tareas nuevas' + globito 1 (build 281) y la propuesta no sale en las listas", [r1.fila, /^Tareas nuevas ?1(?!\d)/.test(r1.filaTxt.trim()), r1.enLista], [true, true, false]);
     await foto("b256-1-propuesta.png");
     var r1b = await p.evaluate(function () { var ic = document.querySelector(".acoh span"); return ic ? ic.textContent : ""; });
     eq("Encabezado de Acomodo cuenta las tareas nuevas", /1 tarea nueva/.test(r1b), true);
@@ -78,7 +78,7 @@ eq("versión >= 257", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     await foto("b256-5-nogd.png");
     /* 6) migración: varias propuestas viejas aparecen de una vez; ia_revisor/mac/revisor también */
     var r9 = await p.evaluate(function () { lista([PR("a", "Una"), PR("b", "Dos", { creada_por: "mac" }), PR("c", "Tres", { creada_por: "ia_revisor" }), PR("d", "Cuatro", { creada_por: "revisor" }), PR("e", "Cinco", { estado: "descartada" }), PR("f", "Seis", { fusionada_en: "x" })]); return { n: propuestas256().length, fila: (document.getElementById("bprop256") || { innerText: "" }).innerText.replace(/\s+/g, " ") }; });
-    eq("Migración: las abiertas sin tipo_elegido (ia, mac, revisor, ia_revisor) salen de una vez; descartadas y fusionadas no", [r9.n, /4 tareas nuevas por revisar/.test(r9.fila)], [4, true]);
+    eq("Migración: las abiertas sin tipo_elegido (ia, mac, revisor, ia_revisor) salen de una vez; descartadas y fusionadas no", [r9.n, /^Tareas nuevas ?4(?!\d)/.test(r9.fila.trim())], [4, true]);
     eq("Sin errores de página", errs, []);
   } catch (e) { malas.push("EXCEPCIÓN " + e.stack); }
   await b.close();

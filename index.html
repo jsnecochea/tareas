@@ -668,6 +668,11 @@ button{font:inherit;color:inherit}
 .ttpie{display:flex;justify-content:center;gap:22px;margin:18px 0 10px}.ttpie button{border:0;background:none;color:var(--ink-3);font-size:16px;padding:8px 6px}
 .cll263{margin:10px 0 4px}.clh263{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:6px 19px;font:inherit;color:var(--ink-2);text-align:left}.clh263 b{font-size:17px;font-weight:700}.clh263 .ttn{background:#8e8e93}.ttr .pel263{color:#7cc0ff;font-weight:600}
 .ttch{color:var(--ink-3);font-size:22px;margin-left:auto}
+/* build 281 (Salvador 7-oct): todos los encabezados del home son FICHAS como las de "Te pregunta Doit"
+   (tareas nuevas, mensajes por acomodar, mías futuras, compartidas, las lleva Claude…): fondo de tarjeta, esquinas de 14px */
+.clh263{background:var(--surface);border-radius:14px;padding:11px 14px;margin:0 15px;width:calc(100% - 30px);color:var(--ink);line-height:1.2;cursor:pointer}
+.clh263:active{background:var(--surface-2)}.clh263 .ttch{line-height:1}
+.clh263 b{font-size:16px}
 /* build 270: home reacomodado — rayita delgada con etiqueta chica entre Te pregunta Doit · Vencidas mías · Hoy mías */
 .sep270{display:flex;align-items:center;gap:8px;margin:16px 19px 7px;font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
 .sep270::after{content:"";flex:1;height:.5px;background:var(--line);order:2}
@@ -680,7 +685,7 @@ button{font:inherit;color:inherit}
 .revl.l-preg{background:color-mix(in srgb,#FF7A00 9%,var(--surface));box-shadow:inset 0 0 0 .5px color-mix(in srgb,#FF7A00 35%,transparent)}
 .revl.l-preg .revr{border-top-color:color-mix(in srgb,#FF7A00 18%,var(--line))}
 .abajo270{margin-top:18px;padding-top:6px;border-top:.5px solid var(--line)}
-.abajo270 .cll263{margin:2px 0}.abajo270 .list{margin-top:2px}
+.abajo270 .cll263{margin:8px 0}.abajo270 .cll263>:not(.clh263){margin-top:4px}.abajo270 .list{margin-top:2px}
 .sem270{display:flex;align-items:center;gap:10px;margin-left:4px;font-size:15px;font-weight:600;color:var(--ink-2)}
 .sem270 span{display:flex;align-items:center;gap:5px}.sem270 i{width:9px;height:9px;border-radius:50%}
 .ttr .semw270{font-weight:600}.ttr .semsd270{font-size:13px!important;opacity:.75}
@@ -814,14 +819,14 @@ button{font:inherit;color:inherit}
 .acog{background:var(--surface);border-radius:16px;overflow:hidden}
 .acor.p256{background:rgba(10,132,255,.09)}.p256 .acow b{font-size:16.5px;white-space:normal}.p256de{color:var(--ink-3);font-size:14px}.p256cn{display:inline-block;background:rgba(10,132,255,.2);color:#7cc0ff;border-radius:7px;padding:0 7px;font-weight:700;font-size:12.5px}.p256why{display:block;color:var(--ink-3);font-size:13.5px;line-height:1.35;margin-top:3px}.p256why b{color:var(--ink-2)}.p256x{margin-left:auto;background:none;border:0;color:var(--ink-3);padding:4px 6px}.p256x svg{display:block}.p256m{display:block;color:var(--ink-2);font-size:15px;line-height:1.35;margin-top:1px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .ac226.p256b,.ac226.p256f{margin-top:6px;flex-wrap:wrap}.p256f>span.q{color:var(--ink-2);font-size:15px;margin-right:4px}
-.prop256row{display:flex;align-items:center;justify-content:space-between;width:calc(100% - 24px);margin:8px 12px 2px;padding:12px 14px;border:0;border-radius:14px;background:rgba(10,132,255,.18);color:#7cc0ff;font:inherit;font-size:16px;font-weight:700}.prop256row b{background:#0a84ff;color:#fff;border-radius:11px;padding:1px 9px;font-size:14px}
+.prop256row{margin:8px 15px 4px}.clh263.prop256row .ttn{background:#FF2D55}   /* build 281: ficha «Tareas nuevas» con el globito rojo, igual que Mensajes por acomodar */
 .iatag.nueva256{color:#7cc0ff;background:rgba(10,132,255,.2)}
 .acor{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-bottom:1px solid var(--line);background:var(--surface);transition:transform .15s}.acor:last-child{border-bottom:0}
 .acob{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}.acow{display:flex;justify-content:space-between;align-items:baseline}.acow b{font-size:17px;font-weight:600}.acow time{color:var(--ink-3);font-size:14px}
 .acom{color:var(--ink-2);font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pill226{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;border:1px solid #545458;border-radius:999px;padding:3px 11px 3px 8px;font-size:14px;color:var(--ink);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pill226 .q{color:var(--ink-3)}.acor .ac226{margin:2px 0 0}
-.msg271{margin-top:2px}.msg271 .clh263{padding:6px 4px}.msg271 .ttn.n0{background:#8e8e93}.msg271 .acog{margin-top:6px}   /* build 271 */
+.msg271{margin:4px 15px 4px}.msg271 .clh263{margin:0;width:100%}.msg271 .ttn{background:#FF2D55}.msg271 .ttn.n0{background:#8e8e93}.msg271 .acog{margin-top:6px}   /* build 271 */
 .acohint{text-align:center;color:var(--ink-3);font-size:13px;margin:8px 0 0}
 .acof{display:flex;align-items:center;gap:8px;width:100%;margin-top:10px;background:var(--surface);border:0;border-radius:16px;min-height:52px;padding:0 14px;font:inherit;font-size:16px;color:var(--ink)}
 .acof svg{color:var(--ink-3)}.acof .r{margin-left:auto;color:var(--ink-3);font-size:14.5px}
@@ -1621,7 +1626,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 280 · une 277, 278, 279 y el hotfix de la caminata: lo que dices en la Caminata se escribe en la tarea al instante y el cuestionario se guarda aunque se cierre la app (ya no se pierde); deshacer nunca borra lo que dijiste; el resumen (te preguntan · vencidas · hoy) va hasta abajo del home y arriba solo el ícono de Caminata · build 279 · el resumen de lo que te toca va hasta abajo del home · build 278 · caminata: solo vincula a la tarea que tú nombras (todas las palabras de su nombre o sinónimo), nunca a una que negaste («no tiene que ver con…»); «¿es esta tarea?» / «es la tarea de X» manda sobre lo que entendió; en cada tarea, ↩ junto al ⋯ deshace lo último que se hizo en ella (pide un toque más). Antes, build 277 · caminata: «confírmame» / «¿entendiste bien?» repite la orden y cómo la entendió y espera tu sí antes de hacerla; «deshazlo», «cancela eso», «retrocede», «esa no era» deshacen la última acción; «repíteme» repite lo último y «regresa un poco» relee desde un par de frases antes; en el home, ícono chico de caminata junto al ⋯ en vez de la barra grande";
+var VERSION_APP = "build 281 · home en fichas: «Tareas nuevas» con su globito enseguida, «Mensajes por acomodar», «Mías futuras», «Compartidas», «Las lleva Claude» y las demás secciones ahora son fichas como las de «Te pregunta Doit» · build 280 · une 277, 278, 279 y el hotfix de la caminata: lo que dices en la Caminata se escribe en la tarea al instante y el cuestionario se guarda aunque se cierre la app (ya no se pierde); deshacer nunca borra lo que dijiste; el resumen (te preguntan · vencidas · hoy) va hasta abajo del home y arriba solo el ícono de Caminata · build 279 · el resumen de lo que te toca va hasta abajo del home · build 278 · caminata: solo vincula a la tarea que tú nombras (todas las palabras de su nombre o sinónimo), nunca a una que negaste («no tiene que ver con…»); «¿es esta tarea?» / «es la tarea de X» manda sobre lo que entendió; en cada tarea, ↩ junto al ⋯ deshace lo último que se hizo en ella (pide un toque más). Antes, build 277 · caminata: «confírmame» / «¿entendiste bien?» repite la orden y cómo la entendió y espera tu sí antes de hacerla; «deshazlo», «cancela eso», «retrocede», «esa no era» deshacen la última acción; «repíteme» repite lo último y «regresa un poco» relee desde un par de frases antes; en el home, ícono chico de caminata junto al ⋯ en vez de la barra grande";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -6898,7 +6903,7 @@ function vLista(){
   try{ if(!window.__rfF263 || Date.now()-window.__rfF263>1500){ window.__rfF263=Date.now(); refrescaFalta263(); } }catch(e){}   /* build 263 */
   h+='<!--est272-->'+bannerAvisos();   /* build 272: aquí va la línea de estado (se llena abajo, con el home ya armado) */
   var _pp256=propuestas256();
-  if(_pp256.length){ var _pl=acoPlegado260(); h+='<button class="prop256row" id="bprop256" aria-expanded="'+(_pl?'false':'true')+'"><span>'+_pp256.length+(_pp256.length===1?' tarea nueva por revisar':' tareas nuevas por revisar')+'</span><b>'+ico(_pl?"der":"down",14)+'</b></button>'; }   /* build 256; 260: plega y despliega Acomodo */
+  if(_pp256.length){ var _pl=acoPlegado260(); h+='<button class="prop256row clh263" id="bprop256" aria-expanded="'+(_pl?'false':'true')+'" aria-label="Tareas nuevas por revisar: '+_pp256.length+'"><b>Tareas nuevas</b><span class="ttn">'+_pp256.length+'</span><span class="ttch">'+(_pl?"›":"⌄")+'</span></button>'; }   /* build 256; 260: plega y despliega Acomodo; 281: ficha «Tareas nuevas» + globito */
 
   var msgs=misMensajes();
   var pend=pendientesInfo();

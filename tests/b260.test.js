@@ -47,7 +47,7 @@ eq("versión >= 260", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       document.querySelector('[data-p256="w2"] [data-p256a="ok"]').click(); document.querySelector('[data-p256="w3"] [data-p256a="ok"]').click();
       var cards = document.querySelectorAll("[data-p256]").length, creadas = document.querySelectorAll("[data-p256] .p256f").length, ban = document.getElementById("bprop256").innerText.replace(/\s+/g, " ").trim(), hdr = document.querySelector(".acoh span").textContent;
       return { cards: cards, creadas: creadas, ban: ban, hdr: hdr }; });
-    eq("El número del banner cuadra con las tarjetas (2 propuestas + 2 'Creada')", [r2.cards, r2.creadas, /^4 tareas nuevas por revisar/.test(r2.ban), /4 tareas nuevas/.test(r2.hdr)], [4, 2, true, true]);
+    eq("El número del banner cuadra con las tarjetas (2 propuestas + 2 'Creada')", [r2.cards, r2.creadas, /^Tareas nuevas ?4(?!\d)/.test(r2.ban), /4 tareas nuevas/.test(r2.hdr)], [4, 2, true, true]);
     await foto("b259-2-banner.png");
     var r3 = await p.evaluate(function () { var b = document.getElementById("bprop256"); b.click();
       var plegada = { aco: !!document.querySelector(".aco226:not(.msg271)"), exp: document.getElementById("bprop256").getAttribute("aria-expanded"), ls: localStorage.getItem("bit_aco_pleg260") };
@@ -59,7 +59,7 @@ eq("versión >= 260", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       var otras = tareas.filter(function (x) { return x.id === "w2"; })[0];
       return { cardSigue: !!document.querySelector('[data-p256="w2"]'), fecha: otras.f_vigente || "", elegida: !!otras.tipo_elegido, banner: document.getElementById("bprop256").innerText.replace(/\s+/g, " ").trim(), cards: document.querySelectorAll("[data-p256]").length }; });
     eq("La X de 'Creada · ¿Para cuándo?' la quita de ahí y la deja Sin fecha; el número baja a 3 y cuadra", r4, { cardSigue: false, fecha: "", elegida: true, banner: r4.banner, cards: 3 });
-    eq("Banner dice 3", /^3 tareas nuevas/.test(r4.banner), true);
+    eq("Banner dice 3 (build 281: «Tareas nuevas» + globito)", /^Tareas nuevas ?3(?!\d)/.test(r4.banner), true);
     /* 3) Te pregunta */
     var COB = function () { return { id: "tCOB", nombre: "Cobranza Moric Pádel Draw", duenio: "salvador", creada_por: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, autorizada: true, f_vigente: "2026-10-20", contexto: "Control de cobro de anuncios del restaurante Moric con vales. Se lleva el saldo por mes.", lista_pasos: [{ tx: "Pedir lista de vales", hecho: false }, { tx: "Cobrar septiembre", hecho: false }],
       msgs: [{ k: "bo", de: "salvador", t: "Revisa los vales de Moric", ts: Date.now() - 90000, h: "07:00" }] }; };
