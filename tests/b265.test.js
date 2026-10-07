@@ -32,7 +32,9 @@ eq("versión >= 255", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       window.espera = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
       window.NOW = Date.now(); document.getElementById("app").style.display = "flex"; window.__srlog = 0;
       window.FIDE = function () { return { id: "tRELOJ", nombre: "Reloj Checador Casa", duenio: "salvador", creada_por: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, f_vigente: "2026-10-20", f_original: "2026-10-20", fecha_fija: true, fecha_dictada: true, contexto: "Instalar el reloj checador en la casa.", wa_contactos: [], msgs: [],
-        hecho238: { ts: 1, hecho: ["Fecha límite: 20 oct"], falta: [{ k: "txt", q: "¿Cuándo te recuerdo antes de la fecha límite?", ops: [] }, { k: "txt", q: "¿El próximo seguimiento?", ops: [] }] } }; };
+        hecho238: { ts: 1, hecho: ["Fecha límite: 20 oct"], falta: [{ k: "txt", q: "¿Qué modelo de reloj checador compro?", ops: [] }, { k: "txt", q: "¿En qué pared va instalado?", ops: [] }] } }; };
+      /* build 267 purga a propósito las preguntas de relleno ("¿Cuándo te recuerdo…?", "¿El próximo seguimiento?") cuando la tarea no tiene
+         terceros; esta tarea no tiene, así que aquí van preguntas concretas que sí sobreviven (antes la prueba usaba las de relleno y el chip no salía). */
       window.__SRS = []; window.__micOK = true; window.SpeechRecognition = window.webkitSpeechRecognition = function () { var o = this; o.start = function () { __SRS.push(o); o.on = true; }; o.stop = function () { o.on = false; if (o.onend) o.onend(); }; o.abort = o.stop; };
       window.dicta255 = function (v) { var tx = document.getElementById("txt"); tx.value = v; document.getElementById("tenv").click(); };
       window.abre = function (T, extra) { tareas = [T].concat(extra || []); abierta = T.id; vista = "hilo"; render(); };

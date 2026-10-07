@@ -64,8 +64,10 @@ eq("versión >= 250", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     eq("La tarjeta de la tarea muestra 'Esperando respuesta de Karina → confirmar a Eduardo' con su estado", [rA2.hay, /Esperando respuesta de Karina → confirmar a Eduardo/.test(rA2.txt), /esperando respuesta · vence .*7 de octubre 20:00/.test(rA2.txt)], [true, true, true]);
     await foto("b250-1-encargo-condicional.png");
     /* estado que pone la Mac */
-    var rA3 = await p.evaluate(function () { tareas[0].encargos[0].estado = "contesto_si"; render(); return document.querySelector(".cond250").textContent; });
-    eq("La tarjeta sigue el estado (dijo que sí)", /dijo que sí, ya se confirmó/.test(rA3), true);
+    /* build 263 (y b263.test.js): un condicional cerrado (contesto_si, contesto_no, confirmado, vencido…) se OCULTA solo; mientras espera, se ve */
+    var rA3 = await p.evaluate(function () { var e = tareas[0].encargos[0]; e.estado = "contesto_si"; render(); var oculto = !document.querySelector(".cond250"), sigue = tareas[0].encargos.length === 1 && tareas[0].encargos[0].estado === "contesto_si";
+      e.estado = "esperando"; render(); var h = document.querySelector(".cond250"); return [oculto, sigue, !!h && /esperando respuesta/.test(h.textContent)]; });
+    eq("La tarjeta sigue el estado: al decir que sí se oculta (el encargo queda guardado) y si vuelve a esperar, reaparece", rA3, [true, true, true]);
     /* el pedido_id se anota cuando WhatsApp devuelve el id */
     var rA4 = await p.evaluate(async function (D) { __WA.length = 0; pideWhatsApp = function (c) { __WA.push(c); return Promise.resolve({ id: "ped77" }); }; var M2 = JSON.parse(JSON.stringify(MODELO)); M2.ordenes[0].pregunta_a = "Rogelio Sada"; var T = CENA([{ nombre: "Rogelio Sada", desde: 1 }]); abre(T); modelo(M2, 20); completaRevision(T, D, { sinRevision: true }); await espera(600); return tareas[0].encargos[0].pregunta; }, TXT);
     eq("pedido_id queda en el encargo", rA4, { contacto: "Rogelio Sada", pedido_id: "ped77" });
