@@ -684,6 +684,14 @@ button{font:inherit;color:inherit}
 .sem270{display:flex;align-items:center;gap:10px;margin-left:4px;font-size:15px;font-weight:600;color:var(--ink-2)}
 .sem270 span{display:flex;align-items:center;gap:5px}.sem270 i{width:9px;height:9px;border-radius:50%}
 .ttr .semw270{font-weight:600}.ttr .semsd270{font-size:13px!important;opacity:.75}
+/* build 272: home minimalista — línea de estado arriba, preguntas agrupadas, "Ya está" con la siguiente subiendo, Las lleva Claude en gris tenue */
+.est272{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:2px 4px;margin:10px 16px 2px;font-size:14.5px;font-weight:500;color:var(--ink-3)}
+.est272 button{border:0;background:none;font:inherit;color:inherit;padding:6px 6px;border-radius:10px;min-height:32px}.est272 button b{font-weight:700}
+.est272 .e-preg b{color:#FF7A00}.est272 .e-venc b{color:#FF453A}.est272 .e-hoy b{color:var(--ink-2)}.est272 .dot272{opacity:.5}
+.sep270{scroll-margin-top:12px}
+.ttr.sale272{pointer-events:none;overflow:hidden;transition:height .25s ease,opacity .25s ease,padding .25s ease}
+.cll263.cl272 .clh263{color:var(--ink-3)}.cll263.cl272 .clh263 b{font-weight:600;color:var(--ink-3)}.cll263.cl272 .sem270{color:var(--ink-3);font-weight:500}
+@media (prefers-reduced-motion:reduce){.ttr.sale272{transition:none}}
 .ttg{margin:12px 21px 5px;font-size:13.5px;font-weight:700;letter-spacing:.05em;color:var(--ink-3);text-transform:uppercase}
 .ttmas{justify-content:center;color:#0a84ff;font-size:15.5px;font-weight:600}
 .tth b{font-size:24px!important}
@@ -1549,7 +1557,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 271 · mensajes por acomodar en su propia pestañita plegable (con contador, se recuerda), entre Nuevas tareas para acomodar y Te pregunta Doit · build 270 · home reacomodado: Te pregunta Doit, Vencidas mías y Hoy mías siempre a la vista; abajo Las lleva Claude con semáforo y Mías futuras · build 269 · a Salvador solo le suenan 5 tipos de push (acuerdo, llamada, atorado, IA atorada, recordatorio) · build 268 · notificaciones con tag (sin repetidas) y cerradas al resolver · build 267 · sin bucle de preguntas (Ninguno cierra), sin repreguntas automáticas a terceros · build 266 · toda pregunta de Claude en texto (sin fichas de botones), la respuesta dictada la cierra · build 265 · chip Falta rojo y ancho, micrófono sin autoarranque · build 264 · expedientes: Ya está los deja dormidos, despiertan solos, cerradas y dormidas siempre en búsqueda · recordatorios una vez, siguiente en orden, Hoy solo lo de Salvador, esperas con fecha, falta info coherente, dictado oculto, WhatsApp sin contacto basura";
+var VERSION_APP = "build 272 · home minimalista: línea de estado con contadores, secciones vacías fuera, preguntas de una tarea en un renglón, lo que espera a un tercero pasa a Las lleva Claude, Ya está con la siguiente subiendo · build 271 · mensajes por acomodar en su propia pestañita plegable (con contador, se recuerda), entre Nuevas tareas para acomodar y Te pregunta Doit · build 270 · home reacomodado: Te pregunta Doit, Vencidas mías y Hoy mías siempre a la vista; abajo Las lleva Claude con semáforo y Mías futuras · build 269 · a Salvador solo le suenan 5 tipos de push (acuerdo, llamada, atorado, IA atorada, recordatorio) · build 268 · notificaciones con tag (sin repetidas) y cerradas al resolver · build 267 · sin bucle de preguntas (Ninguno cierra), sin repreguntas automáticas a terceros · build 266 · toda pregunta de Claude en texto (sin fichas de botones), la respuesta dictada la cierra · build 265 · chip Falta rojo y ancho, micrófono sin autoarranque · build 264 · expedientes: Ya está los deja dormidos, despiertan solos, cerradas y dormidas siempre en búsqueda · recordatorios una vez, siguiente en orden, Hoy solo lo de Salvador, esperas con fecha, falta info coherente, dictado oculto, WhatsApp sin contacto basura";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -6191,6 +6199,7 @@ function siguienteDe(t){
   return null;
 }
 function selloYSigue(t, o){
+  try{ if(o && o.tipo==='hecha' && t) window.__sale272={id:t.id, ts:Date.now()}; }catch(e){}   /* build 272: en el home, la siguiente sube a su lugar */
   window.__avSheet=null; window.__avSonando=null; menuOpen=false;
   window.__ultimoDeshacer={id:t.id, tipo:o.tipo, de:o.texto||"", restaurar:o.restaurar, cuando:Date.now()};
   try{ if(navigator.vibrate) navigator.vibrate(15); }catch(e){}
@@ -6822,7 +6831,7 @@ function vLista(){
   }
 
   try{ if(!window.__rfF263 || Date.now()-window.__rfF263>1500){ window.__rfF263=Date.now(); refrescaFalta263(); } }catch(e){}   /* build 263 */
-  h+=bannerAvisos();
+  h+='<!--est272-->'+bannerAvisos();   /* build 272: aquí va la línea de estado (se llena abajo, con el home ya armado) */
   var _pp256=propuestas256();
   if(_pp256.length){ var _pl=acoPlegado260(); h+='<button class="prop256row" id="bprop256" aria-expanded="'+(_pl?'false':'true')+'"><span>'+_pp256.length+(_pp256.length===1?' tarea nueva por revisar':' tareas nuevas por revisar')+'</span><b>'+ico(_pl?"der":"down",14)+'</b></button>'; }   /* build 256; 260: plega y despliega Acomodo */
 
@@ -6958,6 +6967,7 @@ function vLista(){
      desplegadas, sin acordeón) · 5 plegadas: Las lleva Claude (con semáforo), Mías futuras y el resto */
   var _h270=armaHome270(_rev, det, mias_venc, hoyYa, futuras);
   h+=vAcomodo()+vMsgs271()+vHome270(_h270)+vAbajo270(_cl263, _h270, hMis, mis.length);
+  h=h.replace('<!--est272-->', vEstado272(_h270));   /* build 272: línea de estado arriba del todo */
 
   /* ORDEN DEL SWIPE ENTRE TAREAS — Salvador 2026-09-22: el swipe (window.
      ordenSwipe) sigue el mismo orden de las 7 secciones AUNQUE esten
@@ -15529,6 +15539,7 @@ function bindLista(){
   var bc=$("bclr"); if(bc) bc.onclick=function(){ consulta=""; render() };
   var bcp=$("bcomp"); if(bcp) bcp.onclick=function(){ window.__verComp=!window.__verComp; render(); };
   var bcl=$("bcl263"); if(bcl) bcl.onclick=function(){ window.__clL263=!window.__clL263; render(); };
+  try{ bindHome272(); }catch(e){ console.warn("home272", e); }   /* build 272 */
   var be270=$("benc270"); if(be270) be270.onclick=function(){ window.__verEnc270=!window.__verEnc270; render(); };   /* build 270 */
   var br270=$("brev270"); if(br270) br270.onclick=function(){ window.__verRev270=!window.__verRev270; render(); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-ttmas]"),function(b){ b.onclick=function(){ window.__ttMas=window.__ttMas||{}; var g=b.getAttribute("data-ttmas"); window.__ttMas[g]=!window.__ttMas[g]; render(); }; }); var bkc=$("bback"); if(bkc && consulta) bkc.onclick=function(){ consulta=""; render() };
@@ -17466,6 +17477,9 @@ function reparte263(venc, hoyL){
   var vis={};
   function filtra(L){ return L.filter(function(t){ var p=pelota263(t); if(p.de==="claude"){ if(!vis[t.id]){ vis[t.id]=1; out.claude.push({t:t, p:p}); } return false; } return true; }); }
   out.venc=filtra(venc); out.hoy=filtra(hoyL);
+  /* build 272: las que esperan respuesta de un tercero (detenida, en espera de alguien, encargo sin contestar) salen de Vencidas y Hoy hasta que conteste */
+  function filtra272(L){ return L.filter(function(t){ var e=null; try{ e=esperaTercero272(t); }catch(err){ e=null; } if(!e) return true; if(!vis[t.id]){ vis[t.id]=1; out.claude.push({t:t, p:{de:"claude", esperaA:e.corto, fecha:"", txt:"", por:"espera272"}}); } return false; }); }
+  out.venc=filtra272(out.venc); out.hoy=filtra272(out.hoy);
   /* las que esperan a un tercero con fecha conocida (hito) salen de Hoy aunque su fecha ya pasó */
   out.hoy=out.hoy.filter(function(t){ if(esperaConHito263(t)){ if(!vis[t.id]){ vis[t.id]=1; out.claude.push({t:t, p:pelota263(t)}); } return false; } return true; });
   return out;
@@ -17680,12 +17694,14 @@ var COL270={preg:"#FF7A00", venc:"#FF3B30", hoy:"#8e8e93"};
 function vHome270(H){
   var vis={}, ord=[]; [H.preg, H.venc, H.hoy].forEach(function(L){ L.forEach(function(x){ if(!vis[x.t.id]){ vis[x.t.id]=1; ord.push(x.t.id); } }); });
   window.__ttOrden=ord;   /* la lectura en voz ("Escuchar") sigue este mismo orden */
-  if(!ord.length) return '<div class="sep270 s-ok"><span>Todo al día</span></div>';
+  if(!ord.length){ window.__sale272=null; try{ foto272(H); }catch(e){} return '<div class="sep270 s-ok"><span>Todo al día</span></div>'; }
   var h='<div class="h270">', primero=true;
   function sec(k, label, L){ if(!L.length) return;
-    h+='<div class="sep270 s-'+k+'"><span>'+label+'</span><em>'+L.length+'</em>'+(primero?'<button class="ttlee" id="bttlee" aria-label="Escuchar lo que te toca">'+_icoAudif()+'</button>':'')+'</div>'; primero=false;
-    h+='<div class="revl ttl l270 l-'+k+'">'+L.map(function(x){ return '<button class="revr ttr" data-id="'+esc(x.t.id)+'"><i style="background:'+COL270[k]+'"></i><span class="ttx"><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span>'+(x.why?'<small>'+esc(x.why)+'</small>':'')+'</span></button>'; }).join("")+'</div>'; }
+    h+='<div class="sep270 s-'+k+'" id="sec272-'+k+'"><span>'+label+'</span><em>'+L.length+'</em>'+(primero?'<button class="ttlee" id="bttlee" aria-label="Escuchar lo que te toca">'+_icoAudif()+'</button>':'')+'</div>'; primero=false;
+    h+='<div class="revl ttl l270 l-'+k+'">'+filas272(k, L, function(x){ return '<button class="revr ttr" data-id="'+esc(x.t.id)+'"><i style="background:'+COL270[k]+'"></i><span class="ttx"><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span>'+(x.why?'<small>'+esc(x.why)+'</small>':'')+'</span></button>'; })+'</div>'; }
   sec("preg", "Te pregunta Doit", H.preg); sec("venc", "Vencidas mías", H.venc); sec("hoy", "Hoy mías", H.hoy);
+  try{ foto272(H); }catch(e){}
+  window.__sale272=null;   /* build 272: una sola vez, en el primer home después del Ya está */
   return h+'</div>';
 }
 /* una sección plegable de abajo (mismo renglón que "Las lleva Claude") */
@@ -17694,16 +17710,92 @@ function plegable270(id, label, n, abierta, cuerpo){
   return '<div class="cll263 pl270"><button class="clh263" id="'+id+'" aria-expanded="'+(abierta?"true":"false")+'"><b>'+label+'</b><span class="ttn">'+n+'</span><span class="ttch">'+(abierta?"⌄":"›")+'</span></button>'+(abierta?cuerpo():"")+'</div>';
 }
 function vAbajo270(claudeL, H, hMis, nMis){
-  var h='<div class="abajo270">'+vClaudeLleva263(claudeL);
+  var h='';   /* build 272: Las lleva Claude va hasta abajo; sin nada, la sección no existe */
   h+=plegable270("bfut", "Mías futuras", H.fut.length, verFuturas, function(){ return '<ul class="list">'+H.fut.map(function(t){ return fila(t); }).join("")+'</ul>'; });
   h+=plegable270("benc270", "Te encargaron", nMis, !!window.__verEnc270, function(){ return hMis; });
   h+=plegable270("brev270", "Las revisas tú", H.otros.length, !!window.__verRev270, function(){
     return '<div class="revl ttl">'+H.otros.map(function(x){ return '<button class="revr ttr" data-id="'+esc(x.t.id)+'"><i style="background:#636366"></i><span class="ttx"><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span><small>'+esc(((PERSONAS[x.t.duenio]||{}).nombre?("de "+PERSONAS[x.t.duenio].nombre+" · "):"")+x.why)+'</small></span></button>'; }).join("")+'</div>'; });
   var nC=0; try{ nC=compartidasDe().length; }catch(e){}
   h+=plegable270("bcomp", "Compartidas", nC, !!window.__verComp, function(){ try{ return vCompartidas().replace(/^<button class="compbtn"[^>]*>[^<]*<\/button>/,''); }catch(e){ console.warn("compartidas",e); return ""; } });
-  return h+'</div>';
+  h+=vClaudeLleva263(claudeL).replace('<div class="cll263">','<div class="cll263 cl272">');
+  return h?'<div class="abajo270">'+h+'</div>':'';
 }
 
+
+/* ===================== build 272 (Salvador 7-oct): HOME SÚPER MINIMALISTA =====================
+   1 Línea de estado arriba del todo: "3 te preguntan · 2 vencidas · 5 hoy"; cada contador lleva con scroll suave a su sección; en cero no sale.
+   2 Sección vacía = no existe (ni su título).
+   3 Varias preguntas de una misma tarea = UN renglón "N preguntas"; al tocarlo se abre la tarea con el popup de preguntas.
+   4 Lo de Salvador (hoy o vencido) que espera respuesta de un tercero pasa a "Las lleva Claude" hasta que conteste (solo con campos confiables).
+   5 "Ya está": al volver al home, el renglón se cierra en ~250 ms y la siguiente sube a su lugar.
+   6 "Las lleva Claude" hasta abajo, plegada, con su semáforo y el encabezado en gris tenue. */
+function vEstado272(H){
+  var P=[], n;
+  n=H.preg.length; if(n) P.push(['preg', n, n===1?'te pregunta':'te preguntan']);
+  n=H.venc.length; if(n) P.push(['venc', n, n===1?'vencida':'vencidas']);
+  n=H.hoy.length; if(n) P.push(['hoy', n, 'hoy']);
+  if(!P.length) return '';
+  return '<nav class="est272" aria-label="Lo que te toca">'+P.map(function(x, i){ return (i?'<span class="dot272" aria-hidden="true">·</span>':'')+
+    '<button class="e-'+x[0]+'" data-est272="'+x[0]+'"><b>'+x[1]+'</b> '+x[2]+'</button>'; }).join('')+'</nav>';
+}
+/* las preguntas de Claude pendientes en una tarea (las mismas del popup) */
+function nPreg272(t){ try{ return preguntas249(t).length; }catch(e){ return 0; } }
+/* los renglones de una sección: preguntas agrupadas y, si se acaba de dar "Ya está", el renglón fantasma que se cierra */
+function filas272(k, L, base){
+  var out=L.map(function(x){ var r=base(x);
+    if(k==='preg'){ var n=nPreg272(x.t); if(n>=2){ r=r.replace('<button class="revr ttr" data-id=', '<button class="revr ttr" data-preg272="'+n+'" data-id=');
+      r=r.replace(/<small>[\s\S]*?<\/small>/, '<small>'+n+' preguntas</small>'); if(r.indexOf('<small>')<0) r=r.replace('</span></span></button>', '</span><small>'+n+' preguntas</small></span></button>'); } }
+    return r; });
+  var g=fantasma272(k, L);
+  if(g) out.splice(Math.min(g.i, out.length), 0, g.html);
+  return out.join('');
+}
+function fantasma272(k, L){
+  var s=window.__sale272, f=window.__foto272; if(!s || !f || Date.now()-s.ts>15*60e3) return null;
+  if(L.some(function(x){ return x.t.id===s.id; })) return null;
+  var A=f[k]||[], i=-1; A.forEach(function(x, j){ if(x.id===s.id) i=j; }); if(i<0) return null;
+  window.__sale272=null;
+  return {i:i, html:'<button class="revr ttr sale272" aria-hidden="true" tabindex="-1"><i style="background:'+COL270[k]+'"></i><span class="ttx"><span class="rn">'+esc(A[i].nombre)+'</span>'+(A[i].why?'<small>'+esc(A[i].why)+'</small>':'')+'</span></button>'};
+}
+function foto272(H){ var o={}; ['preg','venc','hoy'].forEach(function(k){ o[k]=H[k].map(function(x){ return {id:x.t.id, nombre:x.t.nombre||'Sin nombre', why:x.why||''}; }); }); window.__foto272=o; }
+function anima272(){
+  Array.prototype.forEach.call(document.querySelectorAll('.ttr.sale272'), function(el){
+    var quita=function(){ if(el.parentNode) el.parentNode.removeChild(el); };
+    var red=false; try{ red=window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
+    if(red){ quita(); return; }
+    el.style.height=el.offsetHeight+'px'; void el.offsetHeight;
+    requestAnimationFrame(function(){ el.style.height='0px'; el.style.opacity='0'; el.style.paddingTop='0px'; el.style.paddingBottom='0px'; el.style.borderTopWidth='0px'; });
+    el.addEventListener('transitionend', function(ev){ if(ev.propertyName==='height') quita(); });
+    setTimeout(quita, 400);
+  });
+}
+function bindHome272(){
+  Array.prototype.forEach.call(document.querySelectorAll('[data-est272]'), function(b){ b.onclick=function(){
+    var el=document.getElementById('sec272-'+b.getAttribute('data-est272')); if(el) try{ el.scrollIntoView({behavior:'smooth', block:'start'}); }catch(e){ el.scrollIntoView(); } }; });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-preg272]'), function(b){ b.addEventListener('click', function(){
+    var id=b.getAttribute('data-id'); window.__pq255Last=null;
+    setTimeout(function(){ try{ if(vista==='hilo' && abierta===id && !document.getElementById('preg249')) abrePreguntas249(id, {gesto:true}); }catch(e){} }, 120); }, true); });
+  anima272();
+}
+/* espera de un tercero, SOLO con los campos que ya existen: detenido (quién la detiene), estado "espera" de otra persona, encargo sin contestar.
+   Si la pelota es de Salvador (le preguntan, decide) o ya contestaron después de la espera, no. Sin quién confiable, no. */
+function esperaTercero272(t){
+  if(!t || t.cierre || t.es_recordatorio) return null;
+  var p=null; try{ p=pelota263(t); }catch(e){} if(p && p.por==='te_necesito') return null;
+  var yoN=[]; try{ yoN=misNombres().map(_n179); }catch(e){}
+  var esYo=function(q){ var n=_n179(q); return !n || q===yo || n===_n179(yo) || yoN.indexOf(n)>=0 || (PERSONAS[q] && q===yo); };
+  var msDia=function(f){ return /^\d{4}-\d{2}-\d{2}$/.test(String(f||''))?new Date(f+'T00:00:00').getTime():0; };
+  var c=null;
+  if(t.detenido && t.detenido.quien && !esYo(String(t.detenido.quien))) c={quien:String(t.detenido.quien), desde:msDia(t.detenido.desde)};
+  else if(t.estado==='espera' && t.espera && !esYo(String(t.espera)) && !(PERSONAS[t.espera] && PERSONAS[t.espera].jefe)) c={quien:(PERSONAS[t.espera]||{}).nombre||String(t.espera), desde:+t.espera_desde||0};
+  else if(t.encargado && t.encargado.id){ var e=null; try{ e=(encargos||[]).filter(function(x){ return x.id===t.encargado.id; })[0]; }catch(err){}
+    if(e && !e.cerrado && e.a && !esYo(String(e.a))) c={quien:(PERSONAS[e.a]||{}).nombre||String(e.a), desde:msDia(t.encargado.desde)||(+e.creado||0)}; }
+  if(!c) return null;
+  var lastIn=0; (t.msgs||[]).forEach(function(m){ if(m && !m.oculto && !m.eliminado && +m.wa_in===1 && (+m.ts||0)>lastIn) lastIn=+m.ts||0; });
+  if(c.desde && lastIn>c.desde) return null;   /* ya contestó: vuelve a sus secciones */
+  c.corto=nombreCorto(c.quien).split(' ')[0]||c.quien;
+  return c;
+}
 
 
 /* ===================== build 182 (Salvador 21:53, maqueta "Claude como supervisor") =====================

@@ -82,7 +82,7 @@ eq("sw.js con versión build ≥ 270", +((/var SW_VERSION = 'build (\d+)'/.exec(
     eq("Secciones 2-4 sin acordeón: ningún botón de abrir/cerrar ni renglón resumen", A.sinToggles, 0);
     eq("Puntitos: naranja vivo, rojo y gris; etiqueta de Te pregunta Doit en naranja vivo", A.colores, ["rgb(255, 122, 0)", "rgb(255, 59, 48)", "rgb(142, 142, 147)", "rgb(255, 122, 0)"]);
     eq("Te pregunta Doit lleva su fondo naranja tenue", A.fondoPreg, true);
-    eq("Abajo, plegadas y en orden: Las lleva Claude · Mías futuras · Las revisas tú", A.abajo, ["bcl263", "bfut", "brev270"]);
+    eq("Abajo, plegadas y en orden: Mías futuras · Las revisas tú · y hasta abajo Las lleva Claude (build 272)", A.abajo, ["bfut", "brev270", "bcl263"]);
     eq("Escuchar: el botón vive en el primer separador y lee en el orden del home", A.lee, [true, "tNEC,tVEN,tEXP,tHOY"]);
     eq("El swipe entre tareas sigue el orden del home (2, 3, 4 y luego Claude)", A.swipe.split(",").slice(0, 4).join(","), "tNEC,tVEN,tEXP,tHOY");
     eq("Sin scroll horizontal a 390 px", A.ancho.every(function (w) { return w <= 390; }), true);
@@ -96,7 +96,7 @@ eq("sw.js con versión build ≥ 270", +((/var SW_VERSION = 'build (\d+)'/.exec(
       r.cab = b.innerText.replace(/\s+/g, " ").trim(); r.aria = b.getAttribute("aria-label");
       r.sem = [].map.call(b.querySelectorAll(".sem270 span"), function (s) { return [getComputedStyle(s.querySelector("i")).backgroundColor, s.textContent]; });
       b.click(); await espera(40);
-      r.filas = [].map.call(document.querySelectorAll(".abajo270 .cll263:first-child .ttr"), function (e) { return [e.getAttribute("data-id"), e.className.match(/sem-(\w+)/)[1], (e.querySelector(".semw270") || e.querySelector(".semsd270") || { textContent: "" }).textContent]; });
+      r.filas = [].map.call(document.querySelectorAll(".abajo270 .cl272 .ttr"), function (e) { return [e.getAttribute("data-id"), e.className.match(/sem-(\w+)/)[1], (e.querySelector(".semw270") || e.querySelector(".semsd270") || { textContent: "" }).textContent]; });
       r.directo = ["cR", "cA", "cS", "cV", "cN"].map(function (id) { var t = tareas.filter(function (x) { return x.id === id; })[0]; var s = semaforo270(t, pelota263(t)); return [id, s.c, s.sinDato]; });
       return r; });
     eq("Las lleva Claude viene plegada", B.plegada, true);
