@@ -41,7 +41,7 @@ eq("versión >= 246", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     await p.waitForTimeout(400);
     var r1b = await p.evaluate(function () { var o = {};
       o.orden = [].map.call(document.querySelectorAll("button.revr .rn, [data-id] .nm"), function (e) { return e.textContent.trim(); });
-      o.venc = /1 vencida/.test(document.getElementById("app").textContent); o.dbg = document.getElementById("app").innerHTML.slice(-1800); return o; });
+      o.venc = (function () { var sp = [].filter.call(document.querySelectorAll(".h270 .sep270"), function (x) { return /Vencidas mías/.test(x.textContent); })[0]; return !!sp && /Vencida de ayer/.test(sp.nextElementSibling.textContent); })();   /* build 270: su sección es "Vencidas mías" */ o.dbg = document.getElementById("app").innerHTML.slice(-1800); return o; });
     eq("lista Hoy: con aviso por hora (08:00, 09:30, 11:00), luego aviso sin hora, luego el resto en su orden", r1b.orden.filter(function (x) { return x !== "Vencida de ayer" && !/^\d+ (vencida|para hoy)/.test(x); }),
       ["Junta con Josué", "Revisar contrato", "Pagar predial", "Aviso sin hora", "Llamar al contador", "Comprar tinta"]);
     if (process.env.DBG) console.log(r1b.dbg);

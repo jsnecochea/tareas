@@ -2,6 +2,10 @@
    ACTUALICE SOLA: la navegacion (el index) se pide siempre a la red SIN CACHE,
    asi un cambio publicado llega con solo cerrar y reabrir, sin reinstalar. */
 
+/* build 270: versión del service worker. Cambiar este número cambia los bytes de sw.js, y el navegador instala el SW nuevo
+   (skipWaiting + clients.claim abajo) y borra los caches viejos en 'activate'. */
+var SW_VERSION = 'build 270';
+
 self.addEventListener('install', function(e){ self.skipWaiting(); });
 
 self.addEventListener('activate', function(e){

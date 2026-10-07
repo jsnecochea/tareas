@@ -31,6 +31,8 @@ eq("versión >= 263", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       window.home = function (L) { tareas = L; abierta = null; vista = "lista"; window.__clL263 = false; window.__ttAb = { venc: true, hoy: true }; window.__rfF263 = 0; render(); };
       window.filas = function () { return [].map.call(document.querySelectorAll(".ttl .ttr:not(.ttsum)"), function (b) { return b.querySelector(".rn").textContent; }); };
       window.sumas = function () { return [].map.call(document.querySelectorAll(".ttsum .rn"), function (b) { return b.textContent; }); };
+      /* build 270: secciones siempre desplegadas del home (Te pregunta Doit · Vencidas mías · Hoy mías) */
+      window.secs = function () { var o = {}; [].forEach.call(document.querySelectorAll(".h270 .sep270"), function (s) { var L = s.nextElementSibling; o[s.querySelector("span").textContent] = [].map.call(L.querySelectorAll(".ttr .rn"), function (b) { return b.textContent; }); }); return o; };
     });
     /* ===================== 1. AVISOS UNA VEZ ===================== */
     var A = await p.evaluate(async function () {
@@ -99,13 +101,13 @@ eq("versión >= 263", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
         T("tBAR", "Proyecto Bardas Cumbres", "", { resumen: { pendientes: [{ t: "Llamar a José Mijares", de: "Salvador" }] } }),
         T("tFIE", "Fiesta Navideña", "", { resumen: { que_toca: "Definir fecha y forma de la fiesta" } }),
         T("tNEC", "Pregunta de Claude", "", { hecho238: { ts: 1, hecho: [], falta: [{ k: "txt", q: "¿A qué hora?", ops: [] }] } })];
-      home(L); var r = { suma: sumas(), filas: filas() };
+      home(L); var r = { suma: sumas(), filas: filas(), secs: secs() };
       r.plegada = !document.querySelector(".cll263 .revl"); r.cabecera = (document.querySelector("#bcl263") || {}).innerText || "";
       document.getElementById("bcl263").click(); await espera(50); r.abierta = [].map.call(document.querySelectorAll(".cll263 .ttr"), function (b) { return b.innerText.replace(/\s+/g, " "); });
       r.pelotas = L.map(function (t) { var q = pelota263(t); return [t.id, q.de, q.esperaA]; });
       return r; });
-    eq("'Para hoy' cuenta solo lo de Salvador (Bardas, Fiesta y la pregunta te_necesito)", C.suma.filter(function (x) { return /para hoy|hoy/.test(x); }), ["3 para hoy"]);
-    eq("Claude las lleva (7) viene plegada", [C.plegada, C.cabecera.replace(/\s+/g, " ").trim()], [true, "Claude las lleva 7 ›"]);
+    eq("Build 270: 'Hoy mías' solo lo de Salvador (Bardas, Fiesta); la pregunta de Claude va en 'Te pregunta Doit'", [C.secs["Hoy mías"], C.secs["Te pregunta Doit"]], [["Proyecto Bardas Cumbres", "Fiesta Navideña"], ["Pregunta de Claude"]]);
+    eq("Las lleva Claude (7, semáforo: 7 al corriente) viene plegada", [C.plegada, C.cabecera.replace(/\s+/g, " ").trim()], [true, "Las lleva Claude 7 ›"]);
     var rowOf = function (n) { return C.abierta.filter(function (x) { return x.indexOf(n) === 0; })[0] || ""; };
     eq("Al abrirla: Cena Jueves Amigos con su 'qué toca' y quién tiene la pelota", /Qué toca: Definir lugar y hora de la cena/.test(rowOf("Cena Jueves Amigos")) && /espera a Eduardo/.test(rowOf("Cena Jueves Amigos")), true);
     eq("Decoración Navideña: 'espera a Pato'; Inversiones: 'espera a Cynthia'", [/espera a Pato/.test(rowOf("Decoración Navideña")), /espera a Cynthia/.test(rowOf("Inversiones BBVA"))], [true, true]);
@@ -117,11 +119,11 @@ eq("versión >= 263", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     var D = await p.evaluate(async function () {
       var L = [T("tVES", "Vestidores Carpintería", "", { f_vigente: "2026-10-05", resumen: { pendientes: [{ t: "Manuel ya tiene cita con el carpintero", de: "Manuel", fecha: "2026-10-07" }, { t: "Presupuesto del carpintero", de: "Manuel", fecha: "2026-10-10" }, { t: "Muestra pintada", de: "Manuel", fecha: "2026-10-14" }] } }),
         T("tVEN", "Vencida de verdad", "", { f_vigente: "2026-10-05" })];
-      home(L); var r = { estado: [estadoReal(L[0]), estadoReal(L[1])], filas: filas(), suma: sumas() };
+      home(L); var r = { estado: [estadoReal(L[0]), estadoReal(L[1])], filas: filas(), suma: secs()["Vencidas mías"] };
       document.getElementById("bcl263").click(); await espera(50);
       r.fila = [].map.call(document.querySelectorAll(".cll263 .ttr"), function (b) { return b.innerText.replace(/\s+/g, " "); }); r.hito = esperaConHito263(L[0]); return r; });
     eq("Vestidores (siguiente paso de Manuel con fecha) pasa a 'espera' y NO es vencida", D.estado, ["espera", "vencida"]);
-    eq("Solo cuenta como vencida la que de verdad lo es", [D.filas, D.suma], [["Vencida de verdad"], ["1 vencida"]]);
+    eq("Solo cuenta como vencida la que de verdad lo es", [D.filas, D.suma], [["Vencida de verdad"], ["Vencida de verdad"]]);
     eq("Sale en Claude las lleva con la fecha del hito más próximo (mié 7 oct)", [D.hito && D.hito.fecha, /espera a Manuel/.test(D.fila[0] || "")], ["2026-10-07", true]);
 
     /* ===================== 5. FALTA INFO COHERENTE ===================== */

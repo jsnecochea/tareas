@@ -667,7 +667,23 @@ button{font:inherit;color:inherit}
 .ttr{padding:13px 15px}.ttr .rn{font-size:19.5px!important}.ttr .ttx{flex:1;min-width:0;display:flex;flex-direction:column}.ttr .ttx small{font-size:15.5px;color:var(--ink-3);font-weight:400;margin-top:1px}.ttr i{width:10px;height:10px}
 .ttpie{display:flex;justify-content:center;gap:22px;margin:18px 0 10px}.ttpie button{border:0;background:none;color:var(--ink-3);font-size:16px;padding:8px 6px}
 .cll263{margin:10px 0 4px}.clh263{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:6px 19px;font:inherit;color:var(--ink-2);text-align:left}.clh263 b{font-size:17px;font-weight:700}.clh263 .ttn{background:#8e8e93}.ttr .pel263{color:#7cc0ff;font-weight:600}
-.ttsum .rn{font-weight:600}.ttch{color:var(--ink-3);font-size:22px;margin-left:auto}
+.ttch{color:var(--ink-3);font-size:22px;margin-left:auto}
+/* build 270: home reacomodado — rayita delgada con etiqueta chica entre Te pregunta Doit · Vencidas mías · Hoy mías */
+.sep270{display:flex;align-items:center;gap:8px;margin:16px 19px 7px;font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.sep270::after{content:"";flex:1;height:.5px;background:var(--line);order:2}
+.sep270 span{order:0;white-space:nowrap}.sep270 em{order:1;font-style:normal;font-weight:600;letter-spacing:0;font-size:12.5px;color:var(--ink-3)}
+.sep270 .ttlee{order:3;margin-left:2px;padding:0 2px}
+.sep270.s-preg{color:#FF7A00}.sep270.s-preg em{color:#FF7A00}
+.sep270.s-venc span{color:#FF453A}
+.sep270.s-ok{justify-content:center;color:var(--ink-3);text-transform:none;letter-spacing:0;font-size:15px;font-weight:500;margin-top:22px}.sep270.s-ok::after{display:none}
+.l270 .revr i{width:9px;height:9px}
+.revl.l-preg{background:color-mix(in srgb,#FF7A00 9%,var(--surface));box-shadow:inset 0 0 0 .5px color-mix(in srgb,#FF7A00 35%,transparent)}
+.revl.l-preg .revr{border-top-color:color-mix(in srgb,#FF7A00 18%,var(--line))}
+.abajo270{margin-top:18px;padding-top:6px;border-top:.5px solid var(--line)}
+.abajo270 .cll263{margin:2px 0}.abajo270 .list{margin-top:2px}
+.sem270{display:flex;align-items:center;gap:10px;margin-left:4px;font-size:15px;font-weight:600;color:var(--ink-2)}
+.sem270 span{display:flex;align-items:center;gap:5px}.sem270 i{width:9px;height:9px;border-radius:50%}
+.ttr .semw270{font-weight:600}.ttr .semsd270{font-size:13px!important;opacity:.75}
 .ttg{margin:12px 21px 5px;font-size:13.5px;font-weight:700;letter-spacing:.05em;color:var(--ink-3);text-transform:uppercase}
 .ttmas{justify-content:center;color:#0a84ff;font-size:15.5px;font-weight:600}
 .tth b{font-size:24px!important}
@@ -1532,7 +1548,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 269 · a Salvador solo le suenan 5 tipos de push (acuerdo, llamada, atorado, IA atorada, recordatorio) · build 268 · notificaciones con tag (sin repetidas) y cerradas al resolver · build 267 · sin bucle de preguntas (Ninguno cierra), sin repreguntas automáticas a terceros · build 266 · toda pregunta de Claude en texto (sin fichas de botones), la respuesta dictada la cierra · build 265 · chip Falta rojo y ancho, micrófono sin autoarranque · build 264 · expedientes: Ya está los deja dormidos, despiertan solos, cerradas y dormidas siempre en búsqueda · recordatorios una vez, siguiente en orden, Hoy solo lo de Salvador, esperas con fecha, falta info coherente, dictado oculto, WhatsApp sin contacto basura";
+var VERSION_APP = "build 270 · home reacomodado: Te pregunta Doit, Vencidas mías y Hoy mías siempre a la vista; abajo Las lleva Claude con semáforo y Mías futuras · build 269 · a Salvador solo le suenan 5 tipos de push (acuerdo, llamada, atorado, IA atorada, recordatorio) · build 268 · notificaciones con tag (sin repetidas) y cerradas al resolver · build 267 · sin bucle de preguntas (Ninguno cierra), sin repreguntas automáticas a terceros · build 266 · toda pregunta de Claude en texto (sin fichas de botones), la respuesta dictada la cierra · build 265 · chip Falta rojo y ancho, micrófono sin autoarranque · build 264 · expedientes: Ya está los deja dormidos, despiertan solos, cerradas y dormidas siempre en búsqueda · recordatorios una vez, siguiente en orden, Hoy solo lo de Salvador, esperas con fecha, falta info coherente, dictado oculto, WhatsApp sin contacto basura";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -6851,9 +6867,9 @@ function vLista(){
     }
   }
 
-  var hMis="";
+  var hMis="";   /* build 270: solo la lista; la sección va plegada hasta abajo (vAbajo270) */
   if(mis.length){
-    hMis='<div class="grp">Te encargaron \u00b7 '+mis.length+'</div><ul class="list">';
+    hMis='<ul class="list">';
     mis.forEach(function(e){
       var venc=dDif(e.limite,hoy())>0;
       hMis+='<li><button class="row" data-enc="'+e.id+'">'+
@@ -6898,30 +6914,6 @@ function vLista(){
 
   /* build 263: a Vencidas y Hoy de Salvador solo entra lo que le toca a él; lo que lleva Claude va a "Claude las lleva (N)" */
   var _rp263=reparte263(mias_venc, hoyYa); mias_venc=_rp263.venc; hoyYa=_rp263.hoy; var _cl263=_rp263.claude;
-  var hVenc="";
-  if(mias_venc.length){
-    hVenc=secHead("venc","Vencidas",mias_venc.length,"sb-venc","calx");
-    if(secAbierta==="venc"){ hVenc+='<ul class="list">';
-      mias_venc.forEach(function(t){hVenc+=fila(t,false,"d-sec-venc")}); hVenc+='</ul>'; }
-  }
-
-  var hMsg="";
-  if(msgs.length){
-    hMsg=secHead("msg","Tienes mensajes sin leer",msgs.length,"sb-msg","chat");
-    if(secAbierta==="msg"){ hMsg+='<ul class="list">';
-      msgs.forEach(function(t){hMsg+=fila(t,false,"d-sec-msg")}); hMsg+='</ul>'; }
-  }
-
-  var hHoy="";
-  if(hoyYa.length){
-    hHoy=secHead("hoy","Hoy",hoyYa.length,"sb-hoy","hoja");
-    if(secAbierta==="hoy"){ hHoy+='<ul class="list">'; hoyYa.forEach(function(t){hHoy+=fila(t,false,"d-sec-hoy")}); hHoy+='</ul>'; }
-  }
-  /* build 138 (Salvador 2026-09-25): si hoy no hay tareas, ya no se mete el
-     titulo "Hoy" con su hueco entre las fichas; las fichas quedan seguidas y
-     hasta abajo va UN renglon limpio. */
-  var hHoyNada=hoyYa.length?'':'<div class="hoynada">Hoy no tienes tareas por hacer.</div>';
-
   /* PRÓXIMAS — cuando no hay nada para hoy, en vez del hueco se ven las que
      vienen, agrupadas por dia. El horizonte se adapta al volumen. */
   var proxRestan=0, hProxBody="", dentro=[];
@@ -6961,16 +6953,10 @@ function vLista(){
      algo (primero lo de Por revisar: te espera/atorados, falta informacion, vinculacion, por
      autorizar; luego vencidas, mensajes nuevos y hoy). Abajo Proximas y "Compartidas · N". ===== */
   try{ if(!window.__hitoChk || Date.now()-window.__hitoChk>60000){ window.__hitoChk=Date.now(); chequeoHitos(); /* build 267: chequeoMetas (empujones por WhatsApp al ejecutor) y revisaClaridadTodas (repreguntas) APAGADOS: solo la Mac manda a terceros */ } }catch(e){ console.warn("hitos",e); }   /* build 222: metas */
-  var _tt=armaTeToca(_rev, det, mias_venc, msgs, hoyYa);
-  h+=vAcomodo()+vTeToca(_tt)+vClaudeLleva263(_cl263)+hMis;   /* build 226: Acomodo arriba (solo lo dudoso); 263: Claude las lleva, plegado */
-
-  /* build 181: abajo, chiquito: "Próximas · N ›" y "Compartidas · N ›" (se abren ahi mismo) */
-  var _nComp=0; try{ _nComp=compartidasDe().length; }catch(e){}
-  if(futuras.length || _nComp){
-    h+='<div class="ttpie">'+(futuras.length?'<button id="bfut">Próximas · '+futuras.length+' '+(verFuturas?'⌄':'›')+'</button>':'')+
-       (_nComp?'<button id="bcomp">Compartidas · '+_nComp+' '+(window.__verComp?'⌄':'›')+'</button>':'')+'</div>';
-    if(verFuturas && futuras.length){ h+='<ul class="list">'; futuras.forEach(function(t){h+=fila(t)}); h+='</ul>'; }
-  }
+  /* build 270: el home de arriba hacia abajo — 1 Acomodo (plegable) · 2 Te pregunta Doit · 3 Vencidas mías · 4 Hoy mías (las tres siempre
+     desplegadas, sin acordeón) · 5 plegadas: Las lleva Claude (con semáforo), Mías futuras y el resto */
+  var _h270=armaHome270(_rev, det, mias_venc, hoyYa, futuras);
+  h+=vAcomodo()+vHome270(_h270)+vAbajo270(_cl263, _h270, hMis, mis.length);
 
   /* ORDEN DEL SWIPE ENTRE TAREAS — Salvador 2026-09-22: el swipe (window.
      ordenSwipe) sigue el mismo orden de las 7 secciones AUNQUE esten
@@ -6986,12 +6972,12 @@ function vLista(){
         if(!seen[t.id]){ seen[t.id]=1; out.push(t.id); }
       });
     }
-    agrega(_tt.map(function(x){ return x.t; })); agrega(_rev.map(function(x){ return x.t; })); agrega(mias_venc); agrega(msgs);
-    agrega(hoyYa); agrega(_cl263.map(function(x){ return x.t; })); agrega(recs); agrega(dentro); agrega(futuras);
+    var _x270=function(L){ return L.map(function(x){ return x.t; }); };   /* build 270: el mismo orden del home nuevo */
+    agrega(_x270(_h270.preg)); agrega(_x270(_h270.venc)); agrega(_x270(_h270.hoy)); agrega(_cl263.map(function(x){ return x.t; }));
+    agrega(_h270.fut); agrega(_x270(_h270.otros)); agrega(_rev.map(function(x){ return x.t; })); agrega(mias_venc); agrega(msgs); agrega(hoyYa); agrega(recs); agrega(dentro); agrega(futuras);
     window.ordenSwipe=out.filter(function(id){ var z=(tareas||[]).filter(function(x){ return x && x.id===id; })[0]; return z && !esPropuesta256(z); });   /* build 263: las propuestas de Acomodo no entran */
   })();
 
-  try{ if(window.__verComp) h+=vCompartidas().replace(/^<button class="compbtn"[^>]*>[^<]*<\/button>/,''); }catch(e){ console.warn("compartidas",e); }
   /* LA PANTALLA ES SOLO TUYA — decision de Salvador, 2026-09-03. La pantalla
      del jefe muestra solo lo suyo y lo que lo detiene; lo de los demas se
      consulta preguntandole a Claude. */
@@ -15526,7 +15512,8 @@ function bindLista(){
   var bc=$("bclr"); if(bc) bc.onclick=function(){ consulta=""; render() };
   var bcp=$("bcomp"); if(bcp) bcp.onclick=function(){ window.__verComp=!window.__verComp; render(); };
   var bcl=$("bcl263"); if(bcl) bcl.onclick=function(){ window.__clL263=!window.__clL263; render(); };
-  Array.prototype.forEach.call(document.querySelectorAll("[data-ttab]"),function(b){ b.onclick=function(){ window.__ttAb=window.__ttAb||{}; var g=b.getAttribute("data-ttab"); window.__ttAb[g]=!window.__ttAb[g]; render(); }; });
+  var be270=$("benc270"); if(be270) be270.onclick=function(){ window.__verEnc270=!window.__verEnc270; render(); };   /* build 270 */
+  var br270=$("brev270"); if(br270) br270.onclick=function(){ window.__verRev270=!window.__verRev270; render(); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-ttmas]"),function(b){ b.onclick=function(){ window.__ttMas=window.__ttMas||{}; var g=b.getAttribute("data-ttmas"); window.__ttMas[g]=!window.__ttMas[g]; render(); }; }); var bkc=$("bback"); if(bkc && consulta) bkc.onclick=function(){ consulta=""; render() };
   var bfu=$("bfut"); if(bfu) bfu.onclick=function(){ verFuturas=!verFuturas; render() };
   var bms2=$("bmas"); if(bms2) bms2.onclick=function(){ masDias+=7; render() };
@@ -17472,16 +17459,57 @@ function queTocaTxt263(t, p){
   if(!tx){ var P=pasos263(t).filter(function(x){ return !x.hecho; })[0]; if(P) tx=P.tx; }
   return tx.length>110?tx.slice(0,109)+"…":tx;
 }
+/* build 270: SEMÁFORO de lo que lleva Claude, SOLO con lo que ya traen las tareas (no se inventa nada):
+   - fechas esperadas: pasos pendientes de otro o de Claude con fecha (plan[], resumen.pendientes, o fecha en el texto), encargos abiertos
+     con "cuando" (Claude) o "vence" (condicional: espera la respuesta de un contacto), y los seguimientos programados (seg_a.programados)
+     que ya pasaron sin respuesta del contacto;
+   - el último mensaje que llegó (wa_in) contra el último que mandamos: si lo último es del contacto, ya contestó y esa espera no cuenta.
+   Atraso = días desde la fecha esperada: 0 = verde, 1–2 = amarillo, 3 o más = rojo. Sin ninguna fecha esperada no hay dato confiable:
+   se cuenta como al corriente (verde) y el renglón lo dice ("sin dato de seguimiento"). */
+function msDe270(f, hm){ var d=new Date(f+"T"+(/^\d{2}:\d{2}$/.test(hm||"")?hm:"00:00")+":00"); return d.getTime(); }
+function semaforo270(t, p){
+  var H=hoy(), lastIn=0, lastOut=0, E=[]; p=p||{};
+  (t.msgs||[]).forEach(function(m){ if(!m || m.oculto || m.eliminado) return; var ts=+m.ts||0; if(!ts) return;
+    if(+m.wa_in===1){ if(ts>lastIn) lastIn=ts; return; }
+    var sal=false; try{ sal=esSalidaWA244(m); }catch(e){} if(sal && ts>lastOut) lastOut=ts; });
+  var contesto=lastIn>0 && lastIn>lastOut;
+  var corto=function(n){ return nombreCorto(String(n||"")).split(" ")[0]; };
+  pasos263(t).forEach(function(x){ if(x.hecho) return; var d=dueno263(x.de)||infiereDe263(x.tx); if(!d || d==="yo") return;
+    var f=x.fecha||fechaEnTexto263(x.tx); if(!_fReal(f)) return;
+    E.push({fecha:f, tipo:d==="otro"?"otro":"claude", quien:d==="otro"?(corto(x.de)||p.esperaA||"El contacto"):"Claude"}); });
+  (Array.isArray(t.encargos)?t.encargos:[]).forEach(function(e){ if(!e || ENC_CERRADO263.test(String(e.estado||""))) return;
+    var cond=e.tipo==="condicional", f=String((cond?(e.vence||e.cuando):(e.cuando||e.vence))||"").slice(0,10); if(!_fReal(f)) return;
+    E.push({fecha:f, tipo:cond?"otro":"claude", quien:cond?(corto(e.pregunta&&e.pregunta.contacto)||"El contacto"):"Claude"}); });
+  if(t.seg_a && t.seg_a.contacto && Array.isArray(t.seg_a.programados)){
+    var ahora=Date.now(), sp=t.seg_a.programados.map(function(s){ s=String(s||""); var f=s.slice(0,10); return _fReal(f)?{f:f, ms:msDe270(f, s.slice(11,16))}:null; })
+      .filter(function(o){ return o && o.ms<=ahora && o.ms>lastIn; }).sort(function(a,b){ return a.ms-b.ms; })[0];
+    if(sp) E.push({fecha:sp.f, tipo:"otro", quien:corto(t.seg_a.contacto)||"El contacto", seg:1});
+  }
+  var peor=null;
+  E.forEach(function(x){ var d=dDif(x.fecha, H); if(d<1) return; if(x.tipo==="otro" && !x.seg && contesto) return;
+    if(!peor || d>peor.d) peor={d:d, x:x}; });
+  if(!peor) return {c:"verde", why:"", sinDato:!E.length};
+  var fc=fechaChip(peor.x.fecha), cuando=(fc==="ayer"?"ayer":"el "+fc), dias=peor.d+" día"+(peor.d===1?"":"s");
+  var why=peor.x.tipo==="claude" ? "Claude va atrasado · tocaba "+cuando+" ("+dias+")" : peor.x.quien+" no ha contestado · se esperaba "+cuando+" ("+dias+")";
+  return {c:peor.d>=3?"rojo":"amarillo", why:why, sinDato:false};
+}
+var SEM270={verde:"#30d158", amarillo:"#ffd60a", rojo:"#FF453A"};
 function vClaudeLleva263(L){
   if(!L.length) return "";
-  var ab=!!window.__clL263;
-  var h='<div class="cll263"><button class="clh263" id="bcl263" aria-expanded="'+(ab?"true":"false")+'"><b>Claude las lleva</b><span class="ttn">'+L.length+'</span><span class="ttch">'+(ab?"⌄":"›")+'</span></button>';
-  if(ab){ h+='<div class="revl ttl">'; L.forEach(function(x){ var t=x.t, p=x.p, hito=esperaConHito263(t), qt=queTocaTxt263(t,p);
+  var ab=!!window.__clL263, n={verde:0, amarillo:0, rojo:0}, rk={rojo:0, amarillo:1, verde:2};
+  var S=L.map(function(x, i){ var s={c:"verde", why:"", sinDato:true}; try{ s=semaforo270(x.t, x.p); }catch(e){ console.warn("semaforo270", e); } n[s.c]++; return {t:x.t, p:x.p, s:s, i:i}; })
+    .sort(function(a,b){ return (rk[a.s.c]-rk[b.s.c]) || (a.i-b.i); });
+  var prob=n.amarillo+n.rojo;
+  var sem='<span class="sem270" aria-hidden="true"><span><i style="background:'+SEM270.verde+'"></i>'+n.verde+'</span>'+(n.amarillo?'<span><i style="background:'+SEM270.amarillo+'"></i>'+n.amarillo+'</span>':'')+(n.rojo?'<span><i style="background:'+SEM270.rojo+'"></i>'+n.rojo+'</span>':'')+'</span>';
+  var h='<div class="cll263"><button class="clh263" id="bcl263" aria-expanded="'+(ab?"true":"false")+'" aria-label="Las lleva Claude: '+n.verde+' al corriente, '+prob+' con problema de seguimiento"><b>Las lleva Claude</b>'+sem+'<span class="ttch">'+(ab?"⌄":"›")+'</span></button>';
+  if(ab){ h+='<div class="revl ttl">'; S.forEach(function(x){ var t=x.t, p=x.p, hito=esperaConHito263(t), qt=queTocaTxt263(t,p);
       var pel=hito?("espera a "+nombreCorto(String(hito.quien||p.esperaA||"")).split(" ")[0]+" · "+fechaChip(hito.fecha)):(p.esperaA?"espera a "+p.esperaA+(p.fecha?" · "+fechaChip(p.fecha):""):"Claude lo lleva");
-      h+='<button class="revr ttr" data-id="'+esc(t.id)+'"><i style="background:#8e8e93"></i><span class="ttx"><span class="rn">'+esc(t.nombre||"Sin nombre")+'</span>'+(qt?'<small>Qué toca: '+esc(qt)+'</small>':'')+'<small class="pel263">'+esc(pel)+'</small></span></button>'; });
+      h+='<button class="revr ttr sem-'+x.s.c+'" data-id="'+esc(t.id)+'"><i style="background:'+SEM270[x.s.c]+'"></i><span class="ttx"><span class="rn">'+esc(t.nombre||"Sin nombre")+'</span>'+(qt?'<small>Qué toca: '+esc(qt)+'</small>':'')+'<small class="pel263">'+esc(pel)+'</small>'+
+        (x.s.why?'<small class="semw270" style="color:'+SEM270[x.s.c]+'">'+esc(x.s.why)+'</small>':'')+(x.s.sinDato?'<small class="semsd270">sin dato de seguimiento · cuenta como al corriente</small>':'')+'</span></button>'; });
     h+='</div>'; }
   return h+'</div>';
 }
+
 /* build 263 · 8: la tarjeta de "siguiente paso" (arriba de la tarea): el paso que sigue y quién lo tiene. Lo hecho no va arriba */
 function pasoSiguiente263(t){
   var R=(t.resumen && typeof t.resumen==="object")?t.resumen:{}, L=pasos263(t).filter(function(p){ return !p.hecho; });
@@ -17592,48 +17620,71 @@ function resyncAvisosNotif263(){
   (tareas||[]).forEach(function(t){ if(!t || t.cierre || (t.duenio||"")!==yo) return; avisosDe(t).forEach(function(a){ avisoAlServidor(t, a, claveAviso(t,a)); }); });
 }
 
-/* ---------- "TE TOCA" (Salvador 20:29): una sola lista arriba del inicio. Siempre primero
-   lo de "Por revisar" (te espera / atorados, falta informacion, posible vinculacion, por
-   autorizar), luego preguntas en compartidas, vencidas, mensajes sin leer y hoy. Sin parpadeos. */
-function vTeToca(items){
-  /* build 181 (maqueta "Propuesta limpia", Salvador 21:31): uno por uno solo lo que pide tu
-     accion (te preguntan / atorado, falta informacion, por autorizar); vencidas y hoy en UN
-     renglon cada uno que se abre ahi mismo. Sin titulos de grupo: el colorcito dice que es.
-     Los mensajes que solo informan NO entran: la tarea se queda con su globito. */
-  if(!items.length) return '<div class="tth"><b>Te toca</b><span class="ttz">todo al día</span></div>';
-  window.__ttAb=window.__ttAb||{};
-  var uno=items.filter(function(x){ return !x.sum; }), sums={};
-  items.filter(function(x){ return x.sum; }).forEach(function(x){ (sums[x.sum]=sums[x.sum]||[]).push(x); });
-  var h='<div class="tth"><b>Te toca</b><span class="ttn">'+items.length+'</span></div><div class="revl ttl">';
-  var _nf=uno.filter(function(x){ return x.grp==="falta"; }).length, _puso=false;
-  function fila(x){ var pre=""; if(x.grp==="falta" && !_puso){ _puso=true; pre='<div class="ttgrp">Falta info · '+_nf+'</div>'; }
-    return pre+'<button class="revr ttr" data-id="'+esc(x.t.id)+'"><i style="background:'+x.col+'"></i><span class="ttx"><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span><small>'+esc(x.why)+'</small></span></button>'; }
-  uno.forEach(function(x){ h+=fila(x); });
-  [["venc","vencida","vencidas","#FF453A"],["hoy","para hoy","para hoy","#8e8e93"]].forEach(function(s){
-    var l=sums[s[0]]; if(!l) return;
-    var ab=window.__ttAb[s[0]];
-    h+='<button class="revr ttr ttsum" data-ttab="'+s[0]+'"><i style="background:'+s[3]+'"></i><span class="ttx"><span class="rn">'+l.length+' '+(l.length===1?s[1]:s[2])+'</span></span><span class="ttch">'+(ab?'⌄':'›')+'</span></button>';
-    if(ab) l.forEach(function(x){ h+=fila(x); });
-  });
+/* ===================== build 270 (Salvador 7-oct): EL HOME REACOMODADO =====================
+   De arriba hacia abajo: 1 "Nuevas tareas para acomodar" (Acomodo, plegable como antes) · 2 "Te pregunta Doit" · 3 "Vencidas mías" · 4 "Hoy mías"
+   · 5 plegadas: "Las lleva Claude" (con semáforo), "Mías futuras" y el resto (Te encargaron, Las revisas tú, Compartidas).
+   2, 3 y 4: sin acordeón, siempre desplegadas, separadas solo por una rayita con su etiqueta chica. Solo lo que le toca 100% a quien ve el home:
+   lo que tiene otro dueño (lo revisa o ya le escaló) baja a "Las revisas tú". Cada tarea sale UNA vez, en la primera sección que le toca.
+   - Te pregunta Doit (naranja vivo): alguien te espera / tu decisión, te preguntan, preguntas de Claude (preguntas249), falta info,
+     entrevista de medida, por autorizar y posible vinculación.
+   - Vencidas mías (rojo): vencidas y las que no tienen fecha definida (sin f_vigente, no indefinidas, sin aviso).
+   - Hoy mías (gris): lo de hoy, primero lo que despertó (expediente con algo nuevo). */
+function suya270(t){ return !!t && (t.duenio===yo || (t.es_recordatorio && !t.duenio)); }
+function sinDefinir270(t){ try{ return !!t && !t.f_vigente && !t.es_recordatorio && t.indefinida!==true && !campanaDe(t); }catch(e){ return false; } }
+function nuevo270(t){ return !!(t && t.nuevo264 && Date.now()-t.nuevo264<3*864e5); }
+function armaHome270(rev, det, venc, hoyL, futL){
+  var out={preg:[], venc:[], hoy:[], otros:[], fut:[]}, ya={};
+  function pon(L, t, why){ if(!t || ya[t.id]) return; ya[t.id]=1; L.push({t:t, why:why||""}); }
+  function vivo(t){ try{ return !!t && !t.cierre && !esDormida264(t) && !esPropuesta256(t) && !t.fusionada_en && estadoReal(t)!=="cerrada"; }catch(e){ return false; } }
+  /* 2 · TE PREGUNTA DOIT */
+  rev.filter(function(x){ return x.k==="espera"; }).forEach(function(x){ pon(out.preg, x.t, etiquetaRev(x.t,x.k)); });
+  det.forEach(function(t){ pon(out.preg, t, esDecisionSal(t)?"esperan tu decisión":"alguien te espera"); });
+  var _q=[]; try{ _q=compartidasDe(); }catch(e){}
+  _q.concat(tareas.filter(function(t){ return t && t.duenio===yo && vivo(t) && !t.es_recordatorio; }))
+    .forEach(function(t){ var p=null; try{ p=preguntaParaMi(t); }catch(e){} if(p) pon(out.preg, t, p.de+(p.todos?" pide opinión a todos":" te pregunta")); });
+  tareas.forEach(function(t){ if(!vivo(t) || t.es_recordatorio || !(t.duenio===yo || (!t.duenio && t.creada_por===yo))) return;
+    var Q=[]; try{ Q=preguntas249(t); }catch(e){} if(Q.length) pon(out.preg, t, String(Q[0].q||"Claude te pregunta")); });
+  rev.filter(function(x){ return x.k==="falta"; }).forEach(function(x){ var fp=null; try{ fp=faltaPrimero(completitud(x.t)); }catch(e){} pon(out.preg, x.t, (fp&&fp.txt)||"falta info"); });
+  tareas.forEach(function(t){ try{ if(entrevistaPendiente(t)) pon(out.preg, t, "falta información · ¿cómo medimos a "+((PERSONAS[t.duenio]||{}).nombre||"")+"?"); }catch(e){} });
+  rev.filter(function(x){ return x.k==="autorizar" || x.k==="vincular"; }).forEach(function(x){ pon(out.preg, x.t, x.k==="vincular"?"posible vinculación":"por autorizar"); });
+  /* 3 · VENCIDAS MÍAS (vencidas y sin fecha definida) */
+  var pre=function(t, s){ return (nuevo270(t)?"Nuevo · ":"")+s; };
+  venc.forEach(function(t){ if(suya270(t)) pon(out.venc, t, pre(t, vencioTxt(t))); else pon(out.otros, t, vencioTxt(t)); });
+  hoyL.forEach(function(t){ if(suya270(t) && sinDefinir270(t)) pon(out.venc, t, pre(t, "sin fecha · falta definir cuándo")); });
+  /* 4 · HOY MÍAS: primero lo que despertó */
+  tareas.filter(function(t){ return nuevo270(t) && vivo(t) && !t.es_recordatorio && leToca(t) && hoyL.indexOf(t)>=0; })
+    .sort(function(a,b){ return b.nuevo264-a.nuevo264; }).forEach(function(t){ if(suya270(t)) pon(out.hoy, t, "Nuevo · llegó algo"); });
+  hoyL.forEach(function(t){ var c=null; try{ c=campanaDe(t); }catch(e){} var w=c?c.txt:"hoy"; if(suya270(t)) pon(out.hoy, t, w); else pon(out.otros, t, w); });
+  /* 5 · las futuras: las suyas a "Mías futuras"; las de otro dueño a "Las revisas tú" */
+  (futL||[]).forEach(function(t){ if(ya[t.id]) return; if(suya270(t)){ ya[t.id]=1; out.fut.push(t); } else pon(out.otros, t, fechaChip(t.f_vigente)||"próxima"); });
+  return out;
+}
+var COL270={preg:"#FF7A00", venc:"#FF3B30", hoy:"#8e8e93"};
+function vHome270(H){
+  var vis={}, ord=[]; [H.preg, H.venc, H.hoy].forEach(function(L){ L.forEach(function(x){ if(!vis[x.t.id]){ vis[x.t.id]=1; ord.push(x.t.id); } }); });
+  window.__ttOrden=ord;   /* la lectura en voz ("Escuchar") sigue este mismo orden */
+  if(!ord.length) return '<div class="sep270 s-ok"><span>Todo al día</span></div>';
+  var h='<div class="h270">', primero=true;
+  function sec(k, label, L){ if(!L.length) return;
+    h+='<div class="sep270 s-'+k+'"><span>'+label+'</span><em>'+L.length+'</em>'+(primero?'<button class="ttlee" id="bttlee" aria-label="Escuchar lo que te toca">'+_icoAudif()+'</button>':'')+'</div>'; primero=false;
+    h+='<div class="revl ttl l270 l-'+k+'">'+L.map(function(x){ return '<button class="revr ttr" data-id="'+esc(x.t.id)+'"><i style="background:'+COL270[k]+'"></i><span class="ttx"><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span>'+(x.why?'<small>'+esc(x.why)+'</small>':'')+'</span></button>'; }).join("")+'</div>'; }
+  sec("preg", "Te pregunta Doit", H.preg); sec("venc", "Vencidas mías", H.venc); sec("hoy", "Hoy mías", H.hoy);
   return h+'</div>';
 }
-function armaTeToca(rev, det, venc, msgs, hoyYa){
-  /* orden (Salvador 21:10): atoradas/te preguntan · falta informacion · por autorizar · vencidas · hoy */
-  var out=[], ya={};
-  function pon(t, why, col, sum){ if(!t || ya[t.id]) return; ya[t.id]=1; out.push({t:t, why:why, col:col, sum:sum||null}); }
-  /* build 264: lo que despertó (expediente con algo nuevo) va hasta arriba con la marca "Nuevo" */
-  tareas.filter(function(t){ return t && t.nuevo264 && Date.now()-t.nuevo264<3*864e5 && !esDormida264(t) && !t.cierre && leToca(t) && !t.es_recordatorio; })
-    .sort(function(a,b){ return b.nuevo264-a.nuevo264; }).forEach(function(t){ pon(t, "Nuevo · llegó algo", "#0a84ff"); });
-  rev.filter(function(x){ return x.k==="espera"; }).forEach(function(x){ pon(x.t, etiquetaRev(x.t,x.k), "#ff9f0a"); });
-  det.forEach(function(t){ pon(t, esDecisionSal(t)?"esperan tu decisión":"alguien te espera", "#ff9f0a"); });
-  compartidasDe().concat(tareas.filter(function(t){ return t.duenio===yo && !t.cierre && estadoReal(t)!=="cerrada" && !esDormida264(t) && !t.es_recordatorio; }))
-    .forEach(function(t){ var p=null; try{ p=preguntaParaMi(t); }catch(e){} if(p) pon(t, p.de+(p.todos?" pide opinión a todos":" te pregunta"), "#ff9f0a"); });
-  rev.filter(function(x){ return x.k==="falta"; }).forEach(function(x){ var _fp=faltaPrimero(completitud(x.t))||{txt:"falta info",col:"#4aa3ff"}; pon(x.t, _fp.txt, _fp.col); out[out.length-1].grp="falta"; });   /* build 195 */
-  tareas.forEach(function(t){ try{ if(entrevistaPendiente(t)) pon(t, "falta información · ¿cómo medimos a "+((PERSONAS[t.duenio]||{}).nombre||"")+"?", "#0a84ff"); }catch(e){} });
-  rev.filter(function(x){ return x.k==="autorizar"||x.k==="vincular"; }).forEach(function(x){ pon(x.t, x.k==="vincular"?"posible vinculación":"por autorizar", x.k==="vincular"?"#bf5af2":"#30d158"); });
-  venc.forEach(function(t){ pon(t, vencioTxt(t), "#FF453A", "venc"); });   /* build 191: recurrente = "tocaba X, sin confirmar" */
-  hoyYa.forEach(function(t){ pon(t, "hoy", "#8e8e93", "hoy"); });
-  return out;
+/* una sección plegable de abajo (mismo renglón que "Las lleva Claude") */
+function plegable270(id, label, n, abierta, cuerpo){
+  if(!n) return "";
+  return '<div class="cll263 pl270"><button class="clh263" id="'+id+'" aria-expanded="'+(abierta?"true":"false")+'"><b>'+label+'</b><span class="ttn">'+n+'</span><span class="ttch">'+(abierta?"⌄":"›")+'</span></button>'+(abierta?cuerpo():"")+'</div>';
+}
+function vAbajo270(claudeL, H, hMis, nMis){
+  var h='<div class="abajo270">'+vClaudeLleva263(claudeL);
+  h+=plegable270("bfut", "Mías futuras", H.fut.length, verFuturas, function(){ return '<ul class="list">'+H.fut.map(function(t){ return fila(t); }).join("")+'</ul>'; });
+  h+=plegable270("benc270", "Te encargaron", nMis, !!window.__verEnc270, function(){ return hMis; });
+  h+=plegable270("brev270", "Las revisas tú", H.otros.length, !!window.__verRev270, function(){
+    return '<div class="revl ttl">'+H.otros.map(function(x){ return '<button class="revr ttr" data-id="'+esc(x.t.id)+'"><i style="background:#636366"></i><span class="ttx"><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span><small>'+esc(((PERSONAS[x.t.duenio]||{}).nombre?("de "+PERSONAS[x.t.duenio].nombre+" · "):"")+x.why)+'</small></span></button>'; }).join("")+'</div>'; });
+  var nC=0; try{ nC=compartidasDe().length; }catch(e){}
+  h+=plegable270("bcomp", "Compartidas", nC, !!window.__verComp, function(){ try{ return vCompartidas().replace(/^<button class="compbtn"[^>]*>[^<]*<\/button>/,''); }catch(e){ console.warn("compartidas",e); return ""; } });
+  return h+'</div>';
 }
 
 
@@ -18098,14 +18149,6 @@ document.addEventListener("click",function(e){
     window.__leeHilo=ahora;
     try{ leeExtras(); }catch(e){}
     return r;
-  };
-  var _tt=vTeToca;
-  vTeToca=function(items){
-    var ord=[]; (items||[]).forEach(function(x){ if(x && x.t && ord.indexOf(x.t.id)<0) ord.push(x.t.id); });
-    window.__ttOrden=ord;
-    var h=_tt.apply(this, arguments);
-    if(ord.length) h=h.replace('<div class="tth"><b>Te toca</b>','<div class="tth"><b>Te toca</b><button class="ttlee" id="bttlee" aria-label="Escuchar Te toca">'+_icoAudif()+'</button>');
-    return h;
   };
 })();
 function _icoAudif(){ return '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="6.5" rx="1.6"/><rect x="16.5" y="14" width="4.5" height="6.5" rx="1.6"/></svg>'; }
