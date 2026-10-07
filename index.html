@@ -1626,7 +1626,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 281 · home en fichas: «Tareas nuevas» con su globito enseguida, «Mensajes por acomodar», «Mías futuras», «Compartidas», «Las lleva Claude» y las demás secciones ahora son fichas como las de «Te pregunta Doit» · build 280 · une 277, 278, 279 y el hotfix de la caminata: lo que dices en la Caminata se escribe en la tarea al instante y el cuestionario se guarda aunque se cierre la app (ya no se pierde); deshacer nunca borra lo que dijiste; el resumen (te preguntan · vencidas · hoy) va hasta abajo del home y arriba solo el ícono de Caminata · build 279 · el resumen de lo que te toca va hasta abajo del home · build 278 · caminata: solo vincula a la tarea que tú nombras (todas las palabras de su nombre o sinónimo), nunca a una que negaste («no tiene que ver con…»); «¿es esta tarea?» / «es la tarea de X» manda sobre lo que entendió; en cada tarea, ↩ junto al ⋯ deshace lo último que se hizo en ella (pide un toque más). Antes, build 277 · caminata: «confírmame» / «¿entendiste bien?» repite la orden y cómo la entendió y espera tu sí antes de hacerla; «deshazlo», «cancela eso», «retrocede», «esa no era» deshacen la última acción; «repíteme» repite lo último y «regresa un poco» relee desde un par de frases antes; en el home, ícono chico de caminata junto al ⋯ en vez de la barra grande";
+var VERSION_APP = "build 282 · seguimientos con tono de líder (sin conteos, regaños ni amenazas) y «recuérdame el martes de X y Y» deja el aviso de ese día y los pasos en la lista, sin IA · build 281 · home en fichas: «Tareas nuevas» con su globito enseguida, «Mensajes por acomodar», «Mías futuras», «Compartidas», «Las lleva Claude» y las demás secciones ahora son fichas como las de «Te pregunta Doit» · build 280 · une 277, 278, 279 y el hotfix de la caminata: lo que dices en la Caminata se escribe en la tarea al instante y el cuestionario se guarda aunque se cierre la app (ya no se pierde); deshacer nunca borra lo que dijiste; el resumen (te preguntan · vencidas · hoy) va hasta abajo del home y arriba solo el ícono de Caminata · build 279 · el resumen de lo que te toca va hasta abajo del home · build 278 · caminata: solo vincula a la tarea que tú nombras (todas las palabras de su nombre o sinónimo), nunca a una que negaste («no tiene que ver con…»); «¿es esta tarea?» / «es la tarea de X» manda sobre lo que entendió; en cada tarea, ↩ junto al ⋯ deshace lo último que se hizo en ella (pide un toque más). Antes, build 277 · caminata: «confírmame» / «¿entendiste bien?» repite la orden y cómo la entendió y espera tu sí antes de hacerla; «deshazlo», «cancela eso», «retrocede», «esa no era» deshacen la última acción; «repíteme» repite lo último y «regresa un poco» relee desde un par de frases antes; en el home, ícono chico de caminata junto al ⋯ en vez de la barra grande";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -3253,8 +3253,8 @@ function creaEncargo(para, texto, tareaId, limite){
   guardaEncargo(e);
   if(t){
     t.encargado={a:para, id:e.id, desde:hoy()};
-    msg(t,"bi","Le pediste a "+PERSONAS[para].nombre+": “"+e.texto+"”. La tarea sigue siendo tuya — "+
-      "si él no contesta, el rojo es tuyo. Te aviso si se queda callado.");
+    msg(t,"bi","Le pediste a "+PERSONAS[para].nombre+": “"+e.texto+"”. La tarea sigue siendo tuya; "+
+      "si no contesta, te aviso.");   /* build 282 (F39): tono */
     guarda(t);
   }
   return e;
@@ -5419,31 +5419,37 @@ function subeAlJefe(t){
     texto:"“"+t.nombre+"”: "+(f==="escalonado"
       ? acum+" vueltas perdidas seguidas"
       : acum+" días vencida")+
-      ". Le pregunté "+toques+" "+(toques===1?"vez":"veces")+" y sigue igual."};
+      " y todavía sin fecha nueva. Ya le propuse el siguiente paso; una palabra tuya puede destrabarla."};   /* build 282 (F39): sin conteo de veces */
 }
 
 /* lo que yo hago antes de molestar a nadie.
    'dicho' es el texto que escribió Claude para ESTA tarea. Si no llegó (sin
    internet, sin proxy, o contestó cualquier cosa), se usa el texto de siempre:
    el correteo NUNCA se detiene porque la IA no contestó. */
+/* build 282 (F39): textos de respaldo del correteo (cuando Claude no redacta). Rotan para no repetir el mismo texto. */
+var EMPUJON282=[
+  function(x){ return "“"+x+"” ya pasó su fecha. ¿Cuál es el siguiente paso y qué día te queda para cerrarla? Si algo te frena, dime y lo resolvemos juntos."; },
+  function(x){ return "Retomemos “"+x+"”: con una fecha corta la dejamos encaminada. ¿Qué te ayudaría a terminarla?"; },
+  function(x){ return "Propongo partir “"+x+"” en un paso chico para esta semana. ¿Qué día te queda? Si prefieres otro plan o que la apoye alguien más, dímelo."; },
+  function(x){ return "Vamos por “"+x+"”: ¿qué es lo primero que se puede avanzar hoy? Cuenta conmigo para lo que necesites."; }
+];
+function textoEmpujon282(nombre, n){ n=Math.max(0, +n||0); var i=n<EMPUJON282.length?n:1+((n-1)%(EMPUJON282.length-1)); return EMPUJON282[i](nombre); }
 function empujon(t, dicho){
   t.empujones=t.empujones||[];
   var n=t.empujones.length, f=formaDanio(t), r=ritmo(t);
   var txt;
   if(dicho && String(dicho).trim().length>8){ txt=String(dicho).trim(); }
   else if(r && !danioAcumulado(t)){
+    /* build 282 (F39, regla TONO DE LOS SEGUIMIENTOS de Salvador 2026-10-04): proactivo y motivador, como lider de empresa top:
+       reconoce + propone el siguiente paso + ofrece ayuda + pide una fecha corta. Nunca conteos, regaños ni tercera persona. */
     txt = r.va_a_fallar
-      ? "Vas "+r.atraso+" día"+(r.atraso===1?"":"s")+" atrás en “"+r.paso+"”. Todavía no vence, pero con lo que queda ya no alcanza. ¿Qué necesitas para destrabarlo hoy?"
-      : "Te falta “"+r.paso+"”, que debía estar hace "+r.atraso+" día"+(r.atraso===1?"":"s")+". ¿Lo sacas hoy?";
+      ? "“"+r.paso+"” va un poco atrás, pero todavía estamos a tiempo de sacar “"+t.nombre+"”. ¿Qué te ayudaría a destrabarlo hoy? Si necesitas algo, dímelo y lo resolvemos."
+      : "Sigue “"+r.paso+"” en “"+t.nombre+"”. ¿Lo dejamos listo hoy? Si algo lo frena, dime qué necesitas.";
   } else if(n===0 && sinFinal(t)){
     /* build 191: recurrente/indefinida no tiene finiquito: se pide el avance, en positivo */
     txt="Tocaba “"+t.nombre+"” el "+fechaBonita(t.f_vigente)+". ¿Ya quedó? Si sí, dímelo y la paso a la siguiente.";
-  } else if(n===0){
-    txt="Ya venció “"+t.nombre+"”. ¿Por qué no la terminaste, y para cuándo la acabas?";
-  } else if(n===1){
-    txt="Segunda vez que te pregunto por “"+t.nombre+"”. Necesito una fecha, no un “ahorita”.";
   } else {
-    txt="Van "+(n+1)+" veces. Si no la puedes sacar, dilo y la movemos con Salvador — pero callado no se queda.";
+    txt=textoEmpujon282(t.nombre, n);
   }
   t.empujones.push({f:hoy(),t:txt});
   msg(t,"bal",txt); t.msgs[t.msgs.length-1].aviso=1;
@@ -5515,13 +5521,17 @@ function vozDelCorreteo(sel, cb){
    "Eres el que persigue las tareas en Duet, la bitacora de una oficina chica en "+
    "Mexico. El motor ya decidio a quien hay que apretar; tu SOLO REDACTAS el "+
    "mensaje que le va a caer en su chat.\n"+
-   "COMO SE ESCRIBE: le hablas de tu a la persona responsable, en español de "+
-   "Mexico, directo y sin saludo ni preambulo. MAXIMO 2 renglones. Le pides algo "+
-   "CONCRETO: una fecha o que diga que la traba. Si ya se le pregunto varias "+
-   "veces (mira 'toques'), le subes el tono sin faltarle al respeto. Si lo "+
-   "ultimo que contesto fue un 'ahorita' o algo sin fecha, se lo cobras.\n"+
-   "PROHIBIDO: inventar datos, montos o fechas que no vengan abajo; regañar por "+
-   "regañar; escribir mas de 2 renglones; poner el nombre de la persona al "+
+   "COMO SE ESCRIBE (build 282, regla de Salvador): como lo escribiria un lider de "+
+   "una empresa de primer nivel: PROACTIVO y MOTIVADOR. Le hablas de tu a la persona "+
+   "responsable, en español de Mexico, sin saludo ni preambulo. MAXIMO 2 renglones. "+
+   "Estructura: reconoce el avance o el esfuerzo, propone el siguiente paso concreto, "+
+   "ofrece ayuda o un plan B y pide una fecha corta. Firme en la fecha, nunca duro. "+
+   "Si ya se le pregunto antes (mira 'toques'), cambia el enfoque (partirla en un paso "+
+   "chico, ofrecer apoyo), nunca subas el tono.\n"+
+   "PROHIBIDO: inventar datos, montos o fechas que no vengan abajo; regañar; amenazar "+
+   "(\"le aviso a tu jefe\"); contar cuantas veces se le ha dicho (\"van 3 veces\"); "+
+   "pedir explicaciones de por que no se hizo; hablar de Salvador en tercera persona; "+
+   "repetir un texto anterior; escribir mas de 2 renglones; poner el nombre de la persona al "+
    "principio como si fuera carta.\n"+
    "Contesta SOLO un JSON, la llave es el numero 'n' de cada una:\n"+
    '{"0":"texto","3":"texto"}\n\n'+
@@ -6559,7 +6569,7 @@ function vEncargar(){
   if(!t){vista="lista";return vLista()}
   return encabezado("¿Quién lo hace?", t.nombre)+
     '<div class="scroll"><div class="adm">'+
-    '<p>La tarea <b>sigue siendo tuya</b>. Si no contesta, el rojo es tuyo — pero te aviso todos los días.</p>'+
+    '<p>La tarea <b>sigue siendo tuya</b>. Si no contesta, te aviso todos los días.</p>'+
     '<div class="sug">'+listaPersonas(yo)+'</div>'+
     '<div id="encpaso2" style="display:none"><h2 style="margin-top:18px">¿Qué le pides?</h2>'+
     '<textarea class="inp2" id="enctxt" rows="3" placeholder="Confirma que llegó la pipa hoy, con foto del tanque."></textarea>'+
@@ -7545,7 +7555,7 @@ function reasignaDicho(t, v, silencioso){
    que te pregunto", "llevas N días esperando") ya atendidos se pliegan en UN renglon chiquito
    ("6 avisos de vencimiento"); a un toque se ven. Nada se borra. Atendido = la tarea se cerro
    o despues del aviso contesto una persona. */
-var AVISO_RX=/^(Ya venci[oó] |Segunda vez que te pregunto|Van \d+ veces|Vas \d+ d[ií]as? atr[aá]s|Te falta “|Llevas \d+ d[ií]as? esperando)/;
+var AVISO_RX=/^(Ya venci[oó] |Segunda vez que te pregunto|Van \d+ veces|Vas \d+ d[ií]as? atr[aá]s|Te falta “|Llevas \d+ d[ií]as? esperando|Retomemos “|Propongo partir “|Vamos por “|Sigue “|“[^”]+” (ya pas[oó] su fecha|va un poco atr[aá]s|estaba para el))/;   /* build 282: textos nuevos del correteo */
 function esAvisoClaude(x){ return !!x && (x.aviso===1 || ((x.k==="bal"||x.k==="bi") && !x.wa_in && AVISO_RX.test(String(x.t||"")))); }
 function avisosPlegados(t){
   var ms=t.msgs||[], res={set:{}, ult:-1, n:0};
@@ -13450,6 +13460,50 @@ function respChecklist(t, r){
   var tot=t.checklist.items.length, inv=t.checklist.items.filter(function(x){ return x.estado>=1; }).length, conf=t.checklist.items.filter(function(x){ return x.estado===2; }).length;
   return [r.hecho.length?"Anoté en la lista: "+r.hecho.join(", ")+".":"", r.dudas.join(" "), "Van "+inv+" de "+tot+" invitados y "+conf+" confirmados."].filter(Boolean).join(" ");
 }
+/* ===== build 282 (F36, Salvador 2026-10-03, "Decoración Navideña Cumbres") =====
+   "Claude, recuérdame el martes de darle seguimiento a Pato y Chuy y pedir la grúa y el material" se mandaba al modelo
+   y el modelo no hizo nada (contestó con una fecha que nadie dijo). Regla fija EN EL TELÉFONO, sin IA:
+   "recuérdame <cuándo> de <hacer X> y <hacer Y>…" (2+ cosas) -> UN aviso ese día (a la hora dicha o 9:00) y los pasos
+   en la lista de la tarea, con la sección del día. La fecha de finiquito NO se toca. Fecha dudosa = una pregunta, nada
+   se guarda. Lo que no encaja exacto (sin fecha, una sola cosa, otra fecha dentro de las cosas) sigue su camino de siempre. */
+var VERBO282=/^[a-zñ]*(ar|er|ir)(le|les|lo|la|los|las|se|selo|sela|selos|selas|me|nos)?$/;
+function recuerdaLista282(v){
+  var s=sinPrefijoClaude(String(v||"")).replace(/\s+/g," ").trim().replace(/[.!]+$/,"");
+  var m=/^(?:por\s+favor\s+)?(?:recu[eé]rda(?:me|nos)|acu[eé]rda(?:me|te)|av[ií]same)\s+(.+)$/i.exec(s); if(!m) return null;
+  var w=m[1].split(" "), nw=function(x){ return _nv(x); }, ini=-1;
+  /* las cosas empiezan en el primer infinitivo que va despues de "de"/"que" (o pegado al cuando) */
+  for(var i=1;i<w.length;i++){ if(VERBO282.test(nw(w[i])) && /^(de|que)$/.test(nw(w[i-1]))){ ini=i; break; } }
+  if(ini<2) return null;
+  var cuando=w.slice(0,ini-1).join(" "), cosas=w.slice(ini).join(" ");
+  if(!cuando.trim() || cuando.split(" ").length>8) return null;
+  var fd=fechaDictada(cuando); if(!fd.duda && fd.todas.length!==1) return null;
+  if(fechaDictada(cosas).todas.length || fechaDictada(cosas).duda) return null;   /* otra fecha adentro: que lo vea el cerebro */
+  /* partir por comas y por " y ": si el pedazo empieza con verbo es otra cosa; si empieza con articulo
+     ("y el material") hereda el verbo de la anterior ("pedir el material"); si no, sigue siendo la misma ("a Pato y Chuy") */
+  var crudo=cosas.split(/\s*,\s*(?:y\s+)?|\s+y\s+(?=\S)/i).map(function(x){ return x.trim(); }).filter(Boolean), out=[];
+  crudo.forEach(function(x){ var p0=nw(x.split(" ")[0]);
+    if(!out.length || VERBO282.test(p0)){ out.push(x); return; }
+    var prev=out[out.length-1], pm=/^(\S+)\s+(el|la|los|las|un|una|unos|unas|lo)\b/i.exec(prev);
+    if(/^(el|la|los|las|un|una|unos|unas)$/.test(p0) && pm && VERBO282.test(nw(pm[1]))) out.push(pm[1]+" "+x);
+    else out[out.length-1]=prev+" y "+x; });
+  if(out.length<2 || !VERBO282.test(nw(out[0].split(" ")[0]))) return null;
+  return {fecha:fd.fecha, duda:fd.duda||"", cuando:cuando, cosas:out.map(function(x){ return conMayuscula(x.replace(/\s+/g," ").trim()).slice(0,120); })};
+}
+function aplicaRecuerdaLista282(t, v, r){
+  msg(t,"bo",v); var mo=t.msgs[t.msgs.length-1]; mo.de=yo; mo.canal="priv:"+yo; mo.nota_claude=1;
+  if(r.duda){ msg(t,"bi",r.duda+" No puse nada; dímelo otra vez con la fecha."); var md=t.msgs[t.msgs.length-1]; md.canal="priv:"+yo; md.nota_claude=1; guarda(t); render(); return; }
+  var hr=horaDicha(r.cuando)?horaValor(r.cuando):"", hora=hr?horaCercana(r.fecha,hr,r.cuando):"09:00";
+  var texto=juntaY(r.cosas.map(function(x,i){ return i?x.charAt(0).toLowerCase()+x.slice(1):x; }));
+  var av=avisoMismoDia(t, r.fecha);
+  if(av){ if(!av.hora) av.hora=hora; if(_nv(av.texto).indexOf(_nv(texto))<0) av.texto=conMayuscula(String(av.texto||"")+" · "+texto).slice(0,240); }
+  else av=nuevoAviso(t, {texto:texto, dicho:v, fecha:r.fecha, hora:hora});
+  var sec=conMayuscula(fechaMovCorta(r.fecha)).slice(0,40);
+  var nuevos=agregaPasos(t, "", r.cosas); nuevos.forEach(function(p){ p.sec=sec; });
+  msg(t,"bi","Anotado. Te aviso "+(textoCuando(av)||fechaBonita(r.fecha))+": "+texto+"."+(nuevos.length?" Lo dejé en la lista ("+nuevos.length+" paso"+(nuevos.length===1?"":"s")+", "+sec+").":""));
+  var mr=t.msgs[t.msgs.length-1]; mr.canal="priv:"+yo; mr.nota_claude=1;
+  try{ if(hr) preguntaAmPm(t, [String(av.ts)], r.cuando); }catch(e){}
+  guarda(t); try{ sincronizaAvisos(t); }catch(e){} render();
+}
 /* lo que regresa Claude: checklist {titulo, items:[{tx, estado}]} (crear o actualizar) */
 function aplicaChecklistClaude(t, j){
   var c=j && j.checklist; if(!c || !Array.isArray(c.items) || !c.items.length) return "";
@@ -16339,6 +16393,9 @@ function bindHilo(){
       msg(t,"bo",v); var _mc=t.msgs[t.msgs.length-1]; _mc.de=yo; _mc.canal="priv:"+yo; _mc.nota_claude=1;
       msg(t,"bi",respChecklist(t,_ck)); var _rc=t.msgs[t.msgs.length-1]; _rc.canal="priv:"+yo; _rc.nota_claude=1;
       window.__chkOpen=window.__chkOpen||{}; window.__chkOpen[t.id]=true; guarda(t); render(); return; }
+    /* build 282 (F36): "recuérdame el martes de X y Y" = aviso ese día + pasos, sin IA y sin tocar el finiquito */
+    var _rl282=recuerdaLista282(v);
+    if(_rl282){ $("txt").value=""; marcaEnvio("tenv",""); aplicaRecuerdaLista282(t, v, _rl282); return; }
     /* build 205 (Salvador 21:14, "Agendar Reunión Consejo Colonia Cumbres"): en "Falta info" lo dictado COMPLETA la tarea
        aunque suene a nota para Claude ("…es para que sepas el contexto" caia en esNotaClaude -> notaClaude -> "No cambié nada").
        Solo las ordenes claras (eliminar, pasarla, encargarla) siguen yendo a Claude. */
@@ -19491,13 +19548,14 @@ function chequeoHitos(){
       var ultNag=g.ts||0, contesto=(t.msgs||[]).some(function(m){ return m && m.k==="bo" && (m.de===t.duenio || (!m.de && t.duenio===yo)) && (m.ts||0)>ultNag && ultNag; });
       if(contesto){ g.ult=H; g.ts=Date.now(); return; }
       if(g.n<2){
-        msg(t,"bal", g.n===0 ? q+", “"+p.tx+"” era para el "+fechaBonita(p.fecha)+". ¿Para cuándo lo tienes?" : "Van "+(g.n+1)+" días sin respuesta de “"+p.tx+"”. Si mañana no está, le aviso a tu jefe.");
+        /* build 282 (F39): tono de lider, sin amenaza ("le aviso a tu jefe") ni conteo de dias sin respuesta */
+        msg(t,"bal", g.n===0 ? "“"+p.tx+"” estaba para el "+fechaBonita(p.fecha)+". ¿Qué día te queda bien para entregarlo? Si algo te frena, dime y vemos cómo ayudarte." : "Retomemos “"+p.tx+"”: con una fecha corta lo dejamos encaminado. ¿Qué necesitas para sacarlo?");
         var m=t.msgs[t.msgs.length-1]; m.canal="equipo"; m.aviso=1; m.pide_a=t.duenio;
         g.n++; g.ult=H; g.ts=Date.now(); guarda(t);
         try{ disparaPushInstantaneo(t.duenio, t.nombre||"Tarea", "“"+p.tx+"” está atrasado", urlTarea(t.id)); }catch(e){}
       } else if(!g.jefe){
         var sups=quienSupervisa(t);
-        msg(t,"bi", q+" no ha cumplido “"+p.tx+"” (debía el "+fechaBonita(p.fecha)+"). Ya le insistí 2 veces."); var mj=t.msgs[t.msgs.length-1]; mj.canal="sup"; mj.aviso=1;
+        msg(t,"bi", q+" todavía no entrega “"+p.tx+"” (era para el "+fechaBonita(p.fecha)+"). Ya se lo recordé con propuesta de siguiente paso; quizá le ayude una palabra tuya.");   /* build 282 (F39): sin conteo */ var mj=t.msgs[t.msgs.length-1]; mj.canal="sup"; mj.aviso=1;
         g.jefe=1; g.ult=H; guarda(t);
         sups.forEach(function(k){ try{ disparaPushInstantaneo(k, t.nombre||"Tarea", q+" no ha cumplido “"+p.tx+"”", urlTarea(t.id)); }catch(e){} });
       }
