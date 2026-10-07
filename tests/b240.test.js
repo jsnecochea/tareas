@@ -21,7 +21,14 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
   await p.route(/^https?:/, function (r) { r.abort(); });
   await p.addInitScript(function () { var P = function () { return Promise.resolve(); };   /* firebase sin red: solo lo que se llama al arrancar */
     var fs0 = { enablePersistence: P, collection: function () { return { doc: function () { return { set: P, get: P, delete: P, onSnapshot: function () {} }; }, where: function () { return this; }, onSnapshot: function () {}, get: P }; } };
-    window.firebase = { apps: [1], initializeApp: function () {}, firestore: function () { return fs0; }, auth: function () { return { onAuthStateChanged: function () {}, signOut: P }; } }; window.firebase.auth.GoogleAuthProvider = function () {}; });
+    window.firebase = { apps: [1], initializeApp: function () {}, firestore: function () { return fs0; }, auth: function () { return { onAuthStateChanged: function () {}, signOut: P }; } }; window.firebase.auth.GoogleAuthProvider = function () {};
+    /* build 240 fix (2026-10-07): el fixture tiene fechas fijas (23-sep a 4-oct); la regla de "reciente (7 días)" de
+       esImp230 depende del reloj real, así que con el paso de los días los mensajes de Garza se iban saliendo de
+       Importante y la prueba empezaba a fallar sola, sin que nadie tocara el código. Se congela el reloj justo
+       después del último mensaje del fixture para que la prueba no se pudra con el tiempo. */
+    var RD240 = Date, base240 = RD240.parse("2026-10-04T12:00:00Z"), t0240 = RD240.now();
+    function FD240() { var a = [].slice.call(arguments); if (!(this instanceof FD240)) return new RD240(base240 + RD240.now() - t0240).toString(); if (!a.length) return new RD240(base240 + RD240.now() - t0240); return new (Function.prototype.bind.apply(RD240, [null].concat(a)))(); }
+    FD240.prototype = RD240.prototype; FD240.now = function () { return base240 + RD240.now() - t0240; }; FD240.parse = RD240.parse; FD240.UTC = RD240.UTC; window.Date = FD240; });
   try {
     await p.goto("file://" + path.join(__dirname, "..", "index.html")); await p.waitForTimeout(600);
     var r = await p.evaluate(function (FX) {
