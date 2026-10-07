@@ -8,8 +8,8 @@ var fs = require("fs"), path = require("path");
 var ok = 0, n = 0, malas = [];
 function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
 var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
-eq("versión = 276", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[1], 276);
-eq("sw.js con versión build 276", /var SW_VERSION = 'build 276'/.test(fs.readFileSync(path.join(__dirname, "..", "sw.js"), "utf8")), true);
+eq("versión >= 276", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[1] >= 276, true);   /* build 277: sube con cada build */
+eq("sw.js con versión >= 276", +((fs.readFileSync(path.join(__dirname, "..", "sw.js"), "utf8").match(/var SW_VERSION = 'build (\d+)'/) || [0, 0])[1]) >= 276, true);
 (async function () {
   var pw = require("/opt/node22/lib/node_modules/playwright"), b = await pw.chromium.launch(), p = await b.newPage({ viewport: { width: 390, height: 844 }, timezoneId: "America/Monterrey" }), errs = [];
   p.on("pageerror", function (e) { if (!/firebase is not defined/.test(e.message)) errs.push(e.message); });
