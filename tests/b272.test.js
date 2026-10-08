@@ -33,7 +33,7 @@ eq("sw.js con versión build ≥ 272", +((/var SW_VERSION = 'build (\d+)'/.exec(
       window.filas = function () { return [].map.call(document.querySelectorAll(".ttl .ttr:not(.ttsum)"), function (b) { return b.querySelector(".rn").textContent; }); };
       window.sumas = function () { return [].map.call(document.querySelectorAll(".ttsum .rn"), function (b) { return b.textContent; }); };
       /* build 270: secciones siempre desplegadas del home (Te pregunta Doit · Vencidas mías · Hoy mías) */
-      window.secs = function () { var o = {}; [].forEach.call(document.querySelectorAll(".h270 .sep270"), function (s) { var L = s.nextElementSibling; o[s.querySelector("span").textContent] = [].map.call(L.querySelectorAll(".ttr .rn"), function (b) { return b.textContent; }); }); return o; };
+      window.secs = function () { var o = {}; [].forEach.call(document.querySelectorAll(".h270 .sep270, .h270 .hd284"), function (s) { var L = s.nextElementSibling; o[s.querySelector("span").textContent] = [].map.call(L.querySelectorAll(".ttr .rn, .f284n"), function (b) { return b.textContent; }); }); return o; };
     });
 
 
@@ -50,11 +50,11 @@ eq("sw.js con versión build ≥ 272", +((/var SW_VERSION = 'build (\d+)'/.exec(
       home(fx());
       var est = document.querySelector(".est272");
       r.est = est ? est.textContent.replace(/\s*·\s*/g, " · ").replace(/\s+/g, " ").trim() : null;
-      r.estArriba = (function () { var e = est.getBoundingClientRect().top, s = document.querySelector(".h270 .sep270").getBoundingClientRect().top; return e > s; })();   /* build 279: la línea de estado va hasta abajo */
+      r.estArriba = (function () { var e = est.getBoundingClientRect().top, s = document.querySelector(".h270 .sep270, .h270 .hd284").getBoundingClientRect().top; return e > s; })();   /* build 279: la línea de estado va hasta abajo */
       r.secs = secs();
-      r.grupo = (function () { var b = document.querySelector('.l-preg [data-id="tP3"]'); return b ? [b.getAttribute("data-preg272"), b.querySelector("small").textContent, document.querySelectorAll('.l-preg [data-id="tP3"]').length] : null; })();
-      r.sola = document.querySelector('.l-preg [data-id="tP1"] small').textContent;
-      r.solaSinGrupo = document.querySelector('.l-preg [data-id="tP1"]').hasAttribute("data-preg272");
+      r.grupo = (function () { var b = document.querySelector('.l284 [data-id="tP3"]'); return b ? [b.getAttribute("data-preg272"), b.querySelector("small").textContent, document.querySelectorAll('.l284 [data-id="tP3"]').length] : null; })();
+      r.sola = document.querySelector('.l284 [data-id="tP1"] small').textContent;
+      r.solaSinGrupo = document.querySelector('.l284 [data-id="tP1"]').hasAttribute("data-preg272");
       r.ancho = document.documentElement.scrollWidth <= 390;
       /* abajo: Las lleva Claude hasta abajo, plegada, gris tenue (con una tarea de Claude) */
       var L2 = fx(); L2.push(T("tCL", "La lleva Claude", "", { encargos: [{ id: "e", estado: "pendiente" }] })); home(L2);

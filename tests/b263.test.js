@@ -32,7 +32,7 @@ eq("versión >= 263", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       window.filas = function () { return [].map.call(document.querySelectorAll(".ttl .ttr:not(.ttsum)"), function (b) { return b.querySelector(".rn").textContent; }); };
       window.sumas = function () { return [].map.call(document.querySelectorAll(".ttsum .rn"), function (b) { return b.textContent; }); };
       /* build 270: secciones siempre desplegadas del home (Te pregunta Doit · Vencidas mías · Hoy mías) */
-      window.secs = function () { var o = {}; [].forEach.call(document.querySelectorAll(".h270 .sep270"), function (s) { var L = s.nextElementSibling; o[s.querySelector("span").textContent] = [].map.call(L.querySelectorAll(".ttr .rn"), function (b) { return b.textContent; }); }); return o; };
+      window.secs = function () { var o = {}; [].forEach.call(document.querySelectorAll(".h270 .sep270, .h270 .hd284"), function (s) { var L = s.nextElementSibling; o[s.querySelector("span").textContent] = [].map.call(L.querySelectorAll(".ttr .rn, .f284n"), function (b) { return b.textContent; }); }); return o; };
     });
     /* ===================== 1. AVISOS UNA VEZ ===================== */
     var A = await p.evaluate(async function () {

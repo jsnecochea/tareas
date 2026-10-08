@@ -33,7 +33,7 @@ eq("sw.js con versión build ≥ 270", +((/var SW_VERSION = 'build (\d+)'/.exec(
       window.filas = function () { return [].map.call(document.querySelectorAll(".ttl .ttr:not(.ttsum)"), function (b) { return b.querySelector(".rn").textContent; }); };
       window.sumas = function () { return [].map.call(document.querySelectorAll(".ttsum .rn"), function (b) { return b.textContent; }); };
       /* build 270: secciones siempre desplegadas del home (Te pregunta Doit · Vencidas mías · Hoy mías) */
-      window.secs = function () { var o = {}; [].forEach.call(document.querySelectorAll(".h270 .sep270"), function (s) { var L = s.nextElementSibling; o[s.querySelector("span").textContent] = [].map.call(L.querySelectorAll(".ttr .rn"), function (b) { return b.textContent; }); }); return o; };
+      window.secs = function () { var o = {}; [].forEach.call(document.querySelectorAll(".h270 .sep270, .h270 .hd284"), function (s) { var L = s.nextElementSibling; o[s.querySelector("span").textContent] = [].map.call(L.querySelectorAll(".ttr .rn, .f284n"), function (b) { return b.textContent; }); }); return o; };
     });
     /* ===================== 1. ORDEN DEL HOME Y SECCIONES SIEMPRE DESPLEGADAS ===================== */
     var A = await p.evaluate(async function () {
@@ -58,15 +58,15 @@ eq("sw.js con versión build ≥ 270", +((/var SW_VERSION = 'build (\d+)'/.exec(
       home(L);
       var r = { secs: secs() };
       var y = function (sel) { var e = document.querySelector(sel); return e ? e.getBoundingClientRect().top + window.scrollY + (document.querySelector(".scroll") || { scrollTop: 0 }).scrollTop : -1; };
-      var seps = [].map.call(document.querySelectorAll(".h270 .sep270 span"), function (s) { return s.textContent; });
+      var seps = [].map.call(document.querySelectorAll(".h270 .sep270 span, .h270 .hd284 span"), function (s) { return s.textContent; });
       r.seps = seps;
-      var pos = [y("#bprop256")].concat([].map.call(document.querySelectorAll(".h270 .sep270"), function (s) { return s.getBoundingClientRect().top; })).concat([y(".abajo270")]);
+      var pos = [y("#bprop256")].concat([].map.call(document.querySelectorAll(".h270 .sep270, .h270 .hd284"), function (s) { return s.getBoundingClientRect().top; })).concat([y(".abajo270")]);
       r.orden = pos.every(function (v, i) { return v >= 0 && (i === 0 || v > pos[i - 1]); });
       r.abajo = [].map.call(document.querySelectorAll(".abajo270 .clh263"), function (b) { return b.id; });
       r.sinToggles = document.querySelectorAll(".h270 [aria-expanded], .h270 .ttsum, .h270 [data-ttab]").length;
       var css = function (sel, prop) { var e = document.querySelector(sel); return e ? getComputedStyle(e)[prop] : ""; };
-      r.colores = [css(".l-preg .ttr i", "backgroundColor"), css(".l-venc .ttr i", "backgroundColor"), css(".l-hoy .ttr i", "backgroundColor"), css(".sep270.s-preg span", "color")];
-      r.fondoPreg = css(".l-preg", "backgroundColor") !== css(".l-hoy", "backgroundColor");
+      r.colores = [!document.querySelector(".l284 .ttr i"), css(".l-venc .ttr i", "backgroundColor"), css(".l-hoy .ttr i", "backgroundColor"), css(".hd284 span", "color")];   /* build 284: Te pregunta Doit limpio, sin puntito ni naranja */
+      r.fondoPreg = css(".l284", "backgroundColor");   /* build 284: bloque gris #1C1C1E, sin fondo naranja */
       r.lee = [!document.querySelector(".h270 .sep270 #bttlee"), (window.__ttOrden || []).join(",")];   /* build 277: el audífono del separador se quitó (la Caminata va con el ícono junto al ⋯) */
       r.swipe = (window.ordenSwipe || []).slice(0, 8).join(",");
       r.ancho = [document.documentElement.scrollWidth, document.querySelector("#app").scrollWidth];
@@ -80,8 +80,8 @@ eq("sw.js con versión build ≥ 270", +((/var SW_VERSION = 'build (\d+)'/.exec(
     eq("Vencidas mías: la vencida de Salvador", A.secs["Vencidas mías"], ["Pagar predial"]);
     eq("Hoy mías: primero lo que despertó (expediente), luego lo de hoy; nada de otro dueño", A.secs["Hoy mías"], ["Expediente colegio", "Llamar al notario"]);
     eq("Secciones 2-4 sin acordeón: ningún botón de abrir/cerrar ni renglón resumen", A.sinToggles, 0);
-    eq("Puntitos: naranja vivo, rojo y gris; etiqueta de Te pregunta Doit en naranja vivo", A.colores, ["rgb(255, 122, 0)", "rgb(255, 59, 48)", "rgb(142, 142, 147)", "rgb(255, 122, 0)"]);
-    eq("Te pregunta Doit lleva su fondo naranja tenue", A.fondoPreg, true);
+    eq("Puntitos: rojo y gris en Vencidas / Hoy; Te pregunta Doit sin puntito y con título claro (build 284)", A.colores, [true, "rgb(255, 59, 48)", "rgb(142, 142, 147)", "rgb(245, 245, 247)"]);
+    eq("Te pregunta Doit en bloque gris #1C1C1E, sin fondo naranja (build 284)", A.fondoPreg, "rgb(28, 28, 30)");
     eq("Abajo, plegadas y en orden: Mías futuras · Las revisas tú · y hasta abajo Las lleva Claude (build 272)", A.abajo, ["bfut", "brev270", "bcl263"]);
     eq("build 277: sin audífono en el separador; el orden del home se conserva", A.lee, [true, "tNEC,tVEN,tEXP,tHOY"]);
     eq("El swipe entre tareas sigue el orden del home (2, 3, 4 y luego Claude)", A.swipe.split(",").slice(0, 4).join(","), "tNEC,tVEN,tEXP,tHOY");
@@ -132,7 +132,7 @@ eq("sw.js con versión build ≥ 270", +((/var SW_VERSION = 'build (\d+)'/.exec(
       r.funciones = ["opcionesUnico261", "abreEnlazar", "menuAcc254", "vPropuestas256", "okProp256", "descartaProp256", "faltaPreciso263", "esDormida264", "despiertaTodas264", "abreMover225", "vCompartidas", "pelota263", "reparte263"].filter(function (f) { return typeof window[f] !== "function"; });
       /* tocar un renglón de Te pregunta Doit abre la tarea */
       window.__verRev270 = false; verFuturas = false; render();
-      document.querySelector('.l-preg .ttr[data-id="tNEC"]').click(); await espera(60); r.abre = [vista, abierta];
+      document.querySelector('.l284 .ttr[data-id="tNEC"]').click(); await espera(60); r.abre = [vista, abierta];
       vista = "lista"; abierta = null; render();
       /* home vacío: una sola línea */
       tareas = []; render(); r.vacio = (document.querySelector(".sep270.s-ok") || { textContent: "" }).textContent;
