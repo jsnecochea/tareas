@@ -1,0 +1,283 @@
+# Historial de Doit
+
+El historial de cada cambio vive aquí y en los commits (`git log`), no en comentarios del código.
+Los comentarios que quedan en `index.html` explican el PORQUÉ de una regla vigente.
+
+## Builds (de `git log`, más reciente arriba)
+
+- 2026-10-08 · Build 286: Caminata — todo lo que dices es orden y nunca se pierde
+- 2026-10-08 · Build 285: «Tu historial» del día en el home y secciones plegables (amanecen compactas salvo Decide tú)
+- 2026-10-08 · Build 284: home «Decide tú» limpio, filas con respuesta rápida
+- 2026-10-07 · Build 283: dictado rápido (2-3 s), órdenes nunca se pierden (encargo para la Mac), respuesta a Decide tú aplicada, Falta info por paso de Claude
+- 2026-10-07 · Build 282: seguimientos con tono de líder (F39) y «recuérdame el martes de X y Y» sin IA (F36)
+- 2026-10-07 · Repara b250 y b265: pruebas desactualizadas, no fallas de timing
+- 2026-10-07 · Home en fichas: Tareas nuevas, Mensajes por acomodar, Mías futuras, Compartidas y Las lleva Claude con el mismo estilo de tarjeta (build 281)
+- 2026-10-07 · Fix prueba b240: congelar el reloj para que no se pudra con el tiempo
+- 2026-10-07 · Build 280: une 277 + 277b + 278 + 279 + hotfix 276 (caminata no pierde)
+- 2026-10-07 · Integra build 279 (resumen al final) sobre 277b/278: arriba solo el ícono chico de Caminata, la línea de estado al final
+- 2026-10-07 · Integra 277b (ícono sólido) sobre 278
+- 2026-10-07 · Build 278: Caminata solo vincula a la tarea que Salvador nombra + ↩ deshacer en la tarea
+- 2026-10-07 · Build 277b: ícono de Caminata del home como silueta SÓLIDA en zancada (cabeza rellena, brazo atrás y abajo, brazo adelante, pierna larga adelante y otra atrás), dibujo SVG propio — no copia de ningún ícono de terceros. Misma caja 24/22, currentColor como los demás. tests/b277.test.js 26/26 (nueva: ícono sólido).
+- 2026-10-07 · Build 279: el resumen «N te preguntan · N vencidas · N hoy» (vEstado272) baja hasta el final del home, después de Las lleva Claude; arriba solo queda el botón Caminata. Contadores siguen llevando con scroll a su sección. tests/b279.test.js 13/13; b272 ajustado al nuevo orden; b276 con versión >= (igual que en 277).
+- 2026-10-07 · Hotfix 276 (sin publicar): la Caminata ya no pierde lo que dice Salvador
+- 2026-10-07 · Build 277: Caminata — «confírmame» / «¿entendiste bien?» repite la orden y cómo la entendió y espera su sí antes de ejecutar (no = no hace nada; otra cosa = corrección y se vuelve a confirmar; vale para tareas y mensajes por acomodar; «¿qué hiciste?» dice la última acción); «deshazlo», «cancela eso», «retrocede», «esa no era», «la juntaste mal» (y la acción "deshacer" de la IA) deshacen la última acción, también desde el cuestionario de la siguiente; «repíteme» repite lo último y «regresa un poco» relee desde dos frases antes; en el home, ícono chico de persona caminando junto al ⋯ en lugar de la barra grande, y sin el audífono del primer separador. tests/b277.test.js 25/25; b270/b275/b276 ajustados al ícono.
+- 2026-10-07 · Build 276: Caminata con interrupción y bandeja limpia — el micrófono sigue abierto mientras la app habla: si Salvador habla, la voz se calla al instante y lo escucha («repíteme lo último», «espera»/«sigue», «a ver, voy», o su respuesta); no se escucha a sí misma (getUserMedia con echoCancellation + medidor de volumen, se ignora lo que coincide con lo que está diciendo); en iOS, si la voz se corta al abrir el micrófono, la interrupción se apaga sola y tocar el círculo interrumpe. Orden completo: decisiones · llamadas de mañana · tareas nuevas (al acomodarla, cuestionario de lo que le falta, una pregunta a la vez, «paso» la deja pendiente) · ficha roja Falta con el mismo cuestionario · mensajes por acomodar con quién, qué dice y las 2 tareas más probables; al final «Bandeja limpia.» o «Quedaron N pendientes: …»
+- 2026-10-07 · Build 275: la Caminata como plática con un asistente — orden decisiones · llamadas de mañana con su guion (IA: Guion de llamada) · tareas nuevas de Acomodo, con una sola frase de arranque; sin menús (lo que dice, como lo diga, lo entiende la IA por el proxy en modo rápido y devuelve un JSON de acción); ejecuta sin reconfirmar y confirma en 3-4 palabras; «no, eso no»/«regrésate» deshace; una sola pregunta si de verdad no entendió; sonido suave de pensando; «va»/«sí» se envían al instante; IA caída = queda anotado para Claude
+- 2026-10-07 · Build 274: modo Caminata — botón grande en el home que recorre decisiones, llamadas de hoy y vencidas/hoy a dos voces tipo podcast; escucha sin cortar (el silencio no envía: a los 2.5 s pregunta «¿Terminaste o sigues?»; «terminé» envía), comandos repite/más detalle/siguiente/atrás/pausa/salir, la respuesta va al hilo como nota de Salvador; reemplaza al modo audífonos
+- 2026-10-07 · Build 273: la tarea en 4 capas — En qué vamos (siguiente paso, quién y para cuándo), Decide tú (recomendación, comparativa ✓/✕ con precio y links, contestar ahí mismo), Lo que sabemos (viñetas) y Plática (lo archivado plegado en «Plática anterior (N) ▸»); la ficha roja Falta siempre abre el cuestionario
+- 2026-10-07 · Build 272: home súper minimalista — línea de estado con contadores (scroll suave a su sección), secciones vacías fuera, preguntas de una tarea en un renglón "N preguntas", lo que espera a un tercero pasa a Las lleva Claude, Ya está con la siguiente subiendo (250 ms), Las lleva Claude hasta abajo en gris tenue
+- 2026-10-07 · Build 271: "Mensajes por acomodar" en su propia pestañita plegable (contador en el encabezado, plegado recordado), debajo de Nuevas tareas para acomodar y arriba de Te pregunta Doit
+- 2026-10-07 · Build 270: home reacomodado — Acomodo arriba; Te pregunta Doit, Vencidas mías y Hoy mías siempre desplegadas; abajo Las lleva Claude con semáforo, Mías futuras y el resto plegado
+- 2026-10-06 · Build 269: a Salvador solo le suenan 5 tipos de push (acuerdo, llamada, atorado, IA atorada, recordatorio); preset Solo lo esencial
+- 2026-10-06 · Build 268: notificaciones con tag estable (reemplazan, no se repiten) y cerradas al resolver
+- 2026-10-06 · Build 267: fin del bucle de preguntas (Ninguno cierra, sin preguntas sobre respuestas, relleno solo con terceros) y apagado de aplicaNoClara y empujones automáticos
+- 2026-10-06 · Build 266: toda pregunta de Claude va en texto (sin fichas de botones); la respuesta dictada la cierra
+- 2026-10-06 · Build 265: chip Falta rojo y ancho, el micrófono ya no arranca solo
+- 2026-10-06 · Build 264: tareas expediente (Ya está las deja dormidas y despiertan solas), cerradas y dormidas siempre en búsqueda y parecidas
+- 2026-10-06 · build 263: avisos una sola vez (firma, espejo sin pisar avisado_en, sin los de Claude, solo lo que permite el tablero; defecto de Salvador 'Solo lo que necesita mi respuesta'); siguiente tarea en el orden del home; Hoy/Vencidas solo lo de Salvador + 'Claude las lleva'; espera de terceros con fecha no es vencida; Falta info coherente; dictado procesado oculto y sin duplicar; WhatsApp dictado solo a contactos reales; el siguiente paso arriba
+- 2026-10-06 · build 262: un solo motor de parecidas y de búsqueda (sugeridasPara262) en Vincular y Mover; sinónimos, raíces, errores de dedo, cerebro ligero con caché
+- 2026-10-06 · build 261: un solo menu completo (11 opciones fijas, en gris las que no aplican) al mantener presionado cualquier texto; Mover y Nueva con la hoja Vincular · Nueva
+- 2026-10-06 · build 260: propuestas con su origen (canal, quien, frase, por que); el banner pliega Acomodo y la cuenta cuadra; Te pregunta con menu propio y sin mensajes movidos
+- 2026-10-06 · build 259: hoja unica Vincular · Nueva (crear nueva, parecidas, alfabetico, busqueda con cerradas que se reabren); el cerebro no cambia el proposito de una tarea ni la cierra con pasos sin palomear
+- 2026-10-06 · build 258: notificaciones — tipo te_necesito (Claude necesita tu respuesta) y atajo 'Solo lo que necesita mi respuesta'; migración; ?recordatorio verificado
+- 2026-10-06 · tests: nota b257
+- 2026-10-06 · build 257: tareas nuevas de la IA = propuestas; se aprueban en Acomodo (OK/Vincular/Dato/No guardar), fuera de las listas
+- 2026-10-06 · build 256: privacidad — Josué y Carlos sin jefe:true; cada usuario ve solo sus tareas
+- 2026-10-06 · build 255: preguntas del cerebro en un solo paso (blur, preguntas en texto, se contestan dictando)
+- 2026-10-06 · build 254: el cuadro de abajo manda a Claude por defecto; WhatsApp directo solo con selector, clasificación y vista previa
+- 2026-10-06 · build 253: ¿A dónde va? con buscador de tareas (abiertas y cerradas de 30 días)
+- 2026-10-06 · build 252: teclado en las ventanitas (focus dentro del toque) y microfono propio; Ver toda la plática con <persona> (7 dias, todas las tareas)
+- 2026-10-06 · build 251: cerebro en modo pesado; nada se atora (reintento + pregunta concreta); contactos dudosos preguntan cual en todo mensaje y se guarda el nombre exacto de WhatsApp
+- 2026-10-06 · build 250: ordenes condicionales (pregunta a A y si dice que si, confirma a B) como encargo; si el nombre es de varios contactos pregunta cual; la tarjeta muestra el encargo; 'tengo que contestarle' + orden ejecutable no es aviso
+- 2026-10-06 · build 249: Tarea nueva pide nombre; en revision todo dictado va al cerebro (pantalla difuminada, refrescada); preguntas del cerebro en su ventanita con autocompletar
+- 2026-10-06 · build 248: dictado 238 corregido (no termina el X no cierra; antes del X = meta; termina cuando = Cierra con), sin preguntar "Fernando de BBVA" si ya está en agenda/tarea, seguimientos por pasos sin textos repetidos, vínculos con cerradas (cerrada) y 2+ palabras de tema
+- 2026-10-06 · build 247: menú completo al tocar cualquier globo (propios: Editar, Eliminar, Es para Claude), Te pregunta con Mover / No es de aquí / Ya la contesté, sin bloques de revisión en tareas hechas a mano
+- 2026-10-06 · build 246: Hoy con recordatorios primero (por hora), Qué toca primero en Importante, Importante más estricto sin indicaciones viejas ni ocultos
+- 2026-10-06 · build 245: imágenes amarillas con visor, confirmación grande de No guardar, lo saliente a la derecha, Mover todos y selección en lote
+- 2026-10-06 · build 244: Te pregunta ya no sale si Salvador contestó por WhatsApp; fotos de WhatsApp como miniatura en cuadrícula
+- 2026-10-06 · build 243: la destino de un vínculo no entra en revisión (Vinculada · Deshacer) y No guardar en el Acomodo
+- 2026-10-05 · build 242: globos limpios estilo iMessage con hoja de detalle, notas de la IA en gris, Importante sin notas, Pasos como ficha
+- 2026-10-05 · build 241: la orden de cerrar de Salvador cierra siempre, sin respuestas duplicadas, cierra_sugerido
+- 2026-10-05 · build 240: Importante limpio, clasificar solo lo de la IA, Acomodo con Dato y sin importancia, Historial con Deshacer
+- 2026-10-05 · build 239: el Acomodo no muestra saludos; las pláticas de puro saludo se marcan solas como plática
+- 2026-10-05 · build 238: el dictado obedece todo (órdenes, encargos, dueño sin cambio), tarjeta Hecho / Me falta, marca de Claude por globo
+- 2026-10-05 · build 237: acomodo por plática (no por mensaje), marquita acomodó Claude y reglas de acomodo en bitacora_personas
+- 2026-10-05 · build 236: Tarea · Dato · Vincular grandes con contorno de color, sin clasificar solo pide elegir, vincúlala por voz
+- 2026-10-05 · build 235: el filtro arranca en Importante (con Ver todo si está vacío) y ficha Claves n/m con su hoja
+- 2026-10-05 · build 234: Agendado se fusiona con la ficha de fecha (verde si está completo, hoja con citas y Mover la fecha), ficha Resumen
+- 2026-10-05 · build 233: encabezado opción A (audífono · clip solo con archivos y cantidad · ⋯, sin fondo, 30 px, gap 6) y renglón De X · sup. Y en una línea
+- 2026-10-05 · build 232: filtro por meta en la hoja de Metas, sin selector Importante|Todo, título con fuente del sistema
+- 2026-10-05 · build 231: una sola fila más compacta — fecha · Metas/Lista · Agendado · Filtro · Detalles
+- 2026-10-05 · build 230: filtro con Todo · Importante (con Resumen) · Claude · integrantes
+- 2026-10-05 · build 229: Tarea · Dato · Vincular en una fila; franja "Agendar" compacta con clip de evidencia
+- 2026-10-05 · build 228: encabezado compacto — una fila de fichas (fecha · lista · personas · Agendado · Resumen · Todo · Detalles)
+- 2026-10-05 · build 227: encabezado limpio — título en una línea, una sola pastilla de filtro, "Te pregunta" minimizable con OK · Mover · Nueva
+- 2026-10-05 · build 226: acomodo de mensajes (OK · Mover · Nueva), Acomodo en el Inicio, iconos de línea sin emojis
+- 2026-10-05 · build 225: info de tarea en chips + Resumen vivo, filtro por meta, mover mensajes, dictado sin cortes
+- 2026-10-05 · build 224: vista supervisor (maqueta aprobada por Salvador 12:03)
+- 2026-10-05 · build 223: respuesta no clara -> Claude repregunta concreto (o espera si ya repreguntaste) y arma la decisión
+- 2026-10-05 · build 222: Metas con los cambios de Salvador (11:17): solo rojo; Claude supervisa al ejecutor; a Salvador solo decisiones armadas
+- 2026-10-05 · build 222 (rama metas, SIN publicar): tareas continuas con Metas
+- 2026-10-05 · build 221: Claude resuelve a cada persona; "¿Quién es X?" con todas las opciones; seguimiento por días; se comparte con
+- 2026-10-05 · build 220: las palomitas leen de wa_estados (Carlos 10:12)
+- 2026-10-05 · build 219: buscador al agregar integrantes; nombres cortos en la franja; responsable y seguimiento dictados
+- 2026-10-05 · build 218: la opción "Solo al equipo" ahora dice "A todo el equipo"
+- 2026-10-05 · build 217: "Solo al equipo" también por WhatsApp; palomitas como WhatsApp
+- 2026-10-05 · build 216: opción "Para mí (nota)" en la hoja ¿Para quién es?
+- 2026-10-05 · build 215: Eliminar archivos elegidos (hoja de confirmación) y hoja ¿Para Claude o mandar? estilo Apple
+- 2026-10-05 · build 214: checklist de 3 estados (○ pendiente · ✓ invitado · ✓✓ confirmado)
+- 2026-10-05 · build 213: el dictado nunca se pierde por una llamada; al volver, Seguir dictando o Mandar así
+- 2026-10-05 · build 212: Posible vinculación con botones invertidos y ✕; el rango de hora agenda a la de inicio
+- 2026-10-05 · build 211: la nota a Claude ya no tira el contexto que trae fechas dictadas
+- 2026-10-05 · build 210: audífonos escucha sin cortar, todo lo dictado va a Claude y responde por voz
+- 2026-10-04 · build 209: Falta info ya no se autoriza sola; ficha completa y botón Autorizar
+- 2026-10-04 · build 208: en Falta info los checks se palomean uno por uno al llegar lo de Claude
+- 2026-10-04 · build 207: en Falta info todo lo dictado va primero a Claude, en una sola llamada
+- 2026-10-04 · build 206: Claude dentro de la tarea anota contexto (sumar/reemplazar), ritmo, indefinida/recurrente y fecha dictada
+- 2026-10-04 · build 205: "Falta info" se llena al dictar (Salvador 21:14, "Agendar Reunión Consejo Colonia Cumbres") — causa: lo dictado dentro de la tarea traía "…es para que sepas el contexto", esNotaClaude() lo mandaba a notaClaude ANTES de revisar "Falta info" y Claude contestó "No entendí bien… No cambié nada en la tarea" (msgs[2] de la tarea); ahora en Falta info lo dictado completa la tarea (solo las órdenes claras —eliminar, pasarla, encargarla— siguen a Claude; "Esto es una tarea…" largo también fija el tipo); al instante y sin IA se sacan indefinida, ritmo (el que va con "ritmo/recordar"), fecha dictada y el contexto (lo dictado manda sobre la descripción vieja); la IA afina después (ahora también "ritmo") sin dejar peor la rayita; barras y renglones en vivo, lo completo tenue y plegado, arriba "Solo me falta: …", y completa sale con la palomita estándar; sin red igual se completa con lo local; tests/b205.test.js
+- 2026-10-04 · build 204: correcciones de Salvador 21:04-21:10 — "¿Te lo agendo?" solo para hoy en adelante: si el año no se dijo, la fecha es la más cercana a cuando nació el mensaje ("Fideicomiso: seguimiento con BBVA" leía "el 28-sep" como 28-sep-2027) y lo que ya pasó no sale ni en la tarjeta ni en el checklist; "Nació en: Correo / WhatsApp de X / Revisor IA / Claude (chat) / Doit (a mano)" con letra chica en "Creada con" del ▾ y antes del primer mensaje (de origen, creada_por, wa_contacto y el primer mensaje); el clip del encabezado siempre está y se pinta verde con archivos; en "Archivos de esta tarea" presión larga = selección múltiple con Apartar (apartado:true, nada se borra) y Copiar a otra tarea (lista con buscador), íconos de línea; un solo cuadro de Contexto cuando la tarjeta de Falta info ya lo trae ("Migración Scotia Online"); tests/b204.test.js
+- 2026-10-04 · build 203: agendar en un toque (Salvador 19:26, "ahórrame todos los pasos posibles") — Sí en "¿Te lo agendo?" ya NO abre Google Calendar: pone al instante la alarma de Doit (nuevoAviso + sincronizaAvisos) y deja gcal:"pendiente" con evento {titulo, fecha, hora, lugar, notas, todo_dia} completo para que el trabajador con el conector de Calendar lo cree y escriba gcal_id; sin hora, la misma pregunta pide la hora o "Todo el Día" (la alarma suena ese día a las 8:00 AM); línea en la ficha "Agendado ✓ · Calendario: en camino" → "Calendario ✓" cuando llega gcal_id; tests/agenda.test.js
+- 2026-10-04 · build 202: "¿Te lo agendo?" en Falta info — tareas o datos con campo evento (Mac 18f: invitaciones, citas y eventos tal como vienen) o con una cita detectada (palabra de cita + fecha exacta u hora) llevan como último paso del checklist la pregunta con botones grandes Sí / No; Sí = recordatorio de Doit (nuevoAviso + sincronizaAvisos) + Google Calendar abierto con el evento lleno (hora de Monterrey convertida a UTC; sin hora, todo el día) + agendado:true; No = agendar:false; sin fecha se pide el día antes (fecha dictada); lo que ya pasó no se pregunta; tests/agenda.test.js
+- 2026-10-04 · build 201: "Falta info" también para tareas viejas abiertas — fecha que nadie dictó (creada por Claude/trabajador con la fecha de su propio día y nunca movida), sin nada de contexto, o finiquito vencido sin ritmo ni recordatorio; ids _AAAAMMDD ya dan su día de creación; la descripción, el análisis, el ritmo o el mensaje con que nació cuentan como contexto; mover o dictar la fecha la marca como dictada; tests/faltainfo.test.js
+- 2026-10-04 · build 200: Notificaciones en ⋯ del inicio (maqueta pantalla 7): atajos Ninguna / Solo urgente / Normal / Todas y un interruptor por tipo (Urgente, Trabajo, WhatsApp), Solo urgente de inicio; catálogo único NOTIF_TIPOS (un tipo nuevo = una línea); preferencias por usuario en su ficha (bitacora_personas.notif con versión); los avisos que manda la app respetan lo que apagó cada quien y llevan su tipo al servidor; tests/notificaciones.test.js
+- 2026-10-04 · build 199: WhatsApp programados dentro de Doit — "mándale a X mañana a las 8 que…", "dile a X el lunes a las 9 que…", "a las 12 si no ha contestado recuérdale…", "…y si no contesta, insístele a las 5" se dejan en la cola con etiquetas [A LAS …] / [SI NO CONTESTA DESDE …] que entiende la Mac v16 (fecha con el candado de fechas); burbuja con reloj "Programado · lun 5 oct 8:00 → Carlos", tocar = cancelar (wa_marca cerrado); las etiquetas nunca se ven; las notas a Claude programan de verdad (nunca "estaré pendiente"); tests/programados.test.js
+- 2026-10-04 · build 198: lo oculto ya no deja renglones "N … · ver" (indicaciones viejas, avisos del sistema, avisos de seguimiento atendidos): en Importante simplemente no salen, en Todo sale todo; si el chat queda vacío, pista "Hay N mensajes ocultos · Todo"
+- 2026-10-04 · build 197: chat limpio — de cada tema solo se ve el último aviso de Claude (vencimientos, empujones, preguntas repetidas, Movida…; los viejos siguen guardados); botón Importante | Todo arriba del chat; las indicaciones a Claude y lo que hizo se ven hasta que ya las viste y regresas, luego se pliegan; la respuesta de Claude siempre dice qué hizo; tests/chat.test.js
+- 2026-10-04 · build 196: títulos de tareas y datos con Mayúscula Inicial en cada palabra menos conectores (siglas y marcas se respetan; se ven así al cargar y se guardan así); avisos del sistema (Movida, Te aviso, Cerrada…) plegados en "N avisos · ver"; los nombres del encabezado vuelven a abrir la ficha de la persona; aviso al jefe sin "vence" y nunca para indefinidas; tests/titulos.test.js
+- 2026-10-04 · build 195: fichas limpias (maqueta aprobada 11:14): encabezado con "Tuya · con X y Y", chip de fecha (Finiquito / Indefinida · próx. / Dato) y ▾ con "Creada con" + Contexto en verde y palabras; fuera del chat Resumen / Se cierra con / La abriste dictando; "Falta info" sustituye Falta información y Por autorizar: Tarea | Dato, barra de contexto con mínimo en 75 % y lista de lo que falta, se llena dictando (antes de cualquier canal) y al completar sale la palomita y brinca a la siguiente; "autorízala así"; datos con Total y Desglose sacados del texto guardado, sin campana / Ya está / bote; checklist compacto con hojita verde y "N de M"; iconos de línea; sinónimos (barda/muro/cerca/tapia, portón/puerta/reja, costo/precio/cotización/presupuesto, casa/residencia) en la búsqueda; tests/fichas.test.js
+- 2026-10-04 · build 194: "abre / busca / el costo de X" busca en TODAS las tareas (también cerradas) y en sus datos, análisis, notas, listas y mensajes; sin acentos y con plurales; una coincidencia la abre, varias = lista con el porqué, ninguna = "No lo encontré" (nunca crea); "Clau abre…" dentro de una tarea también busca; tarjeta DATOS arriba al abrir una cerrada; tests/buscar.test.js (F37)
+- 2026-10-04 · build 193: Indicación para Claude (última opción al dejar picado un mensaje tuyo sin destinatario, "Para Claude" naranja primero en el aviso de externo, canal fijo naranja "Claude" junto a la pastilla); las notas a Claude se pliegan en "! N indicaciones a Claude · ver" (F36); mismo formato en todas (F38): una persona = uno aunque tenga varios nombres o por teléfono, alguien del equipo por WhatsApp tiene su canal "Samuel · WhatsApp", pastilla y caritas en toda tarea con involucrados; tests/indicacion.test.js
+- 2026-10-04 · build 192: el bote borra sin pedir motivo a las recien nacidas (por autorizar, falta informacion desde que nacio, accidente < 15 min); censo en la tarea de cada descarte al nacer y de cada vinculacion (Vincular, Crear tarea nueva, Sumalo a la que ya existe) y ejemplos al prompt de Claude; tarjeta de vinculacion "Este mensaje lo pienso vincular a X. ¿Autorizas?"; tests/borrar.test.js
+- 2026-10-04 · build 191: indefinida nunca sale vencida por fecha (chip "Indefinida · próximo: X"); recurrente pasada sin confirmar dice "tocaba X, sin confirmar" y se pide el avance en positivo; pruebas del punto 4 en tests/fechas.test.js
+- 2026-10-04 · build 190: fechas — manda la fecha dictada: candado a lo que propone Claude (nota a Claude, barra, revision, medida), dia+numero tienen que cuadrar o se pregunta, el texto de la fecha lo arma la app; tests/fechas.test.js
+- 2026-10-03 · build 189: lo que va por WhatsApp solo tiene el bote 30 s y luego sale; notas a Claude/Cloud que Claude entiende y ejecuta
+- 2026-10-03 · build 188: 30 s para deshacer lo que va por WhatsApp (o borrarlo); Cancelar en el aviso; notas para Claude que no salen; contestar a lo ultimo del externo en Todo sale directo
+- 2026-10-03 · build 187: sin avisos de entrega fallida en el chat; responder a lo ultimo del externo sale directo
+- 2026-10-03 · build 186: en Todo el mensaje va al responsable (externo por WhatsApp con aviso); fotos en su lugar del chat; clip junta archivos de WhatsApp; arregla fecha que tronaba la galeria
+- 2026-10-03 · build 185: lectura como podcast en vivo (pregunta y escucha al final; siguiente, repite, duda, resumen, ya esta, eliminala con motivo); Leer lo actual; velocidad en el menu
+- 2026-10-03 · build 184: lectura en voz (dejar picado: leer desde aqui / resumen / toda la tarea; audifonos = podcast que se detiene al final de cada tarea)
+- 2026-10-02 · build 183: Te pregunta plegado en 3 renglones, fotos sin coordenadas, visor con cerrar
+- 2026-10-02 · build 182: Claude supervisor — entrevista al supervisor, entregas con fecha (lista Entregas), fecha del jefe manda, insistencia al dueño 2 dias y aviso al jefe
+- 2026-10-02 · build 181: Te toca limpio (maqueta aprobada): uno por uno lo que pide accion; vencidas y hoy en un renglon que se abre; Proximas y Compartidas chiquitas abajo; mensajes informativos fuera
+- 2026-10-02 · build 180: Te toca por grupos en el orden de Salvador (atoradas, falta info, por autorizar, vencidas, hoy), 3 por grupo con 'ver N mas', letra 20% mas grande
+- 2026-10-02 · build 179: Te toca, Compartidas, integrantes (agregar/quitar, jefes no se quitan), organigrama dictado, crear con 'que esten', Para ti con fuentes, respuestas que no resuelven, supervisor en la misma tarea
+- 2026-10-02 · build 178: canales dentro de la tarea (Todo, Equipo, dueño, cada externo por WhatsApp); donde estas = a quien le llega; aviso al nombrar a un externo; candado si se menciona a otro proveedor; deslizar burbuja ya no cambia de tarea
+- 2026-10-02 · build 177: corrige la etiqueta de version (se quedo en 173 desde la 174)
+- 2026-10-02 · build 177: avisos vino parejo #3e0b1b con marco #FF2D55 (pendiente de aprobar)
+- 2026-10-02 · build 177 (pendiente de aprobar): avisos de Claude rojo tenue con marco; avisos atendidos plegados
+- 2026-10-02 · build 176: deslizar un mensaje para contestarlo en especifico; la cita viaja a WhatsApp (cita_texto)
+- 2026-10-02 · build 175: contestar en la tarea a quien escribio por WhatsApp se le manda (auto_respuesta); Autorizar/Ya esta/Eliminar con animacion y pasa a la siguiente
+- 2026-10-02 · build 174: 'sabado 10' = dia 10; responder a la misma persona de la tarea no crea otra (cero duplicados); sin mensaje Autorizada
+- 2026-10-02 · build 173: 'no es mia, es de X' pasa la tarea y la autoriza; 'ponerle el nombre X' renombra; se aplica a lo ya dicho al abrir la tarea
+- 2026-10-02 · build 172: notificacion de WhatsApp sin id abre la tarea del mensaje (titulo+texto), aunque haya varias con novedades
+- 2026-10-02 · build 171: WhatsApp pedido desde la app va como prioridad urgente
+- 2026-10-02 · build 170: reconoce cada lunes/LV/quincenal al dictar y recupera el ritmo de recordatorios viejos para reenviarlos al servidor con cada y f_fin
+- 2026-10-02 · build 169: aviso_set manda f_fin (AAAA-MM-DD o sin_fin) y 'cada lunes' cuenta como SEMANAL
+- 2026-10-02 · build 168: la tarjeta de vinculación también lee 'posible duplicado de …' que deja el trabajador
+- 2026-10-02 · build 168: Por revisar (te espera / falta información / posible vinculación / por autorizar) con tarjeta dentro de la tarea; renombrar por voz más flexible
+- 2026-10-02 · build 167: duplicados por significado, "abre X" busca, listas con pestañas
+- 2026-10-02 · build 166: checklist dictado va dentro de la tarea que ya existe
+- 2026-10-02 · build 165: dictado cortado queda en pausa con micrófono para seguir
+- 2026-10-02 · build 164: notificación con la app abierta entra por URL; fecha limpia en recurrentes
+- 2026-10-02 · build 164: notificación sin id abre el inicio, ya no adivina tarea
+- 2026-10-02 · build 164: recurrentes se renuevan solas al darle Ya está
+- 2026-10-01 · build 163: corrige línea de versión
+- 2026-10-01 · build 163: recordatorios recurrentes sin fecha de fin caen a información pendiente
+- 2026-10-01 · build 162: Es una tarea nueva en resultados; Vincular con lupa y lista arriba
+- 2026-09-30 · build 161: abrir tarea con info pendiente al picarla
+- 2026-09-30 · build 160: renombrar por voz 'cambia el nombre de esta tarea a X'
+- 2026-09-30 · build 159: Cambiar nombre abre teclado y campo vacío
+- 2026-09-30 · build 158: mensajes WhatsApp compactos Nombre: texto + puntito de detalle
+- 2026-09-30 · build 157: Atorados incluye decisiones de Salvador
+- 2026-09-30 · build 156: Vincular a otra tarea
+- 2026-09-30 · build 155: pestaña Creadas hoy + enlazar a otra tarea
+- 2026-09-29 · build 154: flecha atrás en resultados de búsqueda
+- 2026-09-29 · build 153: mensaje 'en cola' corto (70 caracteres)
+- 2026-09-29 · build 152: mensajes entrantes de WhatsApp (wa_in) cuentan como sin leer
+- 2026-09-29 · build 151: cierre con lista palomeada, ticket 1 evidencia, cierre real en boton cerrar
+- 2026-09-29 · build 150: contestar 'ya lo envie' en el bote cierra la tarea en vez de pedir fecha
+- 2026-09-29 · build 150: notificaciones de la app llevan liga exacta a la tarea; fallback solo si hay una sin leer
+- 2026-09-29 · build 150: notificacion sin id abre el hilo con lo mas reciente sin leer
+- 2026-09-29 · build 150: bote naranja con contexto y play
+- 2026-09-29 · build 150: doble vida, tarea espejo en la app del contacto del equipo
+- 2026-09-29 · build 150: dictado a equipo sale directo por WhatsApp + archivo; en mi tarea de X; ponle un mensaje a
+- 2026-09-29 · build 149: mi cel = chat propio 'Salvador Necochea (Tú)'
+- 2026-09-29 · build 149: correo/mail y compartir archivo por dictado via la cola (canal en el texto del pedido)
+- 2026-09-29 · build 149: mensajeria por dictado sin decir WhatsApp (avisale, dile, comentale, manda)
+- 2026-09-29 · build 149: 'manda WhatsApp a X que diga...' sale directo sin preguntar fecha; mi cel = Mi Cel (tú)
+- 2026-09-29 · Build 148: ficha de persona sin nombre ya no truena la barra
+- 2026-09-29 · Build 148: blindaje de render + icono de análisis en mensajes de IA
+- 2026-09-28 · Build 147: Cambiar nombre al menu de "..." + que hice/elimine hoy corregido
+- 2026-09-27 · Build 146: lápiz para renombrar la tarea + "cambia el nombre a X" por dictado
+- 2026-09-27 · Build 145: escoger tarea siempre visible al coincidir + lista completa de pasos al vincular + palomeo de "ya compré X" desde donde sea
+- 2026-09-27 · Build 144: pasos dentro de la tarea + hora dicha = alarma
+- 2026-09-26 · build 143: acuerdos crean tarea nueva con el porque, ficha de persona, preparame
+- 2026-09-26 · build 142b: campanita naranja en Proximas y futuras para alarmas de otro dia
+- 2026-09-25 · sw.js build 142: notificacion de tarea abre esa tarea con la app abierta
+- 2026-09-25 · build 142: la notificacion de una tarea abre esa tarea
+- 2026-09-25 · build 141: campanitas azul/naranja/roja con alarma roja obligatoria, sin seccion Recordatorios, horas 1-5 tarde, puntitos por movida
+- 2026-09-25 · build 140: mover fecha hablando con Deshacer, registro de movidas y motivo, fix Vencidas, ritmo con campanita en Hoy
+- 2026-09-25 · build 139: WhatsApp sin confirmar con Deshacer 3 s, cancelar desde el mensaje, contactos ligados, marca IA·WA
+- 2026-09-25 · build 138: dictado en vivo arriba de las onditas y home ordenado
+- 2026-09-25 · build 137: WhatsApp desde el home abre tarea nueva; Carlos/Josue por WhatsApp al decir escribele
+- 2026-09-25 · build 136: WhatsApp desde la tarea (wa_pedido), action=visto al abrir y volver, cache local de Firestore
+- 2026-09-25 · Update index.html
+- 2026-09-24 · build 134: teclado abierto al mandar; reabrir tarea desde el chat; deshacer solo en la misma tarea
+- 2026-09-24 · Build 133: sin cintillo (solo palomita 1 s); sin boton Estoy atorado (se dice hablando, con el nombre basta); mensajes cortos; tarea cerrada acepta comentarios
+- 2026-09-24 · Build 132: desde un push solo se abre la hoja si algo suena; al cerrar o quitar alarma se borra en el servidor toda clave (no mas push de cerrados)
+- 2026-09-24 · Build 131: sello y quedate - quitar alarma, Ya esta o eliminar no cambian de tarea; palomita, campana gris, titulo tachado, cintillo con Deshacer
+- 2026-09-24 · Build 130: al eliminar un recordatorio, palomita + salto animado al siguiente, titulo parpadea en verde, cintillo Eliminado / Deshacer
+- 2026-09-24 · Build 129: Eliminar en SONANDO AHORA cierra el recordatorio y pasa al siguiente; recordatorio cerrado ya no suena
+- 2026-09-23 · Build 128: caja de un renglon tipo WhatsApp, hoja de recordatorios con la barra de siempre, horas AM/PM (24 h en Tu cuenta)
+- 2026-09-23 · Build 127: avisos al servidor de push nuevo (aviso_set), hora 4:20 suelta, 4:30 35 = 4:35, tarde por defecto hoy, titulo sin hora
+- 2026-09-23 · Build 126: tareas y recordatorios no se guardaban (de:undefined) y se trababa en Leyendo; caja limpia al enviar
+- 2026-09-23 · Recordatorio: minutos dictados (3 45, y media, menos cuarto), abre su chat al crearse, teclado en caja
+- 2026-09-23 · Dictado: candado de 25s (ya no se traba) y barra de abajo solo sube con teclado real
+- 2026-09-22 · Push: re-manda la suscripcion al servidor al arrancar y boton siempre activo
+- 2026-09-22 · Home sin tachadas, cerradas en contexto y busqueda, barra en respuestas, asunto del recordatorio
+- 2026-09-22 · Hilo: recordatorio directo en la tarea, mover fecha dictado, bote 5 min, iso() local
+- 2026-09-22 · Borrar recordatorio: hoja iOS y brinca al siguiente
+- 2026-09-22 · Amplia sinonimos de recordatorio y detecta hora dicha
+- 2026-09-22 · Reconoce acuerdame/acuerdate igual que recuerdame en el hilo
+- 2026-09-22 · Atorado: apaga el boton mientras espera nombre y motivo
+- 2026-09-22 · Home: bote de basura en gris, igual que la campana en reposo
+- 2026-09-22 · Home: texto blanco en franjas + arregla tamano boton eliminar
+- 2026-09-22 · Home: puntito del color de su seccion + swipe continuo entre secciones
+- 2026-09-22 · Home: acordeon de 7 secciones (atora/pendiente/vencidas/avisos/hoy/recordatorios/proximas)
+- 2026-09-22 · Update index.html
+- 2026-09-22 · Add files via upload
+- 2026-09-21 · Sincroniza VAPID_PUBLIC con la nueva llave de Josue
+- 2026-09-21 · Update sw.js
+- 2026-09-21 · Add files via upload
+
+## 2026-10-08 · marcas de build quitadas del código
+
+Comentarios que solo decían el número de build (sin explicar nada) se quitaron del código; aquí queda dónde estaban (líneas del build 286):
+
+- `build 143`: línea 6807 dentro de render()
+- `build 144`: línea 16921 dentro de bindHilo()
+- `build 182`: línea 15714 dentro de confirmaAccion()
+- `build 188`: línea 7863 dentro de preguntaExterno()
+- `build 190`: línea 2690 dentro de creaAcuerdo(); línea 16806 dentro de bindHilo(); línea 16816 dentro de bindHilo(); línea 16861 dentro de bindHilo()
+- `build 191`: línea 20276 dentro de _leeEntrada()
+- `build 192`: línea 6294 dentro de enlazaTareas(); línea 12032 dentro de contextoBarra(); línea 15667 dentro de bindBarra()
+- `build 193`: línea 7812 dentro de phCanal(); línea 16595 dentro de bindHilo(); línea 20478 dentro de leeOpcionesDe()
+- `build 197`: línea 16598 dentro de bindHilo()
+- `build 199`: línea 16597 dentro de bindHilo()
+- `build 200`: línea 6810 dentro de render(); línea 16043 dentro de bindLista()
+- `build 202`: línea 4867 dentro de vFaltaInfo()
+- `build 203`: línea 16591 dentro de bindHilo()
+- `build 207`: línea 4843 dentro de vFaltaInfo()
+- `build 209`: línea 16579 dentro de bindHilo()
+- `build 210`: línea 20648 dentro de leeComando()
+- `build 212`: línea 16428 dentro de bindHilo()
+- `build 213`: línea 9610 dentro de pausaDictado(); línea 9675 antes de srJunta()
+- `build 214`: línea 8734 dentro de aplicaRevisionClaude(); línea 16448 dentro de bindHilo(); línea 21115 dentro de ejecutaNotaClaude()
+- `build 215`: línea 9895 dentro de vRevision(); línea 11787 dentro de vHilo(); línea 16279 dentro de bindHilo(); línea 17934 dentro de vSupervisor()
+- `build 216`: línea 7867 dentro de preguntaExterno(); línea 20250 dentro de leible(); línea 21075 dentro de ejecutaNotaClaude()
+- `build 219`: línea 5026 dentro de completitud(); línea 8735 dentro de aplicaRevisionClaude()
+- `build 221`: línea 4821 dentro de fichaRevision(); línea 4824 dentro de fichaRevision(); línea 11615 dentro de vHilo(); línea 21113 dentro de ejecutaNotaClaude()
+- `build 222`: línea 8513 dentro de resuelveDudaPersona(); línea 8731 dentro de aplicaRevisionClaude(); línea 14274 dentro de vChecklist()
+- `build 223`: línea 16441 dentro de bindHilo()
+- `build 225`: línea 15296 dentro de arrancaDictadoCompleta(); línea 15886 dentro de arrancaDictadoRev(); línea 16016 dentro de bindCaja2(); línea 16950 dentro de bindHilo(); línea 20479 dentro de leeOpcionesDe()
+- `build 226`: línea 16037 dentro de bindLista()
+- `build 227`: línea 10173 dentro de vPersonas225(); línea 16411 dentro de bindHilo()
+- `build 228`: línea 10192 dentro de vHoja225()
+- `build 229`: línea 16585 dentro de bindHilo(); línea 16589 dentro de bindHilo(); línea 16590 dentro de bindHilo(); línea 20323 dentro de leeNuevo()
+- `build 230`: línea 7775 dentro de vPastilla(); línea 7794 dentro de abreFiltro227()
+- `build 231`: línea 7788 dentro de abreFiltro227()
+- `build 234`: línea 10196 dentro de vHoja225()
+- `build 235`: línea 10194 dentro de vHoja225()
+- `build 240`: línea 4246 dentro de arranca(); línea 6811 dentro de render(); línea 16050 dentro de bindLista(); línea 16451 dentro de bindHilo()
+- `build 241`: línea 14594 dentro de creaTarea()
+- `build 242`: línea 10193 dentro de vHoja225(); línea 11332 dentro de esImp230()
+- `build 243`: línea 11000 dentro de bindAcomodo()
+- `build 244`: línea 11722 dentro de vHilo(); línea 16286 dentro de bindHilo()
+- `build 245`: línea 16287 dentro de bindHilo()
+- `build 246`: línea 11324 dentro de esImp230()
+- `build 248`: línea 21073 dentro de ejecutaNotaClaude()
+- `build 249`: línea 9320 dentro de completaRevision(); línea 10950 dentro de pintaSel245()
+- `build 251`: línea 8497 dentro de aplicaSeguimientoA(); línea 8589 dentro de pideMensaje(); línea 8805 dentro de mandaOrden238()
+- `build 254`: línea 16594 dentro de bindHilo(); línea 16776 dentro de bindHilo(); línea 16782 dentro de bindHilo()
+- `build 256`: línea 16038 dentro de bindLista()
+- `build 258`: línea 1770 dentro de tipoDePush()
+- `build 259`: línea 9324 dentro de completaRevision()
+- `build 261`: línea 20499 antes de _icoAudif()
+- `build 263`: línea 3960 dentro de entrar(); línea 6970 dentro de vLista(); línea 20982 dentro de notaClaude()
+- `build 264`: línea 6286 dentro de enlazaTareas()
+- `build 268`: línea 3090 dentro de cierraHecha(); línea 3120 dentro de duerme264()
+- `build 269`: línea 1769 dentro de tipoDePush()
+- `build 270`: línea 16072 dentro de bindLista()
+- `build 271`: línea 11272 dentro de bindAcomodoInicio()
+- `build 272`: línea 16070 dentro de bindLista()
+- `build 273`: línea 11680 dentro de vHilo(); línea 11793 dentro de vHilo(); línea 16370 dentro de bindHilo()
+- `build 274`: línea 16071 dentro de bindLista()
+- `build 275`: línea 18887 dentro de camHaz274()
+- `build 276`: línea 18721 antes de camComando274(); línea 18724 antes de camComando274(); línea 18725 antes de camComando274(); línea 18896 dentro de camPresenta274(); línea 18988 dentro de camPinta274(); línea 19033 dentro de camResumen275(); línea 19248 dentro de camEjecuta275(); línea 19252 dentro de camSigue275()
+- `build 277`: línea 18723 antes de camComando274(); línea 18895 dentro de camPresenta274(); línea 18906 dentro de camSiguiente274(); línea 18926 dentro de camEmpieza274(); línea 18941 dentro de camSal274(); línea 19596 dentro de camMsgPrompt276(); línea 19618 dentro de camMsgEjecuta276(); línea 19632 dentro de camMsgEjecuta276()
+- `build 278`: línea 19137 dentro de camPrompt275(); línea 19146 dentro de camPrompt275(); línea 19237 dentro de camEjecuta275()
+- `build 283`: línea 18112 dentro de faltaPreciso263(); línea 21070 dentro de respuestaHecho(); línea 21101 dentro de ejecutaNotaClaude()
+- `build 284`: línea 20032 dentro de bindHome272()
+- `build 285`: línea 20033 dentro de bindHome272()
+- `build 286`: línea 19157 dentro de camEntiende275(); línea 19178 dentro de camResuelve275(); línea 19189 dentro de camResuelve275(); línea 19196 dentro de camResuelve275(); línea 19202 dentro de camResuelve275(); línea 19256 dentro de camDeshaz275(); línea 19507 dentro de camAplicaQuiz276(); línea 19603 dentro de camMsgEntiende276(); línea 19617 dentro de camMsgEjecuta276(); línea 19645 dentro de camMsgEjecuta276()
+- `hotfix 276`: línea 19198 dentro de camResuelve275()

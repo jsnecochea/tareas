@@ -1766,8 +1766,8 @@ function notifPermite(k, tipo, sub){
 /* el tipo de un aviso que manda la app, por su titulo (los que no se reconocen suenan como siempre) */
 function tipoDePush(titulo, cuerpo){
   var s=_nn(String(titulo||"")+" | "+String(cuerpo||""));
-  if(/acuerdo|quedamos|(cita|hora|lugar) (confirmad|cambi)|se (confirmo|cambio) (la|el) (cita|hora|lugar)/.test(s)) return "acuerdo";   /* build 269 */
-  if(/necesita tu respuesta|necesito tu (respuesta|si\b|dato)|requiere tu (si|dato)|llamada|te llama/.test(s)) return "te_necesito";   /* build 258 */
+  if(/acuerdo|quedamos|(cita|hora|lugar) (confirmad|cambi)|se (confirmo|cambio) (la|el) (cita|hora|lugar)/.test(s)) return "acuerdo";
+  if(/necesita tu respuesta|necesito tu (respuesta|si\b|dato)|requiere tu (si|dato)|llamada|te llama/.test(s)) return "te_necesito";
   if(/^urgente|requiere tu (accion|decision)|te espera|esperan tu decision|atorad/.test(s)) return "te_necesito";   /* build 269: alguien espera tu sí/dato/pago = te_necesito/atorado */
   if(/atrasad|no ha cumplido|vencid|sin avance|tocaba/.test(s)) return "seguimiento";
   if(/recordatorio|alarma/.test(s)) return "recordatorio";
@@ -2687,7 +2687,7 @@ function creaAcuerdo(t, pend, j, err){
     var _fd=fechaMovida(v);
     if(_fd && _fd>=hoy() && _fd!==t.f_vigente){ var _ant=t.f_vigente; t.f_vigente=_fd; if(!t.f_original) t.f_original=_fd;
       msg(t,"bi","Fecha: "+fechaMovCorta(_fd)+(_ant?" (antes "+fechaMovCorta(_ant)+")":"")+"."); }
-    else if(!_fd && dudaFecha(v)) msg(t,"bi",dudaFecha(v)+" No cambié la fecha.");   /* build 190 */
+    else if(!_fd && dudaFecha(v)) msg(t,"bi",dudaFecha(v)+" No cambié la fecha.");
     guarda(t); if(vista==="hilo") render(); return null;
   }
   var n=creaTarea({nombre:nombre, duenio:yo, fecha:fz.fecha, dicho:nombre});
@@ -3087,7 +3087,7 @@ function cierraHecha(t){
   var tarde=t.f_original&&dDif(t.f_original,hoy())>0;
   msg(t,"bi",tarde?"Cerrada. Lo importante es que ya quedó.":"Cerrada a tiempo. Bien hecho.");
   t.estado="cerrada"; t.pide_atoro=false; t.pide_tel=false; t.pide_fecha=false; guarda(t); sincronizaAvisos(t);
-  try{ barreNotifs268(true); }catch(e){}   /* build 268 */
+  try{ barreNotifs268(true); }catch(e){}
 }
 /* REABRIR: la tarea vuelve a estar viva tal cual estaba, con su historial.
    Se anota quien y por que la reabrio. Si la fecha ya paso, se pide la nueva
@@ -3117,7 +3117,7 @@ function duerme264(t){
   msg(t,"bi","Enterado · queda viva para lo que llegue");
   t.dormida={ts:Date.now(), q:cuentaEntra264(t), e:(t.evidencias||[]).length};
   guarda(t); try{ sincronizaAvisos(t); }catch(e){}
-  try{ barreNotifs268(true); }catch(e){}   /* build 268 */
+  try{ barreNotifs268(true); }catch(e){}
   return prev;
 }
 function restauraDormir264(t, prev){
@@ -3957,7 +3957,7 @@ function entrar(u){ yo=u; $("gate").classList.remove("on"); $("app").style.displ
   setTimeout(function(){ resincronizaAvisos(); }, 2500);
   /* y los avisos que nunca llegaron al servidor nuevo (2026-09-23) */
   setTimeout(function(){ try{ subeAvisosPendientes(); }catch(e){} }, 9000);
-  setTimeout(function(){ try{ limpiaWABasura263(); }catch(e){} }, 11000);   /* build 263 */
+  setTimeout(function(){ try{ limpiaWABasura263(); }catch(e){} }, 11000);
   /* build 136: le dice al servidor que este usuario acaba de ver la app, para
      que no le repita por push lo que ya vio (Carlos: nunca se llamaba visto) */
   setTimeout(function(){ try{ avisaVisto(); }catch(e){} }, 1500); }
@@ -4243,7 +4243,7 @@ function arranca(){
         if(o.reporta_a) p.reporta_a=o.reporta_a;            /* build 179: organigrama dictado */
         if(o.notif && typeof o.notif==="object") p.notif=o.notif;   /* build 200: notificaciones de cada quien */
         if(Array.isArray(o.apodos)) p.apodos=o.apodos;
-        if(d.id===yo && Array.isArray(o.historial_acciones)) window.__histRemoto240=o.historial_acciones;   /* build 240 */
+        if(d.id===yo && Array.isArray(o.historial_acciones)) window.__histRemoto240=o.historial_acciones;
         if(o.nombre&&o.apellido) p.ini=iniciales(o.nombre,o.apellido);
       });
       fichasLeidas=true;
@@ -4818,10 +4818,10 @@ function fichaRevision(t){
   } else {
     F.push(["fecha",t.indefinida===true||esRecurrente(t)?"Finiquito":"Fecha",fin]);
     F.push(["ritmo","Ritmo",t.ritmo||((t.avisos||[]).filter(function(a){ return a&&a.fecha; }).length?"Avisos puestos":"")]);
-    F.push(["quien","Quién",t.revisa_ext&&t.duenio===yo?t.revisa_ext+" · tú supervisas":(t.duenio&&PERSONAS[t.duenio]?(t.duenio===yo?"Tú":PERSONAS[t.duenio].nombre):"")]);   /* build 221 */
+    F.push(["quien","Quién",t.revisa_ext&&t.duenio===yo?t.revisa_ext+" · tú supervisas":(t.duenio&&PERSONAS[t.duenio]?(t.duenio===yo?"Tú":PERSONAS[t.duenio].nombre):"")]);
     if(t.seg_a && t.seg_a.contacto) F.push(["seguimiento","Seguimiento",t.seg_a.contacto+(t.seg_a.cada?" · "+t.seg_a.cada:"")+(t.seg_a.hora?" · "+t.seg_a.hora+(t.seg_a.hora_defecto?" (por defecto)":""):"")]);
   }
-  var _cp221=_compartirLista(t); if(_cp221.length) F.push(["compartir","Se comparte con",_cp221.map(function(c){ return c.nombre; }).join(" · ")]);   /* build 221 */
+  var _cp221=_compartirLista(t); if(_cp221.length) F.push(["compartir","Se comparte con",_cp221.map(function(c){ return c.nombre; }).join(" · ")]);
   var kw=(t.palabras||[]).slice(0,10); if(kw.length) F.push(["etiquetas","Etiquetas",kw.join(" · ")]);
   var pd=t.dup_resuelto?[]:posibleDup(t); if(pd.length) F.push(["vinculo","Vínculo propuesto",pd.slice(0,3).map(nombreVinc248).join(" · ")+" (no vinculado)"]);
   return '<div class="ffin">'+F.map(function(x){ return '<button class="ffr" data-fedit="'+x[0]+'"><span class="ffl">'+esc(x[1])+'</span><span class="ffv'+(x[2]?'':' vac')+'">'+esc(x[2]||"—")+'</span></button>'; }).join("")+'</div>';
@@ -4840,7 +4840,7 @@ function vFaltaInfo(t){
   if(t.hecho238 && !_P && !(t._leyendo && Date.now()-t._leyendo<60000)) return "";   /* build 238: tras el dictado solo queda la tarjeta Hecho / Me falta */
   /* build 236: mientras NO este clasificada se ocultan "Solo me falta", "Datos de la tarea" y "Agendar": solo el Contexto en una linea con su clip */
   if(!clasif236(t) && !_P){ return '<div class="fic ctx hecho ctx236"><span class="ok">Contexto</span><span class="ctxc'+(ctx?'':' vac')+'">'+esc(ctx?(ctx.length>90?ctx.slice(0,89)+"…":ctx):"sin contexto todavía")+'</span>'+vClipEvid(t,"ctx")+'</div>'; }
-  if(t._leyendo && Date.now()-t._leyendo<60000) h='<div class="solofalta leyendo">Claude está leyendo lo que dictaste…</div>'+h;   /* build 207 */
+  if(t._leyendo && Date.now()-t._leyendo<60000) h='<div class="solofalta leyendo">Claude está leyendo lo que dictaste…</div>'+h;
   var _pd207=t.dup_resuelto?[]:posibleDup(t);   /* build 207: vinculos que propuso Claude, solo propuestos */
   if(_pd207.length) h+='<div class="revc c-vincular"><button class="rvx" data-rvx="1" aria-label="Cerrar sugerencia">✕</button><span class="rct">POSIBLE VINCULACIÓN</span><span class="rcp">Propuesta de Claude; no la vinculé.</span>'+
     _pd207.slice(0,3).map(function(d){ return '<div class="rvv"><span><b>'+esc(nombreVinc248(d))+'</b></span><button class="rvb" data-rvinc="'+esc(d.id)+'">'+(esCerradaReciente248(d)?'Ver':'Vincular')+'</button></div>'; }).join("")+'</div>';
@@ -4864,7 +4864,7 @@ function vFaltaInfo(t){
     '<div class="bar b"><i style="width:'+c.datosPct+'%"></i></div></div><ul class="chk">'+
     _pe.map(function(x){ return '<li class="pend">○ '+esc(x.tx)+'</li>'; }).join("")+
     (_ok.length?'<li class="ok tenue">✓ '+esc(_ok.map(function(x){ return x.tx; }).join(" · "))+'</li>':'')+'</ul></div>';
-  h+=vAgenda(t);   /* build 202 */
+  h+=vAgenda(t);
   return h;   /* build 209: no se autoriza hasta completar; 225: sin el botón gris gigante (lo que falta ya está arriba) */
 }
 /* build 195: cuerpo de un DATO: Total + Desglose (lo mas nuevo arriba, lo anterior se queda como "anterior") */
@@ -5023,7 +5023,7 @@ function completitud(t){
     var q=t.duenio && PERSONAS[t.duenio];
     var fin=t.indefinida===true || esRecurrente(t) || !!(t.f_vigente && !t.falta_fecha && !fechaPuestaSola(t));   /* build 201: la fecha que puso el sistema no cuenta */
     var seg=(typeof permiteGenerica267==="function" && !permiteGenerica267(t)) || (t.avisos||[]).some(function(a){ return a && a.fecha; }) || !!(t.seg_a && ((t.seg_a.programados||[]).length || String(t.seg_a.cada||"").trim())) || !!String(t.ritmo||"").trim() || esRecurrente(t) || (t.indefinida===true && !!t.f_vigente);
-    it.push({k:"quien", ok:!!q, tx:q?"Quién: "+(t.revisa_ext&&t.duenio===yo?nombreCorto(t.revisa_ext)+" · tú supervisas":(t.duenio===yo?"tú":PERSONAS[t.duenio].nombre)):"Quién lo hace"});   /* build 219 */
+    it.push({k:"quien", ok:!!q, tx:q?"Quién: "+(t.revisa_ext&&t.duenio===yo?nombreCorto(t.revisa_ext)+" · tú supervisas":(t.duenio===yo?"tú":PERSONAS[t.duenio].nombre)):"Quién lo hace"});
     it.push({k:"finiquito", ok:fin, tx:fin?(t.indefinida===true||esRecurrente(t)?"Finiquito: indefinida":"Finiquito: "+fechaMovCorta(t.f_vigente)):"Finiquito: ¿fecha o indefinida?"});
     it.push({k:"seguimiento", ok:seg, tx:seg?"Próximo seguimiento listo":"Próximo seguimiento"});
   }
@@ -6283,7 +6283,7 @@ function enlazaTareas(oid,did,propuso){
   if(tam>900000){ toast("Juntas pesar\u00edan demasiado (fotos). No se vincul\u00f3 nada."); render(); return; }
   /* 2) se aplica a la destino */
   d.msgs=msgsN;
-  if(esDormida264(d)) despierta264(d, "vinculada desde “"+corta40(o.nombre)+"”");   /* build 264 */
+  if(esDormida264(d)) despierta264(d, "vinculada desde “"+corta40(o.nombre)+"”");
   if(evN.length) d.evidencias=evN;
   if(wa.length) d.wa_contactos=wa;
   if(nMsg && ultO>=ultD && o.ultima) d.ultima=o.ultima;
@@ -6291,7 +6291,7 @@ function enlazaTareas(oid,did,propuso){
   msg(d,"bi","Se pas\u00f3 aqu\u00ed todo lo de \u201c"+(o.nombre||"otra tarea")+"\u201d ("+nMsg+" mensaje"+(nMsg===1?"":"s")+(nArch?" y "+nArch+" archivo"+(nArch===1?"":"s"):"")+").");
   /* 3) la origen se aparta (no se borra) */
   o.estado="fusionada"; o.fusionada_en=d.id; o.fusionada_ts=Date.now();
-  o.censo_vinc={a:d.id, a_nombre:d.nombre||"", ts:Date.now(), por:yo||"", propuso:propuso, origen:origenTarea(o)};   /* build 192 */
+  o.censo_vinc={a:d.id, a_nombre:d.nombre||"", ts:Date.now(), por:yo||"", propuso:propuso, origen:origenTarea(o)};
   try{ sincronizaAvisos(o); }catch(e){}
   guarda(d); guarda(o);
   /* fuera de la memoria local de inmediato (el snapshot tambien la excluye) */
@@ -6804,11 +6804,11 @@ function render(){
   if(db && fichasLeidas && !fichaCompleta(yo)){
     a.innerHTML=vFicha(true); bindFicha(true); return;
   }
-  if(vista==="persona"){a.innerHTML=vPersona();bindPersona();return}   /* build 143 */
+  if(vista==="persona"){a.innerHTML=vPersona();bindPersona();return}
   if(vista==="admin"){a.innerHTML=vAdmin();bindAdmin();return}
   if(vista==="yo"){a.innerHTML=vYo();bindYo();return}
-  if(vista==="notif"){a.innerHTML=vNotif();bindNotif();return}   /* build 200 */
-  if(vista==="historial"){a.innerHTML=vHistorial240();bindHistorial240();return}   /* build 240 */
+  if(vista==="notif"){a.innerHTML=vNotif();bindNotif();return}
+  if(vista==="historial"){a.innerHTML=vHistorial240();bindHistorial240();return}
   if(vista==="encargo"){a.innerHTML=vEncargo();bindEncargo();return}
   if(vista==="encargar"){a.innerHTML=vEncargar();bindPedir(abierta);return}
   if(vista==="suelto"){a.innerHTML=vSuelto();bindPedir(null);return}
@@ -6967,7 +6967,7 @@ function vLista(){
     return h+barraPie();
   }
 
-  try{ if(!window.__rfF263 || Date.now()-window.__rfF263>1500){ window.__rfF263=Date.now(); refrescaFalta263(); } }catch(e){}   /* build 263 */
+  try{ if(!window.__rfF263 || Date.now()-window.__rfF263>1500){ window.__rfF263=Date.now(); refrescaFalta263(); } }catch(e){}
   h+='<!--est272-->'+bannerAvisos();   /* build 272: aquí va la línea de estado (se llena abajo, con el home ya armado) */
   var _pp256=propuestas256();
   if(_pp256.length){ var _pl=acoPlegado260(); h+='<button class="prop256row clh263" id="bprop256" aria-expanded="'+(_pl?'false':'true')+'" aria-label="Tareas nuevas por revisar: '+_pp256.length+'"><b>Tareas nuevas</b><span class="ttn">'+_pp256.length+'</span><span class="ttch ch285" aria-hidden="true">'+CH285+'</span></button>'; }   /* build 256; 260: plega y despliega Acomodo; 281: ficha «Tareas nuevas» + globito */
@@ -7772,7 +7772,7 @@ function vPastilla(t){
   /* build 227 (Salvador 16:24): UNA sola pastilla chica "Todo ▾"; la hoja trae Todo · Claude · cada integrante.
      Lo elegido reemplaza el texto ("Claude ▾", "Eduardo ▾"). Va en el renglon del Resumen. */
   var c=canalActual(t), cl=modoClaude(t), v=vista230(t);
-  var tx=v==="imp"?"Importante":(cl||v==="claude"?"Claude":(c.id==="todo"?"Todo":nombreCorto(nombreVisible230(c.nom, t)).split(" ")[0]));   /* build 230 */
+  var tx=v==="imp"?"Importante":(cl||v==="claude"?"Claude":(c.id==="todo"?"Todo":nombreCorto(nombreVisible230(c.nom, t)).split(" ")[0]));
   return '<button class="chip225 fil227'+(cl||v||c.id!=="todo"?' on':'')+'" id="cnlpill" data-fil227="1" aria-label="Ver: '+esc(tx)+'">'+esc(tx)+ico("down",13)+'</button>';   /* build 228: ficha igual a las demas */
 }
 function abreFiltro227(t){
@@ -7785,13 +7785,13 @@ function abreFiltro227(t){
   sh.innerHTML='<div class="hh"></div>'+ops.map(function(o){
     var ic=o.id==="todo"?ico("bubble",20):(o.id==="imp"?ico("check",20):o.id==="claude"?ico("info",20):(o.av?'<span class="av227">'+esc(inicialesDe(o.nom))+'</span>':ico("people",20)));
     return '<button class="cnlop227'+(o.on?' on':'')+'" data-fil="'+esc(o.id)+'">'+ic+'<span>'+esc(o.nom)+'<small>'+esc(o.sub||"")+'</small></span>'+(o.on?ico("check",18):'')+'</button>'; }).join("")+
-    '<button class="cnlop227 tenue" data-fil="__int">'+ico("plus",20)+'<span>Invitar a nuevo miembro<small>agregar o quitar integrantes</small></span></button>';   /* build 231 */
+    '<button class="cnlop227 tenue" data-fil="__int">'+ico("plus",20)+'<span>Invitar a nuevo miembro<small>agregar o quitar integrantes</small></span></button>';
   function cierra(){ if(bg.parentNode) bg.parentNode.removeChild(bg); if(sh.parentNode) sh.parentNode.removeChild(sh); }
   bg.onclick=cierra;
   Array.prototype.forEach.call(sh.querySelectorAll("[data-fil]"),function(b){ b.onclick=function(){ var id=b.getAttribute("data-fil"); cierra();
     if(id==="__int"){ abreIntegrantes(t); return; }
     window.__cnlClaude=window.__cnlClaude||{}; window.__cnl=window.__cnl||{};
-    if(id==="claude" || id==="imp"){ poneVista230(t, id); window.__cnl[t.id]="todo"; }   /* build 230 */
+    if(id==="claude" || id==="imp"){ poneVista230(t, id); window.__cnl[t.id]="todo"; }
     else { poneVista230(t, ""); window.__cnl[t.id]=id; }
     render(); }; });
   document.body.appendChild(bg); document.body.appendChild(sh);
@@ -7809,7 +7809,7 @@ function responsableExt(t){
 }
 function phCanal(t){
   var c=canalActual(t);
-  if(modoClaude(t)) return "Indicación para Claude…";   /* build 193 */
+  if(modoClaude(t)) return "Indicación para Claude…";
   if(waDest254(t) && !modoWA254(t)) return "Indicación para Claude…";   /* build 254: por defecto el cuadro es para Claude */
   if(c.id==="todo"){ var _rx=responsableExt(t); if(_rx) return "Mensaje para "+nombreVisible230(_rx, t)+" por WhatsApp…"; }   /* 231: nunca el numero */
   if(c.id==="sup") return "Nota de supervisor…";
@@ -7860,11 +7860,11 @@ function preguntaExterno(nombre, v, si, no, paraClaude, paraMi){
     (paraMi?'<button class="aco ami" data-ac="mia"><span class="aci">'+SVG_LAPIZ+'</span><span><b>Para mí (nota)</b><small>Solo tú la ves · no se manda</small></span></button>':'')+'</div>'+
     '<button class="acx" data-ac="cancel">Cancelar</button>';
   function cierra(){ if(bg.parentNode) bg.parentNode.removeChild(bg); if(p.parentNode) p.parentNode.removeChild(p); }
-  var cancela=function(){ cierra(); var ta=$("txt"); if(ta){ ta.value=v; try{ ta.dispatchEvent(new Event("input",{bubbles:true})); }catch(e){} ta.focus(); } };   /* build 188 */
+  var cancela=function(){ cierra(); var ta=$("txt"); if(ta){ ta.value=v; try{ ta.dispatchEvent(new Event("input",{bubbles:true})); }catch(e){} ta.focus(); } };
   p.querySelector('[data-ac="wa"]').onclick=function(){ cierra(); si(); };
   if(paraClaude) p.querySelector('[data-ac="claude"]').onclick=function(){ cierra(); paraClaude(); };
   if(no) p.querySelector('[data-ac="equipo"]').onclick=function(){ cierra(); no(); };
-  if(paraMi) p.querySelector('[data-ac="mia"]').onclick=function(){ cierra(); paraMi(); };   /* build 216 */
+  if(paraMi) p.querySelector('[data-ac="mia"]').onclick=function(){ cierra(); paraMi(); };
   p.querySelector('[data-ac="cancel"]').onclick=cancela;
   bg.onclick=cancela;
   document.body.appendChild(bg); document.body.appendChild(p);
@@ -8494,7 +8494,7 @@ function aplicaSeguimientoA(t, v, j){
   var pl={meta:String(sa.meta||"").replace(/\s+/g," ").trim().slice(0,200), cada:cadaOk?String(sa.cada||"").trim():"", cadaOk:cadaOk,
     hora:horaOk?String(+mh[1]).padStart(2,"0")+":"+mh[2]:"", fechas:Array.isArray(sa.fechas)?sa.fechas:[], local:cadaOk?fechasDeCada(s):[],
     texto:String(sa.texto||""), dicho:String(v).slice(0,400), pasos:pasosSeguimiento248(v, sa)};
-  var r=personasPara250(t, quien);   /* build 251 */
+  var r=personasPara250(t, quien);
   if(r.estado!=="uno") return {hecho:"", duda:nuevaDudaPersona(t, quien, "seguimiento", r.cands, pl)};
   return programaSeguimiento(t, r.persona, pl);
 }
@@ -8510,7 +8510,7 @@ function resuelveDudaPersona(t, did, persona){
   if(d.rol==="responsable") h=asignaResponsable(t, persona, !!(d.extra&&d.extra.sup));
   else if(d.rol==="compartir") h=agregaCompartir(t, persona);
   else if(d.rol==="seguimiento"){ var r=programaSeguimiento(t, persona, d.extra||{}); h=r.hecho||""; du=r.duda||""; }
-  else if(d.rol==="quien_meta" || d.rol==="seguimiento_meta"){ var mm=metasDe(t).filter(function(x){ return x.id===(d.extra||{}).metaId; })[0];   /* build 222 */
+  else if(d.rol==="quien_meta" || d.rol==="seguimiento_meta"){ var mm=metasDe(t).filter(function(x){ return x.id===(d.extra||{}).metaId; })[0];
     if(mm && d.rol==="quien_meta"){ mm.quien=String(persona.nombre).trim(); h="“"+metaCorta(mm)+"” la hace "+mm.quien; }
     else if(mm) h=programaSegMeta(t, mm, persona, d.extra||{}); }
   var tx=[h?"Anoté: "+h+".":"Listo: "+String(persona.nombre).trim()+".", du].filter(Boolean).join(" ");
@@ -8586,7 +8586,7 @@ function borradorMensaje(t, persona, md){
 }
 function pideMensaje(t, v, md){
   _notaPriv(t,"bo",v);
-  var r=personasPara250(t, md.quien);   /* build 251 */
+  var r=personasPara250(t, md.quien);
   if(r.estado==="uno") borradorMensaje(t, r.persona, md);
   else { _notaPriv(t,"bi",nuevaDudaPersona(t, md.quien, "mensaje", r.cands, {quien:md.quien, cuerpo:md.cuerpo||"", pregunta:!!md.pregunta}));
     if(!window.AGENDA_WA && !window.__agendaNo){ try{ cargaAgendaWA(function(){ var d=(t.quien_dudas||[]).filter(function(x){ return x.rol==="mensaje" && x.dicho===String(md.quien).trim(); })[0];
@@ -8728,11 +8728,11 @@ function aplicaRevisionClaude(t, v, j, abiertas){
   if(vinc.length && !t.dup_resuelto){ t.posible_dup=(t.posible_dup||[]).concat(vinc).filter(function(x,i,a){ return a.indexOf(x)===i; }); }   /* solo se PROPONE (franja) */
   if(t.f_vigente || t.periodicidad || t.indefinida===true){ t.pendiente_info=""; t.pendiente_tipo=""; }
   /* la pregunta puede nombrar dias o meses SOLO si los dijo el ("¿jueves o viernes?"); fechas sueltas del modelo, no */
-  var _mt2=aplicaMetasClaude(t, v, j); hecho=hecho.concat(_mt2.hecho); dudas=dudas.concat(_mt2.dudas);   /* build 222 */
+  var _mt2=aplicaMetasClaude(t, v, j); hecho=hecho.concat(_mt2.hecho); dudas=dudas.concat(_mt2.dudas);
   var _ai2=aplicaAvisoInmediato(t, v, j); if(_ai2) hecho.push(_ai2);
   if(t.indefinida===true && j.fecha && !(_mt2.hecho.length) && _fdv.todas.length && !esMetas(t)) dudas.push("Es continua: esa fecha la tomo como meta. ¿Meta de qué?");
-  var _ck7=(esMetas(t) && !(j.checklist && /^metas?$/i.test(String(j.checklist.titulo||""))))?"":aplicaChecklistClaude(t, j); if(_ck7) hecho.push(_ck7);   /* build 214 */
-  var _rs9=aplicaResponsable(t, v, j); if(_rs9) hecho.push(_rs9);   /* build 219 */
+  var _ck7=(esMetas(t) && !(j.checklist && /^metas?$/i.test(String(j.checklist.titulo||""))))?"":aplicaChecklistClaude(t, j); if(_ck7) hecho.push(_ck7);
+  var _rs9=aplicaResponsable(t, v, j); if(_rs9) hecho.push(_rs9);
   if(t.__dudas221){ dudas=dudas.concat(t.__dudas221); delete t.__dudas221; }   /* build 221: ¿Quién es X? */
   var _sg9=aplicaSeguimientoA(t, v, j); if(_sg9.hecho) hecho.push(_sg9.hecho); if(_sg9.duda) dudas.push(_sg9.duda);
   var pq=String(j.pregunta||"").trim();
@@ -8802,7 +8802,7 @@ function mandaOrden238(T, persona, texto, alId){
   if(PERSONAS[persona.id]){ var G=null; try{ G=contactosWA(T).filter(function(g){ return g.eq===persona.id; })[0]; }catch(e){}
     if(G && G.nombre){ mandaAExterno(T, G.nombre, tx, null, "dm:"+persona.id, alId); return "por WhatsApp"; }
     mandaDM(T, persona.id, tx); return "en Doit"; }
-  var nomWA=nombreWA251(persona.nombre);   /* build 251 */
+  var nomWA=nombreWA251(persona.nombre);
   T.wa_contactos=T.wa_contactos||[]; if(!T.wa_contactos.some(function(c){ return _nn(String(c.nombre||c))===_nn(nomWA); })) T.wa_contactos.push({nombre:nomWA, desde:Date.now()});
   mandaAExterno(T, nomWA, tx, null, null, alId); return "por WhatsApp";
 }
@@ -9317,11 +9317,11 @@ function completaRevision(t, v, op){
       if(err){ _respaldo(); return; }
       var j=null; try{ var mm=String(txt||"").match(/\{[\s\S]*\}/); j=mm?JSON.parse(mm[0]):null; }catch(e){ j=null; }
       if(!j){ _respaldo(); return; }
-      t=viva249(t); _T238=t;   /* build 249 */
+      t=viva249(t); _T238=t;
       var r=aplicaRevisionClaude(t, v, j, _ab); _j238=j;
       var _err251=false;
       try{ if(!r.yaHecha){ _or238=ejecutaOrdenes238(t, v, j, _ab); _T238=_or238.T||t; } }catch(e238){ _err251=true; try{ console.warn("ordenes238", e238); }catch(_e){} }
-      if(r.contradice){ _or238=_or238||{hecho:[], falta:[]}; _or238.falta=(_or238.falta||[]).concat([r.contradice]); }   /* build 259 */
+      if(r.contradice){ _or238=_or238||{hecho:[], falta:[]}; _or238.falta=(_or238.falta||[]).concat([r.contradice]); }
       /* build 283: pasos / hechos / que_toca en el plan (formato de la Mac). Si ya salió un mensaje por órdenes, el paso no lleva "seguir" (sin duplicar) */
       if(!r.yaHecha && !r.contradice){ try{ var _msj283=(Array.isArray(j.ordenes)?j.ordenes:[]).some(function(o){ return o && /^(mensaje|condicional|seguimiento)$/i.test(String(o.tipo||"")); });
         var _pl283=aplicaPlan283(_T238||t, v, j, {dichoTs:_m0.ts, sinSeguir:_msj283}); if(_pl283.hecho.length) _or238.hecho=(_or238.hecho||[]).concat(_pl283.hecho); }catch(e283){ try{ console.warn("plan283", e283); }catch(_e){} } }
@@ -9607,7 +9607,7 @@ function pausaDictado(r, stopFn){
   window.__enPausa=true; window.__recPausa={r:r, stopFn:stopFn};
   capa.classList.remove("vivo"); capa.classList.add("pausa");
   pintaDictado(); srLogD({ev:"pausa", motivo:window.__motivoPausa||"", letras:_dictaTexto().texto.length}); window.__motivoPausa="";
-  pintaPausa(window.__noReabre?"No pude volver a abrir el micrófono. Lo que llevas está guardado: mándalo así o inténtalo otra vez.":"");   /* build 213 */
+  pintaPausa(window.__noReabre?"No pude volver a abrir el micrófono. Lo que llevas está guardado: mándalo así o inténtalo otra vez.":"");
 }
 /* ===== build 213 (Salvador 7:56: entro una llamada dictando; al colgar estaba en pausa, le pico y no siguio ni mando) =====
    Causa: "seguir" hacia start() sobre el MISMO motor ya abortado (en iPhone no truena pero no oye); el vigia de arranque
@@ -9672,7 +9672,7 @@ function ofreceBorrador(){
 /* si la app se va a segundo plano (entra una llamada) mientras se dicta: pausa */
 document.addEventListener("visibilitychange", function(){
   if(document.visibilityState==="hidden"){ guardaBorrador(); if(window.__oyendo && window.__rec){ window.__motivoPausa="app oculta (llamada, otra app o bloqueo)"; pausaDictado(window.__rec, window.__recStop); } }
-  else { srLogD({ev:"vuelve", enPausa:!!window.__enPausa}); setTimeout(function(){ try{ ofreceBorrador(); }catch(e){} }, 600); }   /* build 213 */
+  else { srLogD({ev:"vuelve", enPausa:!!window.__enPausa}); setTimeout(function(){ try{ ofreceBorrador(); }catch(e){} }, 600); }
 });
 window.addEventListener("pagehide", function(){ guardaBorrador(); srLogD({ev:"pagehide"}); });
 /* ===== build 225 (Salvador 13:24, "Fideicomiso: seguimiento con BBVA": dictó "Por favor, ponle un mensaje a Fernando para
@@ -9892,7 +9892,7 @@ function vRevision(t,org){
     m+='<div class="b '+(x.k==="bal"?"bal":(x.k==="bo"?"bo":"bi"))+'">'+esc(x.t)+
        '<span class="st">'+meta+'</span></div>';
   });
-  var _orgEv=(org.evidencias||[]).filter(function(f){ return f && !f.eliminado; });   /* build 215 */
+  var _orgEv=(org.evidencias||[]).filter(function(f){ return f && !f.eliminado; });
   if(_orgEv.length)
     m+='<div class="fot">'+_orgEv.map(function(f){
          return '<img src="'+f.data+'" alt="evidencia">' }).join("")+'</div>';
@@ -10170,7 +10170,7 @@ function vPersonas225(t){
   var pp=personas225(t), h="";
   if(pp.compartir.length) h+='<div class="d225b"><h4>Se comparte con</h4><p>'+pp.compartir.map(function(c){ return esc(c.nombre); }).join('<br>')+'</p></div>';
   if(pp.ints.length) h+='<div class="d225b"><h4>Participan</h4><p>'+pp.ints.map(function(x){ return esc(nombreInt(x.k))+' <span class="tenue">· '+esc({hace:"lo hace",revisa:"revisa",opina:"opina",externo:"externo"}[x.rol]||x.rol)+'</span>'; }).join('<br>')+'</p></div>';
-  return (h||'<p class="h225v0">Nadie más en esta tarea.</p>')+'<button class="d225m" data-int227="1"><span>Agregar o quitar integrantes</span><span>'+ico("chev",14)+'</span></button>';   /* build 227 */
+  return (h||'<p class="h225v0">Nadie más en esta tarea.</p>')+'<button class="d225m" data-int227="1"><span>Agregar o quitar integrantes</span><span>'+ico("chev",14)+'</span></button>';
 }
 /* la hoja de abajo (una a la vez) */
 function hoja225(t){ var H=window.__hoja225; return (H && H.tid===t.id)?H:null; }
@@ -10189,11 +10189,11 @@ function vHoja225(t){
   } else if(H.k==="meta"){ var m=metasDe(t).filter(function(x){ return x.id===H.mid; })[0]; tit=m?metaCorta(m):"Meta"; sub="Meta de "+tareaCorta(t)+(m&&quienMeta(t,m)?" · la hace "+quienMeta(t,m):""); cuerpo=vFichaMeta(t,H.mid); }
   else if(H.k==="lista"){ tit=(t.checklist&&t.checklist.titulo)||"Lista"; window.__chkOpen=window.__chkOpen||{}; var _ab=window.__chkOpen[t.id]; window.__chkOpen[t.id]=true; cuerpo=vChecklist(t); window.__chkOpen[t.id]=_ab; }
   else if(H.k==="personas"){ tit="Personas"; cuerpo=vPersonas225(t); }
-  else if(H.k==="agenda"){ var _a228=estadoAgenda228(t); tit=_a228?_a228.txt:"Agenda"; cuerpo=vAgenda228(t); }   /* build 228 */
-  else if(H.k==="pasos"){ tit="Pasos"; sub=pasosHechos(t)+" de "+t.lista_pasos.length; window.__pasosOpen=window.__pasosOpen||{}; var _pa242=window.__pasosOpen[t.id]; window.__pasosOpen[t.id]=true; cuerpo=vPasos(t); window.__pasosOpen[t.id]=_pa242; }   /* build 242 */
-  else if(H.k==="claves"){ var _S=semClaves235(t); tit="Claves"; sub=_S?(_S.todas?"Todo asegurado":(_S.n-_S.ok)+" por asegurar"+(_S.k==="rojo"?" · ya pasó el límite":(_S.k==="ambar"?" · 7 días o menos":""))):""; cuerpo=vClaves235(t); }   /* build 235 */
+  else if(H.k==="agenda"){ var _a228=estadoAgenda228(t); tit=_a228?_a228.txt:"Agenda"; cuerpo=vAgenda228(t); }
+  else if(H.k==="pasos"){ tit="Pasos"; sub=pasosHechos(t)+" de "+t.lista_pasos.length; window.__pasosOpen=window.__pasosOpen||{}; var _pa242=window.__pasosOpen[t.id]; window.__pasosOpen[t.id]=true; cuerpo=vPasos(t); window.__pasosOpen[t.id]=_pa242; }
+  else if(H.k==="claves"){ var _S=semClaves235(t); tit="Claves"; sub=_S?(_S.todas?"Todo asegurado":(_S.n-_S.ok)+" por asegurar"+(_S.k==="rojo"?" · ya pasó el límite":(_S.k==="ambar"?" · 7 días o menos":""))):""; cuerpo=vClaves235(t); }
   else if(H.k==="fecha"){ var _ch=chipEncabezado(t); tit=_ch.cls==="ind"?"Indefinida":(_ch.cls==="sin"?"Sin fecha":_ch.txt.replace(/^Finiquito:\s*/,"")); var _ag=estadoAgenda228(t), _cz=citas234(t);
-    sub=_cz.length>1?_cz.length+" citas":(_ag?_ag.txt:"Sin evento agendado"); cuerpo=vFecha234(t); }   /* build 234 */
+    sub=_cz.length>1?_cz.length+" citas":(_ag?_ag.txt:"Sin evento agendado"); cuerpo=vFecha234(t); }
   else { tit="Resumen"; cuerpo=vDetalles225(t); }   /* build 234: antes "Detalles" */
   if(H.alto==="min") return '<button class="h225bar" data-h225alto="media">'+esc(tit)+' ▴</button>';
   return '<div class="h225v" data-h225x="1"></div><div class="h225 '+esc(H.alto)+'" role="dialog" aria-label="'+esc(tit)+'"><div class="h225g"></div>'+
@@ -10947,7 +10947,7 @@ function pintaSel245(){
     bar.addEventListener("click", function(ev){ var b=ev.target.closest("[data-sel245]"); if(!b) return; ev.stopPropagation(); var S2=window.__sel245; if(!S2) return; var k=b.getAttribute("data-sel245"), t=tareas.filter(function(z){ return z.id===S2.tid; })[0], ixs=Object.keys(S2.set).map(Number).sort(function(a,b2){ return a-b2; });
       if(k==="x"){ window.__sel245=null; pintaSel245(); return; } if(!t || !ixs.length){ toast("Marca al menos un mensaje"); return; }
       if(k==="mover"){ abreMover225(t, ixs[0], ixs, {lote:true}); return; }
-      if(k==="nueva"){ pideNombreNueva249(t, ixs, function(nombre){ var r2=aplicaLote245(t, ixs, "nueva", "", nombre); window.__sel245=null; if(r2 && r2!=="ok") toast(r2); var n2=tareaNuevaDe249(t, ixs); if(n2) vaATareaNueva249(n2); else render(); }); return; }   /* build 249 */
+      if(k==="nueva"){ pideNombreNueva249(t, ixs, function(nombre){ var r2=aplicaLote245(t, ixs, "nueva", "", nombre); window.__sel245=null; if(r2 && r2!=="ok") toast(r2); var n2=tareaNuevaDe249(t, ixs); if(n2) vaATareaNueva249(n2); else render(); }); return; }
       var r=aplicaLote245(t, ixs, k==="ng"?"ng":"nueva"); window.__sel245=null; if(r && r!=="ok") toast(r); render(); }); }
   bar.innerHTML='<span class="sn">'+n+' seleccionado'+(n===1?'':'s')+'</span><button data-sel245="mover">Mover</button><button data-sel245="ng">No guardar</button><button data-sel245="nueva">Nueva</button><button class="x" data-sel245="x" aria-label="Cancelar">✕</button>';
 }
@@ -10997,7 +10997,7 @@ function bindAcomodo(raiz, tareaDe){
   q2("[data-acok]", function(t, ix, ixs){ var r=okG237(t, ixs); if(r) toast(r); render(); });
   q2("[data-acmov]", function(t, ix, ixs){ abreMover225(t, ix, ixs); });
   q2("[data-acdato]", function(t, ix, ixs){ var n=datoG240(t, ixs); if(n) toast("Dato nuevo “"+n.nombre+"”; "+(ixs.length===1?"el mensaje pasó":"la plática pasó")+" ahí."); render(); });
-  q2("[data-acng]", function(t, ix, ixs){ var r=noGuardar243(t, ixs); if(r) render(); });   /* build 243 */
+  q2("[data-acng]", function(t, ix, ixs){ var r=noGuardar243(t, ixs); if(r) render(); });
   q2("[data-acnueva]", function(t, ix, ixs){ var dv=document.getElementById("det242"); if(dv) dv.remove();   /* build 249: pide el nombre */
     pideNombreNueva249(t, ixs, function(nombre){ var n=nuevaG237(t, ixs, false, nombre); if(n) toast("Tarea nueva “"+n.nombre+"”; "+(ixs.length===1?"el mensaje pasó":"la plática pasó")+" ahí."); if(n) vaATareaNueva249(n); else render(); }); });
   /* build 238: tocar el globo con el iconito de Claude = OK · Mover · Nueva para ese mensaje */
@@ -11269,7 +11269,7 @@ function vMsgs271(){
   return h+'</div>';
 }
 function bindAcomodoInicio(){
-  var bm=$("bmsg271"); if(bm) bm.onclick=function(){ poneMsgPlegado271(!msgPlegado271()); render(); };   /* build 271 */
+  var bm=$("bmsg271"); if(bm) bm.onclick=function(){ poneMsgPlegado271(!msgPlegado271()); render(); };
   Array.prototype.forEach.call(document.querySelectorAll(".aco226"), bindAcomodoUna271);
 }
 function bindAcomodoUna271(r){
@@ -11321,7 +11321,7 @@ function indicacionCaduca246(t, x){
 }
 function esImp230(t, x){
   if(x && x.oculto) return false;                                  /* build 246: lo oculto nunca sale */
-  if(indicacionCaduca246(t, x)) return false;                      /* build 246 */
+  if(indicacionCaduca246(t, x)) return false;
   var mi=(t && t.msg_imp && typeof t.msg_imp==="object")?t.msg_imp:{}, k=msgId230(x);
   if(k && Object.prototype.hasOwnProperty.call(mi,k)) return +mi[k]===1;
   if(x.nota_ia || /^\s*(📝\s*)?Nota IA\b/i.test(String(x.t||""))) return false;   /* las notas automaticas solo si Claude las marcó */
@@ -11329,7 +11329,7 @@ function esImp230(t, x){
      ("Van 9 veces…", "Ya venció…"), los avisos del sistema ("Movida del… al…", "Anotado. Te aviso…", "¿Para cuándo…?") y las órdenes de
      fecha o ritmo de Salvador ("muévela para el viernes", "recuérdame martes y jueves"). */
   if(x.k==="bal" || x.aviso || x.empujon) return false;
-  if(esNotaIA242(x)) return false;                                                     /* build 242 */
+  if(esNotaIA242(x)) return false;
   if(+x.wa_in!==1 && (x.wa_c || x.origen==="wa_saliente") && x.k!=="bo" && !(x.url || x.tipo==="foto" || x.tipo==="documento")) return false;   /* 242: lo que mandó Salvador por WhatsApp (salvo archivos) */
   if(x.k==="bo" && !x.nota_claude && (t && t.msgs||[]).some(function(y){ return y!==x && y && y.nota_claude && y.k==="bo" && _nn(String(y.t||"")).replace(/^\s*claude\s*/,"").slice(0,60)===_nn(String(x.t||"")).slice(0,60); })) return false;   /* 242: la misma indicación a Claude repetida */
   if(x.k==="bi" && !(+x.wa_in) && !x.wa_c && !x.de && !x.hab && !x.url && !x.tipo) return false;
@@ -11612,7 +11612,7 @@ function vHilo(){
   _fr("Cierra con", t.cierra);
   if(t.f_vigente && !t.es_recordatorio) _fr("Para", fechaBonita(t.f_vigente));
   _fr("Ritmo", t.ritmo);
-  if(t.revisa_ext) _fr("Lo hace", t.revisa_ext+(t.duenio===yo?" · tú supervisas":""));   /* build 221 */
+  if(t.revisa_ext) _fr("Lo hace", t.revisa_ext+(t.duenio===yo?" · tú supervisas":""));
   if(t.seg_a && t.seg_a.contacto) _fr("Seguimiento a", t.seg_a.contacto+(t.seg_a.cada?" · "+t.seg_a.cada:"")+(t.seg_a.hora?" · "+t.seg_a.hora:""));
   _fr("Se comparte con", _compartirLista(t).map(function(c){ return c.nombre; }).join(" · "));
   /* los recordatorios YA NO se listan aquí: viven en el relojito y su hoja
@@ -11677,7 +11677,7 @@ function vHilo(){
     m+='<div class="b bi bnota'+(n.privado?' priv':'')+'">'+esc(sinEmojiUI(n.t))+'<span class="st">'+esc((n.h||"")+(n.privado?" · solo tú":""))+'</span></div>'; } }
   var _fc244={};   /* build 244: fotos que ya fueron en el globo de otra */
   var _nAr273=0, _abAr273=!!((window.__arch273||{})[t.id]), _TK273='\u0001AR273\u0001';
-  function _ar273(x){ if(!archivado273(x)) return false; _nAr273++; if(_nAr273===1) m+=_TK273; return !_abAr273; }   /* build 273 */
+  function _ar273(x){ if(!archivado273(x)) return false; _nAr273++; if(_nAr273===1) m+=_TK273; return !_abAr273; }
   m+=barraLote245(t, _cn);   /* build 245: Mover todos / No guardar todos cuando el filtro está en una persona */
   (t.msgs||[]).forEach(function(x,ix){
     if(x && x.ts){ _evHasta(x.ts); _ntHasta(x.ts); }
@@ -11719,7 +11719,7 @@ function vHilo(){
     m+=sepDia242(x);   /* build 242: separador de día estilo iMessage, solo cuando cambia el día */
     var q=autorMsg(x,t);
     if(x.hab){ m+=burbujaHablada(x, (q||""), t.id+"|"+ix); return; }
-    if(esFoto244(x)){   /* build 244 */
+    if(esFoto244(x)){
       var _g244=grupoFotos244(t, ix, function(z, jz){ return canalDe(z,t)===_cx && msgEnCanal(z,_v230?"todo":_cn.id,t) && !(_mf225 && metaDeMsg(t,z)!==_mf225) &&
         (_v230==="imp"?esImp230(t,z):(_v230==="claude"?esClaude230(z):esImportante(z, jz, _rmp))); });
       _g244.forEach(function(i){ if(i!==ix) _fc244[i]=1; });
@@ -11784,13 +11784,13 @@ function vHilo(){
     m+='<div class="chk'+(chkCerrado[t.id]?" cl":"")+'"><button class="ch" id="bchk">'+
        '<span class="tt">Rondín</span><span class="cn'+(n===t.puntos.length?" full":"")+'">'+n+' de '+t.puntos.length+'</span>'+
        '<span class="cv">'+(chkCerrado[t.id]?"▼":"▲")+'</span></button><ul>'+items+'</ul></div>';
-    var fotosArr=Object.keys(ft).map(function(k){return ft[k]}).filter(function(f){ return f && !f.eliminado; });   /* build 215 */
+    var fotosArr=Object.keys(ft).map(function(k){return ft[k]}).filter(function(f){ return f && !f.eliminado; });
     if(fotosArr.length){
       m+='<div class="fot">'+fotosArr.map(function(f){return '<img src="'+f.data+'" alt="evidencia">'}).join("")+'</div>';
     }
   }
   _evHasta(Infinity); _ntHasta(Infinity);
-  if(_nAr273) m=m.replace(_TK273, vPlegado273(t, _nAr273));   /* build 273 */
+  if(_nAr273) m=m.replace(_TK273, vPlegado273(t, _nAr273));
   if(t.evidencias&&t.evidencias.length){
     /* build 183 (Salvador 22:09): sin burbuja de coordenadas/hora; la ubicacion queda guardada en la foto */
   }
@@ -12029,7 +12029,7 @@ function contextoBarra(completo){
           calendario:calendarioProximo(16),
           cerradas_recientes:cerradas,
           cerradas_rango:(completo?"todo el historial":"ultimos 7 dias"),
-          censo:(function(){ try{ return censoEjemplos(); }catch(e){ return {}; } })(),   /* build 192 */
+          censo:(function(){ try{ return censoEjemplos(); }catch(e){ return {}; } })(),
           gente:Object.keys(PERSONAS).map(function(k){
             return {clave:k, nombre:PERSONAS[k].nombre};
           }),
@@ -14271,7 +14271,7 @@ function vMetas(t){
   return h+'<input type="file" id="metain" accept="image/*" capture="environment" hidden></div>';
 }
 function vChecklist(t){
-  if(esMetas(t)) return vMetas(t);   /* build 222 */
+  if(esMetas(t)) return vMetas(t);
   if(!tieneChecklist(t)) return "";
   var L=t.checklist.items, inv=L.filter(function(x){ return x.estado>=1; }).length, conf=L.filter(function(x){ return x.estado===2; }).length;
   var ab=!!((window.__chkOpen||{})[t.id]);
@@ -14591,7 +14591,7 @@ function creaTarea(d){
     f_original:f, f_vigente:f, movidas:0,
     recuperable:(d.recuperable===false?false:true),
     criticidad:(["diario","normal","lento"].indexOf(d.criticidad)>=0?d.criticidad:"normal"),
-    periodicidad:per, cierra:cierraDicho241(d)?(d.cierra||""):"", cierra_sugerido:cierraDicho241(d)?"":(d.cierra||""), revisar:d.revisar||"", ritmo:d.ritmo||"", gasto:d.gasto||"",   /* build 241 */
+    periodicidad:per, cierra:cierraDicho241(d)?(d.cierra||""):"", cierra_sugerido:cierraDicho241(d)?"":(d.cierra||""), revisar:d.revisar||"", ritmo:d.ritmo||"", gasto:d.gasto||"",
     estado:"abierta", detenido:null, cierre:null, encargado:null,
     /* REVISION: esta tarea es el respaldo de otra que ejecuta alguien mas.
        revisa_a = id de la tarea del que ejecuta; revisa_ext = nombre, si el que
@@ -15293,7 +15293,7 @@ function arrancaDictadoCompleta(btn,id){
               function(){ window.__dicho=""; window.__parcial=""; paraDictadoCompleta(id); });
   function silencio(){ if(window.__silT){ clearTimeout(window.__silT); window.__silT=null; } }  /* sin auto-envío: solo manda el avioncito */
   r.onresult=function(ev){ if(window.__pausado) return;
-    var interim=srJunta(ev).parcial;   /* build 225 */
+    var interim=srJunta(ev).parcial;
     var ln=document.getElementById("cq_"+id);
     if(ln){ ln.textContent=(window.__dicho+interim).trim()||"Escuchando…"; }
     marcaVivo(); window.__parcial=interim; pintaDictado(); silencio();
@@ -15664,7 +15664,7 @@ function bindBarra(){
         var dd=(b.pendiente&&b.pendiente.tarea)||null;
         if(v&&dd){
           msg(v,"bi","Se le sumó lo que dictaste: “"+(dd.dicho||dd.nombre)+"”.");
-          v.censo_sumados=(v.censo_sumados||[]).concat([{texto:String(dd.dicho||dd.nombre||"").slice(0,300), ts:Date.now(), por:yo||"", propuso:"Claude (filtro de repetidas)"}]).slice(-30);   /* build 192 */
+          v.censo_sumados=(v.censo_sumados||[]).concat([{texto:String(dd.dicho||dd.nombre||"").slice(0,300), ts:Date.now(), por:yo||"", propuso:"Claude (filtro de repetidas)"}]).slice(-30);
           v.ultima=dd.nombre; guarda(v); toast("Sumado a “"+v.nombre+"”");
         }
         cancelaBarra(); return;
@@ -15711,7 +15711,7 @@ function confirmaAccion(b){
     if(dela && PERSONAS[dela.duenio] && dela.duenio!==quienRev){
       dela.revisores=dela.revisores||[]; if(dela.revisores.indexOf(quienRev)<0) dela.revisores.push(quienRev);
       dela.rev_fecha=sv.mi_fecha||dela.f_vigente||hoy(); guarda(dela);
-      if(quienRev===yo && !dela.medida) iniciaEntrevista(dela, yo);   /* build 182 */
+      if(quienRev===yo && !dela.medida) iniciaEntrevista(dela, yo);
       if(quienRev!==yo){ try{ disparaPushInstantaneo(quienRev,'Revisión asignada','Revisas: "'+(sv.que||dela.nombre)+'"',urlTarea(dela.id)); }catch(e){} }
       if(b.foto) pegaFotoA(dela,b.foto);
       toast(quienRev!==yo?"La revisión le llegó a "+PERSONAS[quienRev].nombre:"Le llegó a "+PERSONAS[dela.duenio].nombre+" · tú la revisas el "+fechaBonita(dela.rev_fecha));
@@ -15883,7 +15883,7 @@ function arrancaDictadoRev(btn,ta){
               function(){ paraDictadoHilo(); if(ta){ ta.value=""; } });
   function silencio(){ if(window.__silT){ clearTimeout(window.__silT); window.__silT=null; } }  /* sin auto-envío: solo manda el avioncito */
   r.onresult=function(ev){ if(window.__pausado) return;
-    var interim=srJunta(ev).parcial;   /* build 225 */
+    var interim=srJunta(ev).parcial;
     if(ta){ ta.value=(previo+window.__dicho+interim).trim();
       ta.style.height="auto"; ta.style.height=Math.min(ta.scrollHeight,96)+"px"; }
     marcaVivo(); window.__parcial=interim; pintaDictado(); silencio();
@@ -16013,7 +16013,7 @@ function bindCaja2(){
                 function(){ pararDictado(false); var _b=$("bq"); if(_b){_b.textContent=""; _b.classList.add("vacia");} marcaEnvio("benv",""); });
     function silencio(){ if(window.__silT){ clearTimeout(window.__silT); window.__silT=null; } }  /* sin auto-envío: solo manda el avioncito */
     r.onresult=function(ev){ if(window.__pausado) return;
-      var interim=srJunta(ev).parcial;   /* build 225 */
+      var interim=srJunta(ev).parcial;
       window.__parcial=interim;
       var c=$("bq"); if(c){ c.value=(window.__dicho+interim).trim(); alFinalDeLaCaja(c); marcaEnvio("benv", c.value) }
       marcaVivo(); pintaDictado(); silencio();
@@ -16034,20 +16034,20 @@ function bindCaja2(){
 
 /* ============ BINDS ============ */
 function bindLista(){
-  try{ bindAcomodoInicio(); }catch(e){ console.warn("acomodo",e); }   /* build 226 */
-  try{ bindPropuestas256(); }catch(e){ console.warn("propuestas256",e); }   /* build 256 */
+  try{ bindAcomodoInicio(); }catch(e){ console.warn("acomodo",e); }
+  try{ bindPropuestas256(); }catch(e){ console.warn("propuestas256",e); }
   recargaMic();   /* canal de audio fresco en cuanto se vuelve al home */
   /* la pantalla de la foto reusa estos binds: su flecha suelta la foto */
   var bbk=$("bback"); if(bbk) bbk.onclick=function(){ fotoEnMano=null; vista="lista"; render() };
   var b=$("badm"); if(b) b.onclick=function(){vista="admin";render()};
-  var _hm=$("bhmas"); if(_hm) _hm.onclick=function(){   /* build 200 */
+  var _hm=$("bhmas"); if(_hm) _hm.onclick=function(){
     var v=document.createElement("div"); v.className="hoja-velo"; v.id="hojav";
     v.innerHTML='<div class="hoja"><div class="grp"><button id="hmhist">'+ico("reloj",18,1.9)+' Historial</button><button id="hmnotif">'+ico("campana",18,1.9)+' Notificaciones</button></div><button class="cancel" id="hojano">Cancelar</button></div>';
     document.body.appendChild(v);
     v.onclick=function(e){ if(e.target===v) cierraHoja(); };
     $("hojano").onclick=cierraHoja;
     $("hmnotif").onclick=function(){ cierraHoja(); vista="notif"; render(); };
-    $("hmhist").onclick=function(){ cierraHoja(); vista="historial"; render(); };   /* build 240 */
+    $("hmhist").onclick=function(){ cierraHoja(); vista="historial"; render(); };
   };
   var by=$("byo");  if(by) by.onclick=function(){vista="yo";render()};
   bindBotonAvisos();
@@ -16067,9 +16067,9 @@ function bindLista(){
   var bc=$("bclr"); if(bc) bc.onclick=function(){ consulta=""; render() };
   var bcp=$("bcomp"); if(bcp) bcp.onclick=function(){ window.__verComp=!window.__verComp; render(); };
   var bcl=$("bcl263"); if(bcl) bcl.onclick=function(){ window.__clL263=!window.__clL263; render(); };
-  try{ bindHome272(); }catch(e){ console.warn("home272", e); }   /* build 272 */
-  try{ bindCam274(); }catch(e){ console.warn("cam274", e); }   /* build 274 */
-  var be270=$("benc270"); if(be270) be270.onclick=function(){ window.__verEnc270=!window.__verEnc270; render(); };   /* build 270 */
+  try{ bindHome272(); }catch(e){ console.warn("home272", e); }
+  try{ bindCam274(); }catch(e){ console.warn("cam274", e); }
+  var be270=$("benc270"); if(be270) be270.onclick=function(){ window.__verEnc270=!window.__verEnc270; render(); };
   var br270=$("brev270"); if(br270) br270.onclick=function(){ window.__verRev270=!window.__verRev270; render(); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-ttmas]"),function(b){ b.onclick=function(){ window.__ttMas=window.__ttMas||{}; var g=b.getAttribute("data-ttmas"); window.__ttMas[g]=!window.__ttMas[g]; render(); }; }); var bkc=$("bback"); if(bkc && consulta) bkc.onclick=function(){ consulta=""; render() };
   var bfu=$("bfut"); if(bfu) bfu.onclick=function(){ verFuturas=!verFuturas; render() };
@@ -16276,15 +16276,15 @@ function bindHilo(){
     hojaConfirma({titulo:"Apartar "+refs.length+" archivo"+(refs.length===1?"":"s"), sub:"Dejan de salir aquí. No se borra nada: quedan guardados.", accion:"Apartar",
       cb:function(){ var n=apartaAdjuntos(t, refs); window.__galSel=null; toast("Aparté "+n); render(); }}); };
   var gsc=$("gscop"); if(gsc) gsc.onclick=function(){ var refs=Object.keys((window.__galSel||{}).sel||{}); if(refs.length) abreCopiarA(t, refs); };
-  var gsd=$("gsdel"); if(gsd) gsd.onclick=function(){ var refs=Object.keys((window.__galSel||{}).sel||{}); if(!refs.length) return;   /* build 215 */
+  var gsd=$("gsdel"); if(gsd) gsd.onclick=function(){ var refs=Object.keys((window.__galSel||{}).sel||{}); if(!refs.length) return;
     hojaEliminar(refs.length, function(){ var r=eliminaAdjuntos(t, refs); window.__galSel=null; render();
       if(!r.urls.length){ toast("Eliminé "+r.n); return; }
       procesaEliminar(t).then(function(ok){ if(ok>=r.urls.length) toast("Eliminé "+r.n); else toast("Eliminé "+r.n+". Se borrarán del servidor en cuanto esté listo."); render(); }); }); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-ai]"),function(el){
     el.onclick=function(){abreVisor(adj,+el.getAttribute("data-ai"))};
   });
-  bindFotos244(document, t);   /* build 244 */
-  bindLote245(document, t);    /* build 245 */
+  bindFotos244(document, t);
+  bindLote245(document, t);
   Array.prototype.forEach.call(document.querySelectorAll(".fot img"),function(el,i){
     el.style.cursor="pointer";
     el.onclick=function(){ var _ims=adj.filter(function(f){return f.img;}), s=el.getAttribute("src"), k=-1;
@@ -16367,7 +16367,7 @@ function bindHilo(){
     /* build 192: censo — la vinculacion propuesta NO era */
     t.censo_vinc_no={ts:Date.now(), por:yo||"", propuestas:posibleDup(t).slice(0,3).map(function(x){ return {id:x.id, nombre:x.nombre||""}; })};
     msg(t,"bi","Queda como tarea aparte."); guarda(t); render(); };
-  try{ bindCapas273(t); }catch(e){ console.warn("capas273",e); }   /* build 273 */
+  try{ bindCapas273(t); }catch(e){ console.warn("capas273",e); }
   try{ if(cierraEncargos283(t)) guarda(t); }catch(e){}   /* build 283: los encargos que la Mac ya aplicó se cierran solos */
   /* build 225: chips -> su hoja; Falta -> dictado; resumen y filtro minimizables; ficha de meta; duda de tarea */
   Array.prototype.forEach.call(document.querySelectorAll("[data-chip]"),function(el){ el.onclick=function(ev){ ev.stopPropagation();
@@ -16408,7 +16408,7 @@ function bindHilo(){
   Array.prototype.forEach.call(document.querySelectorAll(".h225 .mt[data-meta] .mtx"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var r=el.closest("[data-meta]"); abreHoja225(t, "meta", r.getAttribute("data-meta")); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-orig225]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); window.__orig225=window.__orig225||{}; window.__orig225[t.id]=!window.__orig225[t.id]; render(); }; });
   try{ var _ms226=document.querySelector(".msgs"); if(_ms226) bindAcomodo(_ms226, function(){ return t; }); var _pt227=document.querySelector(".ptcard"); if(_pt227) bindAcomodo(_pt227, function(){ return t; }); }catch(e){}   /* build 226: OK · Mover · Nueva */
-  var _ib227=document.querySelector("[data-int227]"); if(_ib227) _ib227.onclick=function(ev){ ev.stopPropagation(); window.__hoja225=null; render(); abreIntegrantes(t); };   /* build 227 */
+  var _ib227=document.querySelector("[data-int227]"); if(_ib227) _ib227.onclick=function(ev){ ev.stopPropagation(); window.__hoja225=null; render(); abreIntegrantes(t); };
   /* build 225: el mensaje armado: Mandar / Cambiar / No mandar */
   Array.prototype.forEach.call(document.querySelectorAll("[data-mbact]"),function(el){ el.onclick=function(ev){ ev.stopPropagation();
     var a=el.getAttribute("data-mbact"), b=t.msj_borrador; if(!b) return;
@@ -16425,7 +16425,7 @@ function bindHilo(){
     var i=document.getElementById("qdin"), nm=String((i&&i.value)||"").replace(/\s+/g," ").trim(); if(!nm) return;
     var r=resuelvePersona(t, nm), p=(r.estado==="uno" && _tokPer(r.persona.nombre).join(" ")===_tokPer(nm).join(" "))?r.persona:{id:"ext:"+nm, nombre:nm};
     window.__qdOtro=null; resuelveDudaPersona(t, el.getAttribute("data-qdnuevo"), {id:p.id, nombre:p.nombre}); render(); }; });
-  Array.prototype.forEach.call(document.querySelectorAll("[data-rvx]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); descartaVinculos(t); render(); }; });   /* build 212 */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-rvx]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); descartaVinculos(t); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-rvinc]"),function(el){
     el.onclick=function(){ var did=el.getAttribute("data-rvinc"), d=tareas.filter(function(x){ return x.id===did; })[0]; if(!d) return;
       if(esCerradaReciente248(d)){ abierta=d.id; vista="hilo"; render(); return; }   /* build 248: una cerrada no se vincula, se abre para verla */
@@ -16438,17 +16438,17 @@ function bindHilo(){
   Array.prototype.forEach.call(document.querySelectorAll("[data-entcor]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var tx=pideCorreccion(t, el.getAttribute("data-entcor")); render(); if(tx) toast(tx); }; });
   if(window.__prefill && window.__prefill.tid===t.id){ var _pf=window.__prefill, _tx=$("txt"); window.__prefill=null; if(_tx){ _tx.value=_pf.tx; try{ _tx.dispatchEvent(new Event("input",{bubbles:true})); _tx.focus(); }catch(e){} } }
   /* build 222: metas — palomear, foto de comprobante, historial; decisión de meta atrasada en un toque */
-  Array.prototype.forEach.call(document.querySelectorAll("[data-ddact]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var tx=decideDato(t, el.getAttribute("data-ddid"), el.getAttribute("data-ddact")); if(tx) toast(tx); render(); }; });   /* build 223 */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-ddact]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var tx=decideDato(t, el.getAttribute("data-ddid"), el.getAttribute("data-ddact")); if(tx) toast(tx); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-dmact]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var tx=decideMeta(t, el.getAttribute("data-dmid"), el.getAttribute("data-dmact")); if(tx) toast(tx); render(); }; });
   var _bmh=$("bmetahist"); if(_bmh) _bmh.onclick=function(ev){ ev.stopPropagation(); window.__metaHist=window.__metaHist||{}; window.__metaHist[t.id]=!window.__metaHist[t.id]; render(); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-metaok]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var mid=el.getAttribute("data-metaok"), m=metasDe(t).filter(function(x){ return x.id===mid; })[0]; if(!m) return;
     hojaConfirma({titulo:"¿Se cumplió “"+metaCorta(m)+"”?", sub:m.foto?"Con su foto de comprobante. Se va al historial.":"Sin foto de comprobante. Se va al historial.", accion:"Cumplida", cb:function(){ cumpleMeta(t, mid); render(); }}); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-metafoto]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var inp=$("metain"); if(!inp) return; var mid=el.getAttribute("data-metafoto");
     inp.value=""; inp.onchange=function(){ var f=inp.files&&inp.files[0]; if(!f) return; comprime(f, function(data){ if(!data){ toast("No pude leer la foto"); return; } fotoMeta(t, mid, data); toast("Foto guardada en la meta"); render(); }); }; inp.click(); }; });
-  var bck=$("bchkl"); if(bck) bck.onclick=function(ev){ ev.stopPropagation(); window.__chkOpen=window.__chkOpen||{}; window.__chkOpen[t.id]=!window.__chkOpen[t.id]; render(); };   /* build 214 */
+  var bck=$("bchkl"); if(bck) bck.onclick=function(ev){ ev.stopPropagation(); window.__chkOpen=window.__chkOpen||{}; window.__chkOpen[t.id]=!window.__chkOpen[t.id]; render(); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-chk]"),function(el){ el.onclick=function(ev){ ev.stopPropagation();
     var it=(t.checklist.items||[]).filter(function(x){ return x.id===el.getAttribute("data-chk"); })[0]; if(!it) return;
-    try{ hist240("Palomeó en la lista: "+it.tx, t, {tipo:"palomita", item:it.id, prev:+it.estado||0}); }catch(e){}   /* build 240 */
+    try{ hist240("Palomeó en la lista: "+it.tx, t, {tipo:"palomita", item:it.id, prev:+it.estado||0}); }catch(e){}
     it.estado=((it.estado||0)+1)%3; it.ts=Date.now(); it.fuente="lo tocó "+((PERSONAS[yo]||{}).nombre||""); guarda(t); render(); }; });
   var bps=$("bpasos"); if(bps) bps.onclick=function(ev){ ev.stopPropagation();
     window.__pasosOpen=window.__pasosOpen||{}; window.__pasosOpen[t.id]=!window.__pasosOpen[t.id]; render(); };
@@ -16576,26 +16576,26 @@ function bindHilo(){
   try{ bindDeslizar(t); }catch(e){ console.warn("deslizar",e); }
   var _cp=$("cnlpill"); if(_cp) _cp.onclick=function(ev){ if(ev) ev.stopPropagation(); abreFiltro227(t); };   /* build 227: una sola pastilla */
   var _t227=$("tit227"); if(_t227) _t227.onclick=function(){ window.__tit227=window.__tit227||{}; window.__tit227[t.id]=!window.__tit227[t.id]; render(); };
-  var _ar=$("autrev"); if(_ar) _ar.onclick=function(){ if(!autorizaRevision(t)) render(); };   /* build 209 */
+  var _ar=$("autrev"); if(_ar) _ar.onclick=function(){ if(!autorizaRevision(t)) render(); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-fedit]"),function(b){ b.onclick=function(){ var tx=$("txt"); if(!tx) return;   /* build 209: tocar un campo = corregirlo dictando */
     var k=b.getAttribute("data-fedit"), et={nombre:"El nombre es",tipo:"Es",contexto:"El contexto es",fecha:"La fecha es",ritmo:"El ritmo es",quien:"La hace",etiquetas:"Las etiquetas son",vinculo:"El vínculo es con",de:"Es de",cifras:"Las cifras son"}[k]||"";
     var val=(b.querySelector(".ffv")||{}).textContent||""; if(val==="—") val="";
     tx.value=et+": "+val.replace(/ \(no vinculado\)$/,""); try{ tx.focus(); tx.setSelectionRange(et.length+2, tx.value.length); }catch(e){} }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-tipoi]"),function(b){ b.onclick=function(){ var k=b.getAttribute("data-tipoi");
-    if(k==="vincular"){ abreEnlazar(t.id, {similares:similares229(t).map(function(d){ return d.id; }), tareaNueva:function(){ t.tipo_item="tarea"; t.es_dato=false; t.tipo_elegido=true; guarda(t); if(!revisaCompleta(t)) render(); }}); return; }   /* build 229 */
+    if(k==="vincular"){ abreEnlazar(t.id, {similares:similares229(t).map(function(d){ return d.id; }), tareaNueva:function(){ t.tipo_item="tarea"; t.es_dato=false; t.tipo_elegido=true; guarda(t); if(!revisaCompleta(t)) render(); }}); return; }
     try{ hist240("Tocó “"+(k==="dato"?"Dato":"Tarea")+"”", t, {tipo:"tipo", prev:t.tipo_item||"", elegido:!!t.tipo_elegido}); }catch(e){}
     t.tipo_item=k; t.es_dato=(k==="dato"); t.tipo_elegido=true; guarda(t); if(!revisaCompleta(t)) render(); }; });   /* build 195; 237: tipo_elegido */
   Array.prototype.forEach.call(document.querySelectorAll("[data-agenda]"),function(b){ b.onclick=function(){ if(b.getAttribute("data-agenda")==="si"){ var _ev=eventoDe(t); agendaEvento(t, "", !(_ev&&_ev.hora)); } else noAgendar(t); }; });   /* build 202/203; 229: sin hora = todo el dia (lo que propone la franja) */
-  Array.prototype.forEach.call(document.querySelectorAll("[data-agmenu]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); menuAgenda229(t, b); }; });   /* build 229 */
-  Array.prototype.forEach.call(document.querySelectorAll("[data-evid]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); abreEvidencia(t); }; });   /* build 229 */
-  Array.prototype.forEach.call(document.querySelectorAll("[data-agtododia]"),function(b){ b.onclick=function(){ window.__agTodoDia=window.__agTodoDia||{}; window.__agTodoDia[t.id]=window.__agTodoDia[t.id]?0:1; render(); }; });   /* build 203 */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-agmenu]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); menuAgenda229(t, b); }; });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-evid]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); abreEvidencia(t); }; });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-agtododia]"),function(b){ b.onclick=function(){ window.__agTodoDia=window.__agTodoDia||{}; window.__agTodoDia[t.id]=window.__agTodoDia[t.id]?0:1; render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-agcambia]"),function(b){ b.onclick=function(){ window.__agEdit=window.__agEdit||{}; window.__agEdit[t.id]=1; render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-agguarda]"),function(b){ b.onclick=function(){ var f=$("agf"), h=$("agh"); if(guardaFechaEvento(t, f&&f.value, h&&h.value)) render(); }; });
-  var _d254=$("tdest254"); if(_d254) _d254.onclick=function(ev){ if(ev) ev.stopPropagation(); abreDestino254(t); };   /* build 254 */
-  var _ccl=$("cnlclaude"); if(_ccl) _ccl.onclick=function(){ window.__cnlClaude=window.__cnlClaude||{}; window.__cnlClaude[t.id]=window.__cnlClaude[t.id]?0:1; render(); };   /* build 193 */
+  var _d254=$("tdest254"); if(_d254) _d254.onclick=function(ev){ if(ev) ev.stopPropagation(); abreDestino254(t); };
+  var _ccl=$("cnlclaude"); if(_ccl) _ccl.onclick=function(){ window.__cnlClaude=window.__cnlClaude||{}; window.__cnlClaude[t.id]=window.__cnlClaude[t.id]?0:1; render(); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-progc]"),function(b){ b.onclick=function(){ var mx=(t.msgs||[])[+b.getAttribute("data-progc")]; if(!mx||!mx.prog) return;
-    hojaConfirma({titulo:"Mensaje programado a "+mx.prog.contacto, sub:"“"+_corto(mx.prog.texto)+"”", accion:"Cancelar el mensaje", rojo:true, cb:function(){ cancelaProgramado(t, mx); }}); }; });   /* build 199 */
-  Array.prototype.forEach.call(document.querySelectorAll("[data-cmodo]"),function(b){ b.onclick=function(){ window.__chatModo=window.__chatModo||{}; window.__chatModo[t.id]=b.getAttribute("data-cmodo"); render(); }; });   /* build 197 */
+    hojaConfirma({titulo:"Mensaje programado a "+mx.prog.contacto, sub:"“"+_corto(mx.prog.texto)+"”", accion:"Cancelar el mensaje", rojo:true, cb:function(){ cancelaProgramado(t, mx); }}); }; });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-cmodo]"),function(b){ b.onclick=function(){ window.__chatModo=window.__chatModo||{}; window.__chatModo[t.id]=b.getAttribute("data-cmodo"); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-sisexp]"),function(b){ b.onclick=function(){ window.__sisExp=window.__sisExp||{}; window.__sisExp[t.id]=1; render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-ncexp]"),function(b){ b.onclick=function(){ window.__ncExp=window.__ncExp||{}; window.__ncExp[t.id]=1; render(); }; });
   var _ib=$("intbtn"); if(_ib) _ib.onclick=function(){ abreIntegrantes(t); };
@@ -16773,13 +16773,13 @@ function bindHilo(){
     var _aq188=(!_esOrden && !_cita && _cnA.id==="todo")?aQuienRespondo(t,v,null):"";
     if(_aq188 && externosDe(t).some(function(n){ return _nn(n)===_nn(_aq188); })){
       var _vA=v, _dA=externosDe(t).filter(function(n){ return _nn(n)===_nn(_aq188); })[0];
-      if(!modoWA254(t)){ aClaude254(t, _vA); return; }   /* build 254 */
+      if(!modoWA254(t)){ aClaude254(t, _vA); return; }
       salidaWA254(t, _dA, _vA, null); return;
     }
     var _rx186=(!_esOrden && !_cita && _cnA.id==="todo")?responsableExt(t):null;
     if(_rx186){
       var _vR=v;
-      if(!modoWA254(t)){ aClaude254(t, _vR); return; }   /* build 254 */
+      if(!modoWA254(t)){ aClaude254(t, _vR); return; }
       $("txt").value=""; marcaEnvio("tenv","");
       preguntaExterno(_rx186, _vR, function(){ salidaWA254(t, _rx186, _vR, null); },
         hayEquipo(t)?function(){ mandaAlEquipo(t, _vR, null); }:null,
@@ -16803,7 +16803,7 @@ function bindHilo(){
        ESTA tarea. Se arma su fecha/hora con la hora inteligente y se inserta. */
     if(window.__avAdd===t.id){
       window.__avAdd=null; $("txt").value=""; marcaEnvio("tenv","");
-      if(dudaFecha(v)){ msg(t,"bo",v); msg(t,"bi",dudaFecha(v)+" No puse nada; dímelo otra vez con la fecha."); guarda(t); render(); return; }   /* build 190 */
+      if(dudaFecha(v)){ msg(t,"bo",v); msg(t,"bi",dudaFecha(v)+" No puse nada; dímelo otra vez con la fecha."); guarda(t); render(); return; }
       var rr=armaCuando(v);
       var av=nuevoAviso(t, {texto:sinHoraEnTitulo(asuntoRecordatorio(v,t)), dicho:v, fecha:rr.fecha, hora:rr.hora, cada:rr.cada});
       preguntaAmPm(t, [String(av.ts)], v);
@@ -16813,7 +16813,7 @@ function bindHilo(){
     /* REPROGRAMAR un aviso existente: lo dictado es la nueva fecha/hora */
     if(window.__avEdit && window.__avEdit.taskId===t.id){
       var ed=window.__avEdit; window.__avEdit=null; $("txt").value=""; marcaEnvio("tenv","");
-      if(dudaFecha(v)){ msg(t,"bo",v); msg(t,"bi",dudaFecha(v)+" No puse nada; dímelo otra vez con la fecha."); guarda(t); render(); return; }   /* build 190 */
+      if(dudaFecha(v)){ msg(t,"bo",v); msg(t,"bi",dudaFecha(v)+" No puse nada; dímelo otra vez con la fecha."); guarda(t); render(); return; }
       var nc=armaCuando(v);
       if(ed.id==="self" && t.es_recordatorio){ t.f_vigente=nc.fecha; t.aviso_hora=nc.hora; if(nc.cada) t.aviso_cada=nc.cada; }
       else { var a=(t.avisos||[]).filter(function(x){return String(x.ts)===String(ed.id)})[0];
@@ -16858,7 +16858,7 @@ function bindHilo(){
       $("txt").value=""; marcaEnvio("tenv","");
       /* build 140 RITMO: "recuerdame el lunes y el miercoles" = un aviso de ESTA
          tarea por cada dia dicho, a la hora dicha o a las 9:00. */
-      if(dudaFecha(v)){ msg(t,"bo",v); msg(t,"bi",dudaFecha(v)+" No puse nada; dímelo otra vez con la fecha."); guarda(t); render(); return; }   /* build 190 */
+      if(dudaFecha(v)){ msg(t,"bo",v); msg(t,"bi",dudaFecha(v)+" No puse nada; dímelo otra vez con la fecha."); guarda(t); render(); return; }
       var _dias=cadaDicho(v)?[]:diasDichos(v);
       if(_dias.length>1){
         var _hr=horaDicha(v)?horaValor(v):"", _as=sinHoraEnTitulo(asuntoRecordatorio(v,t)), _avs=[];
@@ -16918,7 +16918,7 @@ function bindHilo(){
      el teclado siga abierto, como en WhatsApp (Salvador 2026-09-24). */
   if(!ta.__hiloEv){ ta.__hiloEv=true;
     ta.addEventListener("blur", function(){ avisaPendiente("tenv", ta.value); marcaEnvio("tenv", ta.value) });
-    ta.addEventListener("focus", function(){ avisaPendiente("tenv", ""); marcaEnvio("tenv", ta.value); pliegaPasos(); /* build 144 */ });
+    ta.addEventListener("focus", function(){ avisaPendiente("tenv", ""); marcaEnvio("tenv", ta.value); pliegaPasos(); });
     ta.addEventListener("input", function(){ avisaPendiente("tenv", ""); marcaEnvio("tenv", ta.value) });
     if(tenv){ tenv.addEventListener("pointerdown", function(ev){ ev.preventDefault(); });
               tenv.addEventListener("mousedown", function(ev){ ev.preventDefault(); }); }
@@ -16947,7 +16947,7 @@ function bindHilo(){
                 function(){ paraDictadoHilo(); var _t=$("txt"); if(_t){_t.textContent="";} marcaEnvio("tenv",""); });
     function silencio(){ if(window.__silT){ clearTimeout(window.__silT); window.__silT=null; } }  /* sin auto-envío: solo manda el avioncito */
     r.onresult=function(ev){ if(window.__pausado) return;
-      var interim=srJunta(ev).parcial;   /* build 225 */
+      var interim=srJunta(ev).parcial;
       ta.value=(previo+window.__dicho+interim).trim();
       alFinalDeLaCaja(ta); ta.scrollTop=ta.scrollHeight;
       marcaVivo(); window.__parcial=interim; pintaDictado(); silencio();
@@ -17931,7 +17931,7 @@ function vSupervisor(t){
   var _atr=(t.lista_pasos||[]).filter(function(p){ return p.hito && !p.hecho && p.fecha && p.fecha<hoy(); })[0];
   if(_atr){ var _d=-dDif(hoy(),_atr.fecha); en=["Atrasado "+Math.abs(dDif(_atr.fecha,hoy()))+" día"+(Math.abs(dDif(_atr.fecha,hoy()))===1?"":"s")+" · "+_atr.tx,"#FF453A"]; }
   var pasos=(t.lista_pasos||[]), hechos=pasos.filter(function(p){ return p.hecho; }).length;
-  var fotos=(t.evidencias||[]).filter(function(f){ return f && !f.eliminado; }).length+((t.adjuntos||[]).length||0);   /* build 215 */
+  var fotos=(t.evidencias||[]).filter(function(f){ return f && !f.eliminado; }).length+((t.adjuntos||[]).length||0);
   var h='<div class="supcard"><span class="sph">SUPERVISAS · '+esc((PERSONAS[t.duenio]||{}).nombre||"")+'</span>'+
     '<span class="spsem" style="--sc:'+en[1]+'"><i></i>'+en[0]+(t.f_vigente?(_sf?' · próximo ':' · entrega ')+esc(fechaChip(t.f_vigente)):'')+'</span>';
   if(pasos.length){
@@ -18109,7 +18109,7 @@ function faltaPreciso263(t){
   var Q=[], c=null; try{ c=completitud(t); }catch(e){ return Q; }
   var pi=String(t.pendiente_info||"").trim();
   if(pi && !esDecisionSal(t)) Q.push(pi.length>160?pi.slice(0,159)+"…":pi);
-  try{ var _fp283=(typeof faltaPasoClaude283==="function")?faltaPasoClaude283(t):""; if(_fp283 && Q.indexOf(_fp283)<0) Q.unshift(_fp283); }catch(e){}   /* build 283 */
+  try{ var _fp283=(typeof faltaPasoClaude283==="function")?faltaPasoClaude283(t):""; if(_fp283 && Q.indexOf(_fp283)<0) Q.unshift(_fp283); }catch(e){}
   var M={quien:"¿Quién la hace?", finiquito:"¿Para cuándo la quieres terminar, o es indefinida?", seguimiento:"¿Cuándo te recuerdo para darle seguimiento?", que:"¿Qué es esto?", de:"¿De quién o de qué proyecto es?", cifras:"¿Cuáles son las cifras?"};
   c.items.forEach(function(x){ if(x.ok || x.k==="agenda") return; var q=M[x.k]; if(q && Q.indexOf(q)<0 && !bloqueaQ267(t, q)) Q.push(q); });
   if(!c.ctxOk && Q.length<4) Q.push("¿De qué se trata? Dame un poco más de contexto.");
@@ -18718,11 +18718,11 @@ function camRelojSilencio(){
   }, CAM.modo==="check"?1200:((CAM.modo==="resp" && !CAM.buf && (CAM_CORTO.test(_camNv(CAM.par)) || (CAM.conf && camConfCorto277(CAM.par))))?700:CAM_SILENCIO));   /* build 275: "va"/"sí" a medias no espera 2.5 s */
 }
 var CAM_CMD=[
-  ["ultimo", /^((repiteme|repite|repetir|repitemelo|dime|di) (otra vez |de nuevo )?lo ultimo( que dijiste)?|lo ultimo otra vez|que dijiste|como dijiste|perdon que dijiste|que dijiste perdon|repiteme|repitemelo|repitemela|repiteme eso|repiteme otra vez|repitemelo otra vez)$/],   /* build 276 */   /* build 277: «repíteme» solo = lo último que dijo */
+  ["ultimo", /^((repiteme|repite|repetir|repitemelo|dime|di) (otra vez |de nuevo )?lo ultimo( que dijiste)?|lo ultimo otra vez|que dijiste|como dijiste|perdon que dijiste|que dijiste perdon|repiteme|repitemelo|repitemela|repiteme eso|repiteme otra vez|repitemelo otra vez)$/],   /* build 277: «repíteme» solo = lo último que dijo */
   ["rebobina", /^((regresa|regresate|regresale|retrocede|retrocedele|vuelve|echate|ve|hazte) (un poco|tantito|un poquito|poquito|un poco mas|mas)( (para )?atras)?|(un poco |tantito )?mas atras|un poco (mas )?(para )?atras|rebobina|rebobinale)$/],   /* build 277: «regresa un poco» = vuelve a leer desde un par de frases antes */
-  ["entendiste", /^((me )?entendiste( bien)?|que entendiste|dime (si|que|lo que) (me )?entendiste|que (hiciste|acabas de hacer)|que vas a hacer|confirmame|confirmamelo|me confirmas|confirma|confirmalo)$/],   /* build 277 */
-  ["espera", /^(espera|esperame|esperate|espera tantito|un momento|un segundo|dame un segundo|aguanta|aguantame|para|para tantito)$/],   /* build 276 */
-  ["voy", /^((a ver|haber|aver) ?voy|a ver|haber|aver|voy|ahi voy|dejame ver|a ver dejame ver|a ver espera|a ver a ver|mira)$/],   /* build 276 */
+  ["entendiste", /^((me )?entendiste( bien)?|que entendiste|dime (si|que|lo que) (me )?entendiste|que (hiciste|acabas de hacer)|que vas a hacer|confirmame|confirmamelo|me confirmas|confirma|confirmalo)$/],
+  ["espera", /^(espera|esperame|esperate|espera tantito|un momento|un segundo|dame un segundo|aguanta|aguantame|para|para tantito)$/],
+  ["voy", /^((a ver|haber|aver) ?voy|a ver|haber|aver|voy|ahi voy|dejame ver|a ver dejame ver|a ver espera|a ver a ver|mira)$/],
   ["continua", /^(sigue|continua|continuale|sigamos|ya sigue|puedes seguir|sigue hablando|sigue sigue)$/],   /* build 276: después de "espera" */
   ["repite", /^(repite|repitelo|repitela|repitemelo|repitemela|otra vez|de nuevo|no te entendi|no entendi)$/],
   ["detalle", /^((dame |quiero )?mas detalles?|detalles?|cuentame mas|explicame mas)$/],
@@ -18884,7 +18884,7 @@ function camHaz274(c){
   if(c==="detalle"){ var t=camTarea274(); if(!t) return camSiguiente274(1);
     return camDi274(camDetalle275(t).concat([{v:"A", t:camVar275("cierra", ["¿Qué hacemos?","¿Cómo la ves?","Tú dime."])}]), function(){ camEscucha274("resp"); }); }
   if(c==="despues") return camDi274([{v:"A", t:camVar275("despues", ["Va, la dejamos para después.","Sale, luego la vemos.","Va, para después."])}], function(){ camSiguiente274(1); });
-  if(c==="deshaz") return CAM.ult ? camDeshaz275() : camSiguiente274(-1);   /* build 275 */
+  if(c==="deshaz") return CAM.ult ? camDeshaz275() : camSiguiente274(-1);
   if(c==="siguiente") return camSiguiente274(1);
   if(c==="atras") return camSiguiente274(-1);
   if(c==="pausa") return camPausa274(true);
@@ -18892,8 +18892,8 @@ function camHaz274(c){
 }
 function camPresenta274(repite){
   var t=camTarea274(); if(!t) return camSiguiente274(1);
-  CAM.qz=null; CAM.espera276=false; CAM.conf=null;   /* build 277 */
-  var _k6=camK276(); if(_k6==="msg") return camMsgPresenta276(!!repite); if(_k6==="fal") return camFalPresenta276(!!repite);   /* build 276 */
+  CAM.qz=null; CAM.espera276=false; CAM.conf=null;
+  var _k6=camK276(); if(_k6==="msg") return camMsgPresenta276(!!repite); if(_k6==="fal") return camFalPresenta276(!!repite);
   CAM.limpia=true; CAM.vacioDicho=false; CAM.aclara=null; camPinta274();
   camGuion275(t, !!repite, function(G){   /* build 275: por tipo (decisión · llamada con su guion · tarea nueva), sin menú */
     if(camTarea274()!==t || !CAM.on) return;
@@ -18903,7 +18903,7 @@ function camPresenta274(repite){
   });
 }
 function camSiguiente274(dir){
-  camCallaMic(); CAM.conf=null;   /* build 277 */
+  camCallaMic(); CAM.conf=null;
   var j=CAM.i+dir;
   while(j>=0 && j<CAM.L.length && !camSigue275(CAM.L[j])) j+=dir>=0?1:-1;   /* build 275: las tareas nuevas (propuestas) también cuentan */
   if(j<0){ CAM.i=0; return camDi274([{v:"A", t:"Esta es la primera."}], function(){ camPresenta274(); }); }
@@ -18923,7 +18923,7 @@ function camEmpieza274(desdeId){
   var C=camLista276(), L=C.L;   /* build 276: + ficha Falta y mensajes por acomodar */
   CAM.mg=C.mg||{}; CAM.res276={}; CAM.pendQ=[]; CAM.qz=null; CAM.rest=null; CAM.habla276=[]; CAM.espera276=false; CAM.bargeNo=false;
   if(desdeId){ L=L.filter(function(x){ return x!==desdeId; }); L.unshift(desdeId); if(!C.g[desdeId]){ C.g[desdeId]="dec"; C.n.dec++; } }
-  CAM.on=true; CAM.L=L; CAM.g=C.g; CAM.i=0; CAM.pausa=false; CAM.explicado=!!window.__camExplicado274; CAM.buf=""; CAM.par=""; CAM.anotadas=0; CAM.hechas275=0; CAM.ult=null; CAM.aclara=null; CAM.sinMic=false; CAM.gl=CAM.gl||{}; CAM.conf=null; CAM.pideConf277=false; CAM.confSig277=false;   /* build 277 */
+  CAM.on=true; CAM.L=L; CAM.g=C.g; CAM.i=0; CAM.pausa=false; CAM.explicado=!!window.__camExplicado274; CAM.buf=""; CAM.par=""; CAM.anotadas=0; CAM.hechas275=0; CAM.ult=null; CAM.aclara=null; CAM.sinMic=false; CAM.gl=CAM.gl||{}; CAM.conf=null; CAM.pideConf277=false; CAM.confSig277=false;
   window.__camExplicado274=true;   /* "di terminé" se explica una vez por sesión de la app */
   camAudio275();   /* build 275: el sonido de "pensando" se desbloquea con este toque (iOS) */
   camMedidor276();   /* build 276: medidor de volumen (getUserMedia con echoCancellation), pedido dentro del toque */
@@ -18938,7 +18938,7 @@ function camSal274(dicho){
   camMedidorApaga276();
   try{ speechSynthesis.cancel(); }catch(e){}
   if(dicho){ try{ var u=new SpeechSynthesisUtterance("Listo, salimos de la caminata."); u.lang="es-MX"; var V=camVoces274(); if(V.A) u.voice=V.A; speechSynthesis.speak(u); }catch(e){} }
-  CAM.on=false; CAM.pausa=false; CAM.fase=""; CAM.conf=null; CAM.pideConf277=false; CAM.confSig277=false;   /* build 277 */
+  CAM.on=false; CAM.pausa=false; CAM.fase=""; CAM.conf=null; CAM.pideConf277=false; CAM.confSig277=false;
   camWake274(false);
   var o=document.getElementById("cam274"); if(o) o.remove();
   document.documentElement.classList.remove("cam274on");
@@ -18985,7 +18985,7 @@ function camPinta274(){
   var s=function(id, x){ var e=document.getElementById(id); if(e && e.textContent!==x) e.textContent=x; };
   s("c274n", n?("Caminata · "+Math.min(CAM.i+1,n)+" de "+n):"Caminata");
   var _gr6=camK276()==="msg"?(CAM.mg||{})[CAM.L[CAM.i]]:null;
-  s("c274tit", _gr6?("Mensaje de "+(_gr6.contacto||"contacto")):(t?(t.nombre||"Sin nombre"):""));   /* build 276 */
+  s("c274tit", _gr6?("Mensaje de "+(_gr6.contacto||"contacto")):(t?(t.nombre||"Sin nombre"):""));
   var est=CAM.pausa?"En pausa":(CAM.fase==="pensando"?"Pensando…":CAM.fase==="hablando"?(CAM.voz==="B"?"Analista":"Doit"):(CAM.fase==="escuchando"?(CAM.sinMic?"Sin micrófono: usa los botones":(CAM.modo==="check"?"¿Terminaste o sigues?":(CAM.qz?"Pregunta "+Math.min(CAM.qz.i+1,CAM.qz.Q.length)+" de "+CAM.qz.Q.length+" · di «paso» si no sabes":"Te escucho · di «terminé» al acabar"))):""));
   s("c274st", est);
   s("c274oy", CAM.fase==="escuchando"?camCorta((CAM.buf+" "+CAM.par).trim(), 160):"");
@@ -19030,7 +19030,7 @@ function camResumen275(n){
   if(n.dec) P.push(n.dec+(n.dec===1?" decisión":" decisiones"));
   if(n.lla) P.push(n.lla+(n.lla===1?" llamada":" llamadas")+" para mañana");
   if(n.nue) P.push(n.nue+(n.nue===1?" tarea nueva":" tareas nuevas"));
-  if(n.fal) P.push(n.fal+(n.fal===1?" con datos que faltan":" con datos que faltan"));   /* build 276 */
+  if(n.fal) P.push(n.fal+(n.fal===1?" con datos que faltan":" con datos que faltan"));
   if(n.msg) P.push(n.msg+(n.msg===1?" mensaje por acomodar":" mensajes por acomodar"));
   return P.length?"Tienes "+juntaY(P)+". Empezamos.":"No tienes pendientes para la caminata.";
 }
@@ -19134,7 +19134,7 @@ function camPrompt275(t, v){
   L.push("Eres Doit, el asistente de Salvador. Van caminando y él te contesta por voz: viene dictado, puede ser impreciso o traer errores de transcripción. Entiende lo que QUIERE y conviértelo en UNA acción. No busques palabras clave: entiende la intención.");
   L.push("TIPO: "+(k==="lla"?"llamada de mañana (con su guion)":(k==="nue"?"tarea NUEVA propuesta por la IA (Acomodo): él decide si va, si se vincula a otra tarea, si se elimina o si es solo un dato":"tarea que requiere su decisión")));
   L.push("TAREA: "+String(t.nombre||""));
-  try{ var _o8=nombres278(t).slice(1); L.push("ESTA TAREA: id "+t.id+(_o8.length?" · también se llama: "+_o8.join(" | "):"")); }catch(e){}   /* build 278 */
+  try{ var _o8=nombres278(t).slice(1); L.push("ESTA TAREA: id "+t.id+(_o8.length?" · también se llama: "+_o8.join(" | "):"")); }catch(e){}
   var d=null; try{ d=decision273(t); }catch(e){}
   if(d){ if(d.pregunta) L.push("PREGUNTA: "+d.pregunta); if(d.recomendacion) L.push("RECOMENDACIÓN: "+d.recomendacion);
     if(d.opciones.length) L.push("OPCIONES: "+d.opciones.map(function(o){ return o.nombre+(o.precio?" ("+o.precio+")":""); }).join(" | ")); }
@@ -19143,7 +19143,7 @@ function camPrompt275(t, v){
   if(k==="nue"){ try{ var og=origenProp256(t); L.push("ORIGEN: "+og.canal+" · "+og.quien+(og.frase.length?" · "+og.frase.join(" ").slice(0,300):"")); }catch(e){} }
   var R=(t.resumen && typeof t.resumen==="object")?t.resumen:{}; if(R.texto) L.push("RESUMEN: "+String(R.texto).slice(0,400));
   L.push("TAREAS ABIERTAS (para vincular; destino = el id):\n"+camCandidatas275(t).map(function(x){ var o8=[]; try{ o8=nombres278(x).slice(1,4); }catch(e){} return x.id+" · "+String(x.nombre||"").slice(0,80)+(o8.length?" (también: "+o8.join(" | ").slice(0,80)+")":""); }).join("\n"));
-  L.push(CAM_PROMPT278);   /* build 278 */
+  L.push(CAM_PROMPT278);
   L.push("LO QUE DIJO: “"+v+"”");
   L.push("ACCIONES:\n- aprobar: está de acuerdo (con la recomendación, con la tarea nueva, con el guion).\n- rechazar: no se hace / no está de acuerdo.\n- detalle: pide más información.\n- despues: la deja para después.\n- vincular: va junto con otra tarea; destino = el id de esa tarea de la lista.\n- eliminar: borrarla, no sirve.\n- dato: no es tarea, solo un dato para guardar.\n- instruccion: da una indicación, elige otra opción o pide algo concreto (\"dile a Rubén que…\", \"que sea el jueves\").\n- aclarar: SOLO si de verdad no se entiende; respuesta_hablada = UNA pregunta concreta y corta.");
   L.push("texto_para_tarea: lo que queda anotado en la tarea, claro y completo, con su decisión (ej. \"Va con la de Dahua.\", \"Que la llamada sea el jueves a las 10.\").\nrespuesta_hablada: confirmación de 2 a 5 palabras, natural, como un amigo (ej. \"Listo, va con Rubén.\", \"Hecho, la junté.\", \"Va, queda como dato.\"). Nunca pidas confirmación ni repitas la pregunta.");
@@ -19154,7 +19154,7 @@ function camPrompt275(t, v){
 function camEntiende275(t, v){
   if(CAM.aclara && CAM.aclara.id===t.id) v=CAM.aclara.v+". "+v;   /* contesta la aclaración: va junto con lo de antes */
   CAM.aclara=null;
-  var tok=++CAM.tok, t0=Date.now(), listo=false, ord=camOrdId286(t, null);   /* build 286 */
+  var tok=++CAM.tok, t0=Date.now(), listo=false, ord=camOrdId286(t, null);
   try{ speechSynthesis.cancel(); }catch(e){}
   CAM.fase="pensando"; CAM.oyeTx=v; camPinta274(); camPiensa275(true);
   var fin=function(j, err){ if(listo) return; listo=true; clearTimeout(to); camPiensa275(false); camLat275("decide", Date.now()-t0, !!j);
@@ -19175,7 +19175,7 @@ function camEntiende275(t, v){
 var CAM_ACC=/^(aprobar|rechazar|detalle|despues|vincular|eliminar|dato|instruccion|aclarar|deshacer)$/;   /* build 277: + deshacer */
 function camResuelve275(t, j, v, vivo, confirmado){
   var a=_camNv(j.accion).replace(/\s+/g,""); if(!CAM_ACC.test(a)) a="instruccion";
-  var dh=String(j.respuesta_hablada||"").replace(/\s+/g," ").trim(), ord=camOrdId286(t, j);   /* build 286 */
+  var dh=String(j.respuesta_hablada||"").replace(/\s+/g," ").trim(), ord=camOrdId286(t, j);
   if(a==="deshacer"){ camOrdenCierra286(t, ord, "pidió deshacer lo anterior", "hecho"); CAM.pideConf277=false; if(vivo){ CAM.fase=""; camHaz274("deshaz"); } return; }   /* build 277: «no, esa no era» lo entiende la IA */
   var fv=null; try{ fv=camFiltraVinc278(t, a, j, v); }catch(e){ console.warn("caminata 278", e); }   /* build 278: su corrección y su «no tiene que ver» mandan */
   if(fv){
@@ -19186,20 +19186,20 @@ function camResuelve275(t, j, v, vivo, confirmado){
   }
   if(!confirmado && a!=="aclarar" && a!=="detalle" && a!=="despues" && (CAM.pideConf277 || j.pide_confirmar===true)){   /* build 277: repetir y esperar su sí */
     var dc=(a==="vincular")?camDestino275(t, j.destino):null;
-    if(a!=="vincular" || dc){ CAM.pideConf277=false; var _dsc=camDescribe277(t, a, j, dc); camOrdenSigue286(t, ord, {motivo:"esperando_confirmacion", entendi:_dsc, clasif:a});   /* build 286 */
+    if(a!=="vincular" || dc){ CAM.pideConf277=false; var _dsc=camDescribe277(t, a, j, dc); camOrdenSigue286(t, ord, {motivo:"esperando_confirmacion", entendi:_dsc, clasif:a});
       if(!vivo) return; CAM.fase=""; return camConfPide277({k:"tarea", id:CAM.L[CAM.i], t:t, j:j, v:v, a:a, desc:_dsc}); }
   }
   var _d7=""; try{ _d7=camDescribe277(t, a, j, a==="vincular"?camDestino275(t, j.destino):null); }catch(e){}
   if(a==="aclarar"){ camOrdenSigue286(t, ord, {motivo:"aclarar", pregunta_ia:dh, preguntar_despues:true});   /* build 286: «aclarar» nunca descarta la orden */
     if(!vivo) return; CAM.fase=""; CAM.aclara={id:t.id, v:v};
     return camDi274([{v:"A", t:camCorta(dh && /\?/.test(dh)?dh:"¿Me lo dices de otra forma?", 140)}], function(){ camEscucha274("resp"); }); }
-  if(a==="detalle" || a==="despues"){ if(camConContenido276(v)) camOrdenSigue286(t, ord, {motivo:a, clasif:a}); else camOrdenCierra286(t, ord, a==="detalle"?"pidió más detalle":"la dejó para después"); }   /* build 286 */
+  if(a==="detalle" || a==="despues"){ if(camConContenido276(v)) camOrdenSigue286(t, ord, {motivo:a, clasif:a}); else camOrdenCierra286(t, ord, a==="detalle"?"pidió más detalle":"la dejó para después"); }
   if(a==="detalle"){ if(vivo){ CAM.fase=""; camHaz274("detalle"); } return; }
-  if(a==="despues"){ camNota276(t, v, "la dejó para después; dijo");   /* hotfix 276 */
+  if(a==="despues"){ camNota276(t, v, "la dejó para después; dijo");
     if(vivo){ CAM.fase=""; camHaz274("despues"); } return; }
   var r=camEjecuta275(t, a, j, v);
   try{ if(CAM.ult && ord && !r.falta) CAM.ult.ord286={id:ord, tid:t.id}; }catch(e){}
-  if(r.falta) camOrdenSigue286(t, ord, {motivo:"aclarar", pregunta_ia:r.falta, preguntar_despues:true});   /* build 286 */
+  if(r.falta) camOrdenSigue286(t, ord, {motivo:"aclarar", pregunta_ia:r.falta, preguntar_despues:true});
   else if(r.soloNota) camOrdenSigue286(t, ord, {motivo:"instruccion", clasif:a, texto_ia:String(j.texto_para_tarea||"").slice(0,1500), entendi:_d7});   /* trabajo: lo hace la Mac */
   else camOrdenCierra286(t, ord, _d7||a);
   if(!r.falta){ CAM.pideConf277=false; if(CAM.ult){ CAM.ult.desc=_d7; try{ ultRegistra278(CAM.ult, _d7); }catch(e){} } }   /* build 277: para «¿qué hiciste?» · 278: queda el ↩ en la tarea */
@@ -19234,7 +19234,7 @@ function camEjecuta275(t, a, j, v){
   var F=camFoto275([t, dest]), dicho="Listo.", vw={a:abierta, v:vista}, soloNota=false;   /* build 286: soloNota = solo quedó un mensaje; la orden sigue para la Mac */
   try{
     if(a==="aprobar"){ if(nue){ okProp256(t); camNota276(t, v); dicho=camVar275("ok", ["Listo, va.","Va, quedó creada.","Hecho."]); } else if(d){ contestaDecision273(t, tx); dicho=camVar275("ok", ["Listo.","Va, hecho.","Perfecto, quedó."]); } else { camGuarda274(t, tx); soloNota=true; dicho=camVar275("ok", ["Listo.","Va, hecho."]); } }
-    else if(a==="rechazar" && !nue && vincPend278(t)){ rechazaVinc278(t, vincPend278(t), "Salvador, caminata"); camGuarda274(t, tx); dicho=camVar275("no", ["Va, no la junto.","Entendido, se queda aparte."]); }   /* build 278 */
+    else if(a==="rechazar" && !nue && vincPend278(t)){ rechazaVinc278(t, vincPend278(t), "Salvador, caminata"); camGuarda274(t, tx); dicho=camVar275("no", ["Va, no la junto.","Entendido, se queda aparte."]); }
     else if(a==="rechazar"){ if(nue){ descartaProp256(t); dicho=camVar275("no", ["Va, la quité.","Listo, fuera."]); } else if(d){ contestaDecision273(t, tx); dicho=camVar275("no", ["Entendido, no va.","Va, no se hace."]); } else { camGuarda274(t, tx); soloNota=true; dicho="Entendido."; } }
     else if(a==="vincular"){ enlazaTareas(t.id, dest.id, "caminata"); camNota276(dest, v, "al juntar «"+String(t.nombre||"")+"»; dijo"); dicho="Listo, la junté con "+camCorta(limpiaHabla(dest.nombre), 50).replace(/[.\s]+$/,"")+"."; }
     else if(a==="eliminar"){ if(nue) descartaProp256(t); else { t.estado="cerrada"; t.cierre={tipo:"cancelado", motivo:"caminata", f:hoy()}; msg(t,"bi","Eliminada en la caminata: "+tx); guarda(t); try{ sincronizaAvisos(t); }catch(e){} }
@@ -19245,15 +19245,15 @@ function camEjecuta275(t, a, j, v){
   }catch(e){ console.warn("caminata 275 ejecuta", e); }
   abierta=vw.a; vista=vw.v;   /* vincular abre la tarea destino: la caminata se queda donde estaba */
   CAM.ult={foto:F, i:CAM.L.indexOf(t.id), a:a}; CAM.hechas275=(CAM.hechas275||0)+1;
-  CAM.res276=CAM.res276||{}; CAM.res276[t.id]=1;   /* build 276 */
+  CAM.res276=CAM.res276||{}; CAM.res276[t.id]=1;
   return {dicho:dicho, soloNota:soloNota};
 }
 function camSigue275(id){ var k6=(CAM.g||{})[id]; if(k6==="msg") return camMsgVivo276(id); var t=tareaId240(id); if(!t) return false;
-  if(k6==="fal"){ try{ return _camVivo(t) && camPreguntas276(t).length>0; }catch(e){ return false; } }   /* build 276 */ try{ return (CAM.g||{})[id]==="nue"?esPropuesta256(t):_camVivo(t); }catch(e){ return false; } }
+  if(k6==="fal"){ try{ return _camVivo(t) && camPreguntas276(t).length>0; }catch(e){ return false; } } try{ return (CAM.g||{})[id]==="nue"?esPropuesta256(t):_camVivo(t); }catch(e){ return false; } }
 function camDeshaz275(){
   var u=CAM.ult; CAM.ult=null; if(!u) return camSiguiente274(-1);
   try{ deshazUlt278(u); }catch(e){ console.warn("caminata 275 deshaz", e); }   /* build 278: la misma función que el ↩ de la tarea (incluye la tarea o dato que nació de un mensaje) */
-  try{ if(u.ord286){ var T6=tareaId240(u.ord286.tid), e6=camOrdEnc286(T6, u.ord286.id); if(e6){ e6.estado="deshecho"; e6.hecho_ts=Date.now(); e6.resultado="Salvador lo deshizo en la caminata"; camGuardaEnc286(T6); } } }catch(e){}   /* build 286 */
+  try{ if(u.ord286){ var T6=tareaId240(u.ord286.tid), e6=camOrdEnc286(T6, u.ord286.id); if(e6){ e6.estado="deshecho"; e6.hecho_ts=Date.now(); e6.resultado="Salvador lo deshizo en la caminata"; camGuardaEnc286(T6); } } }catch(e){}
   CAM.qz=null; try{ if(u.i>=0) delete CAM.res276[CAM.L[u.i]]; }catch(e){}
   CAM.hechas275=Math.max(0, (CAM.hechas275||1)-1);
   if(u.i>=0) CAM.i=u.i;
@@ -19504,7 +19504,7 @@ function camQuizFin276(abandona, ack){
    No se espera al cerebro: la caminata sigue; lo que él no alcance queda en la ficha Falta. */
 function camAplicaQuiz276(t, A, cb){
   if(!t) return; var T=tareaId240(t.id)||t, textos=[], quita=[], H=T.hecho238;
-  try{ (T.encargos||[]).forEach(function(e){ if(e && e.caminata && e.k==="cuestionario" && e.estado==="pendiente"){ e.estado="hecho"; e.hecho_ts=Date.now(); e.resultado="respuesta del cuestionario aplicada a la tarea"; e.por286="app"; } }); }catch(e){}   /* build 286 */
+  try{ (T.encargos||[]).forEach(function(e){ if(e && e.caminata && e.k==="cuestionario" && e.estado==="pendiente"){ e.estado="hecho"; e.hecho_ts=Date.now(); e.resultado="respuesta del cuestionario aplicada a la tarea"; e.por286="app"; } }); }catch(e){}
   A.forEach(function(o){ var p=o.q, tx=String(o.a||"").replace(/\s+/g," ").trim(); if(!tx) return;
     if(p.k==="persona"){ var r=null; try{ r=resuelvePersona(T, tx); }catch(e){} var per=(r && r.estado==="uno")?{id:r.persona.id, nombre:r.persona.nombre}:{id:"ext:"+tx, nombre:tx}; try{ resuelveDudaPersona(T, p.id, per); }catch(e){} return; }
     try{ T.resp267=(T.resp267||[]).concat([normQ267(p.q)]).slice(-60); }catch(e){}
@@ -19593,14 +19593,14 @@ function camMsgPrompt276(gr, t, C, v){
   L.push("LO QUE DIJO: “"+v+"”");
   L.push("ACCIONES:\n- a_tarea: va a una tarea; destino = el id (de las 2 o de la lista).\n- nueva: es una tarea nueva; nombre = nombre corto.\n- dato: es solo un dato.\n- no_guardar: plática, no va a ninguna.\n- despues: lo deja para después.\n- aclarar: SOLO si de verdad no se entiende; respuesta_hablada = UNA pregunta corta.");
   L.push("respuesta_hablada: 2 a 5 palabras, como un amigo (ej. \"Listo, a Vestidores.\"). Nunca pidas confirmación.");
-  L.push(CAM_PROMPT277);   /* build 277 */
+  L.push(CAM_PROMPT277);
   L.push("Contesta SOLO JSON: {\"accion\":\"...\",\"destino\":\"\",\"nombre\":\"\",\"respuesta_hablada\":\"...\",\"pide_confirmar\":false}");
   return L.join("\n");
 }
 function camMsgEntiende276(v){
   var gr=camMsgGr276(), t=camTarea274(), key=CAM.L[CAM.i]; if(!gr || !t) return camSiguiente274(1);
   if(CAM.aclara && CAM.aclara.id===key) v=CAM.aclara.v+". "+v; CAM.aclara=null;
-  var C=CAM.mc||camMsgCands276(gr), loc=camMsgLocal276(v, C), ord=camOrdId286(t, null);   /* build 286 */
+  var C=CAM.mc||camMsgCands276(gr), loc=camMsgLocal276(v, C), ord=camOrdId286(t, null);
   if(loc){ if(ord) loc._ord286=ord; return camMsgEjecuta276(gr, t, loc, v, true); }
   var tok=++CAM.tok, t0=Date.now(), listo=false;
   try{ speechSynthesis.cancel(); }catch(e){}
@@ -19614,8 +19614,8 @@ function camMsgEntiende276(v){
   catch(e){ fin(null); }
 }
 function camMsgEjecuta276(gr, t, j, v, vivo, confirmado){
-  var a=_camNv(j.accion).replace(/\s+/g,"_"), key=CAM.L[CAM.i], dh=String(j.respuesta_hablada||"").replace(/\s+/g," ").trim(), C=CAM.mc||[], ord=camOrdId286(t, j);   /* build 286 */
-  if(a==="deshacer"){ camOrdenCierra286(t, ord, "pidió deshacer lo anterior"); CAM.pideConf277=false; return camHaz274("deshaz"); }   /* build 277 */
+  var a=_camNv(j.accion).replace(/\s+/g,"_"), key=CAM.L[CAM.i], dh=String(j.respuesta_hablada||"").replace(/\s+/g," ").trim(), C=CAM.mc||[], ord=camOrdId286(t, j);
+  if(a==="deshacer"){ camOrdenCierra286(t, ord, "pidió deshacer lo anterior"); CAM.pideConf277=false; return camHaz274("deshaz"); }
   if(a==="aclarar") camOrdenSigue286(t, ord, {motivo:"aclarar", pregunta_ia:dh, preguntar_despues:true});
   if(a==="despues" || a==="detalle"){ if(camConContenido276(v)) camOrdenSigue286(t, ord, {motivo:a}); else camOrdenCierra286(t, ord, "mensaje: "+a); }
   if(a==="aclarar"){ CAM.aclara={id:key, v:v}; return camDi274([{v:"A", t:camCorta(dh && /\?/.test(dh)?dh:"¿A cuál de las dos?", 140)}], function(){ CAM.limpia=false; camEscucha274("resp"); }); }
@@ -19629,7 +19629,7 @@ function camMsgEjecuta276(gr, t, j, v, vivo, confirmado){
   try{ var cx8=correccion278(t, v); if(cx8){ a="a_tarea"; dest=cx8.x; }   /* build 278: "es la de X" / "es esta" manda sobre la IA */
     else if(a==="a_tarea" && dest && niega278(v, dest)){ CAM.aclara={id:key, v:v}; return camDi274([{v:"A", t:"Dijiste que no es "+camNomT276(dest)+". ¿A cuál lo mando?"}], function(){ CAM.limpia=false; camEscucha274("resp"); }); } }catch(e){ console.warn("caminata 278 msg", e); }
   if(!/^(a_tarea|nueva|dato|no_guardar)$/.test(a)){ CAM.aclara={id:key, v:v}; return camDi274([{v:"A", t:"¿A qué tarea lo mando?"}], function(){ CAM.limpia=false; camEscucha274("resp"); }); }
-  var _d7=camDescribeMsg277(gr, a, dest, j);   /* build 277 */
+  var _d7=camDescribeMsg277(gr, a, dest, j);
   if(!confirmado && (CAM.pideConf277 || j.pide_confirmar===true)){ CAM.pideConf277=false; camOrdenSigue286(t, ord, {motivo:"esperando_confirmacion", entendi:_d7}); var jj={}; for(var _k in j) jj[_k]=j[_k]; jj.accion=a; if(dest) jj.destino=dest.id;
     return camConfPide277({k:"msg", id:key, gr:gr, t:t, j:jj, v:v, a:a, desc:_d7}); }
   CAM.pideConf277=false;
@@ -19642,7 +19642,7 @@ function camMsgEjecuta276(gr, t, j, v, vivo, confirmado){
   }catch(e){ console.warn("caminata 276 mensaje", e); }
   abierta=vw.a; vista=vw.v;
   CAM.ult={foto:F, i:CAM.i, a:"msg_"+a, nueva:nueva?nueva.id:"", desc:_d7}; try{ ultRegistra278(CAM.ult, _d7); }catch(e){} CAM.hechas275=(CAM.hechas275||0)+1;
-  if(ord){ CAM.ult.ord286={id:ord, tid:t.id}; camOrdenCierra286(t, ord, _d7||a); }   /* build 286 */
+  if(ord){ CAM.ult.ord286={id:ord, tid:t.id}; camOrdenCierra286(t, ord, _d7||a); }
   CAM.res276=CAM.res276||{}; CAM.res276[key]=1;
   try{ render(); }catch(e){}
   var w=dh.split(" ").filter(Boolean).length; if(dh && w<=8 && !/\?/.test(dh) && !_camCodigo(dh)) dicho=camPunto(dh);
@@ -20029,8 +20029,8 @@ function anima272(){
   });
 }
 function bindHome272(){
-  try{ bindDec284(); }catch(e){ console.warn("dec284", e); }   /* build 284 */
-  try{ bindPl285(); bindHist285(); }catch(e){ console.warn("pl285", e); }   /* build 285 */
+  try{ bindDec284(); }catch(e){ console.warn("dec284", e); }
+  try{ bindPl285(); bindHist285(); }catch(e){ console.warn("pl285", e); }
   Array.prototype.forEach.call(document.querySelectorAll('[data-est272]'), function(b){ b.onclick=function(){
     var k=b.getAttribute('data-est272');   /* build 285: si su sección está plegada, se abre antes de llevarlo ahí */
     if(k==='preg'){ abreSec285('decide'); abreSec285('preg'); } else abreSec285(k);
@@ -20247,7 +20247,7 @@ function leible(x,t){
   if(x.k==="bi" && !esWa && !x.de) return null;                   /* mensajes del sistema */
   var quien="", raw=String(x.hab?(x.t||x.tr||""):(x.t||""));
   if(esWa){ var mm=raw.match(/^([^:\n]{1,24}):\s*([\s\S]*)$/); if(mm){ quien=mm[1].trim(); raw=mm[2]; } else quien=x.wa_c?String(x.wa_c).split(" ")[0]:""; }
-  else if(x.k==="bo" && (!x.de || x.de===yo)) quien=x.nota_mia?"Tú (nota)":"Tú";   /* build 216 */
+  else if(x.k==="bo" && (!x.de || x.de===yo)) quien=x.nota_mia?"Tú (nota)":"Tú";
   else { try{ quien=autorMsg(x,t)||""; }catch(e){} }
   if(quien==="Claude") return null;
   if(/^(Sin confirmaci[oó]n de entrega a |NO SALI[OÓ] a )/.test(raw)) return null;
@@ -20273,7 +20273,7 @@ function _leeEntrada(t){
   var s=_punto("Tarea: "+limpiaHabla(t.nombre||"sin nombre"))+" ";
   var d=t.duenio===yo?"La llevas tú":"La lleva "+((PERSONAS[t.duenio]&&PERSONAS[t.duenio].nombre)||"otra persona");
   if(t.f_vigente){ var e=estadoReal(t);
-    if(sinFinal(t)) d+=(t.indefinida===true?", indefinida":"")+(e==="hoy"?", le toca hoy":(e==="vencida"?", tocaba el "+fechaBonita(t.f_vigente)+" y no se ha confirmado":", próximo el "+fechaBonita(t.f_vigente)));   /* build 191 */
+    if(sinFinal(t)) d+=(t.indefinida===true?", indefinida":"")+(e==="hoy"?", le toca hoy":(e==="vencida"?", tocaba el "+fechaBonita(t.f_vigente)+" y no se ha confirmado":", próximo el "+fechaBonita(t.f_vigente)));
     else d+=(e==="hoy"?", vence hoy":(e==="vencida"?", venció el "+fechaBonita(t.f_vigente):", para el "+fechaBonita(t.f_vigente))); }
   return {tx:s+d+"."};
 }
@@ -20320,7 +20320,7 @@ function leeNuevo(t){
   var antes=_leeMsgs(t,0,k).slice(-3), nuevos=_leeMsgs(t,k,ms.length);
   var leidos=antes.concat(nuevos).map(function(x){ return x.ix; });
   var c=[_leeEntrada(t)], r0=_leeResumen(t), r=(r0 && leidos.indexOf(r0.pix)>=0)?_leeResumen(t,true):r0; if(r) c.push(r);
-  var _ag2=_leeAgenda229(t); if(_ag2) c.push(_ag2);   /* build 229 */
+  var _ag2=_leeAgenda229(t); if(_ag2) c.push(_ag2);
   if(antes.length && mk){ c.push({tx:"Lo último que escuchaste."}); antes.forEach(function(x){ c.push(x); }); }
   if(nuevos.length){ if(antes.length && mk) c.push({tx:"Ahora lo nuevo."}); nuevos.forEach(function(x){ c.push(x); }); }
   else c.push({tx:"No hay mensajes nuevos."});
@@ -20475,8 +20475,8 @@ function leeOpcionesDe(el){
   var _x254=t.msgs[ix];
   if(_x254 && !_x254.oculto){
     if(propio247(_x254)){ _ops.push(["Editar",function(){ menuAcc254(t, ix, '[data-d247="edit"]'); }], ["Eliminar",function(){ accion247(t, ix, "del", document.createElement("div")); }], ["Es para Claude",function(){ accion247(t, ix, "claude", document.createElement("div")); }]); }
-    else if(puedeSerIndicacion(_x254, t)) _ops.push(["Indicación",function(){ convierteEnIndicacion(t, ix); }]);   /* build 193 */
-    _ops.push(["Mover a otra tarea",function(){ abreMover225(t, ix); }]);   /* build 225 */
+    else if(puedeSerIndicacion(_x254, t)) _ops.push(["Indicación",function(){ convierteEnIndicacion(t, ix); }]);
+    _ops.push(["Mover a otra tarea",function(){ abreMover225(t, ix); }]);
     _ops.push(["Nueva",function(){ menuAcc254(t, ix, '[data-acnueva]'); }], ["Dato",function(){ menuAcc254(t, ix, '[data-acdato]'); }], ["No guardar",function(){ menuAcc254(t, ix, '[data-acng]'); }]);
   }
   return _ops;
@@ -20496,7 +20496,7 @@ function leeOpcionesDe(el){
   document.addEventListener("contextmenu",function(e){
     if(vista!=="hilo" && !(vista==="lista" && e.target.closest && e.target.closest(".acor"))) return; var el=e.target.closest && e.target.closest(SEL); if(!el) return;
     e.preventDefault(); if(window.__leeLP && Date.now()-window.__leeLP<900) return;
-    var ops=opcionesUnico261(el);   /* build 261 */ if(ops){ window.__leeLP=Date.now(); leeMenu(e.clientX,e.clientY,ops); }
+    var ops=opcionesUnico261(el); if(ops){ window.__leeLP=Date.now(); leeMenu(e.clientX,e.clientY,ops); }
   });
   document.addEventListener("click",function(e){ if(window.__leeLP && Date.now()-window.__leeLP<700 && !(e.target.closest&&e.target.closest("#leemask"))){ e.stopPropagation(); e.preventDefault(); } },true);
 })();
@@ -20645,7 +20645,7 @@ function leeComando(v){
   if(/\b(ya (la |lo )?(hice|termine|terminamos|terminaron|hicieron|quedo)|ya esta (hecha|terminada|lista)|ya se hizo|marcala (como )?hecha|cierrala|ya esta$)/.test(s)) return leeHecha(t);
   if(nw<=4 && /^(para|alto|detente|callate|basta|es todo|termina|apaga|ya no|ya estuvo|gracias)\b/.test(s)){ leeDi("Va.", function(){ leePara(); }); return; }
   if(nw<=6 && /\b(siguiente|seguimos|sigamos|la que sigue|otra tarea|pasa a la otra|adelante|sigue)\b/.test(s)) return leeSiguienteTarea();
-  if(nw<=5 && /\b(autorizala|autorizalo|autoriza|autorizar|autorizada)\b/.test(s)) return leeAutoriza(t);   /* build 210 */
+  if(nw<=5 && /\b(autorizala|autorizalo|autoriza|autorizar|autorizada)\b/.test(s)) return leeAutoriza(t);
   if(c && c.tipo==="agenda" && (horaDicha(v) || /todo el dia/.test(s))) return leeAgenda(t, v, s);
   if(nw<=10 && /\b(no (lo |la )?agendes|sin agendar|no lo pongas en el calendario|no hace falta agendar)\b/.test(s)){ try{ noAgendar(t); }catch(e){} return leePregunta(leeDiceAnote(t, {hecho:["sin agendar"], falta:soloMeFalta(t)}, tipoRevisar(t)==="falta")); }
   if(nw<=10 && /^(si\s+)?(agendalo|agendala|agendamelo|agendamela|ponlo en el calendario|ponla en el calendario)\b/.test(s)) return leeAgenda(t, v, s);
@@ -20979,7 +20979,7 @@ function notaClaude(t, v){
   if(_pgN && (_pgN.duda || _pgN.texto==="__ESTO__")) _pgN=null;   /* build 283: sin contacto o texto claro lo decide Claude (nunca «No programé nada») */
   if(_pgN){
     var _rn=function(tx){ msg(t,"bi",tx); var r=t.msgs[t.msgs.length-1]; r.canal="priv:"+yo; r.nota_claude=1; guarda(t); render(); };
-    if(revisaPG263(t,_pgN)) return;   /* build 263 */
+    if(revisaPG263(t,_pgN)) return;
     _pgN.contacto=contactoDeTarea(t,_pgN.contacto); mandaProgramado(t,_pgN,null);
     _rn("Programé el WhatsApp a "+_pgN.contacto+(_pgN.a_las?" para el "+fechaMovCorta(_pgN.a_las.fecha)+" a las "+horaCorta(_pgN.a_las.hora):" ahora")+(_pgN.sino_desde?", solo si no contesta":"")+(_pgN.seguimiento?"; si no contesta, le insisto el "+fechaMovCorta(_pgN.seguimiento.a_las.fecha)+" a las "+horaCorta(_pgN.seguimiento.a_las.hora):"")+".");
     return;
@@ -21067,12 +21067,12 @@ function respuestaHecho(hecho, entendi){
   /* build 199 (F40): nunca prometer vigilar sin dejar nada montado */
   if(/\b(estar[eé]\s+pendiente|te\s+aviso|lo\s+vigilo|voy\s+a\s+estar\s+(al\s+)?pendiente|le\s+doy\s+seguimiento)\b/i.test(e)){ e=""; if(!hecho) return "No dejé nada programado. Dime a quién y a qué hora (\"dile a Carlos mañana a las 9 que…\") y lo programo."; }
   if(hecho) return e && _nn(e)!==_nn(hecho) ? hecho+" Entendí: "+e.replace(/[.]+$/,"")+"." : hecho;
-  return e ? "Entendí: "+e.replace(/[.]+$/,"")+". No cambié nada en la tarea." : (typeof LO_PASO283==="string"?LO_PASO283:"No cambié nada todavía: lo paso a Claude para que lo aplique.");   /* build 283 */
+  return e ? "Entendí: "+e.replace(/[.]+$/,"")+". No cambié nada en la tarea." : (typeof LO_PASO283==="string"?LO_PASO283:"No cambié nada todavía: lo paso a Claude para que lo aplique.");
 }
 function ejecutaNotaClaude(t, v){
-  try{ cargaAgendaWA(); }catch(e){}   /* build 248 */
+  try{ cargaAgendaWA(); }catch(e){}
   var ls=[]; (t.msgs||[]).slice(-40).forEach(function(x,i){ if(!x||x.nota_claude||x.eliminado||(x.nota_mia&&x.de!==yo)) return; var q=x.wa_c||(x.de&&PERSONAS[x.de]&&PERSONAS[x.de].nombre)||(x.k==="bo"?"Salvador":"Sistema"); ls.push(q+(x.nota_mia?" (nota suya, contexto)":"")+": "+String(x.tr||x.t||"").slice(0,300)); });
-  (t.msgs||[]).slice(0,-40).forEach(function(x){ if(x && x.nota_mia && x.de===yo && !x.eliminado) ls.unshift(((PERSONAS[yo]||{}).nombre||"Salvador")+" (nota suya, contexto): "+String(x.t||"").slice(0,300)); });   /* build 216 */
+  (t.msgs||[]).slice(0,-40).forEach(function(x){ if(x && x.nota_mia && x.de===yo && !x.eliminado) ls.unshift(((PERSONAS[yo]||{}).nombre||"Salvador")+" (nota suya, contexto): "+String(x.t||"").slice(0,300)); });
   var hoyS=hoy();
   /* build 190: antes solo iba "hoy es AAAA-MM-DD" y Claude sacaba el dia de la semana a ojo
      ("el lunes" lo puso 7-oct, que es miercoles). Ahora va el calendario hecho; y de todos
@@ -21098,7 +21098,7 @@ function ejecutaNotaClaude(t, v){
     "- dato: corrige o aclara información (precios, medidas, quién dijo qué). valor = el dato ya corregido, claro y completo.\n- renombrar: valor = nombre nuevo.\n- fecha: valor = AAAA-MM-DD.\n- cerrar: ya se hizo.\n- eliminar: ya no se va a hacer.\n- pasar: valor = nombre de la persona.\nNo inventes; si no entiendes, accion nada y pregunta en respuesta.\n\nNOTA: "+v+"\n\nULTIMOS MENSAJES:\n"+ls.join("\n");
   var _c206={hecho:[], dudas:[]}, _falta206=false; try{ _falta206=(tipoRevisar(t)==="falta"); }catch(e){}
   var _LP283=(typeof LO_PASO283==="string"?LO_PASO283:"No cambié nada todavía: lo paso a Claude para que lo aplique.");
-  var nota=function(tx){ tx=juntaNota(_c206, tx); if(tx.indexOf(_LP283)>=0){ try{ ordenPendiente283(t, v, "nota_sin_accion"); }catch(e283){} }   /* build 283 */
+  var nota=function(tx){ tx=juntaNota(_c206, tx); if(tx.indexOf(_LP283)>=0){ try{ ordenPendiente283(t, v, "nota_sin_accion"); }catch(e283){} }
     msg(t,"bi",tx); var m=t.msgs[t.msgs.length-1]; m.canal="priv:"+yo; m.nota_claude=1; guarda(t);
     try{ if(_c206.hecho.length && _falta206 && revisaCompleta(t)) return; }catch(e){}
     if(vista==="hilo"&&abierta===t.id) render(); };
@@ -21110,9 +21110,9 @@ function ejecutaNotaClaude(t, v){
         if(_c206.bloquea248 && j && String(j.accion||"").toLowerCase()==="fecha"){ j.accion="nada"; j.fecha=null; j.valor=""; }   /* build 248: "no termina el X" no mueve el finiquito */
         var _mt222=aplicaMetasClaude(t, v, j||{}); _c206.hecho=_c206.hecho.concat(_mt222.hecho); _c206.dudas=_c206.dudas.concat(_mt222.dudas);
         var _ai222=aplicaAvisoInmediato(t, v, j||{}); if(_ai222) _c206.hecho.push(_ai222);
-        var _pr221=aplicaResponsable(t, v, j||{}); if(_pr221) _c206.hecho.push(_pr221); if(t.__dudas221){ _c206.dudas=_c206.dudas.concat(t.__dudas221); delete t.__dudas221; }   /* build 221 */
+        var _pr221=aplicaResponsable(t, v, j||{}); if(_pr221) _c206.hecho.push(_pr221); if(t.__dudas221){ _c206.dudas=_c206.dudas.concat(t.__dudas221); delete t.__dudas221; }
         var _sg221=aplicaSeguimientoA(t, v, j||{}); if(_sg221.hecho) _c206.hecho.push(_sg221.hecho); if(_sg221.duda) _c206.dudas.push(_sg221.duda);
-        var _ckc=aplicaChecklistClaude(t, j||{}); if(_ckc){ _c206.hecho.push(_ckc); window.__chkOpen=window.__chkOpen||{}; window.__chkOpen[t.id]=true; }   /* build 214 */
+        var _ckc=aplicaChecklistClaude(t, j||{}); if(_ckc){ _c206.hecho.push(_ckc); window.__chkOpen=window.__chkOpen||{}; window.__chkOpen[t.id]=true; }
         if(_c206.hecho.length){ guarda(t); try{ sincronizaAvisos(t); }catch(e){} } }catch(e){ _c206={hecho:[], dudas:[]}; }
       if(!j){ nota(_c206.hecho.length?"":_LP283); return; }   /* build 283: la IA no contestó: queda de encargo (antes "Anotado." y se perdía) */
       if(String(j.accion||"").toLowerCase()==="contexto"){ nota(""); return; }
