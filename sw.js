@@ -1,10 +1,12 @@
+/* El publicador sustituye __APP_TOKEN__ por el valor real (igual que en index.html); el token nunca va escrito en el repo, que es público. */
+const APP_TOKEN_SW = '__APP_TOKEN__';
 /* Service worker de Duet. Existe para instalar la PWA y para que la app se
    ACTUALICE SOLA: la navegacion (el index) se pide siempre a la red SIN CACHE,
    asi un cambio publicado llega con solo cerrar y reabrir, sin reinstalar. */
 
 /* build 270 (276): versión del service worker. Cambiar este número cambia los bytes de sw.js, y el navegador instala el SW nuevo
    (skipWaiting + clients.claim abajo) y borra los caches viejos en 'activate'. */
-var SW_VERSION = 'build 291';
+var SW_VERSION = 'build 292';
 
 self.addEventListener('install', function(e){ self.skipWaiting(); });
 
@@ -133,14 +135,14 @@ self.addEventListener('notificationclick', function(event) {
     event.waitUntil(
       fetch(`/push.php?action=recordatorio_del&id=${data.id}&aviso_ts=${data.aviso_ts || ''}`, {
         method: 'POST',
-        headers: { 'x-app-token': '57a921847b942349c0f6d6d187658edb6c9991b313adb010036554e81bc4af19' }
+        headers: { 'x-app-token': APP_TOKEN_SW }
       })
     );
   } else if (action === 'snooze') {
     event.waitUntil(
       fetch(`/push.php?action=recordatorio_snooze&id=${data.id}&aviso_ts=${data.aviso_ts || ''}`, {
         method: 'POST',
-        headers: { 'x-app-token': '57a921847b942349c0f6d6d187658edb6c9991b313adb010036554e81bc4af19' }
+        headers: { 'x-app-token': APP_TOKEN_SW }
       })
     );
   } else {
