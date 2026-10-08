@@ -30,6 +30,13 @@ eq("versión >= 251", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       db = { collection: function () { return { doc: function () { return { set: function () { return Promise.resolve(); }, get: function () { return Promise.resolve({ exists: false }); } }; } }; } };
       pideWhatsApp = function (c) { __WA.push(c); return Promise.resolve({ id: "p" + __WA.length }); };
       window.espera = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+      /* espera a que completaRevision TERMINE: sin "leyendo", sin palomeo en curso y la tarea quieta 400 ms; nunca más que el tope de antes */
+      window.listoRev = async function (T, tope) { var t0 = Date.now(), ult = null, quieta = 0; await espera(60);
+        while (Date.now() - t0 < tope) { var v = (typeof tareas !== "undefined" && tareas.filter(function (x) { return x && x.id === T.id; })[0]) || T, s = "";
+          try { s = JSON.stringify(v); } catch (e) { s = String(Date.now()); }
+          var libre = !v._leyendo && !T._leyendo && !((window.__palomeo || {})[T.id]);
+          if (libre && s === ult) { quieta += 40; if (quieta >= 400) return; } else quieta = 0;
+          ult = s; await espera(40); } };
       window.NOW = Date.now();
       window.ORIGEN = function () { return { id: "tORIGEN", nombre: "Mantenimiento Casa Lerdo", duenio: "salvador", creada_por: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, f_vigente: "2026-10-12", f_original: "2026-10-12", fecha_dictada: true,
         contexto: "Mantenimiento de la casa de Lerdo: pintura, portón y jardín, con Carlos y Manuel.", ritmo: "Cada semana", wa_contactos: [{ nombre: "Carlos Ibarra", desde: 1 }],
@@ -67,7 +74,7 @@ eq("versión >= 251", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     eq("build 283: UNA sola llamada en 'rapido' (sin reintento reforzado)", [r2.llamadas, r2.modos, r2.refuerzo], [1, ["rapido"], false]);
     eq("build 283: sin resultado no hay 'dímelo otra vez' ni tarjeta", [r2.falta, r2.modal, r2.dimelo], [0, false, false]);
     var r3 = await p.evaluate(async function () { var n = 0; preguntaAClaude = function (m, modo, cb) { n++; setTimeout(function () { cb(JSON.stringify({ tipo: "tarea", fecha: null, ordenes: [], recordar: [], vinculos: [], dudas: [], pregunta: null })); }, 5); };
-      var T = PEND(); abre(T); completaRevision(T, "ahí lo que sea con la bodega, tú sabes, hazlo", { sinRevision: true }); await espera(2800);
+      var T = PEND(); abre(T); completaRevision(T, "ahí lo que sea con la bodega, tú sabes, hazlo", { sinRevision: true }); await listoRev(T, 2800);
       var V = tareas[0], H = V.hecho238 || {}, m = document.getElementById("preg249");
       var E = (V.encargos || []).filter(function (e) { return e && e.origen === "app283"; });
       return { llamadas: n, falta: (H.falta || []).map(function (f) { return f.q; }), modal: !!m, enc: E.map(function (e) { return [e.tipo, e.estado, e.motivo, e.t]; }), paso: (V.msgs || []).some(function (x) { return x.k === "bi" && /lo paso a Claude/.test(x.t || ""); }), dimelo: (V.msgs || []).some(function (x) { return /d[ií]melo otra vez|No pesqu/i.test(x.t || ""); }) }; });
@@ -78,7 +85,7 @@ eq("versión >= 251", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     var r3b = await p.evaluate(function () { var V = tareas[0]; return (V.encargos || []).filter(function (e) { return e && e.origen === "app283"; }).length; });
     eq("build 283: un solo encargo por orden (no se duplica)", r3b, 1);
     var r3c = await p.evaluate(async function () { var n = 0; preguntaAClaude = function (m, modo, cb) { n++; setTimeout(function () { cb(JSON.stringify({ tipo: "tarea", fecha: null, ordenes: [{ tipo: "volar_a_la_luna", que: "x" }], recordar: [], vinculos: [], dudas: [] })); }, 5); };
-      var T = PEND(); abre(T); completaRevision(T, "dile a Pedro que me confirme la hora de la entrega de la bodega", { sinRevision: true }); await espera(2800);
+      var T = PEND(); abre(T); completaRevision(T, "dile a Pedro que me confirme la hora de la entrega de la bodega", { sinRevision: true }); await listoRev(T, 2800);
       var H = tareas[0].hecho238 || {}; return { n: n, falta: (H.falta || []).map(function (f) { return f.q; }), modal: !!document.getElementById("preg249"), enc: (tareas[0].encargos || []).filter(function (e) { return e && e.origen === "app283"; }).length }; });
     eq("build 283: acción imposible -> 1 llamada, sin tarjeta, queda de encargo para la Mac", [r3c.n, r3c.modal, r3c.falta, r3c.enc], [1, false, [], 1]);
     await p.evaluate(function () { var m = document.getElementById("preg249"); if (m) m.remove(); });
@@ -91,7 +98,7 @@ eq("versión >= 251", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       window.TKT = function () { return { id: "tKT", nombre: "Cena", duenio: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, f_vigente: "2026-10-08", f_original: "2026-10-08", fecha_dictada: true, contexto: "Cena del jueves con los amigos, hay que confirmar quiénes van.", wa_contactos: [{ nombre: "Karina Gomez", desde: 1 }], msgs: [] }; }; });
     var r4 = await p.evaluate(async function () { __WA.length = 0; var T = TKT(); abre(T, [OTRA()]);
       preguntaAClaude = function (m, modo, cb) { setTimeout(function () { cb(JSON.stringify({ tipo: "tarea", fecha: null, recordar: [], vinculos: [], dudas: [], ordenes: [{ tipo: "mensaje", a: "Karina", canal: "whatsapp", texto: "¿Puedes cenar el jueves?" }] })); }, 5); };
-      completaRevision(T, "mándale un mensaje a Karina para preguntarle si puede cenar el jueves con todos los amigos", { sinRevision: true }); await espera(2800);
+      completaRevision(T, "mándale un mensaje a Karina para preguntarle si puede cenar el jueves con todos los amigos", { sinRevision: true }); await listoRev(T, 2800);
       var m = document.getElementById("preg249"), H = tareas[0].hecho238 || {};
       return { wa: __WA.length, modal: !!m, filas: m ? [].map.call(m.querySelectorAll(".pq255l li"), function (x) { return x.firstChild.textContent; }) : [], ops: m ? (m.querySelector(".pq255l small") || { textContent: "" }).textContent.replace(/[()]/g, "").split(" · ").filter(Boolean).sort() : [], falta: (H.falta || []).map(function (f) { return f.k; }) }; });
     eq("Mensaje simple: 'Karina' coincide con varias -> sale la tarjeta al momento y NO se manda nada", [r4.wa, r4.modal, r4.falta, r4.ops], [0, true, ["msg"], ["Karina GP", "Karina Gomez"]]);
@@ -102,13 +109,13 @@ eq("versión >= 251", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     /* ninguno: tampoco se manda; el campo autocompleta */
     var r5 = await p.evaluate(async function () { __WA.length = 0; var T = TKT(); abre(T, [OTRA()]);
       preguntaAClaude = function (m, modo, cb) { setTimeout(function () { cb(JSON.stringify({ tipo: "tarea", fecha: null, recordar: [], vinculos: [], dudas: [], ordenes: [{ tipo: "mensaje", a: "Zacarías", canal: "whatsapp", texto: "¿Tienes la cotización?" }] })); }, 5); };
-      completaRevision(T, "pídele a Zacarías la cotización de las sillas para la cena del jueves por favor", { sinRevision: true }); await espera(2800);
+      completaRevision(T, "pídele a Zacarías la cotización de las sillas para la cena del jueves por favor", { sinRevision: true }); await listoRev(T, 2800);
       var m = document.getElementById("preg249"); return { wa: __WA.length, modal: !!m, campo: true, filas: m ? [].map.call(m.querySelectorAll(".pq255l li"), function (x) { return x.firstChild.textContent; }) : [] }; });
     eq("Sin coincidencia: tarjeta al instante con autocompletar y no se manda nada", [r5.wa, r5.modal, r5.campo, /No encontré a Zacarías/.test(r5.filas[0] || "")], [0, true, true, true]);
     /* seguimiento programado y "pídele algo" (pideMensaje) */
     var r6 = await p.evaluate(async function () { __WA.length = 0; var T = TKT(); abre(T, [OTRA()]);
       preguntaAClaude = function (m, modo, cb) { setTimeout(function () { cb(JSON.stringify({ tipo: "tarea", fecha: null, recordar: [], vinculos: [], dudas: [], ordenes: [], seguimiento_a: { quien: "Karina", meta: "confirmar la cena", cada: "hoy", fechas: ["2026-10-07"], hora: "10:00", texto: "IA: Hola Karina, ¿confirmas la cena?" } })); }, 5); };
-      completaRevision(T, "dale seguimiento a Karina hoy y mañana a las 10:00 para que confirme la cena del jueves con todos", { sinRevision: true }); await espera(2800);
+      completaRevision(T, "dale seguimiento a Karina hoy y mañana a las 10:00 para que confirme la cena del jueves con todos", { sinRevision: true }); await listoRev(T, 2800);
       var m = document.getElementById("preg249"), V = tareas[0]; return { prog: (V.msgs || []).filter(function (x) { return x.prog; }).length, modal: !!m, dudas: (V.quien_dudas || []).length, fila: m ? (m.querySelector(".pq255l li") || { firstChild: {} }).firstChild.textContent : "" }; });
     eq("Seguimiento programado a 'Karina' dudosa: tarjeta al instante y nada programado", [r6.prog, r6.modal, r6.dudas, r6.fila], [0, true, 1, "¿Quién es Karina?"]);
     var r7 = await p.evaluate(async function () { var T = TKT(); abre(T, [OTRA()]); pideMensaje(T, "mándale un mensaje a Karina para ver si puede cenar", { quien: "Karina", cuerpo: "para ver si puede cenar", pregunta: false }); await espera(400);

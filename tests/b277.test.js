@@ -142,7 +142,7 @@ eq("sw.js con versión >= 277", +((fs.readFileSync(path.join(__dirname, "..", "s
       await hasta(function () { return CAM.conf && !!srViva() && !hablando(); }, 5000);
       r.conf2 = dichos(d2);
       di("sí", true);
-      await hasta(function () { return document.getElementById("c274tit").textContent === "Llamar a Rogelio por la cotización"; }, 5000);
+      await hasta(function () { return document.getElementById("c274tit").textContent === "Llamar a Rogelio por la cotización" || (!!tid("tDEC").decision.respuesta && !hablando()); }, 5000);
       r.hecho = tid("tDEC").decision.respuesta ? tid("tDEC").decision.respuesta.t : null;
       return r; });
     eq("confírmame: repite lo que dijo, cómo lo entendió y pregunta", B.conf,
@@ -159,7 +159,7 @@ eq("sw.js con versión >= 277", +((fs.readFileSync(path.join(__dirname, "..", "s
       await hasta(function () { return __dichos.length >= d0 + 2 && !!srViva() && !hablando(); }, 5000);
       r.que = dichos(d0);
       var d1 = __dichos.length; di("no, deshazlo, la juntaste con otra", true);
-      await hasta(function () { return document.getElementById("c274tit").textContent === "Reloj checador" && !!srViva() && !hablando(); }, 5000);
+      await hasta(function () { return document.getElementById("c274tit").textContent === "Reloj checador" && !!srViva() && !hablando() || (dichos(d1).length >= 1 && !tid("tDEC").decision.respuesta && !!srViva() && !hablando()); }, 5000);
       r.undo = dichos(d1)[0]; r.sinResp = !tid("tDEC").decision.respuesta;
       return r; });
     eq("«¿qué hiciste?» dice lo último que hizo", C.que, ["Lo último que hice: contestar la decisión de Reloj checador: Va con el Steren de tarjeta.", "Si está mal, di deshazlo."]);
@@ -170,12 +170,12 @@ eq("sw.js con versión >= 277", +((fs.readFileSync(path.join(__dirname, "..", "s
       var r = {};
       __iaMap["la de huella"] = { accion: "aprobar", texto_para_tarea: "Va con el ZKTeco de huella.", respuesta_hablada: "Listo." };
       di("la de huella", true); di("terminé", true);
-      await hasta(function () { return document.getElementById("c274tit").textContent === "Llamar a Rogelio por la cotización"; }, 5000);
+      await hasta(function () { return document.getElementById("c274tit").textContent === "Llamar a Rogelio por la cotización" || (!!tid("tDEC").decision.respuesta && !hablando()); }, 5000);
       r.antes = tid("tDEC").decision.respuesta ? tid("tDEC").decision.respuesta.t : null;
       await esp2();
       __iaMap["oye esa no era la buena"] = { accion: "deshacer", respuesta_hablada: "" };
       di("oye esa no era la buena", true); di("terminé", true);
-      await hasta(function () { return document.getElementById("c274tit").textContent === "Reloj checador"; }, 5000);
+      await hasta(function () { return document.getElementById("c274tit").textContent === "Reloj checador" || (!tid("tDEC").decision.respuesta && !hablando()); }, 5000);
       r.despues = !tid("tDEC").decision.respuesta;
       var ia = __ia.filter(function (x) { return /LO QUE DIJO/.test(x.c); }).slice(-1)[0];
       r.prompt = /- deshacer:/.test(ia.c) && /pide_confirmar/.test(ia.c);
@@ -194,7 +194,7 @@ eq("sw.js con versión >= 277", +((fs.readFileSync(path.join(__dirname, "..", "s
       var tn = tid("tNUE"); r.junto = [tid("tVES").msgs.length > nV, !tn || !!tn.fusionada_en || !_camVivo(tn)];
       await esp2();
       var d1 = __dichos.length; di("cancela eso", true);
-      await hasta(function () { return document.getElementById("c274tit").textContent === "Cotizar cámaras extra" && !!srViva() && !hablando(); }, 5000);
+      await hasta(function () { return document.getElementById("c274tit").textContent === "Cotizar cámaras extra" && !!srViva() && !hablando() || (tid("tVES").msgs.length === nV && dichos(d1).length >= 1 && !!srViva() && !hablando()); }, 5000);
       r.undo = dichos(d1)[0];
       var tn2 = tid("tNUE"); r.regreso = [tid("tVES").msgs.length === nV, !!tn2 && !tn2.fusionada_en, !!tn2 && esPropuesta256(tn2)];
       return r; });

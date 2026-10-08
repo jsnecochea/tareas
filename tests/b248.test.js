@@ -34,6 +34,13 @@ var VEST = "Claus a ver aquí todo dar todo el contexto y las fechas vamos a rem
         contexto: "Seguimiento con Fernando Fuentes de BBVA para que entregue el fideicomiso con todas las correcciones solicitadas en el memorándum. Una vez llegue completo y correcto, se agenda la firma.",
         f_vigente: "2026-10-08", f_original: "2026-10-08", fecha_dictada: true, wa_contactos: [{ nombre: "Fernando Fuentes BBVA", desde: 1 }], msgs: [] }, extra || {}); };
       window.espera = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+      /* espera a que completaRevision TERMINE: sin "leyendo", sin palomeo en curso y la tarea quieta 400 ms; nunca más que el tope de antes */
+      window.listoRev = async function (T, tope) { var t0 = Date.now(), ult = null, quieta = 0; await espera(60);
+        while (Date.now() - t0 < tope) { var v = (typeof tareas !== "undefined" && tareas.filter(function (x) { return x && x.id === T.id; })[0]) || T, s = "";
+          try { s = JSON.stringify(v); } catch (e) { s = String(Date.now()); }
+          var libre = !v._leyendo && !T._leyendo && !((window.__palomeo || {})[T.id]);
+          if (libre && s === ult) { quieta += 40; if (quieta >= 400) return; } else quieta = 0;
+          ult = s; await espera(40); } };
       window.modelo = function (j) { preguntaAClaude = function (msgs, mod, cb) { window.__PROMPT = msgs[0].content; setTimeout(function () { cb(JSON.stringify(j)); }, 20); }; };
       window.sinRed = function () { preguntaAClaude = function (msgs, mod, cb) { setTimeout(function () { cb(null, "sin red"); }, 20); }; };
       window.ultimoBi = function (T) { var l = (T.msgs || []).filter(function (m) { return m.k === "bi" && !m.prog; }); return l.length ? l[l.length - 1].t : ""; };
@@ -61,7 +68,7 @@ var VEST = "Claus a ver aquí todo dar todo el contexto y las fechas vamos a rem
     /* dictado 2 por el cerebro 238 (el modelo contesta MAL: fecha 8) */
     var r2 = await p.evaluate(async function (D) { var T = FIDEI(); tareas = [T]; abierta = T.id; vista = "hilo";
       modelo({ tipo: "tarea", fecha: "2026-10-08", contexto: null, quien: null, recordar: [], vinculos: [], ordenes: [], dudas: [], pregunta: null, cierra: null, palabras: ["fideicomiso"] });
-      completaRevision(T, D, {}); await espera(2600);
+      completaRevision(T, D, {}); await listoRev(T, 2600);
       return { f: T.f_vigente, ori: T.f_original, avisos: (T.avisos || []).map(function (a) { return a.fecha; }), cierra: T.cierra, tx: ultimoBi(T), dictada: T.fecha_dictada }; }, D2);
     eq("D2 modelo mal: f_vigente = 15", r2.f, "2026-10-15");
     eq("D2: aviso el 8 (uno solo)", r2.avisos, ["2026-10-08"]);
@@ -70,7 +77,7 @@ var VEST = "Claus a ver aquí todo dar todo el contexto y las fechas vamos a rem
     eq("D2: dice meta y aviso", [/meta/i.test(r2.tx), /aviso/i.test(r2.tx)], [true, true]);
     /* dictado 2 sin red: respaldo local */
     var r2b = await p.evaluate(async function (D) { var T = FIDEI({ f_vigente: "", f_original: "", fecha_dictada: false }); tareas = [T]; abierta = T.id; vista = "hilo";
-      sinRed(); completaRevision(T, D, {}); await espera(2600);
+      sinRed(); completaRevision(T, D, {}); await listoRev(T, 2600);
       return { f: T.f_vigente, avisos: (T.avisos || []).map(function (a) { return a.fecha; }), cierra: T.cierra }; }, D2);
     eq("D2 sin red: f_vigente 15", r2b.f, "2026-10-15");
     eq("D2 sin red: aviso 8", r2b.avisos, ["2026-10-08"]);
@@ -93,7 +100,7 @@ var VEST = "Claus a ver aquí todo dar todo el contexto y las fechas vamos a rem
     eq("nota D2: aviso 8 y cierra", [r2n.avisos, String(r2n.cierra).toLowerCase()], [["2026-10-08"], "fideicomiso firmado"]);
     /* una fecha de finiquito normal sigue funcionando igual */
     var r1c = await p.evaluate(async function () { var T = FIDEI({ f_vigente: "", f_original: "", fecha_dictada: false }); tareas = [T]; abierta = T.id; vista = "hilo";
-      sinRed(); completaRevision(T, "Esta tarea termina el 12 de octubre y la hace Salvador", {}); await espera(2000);
+      sinRed(); completaRevision(T, "Esta tarea termina el 12 de octubre y la hace Salvador", {}); await listoRev(T, 2000);
       return { f: T.f_vigente, avisos: (T.avisos || []).length, cierra: T.cierra || "" }; });
     eq("fecha normal sigue igual", r1c, { f: "2026-10-12", avisos: 0, cierra: "" });
 
@@ -103,7 +110,7 @@ var VEST = "Claus a ver aquí todo dar todo el contexto y las fechas vamos a rem
     var r3a = await p.evaluate(async function (a) { __WA.length = 0; window.AGENDA_WA = [{ nombre: "Fernando Fuentes BBVA" }, { nombre: "Fernando Garza" }];
       var T = FIDEI({ wa_contactos: [] }); tareas = [T]; abierta = T.id; vista = "hilo";
       modelo({ tipo: "tarea", fecha: null, recordar: [], vinculos: [], ordenes: [], dudas: [{ pregunta: "¿Quién es Fernando de BBVA?", opciones: [] }], pregunta: "¿Quién es Fernando de BBVA?", seguimiento_a: a.SEG });
-      completaRevision(T, a.DF, {}); await espera(2600);
+      completaRevision(T, a.DF, {}); await listoRev(T, 2600);
       var hc = T.hecho238 || {};
       return { dudas: (T.quien_dudas || []).length, wa: __WA.map(function (w) { return w.contacto; }), preguntas: [ultimoBi(T), JSON.stringify(hc.falta || [])].join(" ").indexOf("¿Quién es") >= 0, seg: (T.seg_a || {}).contacto }; }, { SEG: SEG, DF: DF });
     eq("Fernando (agenda): sin pregunta", [r3a.dudas, r3a.preguntas], [0, false]);
@@ -111,14 +118,14 @@ var VEST = "Claus a ver aquí todo dar todo el contexto y las fechas vamos a rem
     var r3b = await p.evaluate(async function (a) { __WA.length = 0; window.AGENDA_WA = null;
       var T = FIDEI({ wa_contactos: [{ nombre: "Fernando Fuentes BBVA", desde: 1 }] }); tareas = [T]; abierta = T.id; vista = "hilo";
       modelo({ tipo: "tarea", fecha: null, recordar: [], vinculos: [], ordenes: [], dudas: [], pregunta: "¿Quién es Fernando de BBVA?", seguimiento_a: a.SEG });
-      completaRevision(T, a.DF, {}); await espera(2600);
+      completaRevision(T, a.DF, {}); await listoRev(T, 2600);
       return { dudas: (T.quien_dudas || []).length, wa: __WA.map(function (w) { return w.contacto; }), preg: /¿Quién es/.test(ultimoBi(T)) }; }, { SEG: SEG, DF: DF });
     eq("Fernando (contactos de la tarea): sin pregunta y se programa", [r3b.dudas, r3b.preg, r3b.wa[0]], [0, false, "Fernando Fuentes BBVA"]);
     /* sin agenda al dictar: se pregunta; llega la agenda y se resuelve sola */
     var r3c = await p.evaluate(async function (a) { __WA.length = 0; window.AGENDA_WA = null;
       var T = FIDEI({ wa_contactos: [] }); tareas = [T]; abierta = T.id; vista = "hilo";
       modelo({ tipo: "tarea", fecha: null, recordar: [], vinculos: [], ordenes: [], dudas: [], pregunta: null, seguimiento_a: a.SEG });
-      completaRevision(T, a.DF, {}); await espera(2600);
+      completaRevision(T, a.DF, {}); await listoRev(T, 2600);
       var antes = (T.quien_dudas || []).length, waAntes = __WA.length;
       window.AGENDA_WA = [{ nombre: "Fernando Fuentes BBVA" }]; reintentaDudas248(); await espera(300);
       return { antes: antes, waAntes: waAntes, despues: (T.quien_dudas || []).length, wa: __WA.map(function (w) { return w.contacto; }), tx: ultimoBi(T) }; }, { SEG: SEG, DF: DF });
@@ -141,7 +148,7 @@ var VEST = "Claus a ver aquí todo dar todo el contexto y las fechas vamos a rem
       modelo({ tipo: "tarea", fecha: null, recordar: [], vinculos: [], ordenes: [], dudas: [], pregunta: null,
         seguimiento_a: { quien: "Manuel", meta: "Muestras pintadas de ambos carpinteros listas", cada: "diario", fechas: fechas, hora: null, texto: "IA: ¿Cómo vamos con las muestras de los dos carpinteros? ¿Ya tienen fecha para pintar un cajón?",
           pasos: [{ tx: "el contacto del carpintero de Lorena (se lo pide a Karina)", fecha: null, hora: "12:00" }, { tx: "el estatus con los dos carpinteros", fecha: null, hora: null }, { tx: "las muestras de un cajón pintado de cada carpintero", fecha: "2026-10-12", hora: null }] } });
-      completaRevision(T, V, {}); await espera(2800);
+      completaRevision(T, V, {}); await listoRev(T, 2800);
       var pr = (T.msgs || []).filter(function (m) { return m.prog && !m.prog.cancelado; }).map(function (m) { return { f: m.prog.a_las.fecha, h: m.prog.a_las.hora, t: m.prog.texto }; });
       return { n: __WA.length, pr: pr, hecho: ultimoBi(T) }; }, VEST);
     eq("Vestidores: 7 diarios + 1 al plazo de las 12", [r4.pr.length, r4.n], [8, 8]);
@@ -162,7 +169,7 @@ var VEST = "Claus a ver aquí todo dar todo el contexto y las fechas vamos a rem
       tareas = [T]; abierta = T.id; vista = "hilo";
       modelo({ tipo: "tarea", fecha: null, recordar: [], vinculos: [], ordenes: [], dudas: [], pregunta: null,
         seguimiento_a: { quien: "Manuel", meta: "Muestras listas", cada: "diario", fechas: ["2026-10-06", "2026-10-07", "2026-10-08", "2026-10-09", "2026-10-10", "2026-10-11", "2026-10-12"], hora: null, texto: "IA: ¿Cómo vamos con las muestras?" } });
-      completaRevision(T, V, {}); await espera(2800);
+      completaRevision(T, V, {}); await listoRev(T, 2800);
       var u = {}; __WA.forEach(function (w) { u[w.texto] = 1; }); return [__WA.length, Object.keys(u).length]; }, VEST);
     eq("Sin pasos: 7 mensajes, 7 textos distintos", r4b, [7, 7]);
 
@@ -177,7 +184,7 @@ var VEST = "Claus a ver aquí todo dar todo el contexto y las fechas vamos a rem
       tareas = [T, C, VIEJA, NOEJ, INV, BLUE]; abierta = T.id; vista = "hilo";
       var lista = abiertasParaVincular(T, D, 30).map(function (x) { return x.id; });
       modelo({ tipo: "tarea", fecha: null, recordar: [], vinculos: ["wa_abbea09d95fd8a79", "tBLUE_CUP_BBVA_051026", "tmullpqubtxafy"], ordenes: [], dudas: [], pregunta: null });
-      completaRevision(T, D, {}); await espera(2600);
+      completaRevision(T, D, {}); await listoRev(T, 2600);
       var prompt = window.__PROMPT, pd = posibleDup(T).map(function (x) { return x.id; });
       return { lista: lista, prompt: /tmullpqubtxafy \| Revisar fideicomiso terminado y corregido de BBVA \(cerrada\)/.test(prompt), dup: T.posible_dup || [], pd: pd, tx: ultimoBi(T), vieja: /tVIEJA/.test(prompt), nombre: nombreVinc248(C) }; },
       "hay que revisar el fideicomiso terminado y corregido que manda BBVA para firmar, revisarlo contra el memorándum");

@@ -57,8 +57,10 @@ eq("versión >= 245", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     eq("sin url: gris, sin subrayado y 'foto no disponible'", r1.sin, [["wa_1791209999999.png · foto no disponible", "rgb(122, 122, 128)", "none"]]);
     eq("con url: el chip es botón (en el extracto y en el mensaje desplegado)", r1.chips, 2);
     var r1b = await p.evaluate(function () { var o = {}; var c = document.querySelector(".aco226 .msgs237 button.img245"); c.click(); var v = document.getElementById("visor");
-      o.visor = [v.classList.contains("on"), /^data:image\/png/.test(v.querySelector("img").getAttribute("src")), !!v.querySelector(".vx"), v.querySelector(".vx").getBoundingClientRect().right > 300];
-      var im = v.querySelector("img").getBoundingClientRect(); o.grande = [im.width > 250, im.height > 250]; return o; });
+      o.visor = [v.classList.contains("on"), /^data:image\/png/.test(v.querySelector("img").getAttribute("src")), !!v.querySelector(".vx"), v.querySelector(".vx").getBoundingClientRect().right > 300]; return o; });
+    /* la imagen grande se mide ya decodificada: medir en el mismo instante del toque a veces daba 0 px (prueba inestable, 2 de 4) */
+    await p.waitForFunction(function () { var i = document.querySelector("#visor img"); return !!i && i.complete && i.naturalWidth > 0; }, null, { timeout: 3000 }).catch(function () {});
+    r1b.grande = await p.evaluate(function () { var im = document.querySelector("#visor img").getBoundingClientRect(); return [im.width > 250, im.height > 250]; });
     await foto("b245-visor-abierto.png");
     var r1c = await p.evaluate(function () { var v = document.getElementById("visor"); v.querySelector(".vx").click(); return v.classList.contains("on"); });
     eq("tocar el chip abre el visor con la imagen y una X; la X lo cierra", [r1b.visor, r1c], [[true, true, true, true], false]);

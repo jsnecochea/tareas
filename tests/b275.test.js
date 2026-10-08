@@ -113,7 +113,7 @@ eq("sw.js con versión >= 275", +((fs.readFileSync(path.join(__dirname, "..", "s
       di("terminé", true); await espera(80);
       r.pensando = [CAM.fase, document.getElementById("c274st").textContent, document.getElementById("c274o").className, (window.__piensa275 || 0) > pz, CAM.pensando];
       r.prompt = /LO QUE DIJO: “pues mira yo creo que el de la huella está bien no”/.test(__ia[__ia.length - 1].c) && /"accion"/.test(__ia[__ia.length - 1].c);
-      await hasta(function () { return document.getElementById("c274tit").textContent === "Llamar a Rogelio por la cotización"; }, 4000);
+      await hasta(function () { return document.getElementById("c274tit").textContent === "Llamar a Rogelio por la cotización" || (!!tid("tDEC").decision.respuesta && CAM.fase !== "hablando"); }, 4000);
       await esp2();
       var t = tid("tDEC"); r.decision = t.decision.respuesta ? t.decision.respuesta.t : null;
       r.dicho = dichos(d0);
@@ -152,7 +152,7 @@ eq("sw.js con versión >= 275", +((fs.readFileSync(path.join(__dirname, "..", "s
       await hasta(function () { return document.getElementById("c274tit").textContent === "Teléfono del cerrajero"; }, 4000); await esp2();
       r.vinc = [!tid("tNUE"), tid("tDEST").msgs.length > nDest, vista, abierta];
       var d1 = __dichos.length; di("no, eso no", true);
-      await hasta(function () { return document.getElementById("c274tit").textContent.toLowerCase() === "cotizar cámaras extra" && dichos(d1).some(function (x) { return /Cotizar cámaras extra/.test(x); }); }, 4000); await esp2();
+      await hasta(function () { return document.getElementById("c274tit").textContent.toLowerCase() === "cotizar cámaras extra" && dichos(d1).some(function (x) { return /Cotizar cámaras extra/.test(x); }) || (!!tid("tNUE") && !tid("tNUE").fusionada_en && tid("tDEST").msgs.length === nDest && dichos(d1).length >= 1 && CAM.fase !== "hablando"); }, 4000); await esp2();
       var t = tid("tNUE"); r.undo = [!!t, t && !t.fusionada_en, t && esPropuesta256(t), tid("tDEST").msgs.length === nDest, dichos(d1).slice(0, 2)];
       __iaMap["elimínala ya no sirve"] = { accion: "eliminar", texto_para_tarea: "No sirve.", respuesta_hablada: "Listo, eliminada." };
       di("elimínala ya no sirve", true); di("terminé", true);

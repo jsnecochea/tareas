@@ -166,7 +166,7 @@ eq("sw.js con versión >= 276", +((fs.readFileSync(path.join(__dirname, "..", "s
       r.corta = [CAM.fase !== "hablando", CAM.buf];
       window.__lento = 5;
       await esp2(); di("está bien", true); di("terminé", true);
-      await hasta(function () { return document.getElementById("c274tit").textContent === "Llamar a Rogelio por la cotización"; }, 5000);
+      await hasta(function () { return document.getElementById("c274tit").textContent === "Llamar a Rogelio por la cotización" || (!!tid("tDEC").decision.respuesta && !hablando()); }, 5000);
       var ia = __ia.filter(function (x) { return /LO QUE DIJO/.test(x.c); }).slice(-1)[0];
       r.ia = (ia.c.match(/LO QUE DIJO: “([^”]*)”/) || [])[1];
       r.decision = tid("tDEC").decision.respuesta ? tid("tDEC").decision.respuesta.t : null;
