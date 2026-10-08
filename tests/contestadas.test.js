@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-/* PRUEBAS de la regla «sin fechas = Falta información»: una tarea sin fecha de finiquito o sin próximo seguimiento no
-   cuenta en Hoy ni en Vencidas; va a Te esperan y dice qué le falta. Una indefinida cuenta completa solo si trae su
-   próximo seguimiento. 390 px, reloj fijo mié 2026-10-07 9:00 (Monterrey). */
+/* PRUEBAS: lo que Salvador ya contestó sale de Te esperan al instante y no regresa.
+   Decisión contestada → fuera (solo «N contestadas hoy · ver» plegado) · pregunta hecha antes de su última respuesta → fuera
+   · la misma pregunta vuelta a hacer con otra fecha («(revisión 8-oct)») → fuera · una pregunta nueva y distinta → sí sale
+   · el aviso que Doit le mandó por WhatsApp («Doit: IA · …») no es «Doit te pregunta». 390 px. */
 "use strict";
 var fs = require("fs"), path = require("path");
 var ok = 0, n = 0, malas = [];
@@ -45,41 +46,50 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
 
 
 
+
     await p.evaluate(function () {
-      window.FXS = function () { return [
-        T("tSF", "Sin fecha", { f_vigente: "", ritmo: "" }),
-        T("tFS", "Vencida sin seguimiento", { f_vigente: "2026-10-03", ritmo: "" }),
-        T("tHS", "Hoy sin seguimiento", { ritmo: "" }),
-        T("tIS", "Indefinida con seguimiento", { indefinida: true, f_vigente: "2026-10-07", ritmo: "" }),
-        T("tIN", "Indefinida sin seguimiento", { indefinida: true, f_vigente: "", ritmo: "" }),
-        T("tAV", "Con aviso", { ritmo: "", avisos: [{ ts: 1, texto: "x", fecha: "2026-10-09", hora: "09:00" }] }),
-        T("tOK", "Completa vencida", { f_vigente: "2026-10-02" })
+      var N = Date.now(), Q7 = "¿Cuál es el próximo paso que Claude debe hacer aquí? (revisión 7-oct)", Q8 = "¿Cuál es el próximo paso que Claude debe hacer aquí? (revisión 8-oct)";
+      window.FXC = function () { return [
+        T("tVIVA", "Decisión viva", { decision: { pregunta: "¿Cuál autorizo?", opciones: [{ nombre: "A" }, { nombre: "B" }], ts: N - 3600000 } }),
+        T("tRESP", "Decisión contestada", { decision: { pregunta: "¿Cuál compro?", opciones: [{ nombre: "A" }], ts: N - 7200000, resuelta: true, respuesta: { de: "salvador", t: "A", ts: N - 600000 }, aplicado38: { ts: N - 300000 } } }),
+        T("tPEND", "Decisión contestada sin aplicar", { decision: { pregunta: "¿Voy?", ts: N - 7200000, respuesta: { de: "salvador", t: "Sí", ts: N - 500000 } } }),
+        T("tANT", "Pregunta ya contestada", { hecho238: { ts: 1, hecho: [], falta: [{ k: "txt", q: "¿A quién le mando el plano?", ops: [], ts: N - 7200000 }] } }),
+        T("tREP", "Misma pregunta otro día", { resp267: ["cual es el proximo paso que claude debe hacer aqui revision 7 oct"], falta_paso_claude: { q: Q8, ts: N - 1000, desde: "2026-10-08" }, hecho238: { ts: 1, hecho: [], falta: [{ k: "txt", q: Q8, ops: [], mac: 1, paso37: 1, ts: N - 1000 }] } }),
+        T("tAPA", "Apartada por la Mac", { falta_paso_claude_apartado: { q: Q7, motivo: "Resuelto" }, hecho238: { ts: 1, hecho: [], falta: [{ k: "txt", q: Q7, ops: [], ts: N - 1000 }] } }),
+        T("tNUE", "Pregunta nueva", { resp267: ["cual es el proximo paso que claude debe hacer aqui revision 7 oct"], hecho238: { ts: 1, hecho: [], falta: [{ k: "txt", q: "¿Le pido a Pepe otra cotización?", ops: [], ts: N - 1000 }] } }),
+        T("tDOIT", "Aviso de Doit", { msgs: [{ k: "bo", de: "salvador", t: "Va", ts: N - 7200000 }, { k: "bi", wa_in: 1, wa_c: "Doit", t: "Doit: IA · Blue Cup BBVA: no tengo el número de Imelda: ¿me lo pasas?", ts: N - 600000 }] }),
+        T("tCON", "Pregunta de contacto", { msgs: [{ k: "bo", de: "salvador", t: "Va", ts: N - 7200000 }, { k: "bi", wa_in: 1, wa_c: "Pepe", t: "Pepe: ¿Me confirmas la hora?", ts: N - 600000 }] })
       ]; };
-      window.idsF = function (L) { return L.map(function (x) { return x.t.id; }); };
     });
-    var A = await p.evaluate(function () { encargos = []; home(FXS()); var H = window.__H274, F = filtrosInicio(H, []), r = {};
-      r.falta = ["tSF", "tFS", "tHS", "tIS", "tIN", "tAV", "tOK"].map(function (id) { return id + ":" + faltanFechasTxt(tareas.filter(function (t) { return t.id === id; })[0]); });
-      r.esperan = idsF(F.esperan).sort(); r.hoy = idsF(F.hoy); r.venc = idsF(F.venc);
-      r.fichas = [ficha("esperan").n, ficha("hoy").n];
-      r.filaVenc = (document.querySelector('.fila-inicio[data-grupo="venc"] .fl-n') || {}).textContent || "";
-      r.preg = tareas.filter(function (t) { return t.id === "tSF"; }).map(function (t) { return faltaPreciso263(t); })[0];
+    var A = await p.evaluate(function () { encargos = []; home(FXC()); var H = window.__H274, r = {};
+      r.preg = H.preg.map(function (x) { return x.t.id; }).sort();
+      r.why = {}; H.preg.forEach(function (x) { r.why[x.t.id] = x.why; });
+      r.ficha = ficha("esperan").n;
+      var by = function (id) { return tareas.filter(function (t) { return t.id === id; })[0]; };
+      r.paso = [faltaPasoClaude283(by("tREP")), faltaPasoClaude283(by("tAPA"))];
+      r.resp = (by("tANT").resp267 || []).slice();
       return r; });
-    eq("Qué le falta a cada una", A.falta, ["tSF:Falta fecha de finiquito y próximo seguimiento", "tFS:Falta próximo seguimiento", "tHS:Falta próximo seguimiento", "tIS:", "tIN:Falta próximo seguimiento", "tAV:", "tOK:"]);
-    eq("Las incompletas van a Te esperan", A.esperan, ["tFS", "tHS", "tIN", "tSF"]);
-    eq("Hoy sin incompletas (la vencida completa primero)", A.hoy, ["tOK", "tIS", "tAV"]);
-    eq("Vencidas solo la completa", [A.venc, A.filaVenc], [["tOK"], "1"]);
-    eq("Números de las fichas", A.fichas, ["4", "3"]);
-    eq("El cuestionario de siempre pregunta finiquito y seguimiento", A.preg.filter(function (q) { return /terminar|seguimiento/.test(q); }), ["¿Para cuándo la quieres terminar, o es indefinida?", "¿Cuándo te recuerdo para darle seguimiento?"]);
+    eq("En Te esperan solo lo vivo: decisión viva, pregunta nueva y la del contacto", A.preg, ["tCON", "tNUE", "tVIVA"]);
+    eq("La ficha cuenta solo eso", A.ficha, "3");
+    eq("El aviso de Doit no es «Doit te pregunta»; la del contacto sí", [A.why.tDOIT, A.why.tCON], [undefined, "Pepe te pregunta"]);
+    eq("La pregunta nueva y distinta se ve tal cual", A.why.tNUE, "¿Le pido a Pepe otra cotización?");
+    eq("La misma pregunta de la Mac con otra fecha (o ya apartada) no vuelve", A.paso, ["", ""]);
+    eq("La contestada queda anotada para que no regrese", A.resp, ["a quien le mando el plano"]);
 
     await p.click('.ficha-inicio[data-grupo="esperan"]'); await p.waitForTimeout(80);
-    var E = await p.evaluate(function () { var g = document.querySelector('[data-grupo-vista="esperan"]'), o = {};
-      ["tSF", "tFS", "tIN"].forEach(function (id) { var b = g.querySelector('.ttr[data-id="' + id + '"] small'); o[id] = b ? b.textContent : null; }); return o; });
-    eq("En Te esperan cada una dice en una línea qué le falta", E, { tSF: "Falta fecha de finiquito y próximo seguimiento", tFS: "Falta próximo seguimiento", tIN: "Falta próximo seguimiento" });
-    await foto("fechas-te-esperan.png");
-    await p.click("#binicio"); await p.waitForTimeout(50);
-    await p.click('.ficha-inicio[data-grupo="hoy"]'); await p.waitForTimeout(80);
-    eq("ritmo_seguimiento (lo escribe la Mac) cuenta como próximo seguimiento", await p.evaluate(function () { return tieneSeguimiento({ ritmo_seguimiento: "Diario hasta el viernes" }); }), true);
-    eq("Vista Hoy sin las incompletas", await p.evaluate(function () { return [].map.call(document.querySelectorAll('[data-grupo-vista="hoy"] .ttr[data-id]'), function (b) { return b.getAttribute("data-id"); }); }), ["tOK", "tIS", "tAV"]);
+    var E = await p.evaluate(function () { var g = document.querySelector('[data-grupo-vista="esperan"]'), dt = g.querySelector(".cont284");
+      return { dec: [].map.call(g.querySelectorAll('.sc284[aria-label="Decide tú"] .f284'), function (f) { return f.getAttribute("data-dec284"); }),
+        cont: dt ? [dt.querySelector("summary").textContent, dt.open, [].map.call(dt.querySelectorAll(".f284"), function (f) { return f.getAttribute("data-dec284"); }).sort()] : null,
+        cuenta: (g.querySelector('.sc284[aria-label="Decide tú"] .hd284 em') || {}).textContent }; });
+    eq("Decide tú solo con la viva", [E.dec, E.cuenta], [["tVIVA"], "1"]);
+    eq("Las contestadas hoy: un renglón plegado", E.cont, ["2 contestadas hoy · ver", false, ["tPEND", "tRESP"]]);
+    await foto("contestadas-te-esperan.png");
+
+    /* contestar una decisión desde el home: sale al instante */
+    var C = await p.evaluate(async function () { window.contestaDecision273 = function (t, v) { t.decision.respuesta = { de: "salvador", t: v, ts: Date.now() }; render(); };
+      document.querySelector('.f284[data-dec284="tVIVA"] .p284p').click(); await espera(30);
+      return { dec: document.querySelectorAll('.sc284[aria-label="Decide tú"] .f284').length, cont: (document.querySelector(".cont284 > summary") || {}).textContent, n: window.__H274.preg.map(function (x) { return x.t.id; }).indexOf("tVIVA") }; });
+    eq("Al contestar, la decisión sale de la lista y entra a las contestadas", C, { dec: 0, cont: "3 contestadas hoy · ver", n: -1 });
     eq("sin errores de página", errs, []);
   } catch (e) { malas.push("EXCEPCIÓN " + (e && e.stack || e)); }
   await b.close();

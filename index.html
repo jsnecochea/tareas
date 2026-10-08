@@ -705,6 +705,7 @@ h2.hd284{margin:0;min-height:36px;align-items:center}
 .sep270{scroll-margin-top:12px}
 /* build 284: «Decide tú» limpio (mockup C · Filas con respuesta rápida): sin fondo rojo/naranja, bloque gris, filas con respuesta rápida */
 .sc284{display:flex;flex-direction:column;gap:8px;margin:14px 16px 6px}
+.cont284{margin:10px 16px 6px}.cont284>summary{list-style:none;cursor:pointer;min-height:36px;display:flex;align-items:center;padding:0 4px;font-size:14px;color:#8E8E93}.cont284>summary::-webkit-details-marker{display:none}.cont284[open]>summary{color:#AEAEB2}
 .hd284{display:flex;align-items:baseline;justify-content:space-between;padding:0 4px;scroll-margin-top:12px}
 .hd284 span{font-family:Archivo,-apple-system,BlinkMacSystemFont,sans-serif;font-size:20px;font-weight:700;letter-spacing:-.01em;color:#F5F5F7}
 .hd284 em{font-style:normal;font-size:15px;color:#8E8E93}
@@ -1787,7 +1788,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 297 · Decide tú: al quedar Listo, la fila deja de mostrar la pregunta vieja y enseña el próximo paso ya actualizado";
+var VERSION_APP = "build 298 · Te esperan: lo que ya contestaste sale al instante y no regresa (decisiones, preguntas de Doit y avisos de Doit)";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -7787,7 +7788,7 @@ function fechaPuestaSola(t){
 function tieneFiniquito(t){ return !!(t.indefinida===true || esRecurrente(t) || t.tipo==="recurrente" || (t.f_vigente && !t.falta_fecha && !fechaPuestaSola(t))); }
 function tieneSeguimiento(t){
   var H=hoy();
-  if(esRecurrente(t) || t.tipo==="recurrente" || String(t.ritmo||"").trim()) return true;
+  if(esRecurrente(t) || t.tipo==="recurrente" || String(t.ritmo||"").trim() || String(t.ritmo_seguimiento||"").trim()) return true;
   if(t.indefinida===true && t.f_vigente) return true;
   if((t.avisos||[]).some(function(a){ return a && ((a.fecha && a.fecha>=H) || (a.fecha && String(a.cada||"").trim())); })) return true;
   if(t.seg_a && (String(t.seg_a.cada||"").trim() || (t.seg_a.programados||[]).some(function(x){ return String(x||"").slice(0,10)>=H; }))) return true;
@@ -9395,11 +9396,31 @@ function permiteGenerica267(t){
   var terceros=!!(t && ((t.wa_contactos||[]).length || (t.seg_a && t.seg_a.contacto) || t.revisa_ext || (t.duenio && t.duenio!==yo) || (t.revisores||[]).length));
   return fecha && terceros;
 }
-function respondida267(t, q){ var n=normQ267(q); return !!n && (t.resp267||[]).indexOf(n)>=0; }
+/* La Mac vuelve a hacer la misma pregunta cada día con otra fecha («… (revisión 8-oct)»): para saber si ya se
+   contestó se compara sin esa marca de revisión. */
+function claveQ(q){ return normQ267(String(q||"").replace(/\(\s*revisi[oó]n[^)]*\)/gi," ")).replace(/\s*\brevision \d{1,2} [a-z]{3,}$/,"").trim(); }
+/* la última vez que Salvador contestó algo en esta tarea: lo que dictó o escribió él, la nota «Entendí…» con la que
+   el cerebro aplicó su respuesta, o su respuesta a la decisión. Una pregunta hecha ANTES de eso ya quedó contestada. */
+function ultimaRespuesta(t){
+  var m=0; if(!t) return 0;
+  (t.msgs||[]).forEach(function(x){ if(!x || x.oculto || x.eliminado) return; var ts=+x.ts||0; if(!ts) return;
+    var suyo=x.k==="bo" && (x.de===yo || (!x.de && t.duenio===yo));
+    var aplicada=x.k==="bi" && /^\s*(IA:\s*)?Entend[ií]/.test(String(x.t||""));
+    if((suyo || aplicada) && ts>m) m=ts; });
+  var D=t.decision; if(D && typeof D==="object" && D.respuesta && (+D.respuesta.ts||0)>m) m=+D.respuesta.ts;
+  return m;
+}
+function contestadaDespues(t, f){ var ts=+(f && f.ts)||0; return ts>0 && ts<=ultimaRespuesta(t); }
+function apartadaQ(t, n){ var A=t && t.falta_paso_claude_apartado; if(!A) return false; return (Array.isArray(A)?A:[A]).some(function(a){ return a && claveQ(a.q||a.pregunta||"")===n; }); }
+function respondida267(t, q){ var n=claveQ(q); if(!n) return false; return (t.resp267||[]).some(function(r){ return claveQ(r)===n; }) || apartadaQ(t, n); }
 function bloqueaQ267(t, q){ return (GENERICA267.test(String(q||"")) && !permiteGenerica267(t)) || respondida267(t, q) || /^No me quedó claro qué hacer con «Respuesta a/.test(String(q||"")); }
 function purga267(t){
   if(!t) return false; var cambio=false;
-  if(t.hecho238 && Array.isArray(t.hecho238.falta)){ var a=t.hecho238.falta.length; t.hecho238.falta=t.hecho238.falta.filter(function(f){ return !(f && f.q && (bloqueaQ267(t,f.q))); }); if(t.hecho238.falta.length!==a) cambio=true; }
+  if(t.hecho238 && Array.isArray(t.hecho238.falta)){ var a=t.hecho238.falta.length;
+    t.hecho238.falta=t.hecho238.falta.filter(function(f){
+      if(f && f.q && contestadaDespues(t, f)){ var k=claveQ(f.q); if(k && !respondida267(t, f.q)) t.resp267=(t.resp267||[]).concat([k]).slice(-60); return false; }   /* contestada: que no regrese con otra fecha */
+      return !(f && f.q && (bloqueaQ267(t,f.q))); });
+    if(t.hecho238.falta.length!==a) cambio=true; }
   if(Array.isArray(t.falta263)){ var b=t.falta263.length; t.falta263=t.falta263.filter(function(f){ return !(f && f.q && bloqueaQ267(t,f.q)); }); if(t.falta263.length!==b){ cambio=true; if(!t.falta263.length) delete t.falta263; } }
   return cambio;
 }
@@ -9665,6 +9686,7 @@ function vDecAplicada283(t){
 function faltaPasoClaude283(t){
   var f=t && t.falta_paso_claude; if(!f) return "";
   if(typeof f==="object"){ if(f.resuelto || f.hecho || /^(hecho|resuelto|cerrado|cumplido)$/i.test(String(f.estado||""))) return "";
+    var fq=f.pregunta||f.q||f.que||f.texto||f.t||""; if(contestadaDespues(t, f) || (fq && respondida267(t, fq))) return "";   /* ya la contestó: no se vuelve a preguntar */
     return String(f.pregunta||f.q||f.que||f.texto||f.t||"").replace(/\s+/g," ").trim().slice(0,160)||"¿Cuál es el siguiente paso de esta tarea?"; }
   if(typeof f==="string" && f.trim().length>3 && !/^(1|si|true)$/i.test(f.trim())) return f.replace(/\s+/g," ").trim().slice(0,160);
   return "¿Cuál es el siguiente paso de esta tarea?";
@@ -18186,6 +18208,9 @@ function temaAjeno260(t, y, respondeAlUltimo){
   if(c && (t.msgs||[]).some(function(m){ if(!m || m===y || m.oculto || m.movido_de || _n179(m.wa_c||"").split(" ")[0]!==c) return false; return stems259(String(m.t||"").replace(/^\s*[^:\n]{1,40}:\s*/,"")).some(function(w){ return base.indexOf(w)>=0; }); })) return false;
   return true;
 }
+/* copia en la tarea de un aviso que Doit le mandó a Salvador por WhatsApp («Doit: IA · …»): la pregunta de verdad vive
+   en la tarea (decisión, preguntas); su respuesta llega por el chat de Doit, no como respuesta en esta tarea */
+function esAvisoDeDoit(y){ return !!y && (_n179(String(y.wa_c||""))==="doit" || /^\s*Doit:\s*IA\s*·/.test(String(y.t||""))); }
 function preguntaParaMi(t){
   var ms=t.msgs||[], nombres=misNombres();
   var iUlt=-1; for(var i=ms.length-1;i>=0;i--){ var x=ms[i]; if(x && x.k==="bo" && (x.de===yo || (!x.de && t.duenio===yo)) && !x.vaga){ if(x.compromiso && x.compromiso.hasta>Date.now()) return null; iUlt=i; break; } }
@@ -18193,6 +18218,7 @@ function preguntaParaMi(t){
     var y=ms[j]; if(!y || y.de===yo || y.oculto || y.eliminado || y.contestada247) continue;
     if(temaAjeno260(t, y, j-1===iUlt && iUlt>=0)) continue;   /* build 260: un mensaje movido de otra tarea o de otro tema no genera "Te pregunta" aquí */   /* build 247: ya la contesté; build 227: lo movido/oculto ya no pregunta aqui */
     var deOtro=(y.wa_in===1) || (y.k==="bo" && y.de && y.de!==yo); if(!deOtro) continue;
+    if(esAvisoDeDoit(y)) continue;   /* el aviso que la propia app le mandó por WhatsApp no es alguien que le pregunta */
     var tx=_n179((y.tr||y.t||"")), mm=String(y.t||"").match(/^([^:\n]{1,24}):\s*/), quien=y.wa_c||(y.de&&PERSONAS[y.de]&&PERSONAS[y.de].nombre)||(mm?mm[1]:"Alguien");
     var pide=PIDE_RXf().test(" "+tx+" ") || /\?/.test(String(y.t||""));
     if(!pide) continue;
@@ -18605,14 +18631,17 @@ function armaHome270(rev, det, venc, hoyL, futL){
   function vivo(t){ try{ return !!t && !t.cierre && !esDormida264(t) && !esPropuesta256(t) && !t.fusionada_en && estadoReal(t)!=="cerrada"; }catch(e){ return false; } }
   /* 2 · TE PREGUNTA DOIT — build 284: primero las decisiones que esperan a Salvador (t.decision o «esperando tu decisión») */
   tareas.forEach(function(t){ if(!t || t.es_recordatorio || !vivo(t)) return; var e=null; try{ e=estadoDec284(t); }catch(er){} if(e==="vivo") pon(out.preg, t, "esperan tu decisión"); });
-  rev.filter(function(x){ return x.k==="espera"; }).forEach(function(x){ pon(out.preg, x.t, etiquetaRev(x.t,x.k)); });
-  det.forEach(function(t){ pon(out.preg, t, esDecisionSal(t)?"esperan tu decisión":"alguien te espera"); });
+  var contestada=function(t){ var e=null; try{ e=estadoDec284(t); }catch(er){} return !!e && e!=="vivo"; };   /* ya contestó la decisión: no se le vuelve a pedir */
+  rev.filter(function(x){ return x.k==="espera" && !contestada(x.t); }).forEach(function(x){ pon(out.preg, x.t, etiquetaRev(x.t,x.k)); });
+  det.forEach(function(t){ if(!contestada(t)) pon(out.preg, t, esDecisionSal(t)?"esperan tu decisión":"alguien te espera"); });
   var _q=[]; try{ _q=compartidasDe(); }catch(e){}
   _q.concat(tareas.filter(function(t){ return t && t.duenio===yo && vivo(t) && !t.es_recordatorio; }))
     .forEach(function(t){ var p=null; try{ p=preguntaParaMi(t); }catch(e){} if(p) pon(out.preg, t, p.de+(p.todos?" pide opinión a todos":" te pregunta")); });
   tareas.forEach(function(t){ if(!vivo(t) || t.es_recordatorio || !(t.duenio===yo || (!t.duenio && t.creada_por===yo))) return;
     var Q=[]; try{ Q=preguntas249(t); }catch(e){} if(Q.length) pon(out.preg, t, faltanFechasTxt(t)||String(Q[0].q||"Claude te pregunta")); });
-  rev.filter(function(x){ return x.k==="falta"; }).forEach(function(x){ var ff=faltanFechasTxt(x.t), fp=null; if(!ff) try{ fp=faltaPrimero(completitud(x.t)); }catch(e){} pon(out.preg, x.t, ff||(fp&&fp.txt)||"falta info"); });
+  /* una decisión ya contestada no regresa como «falta info» si no hay una pregunta concreta nueva */
+  var sinPreguntaNueva=function(t){ var q=[]; try{ q=preguntas249(t); }catch(e){} return !q.length && !faltaPasoClaude283(t) && !faltanFechas(t).length; };
+  rev.filter(function(x){ return x.k==="falta" && !(contestada(x.t) && sinPreguntaNueva(x.t)); }).forEach(function(x){ var ff=faltanFechasTxt(x.t), fp=null; if(!ff) try{ fp=faltaPrimero(completitud(x.t)); }catch(e){} pon(out.preg, x.t, ff||(fp&&fp.txt)||"falta info"); });
   venc.concat(hoyL, futL||[]).forEach(function(t){ if(suya270(t)){ var ff=faltanFechasTxt(t); if(ff) pon(out.preg, t, ff); } });
   tareas.forEach(function(t){ try{ if(entrevistaPendiente(t)) pon(out.preg, t, "falta información · ¿cómo medimos a "+((PERSONAS[t.duenio]||{}).nombre||"")+"?"); }catch(e){} });
   rev.filter(function(x){ return x.k==="autorizar" || x.k==="vincular"; }).forEach(function(x){ pon(out.preg, x.t, x.k==="vincular"?"posible vinculación":"por autorizar"); });
@@ -18863,21 +18892,27 @@ function filaDec284(t, i){
   return h+'</div>';
 }
 /* «Decide tú» (solo decisiones) y debajo lo demás que te pregunta Doit, ambos con el mismo estilo limpio */
+/* contestada hoy: la respuesta (o lo que se aplicó) es de hoy */
+function contestadaHoy(t){ var D=(t && t.decision && typeof t.decision==="object")?t.decision:{}, ts=+((D.respuesta||{}).ts)||+((D.aplicado38||{}).ts)||0;
+  if(!ts) return false; var a=new Date(ts), b=new Date(); return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
 function vDecide284(H, filas, fijo){
   var dec=[], resto=[], h='', ids={};
-  (H.preg||[]).forEach(function(x){ var e=null; try{ e=estadoDec284(x.t); }catch(er){} if(e){ if(!ids[x.t.id]){ ids[x.t.id]=1; dec.push(x); } } else resto.push(x); });
-  (H.dec284||[]).forEach(function(x){ if(!ids[x.t.id]){ ids[x.t.id]=1; dec.push(x); } });
-  var vivos=dec.filter(function(x){ return estadoDec284(x.t)==="vivo"; }).length, conId=false;
+  var cont=[];   /* contestadas: salen de la lista al instante; solo un renglón plegado con las de hoy */
+  (H.preg||[]).forEach(function(x){ var e=null; try{ e=estadoDec284(x.t); }catch(er){} if(e==="vivo"){ if(!ids[x.t.id]){ ids[x.t.id]=1; dec.push(x); } } else { if(e && !ids[x.t.id]){ ids[x.t.id]=1; cont.push(x); } resto.push(x); } });
+  (H.dec284||[]).forEach(function(x){ if(!ids[x.t.id]){ ids[x.t.id]=1; cont.push(x); } });
+  cont=cont.filter(function(x){ return contestadaHoy(x.t); });
+  var vivos=dec.length, conId=false;
   var cab=function(lbl, n, k){ var a=conId?'':' id="sec272-preg"'; conId=true; var ab=abre285(k);   /* build 285: encabezado plegable con contador visible */
     if(fijo) return '<h2 class="hd284"'+a+'><span>'+lbl+'</span>'+(n?'<em>'+n+'</em>':'')+'</h2>';   /* en su propia vista: siempre abierto, sin plegar */
     return '<button class="hd284"'+a+' data-pl285="'+k+'" aria-expanded="'+(ab?"true":"false")+'" aria-label="'+esc(lbl)+(n?': '+n:'')+'"><span>'+lbl+'</span>'+(n?'<em>'+n+'</em>':'')+CH285+'</button>'; };
   var oc=function(k){ return (fijo || abre285(k))?'':' hidden'; };
   if(dec.length){ h+='<section class="sc284" aria-label="Decide tú">'+cab("Decide tú", vivos, "decide")+'<div class="bl284"'+oc("decide")+'>'+dec.map(function(x, i){ return filaDec284(x.t, i); }).join("")+'</div></section>'; }
+  var hCont=cont.length?'<details class="cont284"><summary>'+cont.length+' contestada'+(cont.length===1?'':'s')+' hoy · ver</summary><div class="bl284">'+cont.map(function(x, i){ return filaDec284(x.t, i); }).join("")+'</div></details>':'';
   if(resto.length){
     h+='<section class="sc284" aria-label="Te pregunta Doit">'+cab("Te pregunta Doit", resto.length, "preg")+'<div class="bl284 revl ttl l284"'+oc("preg")+'>'+(filas||function(k, L, b){ return L.map(b).join(""); })("preg", resto, function(x){
       return '<button class="revr ttr" data-id="'+esc(x.t.id)+'"><span class="f284i" aria-hidden="true">'+esc(iniDec284(x.t))+'</span><span class="ttx"><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span>'+(vencidaInicio(x.t)?'<span class="et-venc">Vencida</span>':'')+(x.why?'<small>'+esc(x.why)+'</small>':'')+'</span>'+SVG284.chev+'</button>'; })+'</div></section>';
   }
-  return h;
+  return h+hCont;
 }
 /* contestar desde el home: crea t.decision con la pregunta de «esperando tu decisión» si hacía falta y va por contestaDecision273 */
 function asegDec284(t){
