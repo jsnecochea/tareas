@@ -1622,6 +1622,105 @@ html.cam274on,html.cam274on body{overflow:hidden}
 <div class="visor" id="visor"></div>
 <div class="toast" id="toast"></div>
 
+<script id="vigia-errores">
+/* ============ VIGÍA DE ERRORES DEL NAVEGADOR ============
+   Va en su propia etiqueta script, ANTES de Firebase y del script principal: si el script
+   principal trae un error de sintaxis no corre nada de él, y este vigía es lo único
+   que lo ve. Qué hace:
+   1) Toda excepción no atrapada (error / unhandledrejection) se agrupa por FIRMA
+      (mensaje sin números ni textos entre comillas + la función donde tronó) y se
+      cuenta. Nunca guarda datos personales: sin textos entre comillas, sin correos,
+      sin teléfonos, sin URL con parámetros; solo nombres de función de la pila.
+   2) La cola vive en localStorage (sobrevive a una recarga) y, cuando ya hay base y
+      usuario, se escribe con merge en bitacora_personas/<usuario>.errores_app
+      (la misma ficha donde ya se guardan notif e historial_acciones; no es un
+      endpoint nuevo). La Mac la lee para el umbral por build (vigia/umbral.js).
+   3) Arranque: el script principal pone window.__doitArranco al terminar. Si a los
+      12 s no lo puso, la app no arrancó: se registra la firma "arranque_fallido" y,
+      en producción, se ofrece "Volver a intentar" (quita el service worker y los
+      cachés y recarga), una sola vez por sesión para no hacer un ciclo. */
+(function(){
+  var LS="doit_errores_app", MAX_FIRMAS=40, firmas={}, pendiente=false, tEnvio=null;
+  try{ firmas=JSON.parse(localStorage.getItem(LS)||"{}")||{}; }catch(e){ firmas={}; }
+  function guardaLocal(){ try{ localStorage.setItem(LS, JSON.stringify(firmas)); }catch(e){} }
+  function limpiaMsg(m){
+    return String(m||"").replace(/^Uncaught\s+/,"").replace(/^Error:\s+/,"")
+      .replace(/https?:\/\/[^\s)]+/g,"<url>").replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g,"<correo>")
+      .replace(/"[^"]*"|'[^']*'|“[^”]*”|`[^`]*`/g,"«…»").replace(/\d+/g,"#")
+      .replace(/\s+/g," ").trim().slice(0,160);
+  }
+  function funcionesDe(stack){
+    var out=[]; String(stack||"").split("\n").forEach(function(l){
+      var m=/at\s+(?:new\s+)?([\w$.<>]+)\s*\(/.exec(l) || /^([\w$.<>]+)@/.exec(l.trim());
+      if(m && out.length<4 && !/^(Object|eval|<anonymous>)$/.test(m[1])) out.push(m[1]); });
+    return out.join(" < ");
+  }
+  function hash(s){ var h=5381; for(var i=0;i<s.length;i++){ h=((h<<5)+h+s.charCodeAt(i))|0; } return "e"+(h>>>0).toString(36); }
+  function pantalla(){ try{ return (typeof vista!=="undefined" && vista) ? String(vista) : (window.__doitArranco?"login":"arranque"); }catch(e){ return "arranque"; } }
+  function build(){ try{ var m=/build\s+(\d+)/.exec(String(VERSION_APP)); return m?+m[1]:0; }catch(e){ return 0; } }
+  function registra(msg, stack, tipo){
+    var mm=limpiaMsg(msg); if(!mm) mm="(sin mensaje)";
+    if(/ResizeObserver loop|chrome-extension:|moz-extension:/.test(String(msg)+String(stack))) return null;
+    var donde=funcionesDe(stack), f=hash(mm+"|"+donde.split(" < ")[0]), ahora=Date.now(), x=firmas[f];
+    if(!x){
+      var ks=Object.keys(firmas); if(ks.length>=MAX_FIRMAS){ ks.sort(function(a,b){ return (firmas[a].ultimo||0)-(firmas[b].ultimo||0); }); delete firmas[ks[0]]; }
+      x=firmas[f]={msg:mm, donde:donde, tipo:tipo, n:0, primero:ahora};
+    }
+    x.n++; x.ultimo=ahora; x.build=build(); x.pantalla=pantalla(); x.enviado=false;
+    pendiente=true; guardaLocal(); programaEnvio(8000);
+    return f;
+  }
+  function programaEnvio(ms){ if(tEnvio) return; tEnvio=setTimeout(function(){ tEnvio=null; envia(); }, ms); }
+  function envia(){
+    if(!pendiente) return false;
+    var base, u, col;
+    try{ base=db; u=yo; col=(typeof COLP!=="undefined"?COLP:"bitacora_personas"); }catch(e){ return false; }
+    if(!base || !u || typeof base.collection!=="function") return false;
+    var lote={}, hay=false;
+    Object.keys(firmas).forEach(function(f){ var x=firmas[f]; if(x.enviado) return; hay=true;
+      lote[f]={msg:x.msg, donde:x.donde, tipo:x.tipo, n:x.n, primero:x.primero, ultimo:x.ultimo, build:x.build, pantalla:x.pantalla}; });
+    if(!hay){ pendiente=false; return false; }
+    try{
+      var r=base.collection(col).doc(u).set({errores_app:lote, errores_app_ts:Date.now()},{merge:true});
+      var marca=function(){ Object.keys(lote).forEach(function(f){ if(firmas[f] && firmas[f].ultimo===lote[f].ultimo) firmas[f].enviado=true; }); pendiente=Object.keys(firmas).some(function(f){ return !firmas[f].enviado; }); guardaLocal(); };
+      if(r && typeof r.then==="function") r.then(marca, function(){}); else marca();
+    }catch(e){ return false; }
+    return true;
+  }
+  window.addEventListener("error", function(ev){
+    if(ev && ev.target && ev.target!==window && !ev.error && !ev.message) return;   /* imagen o script que no cargó: no es una excepción */
+    registra(ev && (ev.message || (ev.error && ev.error.message)), ev && ev.error && ev.error.stack, "error");
+  });
+  window.addEventListener("unhandledrejection", function(ev){
+    var r=ev && ev.reason; registra((r && (r.message||r.code)) || String(r), r && r.stack, "promesa");
+  });
+  setInterval(function(){ if(pendiente) envia(); }, 60000);
+  document.addEventListener("visibilitychange", function(){ if(document.visibilityState==="hidden" && pendiente) envia(); });
+  /* la cola guardada de una sesión anterior (p. ej. la que no arrancó) se manda en cuanto haya usuario */
+  pendiente=Object.keys(firmas).some(function(f){ return !firmas[f].enviado; });
+  if(pendiente) programaEnvio(15000);
+  setTimeout(function(){
+    if(window.__doitArranco) return;
+    registra("arranque_fallido: la app no terminó de cargar", "", "arranque");
+    if(location.protocol==="file:" && !window.__probarRescate) return;
+    var ya=false; try{ ya=sessionStorage.getItem("doit_rescate")==="1"; }catch(e){}
+    var d=document.createElement("div"); d.id="rescate";
+    d.style.cssText="position:fixed;inset:auto 16px 24px 16px;z-index:99999;background:#1f2937;color:#fff;border-radius:14px;padding:16px;font:15px/1.4 system-ui,sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.35)";
+    d.innerHTML=ya?"Doit no pudo arrancar. Ya se avisó; intenta más tarde.":"Doit no pudo arrancar. <button id='rescateBtn' style='margin-left:8px;padding:8px 12px;border:0;border-radius:10px;background:#fff;color:#111;font-weight:600'>Volver a intentar</button>";
+    document.body.appendChild(d);
+    var b=document.getElementById("rescateBtn");
+    if(b) b.onclick=function(){
+      try{ sessionStorage.setItem("doit_rescate","1"); }catch(e){}
+      var listo=function(){ location.replace(location.pathname+"?r="+Date.now()); };
+      var ps=[];
+      try{ if(navigator.serviceWorker) ps.push(navigator.serviceWorker.getRegistrations().then(function(rs){ return Promise.all(rs.map(function(r){ return r.unregister(); })); })); }catch(e){}
+      try{ if(window.caches) ps.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(k){ return caches.delete(k); })); })); }catch(e){}
+      Promise.all(ps).then(listo, listo); setTimeout(listo, 3000);
+    };
+  }, window.__vigiaEsperaArranque||12000);
+  window.doitErrores={registra:registra, envia:envia, firmas:function(){ return firmas; }, limpia:limpiaMsg, funciones:funcionesDe};
+})();
+</script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -1642,7 +1741,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 287 · Mantenimiento: app más ligera (sin código ni estilos que ya no se usaban) y pruebas más rápidas; nada cambia en cómo funciona";
+var VERSION_APP = "build 288 · Autodiagnóstico: la app anota sus propios errores (sin datos personales) y, si no arranca, ofrece volver a intentar";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -21018,6 +21117,8 @@ function ejecutaNotaClaude(t, v){
   }catch(e){ nota(_LP283); }
 }
 
+/* Último renglón del script principal: si se llega aquí, la app arrancó (lo revisa el vigía de errores de arriba y vigia/humo.js). */
+window.__doitArranco=Date.now();
 </script>
 </body>
 </html>

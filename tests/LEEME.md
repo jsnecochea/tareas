@@ -28,7 +28,7 @@ Todas corren con `TZ=America/Monterrey` salvo que ya pongas otra `TZ`. Sale con 
 | dictado | burbuja de dictado, voz, pausa/seguir |
 | caminata | modo Caminata (274-286) |
 | fechas | fechas, agenda, metas, seguimientos |
-| avisos | notificaciones, sw.js, avisos una vez |
+| avisos | notificaciones, sw.js, avisos una vez, autodiagnóstico (vigía de errores, humo, regreso) |
 | whatsapp | mensajes de WhatsApp, Acomodo de mensajes, palomitas, imágenes |
 | lectura | lectura en voz, menú único, audífono |
 
