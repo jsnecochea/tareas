@@ -1082,6 +1082,7 @@ html.cam274on,html.cam274on body{overflow:hidden}
 .voc .vocsel .tx{flex:1;min-width:0;font-size:18px;overflow-wrap:anywhere}.voc .vocsel small{display:block;font-size:15px;color:var(--ink-2);margin-top:2px}
 .voc .vocsel svg{flex:none;color:var(--ink-3)}.voc .vocsel svg .pal{opacity:0}
 .voc .vocrow.on .vocsel svg{color:var(--ink)}.voc .vocrow.on .vocsel svg .pal{opacity:1}
+.voc .vocaviso{border:1px solid var(--ink-4);border-radius:12px;padding:12px 14px;font-size:17px;line-height:1.6;margin:14px 0 0}
 .voc .vocvacio,.voc .vocayuda{color:var(--ink-2);font-size:16px;line-height:1.6;margin:14px 0 0}
 .cmodo{display:flex;align-self:center;gap:2px;background:var(--surface-2,#2a2a2d);border-radius:10px;padding:2px;margin:2px auto 6px}
 .cmodo button{border:0;background:none;color:var(--ink-3,#9a9aa2);font-size:13px;font-weight:600;padding:5px 12px;border-radius:8px}
@@ -1758,7 +1759,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 290 · Voces: en el ⋯ del inicio eliges hasta 3 voces del teléfono y la Caminata y la lectura las alternan como plática";
+var VERSION_APP = "build 291 · Voces: solo las de español de alta calidad (máx. 8, México primero); si no hay, las 3 mejores y cómo descargar las Premium";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -1902,6 +1903,10 @@ var VOCES_DIALOGO=["Hola. Así va a sonar la caminata.", "¿Y qué tenemos hoy?"
 var VOCES_MUJER=["paulina","monica","marisol","angelica","isabela","francisca","soledad","esperanza","sabina","dalia","helena","laura","elvira","lucia","paloma","ximena","flo","sandy","shelley","grandma","abuela"];
 var VOCES_HOMBRE=["juan","jorge","diego","carlos","raul","pablo","alvaro","eddy","reed","rocko","grandpa","abuelo"];
 var VOCES_REGION=[{k:"mx", tx:"México"}, {k:"latam", tx:"EE.UU. y Latinoamérica"}, {k:"es", tx:"España"}, {k:"otra", tx:"Otras"}];
+/* la pantalla muestra pocas: solo las de alta calidad, hasta VOCES_LISTA_MAX; si no hay ninguna, las VOCES_RESPALDO mejores + cómo descargar */
+var VOCES_LISTA_MAX=8, VOCES_RESPALDO=3;
+/* voces de juguete de Apple (Eloquence y efectos): suenan a caricatura y no sirven para leer tareas */
+var VOCES_JUGUETE=["eddy","flo","grandma","grandpa","reed","rocko","sandy","shelley","abuela","abuelo","albert","bad","bahh","bells","boing","bubbles","cellos","fred","good","jester","junior","kathy","organ","ralph","superstar","trinoids","whisper","wobble","zarvox"];
 function _vozNv(s){ return String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,""); }
 function vocesEs(){ var vs=[]; try{ vs=(window.speechSynthesis && speechSynthesis.getVoices())||[]; }catch(e){}
   return vs.filter(function(v){ return v && /^es([-_]|$)/i.test(v.lang||""); }); }
@@ -1909,16 +1914,29 @@ function vozId(v){ return v ? String(v.voiceURI||v.name||"") : ""; }
 function vozRegion(v){ var l=String((v&&v.lang)||"");
   if(/^es[-_]MX/i.test(l)) return "mx"; if(/^es[-_]ES/i.test(l)) return "es"; if(/^es[-_][A-Z0-9]{2,3}/i.test(l)) return "latam"; return "otra"; }
 function vozCalidad(v){ var s=_vozNv((v&&v.name)+" "+(v&&v.voiceURI));
-  if(/premium/.test(s)) return "Premium"; if(/enhanced|mejorada|neural|natural/.test(s)) return "Mejorada"; return ""; }
+  if(/premium/.test(s)) return "Premium"; if(/enhanced|mejorada|neural|natural|siri/.test(s)) return "Mejorada";
+  /* Chrome/Android: las de Google y las de red (localService=false) son las naturales de ese navegador */
+  if(/(^|\s)google\s|network/.test(s) || (v && v.localService===false && !/compact/.test(s))) return "Natural";
+  return ""; }
+function vozJuguete(v){ var s=_vozNv((v&&v.name)+" "+(v&&v.voiceURI));
+  if(/eloquence|speech\.synthesis\.voice/.test(s)) return true;
+  var w=_vozNv(v&&v.name).split(/[^a-z]+/); return w.some(function(x){ return VOCES_JUGUETE.indexOf(x)>=0; }); }
 function vozGenero(v){ var w=_vozNv(v&&v.name).split(/[^a-z]+/);
   if(w.some(function(x){ return VOCES_MUJER.indexOf(x)>=0; })) return "Mujer";
   if(w.some(function(x){ return VOCES_HOMBRE.indexOf(x)>=0; })) return "Hombre";
   return ""; }
 function vozNombre(v){ return String((v&&v.name)||"Voz").replace(/\s*\((enhanced|premium|mejorada)\)\s*/ig," ").replace(/^(microsoft|google)\s+/i,"").replace(/\s+online\b.*$/i,"").replace(/\s+/g," ").trim(); }
 /* la mejor voz cuando no hay elenco: es-MX > es-US/419/LatAm > es-ES > es, y dentro de cada una Premium > Mejorada > normal */
-function vozRango(v){ var r={mx:0, latam:1, es:2, otra:3}[vozRegion(v)], q={Premium:0, Mejorada:1}[vozCalidad(v)]; return r*10+(q==null?2:q); }
-function vocesOrdenadas(){ return vocesEs().map(function(v,i){ return {v:v, i:i}; }).sort(function(a,b){ return (vozRango(a.v)-vozRango(b.v))||(a.i-b.i); }).map(function(x){ return x.v; }); }
+function vozRango(v){ var r={mx:0, latam:1, es:2, otra:3}[vozRegion(v)], q={Premium:0, Mejorada:1, Natural:1}[vozCalidad(v)];
+  if(q==null) q=/compact/.test(_vozNv(v&&v.voiceURI))?3:2; return r*10+q; }
+function vocesOrdenadas(){ return vocesEs().filter(function(v){ return !vozJuguete(v); }).map(function(v,i){ return {v:v, i:i}; }).sort(function(a,b){ return (vozRango(a.v)-vozRango(b.v))||(a.i-b.i); }).map(function(x){ return x.v; }); }
 function vozMejor(){ return vocesOrdenadas()[0]||null; }
+/* lo que enseña la pantalla Voces: las de alta calidad (máx. 8) o, si no hay, las 3 mejores con alta:false para avisar.
+   Las ya palomeadas se muestran siempre, para que se puedan quitar. */
+function vocesLista(elegidas){ var V=vocesOrdenadas(), A=V.filter(function(v){ return !!vozCalidad(v); }), alta=A.length>0;
+  var L=(alta?A:V).slice(0, alta?VOCES_LISTA_MAX:VOCES_RESPALDO);
+  (elegidas||[]).forEach(function(v){ if(v && L.indexOf(v)<0) L.push(v); });
+  return {voces:V.filter(function(v){ return L.indexOf(v)>=0; }), alta:alta}; }
 /* lo guardado: la ficha (Firestore) manda; si no ha llegado, el respaldo local */
 function vocesConfig(){
   var p=null; try{ p=(PERSONAS[yo]||{}).voces; }catch(e){}
@@ -1970,7 +1988,8 @@ function vocesPrueba(){
 function _vozAttr(s){ return esc(s).replace(/"/g,"&quot;"); }
 var ICO_CHK_VOZ='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path class="pal" d="M8 12.3l2.8 2.8L16.2 9.4"/></svg>';
 function vVoces(){
-  var c=vocesConfig(), V=vocesOrdenadas(), E=vozElenco(), ritmo=c.ritmo||_leeRate(), elegidas=E.map(vozId);
+  var c=vocesConfig(), E=vozElenco(), LV=vocesLista(E), V=LV.voces, ritmo=c.ritmo||_leeRate(), elegidas=E.map(vozId);
+  var AYUDA='Ajustes → Accesibilidad → Contenido leído (en versiones nuevas puede llamarse «Leer y hablar») → Voces → Español. Descarga las «Mejoradas» o «Premium», son gratis, y vuelve aquí.';
   var h='<div class="top"><button class="iconbtn" id="bback" aria-label="Regresar">‹</button><div><div class="tnm"><span class="t">Voces</span></div><div class="d">Elige hasta 3 para tu caminata</div></div></div>';
   h+='<div class="scroll"><div class="voc">';
   h+='<div class="vocel"><div class="vocelt">Tu elenco</div><div class="vocelv">'+(E.length?esc(E.map(vozNombre).join(" · ")):"Sin elegir. Se usa la mejor voz de México.")+'</div>'+
@@ -1980,6 +1999,7 @@ function vVoces(){
   if(!V.length){
     h+='<p class="vocvacio" id="vocvacio">'+(window.speechSynthesis?"Buscando las voces de tu teléfono…":"Este navegador no lee en voz alta.")+'</p>';
   }
+  if(V.length && !LV.alta) h+='<p class="vocaviso" id="vocaviso">Tu teléfono no tiene voces de alta calidad en español; estas son las mejores que hay. Para voces naturales, en el iPhone: '+esc(AYUDA)+'</p>';
   VOCES_REGION.forEach(function(R){
     var L=V.filter(function(v){ return vozRegion(v)===R.k; }); if(!L.length) return;
     h+='<div class="vocgrp">'+esc(R.tx)+'</div>';
@@ -1989,7 +2009,7 @@ function vVoces(){
          '<button class="vocsel" data-vsel="'+_vozAttr(id)+'" role="checkbox" aria-checked="'+(on?"true":"false")+'"><span class="tx">'+esc(vozNombre(v))+'<small>'+esc(det)+'</small></span>'+ICO_CHK_VOZ+'</button></div>';
     });
   });
-  h+='<p class="vocayuda">Para voces más naturales, en el iPhone: Ajustes → Accesibilidad → Contenido leído (en versiones nuevas puede llamarse «Leer y hablar») → Voces → Español. Descarga las «Mejoradas» o «Premium», son gratis, y vuelve aquí.</p>';
+  if(LV.alta || !V.length) h+='<p class="vocayuda">¿Quieres más voces? En el iPhone: '+esc(AYUDA)+'</p>';
   h+='<p class="vocayuda">Son las voces de tu teléfono. Voces tipo cine o como el podcast de NotebookLM necesitan un servicio de paga.</p>';
   return h+'</div></div>';
 }
@@ -18785,6 +18805,7 @@ function camDetalle274(t){
 /* ---------- las dos voces ---------- */
 function camVoces274(){
   var vs=[]; try{ vs=speechSynthesis.getVoices()||[]; }catch(e){}
+  try{ vs=vs.filter(function(x){ return !vozJuguete(x); }); }catch(e){}
   try{ vs=vs.slice().sort(function(a,b){ return (vozCalidad(b)?1:0)-(vozCalidad(a)?1:0); }); }catch(e){}   /* Premium/Mejorada primero */
   var de=function(re){ return vs.filter(function(x){ return re.test(x.lang||""); }); };
   var L=de(/^es[-_]MX/i); if(!L.length) L=de(/^es[-_](US|419)/i); if(!L.length) L=de(/^es[-_]ES/i); if(!L.length) L=de(/^es/i);

@@ -1,9 +1,11 @@
 #!/usr/bin/env node
-/* PRUEBAS: VOCES (⋯ del inicio → Voces). Lista las voces en español del dispositivo agrupadas por país, con calidad y
+/* PRUEBAS: VOCES (⋯ del inicio → Voces). Lista SOLO las voces en español de alta calidad (Premium/Mejorada/Natural, máx. 8,
+   sin voces de juguete ni compactas) agrupadas por país, con calidad y
    mujer/hombre solo por nombre conocido; Play dice la frase de muestra con ESA voz; palomear guarda el elenco (máx. 3) en
    bitacora_personas/<usuario>.voces y localStorage; "Probar el elenco" alterna voces; la Caminata y la lectura rotan el elenco
    (turno nuevo = voz distinta); una voz guardada que no existe se salta; sin elenco se usa la mejor es-MX (Premium primero);
-   en iOS las voces llegan tarde (voiceschanged). speechSynthesis simulado. */
+   en iOS las voces llegan tarde (voiceschanged); sin ninguna de alta calidad, las 3 mejores + aviso para descargar.
+   speechSynthesis simulado. */
 "use strict";
 var path = require("path");
 var ok = 0, n = 0, malas = [];
@@ -27,7 +29,15 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
       { name: "Mónica", lang: "es-ES", voiceURI: "com.apple.voice.compact.es-ES.Monica" },
       { name: "Diego (Mejorada)", lang: "es-AR", voiceURI: "com.apple.voice.enhanced.es-AR.Diego" },
       { name: "Google español de Estados Unidos", lang: "es-US", voiceURI: "Google español de Estados Unidos" },
-      { name: "Samantha", lang: "en-US", voiceURI: "com.apple.voice.compact.en-US.Samantha" } ];
+      { name: "Samantha", lang: "en-US", voiceURI: "com.apple.voice.compact.en-US.Samantha" },
+      { name: "Thomas (Premium)", lang: "fr-FR", voiceURI: "com.apple.voice.premium.fr-FR.Thomas" },
+      { name: "Ava (Enhanced)", lang: "en-US", voiceURI: "com.apple.voice.enhanced.en-US.Ava" },
+      { name: "Marisol (Mejorada)", lang: "es-ES", voiceURI: "com.apple.voice.enhanced.es-ES.Marisol" },
+      { name: "Jorge (Mejorada)", lang: "es-MX", voiceURI: "com.apple.voice.enhanced.es-MX.Jorge" },
+      { name: "Eddy (Español (México))", lang: "es-MX", voiceURI: "com.apple.eloquence.es-MX.Eddy" },
+      { name: "Grandpa (Español (México))", lang: "es-MX", voiceURI: "com.apple.eloquence.es-MX.Grandpa" },
+      { name: "Rocko (Español (España))", lang: "es-ES", voiceURI: "com.apple.eloquence.es-ES.Rocko" },
+      { name: "Shelley (Español (México))", lang: "es-MX", voiceURI: "com.apple.eloquence.es-MX.Shelley" } ];
     var oyentes = [];
     var SS = { speaking: false, pending: false, getVoices: function () { return window.__VOCES; }, cancel: function () { window.__cancel = (window.__cancel || 0) + 1; },
       addEventListener: function (ev, f) { if (ev === "voiceschanged") oyentes.push(f); },
@@ -55,7 +65,9 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
       lleganVoces(); await hasta(function () { return document.querySelectorAll("[data-vsel]").length > 0; }, 1500);
       r.grupos = [].map.call(document.querySelectorAll(".vocgrp"), function (x) { return x.textContent; });
       r.filas = [].map.call(document.querySelectorAll(".vocsel"), function (x) { return x.querySelector(".tx").childNodes[0].textContent + " | " + x.querySelector("small").textContent; });
-      r.ingles = document.body.textContent.indexOf("Samantha") >= 0;
+      r.ingles = /Samantha|Thomas|Ava/.test(document.body.textContent);
+      r.juguete = /Eddy|Grandpa|Rocko|Shelley/.test(document.body.textContent);
+      r.aviso = !!document.getElementById("vocaviso");
       r.ancho = document.documentElement.scrollWidth <= 390;
       r.ayuda = /Ajustes → Accesibilidad → Contenido leído/.test(document.body.textContent);
       r.emoji = /[\u{1F300}-\u{1FAFF}]/u.test(document.getElementById("app").innerHTML);
@@ -63,36 +75,37 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
     eq("⋯ del inicio: entrada Voces con ícono SVG", [A.boton, A.svg], ["Voces", true]);
     eq("abre la pantalla Voces; mientras no hay voces lo dice", [A.vista, A.vacio], ["voces", true]);
     eq("agrupadas por país", A.grupos, ["México", "EE.UU. y Latinoamérica", "España"]);
-    eq("filas: Premium primero, mujer/hombre por nombre conocido, sin dato si no se sabe", A.filas,
-      ["Paulina | Mujer · Premium · es-MX", "Juan | Hombre · es-MX", "Diego | Hombre · Mejorada · es-AR", "español de Estados Unidos | Sin dato · es-US", "Mónica | Mujer · es-ES"]);
-    eq("solo español (sin la voz en inglés)", A.ingles, false);
+    eq("solo alta calidad: México, luego Latinoamérica/EE.UU., luego España; Premium primero; mujer/hombre por nombre conocido", A.filas,
+      ["Paulina | Mujer · Premium · es-MX", "Jorge | Hombre · Mejorada · es-MX", "Diego | Hombre · Mejorada · es-AR", "español de Estados Unidos | Sin dato · Natural · es-US", "Marisol | Mujer · Mejorada · es-ES"]);
+    eq("sin voces de otros idiomas aunque sean Premium/Enhanced", A.ingles, false);
+    eq("sin voces de juguete ni compactas, y sin aviso de descarga", [A.juguete, /Juan|Mónica/.test(A.filas.join()), A.aviso], [false, false, false]);
     eq("cabe en 390 px, sin emoji, con la ayuda del iPhone", [A.ancho, A.emoji, A.ayuda], [true, false, true]);
 
     /* ---------- 2 · Play dice la frase de muestra con esa voz ---------- */
     var B = await p.evaluate(async function () {
-      var d0 = __dichos.length; document.querySelector('[data-vplay="com.apple.voice.compact.es-ES.Monica"]').click(); await espera(30);
+      var d0 = __dichos.length; document.querySelector('[data-vplay="com.apple.voice.enhanced.es-ES.Marisol"]').click(); await espera(30);
       return __dichos.slice(d0).map(function (d) { return [d.voz, d.t]; }); });
-    eq("Play: la muestra tipo tráiler en la voz de esa fila", B, [["Mónica", "En un mundo donde cada minuto cuenta… hoy tienes tres pendientes y una cita a las ocho."]]);
+    eq("Play: la muestra tipo tráiler en la voz de esa fila", B, [["Marisol (Mejorada)", "En un mundo donde cada minuto cuenta… hoy tienes tres pendientes y una cita a las ocho."]]);
 
     /* ---------- 3 · palomear guarda el elenco, máximo 3 ---------- */
     var C = await p.evaluate(async function () {
       var r = {}, sel = function (id) { document.querySelector('[data-vsel="' + id + '"]').click(); };
-      sel("com.apple.voice.premium.es-MX.Paulina"); sel("com.apple.voice.compact.es-MX.Juan"); sel("com.apple.voice.compact.es-ES.Monica");
+      sel("com.apple.voice.premium.es-MX.Paulina"); sel("com.apple.voice.enhanced.es-AR.Diego"); sel("com.apple.voice.enhanced.es-ES.Marisol");
       r.n3 = vocesConfig().elenco.slice();
-      var e0 = __esp.length; sel("com.apple.voice.enhanced.es-AR.Diego");
+      var e0 = __esp.length; sel("com.apple.voice.enhanced.es-MX.Jorge");
       r.cuarta = [vocesConfig().elenco.length, __esp.length - e0, document.getElementById("toast").textContent];
       var u = __esp[__esp.length - 1]; r.firestore = [u[0], u[1].voces.v, u[1].voces.elenco.length, typeof u[1].voces.ts, u[2] && u[2].merge];
       r.local = JSON.parse(localStorage.getItem("bit_voces_salvador")).elenco.length;
       r.marcadas = [].map.call(document.querySelectorAll('.vocsel[aria-checked="true"]'), function (x) { return x.getAttribute("data-vsel"); }).length;
       r.titulo = document.querySelector(".vocelv").textContent;
-      sel("com.apple.voice.compact.es-MX.Juan"); r.quita = vocesConfig().elenco.slice();
-      sel("com.apple.voice.compact.es-MX.Juan");
+      sel("com.apple.voice.enhanced.es-AR.Diego"); r.quita = vocesConfig().elenco.slice();
+      sel("com.apple.voice.enhanced.es-AR.Diego");
       return r; });
-    eq("palomear 3: quedan en el elenco en orden", C.n3, ["com.apple.voice.premium.es-MX.Paulina", "com.apple.voice.compact.es-MX.Juan", "com.apple.voice.compact.es-ES.Monica"]);
+    eq("palomear 3: quedan en el elenco en orden", C.n3, ["com.apple.voice.premium.es-MX.Paulina", "com.apple.voice.enhanced.es-AR.Diego", "com.apple.voice.enhanced.es-ES.Marisol"]);
     eq("la cuarta no entra y avisa", C.cuarta, [3, 0, "Máximo 3 voces. Quita una para poner otra."]);
     eq("se guarda en bitacora_personas/<usuario>.voces con merge", C.firestore, ["salvador", 1, 3, "number", true]);
-    eq("respaldo en localStorage y la pantalla lo muestra", [C.local, C.marcadas, C.titulo], [3, 3, "Paulina · Juan · Mónica"]);
-    eq("quitar la palomita la saca del elenco", C.quita, ["com.apple.voice.premium.es-MX.Paulina", "com.apple.voice.compact.es-ES.Monica"]);
+    eq("respaldo en localStorage y la pantalla lo muestra", [C.local, C.marcadas, C.titulo], [3, 3, "Paulina · Diego · Marisol"]);
+    eq("quitar la palomita la saca del elenco", C.quita, ["com.apple.voice.premium.es-MX.Paulina", "com.apple.voice.enhanced.es-ES.Marisol"]);
 
     /* ---------- 4 · Probar el elenco alterna las voces; deslizadores guardan ritmo y tono ---------- */
     var D = await p.evaluate(async function () {
@@ -102,7 +115,7 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
       var r = document.getElementById("vocritmo"); r.value = "1.25"; r.dispatchEvent(new Event("change")); await espera(30);
       var c = vocesConfig(), ult = __dichos[__dichos.length - 1];
       return { dia: dia, cfg: [c.tono, c.ritmo, _leeRate()], ult: [ult.pitch, ult.rate] }; });
-    eq("Probar el elenco: mini diálogo alternando las 3 voces", D.dia, ["Paulina (Premium)", "Mónica", "Juan", "Paulina (Premium)"]);
+    eq("Probar el elenco: mini diálogo alternando las 3 voces", D.dia, ["Paulina (Premium)", "Marisol (Mejorada)", "Diego (Mejorada)", "Paulina (Premium)"]);
     eq("velocidad y tono se guardan y se usan", [D.cfg, D.ult], [[1.1, 1.25, 1.25], [1.1, 1.25]]);
 
     /* ---------- 5 · la Caminata rota el elenco: turno nuevo = voz distinta ---------- */
@@ -115,7 +128,7 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
       camDi274([{ v: "A", t: "Anotado." }], function () { listo = true; }); await hasta(function () { return listo; }, 3000);
       CAM.on = false; CAM.tok++;
       return { a: a, sig: __dichos.slice(d0).map(function (d) { return d.voz; }) }; });
-    eq("Caminata: pregunta y respuesta con voces distintas; el mismo que sigue hablando conserva su voz", E.a, ["Paulina (Premium)", "Mónica", "Mónica", "Juan"]);
+    eq("Caminata: pregunta y respuesta con voces distintas; el mismo que sigue hablando conserva su voz", E.a, ["Paulina (Premium)", "Marisol (Mejorada)", "Marisol (Mejorada)", "Diego (Mejorada)"]);
     eq("Caminata: el mensaje siguiente toma la siguiente voz del elenco", E.sig, ["Paulina (Premium)"]);
 
     /* ---------- 6 · la lectura en voz alta rota por mensaje ---------- */
@@ -124,7 +137,7 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
       leeArranca(t, [{ tx: "Primer mensaje." }, { tx: "Segundo mensaje." }, { tx: "Tercer mensaje." }], "suelto");
       await hasta(function () { return __dichos.length - d0 >= 3; }, 3000); leePara();
       return __dichos.slice(d0, d0 + 3).map(function (d) { return d.voz; }); });
-    eq("lectura: cada mensaje con la siguiente voz", F, ["Paulina (Premium)", "Mónica", "Juan"]);
+    eq("lectura: cada mensaje con la siguiente voz", F, ["Paulina (Premium)", "Marisol (Mejorada)", "Diego (Mejorada)"]);
 
     /* ---------- 7 · voz guardada que no existe en este dispositivo: se salta sin error ---------- */
     var G = await p.evaluate(async function () {
@@ -137,7 +150,7 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
       return { el: el, err: err, voces: __dichos.slice(d0).map(function (d) { return [d.voz, d.pitch !== undefined && d.pitch !== 1]; }), fil: fil }; });
     eq("voz inexistente: el elenco queda con la que sí hay", G.el, ["Juan"]);
     eq("con una sola voz la Caminata no truena y distingue A/B por tono", [G.err, G.voces], [null, [["Juan", true], ["Juan", true]]]);
-    eq("la pantalla marca solo la que existe", G.fil, 1);
+    eq("la pantalla marca solo la que existe (una compacta ya palomeada se sigue viendo para poder quitarla)", G.fil, 1);
 
     /* ---------- 8 · sin elenco: la mejor es-MX (Premium antes que normal) ---------- */
     var H = await p.evaluate(async function () {
@@ -147,6 +160,36 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
       camDi274([{ v: "A", t: "Hola." }], function () { listo = true; }); await hasta(function () { return listo; }, 3000); CAM.on = false; CAM.tok++;
       r.dicho = __dichos[d0].voz; return r; });
     eq("sin elenco: Paulina Premium (es-MX) en lectura y Caminata", H, { mejor: "Paulina (Premium)", lee: "Paulina (Premium)", cam: "Paulina (Premium)", dicho: "Paulina (Premium)" });
+
+    /* ---------- 9 · muchas de alta calidad: máximo 8, México primero ---------- */
+    var I = await p.evaluate(async function () {
+      PERSONAS.salvador.voces = { v: 1, elenco: [], tono: 1, ts: 3 };
+      var L = [["es-ES","Elvira"],["es-ES","Alvaro"],["es-ES","Lucia"],["es-CO","Ximena"],["es-US","Paloma"],["es-AR","Helena"],["es-MX","Dalia"],["es-MX","Angelica"],["es-CL","Soledad"],["es-ES","Pablo"],["es-MX","Raul"],["es-419","Isabela"]];
+      __VOCES = L.map(function (x) { return { name: x[1] + " (Premium)", lang: x[0], voiceURI: "com.apple.voice.premium." + x[0] + "." + x[1] }; })
+        .concat([{ name: "Juan", lang: "es-MX", voiceURI: "com.apple.voice.compact.es-MX.Juan" }, { name: "Flo (Español (México))", lang: "es-MX", voiceURI: "com.apple.eloquence.es-MX.Flo" }]);
+      vista = "voces"; render();
+      return { n: document.querySelectorAll("[data-vsel]").length, grupos: [].map.call(document.querySelectorAll(".vocgrp"), function (x) { return x.textContent; }),
+        prim: [].slice.call(document.querySelectorAll(".vocsel .tx"), 0, 3).map(function (x) { return x.childNodes[0].textContent; }), aviso: !!document.getElementById("vocaviso") }; });
+    eq("más de 8 de alta calidad: solo 8, México primero, sin aviso", [I.n, I.grupos[0], I.prim, I.aviso], [8, "México", ["Dalia", "Angelica", "Raul"], false]);
+
+    /* ---------- 10 · ninguna de alta calidad: las 3 mejores en español + aviso para descargar ---------- */
+    var J = await p.evaluate(async function () {
+      __VOCES = [{ name: "Mónica", lang: "es-ES", voiceURI: "com.apple.voice.compact.es-ES.Monica" },
+        { name: "Juan", lang: "es-MX", voiceURI: "com.apple.voice.compact.es-MX.Juan" },
+        { name: "Eddy (Español (México))", lang: "es-MX", voiceURI: "com.apple.eloquence.es-MX.Eddy" },
+        { name: "Sandy (Español (México))", lang: "es-MX", voiceURI: "com.apple.eloquence.es-MX.Sandy" },
+        { name: "Jorge", lang: "es-ES", voiceURI: "com.apple.voice.compact.es-ES.Jorge" },
+        { name: "Paulina", lang: "es-MX", voiceURI: "com.apple.ttsbundle.Paulina" },
+        { name: "Diego", lang: "es-AR", voiceURI: "com.apple.voice.compact.es-AR.Diego" },
+        { name: "Thomas (Premium)", lang: "fr-FR", voiceURI: "com.apple.voice.premium.fr-FR.Thomas" }];
+      vista = "voces"; render();
+      var av = document.getElementById("vocaviso");
+      return { filas: [].map.call(document.querySelectorAll(".vocsel .tx"), function (x) { return x.childNodes[0].textContent; }),
+        aviso: av ? /alta calidad/.test(av.textContent) && /Ajustes → Accesibilidad → Contenido leído/.test(av.textContent) && /Mejoradas.*Premium.*gratis/.test(av.textContent) : false,
+        mejor: vozMejor().name, cam: /Eddy|Sandy/.test(camVoces274().A.name + " " + (camVoces274().B || {}).name) }; });
+    eq("sin alta calidad: solo las 3 mejores (México, Latinoamérica, España), sin juguete", J.filas, ["Paulina", "Juan", "Diego"]);
+    eq("sin alta calidad: aviso claro de cómo descargar las Mejoradas/Premium gratis", J.aviso, true);
+    eq("sin alta calidad: la Caminata y la lectura nunca toman una voz de juguete", [J.mejor, J.cam], ["Paulina", false]);
 
     eq("sin errores de página", errs, []);
   } catch (e) { malas.push("EXCEPCIÓN: " + (e && e.stack || e)); }
