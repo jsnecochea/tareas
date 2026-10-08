@@ -1741,7 +1741,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 288 · Autodiagnóstico: la app anota sus propios errores (sin datos personales) y, si no arranca, ofrece volver a intentar";
+var VERSION_APP = "build 289 · Las ligas de tarea (WhatsApp del bot y notificaciones) abren la tarea aunque haya que entrar con Google; fusionada lleva a la nueva; si no existe, lo dice";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -4322,14 +4322,17 @@ function arranca(){
     });
     db.collection(COL).onSnapshot(function(snap){
       dbFail=false;   /* enganchó de verdad: no hay falla */
-      tareas=[]; snap.forEach(function(d){var o=d.data();o.id=d.id;
+      tareas=[]; var _fus={}, _desc={}; snap.forEach(function(d){var o=d.data();o.id=d.id;
         /* build 155: una tarea fusionada (enlazada a otra) NO se pinta en ninguna vista;
            sigue en la base (nada se borra). Y las que crea WhatsApp con `tarea` en vez de
-           `nombre` se leen con ese nombre. */
+           `nombre` se leen con ese nombre. La liga a una fusionada lleva a la tarea en que quedó. */
+        if(o.fusionada_en) _fus[o.id]=String(o.fusionada_en);
+        if(o.estado==="descartada") _desc[o.id]=1;
         if(o.estado==="fusionada" || o.fusionada_en || o.estado==="descartada") return;   /* build 256: la propuesta descartada no se pinta (queda en la base) */
         if(!o.nombre && o.tarea) o.nombre=String(o.tarea);
         if(o.nombre && !o.es_recordatorio) o.nombre=tituloTarea(o.nombre);   /* build 196: se ve ya normalizado; se guarda asi la proxima vez */
         tareas.push(o)});
+      window.__fusLiga=_fus;
       /* LOS EJEMPLOS NO SE SIEMBRAN EN LA BASE — corregido 2026-09-04, el día
          que Josué abrió las reglas. Antes, con la base vacía, se subían las ~15
          tareas de ejemplo a Firestore y le habrían aparecido a TODO el equipo
@@ -4373,16 +4376,13 @@ function arranca(){
         }catch(e){ window.__irUltimo=false; }
       }
       if(window.__irARec && !window.__recAbierto &&
-         !(_deCache && !tareas.some(function(x){ return x.id===String(window.__irARec).split("|")[0]; }))){
+         !(_deCache && !tareaDeLiga(window.__irARec, tareas, _fus))){
         window.__recAbierto=true;
-        var _rr=tareas.filter(function(x){return x.id===window.__irARec})[0];
         /* también puede venir el id de un aviso insertado (tarea|ts) */
-        if(!_rr && /\|/.test(window.__irARec)){
-          var _pp=String(window.__irARec).split("|");
-          _rr=tareas.filter(function(x){return x.id===_pp[0]})[0];
-          if(_rr) window.__avSonando={taskId:_rr.id, id:_pp[1]};
-        } else if(_rr){ window.__avSonando={taskId:_rr.id, id:"self"}; }
-        window.__irARec=null;
+        var _pp=String(window.__irARec).split("|"), _rr=tareaDeLiga(_pp[0], tareas, _fus);
+        if(_rr) window.__avSonando={taskId:_rr.id, id:(_pp[1] && _rr.id===_pp[0])?_pp[1]:"self"};
+        else avisoLigaTarea(_desc[_pp[0]] ? "Esa tarea se descartó; ya no está en tu lista." : "No encontré la tarea de esa liga. Puede que se haya borrado o que no la tengas compartida.");
+        window.__irARec=null; olvidaLigaTarea();
         /* Salvador 2026-09-24: la hoja de recordatorios solo se abre si hay
            uno sonando; si la tarea ya esta cerrada o sin alarmas, solo el hilo. */
         if(_rr){ abierta=_rr.id; vista="hilo"; window.__avSheet=avisoSonando(_rr)?_rr.id:null; if(!avisoSonando(_rr)) window.__avSonando=null; render(); }
@@ -17150,6 +17150,22 @@ function entraPorInvitacion(tk){
     '<a href="'+location.origin+location.pathname+'" style="color:#30D158">doit.ok-doit.com</a>');
 }
 
+/* Liga a una tarea pendiente de abrir: vive 15 min en localStorage (lo que tarda un login) y se
+   borra en cuanto se abre o se avisa que no existe. */
+var LIGA_TAREA_LS="doit_ir_tarea";
+function guardaLigaTarea(id){ try{ localStorage.setItem(LIGA_TAREA_LS, JSON.stringify({id:String(id), ts:Date.now()})); }catch(e){} }
+function leeLigaTarea(){ try{ var o=JSON.parse(localStorage.getItem(LIGA_TAREA_LS)||"null"); if(o && o.id && Date.now()-Number(o.ts||0)<15*60000) return String(o.id); localStorage.removeItem(LIGA_TAREA_LS); }catch(e){} return ""; }
+function olvidaLigaTarea(){ try{ localStorage.removeItem(LIGA_TAREA_LS); }catch(e){} }
+/* La tarea de la liga: si se fusionó, la tarea en la que quedó (fusionMap: id -> fusionada_en). */
+function tareaDeLiga(id, lista, fusionMap){
+  var tid=String(id||"").split("|")[0], vistos={};
+  for(var i=0;i<6 && tid && !vistos[tid];i++){ vistos[tid]=1;
+    var t=(lista||[]).filter(function(x){ return x && x.id===tid; })[0]; if(t) return t;
+    tid=(fusionMap||{})[tid]||""; }
+  return null;
+}
+function avisoLigaTarea(txt){ var e=$("toast"); if(!e) return; e.textContent=txt; e.classList.add("on"); clearTimeout(window.__tLiga); window.__tLiga=setTimeout(function(){ e.classList.remove("on"); }, 7000); }
+
 /* ============ ARRANQUE ============ */
 (function(){
   var q=new URLSearchParams(location.search);
@@ -17166,9 +17182,13 @@ function entraPorInvitacion(tk){
   if(q.get("ultimo")){ window.__irUltimo=true;
     if(q.get("n_t")||q.get("n_b")) window.__notiPista={t:q.get("n_t")||"", b:q.get("n_b")||"", hasta:Date.now()+25000};
     try{ history.replaceState(null,"",location.pathname) }catch(e){} }
+  /* La liga de una tarea (WhatsApp del bot, notificación) tiene que sobrevivir al login de Google:
+     si el popup está bloqueado (navegador dentro de WhatsApp) el login va por redirect y la página
+     regresa SIN el parámetro. Por eso se guarda también en localStorage, como ?alta=. */
   var _rec=q.get("recordatorio");
-  if(_rec){ window.__irARec=_rec;
+  if(_rec){ window.__irARec=_rec; guardaLigaTarea(_rec);
             try{ history.replaceState(null,"",location.pathname) }catch(e){} }
+  else { var _lg=leeLigaTarea(); if(_lg) window.__irARec=_lg; }
   fbListo();
   firebase.auth().onAuthStateChanged(function(user){
     if(yo) return;                       /* ya esta adentro */
@@ -17184,7 +17204,7 @@ function entraPorInvitacion(tk){
     if(d && d.tipo==="abre_pista"){ var _tp=tareaDePista({t:d.t,b:d.b}); if(!_tp) _tp=abreUltimoNuevo(); if(_tp){ barraEstado=null; menuOpen=false; abierta=_tp.id; vista="hilo"; render(); } return; }
     if(d && d.tipo==="abre_ultimo"){ var _u2=abreUltimoNuevo(); if(_u2){ barraEstado=null; menuOpen=false; abierta=_u2.id; vista="hilo"; render(); } return; }
     if(!d || d.tipo!=="abre" || !d.id) return;
-    var pp=String(d.id).split("|"), t=(typeof tareas!=="undefined"?tareas:[]).filter(function(x){ return x.id===pp[0]; })[0];
+    var pp=String(d.id).split("|"), t=tareaDeLiga(pp[0], (typeof tareas!=="undefined"?tareas:[]), window.__fusLiga);
     if(!t){ window.__irARec=String(d.id); window.__recAbierto=false; return; }
     window.__avSonando={taskId:t.id, id:(pp[1]||"self")};
     barraEstado=null; menuOpen=false; abierta=t.id; vista="hilo";

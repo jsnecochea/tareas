@@ -12,6 +12,7 @@ var fs = require("fs"), path = require("path"), os = require("os"), cp = require
 var ok = 0, n = 0, malas = [];
 function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
 var RAIZ = path.join(__dirname, ".."), html = fs.readFileSync(path.join(RAIZ, "index.html"), "utf8");
+var BUILD = +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[1];   /* el build vigente, no un número fijo */
 eq("versión >= 288", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[1] >= 288, true);
 eq("el vigía va antes de Firebase", html.indexOf('<script id="vigia-errores">') > 0 && html.indexOf('<script id="vigia-errores">') < html.indexOf("firebase-app-compat.js"), true);
 eq("el marcador de arranque es el último renglón del script principal", /window\.__doitArranco=Date\.now\(\);\n<\/script>\n<\/body>/.test(html), true);
@@ -79,7 +80,7 @@ eq("umbral: un arranque fallido es fatal", U.evaluaUmbral([{ id: "a", errores_ap
     eq("sin datos personales en la firma", /Juan|Pérez|8112|gmail|x\.com|123/.test(JSON.stringify(F)), false);
     eq("el mensaje queda legible y genérico", fa.msg, "No encontré «…» tel # <correo> en <url>");
     eq("dónde: el nombre de la función", fa.donde.split(" < ")[0], "falla");
-    eq("trae build y pantalla", [fa.build, fa.pantalla], [288, "hilo"]);
+    eq("trae build y pantalla", [fa.build, fa.pantalla], [BUILD, "hilo"]);
     eq("la promesa rechazada también se atrapa", fp.msg, "Cannot read properties of undefined (reading «…»)");
     var e1 = await p.evaluate(function () { var r = window.doitErrores.envia(); return { r: r, sets: __SETS.slice() }; });
     var s1 = e1.sets[0] || { d: {} };
@@ -116,7 +117,7 @@ eq("umbral: un arranque fallido es fatal", U.evaluaUmbral([{ id: "a", errores_ap
     /* ---- 3) humo.js ---- */
     var H = require(path.join(RAIZ, "vigia", "humo.js"));
     var hb = await H.humo("file://" + path.join(RAIZ, "index.html"), { espera: 8000 });
-    eq("humo: el build bueno ARRANCA", [hb.arranco, hb.build], [true, 288]);
+    eq("humo: el build bueno ARRANCA", [hb.arranco, hb.build], [true, BUILD]);
     var hr = await H.humo("file://" + roto, { espera: 3000 });
     eq("humo: la copia rota NO ARRANCA", hr.arranco, false);
   } catch (e) { malas.push("EXCEPCIÓN " + (e && e.stack || e)); try { await b.close(); } catch (_e) {} }

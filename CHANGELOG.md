@@ -5,6 +5,7 @@ Los comentarios que quedan en `index.html` explican el PORQUÉ de una regla vige
 
 ## Builds (de `git log`, más reciente arriba)
 
+- 2026-10-08 · Build 289: la liga de tarea (?recordatorio=<id>) sobrevive al login de Google por redirect (localStorage 15 min, como ?alta=), una tarea fusionada abre la tarea en que quedó y un id inexistente o descartado avisa claro en vez de quedarse en el home; tests/ligatarea.test.js
 - 2026-10-08 · Build 288: autodiagnóstico — vigía de errores del navegador (firma sin datos personales → bitacora_personas/<usuario>.errores_app), marcador de arranque y «Volver a intentar» si la app no arranca; vigia/humo.js, vigia/umbral.js y vigia/regreso.js para detectar un build malo y preparar su revert
 - 2026-10-08 · Build 286: Caminata — todo lo que dices es orden y nunca se pierde
 - 2026-10-08 · Build 285: «Tu historial» del día en el home y secciones plegables (amanecen compactas salvo Decide tú)
