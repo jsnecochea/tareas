@@ -25,6 +25,8 @@ eq("la hoja ¿A dónde va? ya no trae 'Bien, pero sin importancia' en el código
   async function foto(nom, alto) { if (!process.env.CAP) return; await p.setViewportSize({ width: 390, height: alto || 844 }); await p.screenshot({ path: path.join(process.env.CAP, nom) }); await p.setViewportSize({ width: 390, height: 844 }); }
   try {
     await p.goto("file://" + path.join(__dirname, "..", "index.html")); await p.waitForTimeout(600);
+    /* build 285: las secciones del home amanecen plegadas; en esta prueba vieja Acomodo, Mensajes, Te pregunta Doit, Vencidas y Hoy arrancan abiertas como antes (lo que se toque se sigue recordando) */
+    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl285(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
     /* ---------- 1) después de vincular ---------- */
     var r = await p.evaluate(function (FX) {
       yo = "salvador"; var o = {};

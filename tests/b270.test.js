@@ -21,6 +21,8 @@ eq("sw.js con versión build ≥ 270", +((/var SW_VERSION = 'build (\d+)'/.exec(
   async function foto(nom) { if (!process.env.CAP) return; await p.waitForTimeout(250); await p.screenshot({ path: path.join(process.env.CAP, nom) }); }
   try {
     await p.goto("file://" + path.join(__dirname, "..", "index.html")); await p.waitForTimeout(600);
+    /* build 285: las secciones del home amanecen plegadas; en esta prueba vieja Acomodo, Mensajes, Te pregunta Doit, Vencidas y Hoy arrancan abiertas como antes (lo que se toque se sigue recordando) */
+    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl285(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
     await p.evaluate(function () { yo = "salvador"; PERSONAS.salvador = PERSONAS.salvador || { nombre: "Salvador", jefe: true }; PERSONAS.salvador.jefe = true;
       window.__esp = []; window.__push = []; window.__pids = [];
       db = { collection: function () { return { doc: function (k) { return { set: function (d, o) { window.__esp.push([k, d, o]); return Promise.resolve(); }, get: function () { return Promise.resolve({ exists: false }); }, delete: function () { return Promise.resolve(); } }; } }; } };
@@ -63,7 +65,7 @@ eq("sw.js con versión build ≥ 270", +((/var SW_VERSION = 'build (\d+)'/.exec(
       var pos = [y("#bprop256")].concat([].map.call(document.querySelectorAll(".h270 .sep270, .h270 .hd284"), function (s) { return s.getBoundingClientRect().top; })).concat([y(".abajo270")]);
       r.orden = pos.every(function (v, i) { return v >= 0 && (i === 0 || v > pos[i - 1]); });
       r.abajo = [].map.call(document.querySelectorAll(".abajo270 .clh263"), function (b) { return b.id; });
-      r.sinToggles = document.querySelectorAll(".h270 [aria-expanded], .h270 .ttsum, .h270 [data-ttab]").length;
+      r.sinToggles = document.querySelectorAll(".h270 .ttsum, .h270 [data-ttab]").length; r.toggles285 = [].map.call(document.querySelectorAll(".h270 [data-pl285]"), function (b) { return b.getAttribute("data-pl285") + ":" + b.getAttribute("aria-expanded"); });   /* build 285: Salvador pidió que se plieguen tocando el encabezado */
       var css = function (sel, prop) { var e = document.querySelector(sel); return e ? getComputedStyle(e)[prop] : ""; };
       r.colores = [!document.querySelector(".l284 .ttr i"), css(".l-venc .ttr i", "backgroundColor"), css(".l-hoy .ttr i", "backgroundColor"), css(".hd284 span", "color")];   /* build 284: Te pregunta Doit limpio, sin puntito ni naranja */
       r.fondoPreg = css(".l284", "backgroundColor");   /* build 284: bloque gris #1C1C1E, sin fondo naranja */
@@ -79,7 +81,8 @@ eq("sw.js con versión build ≥ 270", +((/var SW_VERSION = 'build (\d+)'/.exec(
     eq("Te pregunta Doit: la pregunta de Claude", A.secs["Te pregunta Doit"], ["Pregunta de Claude"]);
     eq("Vencidas mías: la vencida de Salvador", A.secs["Vencidas mías"], ["Pagar predial"]);
     eq("Hoy mías: primero lo que despertó (expediente), luego lo de hoy; nada de otro dueño", A.secs["Hoy mías"], ["Expediente colegio", "Llamar al notario"]);
-    eq("Secciones 2-4 sin acordeón: ningún botón de abrir/cerrar ni renglón resumen", A.sinToggles, 0);
+    eq("Secciones 2-4 sin renglón resumen ni pestañas", A.sinToggles, 0);
+    eq("build 285: Te pregunta Doit, Vencidas y Hoy se pliegan tocando su encabezado (aquí abiertas)", A.toggles285, ["preg:true", "venc:true", "hoy:true"]);
     eq("Puntitos: rojo y gris en Vencidas / Hoy; Te pregunta Doit sin puntito y con título claro (build 284)", A.colores, [true, "rgb(255, 59, 48)", "rgb(142, 142, 147)", "rgb(245, 245, 247)"]);
     eq("Te pregunta Doit en bloque gris #1C1C1E, sin fondo naranja (build 284)", A.fondoPreg, "rgb(28, 28, 30)");
     eq("Abajo, plegadas y en orden: Mías futuras · Las revisas tú · y hasta abajo Las lleva Claude (build 272)", A.abajo, ["bfut", "brev270", "bcl263"]);
@@ -100,7 +103,7 @@ eq("sw.js con versión build ≥ 270", +((/var SW_VERSION = 'build (\d+)'/.exec(
       r.directo = ["cR", "cA", "cS", "cV", "cN"].map(function (id) { var t = tareas.filter(function (x) { return x.id === id; })[0]; var s = semaforo270(t, pelota263(t)); return [id, s.c, s.sinDato]; });
       return r; });
     eq("Las lleva Claude viene plegada", B.plegada, true);
-    eq("Encabezado con semáforo: 2 al corriente, 2 amarillo, 1 rojo", [B.cab, B.sem], ["Las lleva Claude 2 2 1 ›", [["rgb(48, 209, 88)", "2"], ["rgb(255, 214, 10)", "2"], ["rgb(255, 69, 58)", "1"]]]);
+    eq("Encabezado con semáforo: 2 al corriente, 2 amarillo, 1 rojo", [B.cab, B.sem], ["Las lleva Claude 2 2 1", [["rgb(48, 209, 88)", "2"], ["rgb(255, 214, 10)", "2"], ["rgb(255, 69, 58)", "1"]]]);
     eq("Para lector de pantalla: al corriente y con problema", B.aria, "Las lleva Claude: 2 al corriente, 3 con problema de seguimiento");
     eq("Semáforo por tarea (encargo atrasado 4 días = rojo; Josué 1 día y Karina 2 días = amarillo; Pato contestó = verde; sin fecha = verde sin dato)", B.directo,
       [["cR", "rojo", false], ["cA", "amarillo", false], ["cS", "amarillo", false], ["cV", "verde", false], ["cN", "verde", true]]);
@@ -137,7 +140,7 @@ eq("sw.js con versión build ≥ 270", +((/var SW_VERSION = 'build (\d+)'/.exec(
       /* home vacío: una sola línea */
       tareas = []; render(); r.vacio = (document.querySelector(".sep270.s-ok") || { textContent: "" }).textContent;
       return r; });
-    eq("Mías futuras plegada; al tocarla se ve la futura", [C.futAntes, C.futDesp, C.futCab], [false, true, "Mías futuras 1 ⌄"]);
+    eq("Mías futuras plegada; al tocarla se ve la futura", [C.futAntes, C.futDesp, C.futCab], [false, true, "Mías futuras 1"]);
     eq("La de otro dueño que Salvador revisa baja a 'Las revisas tú' (con su dueño)", C.rev, ["Bitácora de obra de Samuel de Samuel · hoy"]);
     eq("Sin fecha definida → Vencidas mías (después de las vencidas); nunca en Hoy", C.sinDef, [["tV2:venció 1 oct", "tSIN:sin fecha · falta definir cuándo"], ["tH2"]]);
     eq("Una tarea ajena no entra a Vencidas ni Hoy mías", C.ajena, [0, 0, ["tO"]]);

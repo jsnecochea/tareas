@@ -24,6 +24,8 @@ eq("versión >= 245", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
   async function foto(nom, alto) { if (!process.env.CAP) return; await p.setViewportSize({ width: 390, height: alto || 844 }); await p.screenshot({ path: path.join(process.env.CAP, nom) }); await p.setViewportSize({ width: 390, height: 844 }); }
   try {
     await p.goto("file://" + path.join(__dirname, "..", "index.html")); await p.waitForTimeout(600);
+    /* build 285: las secciones del home amanecen plegadas; en esta prueba vieja Acomodo, Mensajes, Te pregunta Doit, Vencidas y Hoy arrancan abiertas como antes (lo que se toque se sigue recordando) */
+    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl285(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
     await p.evaluate(function () { yo = "salvador"; window.__ESCR = [];
       db = { collection: function (c) { return { doc: function (id) { return { set: function (v) { __ESCR.push([c, id, JSON.parse(JSON.stringify(v))]); return Promise.resolve(); }, get: function () { return Promise.resolve({ exists: false }); } }; } }; } };
       window.solo = function () { [].forEach.call(document.body.children, function (x) { if (["app", "undopill", "ng243", "mov225", "det242", "visor", "selbar245", "leemask"].indexOf(x.id) < 0) x.style.display = "none"; }); document.getElementById("app").style.display = "flex"; };

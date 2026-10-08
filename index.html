@@ -724,6 +724,29 @@ button{font:inherit;color:inherit}
 .bl284.l284 .revr .rn{font-size:16px!important;font-weight:600;color:#F5F5F7}
 .bl284.l284 .revr small{font-size:14px!important;color:#98989F!important}
 .bl284.l284 .revr>svg{flex-shrink:0;margin-left:4px}
+/* build 285: secciones del home plegables (encabezado = botón ≥44px, chevron que gira) y «Tu historial» */
+button.hd284{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:0 4px;cursor:pointer;scroll-margin-top:12px;-webkit-tap-highlight-color:transparent}
+button.hd284>span{flex:1;min-width:0}
+button.hd284:focus-visible,button.sep270:focus-visible,.h285r:focus-visible,.h285m:focus-visible{outline:2px solid #0A84FF;outline-offset:2px}
+.ch285{flex-shrink:0;transition:transform .2s ease;color:#8E8E93}
+[aria-expanded="true"]>.ch285,[aria-expanded="true"] .ch285{transform:rotate(90deg)}
+button.sep270{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;min-height:44px;margin:4px 19px 0;width:calc(100% - 38px);font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);cursor:pointer;scroll-margin-top:12px}
+button.sep270 .ch285{order:4}
+.clh263{min-height:44px;box-sizing:border-box}
+.clh263 .ttch.ch285{display:flex;align-items:center;font-size:0}
+.sc284 [hidden],.h270 [hidden]{display:none!important}
+.h285r{all:unset;box-sizing:border-box;cursor:pointer;display:flex;gap:12px;width:100%;padding:12px 16px;border-top:1px solid #2C2C2E;-webkit-tap-highlight-color:transparent}
+.h285r:first-child{border-top:0}.h285r:active{background:#2C2C2E}
+.h285i{width:32px;height:32px;border-radius:16px;background:#2C2C2E;color:#D1D1D6;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.h285x{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.h285t{display:flex;align-items:baseline;gap:8px}
+.h285n{flex:1;font-size:16px;font-weight:600;color:#F5F5F7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.h285h{font-size:13px;color:#8E8E93;flex-shrink:0;font-variant-numeric:tabular-nums}
+.h285q{font-size:14px;line-height:1.35;color:#98989F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.h285v{padding:14px 16px;font-size:15px;color:#8E8E93}
+.h285d{padding:10px 16px 4px;font-size:13px;font-weight:600;color:#8E8E93;border-top:1px solid #2C2C2E}
+.h285m{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;justify-content:center;min-height:44px;width:100%;font-size:15px;color:#0A84FF;border-top:1px solid #2C2C2E}
+@media (prefers-reduced-motion:reduce){.ch285{transition:none}}
 .ttr.sale272{pointer-events:none;overflow:hidden;transition:height .25s ease,opacity .25s ease,padding .25s ease}
 .cll263.cl272 .clh263{color:var(--ink-3)}.cll263.cl272 .clh263 b{font-weight:600;color:var(--ink-3)}.cll263.cl272 .sem270{color:var(--ink-3);font-weight:500}
 @media (prefers-reduced-motion:reduce){.ttr.sale272{transition:none}}
@@ -1656,7 +1679,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 284 · home «Decide tú» limpio, sin fondo rojo: filas con respuesta rápida (las opciones de la decisión en botones y el micrófono para contestar dictando); al contestar dice «Aplicando…» y luego «Listo · lo que hizo» (o «Pendiente de aplicar») · build 283 · lo que le dictas o indicas a Claude contesta en 2-3 s (modo rápido, sin pantalla difuminada); una orden nunca se pierde: si no sale a la primera, queda de encargo y Claude la termina en la Mac; la respuesta a «Decide tú» se aplica al plan y dice «Aplicado»; una tarea a la que Claude no le encuentra siguiente paso sale en «Falta info» · build 282 · seguimientos con tono de líder (sin conteos, regaños ni amenazas) y «recuérdame el martes de X y Y» deja el aviso de ese día y los pasos en la lista, sin IA · build 281 · home en fichas: «Tareas nuevas» con su globito enseguida, «Mensajes por acomodar», «Mías futuras», «Compartidas», «Las lleva Claude» y las demás secciones ahora son fichas como las de «Te pregunta Doit» · build 280 · une 277, 278, 279 y el hotfix de la caminata: lo que dices en la Caminata se escribe en la tarea al instante y el cuestionario se guarda aunque se cierre la app (ya no se pierde); deshacer nunca borra lo que dijiste; el resumen (te preguntan · vencidas · hoy) va hasta abajo del home y arriba solo el ícono de Caminata · build 279 · el resumen de lo que te toca va hasta abajo del home · build 278 · caminata: solo vincula a la tarea que tú nombras (todas las palabras de su nombre o sinónimo), nunca a una que negaste («no tiene que ver con…»); «¿es esta tarea?» / «es la tarea de X» manda sobre lo que entendió; en cada tarea, ↩ junto al ⋯ deshace lo último que se hizo en ella (pide un toque más). Antes, build 277 · caminata: «confírmame» / «¿entendiste bien?» repite la orden y cómo la entendió y espera tu sí antes de hacerla; «deshazlo», «cancela eso», «retrocede», «esa no era» deshacen la última acción; «repíteme» repite lo último y «regresa un poco» relee desde un par de frases antes; en el home, ícono chico de caminata junto al ⋯ en vez de la barra grande";
+var VERSION_APP = "build 285 · «Tu historial» del día hasta abajo del home (lo que moviste, autorizaste, vinculaste o dictaste, con hora; picar abre la tarea) y secciones plegables: cada día amanecen compactas salvo «Decide tú»";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -3387,7 +3410,8 @@ function transfiere(t, nuevo, razon){
 
 /* ============ ESTADO ============ */
 var menuOpen=false, encAbierto=null, sueltoOpen=false, yoOpen=false;
-var verFuturas=false;   /* despliega la lista de tareas con fecha por delante */
+/* despliega la lista de tareas con fecha por delante — build 285: verFuturas y los demás interruptores de secciones del home
+   (window.__verEnc270, __verRev270, __verComp, __clL263) leen y escriben el estado plegado del día (abre285/ponAbre285, más abajo) */
 var masDias=0;          /* cuántos días extra de "Próximas" pidió ver */
 var secAbierta=null;   /* Salvador 2026-09-22: acordeon de las 7 secciones del home
    (atora/pend/venc/msg/hoy/rec/prox). null = todas colapsadas; si trae una clave, esa
@@ -6946,7 +6970,7 @@ function vLista(){
   try{ if(!window.__rfF263 || Date.now()-window.__rfF263>1500){ window.__rfF263=Date.now(); refrescaFalta263(); } }catch(e){}   /* build 263 */
   h+='<!--est272-->'+bannerAvisos();   /* build 272: aquí va la línea de estado (se llena abajo, con el home ya armado) */
   var _pp256=propuestas256();
-  if(_pp256.length){ var _pl=acoPlegado260(); h+='<button class="prop256row clh263" id="bprop256" aria-expanded="'+(_pl?'false':'true')+'" aria-label="Tareas nuevas por revisar: '+_pp256.length+'"><b>Tareas nuevas</b><span class="ttn">'+_pp256.length+'</span><span class="ttch">'+(_pl?"›":"⌄")+'</span></button>'; }   /* build 256; 260: plega y despliega Acomodo; 281: ficha «Tareas nuevas» + globito */
+  if(_pp256.length){ var _pl=acoPlegado260(); h+='<button class="prop256row clh263" id="bprop256" aria-expanded="'+(_pl?'false':'true')+'" aria-label="Tareas nuevas por revisar: '+_pp256.length+'"><b>Tareas nuevas</b><span class="ttn">'+_pp256.length+'</span><span class="ttch ch285" aria-hidden="true">'+CH285+'</span></button>'; }   /* build 256; 260: plega y despliega Acomodo; 281: ficha «Tareas nuevas» + globito */
 
   var msgs=misMensajes();
   var pend=pendientesInfo();
@@ -7083,6 +7107,7 @@ function vLista(){
   /* build 279 (Salvador 7-oct): el resumen "N te preguntan · N vencidas · N hoy" baja hasta el FINAL del home, debajo de todas las
      secciones (Las lleva Claude incluida), para que el home arranque limpio. Sus contadores siguen llevando con scroll a su sección. */
   h+=vEstado272(_h270).replace('class="est272"', 'class="est272 est279"');
+  try{ h+=vHist285(); }catch(e){ console.warn("hist285", e); }   /* build 285: «Tu historial» hasta abajo, después del resumen */
   window.__H274=_h270;   /* build 274: la caminata sigue el orden del home */
   h=h.replace('<!--est272-->', '').replace('<!--cam277-->', vCamIco277());   /* build 279 sobre 277: la línea de estado ya no va arriba (va al final, ver línea de arriba); arriba solo el ícono chico de Caminata junto al ⋯ */
 
@@ -11110,8 +11135,8 @@ function acomodoHoy(){
    dato; No guardar la deja "descartada" (no se borra) y pregunta "¿Sí era de X?" para que el sistema aprenda. Las que ya existían se muestran igual. */
 var PROP256=/^(ia|mac|revisor|ia_revisor)$/i;
 /* build 260: el banner "N tareas nuevas por revisar" PLIEGA y DESPLIEGA la sección Acomodo de la lista principal (se recuerda en localStorage) */
-function acoPlegado260(){ if(window.__acoPleg260===undefined){ var v=false; try{ v=localStorage.getItem("bit_aco_pleg260")==="1"; }catch(e){} window.__acoPleg260=v; } return !!window.__acoPleg260; }
-function poneAcoPlegado260(v){ window.__acoPleg260=!!v; try{ localStorage.setItem("bit_aco_pleg260", v?"1":"0"); }catch(e){} }
+function acoPlegado260(){ return !abre285("aco"); }   /* build 285: el plegado vive en el estado del día (amanece plegada) */
+function poneAcoPlegado260(v){ window.__acoPleg260=!!v; ponAbre285("aco", !v); try{ localStorage.setItem("bit_aco_pleg260", v?"1":"0"); }catch(e){} }
 function esPropuesta256(t){
   if(!t || !PROP256.test(String(t.creada_por||""))) return false;
   if(t.tipo_elegido || t.autorizada || t.cierre || t.fusionada_en || t.es_recordatorio || t.descartada_al_nacer) return false;
@@ -11224,13 +11249,13 @@ function vAcomodo(){
 /* build 271 (Salvador 7-oct): "Mensajes por acomodar" — los mensajes de WhatsApp o correo que la IA no sabe a qué tarea van (tarjetas
    OK · Mover · Nueva · Dato · No guardar, sin cambios por dentro) salen del Acomodo a su propia pestañita plegable, justo debajo de
    "Nuevas tareas para acomodar" y arriba de "Te pregunta Doit". El encabezado lleva el contador; el plegado se recuerda (localStorage). */
-function msgPlegado271(){ if(window.__msgPleg271===undefined){ var v=false; try{ v=localStorage.getItem("bit_msg_pleg271")==="1"; }catch(e){} window.__msgPleg271=v; } return !!window.__msgPleg271; }
-function poneMsgPlegado271(v){ window.__msgPleg271=!!v; try{ localStorage.setItem("bit_msg_pleg271", v?"1":"0"); }catch(e){} }
+function msgPlegado271(){ return !abre285("msg"); }   /* build 285: estado del día */
+function poneMsgPlegado271(v){ window.__msgPleg271=!!v; ponAbre285("msg", !v); try{ localStorage.setItem("bit_msg_pleg271", v?"1":"0"); }catch(e){} }
 function vMsgs271(){
   if(window.__aco256==="prop" && propuestas256().length) return "";   /* "solo propuestas" (build 256) */
   var D=platicasAcomodo237(), A=acomodoHoy(); if(!D.length && !A.n) return "";   /* build 237: UNA tarjeta por plática */
   var pl=msgPlegado271();
-  var h='<div class="aco226 msg271"><button class="clh263 msgh271" id="bmsg271" aria-expanded="'+(pl?"false":"true")+'" aria-label="Mensajes por acomodar: '+D.length+'"><b>Mensajes por acomodar</b><span class="ttn'+(D.length?'':' n0')+'">'+D.length+'</span><span class="ttch">'+(pl?"›":"⌄")+'</span></button>';
+  var h='<div class="aco226 msg271"><button class="clh263 msgh271" id="bmsg271" aria-expanded="'+(pl?"false":"true")+'" aria-label="Mensajes por acomodar: '+D.length+'"><b>Mensajes por acomodar</b><span class="ttn'+(D.length?'':' n0')+'">'+D.length+'</span><span class="ttch ch285" aria-hidden="true">'+CH285+'</span></button>';
   if(pl) return h+'</div>';
   if(D.length) h+='<div class="acog">'+D.slice(0,8).map(function(g){ var t=g.t, ix0=g.ixs[0], x0=t.msgs[g.ixs[g.ixs.length-1]], k=t.id+"|"+ix0, ab=!!(window.__g237open||{})[k],
       _pm=ab && g.ixs.some(function(i){ var x=t.msgs[i]; return !(esSaludo239(t,x) || confirmado237(x) || x.oculto); });   /* build 245: con botones por mensaje, la fila del final sobra */
@@ -16195,7 +16220,7 @@ function bindHilo(){
     var guardaNombre146=function(){
       var v146=(enm146.value||"").trim();
       editaNombre=null;
-      if(v146 && v146!==t.nombre){ var F278=null, n278=t.nombre; try{ F278=camFoto275([t]); }catch(e){} t.nombre=v146; guarda(t); try{ ultNombre278(t, F278, n278); }catch(e){} toast("Nombre actualizado"); }
+      if(v146 && v146!==t.nombre){ var F278=null, n278=t.nombre; try{ F278=camFoto275([t]); }catch(e){} t.nombre=v146; guarda(t); try{ ultNombre278(t, F278, n278); }catch(e){} try{ hist240("Cambió el nombre a “"+v146+"” (era “"+n278+"”)", t, null); }catch(e){} toast("Nombre actualizado"); }
       render();
     };
     enm146.onkeydown=function(ev){
@@ -18049,12 +18074,12 @@ function semaforo270(t, p){
 var SEM270={verde:"#30d158", amarillo:"#ffd60a", rojo:"#FF453A"};
 function vClaudeLleva263(L){
   if(!L.length) return "";
-  var ab=!!window.__clL263, n={verde:0, amarillo:0, rojo:0}, rk={rojo:0, amarillo:1, verde:2};
+  var ab=abre285("claude"), n={verde:0, amarillo:0, rojo:0}, rk={rojo:0, amarillo:1, verde:2};
   var S=L.map(function(x, i){ var s={c:"verde", why:"", sinDato:true}; try{ s=semaforo270(x.t, x.p); }catch(e){ console.warn("semaforo270", e); } n[s.c]++; return {t:x.t, p:x.p, s:s, i:i}; })
     .sort(function(a,b){ return (rk[a.s.c]-rk[b.s.c]) || (a.i-b.i); });
   var prob=n.amarillo+n.rojo;
   var sem='<span class="sem270" aria-hidden="true"><span><i style="background:'+SEM270.verde+'"></i>'+n.verde+'</span>'+(n.amarillo?'<span><i style="background:'+SEM270.amarillo+'"></i>'+n.amarillo+'</span>':'')+(n.rojo?'<span><i style="background:'+SEM270.rojo+'"></i>'+n.rojo+'</span>':'')+'</span>';
-  var h='<div class="cll263"><button class="clh263" id="bcl263" aria-expanded="'+(ab?"true":"false")+'" aria-label="Las lleva Claude: '+n.verde+' al corriente, '+prob+' con problema de seguimiento"><b>Las lleva Claude</b>'+sem+'<span class="ttch">'+(ab?"⌄":"›")+'</span></button>';
+  var h='<div class="cll263"><button class="clh263" id="bcl263" aria-expanded="'+(ab?"true":"false")+'" aria-label="Las lleva Claude: '+n.verde+' al corriente, '+prob+' con problema de seguimiento"><b>Las lleva Claude</b>'+sem+'<span class="ttch ch285" aria-hidden="true">'+CH285+'</span></button>';
   if(ab){ h+='<div class="revl ttl">'; S.forEach(function(x){ var t=x.t, p=x.p, hito=esperaConHito263(t), qt=queTocaTxt263(t,p);
       var pel=hito?("espera a "+nombreCorto(String(hito.quien||p.esperaA||"")).split(" ")[0]+" · "+fechaChip(hito.fecha)):(p.esperaA?"espera a "+p.esperaA+(p.fecha?" · "+fechaChip(p.fecha):""):"Claude lo lleva");
       h+='<button class="revr ttr sem-'+x.s.c+'" data-id="'+esc(t.id)+'"><i style="background:'+SEM270[x.s.c]+'"></i><span class="ttx"><span class="rn">'+esc(t.nombre||"Sin nombre")+'</span>'+(qt?'<small>Qué toca: '+esc(qt)+'</small>':'')+'<small class="pel263">'+esc(pel)+'</small>'+
@@ -18223,8 +18248,9 @@ function vHome270(H){
   if(!ord.length && !(H.dec284||[]).length){ window.__sale272=null; try{ foto272(H); }catch(e){} return '<div class="sep270 s-ok"><span>Todo al día</span></div>'; }
   var h='<div class="h270">', primero=true;
   function sec(k, label, L){ if(!L.length) return;
-    h+='<div class="sep270 s-'+k+'" id="sec272-'+k+'"><span>'+label+'</span><em>'+L.length+'</em>'+'</div>'; primero=false;   /* build 277: sin audífono aquí (la Caminata se abre con el ícono junto al ⋯) */
-    h+='<div class="revl ttl l270 l-'+k+'">'+filas272(k, L, function(x){ return '<button class="revr ttr" data-id="'+esc(x.t.id)+'"><i style="background:'+COL270[k]+'"></i><span class="ttx"><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span>'+(x.why?'<small>'+esc(x.why)+'</small>':'')+'</span></button>'; })+'</div>'; }
+    var ab=abre285(k);   /* build 285: plegable; amanece plegada */
+    h+='<button class="sep270 s-'+k+'" id="sec272-'+k+'" data-pl285="'+k+'" aria-expanded="'+(ab?"true":"false")+'" aria-label="'+esc(label)+': '+L.length+'"><span>'+label+'</span><em>'+L.length+'</em>'+CH285+'</button>'; primero=false;   /* build 277: sin audífono aquí (la Caminata se abre con el ícono junto al ⋯) */
+    h+='<div class="revl ttl l270 l-'+k+'"'+(ab?'':' hidden')+'>'+filas272(k, L, function(x){ return '<button class="revr ttr" data-id="'+esc(x.t.id)+'"><i style="background:'+COL270[k]+'"></i><span class="ttx"><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span>'+(x.why?'<small>'+esc(x.why)+'</small>':'')+'</span></button>'; })+'</div>'; }
   h+=vDecide284(H, filas272);   /* build 284: «Decide tú» en filas con respuesta rápida + lo demás que te pregunta Doit, sin fondo de color */
   sec("venc", "Vencidas mías", H.venc); sec("hoy", "Hoy mías", H.hoy);
   try{ foto272(H); }catch(e){}
@@ -18330,10 +18356,12 @@ function vDecide284(H, filas){
   (H.preg||[]).forEach(function(x){ var e=null; try{ e=estadoDec284(x.t); }catch(er){} if(e){ if(!ids[x.t.id]){ ids[x.t.id]=1; dec.push(x); } } else resto.push(x); });
   (H.dec284||[]).forEach(function(x){ if(!ids[x.t.id]){ ids[x.t.id]=1; dec.push(x); } });
   var vivos=dec.filter(function(x){ return estadoDec284(x.t)==="vivo"; }).length, conId=false;
-  var cab=function(lbl, n){ var a=conId?'':' id="sec272-preg"'; conId=true; return '<div class="hd284"'+a+'><span>'+lbl+'</span>'+(n?'<em>'+n+'</em>':'')+'</div>'; };
-  if(dec.length){ h+='<section class="sc284" aria-label="Decide tú">'+cab("Decide tú", vivos)+'<div class="bl284">'+dec.map(function(x, i){ return filaDec284(x.t, i); }).join("")+'</div></section>'; }
+  var cab=function(lbl, n, k){ var a=conId?'':' id="sec272-preg"'; conId=true; var ab=abre285(k);   /* build 285: encabezado plegable con contador visible */
+    return '<button class="hd284"'+a+' data-pl285="'+k+'" aria-expanded="'+(ab?"true":"false")+'" aria-label="'+esc(lbl)+(n?': '+n:'')+'"><span>'+lbl+'</span>'+(n?'<em>'+n+'</em>':'')+CH285+'</button>'; };
+  var oc=function(k){ return abre285(k)?'':' hidden'; };
+  if(dec.length){ h+='<section class="sc284" aria-label="Decide tú">'+cab("Decide tú", vivos, "decide")+'<div class="bl284"'+oc("decide")+'>'+dec.map(function(x, i){ return filaDec284(x.t, i); }).join("")+'</div></section>'; }
   if(resto.length){
-    h+='<section class="sc284" aria-label="Te pregunta Doit">'+cab("Te pregunta Doit", resto.length)+'<div class="bl284 revl ttl l284">'+(filas||function(k, L, b){ return L.map(b).join(""); })("preg", resto, function(x){
+    h+='<section class="sc284" aria-label="Te pregunta Doit">'+cab("Te pregunta Doit", resto.length, "preg")+'<div class="bl284 revl ttl l284"'+oc("preg")+'>'+(filas||function(k, L, b){ return L.map(b).join(""); })("preg", resto, function(x){
       return '<button class="revr ttr" data-id="'+esc(x.t.id)+'"><span class="f284i" aria-hidden="true">'+esc(iniDec284(x.t))+'</span><span class="ttx"><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span>'+(x.why?'<small>'+esc(x.why)+'</small>':'')+'</span>'+SVG284.chev+'</button>'; })+'</div></section>';
   }
   return h;
@@ -18355,16 +18383,146 @@ function bindDec284(){
 /* una sección plegable de abajo (mismo renglón que "Las lleva Claude") */
 function plegable270(id, label, n, abierta, cuerpo){
   if(!n) return "";
-  return '<div class="cll263 pl270"><button class="clh263" id="'+id+'" aria-expanded="'+(abierta?"true":"false")+'"><b>'+label+'</b><span class="ttn">'+n+'</span><span class="ttch">'+(abierta?"⌄":"›")+'</span></button>'+(abierta?cuerpo():"")+'</div>';
+  return '<div class="cll263 pl270"><button class="clh263" id="'+id+'" aria-expanded="'+(abierta?"true":"false")+'"><b>'+label+'</b><span class="ttn">'+n+'</span><span class="ttch ch285" aria-hidden="true">'+CH285+'</span></button>'+(abierta?cuerpo():"")+'</div>';
 }
+/* ===================== build 285 (Salvador 8-oct): SECCIONES PLEGABLES Y «TU HISTORIAL» =====================
+   1 TODAS las secciones del home se pliegan / despliegan tocando su encabezado (chevron que gira, aria-expanded, ≥44 px), con el
+     contador visible aunque estén plegadas. Estado POR DÍA: al empezar un día nuevo (fecha local distinta a la guardada) TODAS
+     amanecen plegadas menos «Decide tú», que amanece abierta; durante el día se recuerda lo que abrió o cerró
+     (localStorage doit_pleg285_<usuario>_<fecha>, con try/catch). Los interruptores viejos (Acomodo 260, Mensajes 271, Mías futuras,
+     Te encargaron, Las revisas tú, Compartidas, Las lleva Claude) leen y escriben este mismo estado.
+   2 «Tu historial» hasta abajo del home (después del resumen): un renglón por cada cosa que hizo EL USUARIO ACTUAL hoy, lo más
+     reciente arriba: hora · tarea · qué hizo, con ícono por tipo. Fuente: el registro del build 240 (hist240: localStorage
+     doit_hist240 + bitacora_personas/<usuario>.historial_acciones, con ts y por). Solo entradas con por === yo (cada quien ve lo
+     suyo); «Abrió la tarea» no cuenta. Picar el renglón abre la tarea (ahí está el ↩ deshacer del 278). «Ver días anteriores»
+     carga 7 días más cada vez. Se agregan al registro las acciones que no dejaban rastro: cambiar nombre y eliminar la tarea. */
+var PL285_K="doit_pleg285_";
+function _pl285(){
+  var d=hoy(), u=String(yo||""), o=window.__pl285;
+  if(!o || o.d!==d || o.u!==u){ var s=null; try{ s=JSON.parse(localStorage.getItem(PL285_K+u+"_"+d)||"null"); }catch(e){ s=null; }
+    o={d:d, u:u, o:(s && typeof s==="object" && s.o && typeof s.o==="object")?s.o:{}}; window.__pl285=o; }
+  return o;
+}
+/* ¿abierta? lo que el usuario tocó hoy; si no tocó nada, solo «Decide tú» */
+function abre285(k){ var o=_pl285(); if(Object.prototype.hasOwnProperty.call(o.o, k)) return !!o.o[k]; return k==="decide"; }
+function ponAbre285(k, v){ var o=_pl285(); o.o[k]=!!v;
+  try{ localStorage.setItem(PL285_K+o.u+"_"+o.d, JSON.stringify({d:o.d, o:o.o}));
+    for(var i=localStorage.length-1; i>=0; i--){ var kk=localStorage.key(i); if(kk && kk.indexOf(PL285_K+o.u+"_")===0 && kk!==PL285_K+o.u+"_"+o.d) localStorage.removeItem(kk); }   /* solo el estado de hoy */
+  }catch(e){} }
+(function(){ if(typeof window==="undefined" || window.__acc285) return; window.__acc285=1;
+  [["verFuturas","fut"],["__verEnc270","enc"],["__verRev270","rev"],["__verComp","comp"],["__clL263","claude"]].forEach(function(p){
+    try{ Object.defineProperty(window, p[0], {configurable:true, get:function(){ return abre285(p[1]); }, set:function(v){ ponAbre285(p[1], !!v); }}); }catch(e){} });
+})();
+var CH285='<svg class="ch285" width="8" height="13" viewBox="0 0 8 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 1.5l5 5-5 5"/></svg>';
+/* abre o pliega en su lugar (sin volver a pintar el home: no brinca el scroll) */
+function pinta285(k){ var v=abre285(k);
+  Array.prototype.forEach.call(document.querySelectorAll('[data-pl285="'+k+'"]'), function(b){ b.setAttribute("aria-expanded", v?"true":"false");
+    var c=b.nextElementSibling; if(c){ if(v) c.removeAttribute("hidden"); else c.setAttribute("hidden", ""); } }); }
+function abreSec285(k, v){ ponAbre285(k, v!==false); pinta285(k); }
+function bindPl285(){
+  Array.prototype.forEach.call(document.querySelectorAll("[data-pl285]"), function(b){ b.onclick=function(ev){ if(ev) ev.preventDefault();
+    var k=b.getAttribute("data-pl285"); abreSec285(k, !abre285(k)); }; });
+}
+/* ---------- «Tu historial» ---------- */
+var HIST285_RUIDO=/^(Abrió la tarea)$/;
+function histMio285(dias){
+  var ini=new Date(); ini.setHours(0,0,0,0); var desde=ini.getTime()-(dias||0)*864e5, ya={};
+  return histLee240().filter(function(e){ if(!e || !yo || e.por!==yo || (+e.ts||0)<desde || HIST285_RUIDO.test(String(e.que||""))) return false;
+    if(e.id && ya[e.id]) return false; if(e.id) ya[e.id]=1; return true; })
+    .sort(function(a,b){ return (+b.ts||0)-(+a.ts||0); });
+}
+/* lo que hizo, dicho a él (segunda persona) */
+var TU285=[
+  [/^Ya está \(la cerró\)$/, "Cerraste · Ya está"],
+  [/^Movió la fecha (.*)$/, "Cambiaste la fecha $1"],
+  [/^Movió (.*)$/, "Reacomodaste $1"],
+  [/^Vinculó a (.*)$/, "Vinculaste con $1"],
+  [/^Acomodo: OK sin importancia$/, "Autorizaste acomodo (sin importancia)"],
+  [/^Acomodo: OK a (.*)$/, "Autorizaste acomodo de $1"],
+  [/^Acomodo: OK$/, "Autorizaste acomodo"],
+  [/^Acomodo: Nueva (.*)$/, "Acomodo: creaste la tarea $1"],
+  [/^Acomodo: Dato (.*)$/, "Acomodo: lo guardaste como dato $1"],
+  [/^Dictado: (.*)$/, "Dictaste: $1"],
+  [/^Indicación a Claude: (.*)$/, "Le pediste a Claude: $1"],
+  [/^Mensaje a ([^:]+): (.*)$/, "Le escribiste a $1: $2"],
+  [/^Contestó la decisión: (.*)$/, "Respondiste Decide tú: «$1»"],
+  [/^Contestó en caminata: (.*)$/, "Contestaste en caminata: «$1»"],
+  [/^Caminata: como dato (.*)$/, "En caminata la dejaste como dato $1"],
+  [/^Propuesta aceptada: (.*)$/, "Autorizaste la tarea nueva $1"],
+  [/^Propuesta descartada: (.*)$/, "Descartaste la propuesta $1"],
+  [/^Propuesta como dato: (.*)$/, "Guardaste la propuesta como dato $1"],
+  [/^Quitó la palomita: (.*)$/, "Quitaste la palomita: $1"],
+  [/^Palomeó en la lista: (.*)$/, "Palomeaste en la lista: $1"],
+  [/^Palomeó: (.*)$/, "Palomeaste: $1"],
+  [/^Tocó “(.*)”$/, "Marcaste «$1»"],
+  [/^Te pregunta: ya la contesté$/, "Marcaste «ya la contesté»"],
+  [/^No guardar (.*)$/, "No guardaste $1"],
+  [/^No es de aquí (.*)$/, "Marcaste «No es de aquí» $1"],
+  [/^Es para Claude: (.*)$/, "Marcaste «Es para Claude»: $1"],
+  [/^Eliminó (.*)$/, "Eliminaste $1"],
+  [/^Deshizo: (.*)$/, "Deshiciste: $1"],
+  [/^Cambió el nombre (.*)$/, "Renombraste $1"]
+];
+function tu285(q){ q=String(q||"").replace(/\s+/g," ").trim(); for(var i=0;i<TU285.length;i++){ if(TU285[i][0].test(q)) return q.replace(TU285[i][0], TU285[i][1]); } return q; }
+function tipo285(q){ q=String(q||"");
+  if(/^Deshizo/.test(q)) return "undo";
+  if(/^Vinculó/.test(q)) return "link";
+  if(/^Movió la fecha/.test(q)) return "cal";
+  if(/^Movió/.test(q)) return "move";
+  if(/^(Acomodo|Propuesta|Tocó|No es de aquí|Es para Claude|No guardar|Caminata: como dato)/.test(q)) return "folder";
+  if(/^(Dictado|Indicación a Claude|Contestó en caminata)/.test(q)) return "mic";
+  if(/^Contestó la decisión|^Te pregunta/.test(q)) return "decide";
+  if(/^Mensaje a/.test(q)) return "chat";
+  if(/^Cambió el nombre/.test(q)) return "pencil";
+  if(/^(Ya está|Palomeó|Quitó la palomita)/.test(q)) return "check";
+  if(/^Eliminó/.test(q)) return "trash";
+  return "dot";
+}
+function ico285(k){
+  var P={link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+    mic:'<rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v2.5"/>',
+    decide:'<circle cx="12" cy="12" r="8.5"/><path d="M8.3 12.3l2.5 2.5 5-5"/>', dot:'<circle cx="12" cy="12" r="2.2"/>'}[k];
+  if(!P) return ico(k, 16);
+  return '<svg class="icx" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+P+'</svg>';
+}
+function hora285(ts){ var d=new Date(+ts||0), H=fmt24()?("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2):((d.getHours()%12)||12)+":"+("0"+d.getMinutes()).slice(-2)+(d.getHours()<12?" a. m.":" p. m.");
+  return H; }
+function vHist285(){
+  if(!yo) return "";
+  var dias=+window.__hist285dias||0, L=histMio285(dias), H=hoy(), deHoy=L.filter(function(e){ return iso(+e.ts||0)===H; }), ab=abre285("hist");
+  var h='<section class="sc284 hist285" aria-label="Tu historial"><button class="hd284" id="sec285-hist" data-pl285="hist" aria-expanded="'+(ab?"true":"false")+'" aria-label="Tu historial: '+deHoy.length+'"><span>Tu historial</span>'+(deHoy.length?'<em>'+deHoy.length+'</em>':'')+CH285+'</button>';
+  h+='<div class="bl284 bl285"'+(ab?'':' hidden')+'>';
+  if(!deHoy.length) h+='<div class="h285v">Hoy no has movido nada todavía</div>';
+  var dia="";
+  L.forEach(function(e){ var f=iso(+e.ts||0);
+    if(f!==H && f!==dia){ dia=f; h+='<div class="h285d">'+esc(fechaChip(f)==="ayer"?"Ayer":fechaBonita(f))+'</div>'; }
+    h+='<button class="h285r" data-h285="'+esc(e.tid||"")+'" data-h285id="'+esc(e.id||"")+'"><span class="h285i" aria-hidden="true">'+ico285(tipo285(e.que))+'</span><span class="h285x">'+
+      '<span class="h285t"><span class="h285n">'+esc(e.tnom||"Sin tarea")+'</span><time class="h285h">'+esc(hora285(e.ts))+'</time></span>'+
+      '<span class="h285q">'+esc(tu285(e.que))+'</span></span></button>'; });
+  h+='<button class="h285m" id="bhist285">Ver días anteriores</button>';
+  return h+'</div></section>';
+}
+function bindHist285(){
+  Array.prototype.forEach.call(document.querySelectorAll("[data-h285]"), function(el){ el.onclick=function(){ var id=el.getAttribute("data-h285");
+    if(!id || !tareaId240(id)){ toast("Esa tarea ya no está"); return; }
+    window.recienCreadas=[]; abierta=id; vista="hilo"; fichaOpen=false; detOpen={}; menuOpen=false; editaNombre=null; render(); }; });
+  var m=$("bhist285"); if(m) m.onclick=function(){ window.__hist285dias=(+window.__hist285dias||0)+7; render(); };
+}
+/* lo que no dejaba rastro en el historial: eliminar la tarea (con motivo, al nacer, recordatorio) */
+(function(){
+  if(typeof window==="undefined" || window.__envueltas285) return; window.__envueltas285=1;
+  var _cs=cierraSinEjecutar; cierraSinEjecutar=function(t, mk){ var r=_cs.apply(this, arguments); try{ if(t && t.cierre) hist240("Eliminó la tarea"+(mk?" ("+String(mk).replace(/_/g," ")+")":""), t, {tipo:"reabrir"}); }catch(e){} return r; };
+  var _da=descartaAlNacer; descartaAlNacer=function(t){ var r=_da.apply(this, arguments); try{ if(t && t.cierre) hist240("Eliminó la tarea nueva", t, {tipo:"reabrir"}); }catch(e){} return r; };
+  var _br=borraRecordatorioYQuedate; borraRecordatorioYQuedate=function(t){ var r=_br.apply(this, arguments); try{ if(t && t.cierre) hist240("Eliminó el recordatorio", t, {tipo:"reabrir"}); }catch(e){} return r; };
+})();
 function vAbajo270(claudeL, H, hMis, nMis){
   var h='';   /* build 272: Las lleva Claude va hasta abajo; sin nada, la sección no existe */
-  h+=plegable270("bfut", "Mías futuras", H.fut.length, verFuturas, function(){ return '<ul class="list">'+H.fut.map(function(t){ return fila(t); }).join("")+'</ul>'; });
-  h+=plegable270("benc270", "Te encargaron", nMis, !!window.__verEnc270, function(){ return hMis; });
-  h+=plegable270("brev270", "Las revisas tú", H.otros.length, !!window.__verRev270, function(){
+  h+=plegable270("bfut", "Mías futuras", H.fut.length, abre285("fut"), function(){ return '<ul class="list">'+H.fut.map(function(t){ return fila(t); }).join("")+'</ul>'; });
+  h+=plegable270("benc270", "Te encargaron", nMis, abre285("enc"), function(){ return hMis; });
+  h+=plegable270("brev270", "Las revisas tú", H.otros.length, abre285("rev"), function(){
     return '<div class="revl ttl">'+H.otros.map(function(x){ return '<button class="revr ttr" data-id="'+esc(x.t.id)+'"><i style="background:#636366"></i><span class="ttx"><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span><small>'+esc(((PERSONAS[x.t.duenio]||{}).nombre?("de "+PERSONAS[x.t.duenio].nombre+" · "):"")+x.why)+'</small></span></button>'; }).join("")+'</div>'; });
   var nC=0; try{ nC=compartidasDe().length; }catch(e){}
-  h+=plegable270("bcomp", "Compartidas", nC, !!window.__verComp, function(){ try{ return vCompartidas().replace(/^<button class="compbtn"[^>]*>[^<]*<\/button>/,''); }catch(e){ console.warn("compartidas",e); return ""; } });
+  h+=plegable270("bcomp", "Compartidas", nC, abre285("comp"), function(){ try{ return vCompartidas().replace(/^<button class="compbtn"[^>]*>[^<]*<\/button>/,''); }catch(e){ console.warn("compartidas",e); return ""; } });
   h+=vClaudeLleva263(claudeL).replace('<div class="cll263">','<div class="cll263 cl272">');
   return h?'<div class="abajo270">'+h+'</div>':'';
 }
@@ -19800,8 +19958,11 @@ function anima272(){
 }
 function bindHome272(){
   try{ bindDec284(); }catch(e){ console.warn("dec284", e); }   /* build 284 */
+  try{ bindPl285(); bindHist285(); }catch(e){ console.warn("pl285", e); }   /* build 285 */
   Array.prototype.forEach.call(document.querySelectorAll('[data-est272]'), function(b){ b.onclick=function(){
-    var el=document.getElementById('sec272-'+b.getAttribute('data-est272')); if(el) try{ el.scrollIntoView({behavior:'smooth', block:'start'}); }catch(e){ el.scrollIntoView(); } }; });
+    var k=b.getAttribute('data-est272');   /* build 285: si su sección está plegada, se abre antes de llevarlo ahí */
+    if(k==='preg'){ abreSec285('decide'); abreSec285('preg'); } else abreSec285(k);
+    var el=document.getElementById('sec272-'+k); if(el) try{ el.scrollIntoView({behavior:'smooth', block:'start'}); }catch(e){ el.scrollIntoView(); } }; });
   Array.prototype.forEach.call(document.querySelectorAll('[data-preg272]'), function(b){ b.addEventListener('click', function(){
     var id=b.getAttribute('data-id'); window.__pq255Last=null;
     setTimeout(function(){ try{ if(vista==='hilo' && abierta===id && !document.getElementById('preg249')) abrePreguntas249(id, {gesto:true}); }catch(e){} }, 120); }, true); });

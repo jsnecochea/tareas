@@ -31,6 +31,8 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
     FD240.prototype = RD240.prototype; FD240.now = function () { return base240 + RD240.now() - t0240; }; FD240.parse = RD240.parse; FD240.UTC = RD240.UTC; window.Date = FD240; });
   try {
     await p.goto("file://" + path.join(__dirname, "..", "index.html")); await p.waitForTimeout(600);
+    /* build 285: las secciones del home amanecen plegadas; en esta prueba vieja Acomodo, Mensajes, Te pregunta Doit, Vencidas y Hoy arrancan abiertas como antes (lo que se toque se sigue recordando) */
+    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl285(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
     var r = await p.evaluate(function (FX) {
       yo = "salvador"; var o = {};
       try { localStorage.removeItem("doit_hist240"); } catch (e) {}

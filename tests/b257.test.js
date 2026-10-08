@@ -19,12 +19,14 @@ eq("versión >= 257", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
   async function foto(nom) { if (!process.env.CAP) return; await p.waitForTimeout(250); await p.screenshot({ path: path.join(process.env.CAP, nom) }); }
   try {
     await p.goto("file://" + path.join(__dirname, "..", "index.html")); await p.waitForTimeout(600);
+    /* build 285: las secciones del home amanecen plegadas; en esta prueba vieja Acomodo, Mensajes, Te pregunta Doit, Vencidas y Hoy arrancan abiertas como antes (lo que se toque se sigue recordando) */
+    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl285(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
     await p.evaluate(function () { yo = "salvador"; window.__agendaNo = 1;
       db = { collection: function () { return { doc: function () { return { set: function () { return Promise.resolve(); }, get: function () { return Promise.resolve({ exists: false }); } }; } }; } };
       document.getElementById("app").style.display = "flex";
       window.PR = function (id, nom, extra) { var t = { id: id, nombre: nom, duenio: "salvador", creada_por: "ia", estado: "abierta", tipo_item: "tarea", wa_contactos: [{ nombre: "Ing. Pedro" }], msgs: [{ id: "m" + id, de: "Ing. Pedro", t: "Ing. Pedro: mándame el plano de la azotea", ts: Date.now() - 60000 }] }; for (var k in (extra || {})) t[k] = extra[k]; return t; };
       window.NORMAL = function () { return { id: "tN", contexto: "algo", nombre: "Tarea normal mía", duenio: "salvador", creada_por: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, f_vigente: "2026-10-20", f_original: "2026-10-20", msgs: [] }; };
-      window.lista = function (T) { tareas = T; abierta = null; vista = "lista"; window.__aco256 = ""; window.__p256f = {}; window.__acoPleg260 = undefined; try { localStorage.removeItem("bit_aco_pleg260"); } catch (e) {} render(); };
+      window.lista = function (T) { tareas = T; abierta = null; vista = "lista"; window.__aco256 = ""; window.__p256f = {}; window.__acoPleg260 = undefined; try { localStorage.removeItem("bit_aco_pleg260"); } catch (e) {} try { ponAbre285("aco", true); } catch (e) {} render(); };   /* build 285: el plegado vive en el estado del día; el helper lo reabre */
     });
     var limpia = async function () { await p.evaluate(function () { [].forEach.call(document.querySelectorAll("#preg249,#hoja254,#acom249,#det242,.leemask,.cnlbg,.cnlsheet,.pop243"), function (e) { e.remove(); }); }); };
     /* 1) propuesta excluida de las listas y visible en Acomodo */

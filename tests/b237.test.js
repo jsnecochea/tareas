@@ -21,6 +21,8 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
     window.firebase = { apps: [1], initializeApp: function () {}, firestore: function () { return fs0; }, auth: function () { return { onAuthStateChanged: function () {}, signOut: P }; } }; window.firebase.auth.GoogleAuthProvider = function () {}; });
   try {
     await p.goto("file://" + path.join(__dirname, "..", "index.html")); await p.waitForTimeout(600);
+    /* build 285: las secciones del home amanecen plegadas; en esta prueba vieja Acomodo, Mensajes, Te pregunta Doit, Vencidas y Hoy arrancan abiertas como antes (lo que se toque se sigue recordando) */
+    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl285(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
     var r = await p.evaluate(function () {
       yo = "salvador"; var o = {}, NOW = Date.now(), hm = function (ms) { var d = new Date(NOW - ms); return ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2); };
       window.esPropuesta256 = function () { return false; };   /* build 256: este suite prueba el camino viejo de la plática sin clasificar; las propuestas lo tienen b256 */ window.__ESCR = []; db = { collection: function (c) { return { doc: function (id) { return { set: function (v, op) { window.__ESCR.push([c, id, JSON.parse(JSON.stringify(v)), op || null]); return Promise.resolve(); }, get: function () { return Promise.resolve({ exists: false, data: function () { return null; } }); } }; } }; } };

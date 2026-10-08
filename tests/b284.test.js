@@ -104,12 +104,12 @@ eq("las fichas de «Te pregunta Doit» ya no usan el fondo naranja (.l-preg)", /
     eq("«esperando tu decisión»: el botón contesta por contestaDecision273 y, aplicado, se limpia como «Ya decidí»", S, { cd: [["tSAL", "Sí"]], preg: "¿Vas tú solo a la reunión del viernes?", ap: true, pt: "", e: "listo" });
 
     /* ===== 5) lo que no es decisión: filas limpias con chevron, sin botones; sin decisiones no hay «Decide tú» ===== */
-    var N = await p.evaluate(function () { home([FALTA()]); var s = [].slice.call(document.querySelectorAll(".sc284"));
+    var N = await p.evaluate(function () { home([FALTA()]); var s = [].slice.call(document.querySelectorAll(".sc284:not(.hist285)"));   /* build 285: «Tu historial» también usa el bloque 284 */
       var r = s.map(function (x) { return x.getAttribute("aria-label"); }), bl = document.querySelector(".bl284.l284");
       return { secs: r, botones: document.querySelectorAll(".bl284 .p284, .bl284 .p284m").length, chev: !!(bl && bl.querySelector(".revr > svg")), bg: bl && getComputedStyle(bl).backgroundColor,
         fila: bl && getComputedStyle(bl.querySelector(".revr")).backgroundColor }; });
     eq("sin decisiones no sale «Decide tú»; lo demás en «Te pregunta Doit» limpio, con chevron y sin botones", N, { secs: ["Te pregunta Doit"], botones: 0, chev: true, bg: "rgb(28, 28, 30)", fila: "rgba(0, 0, 0, 0)" });
-    var V = await p.evaluate(function () { home([base("tX", "Nada pendiente", {})]); return !!document.querySelector(".sc284"); });
+    var V = await p.evaluate(function () { home([base("tX", "Nada pendiente", {})]); return !!document.querySelector(".sc284:not(.hist285)"); });
     eq("sin nada que preguntar la sección no aparece", V, false);
 
     /* picar la fila abre la tarea; el micrófono abre el dictado de esa decisión */
