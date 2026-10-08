@@ -31,6 +31,7 @@ coordinarlo antes con Josué (el publicador).
 
 - La ÚNICA fuente de verdad del estado técnico para el Grupo Do IT es el campo `estado_vivo` de la tarea
   `tPROGRAMACION_DOIT` en Doit (conector Doit: leer_tarea / guardar_tarea con merge; nunca mandar `msgs`).
+- **Al recibir cualquier pedido de programación** (de cualquier chat, dictado o tarea programada: home, app, bot, servidor): anótalo en ese momento en `estado_vivo.en_curso` con fecha y quién lo pidió.
 - **Al terminar cualquier cambio** (app, bot o servidor): actualiza `estado_vivo` (hecho / en_curso / pendiente,
   con fecha y build) ANTES de dar el trabajo por terminado. Sin eso el trabajo no está terminado.
 - Pendientes del equipo: campo `pendientes_equipo` de la misma tarea (los crea el bot cuando promete "lo reviso").
