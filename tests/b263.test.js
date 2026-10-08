@@ -31,13 +31,13 @@ eq("versión >= 263", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       var N = Date.now();
       window.T = function (id, nombre, ctx, extra) { var t = { id: id, nombre: nombre, duenio: "salvador", creada_por: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, autorizada: true, f_vigente: "2026-10-06", fecha_dictada: true, contexto: ctx || "Tarea de prueba con contexto suficiente para que no falte nada de contexto en la ficha de la tarea y se vea completa.", ritmo: "diario", msgs: [{ k: "bo", de: "salvador", t: "Va", ts: N - 100000, h: "07:00" }] }; for (var k in (extra || {})) t[k] = extra[k]; return t; };
       window.home = function (L) { tareas = L; abierta = null; vista = "lista"; window.__grupoInicio = null; window.__clL263 = false; window.__ttAb = { venc: true, hoy: true }; window.__rfF263 = 0; render(); };
-      window.filas = function () { var o = []; ["esperan", "venc", "hoy"].forEach(function (g) { window.__grupoInicio = g; render(); [].forEach.call(document.querySelectorAll('[data-grupo-vista="' + g + '"] .ttl .ttr:not(.ttsum)'), function (b) { o.push(b.querySelector(".rn").textContent); }); }); window.__grupoInicio = null; render(); return o; };
+      window.filas = function () { var o = []; ["esperan", "venc", "hoy"].forEach(function (g) { window.__grupoInicio = g; render(); [].forEach.call(document.querySelectorAll('[data-grupo-vista="' + g + '"] .ttl .ttr:not(.ttsum)' + (g === "hoy" ? ":not(.es-vencida)" : "")), function (b) { o.push(b.querySelector(".rn").textContent); }); }); window.__grupoInicio = null; render(); return o; };
       window.sumas = function () { return [].map.call(document.querySelectorAll(".ttsum .rn"), function (b) { return b.textContent; }); };
       /* build 270: secciones siempre desplegadas del home (Te pregunta Doit · Vencidas mías · Hoy mías) */
       /* home de tres fichas: cada sección vive en su propia vista (Te esperan · Vencidas · Hoy); se abren una por una y se regresa al inicio */
       window.secs = function () { var o = {};
         [["esperan"], ["venc", "Vencidas mías"], ["hoy", "Hoy mías"]].forEach(function (x) { window.__grupoInicio = x[0]; render(); var g = document.querySelector('[data-grupo-vista="' + x[0] + '"]'); if (!g) return;
-          if (x[1]) { var L = [].map.call(g.querySelectorAll(".ttr .rn"), function (b) { return b.textContent; }); if (L.length) o[x[1]] = L; }
+          if (x[1]) { var L = [].map.call(g.querySelectorAll(x[0] === "hoy" ? ".ttr:not(.es-vencida) .rn" : ".ttr .rn"), function (b) { return b.textContent; }); if (L.length) o[x[1]] = L; }   /* «Hoy mías» = lo de hoy; las vencidas que la ficha Hoy junta arriba las cubre inicio-filtros */
           else [].forEach.call(g.querySelectorAll(".sc284"), function (sc) { o[sc.getAttribute("aria-label")] = [].map.call(sc.querySelectorAll(".ttr .rn, .f284n"), function (b) { return b.textContent; }); }); });
         window.__grupoInicio = null; render(); return o; };
     });

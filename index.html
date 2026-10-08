@@ -682,7 +682,11 @@ button{font:inherit;color:inherit}
 .fila-inicio+.fila-inicio::before{content:"";position:absolute;top:0;left:16px;right:0;height:.5px;background:#38383A}
 .fila-inicio:active{background:#2C2C2E}
 .fila-inicio .fl-t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fila-inicio .fl-n{color:#8E8E93;font-variant-numeric:tabular-nums}.fila-inicio .fl-n.rojo{color:#FF453A}
+.fila-inicio .fl-n{color:#8E8E93;font-variant-numeric:tabular-nums}
+.fila-inicio .fl-n.globo{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:22px;height:22px;padding:0 7px;border-radius:11px;font-size:13px;font-weight:600;color:#FFFFFF}
+.fila-inicio .fl-n.globo.rojo{background:#D70015}.fila-inicio .fl-n.globo.morado{background:#8944AB}
+.et-venc{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;background:rgba(215,0,21,0.18);color:#FF453A;font-size:11px;font-weight:600;line-height:15px;vertical-align:2px;white-space:nowrap}
+.ttx .et-venc{align-self:flex-start;margin:2px 0 0}
 .fila-inicio .fl-p{width:8px;height:8px;border-radius:4px;background:#30D158;flex-shrink:0}
 .enc .atras-inicio{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:2px;min-height:44px;padding:0 6px 0 0;font-size:17px;color:#0A84FF;-webkit-tap-highlight-color:transparent}
 .enc .atras-inicio b{font-size:28px;font-weight:400;line-height:1;margin-top:-3px}
@@ -1783,7 +1787,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 294 · home de tres fichas (Te esperan · Bandeja · Hoy) y lista agrupada";
+var VERSION_APP = "build 295 · home: Vencidas y Te encargaron como filtros con globito; lo vencido cuenta en Hoy o Te esperan";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -7420,19 +7424,7 @@ function vLista(){
   }
 
   var hMis="";   /* la lista de «Te encargaron»; se ve en su propia vista (vGrupoInicio) */
-  if(mis.length){
-    hMis='<ul class="list">';
-    mis.forEach(function(e){
-      var venc=dDif(e.limite,hoy())>0;
-      hMis+='<li><button class="row" data-enc="'+e.id+'">'+
-        '<span class="dot '+(venc?"d-venc":"d-esper")+'"></span><span>'+
-        '<span class="nm">'+esc(PERSONAS[e.de].nombre)+' te encarg\u00f3</span>'+
-        '<span class="ls">'+esc(e.texto)+'</span></span>'+
-        '<span class="meta">'+(venc?'<span class="bdg g-venc">!</span>':'<span class="bdg g-esper">1</span>')+
-        '</span></button></li>';
-    });
-    hMis+='</ul>';
-  }
+  if(mis.length) hMis='<ul class="list">'+mis.map(filaEncargoInicio).join("")+'</ul>';
 
   var hPend="";
   if(pend.length){
@@ -7509,10 +7501,10 @@ function vLista(){
      desplegadas, sin acordeón) · 5 plegadas: Las lleva Claude (con semáforo), Mías futuras y el resto */
   var _h270=armaHome270(_rev, det, mias_venc, hoyYa, futuras);
   /* el home son tres fichas y una lista agrupada; cada grupo se ve en su propia vista (vGrupoInicio) con las mismas filas de siempre */
-  var _ctxIni={H:_h270, claude:_cl263, hMis:hMis, nMis:mis.length};
-  h+=_grupo?vGrupoInicio(_grupo, _ctxIni):_arriba+vFichasInicio(_h270)+vListaInicio(_ctxIni);
+  var _ctxIni={H:_h270, claude:_cl263, hMis:hMis, nMis:mis.length, F:filtrosInicio(_h270, mis)};
+  h+=_grupo?vGrupoInicio(_grupo, _ctxIni):_arriba+vFichasInicio(_h270, _ctxIni.F)+vListaInicio(_ctxIni);
   ordenLecturaInicio(_h270);
-  try{ foto272(_h270); }catch(e){}
+  try{ foto272({preg:_h270.preg, venc:_ctxIni.F.venc, hoy:_ctxIni.F.hoy}); }catch(e){}   /* lo que se ve en cada vista: así el renglón que se cierra sale en su lugar */
   window.__sale272=null;   /* el renglón que se cierra tras «Ya está» se pinta una sola vez */
   window.__H274=_h270;   /* la caminata sigue el orden del home */
   h=h.replace('<!--cam277-->', vCamIco277());
@@ -18618,8 +18610,12 @@ var COL270={preg:"#FF7A00", venc:"#FF3B30", hoy:"#8e8e93"};
    · Te esperan — lo que hoy era «Decide tú» + «Te pregunta Doit» (la misma lista H.preg); el número es H.preg.length.
    · Bandeja — «Tareas nuevas» (propuestas256) + «Mensajes por acomodar» (platicasAcomodo237), en dos pestañas.
    · Hoy — «Hoy mías» (H.hoy).
-   Abajo una lista agrupada (Vencidas, Próximas, Te encargaron, Las revisas tú, Compartidas, Las lleva Claude, Historial):
+   Abajo una lista agrupada (Vencidas, Te encargaron, Próximas, Las revisas tú, Compartidas, Las lleva Claude, Historial):
    un renglón sin nada no sale, salvo Historial. Una ficha en cero se queda, apagada.
+   Vencidas y Te encargaron son FILTROS: su número solo dice cuántas vencieron o te encargaron, y esas mismas cosas
+   también cuentan en la ficha que les toca por su tipo (filtrosInicio): lo que pide tu decisión o tu respuesta va a
+   Te esperan; lo que hay que hacer (actividad, cita, llamada) va a Hoy aunque ya haya vencido, porque todo lo atrasado
+   se junta en hoy. Una cosa puede salir en una ficha y en un filtro; dentro de una ficha cuenta una sola vez.
    Solo cambia DÓNDE se pintan las cosas: la selección (armaHome270, reparte263…), las filas y sus botones son los de siempre,
    y el orden del swipe y de la Caminata sale de las mismas listas. Al abrir una tarea desde un grupo y regresar, se vuelve al grupo. */
 var GRUPOS_INICIO={
@@ -18647,19 +18643,42 @@ function cuentaBandeja(){
 }
 /* sin pestaña elegida: Tareas nuevas si hay, si no Mensajes */
 function segBandeja(){ var s=window.__segBandeja; if(s==="nuevas" || s==="mensajes") return s; return cuentaBandeja().nuevas?"nuevas":(cuentaBandeja().mensajes?"mensajes":"nuevas"); }
-function cuentasInicio(H){ return {esperan:(H.preg||[]).length, bandeja:cuentaBandeja().total, hoy:(H.hoy||[]).length}; }
-function vFichasInicio(H){
-  var n=cuentasInicio(H);
+/* venció: la misma regla que manda una tarea a Vencidas (estadoReal) */
+function vencidaInicio(t){ try{ return !!t && estadoReal(t)==="vencida"; }catch(e){ return false; } }
+function encargoVencido(e){ return !!(e && e.limite && dDif(e.limite, hoy())>0); }
+/* un encargo pide tu respuesta si pregunta algo o pide decidir/confirmar; si no, es algo que hacer */
+var PIDE_RESPUESTA_ENC=/^(¿|decid|decide|define|autoriz|aprueb|elig|escog|confirm|dime|d[ií]game|av[ií]sa|contest|respond|opin|qué\s|cu[aá]l|cu[aá]ndo|cómo\s|d[oó]nde|qui[eé]n|cu[aá]nt|s[ií] o no)/;
+function encargoPideRespuesta(e){ var s=String(e && e.texto||"").trim().toLowerCase(); return s.indexOf("?")>=0 || PIDE_RESPUESTA_ENC.test(s); }
+/* reparte lo de las fichas y los filtros. Las listas de siempre (armaHome270) no cambian: Te esperan es H.preg (una
+   decisión vencida ya está ahí); Hoy suma las vencidas que no son decisión ni pregunta (H.venc), primero, y luego H.hoy.
+   Los encargos van a Te esperan o a Hoy por su tipo; si su tarea ya está en esa ficha no se cuentan otra vez. */
+function filtrosInicio(H, mis){
+  var F={esperan:[], hoy:[], venc:[], encEsperan:[], encHoy:[], encVenc:[], enc:(mis||[]).slice()}, enPreg={}, enHoy={}, enVenc={}, vencHoy=[], restoHoy=[];
+  (H.preg||[]).forEach(function(x){ if(enPreg[x.t.id]) return; enPreg[x.t.id]=1; F.esperan.push(x); });
+  (H.venc||[]).concat(H.hoy||[]).forEach(function(x){ if(enHoy[x.t.id] || enPreg[x.t.id]) return; enHoy[x.t.id]=1; (vencidaInicio(x.t)?vencHoy:restoHoy).push(x); });
+  F.hoy=vencHoy.concat(restoHoy);
+  var pv=function(x, why){ if(enVenc[x.t.id]) return; enVenc[x.t.id]=1; F.venc.push(why==null?x:{t:x.t, why:why}); };
+  (H.venc||[]).forEach(function(x){ pv(x); });
+  (H.preg||[]).concat(H.hoy||[]).forEach(function(x){ if(vencidaInicio(x.t)) pv(x, vencioTxt(x.t)); });
+  F.enc.forEach(function(e){ var tid=e.tareaId||"";
+    if(encargoVencido(e)) F.encVenc.push(e);
+    if(encargoPideRespuesta(e) || (tid && enPreg[tid])){ if(!(tid && enPreg[tid])) F.encEsperan.push(e); }
+    else if(!(tid && enHoy[tid])) F.encHoy.push(e); });
+  return F;
+}
+function cuentasInicio(H, F){ F=F||filtrosInicio(H, []); return {esperan:F.esperan.length+F.encEsperan.length, bandeja:cuentaBandeja().total, hoy:F.hoy.length+F.encHoy.length}; }
+function vFichasInicio(H, F){
+  var n=cuentasInicio(H, F);
   return '<div class="fichas-inicio">'+["esperan","bandeja","hoy"].map(function(k){ var G=GRUPOS_INICIO[k];
     return '<button class="ficha-inicio'+(n[k]?'':' cero')+'" data-grupo="'+k+'" style="--fc:'+G.c+';--fb:'+G.b+'" aria-label="'+G.t+': '+n[k]+'">'+
       '<span class="fi-n" aria-hidden="true">'+n[k]+'</span><span class="fi-l" aria-hidden="true">'+G.t+'</span></button>'; }).join("")+'</div>';
 }
 function nCompartidas(){ try{ return compartidasDe().length; }catch(e){ return 0; } }
 function vListaInicio(C){
-  var H=C.H, R=[];
-  if(H.venc.length) R.push(["venc", H.venc.length, "rojo"]);
+  var H=C.H, F=C.F||filtrosInicio(H, []), R=[], nv=F.venc.length+F.encVenc.length;
+  if(nv) R.push(["venc", nv, "globo rojo"]);
+  if(C.nMis) R.push(["enc", C.nMis, "globo morado"]);
   if(H.fut.length) R.push(["prox", H.fut.length]);
-  if(C.nMis) R.push(["enc", C.nMis]);
   if(H.otros.length) R.push(["rev", H.otros.length]);
   var nc=nCompartidas(); if(nc) R.push(["comp", nc]);
   if(C.claude.length) R.push(["claude", C.claude.length, "", 1]);
@@ -18668,15 +18687,29 @@ function vListaInicio(C){
     return '<button class="fila-inicio" data-grupo="'+r[0]+'" aria-label="'+t+(r[1]!=null?': '+r[1]:'')+'"><span class="fl-t">'+t+'</span>'+
       (r[3]?'<span class="fl-p" aria-hidden="true"></span>':'')+(r[1]!=null?'<span class="fl-n'+(r[2]?' '+r[2]:'')+'" aria-hidden="true">'+r[1]+'</span>':'')+'</button>'; }).join("")+'</nav>';
 }
-/* los renglones de Vencidas y Hoy, iguales a los de las secciones de antes (con el renglón que se cierra tras «Ya está») */
+/* los renglones de Vencidas y Hoy, iguales a los de las secciones de antes (con el renglón que se cierra tras «Ya está»);
+   en Hoy lo vencido lleva su etiqueta roja para que no se confunda con lo de hoy */
 function filasInicio(k, L){
-  return '<div class="revl ttl l270 l-'+k+'">'+filas272(k, L, function(x){ return '<button class="revr ttr" data-id="'+esc(x.t.id)+'"><i style="background:'+COL270[k]+'"></i><span class="ttx"><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span>'+(x.why?'<small>'+esc(x.why)+'</small>':'')+'</span></button>'; })+'</div>';
+  return '<div class="revl ttl l270 l-'+k+'">'+filas272(k, L, function(x){ var v=k!=="venc" && vencidaInicio(x.t);
+    var sf=k!=="venc" && !v && sinDefinir270(x.t);
+    return '<button class="revr ttr'+(v?' es-vencida':'')+(sf?' es-sinfecha':'')+'" data-id="'+esc(x.t.id)+'"><i style="background:'+COL270[v?"venc":k]+'"></i><span class="ttx"><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span>'+(v?'<span class="et-venc">Vencida</span>':'')+(x.why?'<small>'+esc(x.why)+'</small>':'')+'</span></button>'; })+'</div>';
 }
+/* el renglón de un encargo que te hicieron (el mismo en Te encargaron, en las fichas y en Vencidas) */
+function filaEncargoInicio(e){
+  var venc=encargoVencido(e), de=(PERSONAS[e.de]||{}).nombre||"Alguien";
+  return '<li><button class="row'+(venc?' es-vencida':'')+'" data-enc="'+esc(e.id)+'">'+
+    '<span class="dot '+(venc?"d-venc":"d-esper")+'"></span><span>'+
+    '<span class="nm">'+esc(de)+' te encargó'+(venc?'<span class="et-venc">Vencida</span>':'')+'</span>'+
+    '<span class="ls">'+esc(e.texto)+'</span></span>'+
+    '<span class="meta">'+(venc?'<span class="bdg g-venc">!</span>':'<span class="bdg g-esper">1</span>')+
+    '</span></button></li>';
+}
+function encargosInicio(L, tit){ if(!L || !L.length) return ""; return '<section class="sc284 sc-enc" aria-label="'+tit+'"><h2 class="hd284"><span>'+tit+'</span><em>'+L.length+'</em></h2><ul class="list l-enc">'+L.map(filaEncargoInicio).join("")+'</ul></section>'; }
 function vGrupoInicio(g, C){
-  var H=C.H, G=GRUPOS_INICIO[g], cuerpo="", vacio="Nada pendiente aquí.";
-  if(g==="esperan") cuerpo=vDecide284(H, filas272, true);
-  else if(g==="hoy"){ if(H.hoy.length) cuerpo=filasInicio("hoy", H.hoy); }
-  else if(g==="venc"){ if(H.venc.length) cuerpo=filasInicio("venc", H.venc); }
+  var H=C.H, F=C.F||filtrosInicio(H, []), G=GRUPOS_INICIO[g], cuerpo="", vacio="Nada pendiente aquí.";
+  if(g==="esperan") cuerpo=vDecide284(H, filas272, true)+encargosInicio(F.encEsperan, "Te encargaron");
+  else if(g==="hoy"){ cuerpo=(F.hoy.length?filasInicio("hoy", F.hoy):"")+encargosInicio(F.encHoy, "Te encargaron"); }
+  else if(g==="venc"){ cuerpo=(F.venc.length?filasInicio("venc", F.venc):"")+encargosInicio(F.encVenc, "Te encargaron"); }
   else if(g==="bandeja"){
     var nb=cuentaBandeja(), sg=segBandeja();
     cuerpo='<div class="seg-bandeja" role="tablist" aria-label="Bandeja">'+[["nuevas","Tareas nuevas",nb.nuevas],["mensajes","Mensajes",nb.mensajes]].map(function(x){
@@ -18783,7 +18816,7 @@ function filaDec284(t, i){
   var e=estadoDec284(t), id=esc(t.id), q=preguntaDec284(t), hace=haceDec284(t);
   var h='<div class="f284'+(i?'':' f284a')+'" data-dec284="'+id+'" data-e284="'+e+'">'+
     '<button class="f284h" data-id="'+id+'"><span class="f284i" aria-hidden="true">'+esc(iniDec284(t))+'</span><span class="f284x">'+
-      '<span class="f284t"><span class="f284n">'+esc(t.nombre||"Sin nombre")+'</span>'+(hace?'<span class="f284w">'+esc(hace)+'</span>':'')+'</span>'+
+      '<span class="f284t"><span class="f284n">'+esc(t.nombre||"Sin nombre")+'</span>'+(vencidaInicio(t)?'<span class="et-venc">Vencida</span>':'')+(hace?'<span class="f284w">'+esc(hace)+'</span>':'')+'</span>'+
       (q?'<span class="f284q">'+esc(q)+'</span>':'')+'</span></button>';
   if(e==="vivo"){
     h+='<div class="f284b">'+opcionesDec284(t).map(function(o){ return '<button class="p284'+(o.p?' p284p':'')+'" data-r284="'+id+'" data-v284="'+esc(o.n)+'">'+esc(o.n)+'</button>'; }).join("")+
@@ -18810,7 +18843,7 @@ function vDecide284(H, filas, fijo){
   if(dec.length){ h+='<section class="sc284" aria-label="Decide tú">'+cab("Decide tú", vivos, "decide")+'<div class="bl284"'+oc("decide")+'>'+dec.map(function(x, i){ return filaDec284(x.t, i); }).join("")+'</div></section>'; }
   if(resto.length){
     h+='<section class="sc284" aria-label="Te pregunta Doit">'+cab("Te pregunta Doit", resto.length, "preg")+'<div class="bl284 revl ttl l284"'+oc("preg")+'>'+(filas||function(k, L, b){ return L.map(b).join(""); })("preg", resto, function(x){
-      return '<button class="revr ttr" data-id="'+esc(x.t.id)+'"><span class="f284i" aria-hidden="true">'+esc(iniDec284(x.t))+'</span><span class="ttx"><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span>'+(x.why?'<small>'+esc(x.why)+'</small>':'')+'</span>'+SVG284.chev+'</button>'; })+'</div></section>';
+      return '<button class="revr ttr" data-id="'+esc(x.t.id)+'"><span class="f284i" aria-hidden="true">'+esc(iniDec284(x.t))+'</span><span class="ttx"><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span>'+(vencidaInicio(x.t)?'<span class="et-venc">Vencida</span>':'')+(x.why?'<small>'+esc(x.why)+'</small>':'')+'</span>'+SVG284.chev+'</button>'; })+'</div></section>';
   }
   return h;
 }

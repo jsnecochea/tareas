@@ -50,7 +50,7 @@ eq("la línea de estado vieja ya no existe en el código", /function vEstado272|
     var A = await p.evaluate(function () { home(FX()); var H = window.__H274, r = {};
       r.fichas = [].map.call(document.querySelectorAll(".fichas-inicio > .ficha-inicio"), function (f) { return f.getAttribute("data-grupo"); });
       r.esperan = ficha("esperan"); r.bandeja = ficha("bandeja"); r.hoy = ficha("hoy");
-      r.cuentas = [H.preg.length, propuestas256().length + platicasAcomodo237().length, H.hoy.length];
+      var F = filtrosInicio(H, misEncargos()); r.cuentas = [F.esperan.length + F.encEsperan.length, propuestas256().length + platicasAcomodo237().length, F.hoy.length + F.encHoy.length];
       r.mismoAncho = r.esperan.w === r.bandeja.w && r.bandeja.w === r.hoy.w;
       r.sinIconos = !document.querySelector(".fichas-inicio svg, .fichas-inicio img");
       r.filas = [].map.call(document.querySelectorAll(".lista-inicio .fila-inicio"), function (f) { return f.textContent; });
@@ -63,7 +63,7 @@ eq("la línea de estado vieja ya no existe en el código", /function vEstado272|
     eq("Te esperan: número = te preguntan (decisión + pregunta)", [A.esperan.n, A.esperan.l, A.esperan.aria, A.esperan.tag], ["2", "Te esperan", "Te esperan: 2", "BUTTON"]);
     eq("Bandeja: tareas nuevas + mensajes por acomodar", [A.bandeja.n, A.bandeja.l, A.bandeja.aria], [String(A.cuentas[1]), "Bandeja", "Bandeja: " + A.cuentas[1]]);
     eq("Bandeja trae las dos clases (1 nueva + pláticas)", A.cuentas[1] >= 2, true);
-    eq("Hoy: Hoy mías", [A.hoy.n, A.hoy.aria], ["3", "Hoy: 3"]);
+    eq("Hoy: Hoy mías + la vencida (es actividad, se junta en hoy)", [A.hoy.n, A.hoy.aria], ["4", "Hoy: 4"]);
     eq("Mismos números que las listas del home", [+A.esperan.n, +A.bandeja.n, +A.hoy.n], A.cuentas);
     eq("Colores de las fichas", [A.esperan.color, A.bandeja.color, A.hoy.color], ["rgb(255, 159, 10)", "rgb(10, 132, 255)", "rgb(48, 209, 88)"]);
     eq("Borde al 45 %", [A.esperan.borde, A.bandeja.borde, A.hoy.borde], ["rgba(255, 159, 10, 0.45)", "rgba(10, 132, 255, 0.45)", "rgba(48, 209, 88, 0.45)"]);
@@ -130,7 +130,7 @@ eq("la línea de estado vieja ya no existe en el código", /function vEstado272|
     /* 5 · Hoy: los renglones de siempre; abrir una tarea y regresar vuelve a Hoy */
     await p.click('.ficha-inicio[data-grupo="hoy"]'); await p.waitForTimeout(80);
     var Hh = await p.evaluate(function () { var g = document.querySelector('[data-grupo-vista="hoy"]'); return [].map.call(g.querySelectorAll(".ttr[data-id]"), function (b) { return b.getAttribute("data-id"); }); });
-    eq("Vista Hoy con sus renglones", Hh, ["tH1", "tH2", "tH3"]);
+    eq("Vista Hoy con sus renglones (la vencida primero)", Hh, ["tV1", "tH1", "tH2", "tH3"]);
     await foto("inicio-hoy.png");
     await p.click('[data-grupo-vista="hoy"] .ttr[data-id="tH2"]'); await p.waitForTimeout(120);
     var Tt = await p.evaluate(function () { var r = [vista, abierta]; volver(); vista = "lista"; abierta = null; render(); r.push(!!document.querySelector('[data-grupo-vista="hoy"]')); return r; });

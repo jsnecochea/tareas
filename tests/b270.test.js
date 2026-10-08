@@ -38,7 +38,7 @@ eq("sw.js con versión build ≥ 270", +((/var SW_VERSION = 'build (\d+)'/.exec(
       /* home de tres fichas: cada sección vive en su propia vista (Te esperan · Vencidas · Hoy); se abren una por una y se regresa al inicio */
       window.secs = function () { var o = {};
         [["esperan"], ["venc", "Vencidas mías"], ["hoy", "Hoy mías"]].forEach(function (x) { window.__grupoInicio = x[0]; render(); var g = document.querySelector('[data-grupo-vista="' + x[0] + '"]'); if (!g) return;
-          if (x[1]) { var L = [].map.call(g.querySelectorAll(".ttr .rn"), function (b) { return b.textContent; }); if (L.length) o[x[1]] = L; }
+          if (x[1]) { var L = [].map.call(g.querySelectorAll(x[0] === "hoy" ? ".ttr:not(.es-vencida) .rn" : ".ttr .rn"), function (b) { return b.textContent; }); if (L.length) o[x[1]] = L; }   /* «Hoy mías» = lo de hoy; las vencidas que la ficha Hoy junta arriba las cubre inicio-filtros */
           else [].forEach.call(g.querySelectorAll(".sc284"), function (sc) { o[sc.getAttribute("aria-label")] = [].map.call(sc.querySelectorAll(".ttr .rn, .f284n"), function (b) { return b.textContent; }); }); });
         window.__grupoInicio = null; render(); return o; };
       window.enGrupo = function (g, fn) { window.__grupoInicio = g; render(); var r = fn(document.querySelector('[data-grupo-vista="' + g + '"]')); window.__grupoInicio = null; render(); return r; };
@@ -72,7 +72,7 @@ eq("sw.js con versión build ≥ 270", +((/var SW_VERSION = 'build (\d+)'/.exec(
       var css = function (root, sel, prop) { var e = root && root.querySelector(sel); return e ? getComputedStyle(e)[prop] : ""; };
       var vE = enGrupo("esperan", function (g) { return { tog: [].slice.call(g.querySelectorAll(".ttsum, [data-ttab]")).length, pl: g.querySelectorAll("[data-pl285], [hidden]").length, sinPunto: !g.querySelector(".l284 .ttr i"), tit: css(g, ".hd284 span", "color"), fondo: css(g, ".l284", "backgroundColor") }; });
       var vV = enGrupo("venc", function (g) { return { tog: g.querySelectorAll(".ttsum, [data-ttab]").length, pl: g.querySelectorAll("[data-pl285], [hidden]").length, c: css(g, ".l-venc .ttr i", "backgroundColor") }; });
-      var vH = enGrupo("hoy", function (g) { return { tog: g.querySelectorAll(".ttsum, [data-ttab]").length, pl: g.querySelectorAll("[data-pl285], [hidden]").length, c: css(g, ".l-hoy .ttr i", "backgroundColor") }; });
+      var vH = enGrupo("hoy", function (g) { return { tog: g.querySelectorAll(".ttsum, [data-ttab]").length, pl: g.querySelectorAll("[data-pl285], [hidden]").length, c: css(g, ".l-hoy .ttr:not(.es-vencida) i", "backgroundColor") }; });
       r.sinToggles = vE.tog + vV.tog + vH.tog; r.toggles285 = [vE.pl, vV.pl, vH.pl];
       r.colores = [vE.sinPunto, vV.c, vH.c, vE.tit];   /* Te pregunta Doit limpio, sin puntito ni naranja */
       r.fondoPreg = vE.fondo;   /* bloque gris #1C1C1E, sin fondo naranja */

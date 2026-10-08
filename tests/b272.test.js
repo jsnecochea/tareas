@@ -36,7 +36,7 @@ eq("sw.js con versión build ≥ 272", +((/var SW_VERSION = 'build (\d+)'/.exec(
       /* home de tres fichas: cada sección vive en su propia vista (Te esperan · Vencidas · Hoy); se abren una por una y se regresa al inicio */
       window.secs = function () { var o = {};
         [["esperan"], ["venc", "Vencidas mías"], ["hoy", "Hoy mías"]].forEach(function (x) { window.__grupoInicio = x[0]; render(); var g = document.querySelector('[data-grupo-vista="' + x[0] + '"]'); if (!g) return;
-          if (x[1]) { var L = [].map.call(g.querySelectorAll(".ttr .rn"), function (b) { return b.textContent; }); if (L.length) o[x[1]] = L; }
+          if (x[1]) { var L = [].map.call(g.querySelectorAll(x[0] === "hoy" ? ".ttr:not(.es-vencida):not(.es-sinfecha) .rn" : ".ttr .rn"), function (b) { return b.textContent; }); if (L.length) o[x[1]] = L; }   /* «Hoy mías» = lo de hoy; las vencidas que la ficha Hoy junta arriba las cubre inicio-filtros */
           else [].forEach.call(g.querySelectorAll(".sc284"), function (sc) { o[sc.getAttribute("aria-label")] = [].map.call(sc.querySelectorAll(".ttr .rn, .f284n"), function (b) { return b.textContent; }); }); });
         window.__grupoInicio = null; render(); return o; };
       window.cuentas = function () { return [].map.call(document.querySelectorAll(".ficha-inicio, .fila-inicio"), function (b) { return b.getAttribute("aria-label"); }); };
@@ -78,7 +78,7 @@ eq("sw.js con versión build ≥ 272", +((/var SW_VERSION = 'build (\d+)'/.exec(
       home([]); r.vacio = [document.querySelectorAll(".ficha-inicio.cero").length, cuentas().slice(3), !document.querySelector(".h270, .abajo270, .est272")];
       return r; });
     if (process.env.CAP) { await p.evaluate(function () { var L = fx272(); L.push(T("tCL", "La lleva Claude", "", { encargos: [{ id: "e", estado: "pendiente" }] })); home(L); }); await foto("b272-inicio.png"); }
-    eq("Fichas y lista con los contadores de siempre (te preguntan 2 · vencidas 2 · hoy 3)", A.est, ["Te esperan: 2", "Bandeja: 0", "Hoy: 3", "Vencidas: 2", "Próximas: 1", "Historial"]);
+    eq("Fichas y lista: te preguntan 2 · hoy 3 + las 2 vencidas (son actividades, se juntan en Hoy) · vencidas 2", A.est, ["Te esperan: 2", "Bandeja: 0", "Hoy: 5", "Vencidas: 2", "Próximas: 1", "Historial"]);
     eq("Ya no hay línea de estado", A.estArriba, true);
     eq("Secciones del home", A.secs, { "Te pregunta Doit": ["Junta con el banco", "Pregunta sola"], "Vencidas mías": ["Vencida uno", "Vencida dos"], "Hoy mías": ["Hoy uno", "Hoy dos", "Hoy tres"] });
     eq("3 preguntas de una tarea = un renglón 'N preguntas'", A.grupo, ["3", "3 preguntas", 1]);
@@ -99,7 +99,7 @@ eq("sw.js con versión build ≥ 272", +((/var SW_VERSION = 'build (\d+)'/.exec(
       document.getElementById("binicio").click(); await espera(60);
       r.llego = [sc.scrollTop === 0 || !!document.querySelector(".fichas-inicio"), !document.querySelector("[data-grupo-vista]")];
       return r; });
-    eq("Tocar la ficha Hoy abre su vista con las 17 de hoy y solo eso", B.llamado, [true, 17, true]);
+    eq("Tocar la ficha Hoy abre su vista con las 17 de hoy + las 2 vencidas y solo eso", B.llamado, [true, 19, true]);
     eq("‹ Inicio regresa a las fichas", B.llego, [true, true]);
 
     /* ===== tocar el renglón agrupado: abre la tarea con el popup de preguntas ===== */
@@ -141,10 +141,10 @@ eq("sw.js con versión build ≥ 272", +((/var SW_VERSION = 'build (\d+)'/.exec(
       r.flujo = [vista, abierta !== null];
       abierta = null; vista = "lista"; render();
       var g = document.querySelector(".l-hoy .sale272");
-      r.fantasma = g ? [g.querySelector(".rn").textContent, [].map.call(document.querySelectorAll(".l-hoy .ttr"), function (e) { return e.querySelector(".rn").textContent; }), getComputedStyle(g).transitionDuration.split(",")[0].trim(), g.hasAttribute("data-id")] : null;
+      r.fantasma = g ? [g.querySelector(".rn").textContent, [].map.call(document.querySelectorAll(".l-hoy .ttr:not(.es-vencida)"), function (e) { return e.querySelector(".rn").textContent; }), getComputedStyle(g).transitionDuration.split(",")[0].trim(), g.hasAttribute("data-id")] : null;
       await espera(150); var g2 = document.querySelector(".l-hoy .sale272"); r.aMitad = g2 ? Math.round(g2.getBoundingClientRect().height) : -1;
       await espera(400);
-      r.despues = [!!document.querySelector(".sale272"), [].map.call(document.querySelectorAll(".l-hoy .ttr"), function (e) { return e.querySelector(".rn").textContent; })];
+      r.despues = [!!document.querySelector(".sale272"), [].map.call(document.querySelectorAll(".l-hoy .ttr:not(.es-vencida)"), function (e) { return e.querySelector(".rn").textContent; })];
       render(); r.otraVez = !!document.querySelector(".sale272");
       return r; });
     eq("'Ya está' dentro de la tarea no regresa al home", E.flujo, ["hilo", true]);
