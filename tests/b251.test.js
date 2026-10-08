@@ -45,14 +45,15 @@ eq("versión >= 251", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     var src = html;
     eq("MODO_CEREBRO = pesado", /var MODO_CEREBRO="pesado"/.test(src), true);
     var usos = function (nombre) { var i = src.indexOf("function " + nombre); var j = src.indexOf("\nfunction ", i + 10); var cuerpo = src.slice(i, j); return [/preguntaAClaude\(\[\{role:"user"[^\n]*?MODO_CEREBRO/.test(cuerpo), /"rapido"/.test(cuerpo)]; };
-    eq("completaRevision / nota a Claude / agregaContexto / barraEnviar / entrevista: modo pesado, ya no rapido", ["completaRevision", "ejecutaNotaClaude", "agregaContexto", "barraEnviar", "contestaEntrevista"].map(usos), [[true, false], [true, false], [true, false], [true, false], [true, false]]);
+    /* build 283 (Salvador aprobó app-fix-dictado.md): dictados e indicaciones (completaRevision fuera de «Falta info») y la nota a Claude van en "rapido" */
+    eq("build 283: completaRevision y nota a Claude en rapido; agregaContexto / barraEnviar / entrevista siguen en pesado", ["completaRevision", "ejecutaNotaClaude", "agregaContexto", "barraEnviar", "contestaEntrevista"].map(usos), [[false, true], [false, true], [true, false], [true, false], [true, false]]);
     var rmod = await p.evaluate(async function () { window.fetch = function () { return Promise.resolve({ ok: true, json: function () { return Promise.resolve({ model: "claude-sonnet-5-5", content: [{ text: "{}" }] }); } }); };
       APP_TOKEN = "tok"; var out = null; preguntaAClaude([{ role: "user", content: "x" }], "pesado", function () { out = Object.assign({}, window.__MODELO_CLAUDE); }); await espera(80); return out; });
     eq("la app anota el modelo que dice el servidor (campo model) por modo", rmod, { pesado: "claude-sonnet-5-5" });
     var r1 = await p.evaluate(async function () { var modos = []; preguntaAClaude = function (m, modo, cb) { modos.push(modo); setTimeout(function () { cb(JSON.stringify({ tipo: "tarea", fecha: null, ordenes: [{ tipo: "claude", que: "revisar el contrato", fecha: "2026-10-07" }], recordar: [], vinculos: [], dudas: [] })); }, 5); };
       var T = { id: "tM", nombre: "Contrato", duenio: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, f_vigente: "2026-10-12", f_original: "2026-10-12", fecha_dictada: true, contexto: "Contrato de arrendamiento de la bodega con el propietario, pendiente de firma.", msgs: [] };
       abre(T); completaRevision(T, "revisa el contrato de la bodega y dime qué cláusulas me conviene cambiar", { sinRevision: true }); await espera(300); return modos; });
-    eq("completaRevision pide con 'pesado'", r1, ["pesado"]);
+    eq("build 283: completaRevision (indicación, fuera de Falta info) pide con 'rapido'", r1, ["rapido"]);
 
     /* 2) nada se atora: vacío -> reintento UNA vez con prompt reforzado -> pregunta concreta */
     var PEND = function () { return { id: "tP", nombre: "Bodega", duenio: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, f_vigente: "2026-10-12", f_original: "2026-10-12", fecha_dictada: true, contexto: "Bodega nueva de Gruponec en el parque industrial; falta definir quién la limpia antes de mudarse.",
@@ -62,25 +63,24 @@ eq("versión >= 251", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       var T = PEND(); abre(T); completaRevision(T, "ahí lo que sea con la bodega, tú sabes, hazlo", { sinRevision: true }); await espera(700);
       var V = tareas[0], H = V.hecho238 || {};
       return { llamadas: n, modos: modos, refuerzo: /REINTENTO/.test(prompts[1] || "") && !/REINTENTO/.test(prompts[0]), ctx: /Bodega nueva de Gruponec en el parque industrial/.test(prompts[1] || ""), ultimos: (prompts[1] || "").indexOf("mensaje número 12 de la bodega") > 0 && (prompts[1] || "").indexOf("mensaje número 2 de la bodega") < 0, hecho: H.hecho || [], falta: (H.falta || []).length, modal: !!document.getElementById("preg249"), dimelo: (V.msgs || []).some(function (m) { return /dímelo otra vez/i.test(m.t || ""); }) }; });
-    eq("Reintenta UNA vez en 'pesado', con prompt reforzado (contexto completo y los últimos 10 mensajes)", [r2.llamadas, r2.modos, r2.refuerzo, r2.ctx, r2.ultimos], [2, ["pesado", "pesado"], true, true, true]);
-    eq("Si el reintento sí dejó orden, se aplica y no hay 'dímelo otra vez' ni tarjeta", [r2.hecho.length > 0, r2.falta, r2.modal, r2.dimelo], [true, 0, false, false]);
+    /* build 283: ya no hay reintento en serie: UNA llamada en rápido; lo que no dejó nada queda de encargo para la Mac, sin tarjeta ni «dímelo otra vez» */
+    eq("build 283: UNA sola llamada en 'rapido' (sin reintento reforzado)", [r2.llamadas, r2.modos, r2.refuerzo], [1, ["rapido"], false]);
+    eq("build 283: sin resultado no hay 'dímelo otra vez' ni tarjeta", [r2.falta, r2.modal, r2.dimelo], [0, false, false]);
     var r3 = await p.evaluate(async function () { var n = 0; preguntaAClaude = function (m, modo, cb) { n++; setTimeout(function () { cb(JSON.stringify({ tipo: "tarea", fecha: null, ordenes: [], recordar: [], vinculos: [], dudas: [], pregunta: null })); }, 5); };
       var T = PEND(); abre(T); completaRevision(T, "ahí lo que sea con la bodega, tú sabes, hazlo", { sinRevision: true }); await espera(2800);
       var V = tareas[0], H = V.hecho238 || {}, m = document.getElementById("preg249");
-      return { llamadas: n, falta: (H.falta || []).map(function (f) { return f.q; }), modal: !!m, filas: m ? [].map.call(m.querySelectorAll(".pq255l li"), function (x) { return x.firstChild.textContent; }) : [], dimelo: (V.msgs || []).some(function (x) { return /d[ií]melo otra vez|No pesqu/i.test(x.t || ""); }) }; });
-    eq("Sigue sin quedar claro: solo 2 llamadas y se abre EN EL ACTO la tarjeta con una pregunta concreta", [r3.llamadas, r3.modal, r3.filas.length, /No me quedó claro qué hacer con «ahí lo que sea/.test(r3.filas[0] || "")], [2, true, 1, true]);
+      var E = (V.encargos || []).filter(function (e) { return e && e.origen === "app283"; });
+      return { llamadas: n, falta: (H.falta || []).map(function (f) { return f.q; }), modal: !!m, enc: E.map(function (e) { return [e.tipo, e.estado, e.motivo, e.t]; }), paso: (V.msgs || []).some(function (x) { return x.k === "bi" && /lo paso a Claude/.test(x.t || ""); }), dimelo: (V.msgs || []).some(function (x) { return /d[ií]melo otra vez|No pesqu/i.test(x.t || ""); }) }; });
+    eq("build 283: sigue sin quedar claro -> 1 llamada, sin tarjeta; queda de encargo (orden pendiente) y el texto dice que lo pasa a Claude", [r3.llamadas, r3.modal, r3.enc, r3.paso], [1, false, [["orden", "pendiente", "sin_resultado", "ahí lo que sea con la bodega, tú sabes, hazlo"]], true]);
     eq("Nunca más 'Dímelo otra vez' sin pregunta", r3.dimelo, false);
     await foto("b251-1-pregunta-concreta.png");
-    var r3b = await p.evaluate(async function () { var n = 0, ps = []; preguntaAClaude = function (m, modo, cb) { n++; ps.push(m[0].content); setTimeout(function () { cb(JSON.stringify({ tipo: "tarea", fecha: null, ordenes: [{ tipo: "claude", que: "anotar como dato lo de la bodega" }], recordar: [], vinculos: [], dudas: [] })); }, 5); };
-      var op0 = (document.querySelector("#preg249 .pq255l small") || { textContent: "" }).textContent.replace(/[()]/g, "").split(" · ")[0];
-      preguntaAClaude = function (m, modo, cb) { n++; ps.push(m[0].content); var rep = /Reparte su respuesta/.test(m[0].content); setTimeout(function () { cb(JSON.stringify(rep ? { respuestas: [{ n: 1, r: op0 || "como dato" }] } : { tipo: "tarea", fecha: null, ordenes: [{ tipo: "claude", que: "anotar como dato lo de la bodega" }], recordar: [], vinculos: [], dudas: [] })); }, 5); };
-      dicta255("lo anotas como dato"); await espera(900);
-      var V = tareas[0]; return { n: n, resp: ps.some(function (q) { return /Respuesta a «No me quedó claro qué hacer con/.test(q); }), modal: !!document.getElementById("preg249"), overlay: !!document.getElementById("acom249") }; });
-    eq("Contestar la pregunta concreta la manda de nuevo al cerebro y se libera", [r3b.n >= 1, r3b.resp, r3b.modal, r3b.overlay], [true, true, false, false]);
+    /* build 283: ya no sale la pregunta concreta del 251 (la orden la termina la Mac); el encargo queda una sola vez */
+    var r3b = await p.evaluate(function () { var V = tareas[0]; return (V.encargos || []).filter(function (e) { return e && e.origen === "app283"; }).length; });
+    eq("build 283: un solo encargo por orden (no se duplica)", r3b, 1);
     var r3c = await p.evaluate(async function () { var n = 0; preguntaAClaude = function (m, modo, cb) { n++; setTimeout(function () { cb(JSON.stringify({ tipo: "tarea", fecha: null, ordenes: [{ tipo: "volar_a_la_luna", que: "x" }], recordar: [], vinculos: [], dudas: [] })); }, 5); };
       var T = PEND(); abre(T); completaRevision(T, "dile a Pedro que me confirme la hora de la entrega de la bodega", { sinRevision: true }); await espera(2800);
-      var H = tareas[0].hecho238 || {}; return { n: n, falta: (H.falta || []).map(function (f) { return f.q; }), modal: !!document.getElementById("preg249") }; });
-    eq("Acción imposible: también se reintenta una vez y luego pregunta (a quién y qué le digo)", [r3c.n, r3c.modal, r3c.falta], [2, true, ["¿A quién se lo mando y qué le digo exactamente?"]]);
+      var H = tareas[0].hecho238 || {}; return { n: n, falta: (H.falta || []).map(function (f) { return f.q; }), modal: !!document.getElementById("preg249"), enc: (tareas[0].encargos || []).filter(function (e) { return e && e.origen === "app283"; }).length }; });
+    eq("build 283: acción imposible -> 1 llamada, sin tarjeta, queda de encargo para la Mac", [r3c.n, r3c.modal, r3c.falta, r3c.enc], [1, false, [], 1]);
     await p.evaluate(function () { var m = document.getElementById("preg249"); if (m) m.remove(); });
     var r3d = await p.evaluate(async function () { var n = 0; preguntaAClaude = function (m, modo, cb) { n++; setTimeout(function () { cb(JSON.stringify({ tipo: "tarea", ordenes: [], recordar: [], vinculos: [], dudas: [] })); }, 5); };
       var T = PEND(); abre(T); completaRevision(T, "ok", { sinRevision: true }); await espera(500); return n; });

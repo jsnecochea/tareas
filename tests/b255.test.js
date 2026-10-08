@@ -75,7 +75,7 @@ eq("versión >= 255", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       return { durante: durante, modos: window.__PROMPTS.map(function (x) { return x[0]; }), ctx: /¿Cuándo te recuerdo antes de la fecha límite\?/.test(window.__PROMPTS[0][1]) && /1\. /.test(window.__PROMPTS[0][1]) && /2\. ¿El próximo seguimiento\?/.test(window.__PROMPTS[0][1]) && /recuérdame el jueves a las 9 y el seguimiento el lunes/.test(window.__PROMPTS[0][1]), brain: /Respuesta a «¿Cuándo te recuerdo antes de la fecha límite\?»: el jueves a las 9\./.test((window.__PROMPTS[1] || [0, ""])[1]) && /Respuesta a «¿El próximo seguimiento\?»: el lunes\./.test((window.__PROMPTS[1] || [0, ""])[1]),
         despues: { loader: !!document.getElementById("acom249"), bloque: !!m, falta: ((V.hecho238 || {}).falta || []).length }, contexto: /jueves a las 9/.test(V.contexto || ""), nota: (V.msgs || []).some(function (x) { return x.resp_preguntas255; }) }; });
     eq("Durante: blur con loader, el bloque ya no está y la caja queda vacía", r4.durante, { loader: true, bloque: false, caja: "" });
-    eq("Se manda al cerebro en modo pesado: primero reparte (con las preguntas como contexto), luego aplica", [r4.modos, r4.ctx, r4.brain], [["pesado", "pesado"], true, true]);
+    eq("Primero reparte en pesado (con las preguntas como contexto); luego aplica (build 283: en rápido, fuera de «Falta info»)", [r4.modos, r4.ctx, r4.brain], [["pesado", "rapido"], true, true]);
     eq("Al terminar: sin loader, sin bloque, sin preguntas pendientes y refrescada con lo dicho", [r4.despues, r4.contexto, r4.nota], [{ loader: false, bloque: false, falta: 0 }, true, true]);
     await foto("b255-2-listo.png");
     /* 5) contesta solo una: se queda SOLO la otra en el bloque */

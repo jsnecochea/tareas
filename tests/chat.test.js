@@ -95,7 +95,7 @@ si("salir de la tarea termina la visita", /if\(vista!=="hilo" && vista!=="galeri
 eq("hecho + entendi", c.respuestaHecho("Cambié el nombre a “X”.", "Querías que se llamara X"), "Cambié el nombre a “X”. Entendí: Querías que se llamara X.");
 eq("'Listo' no cuenta como entender", c.respuestaHecho("La cerré como hecha.", "Listo"), "La cerré como hecha.");
 eq("nada hecho, pero entendio", c.respuestaHecho("", "Es una nota para ti sobre el portón"), "Entendí: Es una nota para ti sobre el portón. No cambié nada en la tarea.");
-eq("nada hecho y vago", c.respuestaHecho("", "Ok"), "No cambié nada: no me quedó claro qué hacer. Dímelo otra vez.");
+eq("nada hecho y vago (build 283: sin «dímelo otra vez», lo termina Claude)", /^No cambié nada todavía: lo paso a Claude/.test(c.respuestaHecho("", "Ok")) && !/d[ií]melo otra vez/i.test(c.respuestaHecho("", "Ok")), true);
 si("prompt pide decir que entendio (nunca solo Listo)", /QUÉ ENTENDISTE/.test(html));
 
 var m = html.match(/<script>([\s\S]*?)<\/script>\s*<\/body>/), okc = false;

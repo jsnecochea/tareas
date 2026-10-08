@@ -131,7 +131,7 @@ eq("sw.js con versión build ≥ 273", +((/var SW_VERSION = 'build (\d+)'/.exec(
     eq("lo dictado no se pierde si la pantalla se repinta", D.sobreviveRender, "Autorizo la de Dahua");
     eq("la respuesta va al hilo como nota para Claude (no sale por WhatsApp)", D.msg, ["bo", "Autorizo la de Dahua", "salvador", "priv:salvador", 1, 1]);
     eq("queda en decision.respuesta y se guarda", [D.resp, D.guardo], [["Autorizo la de Dahua", "salvador"], true]);
-    eq("la capa dice lo que contestaste", D.ui, [false, "Contestaste: «Autorizo la de Dahua». Claude lo aplica."]);
+    eq("la capa dice lo que contestaste (build 283: pendiente de aplicar hasta aplicado38)", D.ui, [false, "Contestaste: «Autorizo la de Dahua». Pendiente de aplicar · Claude lo está aplicando…"]);
     eq("el dictado se apagó al mandar", D.oyendo, false);
     eq("Cambiar → se contesta otra vez (escrito, con Enter)", D.escrito, ["Mejor la de Hikvision", 2]);
 

@@ -45,7 +45,7 @@ eq("versión >= 252", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     var src = html;
     eq("MODO_CEREBRO = pesado", /var MODO_CEREBRO="pesado"/.test(src), true);
     var usos = function (nombre) { var i = src.indexOf("function " + nombre); var j = src.indexOf("\nfunction ", i + 10); var cuerpo = src.slice(i, j); return [/preguntaAClaude\(\[\{role:"user"[^\n]*?MODO_CEREBRO/.test(cuerpo), /"rapido"/.test(cuerpo)]; };
-    eq("completaRevision / nota a Claude / agregaContexto / barraEnviar / entrevista: modo pesado, ya no rapido", ["completaRevision", "ejecutaNotaClaude", "agregaContexto", "barraEnviar", "contestaEntrevista"].map(usos), [[true, false], [true, false], [true, false], [true, false], [true, false]]);
+    eq("build 283: completaRevision y nota a Claude en rapido; agregaContexto / barraEnviar / entrevista siguen en pesado", ["completaRevision", "ejecutaNotaClaude", "agregaContexto", "barraEnviar", "contestaEntrevista"].map(usos), [[false, true], [false, true], [true, false], [true, false], [true, false]]);
     /* espía del focus: ¿ocurrió DENTRO del toque? (iOS solo abre el teclado así) */
     await p.evaluate(function () { window.__FOC = []; var _f = HTMLElement.prototype.focus; document.addEventListener("click", function () { window.__inClick = true; setTimeout(function () { window.__inClick = false; }, 0); }, true);
       HTMLElement.prototype.focus = function () { window.__FOC.push([this.id || this.className || this.tagName, !!window.__inClick]); return _f.apply(this, arguments); }; });

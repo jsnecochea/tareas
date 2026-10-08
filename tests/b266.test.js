@@ -61,7 +61,7 @@ eq("versión >= 255", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       var V = tareas[0];
       return { dd: (V.decision_dato || []).length, pend: [V.pendiente_tipo, V.pendiente_info], bloque: !!document.getElementById("preg249"), fichas: document.querySelectorAll(".c-decmeta,.decban,[data-ddact]").length, chip: !!document.querySelector('[data-chip="falta"]'), modo: window.__PROMPTS.map(function (x) { return x[0]; }), ctx: /Respuesta a «Manuel Parra no da el dato/.test((window.__PROMPTS[1] || [0, ""])[1]), yoHablo: ((V.repreg || [])[0] || {}).yo_hablo || null }; });
     eq("Dictar la respuesta cierra el registro y la pregunta desaparece", [r2.dd, r2.pend, r2.bloque, r2.fichas, r2.chip], [0, ["", ""], false, 0, false]);
-    eq("Pasó por el cerebro pesado con la pregunta como contexto", [r2.modo, r2.ctx], [["pesado", "pesado"], true]);
+    eq("Reparte en pesado con la pregunta como contexto y aplica en rápido (build 283)", [r2.modo, r2.ctx], [["pesado", "rapido"], true]);
     /* 3) si el contacto ya contestó algo útil después, no se muestra */
     await limpia();
     var r3 = await p.evaluate(async function () { var T = VEST(); T.msgs.push({ k: "bo", wa_in: 1, wa_c: "Manuel Parra", t: "Son 48 mil pesos la piedra", ts: Date.now() - 1000, h: "08:00", claridad: "ok" }); tareas = [T]; abierta = "tVEST"; vista = "hilo"; render(); await espera(80);
