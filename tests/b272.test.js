@@ -36,7 +36,7 @@ eq("sw.js con versión build ≥ 272", +((/var SW_VERSION = 'build (\d+)'/.exec(
       /* home de tres fichas: cada sección vive en su propia vista (Te esperan · Vencidas · Hoy); se abren una por una y se regresa al inicio */
       window.secs = function () { var o = {};
         [["esperan"], ["venc", "Vencidas mías"], ["hoy", "Hoy mías"]].forEach(function (x) { window.__grupoInicio = x[0]; render(); var g = document.querySelector('[data-grupo-vista="' + x[0] + '"]'); if (!g) return;
-          if (x[1]) { var L = [].map.call(g.querySelectorAll(x[0] === "hoy" ? ".ttr:not(.es-vencida):not(.es-sinfecha) .rn" : ".ttr .rn"), function (b) { return b.textContent; }); if (L.length) o[x[1]] = L; }   /* «Hoy mías» = lo de hoy; las vencidas que la ficha Hoy junta arriba las cubre inicio-filtros */
+          if (x[1]) { var L = [].map.call(g.querySelectorAll(x[0] === "hoy" ? ".ttr:not(.es-vencida) .rn" : ".ttr .rn"), function (b) { return b.textContent; }); if (L.length) o[x[1]] = L; }   /* «Hoy mías» = lo de hoy; las vencidas que la ficha Hoy junta arriba las cubre inicio-filtros */
           else [].forEach.call(g.querySelectorAll(".sc284"), function (sc) { o[sc.getAttribute("aria-label")] = [].map.call(sc.querySelectorAll(".ttr .rn, .f284n"), function (b) { return b.textContent; }); }); });
         window.__grupoInicio = null; render(); return o; };
       window.cuentas = function () { return [].map.call(document.querySelectorAll(".ficha-inicio, .fila-inicio"), function (b) { return b.getAttribute("aria-label"); }); };
@@ -128,7 +128,7 @@ eq("sw.js con versión build ≥ 272", +((/var SW_VERSION = 'build (\d+)'/.exec(
       r.claude = [].map.call(document.querySelectorAll('[data-grupo-vista="claude"] .ttr'), function (e) { return [e.getAttribute("data-id"), (e.querySelector(".pel263") || { textContent: "" }).textContent]; }).sort();
       r.secs = secs();
       return r; });
-    eq("Te pregunta Doit: la que me espera a mí y la que me pregunta (aunque esté detenida)", D.secs["Te pregunta Doit"], ["Me espera a mí", "Detenida pero con pregunta para mí"]);
+    eq("Te pregunta Doit: la que me espera a mí y la que me pregunta (aunque esté detenida); los toques sin fecha van a Falta información y no cuentan aquí", D.secs["Te pregunta Doit"].filter(function (x) { return !/^Hablarle otra vez/.test(x); }), ["Me espera a mí", "Detenida pero con pregunta para mí"]);
     eq("Hoy mías: la que ya contestó y la que no tiene quién (sin dato confiable no se mueve)", D.secs["Hoy mías"], ["Ya contestó", "Detenida sin quién"]);
     eq("La vencida que esperaba a Samuel ya no está en Vencidas mías (los toques 'Hablarle otra vez' siguen como antes)", (D.secs["Vencidas mías"] || []).filter(function (x) { return !/^Hablarle otra vez/.test(x); }), []);
     eq("Las lleva Claude las tiene, con a quién se espera", D.claude, [["tDET", "espera a Karina"], ["tENC", "espera a Samuel"], ["tESP", "espera a Samuel"]]);

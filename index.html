@@ -1787,7 +1787,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 295 · home: Vencidas y Te encargaron como filtros con globito; lo vencido cuenta en Hoy o Te esperan";
+var VERSION_APP = "build 296 · home: sin fecha de finiquito o sin próximo seguimiento = Falta información en Te esperan";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -7779,6 +7779,31 @@ function fechaPuestaSola(t){
   if(t.creada_por && PERSONAS[t.creada_por]) return false;          /* la dicto una persona al crearla */
   var dc=_diaCreacion(t); return !!dc && t.f_vigente===dc;   /* si alguien la cambio despues, ya no es la puesta sola */
 }
+/* Toda tarea tuya necesita su fecha de finiquito (o ser indefinida/recurrente) Y su próximo seguimiento: sin eso
+   no está completa y va a «Falta información» (Te esperan), nunca a Hoy, Vencidas ni Próximas. Una indefinida cuenta
+   completa solo si trae su próximo seguimiento. Se usan los campos de siempre: finiquito = f_vigente (sin falta_fecha
+   ni fecha puesta por el sistema) o indefinida/periodicidad; seguimiento = ritmo, avisos con fecha que no ha pasado,
+   seg_a programados por venir o con cada, recurrente, o la próxima fecha (f_vigente) de una indefinida. */
+function tieneFiniquito(t){ return !!(t.indefinida===true || esRecurrente(t) || t.tipo==="recurrente" || (t.f_vigente && !t.falta_fecha && !fechaPuestaSola(t))); }
+function tieneSeguimiento(t){
+  var H=hoy();
+  if(esRecurrente(t) || t.tipo==="recurrente" || String(t.ritmo||"").trim()) return true;
+  if(t.indefinida===true && t.f_vigente) return true;
+  if((t.avisos||[]).some(function(a){ return a && ((a.fecha && a.fecha>=H) || (a.fecha && String(a.cada||"").trim())); })) return true;
+  if(t.seg_a && (String(t.seg_a.cada||"").trim() || (t.seg_a.programados||[]).some(function(x){ return String(x||"").slice(0,10)>=H; }))) return true;
+  return false;
+}
+function faltanFechas(t){
+  try{
+    if(!t || t.cierre || t.fusionada_en || t.es_recordatorio || esDato(t) || esDormida264(t) || estadoReal(t)==="cerrada") return [];
+    if(typeof esPropuesta256==="function" && esPropuesta256(t)) return [];
+    if(!(t.duenio===yo || (!t.duenio && t.creada_por===yo))) return [];
+    var L=[]; if(!tieneFiniquito(t)) L.push("finiquito"); if(!tieneSeguimiento(t)) L.push("seguimiento"); return L;
+  }catch(e){ return []; }
+}
+function faltanFechasTxt(t){ var L=faltanFechas(t); if(!L.length) return "";
+  if(L.length===2) return "Falta fecha de finiquito y próximo seguimiento";
+  return L[0]==="finiquito"?"Falta fecha de finiquito":"Falta próximo seguimiento"; }
 function faltaVieja(t){
   if(!t || t.cierre || t.es_recordatorio || esDato(t) || t.autorizada_asi || estadoReal(t)==="cerrada") return "";
   if(!(t.duenio===yo || t.creada_por===yo)) return "";
@@ -18475,6 +18500,7 @@ function faltaPreciso263(t){
   try{ var _fp283=(typeof faltaPasoClaude283==="function")?faltaPasoClaude283(t):""; if(_fp283 && Q.indexOf(_fp283)<0) Q.unshift(_fp283); }catch(e){}
   var M={quien:"¿Quién la hace?", finiquito:"¿Para cuándo la quieres terminar, o es indefinida?", seguimiento:"¿Cuándo te recuerdo para darle seguimiento?", que:"¿Qué es esto?", de:"¿De quién o de qué proyecto es?", cifras:"¿Cuáles son las cifras?"};
   c.items.forEach(function(x){ if(x.ok || x.k==="agenda") return; var q=M[x.k]; if(q && Q.indexOf(q)<0 && !bloqueaQ267(t, q)) Q.push(q); });
+  (typeof faltanFechas==="function"?faltanFechas(t):[]).forEach(function(k){ var q=M[k]; if(q && Q.indexOf(q)<0 && !respondida267(t, q)) Q.push(q); });
   if(!c.ctxOk && Q.length<4) Q.push("¿De qué se trata? Dame un poco más de contexto.");
   return Q.slice(0,4);
 }
@@ -18572,7 +18598,6 @@ function resyncAvisosNotif263(){
    - Vencidas mías (rojo): vencidas y las que no tienen fecha definida (sin f_vigente, no indefinidas, sin aviso).
    - Hoy mías (gris): lo de hoy, primero lo que despertó (expediente con algo nuevo). */
 function suya270(t){ return !!t && (t.duenio===yo || (t.es_recordatorio && !t.duenio)); }
-function sinDefinir270(t){ try{ return !!t && !t.f_vigente && !t.es_recordatorio && t.indefinida!==true && !campanaDe(t); }catch(e){ return false; } }
 function nuevo270(t){ return !!(t && t.nuevo264 && Date.now()-t.nuevo264<3*864e5); }
 function armaHome270(rev, det, venc, hoyL, futL){
   var out={preg:[], venc:[], hoy:[], otros:[], fut:[]}, ya={};
@@ -18586,8 +18611,9 @@ function armaHome270(rev, det, venc, hoyL, futL){
   _q.concat(tareas.filter(function(t){ return t && t.duenio===yo && vivo(t) && !t.es_recordatorio; }))
     .forEach(function(t){ var p=null; try{ p=preguntaParaMi(t); }catch(e){} if(p) pon(out.preg, t, p.de+(p.todos?" pide opinión a todos":" te pregunta")); });
   tareas.forEach(function(t){ if(!vivo(t) || t.es_recordatorio || !(t.duenio===yo || (!t.duenio && t.creada_por===yo))) return;
-    var Q=[]; try{ Q=preguntas249(t); }catch(e){} if(Q.length) pon(out.preg, t, String(Q[0].q||"Claude te pregunta")); });
-  rev.filter(function(x){ return x.k==="falta"; }).forEach(function(x){ var fp=null; try{ fp=faltaPrimero(completitud(x.t)); }catch(e){} pon(out.preg, x.t, (fp&&fp.txt)||"falta info"); });
+    var Q=[]; try{ Q=preguntas249(t); }catch(e){} if(Q.length) pon(out.preg, t, faltanFechasTxt(t)||String(Q[0].q||"Claude te pregunta")); });
+  rev.filter(function(x){ return x.k==="falta"; }).forEach(function(x){ var ff=faltanFechasTxt(x.t), fp=null; if(!ff) try{ fp=faltaPrimero(completitud(x.t)); }catch(e){} pon(out.preg, x.t, ff||(fp&&fp.txt)||"falta info"); });
+  venc.concat(hoyL, futL||[]).forEach(function(t){ if(suya270(t)){ var ff=faltanFechasTxt(t); if(ff) pon(out.preg, t, ff); } });
   tareas.forEach(function(t){ try{ if(entrevistaPendiente(t)) pon(out.preg, t, "falta información · ¿cómo medimos a "+((PERSONAS[t.duenio]||{}).nombre||"")+"?"); }catch(e){} });
   rev.filter(function(x){ return x.k==="autorizar" || x.k==="vincular"; }).forEach(function(x){ pon(out.preg, x.t, x.k==="vincular"?"posible vinculación":"por autorizar"); });
   /* build 284: las decisiones ya contestadas (Aplicando… / Pendiente de aplicar / Listo · …) se quedan a la vista 24 h; no cuentan como pendientes */
@@ -18595,7 +18621,6 @@ function armaHome270(rev, det, venc, hoyL, futL){
   /* 3 · VENCIDAS MÍAS (vencidas y sin fecha definida) */
   var pre=function(t, s){ return (nuevo270(t)?"Nuevo · ":"")+s; };
   venc.forEach(function(t){ if(suya270(t)) pon(out.venc, t, pre(t, vencioTxt(t))); else pon(out.otros, t, vencioTxt(t)); });
-  hoyL.forEach(function(t){ if(suya270(t) && sinDefinir270(t)) pon(out.venc, t, pre(t, "sin fecha · falta definir cuándo")); });
   /* 4 · HOY MÍAS: primero lo que despertó */
   tareas.filter(function(t){ return nuevo270(t) && vivo(t) && !t.es_recordatorio && leToca(t) && hoyL.indexOf(t)>=0; })
     .sort(function(a,b){ return b.nuevo264-a.nuevo264; }).forEach(function(t){ if(suya270(t)) pon(out.hoy, t, "Nuevo · llegó algo"); });
@@ -18659,7 +18684,7 @@ function filtrosInicio(H, mis){
   F.hoy=vencHoy.concat(restoHoy);
   var pv=function(x, why){ if(enVenc[x.t.id]) return; enVenc[x.t.id]=1; F.venc.push(why==null?x:{t:x.t, why:why}); };
   (H.venc||[]).forEach(function(x){ pv(x); });
-  (H.preg||[]).concat(H.hoy||[]).forEach(function(x){ if(vencidaInicio(x.t)) pv(x, vencioTxt(x.t)); });
+  (H.preg||[]).concat(H.hoy||[]).forEach(function(x){ if(vencidaInicio(x.t) && !faltanFechas(x.t).length) pv(x, vencioTxt(x.t)); });
   F.enc.forEach(function(e){ var tid=e.tareaId||"";
     if(encargoVencido(e)) F.encVenc.push(e);
     if(encargoPideRespuesta(e) || (tid && enPreg[tid])){ if(!(tid && enPreg[tid])) F.encEsperan.push(e); }
@@ -18691,8 +18716,7 @@ function vListaInicio(C){
    en Hoy lo vencido lleva su etiqueta roja para que no se confunda con lo de hoy */
 function filasInicio(k, L){
   return '<div class="revl ttl l270 l-'+k+'">'+filas272(k, L, function(x){ var v=k!=="venc" && vencidaInicio(x.t);
-    var sf=k!=="venc" && !v && sinDefinir270(x.t);
-    return '<button class="revr ttr'+(v?' es-vencida':'')+(sf?' es-sinfecha':'')+'" data-id="'+esc(x.t.id)+'"><i style="background:'+COL270[v?"venc":k]+'"></i><span class="ttx"><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span>'+(v?'<span class="et-venc">Vencida</span>':'')+(x.why?'<small>'+esc(x.why)+'</small>':'')+'</span></button>'; })+'</div>';
+    return '<button class="revr ttr'+(v?' es-vencida':'')+'" data-id="'+esc(x.t.id)+'"><i style="background:'+COL270[v?"venc":k]+'"></i><span class="ttx"><span class="rn">'+esc(x.t.nombre||"Sin nombre")+'</span>'+(v?'<span class="et-venc">Vencida</span>':'')+(x.why?'<small>'+esc(x.why)+'</small>':'')+'</span></button>'; })+'</div>';
 }
 /* el renglón de un encargo que te hicieron (el mismo en Te encargaron, en las fichas y en Vencidas) */
 function filaEncargoInicio(e){
@@ -20443,7 +20467,7 @@ function nPreg272(t){ try{ return preguntas249(t).length; }catch(e){ return 0; }
 /* los renglones de una sección: preguntas agrupadas y, si se acaba de dar "Ya está", el renglón fantasma que se cierra */
 function filas272(k, L, base){
   var out=L.map(function(x){ var r=base(x);
-    if(k==='preg'){ var n=nPreg272(x.t); if(n>=2){ r=r.replace('<button class="revr ttr" data-id=', '<button class="revr ttr" data-preg272="'+n+'" data-id=');
+    if(k==='preg' && !faltanFechas(x.t).length){ var n=nPreg272(x.t); if(n>=2){   /* lo que falta de fechas se dice tal cual, no «N preguntas» */ r=r.replace('<button class="revr ttr" data-id=', '<button class="revr ttr" data-preg272="'+n+'" data-id=');
       r=r.replace(/<small>[\s\S]*?<\/small>/, '<small>'+n+' preguntas</small>'); if(r.indexOf('<small>')<0) r=r.replace('</span></span></button>', '</span><small>'+n+' preguntas</small></span></button>'); } }
     return r; });
   var g=fantasma272(k, L);

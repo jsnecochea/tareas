@@ -135,7 +135,7 @@ eq("sw.js con versión build ≥ 270", +((/var SW_VERSION = 'build (\d+)'/.exec(
       /* sin fecha definida (y sin pregunta pendiente) va a Vencidas mías, nunca a Hoy */
       var S = T("tSIN", "Sin fecha", "", { f_vigente: "" }), V = T("tV2", "Otra vencida", "", { f_vigente: "2026-10-01" }), Hh = T("tH2", "De hoy", "", {});
       var X = armaHome270([], [], [V], [S, Hh], []);
-      r.sinDef = [X.venc.map(function (x) { return x.t.id + ":" + x.why; }), X.hoy.map(function (x) { return x.t.id; })];
+      r.sinDef = [X.venc.map(function (x) { return x.t.id + ":" + x.why; }), X.hoy.map(function (x) { return x.t.id; }), X.preg.filter(function (x) { return x.t.id === "tSIN"; }).map(function (x) { return x.t.id + ":" + x.why; })];
       /* una tarea de otro dueño nunca entra a 3 ni a 4 */
       var O = T("tO", "De Samuel", "", { duenio: "samuel" }), Y = armaHome270([], [], [O], [O], []);
       r.ajena = [Y.venc.length, Y.hoy.length, Y.otros.map(function (x) { return x.t.id; })];
@@ -150,7 +150,7 @@ eq("sw.js con versión build ≥ 270", +((/var SW_VERSION = 'build (\d+)'/.exec(
       return r; });
     eq("Próximas (= Mías futuras) fuera del inicio; al tocar su renglón se ve la futura", [C.futAntes, C.futDesp, C.futCab], [false, true, "Próximas 1"]);
     eq("La de otro dueño que Salvador revisa baja a 'Las revisas tú' (con su dueño)", C.rev, ["Bitácora de obra de Samuel de Samuel · hoy"]);
-    eq("Sin fecha definida → Vencidas mías (después de las vencidas); nunca en Hoy", C.sinDef, [["tV2:venció 1 oct", "tSIN:sin fecha · falta definir cuándo"], ["tH2"]]);
+    eq("Sin fecha definida → Falta información (Te esperan); nunca en Vencidas ni en Hoy", C.sinDef, [["tV2:venció 1 oct"], ["tH2"], ["tSIN:Falta fecha de finiquito"]]);
     eq("Una tarea ajena no entra a Vencidas ni Hoy mías", C.ajena, [0, 0, ["tO"]]);
     eq("Siguen todas las funciones (menú de pulsación larga, vincular, mover, propuestas, falta, expedientes, compartidas)", C.funciones, []);
     eq("Tocar un renglón abre la tarea", C.abre, ["hilo", "tNEC"]);
