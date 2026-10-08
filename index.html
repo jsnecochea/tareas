@@ -1066,6 +1066,23 @@ html.cam274on,html.cam274on body{overflow:hidden}
 .ntf .tg::after{content:"";position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .2s}
 .ntf .tg.on{background:#30d158}.ntf .tg.on::after{left:20px}
 @media (prefers-reduced-motion:reduce){.ntf .tg,.ntf .tg::after{transition:none}}
+/* Voces: letra grande y renglones aireados (lectura fácil), monocromo */
+.voc{padding:8px 16px 40px;display:flex;flex-direction:column;font-size:18px;line-height:1.5}
+.voc .vocel{background:var(--surface);border-radius:14px;padding:14px 16px;margin:4px 0 8px}
+.voc .vocelt{font-size:14px;color:var(--ink-2);letter-spacing:.02em}
+.voc .vocelv{font-size:19px;font-weight:600;margin:2px 0 8px}
+.voc .vocsl{display:flex;align-items:center;gap:12px;padding:8px 0}
+.voc .vocsl span{width:92px;flex:none;color:var(--ink-2);font-size:16px}
+.voc .vocsl input{flex:1;min-width:0;accent-color:var(--ink)}
+.voc .vocprueba{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:8px;padding:13px;border-radius:12px;border:1px solid var(--ink-4);background:none;font-size:17px;font-weight:600;color:var(--ink)}
+.voc .vocgrp{font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);margin:20px 0 4px}
+.voc .vocrow{display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--line)}
+.voc .vocplay{flex:none;width:44px;height:44px;border-radius:50%;border:1px solid var(--ink-4);background:none;color:var(--ink);display:flex;align-items:center;justify-content:center}
+.voc .vocsel{flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:14px 4px;border:0;background:none;text-align:left;color:var(--ink)}
+.voc .vocsel .tx{flex:1;min-width:0;font-size:18px;overflow-wrap:anywhere}.voc .vocsel small{display:block;font-size:15px;color:var(--ink-2);margin-top:2px}
+.voc .vocsel svg{flex:none;color:var(--ink-3)}.voc .vocsel svg .pal{opacity:0}
+.voc .vocrow.on .vocsel svg{color:var(--ink)}.voc .vocrow.on .vocsel svg .pal{opacity:1}
+.voc .vocvacio,.voc .vocayuda{color:var(--ink-2);font-size:16px;line-height:1.6;margin:14px 0 0}
 .cmodo{display:flex;align-self:center;gap:2px;background:var(--surface-2,#2a2a2d);border-radius:10px;padding:2px;margin:2px auto 6px}
 .cmodo button{border:0;background:none;color:var(--ink-3,#9a9aa2);font-size:13px;font-weight:600;padding:5px 12px;border-radius:8px}
 .cmodo button.on{background:#3a3a3e;color:var(--ink,#f2f2f4)}
@@ -1741,7 +1758,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 289 · Las ligas de tarea (WhatsApp del bot y notificaciones) abren la tarea aunque haya que entrar con Google; fusionada lleva a la nueva; si no existe, lo dice";
+var VERSION_APP = "build 290 · Voces: en el ⋯ del inicio eliges hasta 3 voces del teléfono y la Caminata y la lectura las alternan como plática";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -1872,6 +1889,125 @@ function bindNotif(){
   var bb=$("bback"); if(bb) bb.onclick=function(){ vista="lista"; render(); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-npre]"),function(b){ b.onclick=function(){ guardaNotif(notifDePreset(b.getAttribute("data-npre"))); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-ntipo]"),function(b){ b.onclick=function(){ var pr=notifPrefs(yo), k=b.getAttribute("data-ntipo"); pr[k]=!pr[k]; guardaNotif(pr); render(); }; });
+}
+/* ===== VOCES: el elenco de la Caminata y de la lectura en voz alta (⋯ del inicio → Voces) =====
+   Solo voces del dispositivo (speechSynthesis): no hay servicio de paga detrás. Cada quien palomea hasta 3 voces en español;
+   la Caminata y la lectura las ROTAN (cada turno o mensaje nuevo, la siguiente) para que suene a plática entre varias voces.
+   Se guarda en bitacora_personas/<usuario>.voces = {v:1, elenco:[voiceURI…], ritmo, tono, ts} y en localStorage de respaldo.
+   Una voz guardada que no existe en este dispositivo se salta sin error; sin elenco se usa la mejor voz es-MX (Premium > Mejorada > normal). */
+var VOCES_MAX=3, VOCES_RITMO=1.1, VOCES_TONO=1;
+var VOCES_MUESTRA="En un mundo donde cada minuto cuenta… hoy tienes tres pendientes y una cita a las ocho.";
+var VOCES_DIALOGO=["Hola. Así va a sonar la caminata.", "¿Y qué tenemos hoy?", "Tres pendientes y una cita a las ocho.", "Perfecto. Empecemos por lo más urgente."];
+/* nombres de voces conocidos (Apple, Microsoft, Google). Lo que no está aquí es "sin dato": no se adivina por el nombre. */
+var VOCES_MUJER=["paulina","monica","marisol","angelica","isabela","francisca","soledad","esperanza","sabina","dalia","helena","laura","elvira","lucia","paloma","ximena","flo","sandy","shelley","grandma","abuela"];
+var VOCES_HOMBRE=["juan","jorge","diego","carlos","raul","pablo","alvaro","eddy","reed","rocko","grandpa","abuelo"];
+var VOCES_REGION=[{k:"mx", tx:"México"}, {k:"latam", tx:"EE.UU. y Latinoamérica"}, {k:"es", tx:"España"}, {k:"otra", tx:"Otras"}];
+function _vozNv(s){ return String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,""); }
+function vocesEs(){ var vs=[]; try{ vs=(window.speechSynthesis && speechSynthesis.getVoices())||[]; }catch(e){}
+  return vs.filter(function(v){ return v && /^es([-_]|$)/i.test(v.lang||""); }); }
+function vozId(v){ return v ? String(v.voiceURI||v.name||"") : ""; }
+function vozRegion(v){ var l=String((v&&v.lang)||"");
+  if(/^es[-_]MX/i.test(l)) return "mx"; if(/^es[-_]ES/i.test(l)) return "es"; if(/^es[-_][A-Z0-9]{2,3}/i.test(l)) return "latam"; return "otra"; }
+function vozCalidad(v){ var s=_vozNv((v&&v.name)+" "+(v&&v.voiceURI));
+  if(/premium/.test(s)) return "Premium"; if(/enhanced|mejorada|neural|natural/.test(s)) return "Mejorada"; return ""; }
+function vozGenero(v){ var w=_vozNv(v&&v.name).split(/[^a-z]+/);
+  if(w.some(function(x){ return VOCES_MUJER.indexOf(x)>=0; })) return "Mujer";
+  if(w.some(function(x){ return VOCES_HOMBRE.indexOf(x)>=0; })) return "Hombre";
+  return ""; }
+function vozNombre(v){ return String((v&&v.name)||"Voz").replace(/\s*\((enhanced|premium|mejorada)\)\s*/ig," ").replace(/^(microsoft|google)\s+/i,"").replace(/\s+online\b.*$/i,"").replace(/\s+/g," ").trim(); }
+/* la mejor voz cuando no hay elenco: es-MX > es-US/419/LatAm > es-ES > es, y dentro de cada una Premium > Mejorada > normal */
+function vozRango(v){ var r={mx:0, latam:1, es:2, otra:3}[vozRegion(v)], q={Premium:0, Mejorada:1}[vozCalidad(v)]; return r*10+(q==null?2:q); }
+function vocesOrdenadas(){ return vocesEs().map(function(v,i){ return {v:v, i:i}; }).sort(function(a,b){ return (vozRango(a.v)-vozRango(b.v))||(a.i-b.i); }).map(function(x){ return x.v; }); }
+function vozMejor(){ return vocesOrdenadas()[0]||null; }
+/* lo guardado: la ficha (Firestore) manda; si no ha llegado, el respaldo local */
+function vocesConfig(){
+  var p=null; try{ p=(PERSONAS[yo]||{}).voces; }catch(e){}
+  if(!p || typeof p!=="object"){ try{ p=JSON.parse(localStorage.getItem("bit_voces_"+yo)||"null"); }catch(e){ p=null; } }
+  p=(p && typeof p==="object")?p:{};
+  var E=Array.isArray(p.elenco)?p.elenco.filter(function(x){ return typeof x==="string" && x; }).slice(0, VOCES_MAX):[];
+  return {v:1, elenco:E, ritmo:(+p.ritmo>0?+p.ritmo:null), tono:(+p.tono>0?+p.tono:VOCES_TONO), ts:p.ts||0};
+}
+function guardaVoces(o){
+  var c=vocesConfig(), n={v:1, elenco:(o.elenco||c.elenco).slice(0, VOCES_MAX), ritmo:(o.ritmo!=null?o.ritmo:(c.ritmo||VOCES_RITMO)), tono:(o.tono!=null?o.tono:c.tono), ts:Date.now()};
+  try{ PERSONAS[yo]=PERSONAS[yo]||{}; PERSONAS[yo].voces=n; }catch(e){}
+  try{ if(db) db.collection(COLP).doc(yo).set({voces:n},{merge:true}).catch(function(){ toast("No se pudieron guardar tus voces"); }); }catch(e){}
+  try{ localStorage.setItem("bit_voces_"+yo, JSON.stringify(n)); }catch(e){}
+  try{ localStorage.setItem("bit_lee_rate", String(n.ritmo)); }catch(e){}   /* la velocidad es la misma de "Ajustar lectura" */
+  return n;
+}
+/* el elenco que SÍ existe en este dispositivo, en el orden en que se palomeó */
+function vozElenco(){ var vs=vocesEs(), out=[];
+  vocesConfig().elenco.forEach(function(id){ var v=vs.filter(function(x){ return vozId(x)===id; })[0]||vs.filter(function(x){ return x.name===id; })[0]; if(v && out.indexOf(v)<0) out.push(v); });
+  return out; }
+function vozTono(){ return vocesConfig().tono||VOCES_TONO; }
+/* ROTACIÓN: rol = quién habla (Caminata: "A"/"B"). Mismo rol seguido = misma voz; rol nuevo o rol null (mensaje nuevo) = la siguiente
+   del elenco, así una pregunta y su respuesta nunca salen con la misma voz si hay 2 o más. */
+var VOZ_ROT={i:-1, rol:undefined};
+function vozRota(rol){ var E=vozElenco(); if(!E.length) return null;
+  if(rol==null || rol!==VOZ_ROT.rol || VOZ_ROT.i<0){ VOZ_ROT.i=(VOZ_ROT.i+1)%E.length; }
+  VOZ_ROT.rol=(rol==null?undefined:rol);
+  return E[VOZ_ROT.i%E.length]; }
+function vozTurnoNuevo(){ VOZ_ROT.rol=undefined; }
+/* voz para lectura (un mensaje = un turno) */
+function vozLectura(){ return vozRota(null)||vozMejor(); }
+function vozDi(texto, voz, fin){
+  try{ speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(texto); if(voz){ u.voice=voz; u.lang=voz.lang||"es-MX"; } else u.lang="es-MX";
+    u.rate=_leeRate(); u.pitch=vozTono(); if(fin){ u.onend=fin; u.onerror=fin; } speechSynthesis.speak(u); return u; }catch(e){ return null; } }
+/* el mini diálogo de "Probar el elenco": cada línea con la siguiente voz */
+function vocesPrueba(){
+  var E=vozElenco(); if(!E.length){ var m=vozMejor(); E=m?[m]:[]; }
+  var k=0, tok=(window.__vocTok=(window.__vocTok||0)+1);
+  try{ speechSynthesis.cancel(); }catch(e){}
+  var uno=function(){ if(tok!==window.__vocTok || k>=VOCES_DIALOGO.length) return;
+    var v=E.length?E[k%E.length]:null, t=VOCES_DIALOGO[k++];
+    try{ var u=new SpeechSynthesisUtterance(t); if(v){ u.voice=v; u.lang=v.lang||"es-MX"; } else u.lang="es-MX"; u.rate=_leeRate(); u.pitch=vozTono();
+      u.onend=function(){ setTimeout(uno, 150); }; u.onerror=function(e){ if(e && (e.error==="interrupted"||e.error==="canceled")) return; setTimeout(uno, 150); };
+      speechSynthesis.speak(u); }catch(e){} };
+  uno();
+}
+/* iOS entrega las voces tarde: se espera voiceschanged y se repinta la pantalla si está abierta */
+(function(){ try{ if(window.speechSynthesis && speechSynthesis.addEventListener) speechSynthesis.addEventListener("voiceschanged", function(){ if(typeof vista!=="undefined" && vista==="voces") try{ render(); }catch(e){} }); }catch(e){} })();
+function _vozAttr(s){ return esc(s).replace(/"/g,"&quot;"); }
+var ICO_CHK_VOZ='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path class="pal" d="M8 12.3l2.8 2.8L16.2 9.4"/></svg>';
+function vVoces(){
+  var c=vocesConfig(), V=vocesOrdenadas(), E=vozElenco(), ritmo=c.ritmo||_leeRate(), elegidas=E.map(vozId);
+  var h='<div class="top"><button class="iconbtn" id="bback" aria-label="Regresar">‹</button><div><div class="tnm"><span class="t">Voces</span></div><div class="d">Elige hasta 3 para tu caminata</div></div></div>';
+  h+='<div class="scroll"><div class="voc">';
+  h+='<div class="vocel"><div class="vocelt">Tu elenco</div><div class="vocelv">'+(E.length?esc(E.map(vozNombre).join(" · ")):"Sin elegir. Se usa la mejor voz de México.")+'</div>'+
+     '<label class="vocsl"><span>Velocidad</span><input type="range" id="vocritmo" min="0.8" max="1.5" step="0.05" value="'+ritmo+'" aria-label="Velocidad"></label>'+
+     '<label class="vocsl"><span>Tono</span><input type="range" id="voctono" min="0.8" max="1.2" step="0.05" value="'+c.tono+'" aria-label="Tono"></label>'+
+     '<button class="vocprueba" id="vocprueba">'+svgPlay()+' Probar el elenco</button></div>';
+  if(!V.length){
+    h+='<p class="vocvacio" id="vocvacio">'+(window.speechSynthesis?"Buscando las voces de tu teléfono…":"Este navegador no lee en voz alta.")+'</p>';
+  }
+  VOCES_REGION.forEach(function(R){
+    var L=V.filter(function(v){ return vozRegion(v)===R.k; }); if(!L.length) return;
+    h+='<div class="vocgrp">'+esc(R.tx)+'</div>';
+    L.forEach(function(v){ var id=vozId(v), on=elegidas.indexOf(id)>=0, g=vozGenero(v), q=vozCalidad(v);
+      var det=[g||"Sin dato", q, v.lang].filter(Boolean).join(" · ");
+      h+='<div class="vocrow'+(on?' on':'')+'"><button class="vocplay" data-vplay="'+_vozAttr(id)+'" aria-label="Escuchar '+_vozAttr(vozNombre(v))+'">'+svgPlay()+'</button>'+
+         '<button class="vocsel" data-vsel="'+_vozAttr(id)+'" role="checkbox" aria-checked="'+(on?"true":"false")+'"><span class="tx">'+esc(vozNombre(v))+'<small>'+esc(det)+'</small></span>'+ICO_CHK_VOZ+'</button></div>';
+    });
+  });
+  h+='<p class="vocayuda">Para voces más naturales, en el iPhone: Ajustes → Accesibilidad → Contenido leído (en versiones nuevas puede llamarse «Leer y hablar») → Voces → Español. Descarga las «Mejoradas» o «Premium», son gratis, y vuelve aquí.</p>';
+  h+='<p class="vocayuda">Son las voces de tu teléfono. Voces tipo cine o como el podcast de NotebookLM necesitan un servicio de paga.</p>';
+  return h+'</div></div>';
+}
+function bindVoces(){
+  var bb=$("bback"); if(bb) bb.onclick=function(){ window.__vocTok=(window.__vocTok||0)+1; try{ speechSynthesis.cancel(); }catch(e){} vista="lista"; render(); };
+  var vs=vocesEs(), de=function(id){ return vs.filter(function(x){ return vozId(x)===id; })[0]||null; };
+  Array.prototype.forEach.call(document.querySelectorAll("[data-vplay]"),function(b){ b.onclick=function(){ window.__vocTok=(window.__vocTok||0)+1; vozDi(VOCES_MUESTRA, de(b.getAttribute("data-vplay"))); }; });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-vsel]"),function(b){ b.onclick=function(){
+    var id=b.getAttribute("data-vsel"), E=vocesConfig().elenco.filter(function(x){ return !!de(x); }), i=E.indexOf(id);
+    if(i>=0) E.splice(i,1);
+    else { if(E.length>=VOCES_MAX){ toast("Máximo 3 voces. Quita una para poner otra."); return; } E.push(id); }
+    guardaVoces({elenco:E}); VOZ_ROT.i=-1; render(); }; });
+  var r=$("vocritmo"); if(r) r.onchange=function(){ guardaVoces({ritmo:+r.value}); vocesPrueba(); };
+  var t=$("voctono"); if(t) t.onchange=function(){ guardaVoces({tono:+t.value}); vocesPrueba(); };
+  var p=$("vocprueba"); if(p) p.onclick=vocesPrueba;
+  /* en iOS las voces pueden tardar: se reintenta unos segundos aunque no llegue voiceschanged */
+  if(!vs.length && window.speechSynthesis){ var n=0, iv=setInterval(function(){ n++; if(vista!=="voces"){ clearInterval(iv); return; }
+    if(vocesEs().length){ clearInterval(iv); render(); } else if(n>=12){ clearInterval(iv); var x=$("vocvacio"); if(x) x.textContent="Este teléfono no tiene voces en español. Descárgalas con la ayuda de abajo."; } }, 400); }
 }
 /* ===== build 268: TAG ESTABLE de cada notificación y cierre de las resueltas =====
    Tags: "q:<tareaId>:<idPregunta>" · "acuerdo:<id>" · "rec:<tareaId>:<avisoId>". Sin origen conocido: tipo|url|hash del cuerpo.
@@ -4308,6 +4444,7 @@ function arranca(){
         p.mail_personal=o.mail_personal||"";
         if(o.reporta_a) p.reporta_a=o.reporta_a;            /* build 179: organigrama dictado */
         if(o.notif && typeof o.notif==="object") p.notif=o.notif;   /* build 200: notificaciones de cada quien */
+        if(o.voces && typeof o.voces==="object") p.voces=o.voces;   /* el elenco de voces de cada quien (⋯ → Voces) */
         if(Array.isArray(o.apodos)) p.apodos=o.apodos;
         if(d.id===yo && Array.isArray(o.historial_acciones)) window.__histRemoto240=o.historial_acciones;
         if(o.nombre&&o.apellido) p.ini=iniciales(o.nombre,o.apellido);
@@ -5961,6 +6098,7 @@ function leeEnVoz(texto, boton){
     if(S.speaking || window.__leyendo){ S.cancel(); window.__leyendo=false;
       vuelvePlay(window.__leyBtn); return; }
     var u=new SpeechSynthesisUtterance(String(texto||"")); u.lang="es-MX"; u.rate=1;
+    try{ var v=_leeVoz(); if(v){ u.voice=v; u.lang=v.lang||"es-MX"; } u.pitch=vozTono(); }catch(e){}
     u.onend=function(){ window.__leyendo=false; vuelvePlay(boton); };
     u.onerror=function(){ window.__leyendo=false; vuelvePlay(boton); };
     window.__leyendo=true; window.__leyBtn=boton;
@@ -6872,6 +7010,7 @@ function render(){
   if(vista==="admin"){a.innerHTML=vAdmin();bindAdmin();return}
   if(vista==="yo"){a.innerHTML=vYo();bindYo();return}
   if(vista==="notif"){a.innerHTML=vNotif();bindNotif();return}
+  if(vista==="voces"){a.innerHTML=vVoces();bindVoces();return}
   if(vista==="historial"){a.innerHTML=vHistorial240();bindHistorial240();return}
   if(vista==="encargo"){a.innerHTML=vEncargo();bindEncargo();return}
   if(vista==="encargar"){a.innerHTML=vEncargar();bindPedir(abierta);return}
@@ -9427,6 +9566,7 @@ function ico(n,px,gr){
     lupa:'<circle cx="10.5" cy="10.5" r="6.2"/><path d="M15.1 15.1 21 21"/>',
     /* build 195 (maqueta "Fichas limpias"): calendario, recurrente, dato y checklist */
     /* build 200: notificaciones */
+    voces:'<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/>',
     campana:'<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
     alerta:'<path d="M12 3.8 21 19.5H3z"/><path d="M12 10v4.2M12 17.2v.3"/>',
     msj:'<path d="M4.5 5.5h15a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H10l-4.5 3.5v-3.5h-1a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z"/>',
@@ -16047,12 +16187,13 @@ function bindLista(){
   var b=$("badm"); if(b) b.onclick=function(){vista="admin";render()};
   var _hm=$("bhmas"); if(_hm) _hm.onclick=function(){
     var v=document.createElement("div"); v.className="hoja-velo"; v.id="hojav";
-    v.innerHTML='<div class="hoja"><div class="grp"><button id="hmhist">'+ico("reloj",18,1.9)+' Historial</button><button id="hmnotif">'+ico("campana",18,1.9)+' Notificaciones</button></div><button class="cancel" id="hojano">Cancelar</button></div>';
+    v.innerHTML='<div class="hoja"><div class="grp"><button id="hmhist">'+ico("reloj",18,1.9)+' Historial</button><button id="hmnotif">'+ico("campana",18,1.9)+' Notificaciones</button><button id="hmvoces">'+ico("voces",18,1.9)+' Voces</button></div><button class="cancel" id="hojano">Cancelar</button></div>';
     document.body.appendChild(v);
     v.onclick=function(e){ if(e.target===v) cierraHoja(); };
     $("hojano").onclick=cierraHoja;
     $("hmnotif").onclick=function(){ cierraHoja(); vista="notif"; render(); };
     $("hmhist").onclick=function(){ cierraHoja(); vista="historial"; render(); };
+    $("hmvoces").onclick=function(){ cierraHoja(); vista="voces"; render(); };
   };
   var by=$("byo");  if(by) by.onclick=function(){vista="yo";render()};
   bindBotonAvisos();
@@ -18644,6 +18785,7 @@ function camDetalle274(t){
 /* ---------- las dos voces ---------- */
 function camVoces274(){
   var vs=[]; try{ vs=speechSynthesis.getVoices()||[]; }catch(e){}
+  try{ vs=vs.slice().sort(function(a,b){ return (vozCalidad(b)?1:0)-(vozCalidad(a)?1:0); }); }catch(e){}   /* Premium/Mejorada primero */
   var de=function(re){ return vs.filter(function(x){ return re.test(x.lang||""); }); };
   var L=de(/^es[-_]MX/i); if(!L.length) L=de(/^es[-_](US|419)/i); if(!L.length) L=de(/^es[-_]ES/i); if(!L.length) L=de(/^es/i);
   var a=L[0]||null, b=L.length>1?L[1]:null;
@@ -18652,7 +18794,7 @@ function camVoces274(){
   return {A:a, B:b, distintas:!!(a && b && a!==b)};
 }
 function camDi274(G, done){
-  var tok=++CAM.tok, k=0, V=camVoces274();
+  var tok=++CAM.tok, k=0, V=camVoces274(), E=[]; try{ E=vozElenco(); vozTurnoNuevo(); }catch(e){}
   CAM.fase="hablando"; camPinta274();
   try{ if(speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel(); }catch(e){}
   camBargeAbre276(tok);   /* build 276: el micrófono sigue abierto mientras habla (interrupción) */
@@ -18664,8 +18806,12 @@ function camDi274(G, done){
     var sig=function(){ if(listo) return; listo=true; clearTimeout(CAM.wd); if(tok===CAM.tok) setTimeout(uno, 120); };
     try{ u=new SpeechSynthesisUtterance(g.t); }catch(e){ return sig(); }
     var rate=1.0; try{ rate=_leeRate(); }catch(e){}
-    if(g.v==="A"){ u.voice=V.A||null; u.lang=(V.A&&V.A.lang)||"es-MX"; u.pitch=V.distintas?1.05:1.25; u.rate=rate*1.02; }
-    else { u.voice=V.B||V.A||null; u.lang=((V.B||V.A)&&(V.B||V.A).lang)||"es-MX"; u.pitch=V.distintas?0.95:0.75; u.rate=rate*(V.distintas?0.97:0.9); }
+    var tono=1; try{ tono=vozTono(); }catch(e){}
+    if(E.length){   /* elenco palomeado: cada turno con la siguiente voz; con una sola voz, A y B se distinguen por tono */
+      var ve=vozRota(g.v)||E[0], dist=E.length>1; u.voice=ve; u.lang=ve.lang||"es-MX";
+      u.pitch=tono*(dist?1:(g.v==="A"?1.15:0.85)); u.rate=rate*(dist?1:(g.v==="A"?1.02:0.92)); }
+    else if(g.v==="A"){ u.voice=V.A||null; u.lang=(V.A&&V.A.lang)||"es-MX"; u.pitch=tono*(V.distintas?1.05:1.25); u.rate=rate*1.02; }
+    else { u.voice=V.B||V.A||null; u.lang=((V.B||V.A)&&(V.B||V.A).lang)||"es-MX"; u.pitch=tono*(V.distintas?0.95:0.75); u.rate=rate*(V.distintas?0.97:0.9); }
     u.volume=g.bajito?0.55:1;
     u.onend=sig; u.onerror=function(e){ if(e && (e.error==="interrupted"||e.error==="canceled") && tok!==CAM.tok) return;
       if(e && (e.error==="interrupted"||e.error==="canceled") && tok===CAM.tok && CAM.brec){ camBargeFalla276("la voz se cortó al abrir el micrófono ("+e.error+")"); k--; }   /* build 276: iOS no deja hablar y escuchar a la vez: se apaga la interrupción y se repite la frase */
@@ -18929,7 +19075,7 @@ function camPausa274(dicho){
   if(!CAM.on) return;
   if(CAM.pausa){ CAM.pausa=false; camPinta274(); return camPresenta274(); }
   CAM.pausa=true; camCallaMic(); CAM.tok++; camPiensa275(false); try{ speechSynthesis.cancel(); }catch(e){} CAM.fase=""; camPinta274();
-  if(dicho){ try{ var u=new SpeechSynthesisUtterance("En pausa."); u.lang="es-MX"; var V=camVoces274(); if(V.A) u.voice=V.A; speechSynthesis.speak(u); }catch(e){} }
+  if(dicho){ try{ var u=new SpeechSynthesisUtterance("En pausa."); u.lang="es-MX"; var V=camVoces274(), va=null; try{ va=vozRota(null); }catch(e){} va=va||V.A; if(va){ u.voice=va; u.lang=va.lang||"es-MX"; } speechSynthesis.speak(u); }catch(e){} }
 }
 function camEmpieza274(desdeId){
   if(CAM.on) return;
@@ -18952,7 +19098,7 @@ function camSal274(dicho){
   try{ if(CAM.qz && CAM.qz.A.length) camAplicaQuiz276(tareaId240(CAM.qz.id), CAM.qz.A); }catch(e){} CAM.qz=null;   /* build 276: lo contestado no se pierde */
   camMedidorApaga276();
   try{ speechSynthesis.cancel(); }catch(e){}
-  if(dicho){ try{ var u=new SpeechSynthesisUtterance("Listo, salimos de la caminata."); u.lang="es-MX"; var V=camVoces274(); if(V.A) u.voice=V.A; speechSynthesis.speak(u); }catch(e){} }
+  if(dicho){ try{ var u=new SpeechSynthesisUtterance("Listo, salimos de la caminata."); u.lang="es-MX"; var V=camVoces274(), va=null; try{ va=vozRota(null); }catch(e){} va=va||V.A; if(va){ u.voice=va; u.lang=va.lang||"es-MX"; } speechSynthesis.speak(u); }catch(e){} }
   CAM.on=false; CAM.pausa=false; CAM.fase=""; CAM.conf=null; CAM.pideConf277=false; CAM.confSig277=false;
   camWake274(false);
   var o=document.getElementById("cam274"); if(o) o.remove();
@@ -20216,11 +20362,9 @@ function pideEntrevista(v){ return /^\s*(entrev[ií]stame|hazme\s+la\s+entrevist
    seguimiento, mensajes del sistema, ligas, coordenadas ni emojis (se arma de los DATOS, no
    de la pantalla). */
 var LEE={cola:[],i:0,t:null,act:false,pausa:false,modo:"",fin:false,tok:0};
-function _leeRate(){ try{ var r=+localStorage.getItem("bit_lee_rate"); return r>0?r:1.1; }catch(e){ return 1.1; } }
-function _leeVoz(){ try{ var vs=speechSynthesis.getVoices()||[], v=null;
-  vs.forEach(function(x){ if(!v && /^es[-_]MX/i.test(x.lang)) v=x; });
-  vs.forEach(function(x){ if(!v && /^es[-_](US|419)/i.test(x.lang)) v=x; });
-  vs.forEach(function(x){ if(!v && /^es/i.test(x.lang)) v=x; }); return v; }catch(e){ return null; } }
+function _leeRate(){ var r=0; try{ r=+localStorage.getItem("bit_lee_rate"); }catch(e){} if(!(r>0)){ try{ r=vocesConfig().ritmo||0; }catch(e){} } return r>0?r:1.1; }
+/* la voz fija (un solo aviso, ajustes): la primera del elenco o la mejor es-MX */
+function _leeVoz(){ try{ return vozElenco()[0]||vozMejor(); }catch(e){ return null; } }
 function limpiaHabla(s){
   s=String(s||"");
   s=s.replace(/^\s*IA:\s*/i,"");
@@ -20338,7 +20482,7 @@ function leePaso(){
   var it=LEE.cola[LEE.i]; leeBarra(); leeRepinta(true);
   try{
     speechSynthesis.cancel();
-    var u=new SpeechSynthesisUtterance(it.tx); u.lang="es-MX"; u.rate=_leeRate(); var v=_leeVoz(); if(v) u.voice=v;
+    var u=new SpeechSynthesisUtterance(it.tx); u.lang="es-MX"; u.rate=_leeRate(); u.pitch=vozTono(); var v=vozLectura(); if(v){ u.voice=v; u.lang=v.lang||"es-MX"; }   /* cada mensaje con la siguiente voz del elenco */
     var sig=function(){ if(tok!==LEE.tok || !LEE.act || LEE.pausa) return;
       if(typeof it.ix==="number" && LEE.t && LEE.t.msgs && LEE.t.msgs[it.ix]) _leePonMarca(LEE.t.id, LEE.t.msgs[it.ix].ts);
       LEE.i++; leePaso(); };
@@ -20559,7 +20703,7 @@ function _nv(s){ return String(s||"").toLowerCase().normalize("NFD").replace(/[�
 function leeDi(txt, done){
   var tok=++LEE.tok; LEE.hablando=true; leeBarra();
   var fin=function(){ if(tok!==LEE.tok) return; clearTimeout(LEE.wd); LEE.hablando=false; if(done) done(); };
-  try{ speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(txt); u.lang="es-MX"; u.rate=_leeRate(); var v=_leeVoz(); if(v) u.voice=v;
+  try{ speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(txt); u.lang="es-MX"; u.rate=_leeRate(); u.pitch=vozTono(); var v=vozLectura(); if(v){ u.voice=v; u.lang=v.lang||"es-MX"; }
     u.onend=fin; u.onerror=function(e){ if(e && (e.error==="interrupted"||e.error==="canceled")) return; fin(); };
     clearTimeout(LEE.wd); LEE.wd=setTimeout(fin, 4000+String(txt).length*90/_leeRate());
     setTimeout(function(){ if(tok===LEE.tok) speechSynthesis.speak(u); }, 60);
