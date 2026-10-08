@@ -79,10 +79,12 @@ eq("las fichas de «Te pregunta Doit» ya no usan el fondo naranja (.l-preg)", /
       home([DEC()]); document.querySelector('.f284[data-dec284="tDEC"] .p284p').click(); await espera(40);
       var antes = estado("tDEC"), T = tareas[0], enc = (T.encargos || []).map(function (e) { return [e.tipo, e.estado]; });
       for (var i = 0; i < 30; i++) { await espera(100); if (tareas[0].decision.aplicado38) break; } await espera(30);
-      return { cd: __CD.slice(), modos: __LL.map(function (l) { return l.modo; }), antes: antes, enc: enc, despues: estado("tDEC"), sec: !!document.querySelector('.sc284[aria-label="Decide tú"]'), cuenta: (document.querySelector('.sc284[aria-label="Decide tú"] .hd284 em') || {}).textContent || "" }; });
+      return { cd: __CD.slice(), modos: __LL.map(function (l) { return l.modo; }), antes: antes, enc: enc, despues: estado("tDEC"), sec: !!document.querySelector('.sc284[aria-label="Decide tú"]'), cuenta: (document.querySelector('.sc284[aria-label="Decide tú"] .hd284 em') || {}).textContent || "",
+        q: (document.querySelector('.f284[data-dec284="tDEC"] .f284q') || {}).textContent }; });
     eq("el botón contesta por contestaDecision273 con la opción", R.cd, [["tDEC", "Hikvision"]]);
     eq("mientras se aplica: «Aplicando…» en gris, sin botones, con el encargo decision_resp", [R.antes, R.enc], [{ e: "aplicando", txt: "Aplicando…", color: "rgb(142, 142, 147)", svg: false, botones: 0 }, [["decision_resp", "pendiente"]]]);
     eq("aplicado: «Listo · <lo que hizo>» en verde con palomita (de la nota Hice: …)", [R.modos, R.despues && R.despues.e, R.despues && /^Listo · Claude le escribe a Pepe/.test(R.despues.txt), R.despues && R.despues.color, R.despues && R.despues.svg], [["rapido"], "listo", true, "rgb(48, 209, 88)", true]);
+    eq("ya listo: la fila YA NO enseña la pregunta/recomendación vieja, sino el próximo paso actualizado (que_toca)", R.q, "Claude le confirma a Pepe");
     eq("ya contestada no cuenta como pendiente (sin contador)", [R.sec, R.cuenta], [true, ""]);
 
     /* falla: Pendiente de aplicar, nunca Listo; luego la Mac pone aplicado38 con su nota */

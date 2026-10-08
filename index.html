@@ -1787,7 +1787,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 296 · home: sin fecha de finiquito o sin próximo seguimiento = Falta información en Te esperan";
+var VERSION_APP = "build 297 · Decide tú: al quedar Listo, la fila deja de mostrar la pregunta vieja y enseña el próximo paso ya actualizado";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -18836,8 +18836,16 @@ var SVG284={
   ok:'<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#30D158" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6.5l2.5 2.5L10 3.5"/></svg>',
   chev:'<svg width="8" height="13" viewBox="0 0 8 13" fill="none" stroke="#5A5A5F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 1.5l5 5-5 5"/></svg>'
 };
+/* una vez contestada y aplicada, la fila ya no debe seguir mostrando la pregunta/recomendación vieja (confunde:
+   parece que sigue pidiendo lo mismo). En su lugar se enseña el próximo paso YA actualizado de la tarea
+   (resumen.que_toca), que es lo que de verdad sigue pendiente ahora. Salvador, 8-oct. */
+function proximoPasoDec284(t){
+  var qt=String(((t.resumen||{}).que_toca)||"").replace(/\s+/g," ").trim();
+  return qt.length>120?qt.slice(0,119)+"…":qt;
+}
 function filaDec284(t, i){
-  var e=estadoDec284(t), id=esc(t.id), q=preguntaDec284(t), hace=haceDec284(t);
+  var e=estadoDec284(t), id=esc(t.id), hace=haceDec284(t);
+  var q=(e==="listo")?proximoPasoDec284(t):preguntaDec284(t);
   var h='<div class="f284'+(i?'':' f284a')+'" data-dec284="'+id+'" data-e284="'+e+'">'+
     '<button class="f284h" data-id="'+id+'"><span class="f284i" aria-hidden="true">'+esc(iniDec284(t))+'</span><span class="f284x">'+
       '<span class="f284t"><span class="f284n">'+esc(t.nombre||"Sin nombre")+'</span>'+(vencidaInicio(t)?'<span class="et-venc">Vencida</span>':'')+(hace?'<span class="f284w">'+esc(hace)+'</span>':'')+'</span>'+
