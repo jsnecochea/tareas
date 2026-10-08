@@ -71,7 +71,7 @@ function siguiente() {
     clearTimeout(tope); vivos--;
     var s = (Date.now() - ini) / 1000, m = out.match(/RESULTADO\s+(\d+)\/(\d+)/g), r = m ? m[m.length - 1].replace(/RESULTADO\s+/, "") : "?";
     res.push({ t: t, ok: code === 0, s: s, r: r, out: out });
-    console.log((code === 0 ? "  ✓ " : "  ✗ ") + (t.nom + "              ").slice(0, 14) + (s.toFixed(1) + " s     ").slice(0, 8) + r);
+    console.log((code === 0 ? "  ✓ " : "  ✗ ") + (t.nom + "                  ").slice(0, 17) + (s.toFixed(1) + " s     ").slice(0, 8) + r);
     siguiente();
   });
 }
