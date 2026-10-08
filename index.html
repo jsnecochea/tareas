@@ -56,10 +56,9 @@ button{font:inherit;color:inherit}
 #gzona,#gate .logo{animation:gsube .45s ease-out both}
 #gzona{animation-delay:.12s}
 @media (prefers-reduced-motion:reduce){#gzona,#gate .logo{animation:none}}
-.nip{display:flex;gap:9px}
-.nip input{width:52px;height:60px;text-align:center;font-size:35.1px;font-family:Archivo,-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;
-  border:1.5px solid var(--line);border-radius:11px;background:var(--surface);color:var(--ink)}
-.nip input:focus{outline:2px solid var(--hacer);border-color:var(--hacer)}
+
+
+
 .gerr{color:var(--venc);font-size:18.2px;min-height:18px}
 /* build 72: boton de Google, tarjeta y apagador del paso de avisos */
 .gbtn{display:inline-flex;align-items:center;justify-content:center;gap:12px;padding:16px 34px;
@@ -75,19 +74,15 @@ button{font:inherit;color:inherit}
   border:1px solid rgba(255,255,255,.10);border-radius:22px;padding:17px 17px;
   width:100%;text-align:left;box-shadow:0 12px 32px rgba(0,0,0,.35)}
 .gcx{flex:1 1 auto;min-width:0}
-.gico{width:42px;height:42px;border-radius:13px;flex:0 0 auto;display:flex;
-  align-items:center;justify-content:center;background:linear-gradient(135deg,#3ddc6a,#22a447);
-  box-shadow:0 4px 12px rgba(48,209,88,.25)}
-.gico svg{width:24px;height:24px}
+
+
 .gbtn.wide{width:100%}
 .gcard .tt{font-size:18.9px;font-weight:600}
 .gcard .dd{color:var(--ink-2);font-size:15.4px;line-height:1.4;margin-top:2px}
-.gsw{position:relative;width:56px;height:32px;border-radius:16px;background:var(--hacer);
-  transition:background .2s;flex:0 0 auto;cursor:pointer}
-.gsw.off{background:var(--line)}
-.gsw i{position:absolute;top:3px;left:27px;width:26px;height:26px;border-radius:50%;
-  background:#fff;transition:left .2s}
-.gsw.off i{left:3px}
+
+
+
+
 #gzona{display:flex;flex-direction:column;align-items:center;gap:14px}
 
 /* ---------- barra ---------- */
@@ -107,7 +102,7 @@ button{font:inherit;color:inherit}
   display:grid;place-items:center;color:var(--ink-2);cursor:pointer;flex:none;padding:0}
 /* los SVG de trazo se alinean solos y heredan el color: un solo peso en toda la app */
 .icx{display:block;flex:none}
-.encq .icx{display:inline-block;vertical-align:-2px;margin-left:2px}
+
 /* VERDE: que ni se note es el premio. Sin fondo, sin borde. */
 .est{display:flex;align-items:center;gap:6px;font-size:16.2px;color:var(--ink-2)}
 .est .pt{width:7px;height:7px;border-radius:50%;background:var(--hacer);flex:none}
@@ -124,10 +119,7 @@ button{font:inherit;color:inherit}
 @keyframes resp{0%,100%{opacity:1}50%{opacity:.42}}
 @media (prefers-reduced-motion:reduce){.enc.rojo .est .pt{animation:none}}
 /* el renglon de abajo del encabezado rojo: quien te espera */
-.encq{display:block;width:100%;text-align:center;background:none;border:0;margin-top:9px;
-  color:var(--rojo-ink);font-size:16.9px;cursor:pointer;padding:2px 0 0;
-  animation:resp 1.8s ease-in-out infinite}
-@media (prefers-reduced-motion:reduce){.encq{animation:none}}
+@media (prefers-reduced-motion:reduce){}
 
 /* ---------- BARRA UNICA: crea, busca o revisa ----------
    VIVE ABAJO, como WhatsApp y Telegram: al abrirse el teclado sube pegada a el
@@ -221,8 +213,7 @@ button{font:inherit;color:inherit}
 .cam{width:44px;height:44px;border-radius:50%;flex:none;background:var(--surface-2);
   border:.5px solid var(--line);display:grid;place-items:center;padding:0;
   color:var(--ink-2);cursor:pointer}
-.who{width:38px;height:38px;border-radius:50%;flex:none;background:var(--hacer);color:#fff;
-  display:grid;place-items:center;font-family:Archivo,-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;font-weight:600;font-size:17.6px}
+
 .top .t{font-family:Archivo,-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;font-weight:600;font-size:20.9px;line-height:1.15}
 .top .d{font-size:16.9px;color:var(--ink-2);line-height:1.3}
 .top .grow{flex:1}
@@ -246,14 +237,11 @@ button{font:inherit;color:inherit}
 .row .ls{font-size:15.5px;color:var(--ink-2);font-weight:400}
 .row .paso{font-size:15.5px}
 /* el encabezado de la lista: Hoy + fecha larga */
-.hoyh{display:flex;align-items:baseline;gap:8px;padding:16px 15px 6px}
 .hoynada{padding:18px 15px 8px;text-align:center;color:var(--ink-3);font-size:16px}
 .iatag{display:inline-block;font-size:11.5px;font-weight:600;color:#9FE1CB;background:rgba(29,158,117,.18);border-radius:6px;padding:1px 6px;margin-right:6px;vertical-align:1px}
-.hoyh b{font-family:Archivo,-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;font-size:23px;font-weight:600;color:var(--ink)}
-.hoyh span{font-size:16.9px;color:var(--ink-3)}
+
+
 /* pie tenue: lo que Claude persigue y no subio */
-.piesig{display:block;width:100%;text-align:center;background:none;border:0;
-  padding:16px 15px 26px;color:var(--ink-4);font-size:16.2px;cursor:pointer}
 .row:active{background:var(--surface-2)}
 .dot{width:10px;height:10px;border-radius:50%;margin-top:6px}
 .rico{display:flex;align-items:flex-start;margin-top:1px;color:var(--morado)}/* Salvador 2026-09-22: color de su seccion */
@@ -273,9 +261,7 @@ button{font:inherit;color:inherit}
 .arcard .arbtn button{height:54px;border-radius:14px;border:0;font-size:18px;font-weight:600;cursor:pointer}
 .arcard .arpos{background:var(--azul);color:#fff}.arcard .ardel{background:#2C2C2E;color:var(--venc)}
 /* build 143: chip de persona, "Listo" tocable y ficha de persona */
-.pchip{display:inline-flex;align-items:center;gap:4px;margin-left:8px;padding:2px 10px 2px 7px;border-radius:999px;border:0;
-  background:rgba(10,132,255,.16);color:var(--azul);font:inherit;font-size:14.5px;font-weight:500;line-height:1.5;vertical-align:1px;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.pchip:active{background:rgba(10,132,255,.28)}
+
 .b.liga{cursor:pointer}
 .b.liga .abre{display:block;margin-top:3px;color:var(--azul);font-size:15.5px;font-weight:500}
 .pcab{display:flex;flex-direction:column;align-items:center;padding:22px 16px 10px;text-align:center}
@@ -291,15 +277,13 @@ button{font:inherit;color:inherit}
 .d-hacer{background:var(--hacer)}.d-super{background:var(--super)}
 .d-esper{background:var(--esper)}.d-sil{background:var(--sil)}.d-ok{background:var(--ink-3)}
 .d-venc{background:var(--venc)}
-/* puntitos del color de su seccion en el home (Salvador 2026-09-22) */
-.d-sec-atora{background:var(--venc)}.d-sec-pend{background:var(--naranjaosc)}
-.d-sec-venc{background:var(--amar)}.d-sec-msg{background:var(--hacer)}
-.d-sec-hoy{background:var(--azul)}.d-sec-rec{background:var(--morado)}.d-sec-prox{background:var(--gris-b)}
+/* puntitos del color de su seccion en el home (Salvador 2026-09-22) */.d-sec-pend{background:var(--naranjaosc)}
+
+.d-sec-prox{background:var(--gris-b)}
 .d-tenue{background:var(--super);opacity:.42}
 .buscar{padding:8px 14px 4px}
-.binp{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;
-  padding:9px 12px;font:inherit;font-size:18.9px;color:var(--ink)}
-.binp::placeholder{color:var(--ink-3)}
+
+
 .franja{display:flex;flex-direction:column;gap:2px;align-items:flex-start;width:100%;text-align:left;
   margin:8px 14px 4px;width:calc(100% - 28px);border-radius:11px;padding:11px 13px;cursor:pointer;
   border:1px solid var(--line);background:var(--surface)}
@@ -316,13 +300,10 @@ button{font:inherit;color:inherit}
   color:var(--ink-2);font-size:16.9px;line-height:1.45}
 .grp{font-family:Archivo,-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;font-size:14.9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
   color:var(--ink-3);padding:14px 15px 6px}
-.sec-head{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;
-  margin:0;padding:14px 15px 6px;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent;
-  font:inherit;color:inherit}
-.sec-head .grp{padding:0}
-.sec-chev{width:8px;height:8px;border-right:1.6px solid var(--ink-3);border-bottom:1.6px solid var(--ink-3);
-  transform:rotate(-45deg);transition:transform .2s ease;flex:none}
-.sec-chev.open{transform:rotate(45deg)}
+
+
+
+
 /* ===== BARRAS DE SECCION UNIFORMES — mismo molde, un color por seccion.
    Aprobado por Salvador 2026-09-22: acordeon (solo una abierta a la vez),
    contenido siempre blanco/gris (nunca texto de color), puntito/icono lateral
@@ -343,14 +324,14 @@ button{font:inherit;color:inherit}
 .sb-atora .sicw{background:rgba(255,69,58,.20);color:#ff8a83}.sb-atora .scnt{background:var(--venc);color:#3a0705}.sb-atora b{color:var(--ink)}
 .sb-pend{background:linear-gradient(180deg,rgba(210,102,10,.20),rgba(210,102,10,.06));border-color:rgba(210,102,10,.5);box-shadow:0 0 20px rgba(210,102,10,.20)}
 .sb-pend .sicw{background:rgba(210,102,10,.24);color:#ffab5c}.sb-pend .scnt{background:var(--naranjaosc);color:#2a1400}.sb-pend b{color:var(--ink)}
-.sb-venc{background:linear-gradient(180deg,rgba(255,214,10,.14),rgba(255,214,10,.05));border-color:rgba(255,214,10,.40);box-shadow:0 0 20px rgba(255,214,10,.16)}
-.sb-venc .sicw{background:rgba(255,214,10,.18);color:#ffe066}.sb-venc .scnt{background:var(--amar);color:#3a2f00}.sb-venc b{color:var(--ink)}
-.sb-msg{background:linear-gradient(180deg,rgba(48,209,88,.14),rgba(48,209,88,.05));border-color:rgba(48,209,88,.40);box-shadow:0 0 20px rgba(48,209,88,.20)}
-.sb-msg .sicw{background:rgba(48,209,88,.18);color:#5ef08a}.sb-msg .scnt{background:var(--hacer);color:#06340f}.sb-msg b{color:var(--ink)}
+
+
+
+
 .sb-hoy{background:linear-gradient(180deg,rgba(10,132,255,.14),rgba(10,132,255,.05));border-color:rgba(10,132,255,.40);box-shadow:0 0 20px rgba(10,132,255,.18)}
 .sb-hoy .sicw{background:rgba(10,132,255,.18);color:#8fc4ff}.sb-hoy .scnt{background:var(--azul);color:#031c33}.sb-hoy b{color:var(--ink)}
-.sb-rec{background:linear-gradient(180deg,rgba(124,100,255,.14),rgba(124,100,255,.05));border-color:rgba(124,100,255,.40);box-shadow:0 0 20px rgba(124,100,255,.18)}
-.sb-rec .sicw{background:rgba(124,100,255,.18);color:#b3a4ff}.sb-rec .scnt{background:var(--morado);color:#180f3a}.sb-rec b{color:var(--ink)}
+
+
 .sb-prox{background:linear-gradient(180deg,rgba(142,142,147,.14),rgba(142,142,147,.05));border-color:rgba(142,142,147,.35)}
 .sb-prox .sicw{background:rgba(142,142,147,.18);color:#c7c7cc}.sb-prox .scnt{background:var(--gris-b);color:#1c1c1e}.sb-prox b{color:var(--ink)}
 /* build 155: "Creadas hoy" (vista duplicada, sin color: gris plano) */
@@ -370,7 +351,7 @@ button{font:inherit;color:inherit}
 .enlh .enlv{padding:22px 16px;text-align:center;color:var(--ink-3);font-size:15px}
 .enlh .enlc{display:block;width:100%;margin-top:8px;padding:17px;border:0;border-radius:14px;background:var(--surface-2);font:inherit;font-size:20px;font-weight:600;color:var(--azul);cursor:pointer}
 
-.sec-head .grow{flex:1}
+
 .marcaje{color:var(--super);font-weight:600}
 .pieacc{padding:14px 15px 26px}
 .hoja{position:absolute;top:54px;right:10px;z-index:20;background:var(--surface);
@@ -391,7 +372,7 @@ button{font:inherit;color:inherit}
 .nm{font-family:Archivo,-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;font-weight:600;font-size:19.6px;line-height:1.25;margin-bottom:2px;display:block}
 .ls{font-size:17.6px;color:var(--ink-2);line-height:1.35;display:-webkit-box;-webkit-line-clamp:1;
   -webkit-box-orient:vertical;overflow:hidden}
-.row.sil .ls{color:var(--sil);font-weight:500}
+
 .paso{font-size:17.6px;color:var(--hacer);line-height:1.35;font-weight:600;display:-webkit-box;
   -webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
 .meta{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
@@ -401,8 +382,8 @@ button{font:inherit;color:inherit}
 .bdg{min-width:22px;height:22px;padding:0 6px;border-radius:10px;display:grid;place-items:center;
   background:var(--surface-2);color:var(--ink-2);font-family:Archivo,-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;font-weight:600;font-size:14.9px}
 .bico{color:var(--ink-3);display:grid;place-items:center}
-.g-hacer{background:var(--hacer)}.g-venc{background:var(--venc)}
-.g-esper{background:var(--esper)}.g-sil{background:var(--sil)}
+.g-venc{background:var(--venc)}
+.g-esper{background:var(--esper)}
 .done .nm{text-decoration:line-through;color:var(--ink-3)}
 .done .ls{color:var(--ink-3)}
 .vacio{padding:40px 24px;text-align:center;color:var(--ink-3);font-size:18.9px;line-height:1.6}
@@ -415,12 +396,12 @@ button{font:inherit;color:inherit}
 /* ficha COLAPSADA por defecto: resumen de 2 renglones + "ver detalle". Salvador 2026-09-18 */
 .strip.col{align-items:flex-start;flex-direction:column;gap:5px}
 .strip.col .rsm2{font-size:16.6px;line-height:1.4;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;width:100%}
-.strip .scv{color:var(--ink-3);font-size:14px;font-weight:600;flex:none}
-.fbody{padding:8px 15px 12px;background:var(--surface);border-bottom:1px solid var(--line);display:none}
-.fbody.on{display:block}
-.fbody dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:16.9px}
-.fbody dt{color:var(--ink-3);font-size:14.9px;text-transform:uppercase;letter-spacing:.05em;font-weight:600;padding-top:2px}
-.fbody dd{margin:0;color:var(--ink-2);line-height:1.4}
+
+
+
+
+
+
 /* LOS MENSAJES SE PEGAN ABAJO, NO ARRIBA — corregido el 2026-09-03.
    ESTABA MAL: con una conversacion corta los globos se quedaban hasta arriba
    y abajo quedaba un hueco negro enorme hasta la barra de escribir. Y al abrir
@@ -457,7 +438,7 @@ button{font:inherit;color:inherit}
 .hmas{background:none;border:0;padding:4px 0 0;margin:0;color:var(--hacer);font-weight:700;
   font-size:14.6px;cursor:pointer;font-family:inherit}
 .hbar{display:flex;align-items:center;gap:12px;margin-top:8px}
-.hbar .hfch{flex:1;text-align:right;font-size:14.2px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+
 .hplay{flex:none;width:34px;height:34px;border-radius:50%;background:var(--hacer);color:#06340f;
   border:0;display:grid;place-items:center;cursor:pointer}
 .hplay.on{background:var(--venc);color:#fff}
@@ -494,8 +475,7 @@ button{font:inherit;color:inherit}
   padding:8px 12px max(8px,calc(env(safe-area-inset-bottom) - 10px));flex:none}
 .comp .pie{padding:0;border-top:0;background:none}
 .sug{display:flex;gap:7px;margin-bottom:8px;flex-wrap:wrap}
-.enchip{font-size:13px;color:var(--ink-3);text-align:center;margin-bottom:8px;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
 .dudah{position:fixed;left:12px;right:12px;bottom:80px;z-index:60;
   background:var(--surface-2);border:1px solid var(--line);border-radius:16px;
   padding:15px 16px;box-shadow:0 14px 38px rgba(0,0,0,.55)}
@@ -618,9 +598,9 @@ button{font:inherit;color:inherit}
 .rqbar{display:flex;align-items:center;gap:8px;margin:0 0 8px;padding:7px 8px;border-radius:12px;background:var(--surface-2,#2c2c2e)}
 .rqbar .qcita{flex:1;margin:0}
 .rqbar button{background:none;border:0;color:var(--t2,#9a9a9f);font-size:20px;padding:4px 8px}
-.b.swp{transition:none}
+
 .b.swback{transition:transform .2s ease}
-.swico{position:absolute;left:-36px;top:50%;width:28px;height:28px;margin-top:-14px;border-radius:50%;background:var(--ok,#30d158);color:#000;display:grid;place-items:center;font-weight:800;opacity:0}
+
 .b.flash{box-shadow:0 0 0 2px var(--ok,#30d158);transition:box-shadow .3s}
 .cnlwrap{display:flex;justify-content:center;align-items:center;gap:8px;padding:8px 0 0}
 /* build 219 (Salvador 10:15): la franja de canales va en UN renglon; si no cabe, se desliza de lado (centrada si cabe) */
@@ -660,12 +640,12 @@ button{font:inherit;color:inherit}
 .spf{display:inline-block;min-width:58px;color:var(--ink-3)}
 .splist{margin:0;padding:0 0 0 2px;list-style:none;font-size:14px;color:var(--ink-2)}.splist li.ok{color:var(--ink-3);text-decoration:line-through}
 .compbtn{display:block;margin:18px auto 10px;border:0;background:none;color:var(--ink-3);font-size:15px;padding:8px 14px}
-.tth{display:flex;align-items:center;justify-content:space-between;margin:12px 19px 6px}
-.tth b{font-family:Archivo,-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;font-size:20px;font-weight:700;color:var(--ink)}
+
+
 .ttn{background:#FF2D55;color:#fff;border-radius:11px;padding:1px 9px;font-size:14px;font-weight:700}
-.ttz{color:var(--ink-3);font-size:14px}
+
 .ttr{padding:13px 15px}.ttr .rn{font-size:19.5px!important}.ttr .ttx{flex:1;min-width:0;display:flex;flex-direction:column}.ttr .ttx small{font-size:15.5px;color:var(--ink-3);font-weight:400;margin-top:1px}.ttr i{width:10px;height:10px}
-.ttpie{display:flex;justify-content:center;gap:22px;margin:18px 0 10px}.ttpie button{border:0;background:none;color:var(--ink-3);font-size:16px;padding:8px 6px}
+
 .cll263{margin:10px 0 4px}.clh263{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:6px 19px;font:inherit;color:var(--ink-2);text-align:left}.clh263 b{font-size:17px;font-weight:700}.clh263 .ttn{background:#8e8e93}.ttr .pel263{color:#7cc0ff;font-weight:600}
 .ttch{color:var(--ink-3);font-size:22px;margin-left:auto}
 /* build 281 (Salvador 7-oct): todos los encabezados del home son FICHAS como las de "Te pregunta Doit"
@@ -677,7 +657,7 @@ button{font:inherit;color:inherit}
 .sep270{display:flex;align-items:center;gap:8px;margin:16px 19px 7px;font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
 .sep270::after{content:"";flex:1;height:.5px;background:var(--line);order:2}
 .sep270 span{order:0;white-space:nowrap}.sep270 em{order:1;font-style:normal;font-weight:600;letter-spacing:0;font-size:12.5px;color:var(--ink-3)}
-.sep270 .ttlee{order:3;margin-left:2px;padding:0 2px}
+
 .sep270.s-preg{color:#FF7A00}.sep270.s-preg em{color:#FF7A00}
 .sep270.s-venc span{color:#FF453A}
 .sep270.s-ok{justify-content:center;color:var(--ink-3);text-transform:none;letter-spacing:0;font-size:15px;font-weight:500;margin-top:22px}.sep270.s-ok::after{display:none}
@@ -750,27 +730,27 @@ button.sep270 .ch285{order:4}
 .ttr.sale272{pointer-events:none;overflow:hidden;transition:height .25s ease,opacity .25s ease,padding .25s ease}
 .cll263.cl272 .clh263{color:var(--ink-3)}.cll263.cl272 .clh263 b{font-weight:600;color:var(--ink-3)}.cll263.cl272 .sem270{color:var(--ink-3);font-weight:500}
 @media (prefers-reduced-motion:reduce){.ttr.sale272{transition:none}}
-.ttg{margin:12px 21px 5px;font-size:13.5px;font-weight:700;letter-spacing:.05em;color:var(--ink-3);text-transform:uppercase}
-.ttmas{justify-content:center;color:#0a84ff;font-size:15.5px;font-weight:600}
-.tth b{font-size:24px!important}
+
+
+
 .cnlpill{display:flex;align-items:center;gap:8px;padding:6px 15px;border-radius:20px;font-size:15.5px;font-weight:600;color:var(--ink);background:var(--surface-2,#2c2c2e);border:1.5px solid var(--cc);box-shadow:0 0 14px color-mix(in srgb,var(--cc) 45%,transparent)}
 .cnlpill i{width:9px;height:9px;border-radius:50%;background:var(--cc)}
 .scroll.cnl{border-top:2.5px solid var(--cc);background-image:linear-gradient(to bottom,color-mix(in srgb,var(--cc) 30%,transparent) 0px,transparent 64px);background-repeat:no-repeat}
 .cnlsheet{position:fixed;left:0;right:0;bottom:0;z-index:65;background:#2c2c2e;border-radius:22px 22px 0 0;padding:12px 14px 30px;box-shadow:0 -10px 40px rgba(0,0,0,.6)}
 .cnlsheet .hh{width:40px;height:5px;border-radius:3px;background:#555;margin:0 auto 10px}
-.cnlop{display:flex;align-items:center;gap:12px;width:100%;padding:12px 10px;border:0;border-radius:12px;background:none;color:var(--ink);font-size:16.5px;text-align:left}
-.cnlop i{width:11px;height:11px;border-radius:50%;flex:none}.cnlop small{display:block;color:var(--ink-3);font-size:13px}
-.cnlop.on{background:#3a3a3c}
+
+
+
 .cnlbg{position:fixed;inset:0;z-index:64;background:rgba(0,0,0,.45)}
 .extpop{position:fixed;left:22px;right:22px;top:30%;z-index:70;background:#2c2c2e;border-radius:20px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.7);text-align:center}
 .extpop b{font-size:17.5px;display:block;margin-bottom:6px}.extpop p{margin:0 0 14px;color:#c7c7cc;font-size:15px;line-height:1.35}
 .extpop button{display:block;width:100%;border:0;border-radius:12px;padding:12px;font-weight:600;font-size:16px;margin-top:8px;color:#fff;background:#3a3a3c}
 .extpop button.si{background:#0a84ff}
-.extpop button.pcl{background:#D97757}
+
 .cnlpill.cnlcl{padding:6px 12px;opacity:1;box-shadow:none;color:#D97757;border-color:#D97757;background:rgba(217,119,87,.10)}   /* build 215: naranja vivo, nunca descolorido */
 .cnlpill.cnlcl.on{background:#D97757;color:#1f0e06;box-shadow:0 0 14px color-mix(in srgb,#D97757 55%,transparent)}.cnlpill.cnlcl.on i{background:#1f0e06}
 .cnlpill.off{opacity:.45;box-shadow:none}
-.ncfold{color:#D97757}
+
 /* build 195: fichas limpias */
 :root{--fi-blue:#4aa3ff;--fi-bluebg:#10283f;--fi-greenbg:#123a20}
 .hrow{display:flex;align-items:center;gap:8px;margin:6px 14px 4px}
@@ -780,7 +760,7 @@ button.sep270 .ch285{order:4}
 .chip225.b{color:var(--ink-2)}.chip225 svg{flex:none;margin-right:1px}.chip225.red{color:#ff453a;font-weight:700}.chip225.falta{background:#ff453a;color:#fff;font-weight:700;min-width:88px;justify-content:center}   /* build 265: rojo mientras falte algo, ancho cómodo para el dedo */
 .paraTi225{flex:none;align-self:flex-start;margin:0 12px 6px;background:rgba(10,132,255,.16);color:#7cc0ff;font-size:13.5px;font-weight:600;border-radius:14px;padding:4px 11px}
 .rv225{flex:none;display:block;width:calc(100% - 24px);margin:0 12px 6px;text-align:left;border:0;border-left:3px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 10px;font:inherit;color:var(--ink);cursor:pointer}
-.rv225 .rvk{display:block;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:2px}
+
 .rv225 .rvt{display:block;font-size:14.5px;line-height:1.35;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rv225 .red{color:#ff453a;font-weight:700}
 .rv225.min{width:auto;display:inline-block;padding:3px 10px;font-size:12.5px;color:var(--ink-3);border-left-width:0;background:none}
 .fm225{flex:none;display:flex;gap:6px;padding:0 12px 6px;overflow-x:auto;scrollbar-width:none}.fm225::-webkit-scrollbar{display:none}
@@ -806,15 +786,15 @@ button.sep270 .ch285{order:4}
 .d225b h4 i{font-style:normal;width:18px;height:18px;border-radius:50%;background:#3a3a3c;color:var(--ink-2);display:grid;place-items:center;font-size:11px}
 .d225b p{margin:0;font-size:15px;line-height:1.45;color:var(--ink)}.d225b .d225m{border-top-color:#3a3a3c;padding:8px 0}
 .d225b.falta{background:rgba(10,132,255,.14)}.d225b .azul{color:#7cc0ff;font-weight:600}.d225b .racu{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:4px}.d225b .racu li{display:flex;gap:6px;font-size:14.5px;line-height:1.35}.d225b .racu li svg{color:#30d158;flex:none;margin-top:2px}.d225b .racu li span{flex:1}.d225b .racu small{color:var(--ink-3);font-size:12.5px}.d225b .rfal{margin-top:6px;font-size:14px;color:var(--ink-2)}
-.d225dic{margin-top:8px;border:0;border-radius:10px;background:#0a84ff;color:#fff;font:inherit;font-size:14.5px;font-weight:700;padding:6px 14px}
+
 .d225o{border:0;background:none;font:inherit;color:var(--ink);padding:0;text-align:left;font-size:15px}
 .mf225 .mfr{display:flex;gap:10px;padding:9px 2px;border-top:1px solid var(--line);font-size:15.5px}.mf225 .mfr:first-child{border-top:0}
 .mf225 .k{flex:none;width:104px;color:var(--ink-3)}.mf225 .v{flex:1;min-width:0}.mf225 .v.red{color:#ff453a;font-weight:700}
 .mfev{display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px}.mfev img{width:72px;height:72px;object-fit:cover;border-radius:8px;flex:none}
 .mfms{display:flex;flex-direction:column;gap:6px;margin:6px 0}.mfm{background:var(--surface-2);border-radius:12px;padding:7px 10px;font-size:14.5px;line-height:1.35}.mfm small{display:block;color:var(--ink-3);font-size:12px;margin-top:2px}
 .mf225 .ebt{display:flex;gap:8px;margin-top:10px}
-.dt225{display:flex;flex-direction:column;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid #3a3a3c;font-size:14.5px}
-.dt225 .dtb{display:flex;gap:6px;flex-wrap:wrap}.dt225 button{border:0;border-radius:10px;background:rgba(10,132,255,.18);color:#7cc0ff;font:inherit;font-size:14px;font-weight:600;padding:5px 10px}
+
+
 .mvnuevo{display:block;font-size:11.5px;font-weight:800;letter-spacing:.04em;color:#30d158;margin-bottom:3px}
 .mov225{position:fixed;left:0;right:0;bottom:0;max-height:70vh;background:#1c1c1e;border-radius:22px 22px 0 0;padding:12px 14px calc(18px + env(safe-area-inset-bottom));display:flex;flex-direction:column;box-shadow:0 -10px 40px rgba(0,0,0,.7)}
 /* build 226: acomodo (OK · Mover · Nueva), hoja "¿A dónde va?", seccion Acomodo del Inicio */
@@ -844,17 +824,17 @@ button.sep270 .ch285{order:4}
 .nia242 .niam{flex:none;border:0;background:none;color:var(--azul);font:inherit;font-size:12.5px;padding:0}
 .b .st .mdel{display:none}.b .st:empty{display:none}.det242b .ac226{margin:10px 0 0;font-size:15px}.det242b .ac226 button{font-size:15px}.det242x{margin-top:12px;color:var(--venc)}.det247 .prop247{margin-top:10px}.det247 .cl247{color:#D97757;font-weight:600}.ed247{margin-top:12px;display:flex;flex-direction:column;gap:8px}.ed247 textarea{width:100%;box-sizing:border-box;border-radius:12px;border:1px solid var(--line,#3a3a3c);background:var(--surface-2);color:var(--ink);font:inherit;font-size:16px;padding:10px}.ed247b{display:flex;gap:10px}.ptcard,.ptcard .ptl{cursor:pointer}
 .cl238{display:inline-flex;width:16px;height:16px;color:var(--ink-2);vertical-align:-3px;margin-right:4px}.cl238 svg{width:15px;height:15px}.cl238.on{color:var(--azul)}
-.b[data-mix]{cursor:default}.ac226.m238{margin:2px 0 4px 0}.ac226.triv240{margin-top:0}.ac226.triv240 button{color:var(--ink-3);font-weight:500}.prop238{font-size:12.5px;color:var(--ink-3);margin-top:2px}.m237{display:flex;flex-direction:column}.m237.listo{opacity:.5}
+.b[data-mix]{cursor:default}.ac226.m238{margin:2px 0 4px 0}.prop238{font-size:12.5px;color:var(--ink-3);margin-top:2px}.m237{display:flex;flex-direction:column}.m237.listo{opacity:.5}
 .hc238{position:relative;margin:6px 12px 8px;padding:12px 14px 10px;background:var(--surface-2);border-radius:14px;font-size:15.5px;line-height:1.4}
 .hc238>b{display:block;font-size:13px;color:var(--ink-3);font-weight:600;margin:2px 0 4px}.hc238 ul{list-style:none;margin:0 0 6px;padding:0}.hc238 li{display:flex;gap:7px;align-items:flex-start;padding:3px 0}
-.hch li svg{color:#30d158;flex:none;margin-top:3px}.hcf li{flex-direction:column;gap:6px}.hco{display:flex;flex-wrap:wrap;gap:6px}.hco button{border:1px solid var(--azul);color:var(--azul);background:transparent;border-radius:12px;padding:5px 11px;font:inherit;font-size:14px}
+.hch li svg{color:#30d158;flex:none;margin-top:3px}
 .hcx{position:absolute;top:8px;right:8px;border:0;background:none;color:var(--ink-3);width:24px;height:24px;display:grid;place-items:center}
 .hist240{list-style:none;margin:0;padding:6px 0}.hist240 li{display:flex;align-items:center;gap:8px;padding:0 14px;border-bottom:.5px solid var(--line)}.hist240 li.vac{padding:20px 16px;color:var(--ink-3)}
 .hrow240{flex:1;min-width:0;display:flex;gap:10px;align-items:flex-start;text-align:left;background:none;border:0;color:var(--ink);font:inherit;padding:11px 0}.hrow240 time{color:var(--ink-3);font-size:13.5px;min-width:44px;margin-top:2px}
 .hrow240 .ht{display:flex;flex-direction:column;min-width:0}.hrow240 .ht b{font-size:15.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hrow240 .ht span{font-size:14.5px;color:var(--ink-2)}
 .hund240{flex:none;border:1px solid var(--azul);color:var(--azul);background:none;border-radius:12px;padding:4px 10px;font:inherit;font-size:13.5px}.hok{color:var(--ink-3);font-size:12.5px}
-.mq237{display:block;border:0;background:none;font:inherit;font-size:12px;color:var(--ink-3);margin:-2px 0 6px 12px;padding:2px 0;cursor:pointer}
-.ac226.mq237ab{margin-left:12px}.acor.g237{cursor:pointer}.acow .n237{color:var(--ink-3);font-size:13.5px;margin-left:6px;font-weight:400}.acow time{margin-left:auto}
+
+.acor.g237{cursor:pointer}.acow .n237{color:var(--ink-3);font-size:13.5px;margin-left:6px;font-weight:400}.acow time{margin-left:auto}
 .acom.x237{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .msgs237{display:flex;flex-direction:column;gap:4px;margin:6px 0 2px;padding:6px 0 0;border-top:.5px solid var(--line)}.m237{font-size:14px;color:var(--ink-2)}.m237.tenue{color:var(--ink-3)}.m237 time{color:var(--ink-3);font-size:12px;margin-right:6px}
 .ac226 button{border:0;background:none;font:inherit;font-size:13.5px;font-weight:600;color:var(--fi-blue);padding:3px 2px}
@@ -879,7 +859,6 @@ button.sep270 .ch285{order:4}
 .pill226{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;border:1px solid #545458;border-radius:999px;padding:3px 11px 3px 8px;font-size:14px;color:var(--ink);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pill226 .q{color:var(--ink-3)}.acor .ac226{margin:2px 0 0}
 .msg271{margin:4px 15px 4px}.msg271 .clh263{margin:0;width:100%}.msg271 .ttn{background:#FF2D55}.msg271 .ttn.n0{background:#8e8e93}.msg271 .acog{margin-top:6px}   /* build 271 */
-.acohint{text-align:center;color:var(--ink-3);font-size:13px;margin:8px 0 0}
 .acof{display:flex;align-items:center;gap:8px;width:100%;margin-top:10px;background:var(--surface);border:0;border-radius:16px;min-height:52px;padding:0 14px;font:inherit;font-size:16px;color:var(--ink)}
 .acof svg{color:var(--ink-3)}.acof .r{margin-left:auto;color:var(--ink-3);font-size:14.5px}
 .acol{background:var(--surface);border-radius:14px;margin-top:6px;overflow:hidden}.acoli{display:flex;justify-content:space-between;gap:10px;width:100%;border:0;border-bottom:1px solid var(--line);background:none;font:inherit;font-size:14.5px;color:var(--ink);padding:10px 14px;text-align:left}
@@ -889,8 +868,8 @@ button.sep270 .ch285{order:4}
 .ttl227 .tnm{min-width:0}
 .rvrow227{display:flex;align-items:flex-start;gap:8px;padding:0 12px 6px;flex:none}.rvrow227 .rv225{margin:0;flex:1;min-width:0;width:auto}
 .rvrow227 .rv225.min{flex:1;text-align:left}.rvrow227 .fil227{margin-left:auto}
-.rv225 .rvk{display:flex;align-items:center;gap:4px}.rv225 .rvk svg{color:var(--ink-3)}
-.rv225.min{display:flex;align-items:center;padding:4px 2px;background:none;border:0}.rv225.min .rvk{margin:0;font-size:12.5px}
+
+.rv225.min{display:flex;align-items:center;padding:4px 2px;background:none;border:0}
 .fil227{flex:none;display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font:inherit;font-size:13.5px;font-weight:600;border-radius:14px;padding:4px 9px 4px 11px;white-space:nowrap}
 .fil227.on{color:#7cc0ff;border-color:rgba(10,132,255,.5)}
 .cnlop227{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;color:var(--ink);font:inherit;font-size:17px;padding:11px 16px;text-align:left}
@@ -899,7 +878,7 @@ button.sep270 .ch285{order:4}
 .pth{display:flex;align-items:center;justify-content:space-between;gap:8px}.ptmin227{border:0;background:none;color:var(--ink-3);padding:0 2px;display:flex}
 .ptmini227{display:flex;align-items:center;gap:6px;margin:6px 12px 2px;padding:5px 12px;border:0;border-left:3px solid #0a84ff;border-radius:10px;background:var(--surface);color:#7cc0ff;font:inherit;font-size:13.5px;font-weight:600;flex:none;align-self:flex-start}
 .ac226.pt227{margin:2px 0 0}
-.chip225.verde{color:#30d158}.chip225.on228{color:var(--ink);background:#3a3a3c}.chip225.fil227{border:0;font-weight:400}.chip225.fil227.on{color:#7cc0ff}
+.chip225.verde{color:#30d158}.chip225.fil227{border:0;font-weight:400}.chip225.fil227.on{color:#7cc0ff}
 .rv228{flex:none;margin:0 12px 6px;padding:8px 12px;border-radius:12px;background:var(--surface);font-size:14.5px;line-height:1.45;color:var(--ink-2)}.rv228 .red{color:#ff453a;font-weight:700}
 .mf225 .v.verde{color:#30d158}
 .top:has(.ttl227){gap:6px;padding-left:10px;padding-right:8px}
@@ -936,8 +915,8 @@ button.sep270 .ch285{order:4}
 .res230 .rfal{font-size:14px;color:var(--ink-2)}.res230 .rfal b{color:var(--ink)}.res230 .ract{align-self:flex-end;font-size:11.5px;color:var(--ink-3)}
 /* build 274: MODO CAMINATA — botón grande en el home y pantalla mínima (título, círculo hablando/escuchando, Pausa y Siguiente) */
 .cam274b{display:flex;align-items:center;gap:14px;width:calc(100% - 8px);margin:6px 4px 10px;padding:14px 16px;border:0;border-radius:18px;background:var(--azul);color:#fff;font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;min-height:64px}
-.cam274b:active{opacity:.85}.cam274i{flex:none;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.18);display:grid;place-items:center}
-.cam274t{display:flex;flex-direction:column;min-width:0}.cam274t b{font-size:19px;font-weight:700;line-height:1.2}.cam274t small{font-size:13.5px;opacity:.85;line-height:1.3}
+.cam274b:active{opacity:.85}
+
 html.cam274on,html.cam274on body{overflow:hidden}
 .cam274{position:fixed;inset:0;z-index:9999;background:#000;color:#fff;display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px calc(env(safe-area-inset-bottom,0px) + 16px);box-sizing:border-box}
 .c274top{display:flex;align-items:center;justify-content:space-between;font-size:15px;color:#aeaeb2}
@@ -997,7 +976,7 @@ html.cam274on,html.cam274on body{overflow:hidden}
 .res230 .sub246{font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);margin-top:2px}
 .res230 .rsm246>summary{font-size:13.5px;color:var(--ink-3);cursor:pointer;list-style:none;padding:2px 0}.res230 .rsm246>summary::-webkit-details-marker{display:none}.res230 .rsm246[open]>summary{margin-bottom:4px}
 .vac230{text-align:center;color:var(--ink-3);font-size:14px;padding:24px 16px}
-.chips225{gap:4px;padding:2px 8px 6px}.chip225{font-size:13px;padding:5px 7px;gap:3px}.chip225 svg{width:14px;height:14px}.chip225.det231{padding:5px 7px}.chip225.det231 svg{width:17px;height:17px}
+.chips225{gap:4px;padding:2px 8px 6px}.chip225{font-size:13px;padding:5px 7px;gap:3px}.chip225 svg{width:14px;height:14px}
 .chip225.fecha234.amb234 svg{color:#FF9F0A}.chip225.clv235.amb235{color:#FF9F0A}.chip225.clv235.red{color:#FF453A}
 .clv235r{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:.5px solid var(--line)}.clv235r .clvk{background:none;border:0;color:var(--ink-3);padding:0;width:26px;height:26px;display:grid;place-items:center;cursor:pointer}
 .clv235r.ok .clvk{color:#30d158}.clv235r .clvt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.clv235r .clvt small{color:var(--ink-3);font-size:13px}.clv235r .clvt small.amb235{color:#FF9F0A}.clv235r .clvt small.red{color:#FF453A}
@@ -1018,10 +997,10 @@ html.cam274on,html.cam274on body{overflow:hidden}
 .mf232.on .mfb{color:#7cc0ff}.mf232.on .mfb svg{color:#0a84ff}.mf232 .mff{border:0;background:none;color:var(--ink-3);padding:8px 4px;display:flex}
 .mf232h{margin:14px 0 6px;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3)}
 .autpill{display:block;margin:10px auto 6px;border:0;border-radius:16px;background:rgba(48,209,88,.16);color:#30d158;font:inherit;font-size:15px;font-weight:700;padding:7px 16px}
-.hchip{flex:1;display:flex;align-items:center;gap:8px;background:var(--surface-2,#2a2a2d);border-radius:12px;padding:9px 12px;font-size:15px;color:var(--ink,#f2f2f4);min-width:0}
-.hchip span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hchip.ind{color:var(--fi-blue)}.hchip.dato svg{color:#ff9f0a}.hchip.sin{color:var(--ink-3,#9a9aa2)}
-.hchev{width:38px;height:38px;border-radius:12px;border:0;background:var(--surface-2,#2a2a2d);color:var(--ink-3,#9a9aa2);font-size:15px;flex:none}
+
+
+
+
 .dsec,.dctx,.fic{margin:6px 14px;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px}
 .dsec{background:var(--surface-2,#232326)}.dsec.ant{opacity:.7}
 .dsec h4,.dctx h4{margin:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3,#9a9aa2)}
@@ -1056,22 +1035,22 @@ html.cam274on,html.cam274on body{overflow:hidden}
 .chk .tenue{opacity:.5;font-size:13px}
 /* build 202: ¿Te lo agendo? */
 .fic.agenda{background:var(--fi-bluebg);border:1px solid #2f6fa8}
-.aghd{display:flex;align-items:center;gap:8px;color:var(--fi-blue);font-size:17px}
-.fic .agev{font-weight:600}.fic .agcu{color:var(--ink-3,#9a9aa2);font-size:14px}.fic .agq{color:#ffd60a}
-.agbt{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
-.agbt button{font-size:20px;font-weight:700;border-radius:14px;padding:16px 8px;border:1px solid #3a3a3e;background:var(--surface-2,#2a2a2d);color:var(--ink,#f2f2f4)}
-.agbt .si{background:#1a5c33;border-color:#30d158;color:#fff}
-.agin{display:flex;gap:8px}.agin input{flex:1;min-width:0;font-size:17px;padding:10px;border-radius:10px;border:1px solid #3a3a3e;background:#1c1c1e;color:var(--ink,#f2f2f4)}
-.agok{font-size:17px;font-weight:600;padding:13px;border-radius:12px;border:0;background:var(--fi-blue);color:#fff}
-.agcam{background:none;border:0;color:var(--fi-blue);font-size:14px;padding:4px 0;align-self:flex-start}
-.agtd{flex:1;font-size:16px;font-weight:600;border-radius:10px;border:1px solid #3a3a3e;background:var(--surface-2,#2a2a2d);color:var(--ink-3,#9a9aa2)}.agtd.on{background:var(--fi-bluebg);border-color:#2f6fa8;color:var(--fi-blue)}
-.agin input:disabled{opacity:.4}
+
+.fic .agq{color:#ffd60a}
+
+
+
+
+
+
+
+
 .agst{display:flex;align-items:center;gap:6px;margin:2px 16px 4px;font-size:14px;color:#30d158}.agst svg{flex:none}
 .typep button{font-size:17px;font-weight:600;border-radius:14px;padding:12px 8px;background:var(--surface-2,#2a2a2d);color:var(--ink-3,#9a9aa2);border:1px solid #3a3a3e}
 .typep button.on{background:var(--fi-bluebg);color:var(--fi-blue);border-color:#2f6fa8}
 .dtot{font-size:27px;font-weight:700;font-variant-numeric:tabular-nums}.dsub{color:var(--ink-3,#9a9aa2);font-size:14px}
 .dl{display:flex;flex-direction:column;font-size:15px;font-variant-numeric:tabular-nums}.dl div{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid #3a3a3e}.dl div:last-child{border-bottom:0}
-.ttgrp{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3,#9a9aa2);padding:8px 4px 2px}
+
 .bprog{border:1px solid #2f6fa8;background:var(--fi-bluebg,#10283f)!important}.bprog.cancel{opacity:.5;border-color:#3a3a3e}
 .bprog .pgh{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#4aa3ff}.bprog .pgt{display:block;margin-top:4px}
 .bprog .pgx{display:block;margin-top:4px;font-size:12px;color:var(--ink-3,#9a9aa2)}
@@ -1096,7 +1075,7 @@ html.cam274on,html.cam274on body{overflow:hidden}
 .datoc .dch{display:block;font-size:12px;font-weight:700;letter-spacing:.04em;color:#64d2ff;margin-bottom:4px}
 .datoc .dct+.dct{margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.08)}
 .b.ext{border-left:3px solid var(--xc)}
-.b .ctag{display:block;font-size:12.5px;color:var(--ink-3);margin-top:2px}
+
 .sigue-ov{position:fixed;inset:0;z-index:70;display:grid;place-items:center;pointer-events:none;background:rgba(0,0,0,0);backdrop-filter:blur(0);-webkit-backdrop-filter:blur(0);animation:sigueOv 1.05s ease forwards}
 .sigue-ov span{width:104px;height:104px;border-radius:50%;display:grid;place-items:center;color:#fff;transform:scale(.4);opacity:0;animation:siguePop 1.05s cubic-bezier(.2,.9,.25,1.2) forwards}
 .sigue-ov.ok span{background:#30d158;box-shadow:0 10px 40px rgba(48,209,88,.45)}
@@ -1114,10 +1093,10 @@ html.cam274on,html.cam274on body{overflow:hidden}
 @keyframes saltoFlash2{0%,50%{color:var(--hacer);text-decoration-color:transparent}25%,75%{color:var(--ink);text-decoration-color:transparent}100%{color:var(--ink);text-decoration-color:var(--ink-3)}}
 #app.salto .msgs{opacity:0;transition:opacity .35s ease}
 #app.salto .msgs.reaparece{opacity:1}
-.saltopill{position:sticky;bottom:8px;margin:8px 14px 0;background:var(--surface-2);border:.5px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;font-size:15px;color:var(--ink-2);animation:saltoPill .3s cubic-bezier(.2,.8,.2,1)}
+
 @keyframes saltoPill{from{transform:translateY(140%);opacity:0}to{transform:translateY(0);opacity:1}}
-.saltopill .tx{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.saltopill button{background:none;border:0;color:var(--hacer);font:600 15px Archivo,sans-serif;padding:0}
+
+
 /* cintillo delgado de Deshacer, arriba de la barra de acciones (Salvador 2026-09-25) */
 /* build 278: ↩ junto al ⋯ y su línea de confirmación */
 .top .und278b{color:var(--ink-2)}
@@ -1155,7 +1134,7 @@ html.cam274on,html.cam274on body{overflow:hidden}
 .avsheet .avpie .caja{cursor:text}
 .op[disabled]{opacity:.5}
 .op.full{flex:1 1 100%;text-align:left}
-.negmsg{flex:1 1 100%;color:var(--ink-2);font-size:16px;margin-bottom:2px;line-height:1.35}
+
 /* PANTALLA "MUY CARO" — limpia: "Díctame tu respuesta" + sugerencias suaves + mic */
 .negask{font-family:Archivo,-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;font-weight:600;font-size:24px;color:var(--ink);text-align:center;line-height:1.25}
 .suglist{margin:28px auto 0;width:100%;max-width:440px;text-align:left}
@@ -1219,7 +1198,6 @@ html.cam274on,html.cam274on body{overflow:hidden}
 .galgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
 .galgrid figure{margin:0;position:relative}
 /* build 204: clip verde con archivos; seleccion multiple; de donde nacio */
-.iconbtn.clipon{color:#30d158}
 .galtip{color:var(--ink-3);font-size:14px;margin:-6px 0 10px}
 .galsel{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px;position:sticky;top:0;background:var(--bg,#1c1c1e);padding:6px 0;z-index:2}
 .galsel b{flex:1;font-size:17px}
@@ -1279,9 +1257,9 @@ html.cam274on,html.cam274on body{overflow:hidden}
   padding:30px 22px;min-height:60%}
 .qtit{font-family:Archivo,sans-serif;font-weight:600;font-size:26px;color:var(--ink-2);line-height:1.2}
 .qpreg{font-size:26px;line-height:1.4;color:var(--ink);margin-top:20px;font-weight:700}
-.qpie{padding:18px 18px 26px;border-top:.5px solid var(--line);display:flex;flex-direction:column;align-items:center}
-.qdicta{font-size:18px;color:var(--ink-2);font-weight:600;margin-bottom:10px}
-.qcancel{width:44px;height:44px;border-radius:50%;border:0;background:var(--venc);display:grid;place-items:center;cursor:pointer;margin-top:26px}
+
+
+
 /* confirmar */
 .cbloque{padding:30px 22px}
 .crmonto{font-family:Archivo,sans-serif;font-weight:600;font-size:27px;color:var(--ink);line-height:1.25}
@@ -1323,36 +1301,21 @@ html.cam274on,html.cam274on body{overflow:hidden}
 .tnm{display:flex;align-items:center;gap:7px}
 .tin{font:inherit;font-weight:600;color:var(--ink);background:var(--surface-2);border:1px solid var(--azul);border-radius:8px;padding:3px 8px;width:100%;max-width:280px}
 /* RENGLON DE MENSAJES — verde difuminado (glow), delgado, un solo renglon */
-.msgbar{display:flex;align-items:center;gap:12px;width:calc(100% - 30px);margin:11px 15px 3px;
-  padding:9px 13px;border-radius:12px;cursor:pointer;text-align:left;
-  background:linear-gradient(180deg,rgba(48,209,88,.14),rgba(48,209,88,.05));
-  border:1px solid rgba(48,209,88,.40);box-shadow:0 0 20px rgba(48,209,88,.20)}
-.msgbar .micw{position:relative;flex:none;width:34px;height:34px;border-radius:9px;
-  background:rgba(48,209,88,.18);color:#5ef08a;display:grid;place-items:center}
-.msgbar .mcount{position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;border-radius:10px;
-  padding:0 5px;display:grid;place-items:center;font-size:12px;font-weight:800;
-  background:var(--hacer);color:#06340f;border:2px solid var(--ground)}
-.msgbar b{font-size:16px;font-weight:600;color:#8ff0a9}
-.msgbar .grow{flex:1}
-.msgbar .mchev{color:#5ef08a;font-size:17px}
-.msgbar:active{filter:brightness(1.08)}
+
+
+
+
+
+
 /* ===== BOTE "INFORMACION PENDIENTE" — espejo naranja del renglon verde ===== */
-.pendbar{display:flex;align-items:center;gap:12px;width:calc(100% - 30px);margin:11px 15px 3px;
-  padding:9px 13px;border-radius:12px;cursor:pointer;text-align:left;
-  background:linear-gradient(180deg,rgba(255,159,10,.16),rgba(255,159,10,.05));
-  border:1px solid rgba(255,159,10,.45);box-shadow:0 0 22px rgba(255,159,10,.20);
-  animation:pulso 1.5s ease-in-out infinite}
 @keyframes pulso{0%,100%{box-shadow:0 0 20px rgba(255,159,10,.18)}50%{box-shadow:0 0 30px rgba(255,159,10,.42)}}
-@media (prefers-reduced-motion:reduce){.pendbar{animation:none}}
-.pendbar .pcw{position:relative;flex:none;width:34px;height:34px;border-radius:9px;
-  background:rgba(255,159,10,.20);color:#ffca6a;display:grid;place-items:center}
-.pendbar .pcw .qmk{font-family:Archivo,Barlow;font-size:19px;font-weight:800;line-height:1}
-.pendbar .pcount{position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;border-radius:10px;
-  padding:0 5px;display:grid;place-items:center;font-size:12px;font-weight:800;
-  background:var(--esper);color:#3a2400;border:2px solid var(--ground)}
-.pendbar b{font-size:16px;font-weight:600;color:#ffca6a}
-.pendbar .grow{flex:1}.pendbar .pchev{color:#ffb340;font-size:17px}
-.pendbar:active{filter:brightness(1.08)}
+@media (prefers-reduced-motion:reduce){}
+
+
+
+
+
+
 .pendwrap{padding:2px 12px 8px;display:flex;flex-direction:column;gap:9px}
 /* build 168 (Salvador 2026-10-02): POR REVISAR — una sola seccion compacta */
 .revh{display:flex;align-items:baseline;gap:8px;margin:12px 19px 6px}
@@ -1612,12 +1575,12 @@ html.cam274on,html.cam274on body{overflow:hidden}
 .pq255d{display:block;margin:0 auto;border:0;background:none;color:var(--ink-3,#9a9aa0);font:inherit;font-size:15px;padding:8px 16px;text-decoration:underline}
 .q249{background:var(--surface-2,#2c2c2e);border:1px solid transparent;border-radius:14px;padding:10px 12px;margin-bottom:10px}.q249.ok{border-color:#30d158}
 .q249 .qt{display:block;font-size:16.5px;font-weight:600;margin-bottom:8px}
-.q249 .qo{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}.q249 .qop,.q249 .qsg{border:0;border-radius:12px;padding:8px 12px;background:#1c3a5a;color:var(--ink,#fff);font:inherit;font-size:15.5px;text-align:left}
-.q249 .qop.on{background:#0a84ff}.q249 .qsg small{display:block;color:#9cc9ff;font-size:12.5px}
+
+
 .q249 .qi{width:100%;box-sizing:border-box;border:1px solid var(--line,#38383a);border-radius:12px;padding:11px 12px;background:var(--surface,#000);color:var(--ink,#fff);font:inherit;font-size:16.5px}
 .q249 .qs{display:flex;flex-direction:column;gap:6px;margin-top:8px}
-.preg249 .pie249{display:flex;gap:10px;margin-top:6px}.preg249 .pie249 button{flex:1;min-height:48px;border:0;border-radius:14px;font:inherit;font-size:17px;font-weight:700;background:var(--surface-2,#2c2c2e);color:var(--ink,#fff)}
-.preg249 .pie249 .go{background:#0a84ff;color:#fff}.preg249 .pie249 .go:disabled{opacity:.4}
+
+
 .cond250{margin:6px 12px 8px}.cd250{padding:10px 14px;border-radius:14px;background:var(--surface-2);border-left:4px solid #ff9f0a;display:flex;flex-direction:column;gap:2px;margin-bottom:6px}.cd250 .cdt{font-size:15.5px;font-weight:600}.cd250 .cde{font-size:13.5px;color:var(--ink-3)}.cd250.e-contesto_si,.cd250.e-confirmado{border-left-color:#30d158}.cd250.e-contesto_no,.cd250.e-vencido{border-left-color:#8e8e93}
 .mic252{flex:0 0 auto;width:46px;min-height:46px;border:0;border-radius:12px;background:var(--surface-2,#2c2c2e);color:var(--ink,#fff);display:flex;align-items:center;justify-content:center}.mic252.on{background:#ff453a;color:#fff}
 .row252{display:flex;gap:8px;align-items:stretch}.row252>input,.row252>textarea{flex:1;min-width:0}
@@ -1629,13 +1592,13 @@ html.cam274on,html.cam274on body{overflow:hidden}
 .pl252 .pm{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap;font-size:13px;color:var(--ink-3,#9a9aa0)}.pl252 .pg{border:0;border-radius:10px;padding:5px 9px;min-height:30px;background:#1d3b5c;color:#9ecbff;font:inherit;font-size:13px;font-weight:600}.pl252 .pg.sa{background:#5c3d12;color:#ffc982}.pl252 .pg.ng{background:#3a3a3c;color:#c7c7cc}
 .plat252 .pie{margin:16px 16px 0;font-size:13.5px;color:var(--ink-3,#9a9aa0)}
 .bus253{display:flex;gap:8px;margin:2px 0 10px}.bus253 input{flex:1;min-width:0;box-sizing:border-box;border:1px solid var(--line,#38383a);border-radius:12px;padding:11px 12px;background:var(--surface,#000);color:var(--ink,#fff);font:inherit;font-size:17px}.bus253 .lupa{flex:0 0 46px;border:0;border-radius:12px;background:var(--surface-2,#2c2c2e);color:var(--ink,#fff);display:flex;align-items:center;justify-content:center}.caja2>button.dest254{width:auto;height:32px;border-radius:16px;padding:0 10px;font-size:13px;font-weight:600;background:var(--surface);border:.5px solid var(--line);color:#D97757;display:inline-flex;align-items:center;gap:3px;align-self:flex-end;margin-bottom:2px}.caja2>button.dest254.wa{color:#25a244}.big254{display:block;width:100%;margin:8px 0 0;padding:14px;font-size:16px;font-weight:700}.big254.pri{background:#D97757;color:#fff;border:0}.pv254{white-space:pre-wrap;margin:6px 0 4px;padding:10px 12px;background:var(--surface-2,#222);border-radius:12px;font-size:15px}.bus253x{color:var(--ink-3,#9a9aa0);font-size:14px;padding:6px 2px}
-.hc238 .hc249{display:block;width:100%;margin-top:6px;min-height:42px;border:0;border-radius:12px;background:#0a84ff;color:#fff;font:inherit;font-size:16px;font-weight:700}
+
 
 .leemenu{position:fixed;width:230px;background:#2a2a33;border-radius:14px;padding:4px 0;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 .leemenu button{display:block;width:100%;text-align:left;border:0;background:none;color:#fff;font-size:17px;padding:13px 16px}
 .leemenu button+button{border-top:.5px solid #3a3a44}.leemenu.u261{max-height:calc(100vh - 24px);overflow-y:auto}.leemenu.u261 button{padding:11px 16px;font-size:16.5px}.leemenu.u261 button.lmoff{color:#6c6c76}
 .msgs .b,.ptcard,.top .tnm{-webkit-touch-callout:none}.msgs .b,.ptcard,.hc238,.rtx,.sub246,#preg249 li,.acor,.nia242{-webkit-user-select:none;user-select:none}.nia242{-webkit-touch-callout:none}.hc238,.rtx,.sub246,#preg249 li,.acor{-webkit-touch-callout:none}
-.ttlee{margin-left:auto;border:0;background:none;color:var(--ink-2);padding:2px 8px;display:flex;align-items:center}
+
 .fotin{flex-direction:column;align-items:flex-end;gap:2px}.fotin img{width:180px;height:auto;max-height:240px;border-radius:12px}.fotin .fh{font-size:12px;color:var(--ink-3)}
 .gdoc{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;aspect-ratio:1;border-radius:10px;background:#2a2a33;color:#fff;text-decoration:none;padding:6px;text-align:center}
 .gdoc span{font-size:20px;font-weight:700;color:#ff9f0a}.gdoc small{font-size:11px;color:#bbb;word-break:break-all}
@@ -2080,6 +2043,7 @@ function dm(n){ var d=new Date(); d.setDate(d.getDate()+n); return iso(d) }
 function dDif(a,b){ return Math.round((new Date(b+"T00:00:00")-new Date(a+"T00:00:00"))/86400000) }
 
 /* cuándo deja de servir una recuperable: lo dicta la periodicidad, no se pregunta */
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function topeRecuperable(t){
   if(!t.f_original) return null;
   if(t.periodicidad==="semanal") return dmDe(t.f_original,7);
@@ -2141,6 +2105,7 @@ function vencioTxt(t){
   var c=fechaChip(t.f_vigente)||"";
   return sinFinal(t) ? "tocaba "+c+", sin confirmar" : "venció "+c;
 }
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function colorReal(t){
   var e=estadoReal(t);
   if(e==="cerrada"){
@@ -2255,7 +2220,7 @@ function _proxNumero(dd, H){
   return null;
 }
 /* "lunes 5 de octubre", siempre calculado de la fecha. (OJO: no se llama fechaLarga porque
-   ya hay una fechaLarga() mas abajo -la de hoy- y en JS la ultima declarada gana.) */
+   había una fechaLarga() más abajo -la de hoy-, sin uso; se retiró el 8-oct, ver archivo/.) */
 function fechaConDia(f){ if(!_fReal(f)) return String(f||""); var d=new Date(f+"T00:00:00");
   return _DIAL[d.getDay()]+" "+d.getDate()+" de "+_MESL[d.getMonth()]; }
 /* TODAS las fechas dichas, en el orden en que se dijeron, y las dudas. */
@@ -2358,6 +2323,7 @@ function fechaDictada(txt){
 function dudaFecha(txt){ return fechaDictada(txt).duda; }
 /* build 174 (F19), ahora con candado: dia + numero = esa fecha si cuadran los dos; si
    no cuadran, null (y dudaFecha() trae la pregunta). Se deja por compatibilidad. */
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function diaSemanaConNumero(s){
   var r=fechasDichas(s), x=r.lista.filter(function(y){ return y.k==="diaNum"; })[0];
   return x?x.f:null;
@@ -3023,10 +2989,6 @@ function diaEntrega(f){
   var d=new Date(f+"T00:00:00");
   return DIAS_L[d.getDay()]+" "+d.getDate()+" "+MES_3[d.getMonth()];
 }
-function cadaTxt(t){
-  if(t.periodicidad==="mensual"){ var f=t.f_vigente||t.f_original; return t.dia_mes?"cada mes, el "+t.dia_mes:(f?"cada mes, el "+Number(f.slice(8,10)):"cada mes"); }
-  var g=t.f_vigente||t.f_original; return g?"cada "+DIAS_L[new Date(g+"T00:00:00").getDay()]:"cada semana";
-}
 function siguienteVuelta(t){
   var H=hoy(), para=t.f_vigente||t.f_original||H;
   var tarde=dDif(para,H);
@@ -3175,12 +3137,14 @@ function claveDe(nombre){
   return c;
 }
 /* Mexico son 10 digitos; wa.me los quiere con lada de pais y sin signos */
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function telWa(tel){
   var d=String(tel||"").replace(/\D/g,"");
   if(d.length===10) d="52"+d;
   if(d.length===12 && d.indexOf("521")===0) d="52"+d.slice(3);   // el 1 viejo
   return d;
 }
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function creaAcceso(nombre, correo, cb){
   var mail=String(correo||"").toLowerCase().trim();
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)){ cb(null,"Ese correo no se ve completo"); return }
@@ -3191,12 +3155,14 @@ function creaAcceso(nombre, correo, cb){
     .then(function(){ cb(acc,null) })
     .catch(function(){ cb(null,"No se pudo guardar el acceso") });
 }
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function textoAcceso(nombre){
   return "Hola "+nombre+", soy "+((PERSONAS[yo]&&PERSONAS[yo].nombre)||"Salvador")+". "+
     "Te di de alta en la bitácora de la oficina: ahí te llegan tus pendientes y me "+
     "contestas ahí mismo, sin correos.\n\n"+location.origin+location.pathname+"\n\n"+
     "Ábrela y pica “Entrar con Google” con tu cuenta.";
 }
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function APP_URL(){ return location.origin+location.pathname }
 /* LIGA DE UN SOLO USO (Salvador 2026-09-16). Cada liga trae un token unico.
    El primero que entra con Google usando esa liga la QUEMA: queda amarrada a
@@ -3229,6 +3195,7 @@ function consumeLiga(mail,cb){
       .catch(function(){ cb(false) });
   }).catch(function(){ cb(false) });
 }
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function abreWhatsApp(tel,texto){
   window.open("https://wa.me/"+telWa(tel)+"?text="+encodeURIComponent(texto),"_blank");
 }
@@ -3579,7 +3546,6 @@ function abreCopiarA(t, refs){
     var n=copiaAdjuntos(t, refs, d); cierraEnlazar(); window.__galSel=null; toast("Copié "+n+" a “"+corta40(d.nombre)+"”"); render(); };
   q.oninput=pinta; pinta();
 }
-function adjImgs(t){ return adjuntos(t).filter(function(f){ return f.img; }); }
 function fechaCorta(ts){
   if(!ts)return"";
   var d=new Date(ts);
@@ -3963,6 +3929,7 @@ function entrar(u){ yo=u; $("gate").classList.remove("on"); $("app").style.displ
   setTimeout(function(){ try{ avisaVisto(); }catch(e){} }, 1500); }
 /* build 139: CANDADO DE PRIVACIDAD. true = hay que confirmar antes de mandar:
    el texto trae dinero/cifras o nombra a otro contacto ligado a la tarea. */
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function waCandado(texto, contacto, t){
   var s=String(texto||"");
   if(/\$\s*\d|\b\d{1,3}(,\d{3})+\b|\b\d{4,}\b|\b\d+\s*(mil|k|pesos|usd|dlls?|d[oó]lares)\b|\bpresupuest|\bcotizaci/i.test(s)) return true;
@@ -4791,6 +4758,7 @@ function origenDe(t){
 }
 function lineaOrigen(t, cls){ var o=origenDe(t); return o?'<div class="'+(cls||"orgn")+'">Nació en: '+esc(o.txt)+'</div>':''; }
 /* build 195: el detalle del ▾ */
+/* SIN USO, REEMPLAZADA: se retira junto con su prueba b204 (revisión 8-oct) */
 function vDetalle(t, frows){
   var cc=creadaCon(t), cuando=cc.ts?fechaCorta(new Date(cc.ts))+" "+hhmm(new Date(cc.ts)):"";
   var h='<div class="dsec"><h4>Creada con</h4>'+(cc.foto?'<img class="dfoto" src="'+esc(cc.foto)+'" alt="foto con la que se creó">':'')+
@@ -4930,9 +4898,12 @@ function tipoItem(t){
   var cif=(t.datos_corregidos||[]).some(function(d){ return /\$\s*\d|\d[\d,]*\.\d{2}/.test(String((d&&d.t)||d||"")); });
   return (cif && !t.f_vigente && !t.periodicidad) ? "dato" : "tarea";
 }
+/* SIN USO, REEMPLAZADA: se retira junto con su prueba fichas y titulos (revisión 8-oct) */
 function _primerNombre(s){ return String(s||"").trim().split(/\s+/)[0]||""; }
+/* SIN USO, REEMPLAZADA: se retira junto con su prueba fichas y titulos (revisión 8-oct) */
 function juntaNombres(l){ l=l.filter(Boolean); if(l.length<=1) return l.join(""); if(l.length>3) return l.slice(0,3).join(", ")+" +"+(l.length-3); return l.slice(0,-1).join(", ")+" y "+l[l.length-1]; }
 /* "Tuya · con Chuy y Pato" / "De Samuel · con Cynthia" / "Dato · de Manuel Parra" */
+/* SIN USO, REEMPLAZADA: se retira junto con su prueba fichas y titulos (revisión 8-oct) */
 function subtituloTarea(t){
   var ints=[]; try{ ints=integrantesDe(t); }catch(e){}
   var otros=ints.filter(function(x){ return x.k!==t.duenio && x.k!==yo; }).map(function(x){ return _primerNombre(nombreInt(x.k)); });
@@ -4945,6 +4916,7 @@ function subtituloTarea(t){
   return dueno+(otros.length?" · con "+juntaNombres(otros):"");
 }
 /* build 196: lo mismo, pero los nombres se tocan y abren la ficha de la persona (como build 143) */
+/* SIN USO, REEMPLAZADA: se retira junto con su prueba titulos (revisión 8-oct) */
 function subtituloHTML(t){
   var txt=subtituloTarea(t), ints=[]; try{ ints=integrantesDe(t); }catch(e){}
   var nom={}; ints.forEach(function(x){ var n=nombreInt(x.k); nom[_primerNombre(n)]=nom[_primerNombre(n)]||n; });
@@ -5101,6 +5073,7 @@ function eventoPendiente(t){
   return !(ev.fecha && ev.fecha<hoy());                   /* lo que ya paso no se agenda */
 }
 /* AAAA-MM-DD + HH:MM en Monterrey -> ms UTC (sin suponer el desfase: se mide con Intl) */
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function mtyAUtcMs(fecha, hora){
   var p=fecha.split("-").map(Number), h=String(hora||"00:00").split(":").map(Number);
   var guess=Date.UTC(p[0],p[1]-1,p[2],h[0],h[1]);
@@ -5109,7 +5082,9 @@ function mtyAUtcMs(fecha, hora){
     return Date.UTC(+o.year,+o.month-1,+o.day,(+o.hour)%24,+o.minute)-ms; }
   var ms=guess-off(guess); return guess-off(ms);
 }
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function _gcalUtc(ms){ return new Date(ms).toISOString().replace(/[-:]/g,"").replace(/\.\d{3}/,""); }
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function urlGoogleCal(ev, t){
   var dates;
   if(ev.hora){ var a=mtyAUtcMs(ev.fecha, ev.hora), b=(ev.hora_fin && ev.hora_fin>ev.hora)?mtyAUtcMs(ev.fecha, ev.hora_fin):a+60*60*1000; dates=_gcalUtc(a)+"/"+_gcalUtc(b); }   /* build 212: con hora de fin, esa duracion; si no, 1 hora */
@@ -5224,6 +5199,7 @@ function similares229(t){
   return out.slice(0,6);
 }
 /* la linea de la ficha cuando ya se agendo */
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function lineaAgenda(t){
   if(!t || t.agendado!==true) return "";
   return '<div class="agst">'+ico("cal",15)+'<span>Agendado ✓ · '+(t.gcal_id?'Calendario ✓':'Calendario: en camino')+'</span></div>';
@@ -6034,11 +6010,6 @@ function enlazaCandidatas(oid){
    Orden: [+ Crear tarea nueva] fijo · las PARECIDAS (de más a menos) · TODAS las demás abiertas en orden alfabético sin acentos.
    Buscador: nombre, nombre anterior, contexto y alias, sin acentos, en TODAS las abiertas; si no hay coincidencia en abiertas muestra
    también las cerradas (marcadas "cerrada", en gris); al vincular a una cerrada, se reabre. */
-function _txtBusca259(x){
-  var flat=function(v){ return [].concat(v||[]).map(function(z){ return (z&&typeof z==="object")?(z.nombre||z.tx||""):String(z); }).join(" "); };
-  var ctx=""; try{ ctx=contextoDe(x)||""; }catch(e){}
-  return _n179([x.nombre, flat(x.nombre_anterior), flat(x.nombres_anteriores), ctx||x.contexto||"", flat(x.alias), flat(x.alias_tarea), flat(x.palabras), flat(x.sinonimos), x.de_quien||""].join(" "));
-}
 function esCerradaVinc259(x){ var c=!!x.cierre; if(!c){ try{ c=estadoReal(x)==="cerrada"; }catch(e){} } return c; }
 /* ===================== build 262: UN SOLO MOTOR DE PARECIDAS Y DE BÚSQUEDA (sugeridasPara262) =====================
    Lo usan TODAS las hojas (Vincular, Mover mensajes / ¿A dónde va?, Acomodo, Nueva y Dato): mismo formato — buscador, "+ Crear tarea nueva",
@@ -6188,12 +6159,6 @@ function semBusca262(q, excl, cb){
     var ok={}; C.forEach(function(d){ ok[d.id]=1; }); ids=ids.filter(function(id){ return ok[id]; }).slice(0,5); window.__sem262[k]={ts:Date.now(), ids:ids}; cb(ids); }); }catch(e){}
 }
 function buscaVinc259(q, excl){ return buscaVinc262(q, excl); }   /* build 262: un solo motor */
-function ordenVinc259(oid, simIds){   /* compat: sin motor de parecidas cae a lo que se le pase; las hojas usan sugeridasPara262 */
-  var cand=enlazaCandidatas(oid), sims=[], vis={};
-  (simIds||[]).forEach(function(id){ var d=cand.filter(function(x){ return x.id===id; })[0]; if(d && !vis[id]){ vis[id]=1; sims.push(d); } });
-  var rest=cand.filter(function(x){ return !vis[x.id]; }).sort(function(a,b){ return _n179(a.nombre).localeCompare(_n179(b.nombre)); });
-  return {sims:sims, rest:rest};
-}
 function abreEnlazar(oid, op){
   op=op||{};   /* build 229: desde "Vincular" de una tarea nueva: parecidas primero y "Tarea nueva" */
   var o=tareas.filter(function(x){return x.id===oid})[0]; if(!o) return;
@@ -7818,17 +7783,6 @@ function phCanal(t){
   if(canalesDe(t).length<=2) return "";
   return "Mensaje al equipo…";
 }
-function abreCanales(t){
-  var c=canalActual(t);
-  var bg=document.createElement("div"); bg.className="cnlbg";
-  var s=document.createElement("div"); s.className="cnlsheet";
-  s.innerHTML='<div class="hh"></div>'+canalesDe(t).map(function(x){
-    return '<button class="cnlop'+(x.id===c.id?" on":"")+'" data-cnl="'+esc(x.id)+'"><i style="background:'+x.col+'"></i><span>'+esc(x.nom)+'<small>'+esc(x.sub)+'</small></span></button>'; }).join("");
-  function cierra(){ if(bg.parentNode) bg.parentNode.removeChild(bg); if(s.parentNode) s.parentNode.removeChild(s); }
-  bg.onclick=cierra;
-  Array.prototype.forEach.call(s.querySelectorAll("[data-cnl]"),function(b){ b.onclick=function(){ window.__cnl=window.__cnl||{}; window.__cnl[t.id]=b.getAttribute("data-cnl"); cierra(); render(); }; });
-  document.body.appendChild(bg); document.body.appendChild(s);
-}
 function externoNombrado(t, v){
   var n=" "+_nn(v).replace(/[^a-z0-9ñ ]+/g," ")+" ";
   var hit=null;
@@ -8090,6 +8044,7 @@ function aQuienRespondo(t, v, cita){
   if(/^\s*(recu[eé]rda(me|le)|av[ií]sa(me|le)|apunta|anota|agrega|p[oó]n(me|le)|c[aá]mbia(le)?|dile|d[ií]gale|m[aá]nda(le|me)|preg[uú]nta(le)?|escr[ií]be(le)?|ll[aá]ma(le|me)|m[aá]rca(le|me)|abre|busca|cierra|ci[eé]rrala|borra|b[oó]rrala|elimina|crea|hazme|haz|recordatorio|alarma|mu[eé]vela|p[aá]sala|reenv[ií]a)\b/i.test(s)) return "";
   return c;
 }
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function respondeAuto(t, v, contacto, cita){
   var desde=Date.now(), cpo={usuario:yo, tarea_id:t.id, contacto:contacto, texto:v, auto_respuesta:1, desde_ts:desde};
   if(cita && cita.t) cpo.cita_texto=String(cita.t).slice(0,300);
@@ -8626,6 +8581,7 @@ function vQuienDudas(t){
         '<button class="qdb otro" data-qdotro="'+esc(d.id)+'"><b>Otro / nuevo</b><small>escribe el nombre</small></button>')+'</div></div>';
   }).join("");
 }
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function vCompartir(t){
   var l=_compartirLista(t); if(!l.length) return "";
   return '<div class="compc"><span class="cpl">Se comparte con</span>'+l.map(function(c){ return '<span class="cpp">'+esc(c.nombre)+'</span>'; }).join("")+'</div>';
@@ -8909,19 +8865,6 @@ function sinResultado251(t, v, j, r, or, err){
   if(!vacio) return false;
   var comp=true; try{ comp=!!completitud(t).completa; }catch(e){}
   return !comp || ordenesDichas238(v);
-}
-function ultimos10_251(t){ return (t.msgs||[]).filter(function(m){ return m && !m.oculto && String(m.t||"").trim() && !m.res238; }).slice(-10).map(function(m){
-  var q=m.wa_c||(m.de&&PERSONAS[m.de]&&PERSONAS[m.de].nombre)||(m.k==="bo"?"Salvador":"Claude"); return q+": "+String(m.t).replace(/\s+/g," ").slice(0,300); }).join("\n"); }
-function refuerzo251(t, v){
-  return "\n\nREINTENTO (build 251): tu respuesta anterior no dejó ninguna orden ni dato aplicable. Vuelve a leer con calma lo dictado y lo que ya hay en la tarea. Devuelve ORDENES concretas (mensaje, condicional, claude, agendar, seguimiento, vincular o clasificar) o los datos que corresponden. Solo si de verdad es imposible, llena \"pregunta\" con UNA pregunta corta y concreta. Nunca contestes que no cambiaste nada.\n"+
-    "CONTEXTO COMPLETO DE LA TAREA: "+String(contextoDe(t)||t.contexto||"(nada)").slice(0,3000)+"\nNOMBRE: "+(t.nombre||"")+" · FECHA: "+(t.f_vigente||"sin fecha")+"\nÚLTIMOS 10 MENSAJES:\n"+(ultimos10_251(t)||"(ninguno)")+"\nLO DICTADO AHORA: "+String(v||"").slice(0,1500);
-}
-function preguntaConcreta251(v, t){
-  var s=_fsa(v), q;
-  if(/\b(dile|diles|pidele|pideles|escribele|mandale|avisale|preguntale|pregunta|manda|avisa)\b/.test(s)) return {k:"txt", q:"¿A quién se lo mando y qué le digo exactamente?", ops:[]};
-  if(/\b(agend\w*|recuerdame|avisame|recordatorio|fecha|cuando|para el)\b/.test(s)) return {k:"txt", q:"¿Para qué día y a qué hora lo agendo?", ops:[]};
-  var corto=String(v||"").replace(/\s+/g," ").trim(); corto=corto.length>60?corto.slice(0,59)+"…":corto;
-  return {k:"resp", q:"No me quedó claro qué hacer con «"+corto+"». ¿Qué es?", ops:[{id:"dato", label:"Es un dato para anotar"},{id:"msg", label:"Mándale un mensaje a alguien"},{id:"agenda", label:"Agéndame un aviso"}]};
 }
 /* nombre EXACTO como lo usa WhatsApp (el de contactos o la agenda), no el alias con paréntesis que arma la app: la Mac lo busca tal cual */
 function nombresExactosWA251(){
@@ -9774,13 +9717,6 @@ function pararDictado(usar){
   marcaEnvio("benv","");
 }
 
-function fechaLarga(){
-  var d=new Date();
-  var dias=["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
-  var mes=["enero","febrero","marzo","abril","mayo","junio","julio","agosto",
-           "septiembre","octubre","noviembre","diciembre"];
-  return dias[d.getDay()]+" "+d.getDate()+" de "+mes[d.getMonth()];
-}
 /* ---- ¿ya la agrego a la pantalla de inicio? Si si, cero aviso. ---- */
 function estaInstalada(){
   try{
@@ -9987,6 +9923,7 @@ function resumenVivo(t){
   return {una:P.map(function(p){ return p.tx; }).join(" · "), partes:P};
 }
 /* cuantas cosas le tocan a quien mira (para la pastilla discreta) */
+/* SIN USO, REEMPLAZADA: se retira junto con su prueba b225 (revisión 8-oct) */
 function cosasParaTi(t){
   var n=0; try{ n+=porAprobar(t).length; }catch(e){}
   n+=(t.decision_meta||[]).length+(t.decision_dato||[]).length+(t.quien_dudas||[]).length+(t.msj_borrador?1:0);
@@ -10097,6 +10034,7 @@ function vAgenda228(t){
     '</div><p class="h225v0">'+esc(a.ok?"Tiene las dos cosas: la alerta de Doit y el evento en tu Google Calendar.":"Para quedar agendado necesita las dos: la alerta de Doit y el evento en Google Calendar.")+'</p>';
   return h;
 }
+/* SIN USO, REEMPLAZADA: se retira junto con su prueba b225 (revisión 8-oct) */
 function vResumenVivo(t){
   /* build 228: ya no es bloque fijo: la ficha "Resumen" lo despliega debajo de las fichas y lo pliega al volver a tocarla */
   var r=resumenVivo(t); if(!r.una || !min225(t.id,"rvab")) return "";
@@ -10104,6 +10042,7 @@ function vResumenVivo(t){
 }
 /* filtro del chat por meta */
 function filtroMeta(t){ var f=(window.__mfil225||{})[t.id]||""; if(f && f!=="otro" && !metasDe(t).some(function(m){ return m.id===f; })) f=""; return f; }
+/* SIN USO, REEMPLAZADA: se retira junto con su prueba b225 (revisión 8-oct) */
 function vFiltroMeta(t){
   var pe=metasEnCurso(t); if(!pe.length || esDato(t)) return "";
   var f=filtroMeta(t);
@@ -10202,6 +10141,7 @@ function vHoja225(t){
     (sub?'<div class="h225s">'+esc(sub)+'</div>':'')+'<div class="h225c">'+cuerpo+'</div></div>';
 }
 /* ---- mover un mensaje a otra tarea (nunca se borra: en el origen queda oculto) ---- */
+/* SIN USO, REEMPLAZADA: se retira junto con su prueba b225 (revisión 8-oct) */
 function tareasParaMover(t, x){
   var c=_nn(String((x&&x.wa_c)||"")), H=[];
   tareas.forEach(function(d){ if(!d || d.id===t.id || d.cierre || d.fusionada_en || d.es_recordatorio || estadoReal(d)==="cerrada") return;
@@ -10274,11 +10214,6 @@ function arreglaMezcla(t, v){
 function censoAcomodo(t, x, de, a, tipo){
   t.censo_acomodo=(t.censo_acomodo||[]).concat([{contacto:String((x&&x.wa_c)||""), texto:_txMsg(x).replace(/^[^:\n]{1,40}:\s*/,"").slice(0,80),
     de:de||"", a:a||"", tipo:tipo, ts:Date.now(), por:yo||""}]).slice(-100);
-}
-function acomodoOk(t, ix){
-  var x=(t.msgs||[])[ix]; if(!x) return "";
-  x.duda_resuelta="esta"; x.duda_ts=Date.now(); x.acomodo={ok:1, ts:Date.now(), por:yo||""};
-  censoAcomodo(t, x, t.id, t.id, "ok"); guarda(t); return "Listo: se queda en “"+(t.nombre||"esta tarea")+"”.";
 }
 function soloPlatica(t, ix){
   var x=(t.msgs||[])[ix]; if(!x || x.oculto) return "";
@@ -10356,21 +10291,6 @@ function nuevaDesdeMsg(t, ix, nombre){
   n.creada_desde={tarea_id:t.id, ts:x.ts||0, tipo:"acomodo"};
   var r=mueveMensaje(t, ix, n.id, "nueva"); guarda(n);
   return r?n:null;
-}
-/* las tareas para "¿A donde va?": la mas probable primero (la alternativa de la duda, o la de mas palabras en comun),
-   luego donde cayo, luego las del mismo contacto; maximo 5 */
-function opcionesMover(t, x){
-  var L=tareasParaMover(t, x), d=x&&x.duda_tarea, ws={};
-  _nn(_txMsg(x)).replace(/[^a-z0-9ñ ]+/g," ").split(/\s+/).forEach(function(w){ if(w.length>=4 && META_VACIAS.indexOf(w)<0) ws[w.slice(0,6)]=1; });
-  L.forEach(function(o){ var s=0, b=_nn([o.d.nombre, o.d.contexto, ((o.d.checklist&&o.d.checklist.items)||[]).map(function(i){ return i.tx; }).join(" ")].join(" ")).replace(/[^a-z0-9ñ ]+/g," ").split(/\s+/), vis={};
-    b.forEach(function(w){ var r=w.slice(0,6); if(w.length>=4 && ws[r] && !vis[r]){ vis[r]=1; s++; } }); o.p=s+(o.mismo?0.5:0); });
-  var best=(d && d.alternativa_id)?L.filter(function(o){ return o.d.id===d.alternativa_id; })[0]:null;
-  if(!best){ var sl=L.slice().sort(function(a,b){ return b.p-a.p; }); best=sl[0]||null; }
-  var resto=L.filter(function(o){ return o!==best; }).sort(function(a,b){ return (b.p-a.p) || (b.mismo-a.mismo); });
-  var out=[]; if(best) out.push({d:best.d, tag:"más probable", best:true});
-  out.push({d:t, tag:"aquí cayó", aqui:true});
-  resto.slice(0,3).forEach(function(o){ out.push({d:o.d, tag:o.mismo?"":""}); });
-  return out;
 }
 function inicialesDe(n){ var w=nombreCorto(String(n||"")).replace(/\(.*?\)/g,"").replace(/[^\wáéíóúñü ]+/gi," ").trim().split(/\s+/).filter(Boolean); return ((w[0]||"?").charAt(0)+((w[1]||"").charAt(0)||"")).toUpperCase(); }
 function nombreLimpio(n){ return String(n||"").replace(/\s*\(.*?\)\s*/g," ").replace(/[☀-➿️‍]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uD83E[\uDC00-\uDFFF]/g,"").replace(/\s+/g," ").trim(); }
@@ -10482,7 +10402,6 @@ function platicas237(t){
     var mejor=base.slice().sort(function(a,b){ return _tx(b).length-_tx(a).length; })[0]; g.extractoX=mejor||null; g.extracto=mejor?_tx(mejor):""; });   /* 245: se guarda el mensaje para mostrar su imagen */
   return G;
 }
-function grupoDe237(t, ix){ var G=platicas237(t); for(var i=0;i<G.length;i++) if(G[i].ixs.indexOf(ix)>=0) return G[i]; return null; }
 /* tarea que creo la IA y Salvador aun no clasifica */
 function sinClasificarIA237(t){ return !!t && t.creada_por==="ia_revisor" && t.por_autorizar===true && !clasif236(t) && !t.cierre; }
 function botonesG237(ix, ixs, extra){ var g=esc(ixs.join(","));
@@ -10841,12 +10760,6 @@ function icoCl238(t, x, ix){
 }
 /* build 242: OK · Mover · Nueva · Dato ya no van debajo del globo: viven en la hoja del detalle (tocar el globo) */
 function vDudaTarea(t, x, ix){ return ""; }
-function vDudaTarea238(t, x, ix){
-  if(!x || x.oculto || confirmado237(x) || esSaludo238(t, x)) return "";
-  if(x.duda_tarea && !x.duda_resuelta) return botonesG237(ix, [ix]);
-  if(acomodoIA237(x) && (window.__cl238||{})[t.id+"|"+ix]) return botonesG237(ix, [ix], " mq237ab");
-  return "";
-}
 /* acciones sobre TODA la plática */
 function ixsDe237(el, ix){ var c=el && el.closest && el.closest("[data-acg]"); var v=c?String(c.getAttribute("data-acg")||""):""; var l=v?v.split(",").map(function(n){ return +n; }).filter(function(n){ return !isNaN(n); }):[]; return l.length?l:[ix]; }
 function palabrasRegla237(xs){
@@ -10974,14 +10887,6 @@ function preguntaTema243(t, ixs){
     if(usa.length>1) reglaLote245("no_guardar", t, usa, t, {acierto_tema:si}); else usa.forEach(function(i){ guardaRegla237("no_guardar", t, [i], t, {acierto_tema:si}); });
     el.remove(); clearTimeout(window.__ngT243); toast(si?"Anotado: el tema sí era de esa tarea":"Anotado: no era de esa tarea"); };
   window.__ngT243=setTimeout(function(){ if(el.parentNode) el.remove(); }, 8000);
-}
-function trivialG240(t, ixs){
-  var hechos=[]; t.msg_imp=(t.msg_imp && typeof t.msg_imp==="object")?t.msg_imp:{};
-  ixs.forEach(function(ix){ var x=(t.msgs||[])[ix]; if(!x || x.oculto) return; var k=msgId230(x)||("ts"+(x.ts||ix)); t.msg_imp[k]=0;
-    x.duda_resuelta="esta"; x.duda_ts=Date.now(); x.acomodo={ok:1, ts:Date.now(), por:yo||"", trivial:1}; hechos.push(ix); });
-  if(!hechos.length) return ""; hechos.forEach(function(i){ guardaRegla237("trivial", t, [i], t); }); guarda(t);
-  try{ hist240("Acomodo: OK sin importancia", t, null); }catch(e){}
-  return "Listo: se queda en “"+(t.nombre||"esta tarea")+"”, sin importancia.";
 }
 function nuevaG237(t, ixs, comoDato, nombre){
   var xs=ixs.filter(function(i){ var x=(t.msgs||[])[i]; return x && !x.oculto && !confirmado237(x); }); if(!xs.length) xs=ixs.filter(function(i){ var x=(t.msgs||[])[i]; return x && !x.oculto; }); if(!xs.length) return null;
@@ -11111,11 +11016,6 @@ function platicaSola239(){
     if(n){ censoAcomodo(t, t.msgs[g.ixs[0]], t.id, "", "platica_auto"); if(tocadas.indexOf(t)<0) tocadas.push(t); } });
   tocadas.forEach(function(t){ guarda(t); });
   if(tocadas.length && db) render();
-}
-function dudasAcomodo(){
-  var out=[]; tareas.forEach(function(t){ if(!abiertaVisible(t)) return;
-    (t.msgs||[]).forEach(function(x,ix){ if(x && x.duda_tarea && !x.duda_resuelta && !x.oculto && !x.eliminado) out.push({t:t, ix:ix, x:x}); }); });
-  return out.sort(function(a,b){ return (b.x.ts||0)-(a.x.ts||0); });
 }
 /* lo de HOY: mensajes de WhatsApp que llegaron solos a una tarea (los movidos a mano no cuentan dos veces) */
 function acomodoHoy(){
@@ -13648,7 +13548,6 @@ function leeFoto(t, ev){
     guarda(t); if(typeof render==="function") render();
   });
 }
-function pegaFoto(t){ pegaFotoA(t, fotoEnMano); }
 
 /* ===== build 144 (Salvador 2026-09-26): PASOS DENTRO DE LA TAREA =====
    Un dictado con 2+ cosas nace como UNA tarea con su lista t.lista_pasos:
@@ -13787,6 +13686,7 @@ function vistaSup(t){
   try{ return soySupervisor(t) && esMetas(t); }catch(e){ return false; }
 }
 function necesitaAprobacion(t){ return (t.revisores||[]).some(function(k){ return k && k!==yo; }) || (t.duenio===yo && !!t.supervisa && t.supervisa!==yo); }
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function subSupHTML(t){ return esc(propietario233(t)); }   /* build 233: era "Lo hace X · supervisas tú" */
 /* build 233: primer nombre (o el alias corto de Doit) para que quepa en una linea */
 function pila233(k){ if(k && PERSONAS[k]) return nombreCorto(PERSONAS[k].nombre).split(" ")[0]; return nombreCorto(String(k||"")).split(" ")[0]; }
@@ -13801,6 +13701,7 @@ function propietario233(t){
 }
 function _supAb(t, k, def){ var o=window.__supAb=window.__supAb||{}, kk=t.id+"|"+k; return (kk in o)?!!o[kk]:def; }
 function porAprobar(t){ return metasDe(t).filter(function(m){ return (+m.estado||0)===1; }); }
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function resumenDatos(t){
   var p=[];
   if(t.seg_a && t.seg_a.contacto) p.push(("Seguimiento "+(t.seg_a.cada||"")+(t.seg_a.hora?" "+t.seg_a.hora:"")).replace(/\s+/g," ").trim());
@@ -13809,6 +13710,7 @@ function resumenDatos(t){
   if(cp) p.push("se comparte con "+cp);
   return p.join(" · ")||"Sin datos extra";
 }
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function vMetasSup(t){
   var L=metasDe(t), H=hoy(), pend=L.filter(function(m){ return !metaCumplida(m); }), hech=L.filter(metaCumplida);
   pend.sort(function(a,b){ return String(a.fecha||"9999").localeCompare(String(b.fecha||"9999")); });
@@ -13825,11 +13727,13 @@ function vMetasSup(t){
   }
   return h+'</div>';
 }
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function vSecSup(t, k, titulo, linea){
   var ab=_supAb(t,k,false);
   return '<div class="ssec" data-ssec="'+k+'"><button class="ssh" data-supab="'+k+'">'+esc(titulo)+'<span class="r"></span><span class="chev">'+(ab?'▴':'▾')+'</span></button>'+
     (ab?'<div class="sfull">'+linea.full+'</div>':'<div class="sone">'+esc(linea.una)+'</div>')+'</div>';
 }
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function vSupSecciones(t){
   var ctx=contextoDe(t)||"";
   var full=[["Finiquito", t.indefinida===true?"Indefinida":(t.f_vigente?fechaConDia(t.f_vigente):"")], ["Lo hace", ejecutorNombre(t)],
@@ -13889,7 +13793,9 @@ function sugSup(t){
    4) tras 2 repreguntas sin dato claro, tarjeta de decisión para Salvador con todo el contexto.
    La Mac (v18m) hace lo mismo al instante; la app espera 10 min y no actúa si la Mac ya lo anotó (nunca doble repregunta). ===== */
 var CLARIDAD_ESPERA_MS=10*60000, REPREG_CADA_MS=4*3600*1000;
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function _quienMsg(x){ return String((x&&(x.wa_c||x.wa_auto))||"").trim(); }
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function _esPreguntaA(x, c){
   if(!x) return false; var tx=String(x.tr||x.t||"").replace(/^→\s*[^:]{1,40}:\s*/,"");
   if(!/[?¿]/.test(tx)) return false;
@@ -13899,6 +13805,7 @@ function _esPreguntaA(x, c){
   return !d || _nn(d).split(/\s+/)[0]===_nn(c).split(/\s+/)[0];
 }
 /* la ultima respuesta de alguien que sigue a una pregunta concreta suya, sin revisar, con 10 min de reposo */
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function candidatoClaridad(t, ahora){
   var ms=t.msgs||[]; ahora=ahora||Date.now();
   for(var i=ms.length-1;i>=0 && i>=ms.length-25;i--){
@@ -13914,8 +13821,10 @@ function candidatoClaridad(t, ahora){
   }
   return null;
 }
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function _raizDato(s){ return _nn(s).replace(/[^a-z0-9ñ ]+/g," ").split(/\s+/).filter(function(w){ return w.length>=5; }).map(function(w){ return w.slice(0,6); }); }
 /* aplica el criterio con lo que dijo Claude: info {clara, pregunta, falta, texto} */
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function aplicaNoClara(t, cand, info, ahora){
   return "";   /* build 267: APAGADO. Ya no escribe repreguntas ni registros (repreg, decision_dato, decision_salvador); la Mac lleva el seguimiento con plan[] (18z8/18z15) */
   ahora=ahora||Date.now(); var x=(t.msgs||[])[cand.ix]; if(!x) return "";
@@ -13950,12 +13859,14 @@ function aplicaNoClara(t, cand, info, ahora){
     .then(function(j){ var pid=(j&&(j.id||j.pedido_id))||null; if(pid){ mw.wa_pid=pid; guarda(t); } }).catch(function(){});
   r.n++; r.ts=ahora; return "repregunto";
 }
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function promptClaridad(cand){
   return "Eres Claude dentro de la app Doit. Se le hizo a "+cand.contacto+" esta pregunta: «"+cand.pregunta+"». Contestó: «"+cand.respuesta+"».\n"+
     "¿La respuesta contesta la pregunta de forma CLARA y concreta (sí/no, el dato, la foto, el costo o la fecha que se pidió)? Es NO clara si es evasiva "+
     "(\"no se alcanza a apreciar\", \"creo que\", \"ahorita lo checo\"), cambia de tema o promete sin dar el dato. Si la pregunta no era concreta, cuenta como clara.\n"+
     "Contesta SOLO JSON: {\"clara\":true|false,\"pregunta\":\"la pregunta concreta, corta\",\"falta\":\"el dato concreto que falta, corto\",\"texto\":\"IA: Gracias, <nombre>. Para poder decidir necesito el dato concreto: <una sola pregunta concreta>\"}";
 }
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function revisaClaridadTodas(ahora){
   return;   /* build 267: apagado, ver aplicaNoClara */
   ahora=ahora||Date.now(); if(window.__clarPend) return; var n=0;
@@ -14027,6 +13938,7 @@ function decideDato(t, did, accion){
   else { if(r) r.cerrado=true; tx="Listo: ya no hace falta «"+d.falta+"»."; }
   msg(t,"bi",tx); guarda(t); return tx;
 }
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function vDecisionDato(t){
   return (t.decision_dato||[]).map(function(d){
     return '<div class="revc c-decmeta" data-dd="'+esc(d.id)+'"><span class="rct">DECIDE · SIN DATO CLARO</span>'+
@@ -14149,6 +14061,7 @@ function aplicaMetasClaude(t, v, j){
    3) le llega UNA tarjeta para decidir en un toque: meta, fecha, atraso, qué contestó el ejecutor, evidencia (fotos),
       costo si lo hay, y botones con la decisión ("Nueva fecha 12-oct" / "Hablo yo con él" / "Autorizo"). ===== */
 var ESCALA_DIAS={alta:1, normal:3, baja:7};
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function importanciaDe(t){ var c=String((t&&t.criticidad)||"normal").toLowerCase(); return (c==="diario"||c==="alta"||c==="critica")?"alta":((c==="lento"||c==="baja")?"baja":"normal"); }
 function ejecutorMeta(t, m){
   var c=String((m.seg&&m.seg.contacto)||m.quien||t.revisa_ext||"").trim();
@@ -14157,15 +14070,18 @@ function ejecutorMeta(t, m){
   return null;
 }
 /* lo que contestó el ejecutor desde que venció la meta (sus mensajes entrantes) */
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function respuestasEjecutor(t, ej, desdeTs){
   var nn=_nn(ej.nombre).split(/\s+/)[0];
   return (t.msgs||[]).filter(function(x){ return x && x.wa_in===1 && (x.ts||0)>=desdeTs && _nn(String(x.wa_c||"")).split(/\s+/)[0]===nn; });
 }
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function textoEmpuje(t, m, ej){
   var n=nombreCorto(ej.nombre).split(" ")[0];
   return "IA: Hola "+n+", gracias por lo que van avanzando en "+tareaCorta(t)+". La meta “"+metaCorta(m)+"” estaba para el "+fechaMeta(m.fecha)+
     ". ¿Qué te falta para dejarla lista y para qué día la podemos cerrar? Si me mandas una foto de cómo va, mejor.";
 }
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function empujaEjecutor(t, m, ej){
   var tx=textoEmpuje(t, m, ej);
   if(ej.k){ msg(t,"bal",tx.replace(/^IA:\s*/,"")); var mm=t.msgs[t.msgs.length-1]; mm.canal="dm:"+ej.k; mm.aviso=1; mm.meta_id=m.id; mm.pide_a=ej.k;
@@ -14177,6 +14093,7 @@ function empujaEjecutor(t, m, ej){
     .catch(function(e){ mw.wa_err=String((e&&e.message)||e).slice(0,60); guarda(t); });
 }
 /* fotos que mandó el ejecutor desde que venció + la foto de la meta; costo en lo que dijo o en el gasto de la tarea */
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function evidenciaMeta(t, m, ej, desdeTs){
   var rs=ej?respuestasEjecutor(t, ej, desdeTs):[], fotos=[];
   rs.forEach(function(x){ if(x.url && /foto|imagen|image|jpe?g|png/i.test(String(x.tipo||"")+" "+x.url)) fotos.push(x.url); });
@@ -14185,10 +14102,12 @@ function evidenciaMeta(t, m, ej, desdeTs){
   return {resp:rs.map(function(x){ return String(x.t||"").replace(/^[^:]{1,40}:\s*/,"").slice(0,240); }).filter(Boolean).slice(-3), fotos:fotos.slice(0,4), costo:costo};
 }
 /* propuesta de nueva fecha: la que dijo el ejecutor, si dijo una; si no, en 3 días */
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function fechaPropuesta(ev, H){
   for(var i=ev.resp.length-1;i>=0;i--){ try{ var fd=fechaDictada(ev.resp[i]); if(fd && fd.todas && fd.todas.length && fd.todas[0]>H) return fd.todas[0]; }catch(e){} }
   var d=new Date(H+"T00:00:00"); d.setDate(d.getDate()+3); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 }
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function escalaMeta(t, m, ej, atraso, motivo, desdeTs, H){
   var ev=evidenciaMeta(t, m, ej, desdeTs), nf=fechaPropuesta(ev, H);
   t.decision_meta=(t.decision_meta||[]).filter(function(d){ return d.metaId!==m.id; });
@@ -14200,6 +14119,7 @@ function escalaMeta(t, m, ej, atraso, motivo, desdeTs, H){
   try{ if(yo!=="salvador" && PERSONAS.salvador) disparaPushInstantaneo("salvador", tareaCorta(t), "Decide: meta “"+d.corta+"” atrasada "+atraso+" día"+(atraso===1?"":"s"), urlTarea(t.id), "espera"); }catch(e){}
   return d;
 }
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function chequeoMetas(ahoraMs){
   var ahora=ahoraMs||Date.now(), H=hoy(), hr=new Date(ahora).getHours();
   tareas.forEach(function(t){
@@ -14235,6 +14155,7 @@ function decideMeta(t, did, accion, fecha){
     if(ej && !ej.k) pideWhatsApp({usuario:yo, tarea_id:t.id, contacto:ej.nombre, texto:"IA: Hola "+nombreCorto(ej.nombre).split(" ")[0]+", Salvador autoriza “"+d.corta+"”"+(d.costo?" ("+d.costo+")":"")+". Adelante, ¡gracias!", sin_espera:1}).catch(function(){}); }
   if(tx) msg(t,"bi",tx); guarda(t); return tx;
 }
+/* PENDIENTE DE CONECTAR (revisión 8-oct) */
 function vDecisionMeta(t){
   return (t.decision_meta||[]).map(function(d){
     return '<div class="revc c-decmeta" data-dm="'+esc(d.id)+'"><span class="rct">DECIDE · META ATRASADA</span>'+
@@ -14987,18 +14908,6 @@ function armaCuando(v){
   else { var _pf=proximaFranja(); f=_pf.fecha; h=_pf.hora; }
   return {fecha:f, hora:h, cada:_cada||""};
 }
-/* el resumen de 2 renglones que se ve con la ficha colapsada */
-function resumenTarea(t){
-  if(t.es_recordatorio){
-    var q=[]; if(t.f_vigente) q.push(fechaBonita(t.f_vigente)); if(t.aviso_hora) q.push("a las "+horaBonita(t.aviso_hora));
-    return conMayuscula(t.nombre||"Recordatorio")+(q.length?" · te aviso "+q.join(" "):"");
-  }
-  var p=[conMayuscula(t.revisar||t.nombre||"")];
-  if(t.gasto && /\d/.test(t.gasto) && !/no\s*gasta/i.test(t.gasto)) p.push("monto "+t.gasto);
-  if(t.f_vigente) p.push("para "+fechaBonita(t.f_vigente));
-  if(t.cierra) p.push("cierra con "+t.cierra);
-  return p.join(" · ");
-}
 function vAvisosSheet(t){
   var son=avisoSonando(t), todos=avisosDe(t);
   var prog=todos.filter(function(a){ return !(son && a.id===son.id); });
@@ -15309,9 +15218,6 @@ function arrancaDictadoCompleta(btn,id){
 function palomita(){ return '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" '+
   'stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">'+
   '<path d="M5 12.8l4.6 4.6L19 7.4"/></svg>' }
-function cruzBlanca(){ return '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" '+
-  'stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M6.5 6.5 17.5 17.5"/>'+
-  '<path d="M17.5 6.5 6.5 17.5"/></svg>'; }
 function cruzRoja(){ return '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" '+
   'stroke="#FF453A" stroke-width="2.4" stroke-linecap="round"><path d="M6.5 6.5 17.5 17.5"/>'+
   '<path d="M17.5 6.5 6.5 17.5"/></svg>'; }
@@ -18554,16 +18460,6 @@ function esLlamada274(t){
 }
 /* el orden de la caminata: decisiones · llamadas de hoy · vencidas y de hoy */
 function camLista274(){ return camLista276().L; }   /* build 276: + ficha Falta · mensajes por acomodar */   /* build 275: decisiones · llamadas de MAÑANA · tareas nuevas de Acomodo */
-function camLista274v(){
-  var H=window.__H274||{preg:[], venc:[], hoy:[]}, out=[], ya={}, h=hoy();
-  var pon=function(t){ if(t && !ya[t.id] && _camVivo(t)){ ya[t.id]=1; out.push(t.id); } };
-  (tareas||[]).forEach(function(t){ var d=null; try{ d=decision273(t); }catch(e){} var ds=false; try{ ds=esDecisionSal(t); }catch(e){} if(d || ds) pon(t); });
-  var vh=(H.venc||[]).concat(H.hoy||[]).map(function(x){ return x.t; });
-  vh.forEach(function(t){ if(esLlamada274(t) && (t.f_vigente===h || (H.hoy||[]).some(function(x){ return x.t===t; }))) pon(t); });
-  (tareas||[]).forEach(function(t){ if(t && t.f_vigente===h && !t.es_recordatorio && (t.duenio===yo || !t.duenio) && esLlamada274(t)) pon(t); });
-  vh.forEach(pon);
-  return out;
-}
 /* ---------- texto hablado: frases cortas, sin código ni ligas ---------- */
 function _camCodigo(s){ return /[{}<>;=\\]|=>|\bfunction\b|\bvar\b|\bconst\b|\breturn\b|\.(js|html|php|json|py)\b|`/.test(s); }
 function camFrases(s, max){
@@ -18957,14 +18853,6 @@ document.addEventListener("visibilitychange", function(){
   if(document.visibilityState==="visible"){ camWake274(true); if(CAM.fase==="escuchando" && !CAM.oye) camEscucha274(CAM.modo||"resp"); }
 });
 /* ---------- pantalla mínima ---------- */
-function vCaminata274(){
-  if(!window.SpeechSynthesisUtterance && !window.speechSynthesis) return "";
-  var n=0; try{ n=camLista274().length; }catch(e){}
-  if(!n) return "";
-  return '<button class="cam274b" id="bcam274" aria-label="Caminata: escuchar tus pendientes uno por uno">'+
-    '<span class="cam274i" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"/><path d="M10.5 21l1.5-6-2.5-2.5 1.5-5 3.5 3 3 1"/><path d="M9.5 8l-3 1.5-1 3.5"/><path d="M12 15l3 2 1 4"/></svg></span>'+
-    '<span class="cam274t"><b>Caminata</b><small>'+n+(n===1?' pendiente':' pendientes')+' en voz, sin ver la pantalla</small></span></button>';
-}
 function camAbreUI274(){
   var o=document.getElementById("cam274"); if(o) o.remove();
   o=document.createElement("div"); o.id="cam274"; o.className="cam274"; o.setAttribute("role","dialog"); o.setAttribute("aria-label","Caminata");
@@ -19700,7 +19588,6 @@ function camSinConf277(v){
   var s=String(v||"").replace(/[,.;:\s]*¿?\s*(conf[ií]rm(amelo|amela|ame|a)( antes| primero)?|me confirmas|(me )?entendiste( bien)?|dime (si|qu[eé]|lo que) (me )?entendiste|dime qu[eé] vas a hacer|rep[ií]teme (lo )?qu[eé] (vas a hacer|entendiste|te dije)|qu[eé] vas a hacer|antes de hacerlo|antes de que lo hagas|no lo hagas todav[ií]a)\s*\??[.,;!]*/gi, " ");
   return s.replace(/\s+/g," ").replace(/^[\s,.;:]+|[\s,.;:]+$/g,"").trim();
 }
-function _camMay277(s){ s=String(s||""); return s.charAt(0).toUpperCase()+s.slice(1); }
 /* cómo entendió la orden, en palabras (sin ejecutar nada) */
 function camDescribe277(t, a, j, dest){
   var nom=camNombre(t), tx=camCorta(limpiaHabla(String((j&&j.texto_para_tarea)||"").replace(/\s+/g," ").trim()), 160).replace(/[.\s]+$/,""), nue=false, d=null;
@@ -20307,7 +20194,6 @@ function leeArranca(t, cola, modo){
   leePaso();
 }
 function leeDesde(t, ix){ leeArranca(t, _leeMsgs(t, ix, (t.msgs||[]).length), "desde"); }
-function leeResumenSolo(t){ var r=_leeResumen(t); leeArranca(t, r?[r]:[], "resumen"); }
 function leeTarea(t){
   var c=[_leeEntrada(t)], r=_leeResumen(t, true); if(r) c.push(r);
   var _ag=_leeAgenda229(t); if(_ag) c.push(_ag);   /* build 229: la franja Agendar tambien se lee */
