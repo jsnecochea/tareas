@@ -705,6 +705,7 @@ h2.hd284{margin:0;min-height:36px;align-items:center}
 .sep270{scroll-margin-top:12px}
 /* build 284: «Decide tú» limpio (mockup C · Filas con respuesta rápida): sin fondo rojo/naranja, bloque gris, filas con respuesta rápida */
 .sc284{display:flex;flex-direction:column;gap:8px;margin:14px 16px 6px}
+.plan-seg{margin:6px 16px 0;font-size:13px;color:#8E8E93}
 .cont284{margin:10px 16px 6px}.cont284>summary{list-style:none;cursor:pointer;min-height:36px;display:flex;align-items:center;padding:0 4px;font-size:14px;color:#8E8E93}.cont284>summary::-webkit-details-marker{display:none}.cont284[open]>summary{color:#AEAEB2}
 .hd284{display:flex;align-items:baseline;justify-content:space-between;padding:0 4px;scroll-margin-top:12px}
 .hd284 span{font-family:Archivo,-apple-system,BlinkMacSystemFont,sans-serif;font-size:20px;font-weight:700;letter-spacing:-.01em;color:#F5F5F7}
@@ -1788,7 +1789,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 298 · Te esperan: lo que ya contestaste sale al instante y no regresa (decisiones, preguntas de Doit y avisos de Doit)";
+var VERSION_APP = "build 299 · Plan de seguimiento: un solo plan por tarea (plan_seguimiento + plan_log) que leen la app y la Mac";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -7780,31 +7781,137 @@ function fechaPuestaSola(t){
   if(t.creada_por && PERSONAS[t.creada_por]) return false;          /* la dicto una persona al crearla */
   var dc=_diaCreacion(t); return !!dc && t.f_vigente===dc;   /* si alguien la cambio despues, ya no es la puesta sola */
 }
-/* Toda tarea tuya necesita su fecha de finiquito (o ser indefinida/recurrente) Y su próximo seguimiento: sin eso
-   no está completa y va a «Falta información» (Te esperan), nunca a Hoy, Vencidas ni Próximas. Una indefinida cuenta
-   completa solo si trae su próximo seguimiento. Se usan los campos de siempre: finiquito = f_vigente (sin falta_fecha
-   ni fecha puesta por el sistema) o indefinida/periodicidad; seguimiento = ritmo, avisos con fecha que no ha pasado,
-   seg_a programados por venir o con cada, recurrente, o la próxima fecha (f_vigente) de una indefinida. */
-function tieneFiniquito(t){ return !!(t.indefinida===true || esRecurrente(t) || t.tipo==="recurrente" || (t.f_vigente && !t.falta_fecha && !fechaPuestaSola(t))); }
-function tieneSeguimiento(t){
-  var H=hoy();
-  if(esRecurrente(t) || t.tipo==="recurrente" || String(t.ritmo||"").trim() || String(t.ritmo_seguimiento||"").trim()) return true;
-  if(t.indefinida===true && t.f_vigente) return true;
-  if((t.avisos||[]).some(function(a){ return a && ((a.fecha && a.fecha>=H) || (a.fecha && String(a.cada||"").trim())); })) return true;
-  if(t.seg_a && (String(t.seg_a.cada||"").trim() || (t.seg_a.programados||[]).some(function(x){ return String(x||"").slice(0,10)>=H; }))) return true;
-  return false;
+/* ===================== PLAN DE SEGUIMIENTO =====================
+   UN plan por tarea, el mismo que lee el bot de la Mac (contrato: docs/plan-seguimiento.md):
+     t.plan_seguimiento = {finiquito:"AAAA-MM-DD"|"indefinida", cada:"lo que dijo", dias:["lun","jue"],
+       periodicidad:"diario"|"semanal"|"quincenal"|"mensual", hora:"HH:MM", proximo:"AAAA-MM-DD", metas:[{texto, fecha, hecha}],
+       proximo_paso:"", con_quien:"", actualizado:{ts, por}}
+     t.plan_log = [{fecha:"AAAA-MM-DD", hecho:true, por:"mac"|"salvador"|"app", nota:""}]  (quien da el seguimiento lo anota)
+   planDe(t) es el ÚNICO lector: lo guardado manda y lo que falte se toma de los campos de antes (f_vigente, indefinida,
+   periodicidad, ritmo, ritmo_seguimiento, avisos, seg_a, resumen.que_toca, pasos) sin escribir nada. Las fechas se sacan
+   con código (días de la semana, diario/semanal/quincenal/mensual), nunca con IA.
+   Falta información = sin finiquito, sin seguimiento (días, periodicidad o próxima fecha) o sin próximo paso. */
+var DIAS_PLAN=["dom","lun","mar","mie","jue","vie","sab"], DIAS_PLAN_L=["domingo","lunes","martes","miercoles","jueves","viernes","sabado"];
+var PER_PLAN=/^(diario|semanal|quincenal|mensual)$/;
+function ordenSemanaPlan(d){ return (DIAS_PLAN.indexOf(d)+6)%7; }
+function leeRitmoPlan(tx){
+  var s=_n179(tx), o={dias:[], periodicidad:"", hora:""}; if(!s) return o;
+  if(/\b(lunes a viernes|entre semana|dias habiles)\b/.test(s)) o.dias=["lun","mar","mie","jue","vie"];
+  else DIAS_PLAN_L.forEach(function(d, i){ if(new RegExp("\\b"+d+"s?\\b").test(s)) o.dias.push(DIAS_PLAN[i]); });
+  o.dias.sort(function(a, b){ return ordenSemanaPlan(a)-ordenSemanaPlan(b); });
+  if(!o.dias.length){
+    if(/\b(diari\w*|cada dia|todos los dias|al dia)\b/.test(s)) o.periodicidad="diario";
+    else if(/\b(quincena\w*|quincenal\w*|cada 15 dias|cada quince dias)\b/.test(s)) o.periodicidad="quincenal";
+    else if(/\b(mensual\w*|cada mes|al mes|todos los meses)\b/.test(s)) o.periodicidad="mensual";
+    else if(/\b(semanal\w*|cada semana|a la semana|por semana|todas las semanas)\b/.test(s)) o.periodicidad="semanal";
+  }
+  var h=s.match(/\ba las (\d{1,2})(?: (\d{2}))?(?: (am|pm|de la tarde|de la noche|de la manana))?\b/);
+  if(h){ var hh=+h[1], mm=+(h[2]||0); if(/pm|tarde|noche/.test(h[3]||"") && hh<12) hh+=12; if(hh<24 && mm<60) o.hora=String(hh).padStart(2,"0")+":"+String(mm).padStart(2,"0"); }
+  return o;
 }
-function faltanFechas(t){
+function sumaDiasPlan(f, n){ var d=new Date(f+"T12:00:00"); d.setDate(d.getDate()+n); return iso(d); }
+function ultimoSeguimiento(t){ var u=""; (Array.isArray(t && t.plan_log)?t.plan_log:[]).forEach(function(x){ var f=String((x && x.fecha)||"").slice(0,10); if(x && x.hecho!==false && _fReal(f) && f>u) u=f; }); return u; }
+/* la siguiente fecha: después del último seguimiento dado; sin ninguno, desde «desde» */
+function proximoPlan(P, ultimo, desde){
+  var ini=ultimo?sumaDiasPlan(ultimo, 1):desde;
+  if(P.dias.length){ for(var i=0; i<7; i++){ var f=sumaDiasPlan(ini, i); if(P.dias.indexOf(DIAS_PLAN[new Date(f+"T12:00:00").getDay()])>=0) return f; } return ""; }
+  if(P.periodicidad==="diario") return ini;
+  var ref=ultimo||sumaDiasPlan(desde, -1);
+  if(P.periodicidad==="semanal") return sumaDiasPlan(ref, 7);
+  if(P.periodicidad==="quincenal") return sumaDiasPlan(ref, 15);
+  if(P.periodicidad==="mensual"){ var d=new Date(ref+"T12:00:00"); d.setMonth(d.getMonth()+1); return iso(d); }
+  return "";
+}
+function planGuardado(t){ var G=t && t.plan_seguimiento; return (G && typeof G==="object" && !Array.isArray(G))?G:null; }
+function planDe(t){
+  var G=planGuardado(t)||{}, guardado=!!planGuardado(t), H=hoy();
+  var P={finiquito:"", cada:"", dias:[], periodicidad:"", hora:"", proximo:"", metas:[], proximo_paso:"", con_quien:"", actualizado:G.actualizado||null, guardado:guardado, seguimientoLibre:""};
+  if(!t) return P;
+  /* finiquito: la fecha de la tarea (f_vigente / indefinida) es la que mueve toda la app; el plan la refleja */
+  if(t.indefinida===true || esRecurrente(t) || t.tipo==="recurrente") P.finiquito="indefinida";
+  else if(t.f_vigente && !t.falta_fecha && !fechaPuestaSola(t)) P.finiquito=t.f_vigente;
+  else if(G.finiquito==="indefinida" || _fReal(G.finiquito)) P.finiquito=G.finiquito;
+  /* cada cuándo */
+  P.cada=String(G.cada||"").trim(); P.hora=/^\d{2}:\d{2}$/.test(G.hora||"")?G.hora:"";
+  P.dias=(Array.isArray(G.dias)?G.dias:[]).filter(function(d){ return DIAS_PLAN.indexOf(d)>=0; }).sort(function(a, b){ return ordenSemanaPlan(a)-ordenSemanaPlan(b); });
+  P.periodicidad=P.dias.length?"":(PER_PLAN.test(G.periodicidad||"")?G.periodicidad:"");
+  if(!P.dias.length && !P.periodicidad){
+    [t.ritmo, t.ritmo_seguimiento, t.seg_a && t.seg_a.cada].forEach(function(x){ var tx=String(x||"").trim(); if(!tx || P.dias.length || P.periodicidad) return;
+      var r=leeRitmoPlan(tx); if(r.dias.length || r.periodicidad){ P.dias=r.dias; P.periodicidad=r.periodicidad; if(!P.cada) P.cada=tx; if(!P.hora) P.hora=r.hora; } });
+    if(!P.dias.length && !P.periodicidad && esRecurrente(t)) P.periodicidad=t.periodicidad;
+  }
+  /* sin plan guardado, un ritmo escrito que no dice días sigue contando como seguimiento (así estaban las tareas de antes) */
+  if(!guardado && !P.dias.length && !P.periodicidad) P.seguimientoLibre=String(t.ritmo||t.ritmo_seguimiento||"").trim();
+  /* próxima fecha: calculada; si no hay ritmo, la que ya estaba (plan, aviso, WhatsApp programado o la próxima de una indefinida) */
+  var desde=(guardado && G.actualizado && +G.actualizado.ts)?sumaDiasPlan(iso(new Date(+G.actualizado.ts)), 1):H;
+  P.proximo=proximoPlan(P, ultimoSeguimiento(t), desde);
+  if(!P.proximo && _fReal(G.proximo)) P.proximo=G.proximo;
+  if(!P.proximo){ var c=[];
+    (t.avisos||[]).forEach(function(a){ if(a && _fReal(a.fecha) && a.fecha>=H) c.push(a.fecha); });
+    if(t.seg_a) (t.seg_a.programados||[]).forEach(function(x){ var f=String(x||"").slice(0,10); if(_fReal(f) && f>=H) c.push(f); });
+    if(t.indefinida===true && _fReal(t.f_vigente)) c.push(t.f_vigente);
+    c.sort(); P.proximo=c[0]||""; }
+  /* próximo paso: el guardado; si no, el «qué toca» del resumen o el primer paso pendiente */
+  P.proximo_paso=String(G.proximo_paso||"").trim();
+  if(!P.proximo_paso){ var R=(t.resumen && typeof t.resumen==="object")?t.resumen:{}, qt=String(R.que_toca||"").replace(/\s+/g," ").trim();
+    if(qt && !/·\s*hecho\s*$/i.test(qt)) P.proximo_paso=qt;
+    else { try{ var ps=pasos263(t).filter(function(x){ return !x.hecho; })[0]; if(ps) P.proximo_paso=ps.tx; }catch(e){} } }
+  P.con_quien=String(G.con_quien||(t.seg_a && t.seg_a.contacto)||((t.wa_contactos||[])[0]||{}).nombre||"").trim();
+  if(Array.isArray(G.metas)) P.metas=G.metas.filter(function(m){ return m && m.texto; });
+  else { try{ P.metas=metasDe(t).map(function(m){ return {texto:String(m.tx||""), fecha:m.fecha||"", hecha:metaCumplida(m)}; }); }catch(e){} }
+  return P;
+}
+function tieneSeguimientoPlan(P){ return !!(P.dias.length || P.periodicidad || P.proximo || P.seguimientoLibre); }
+/* lo que le falta al plan de una tarea tuya: "finiquito", "seguimiento", "proximo_paso" */
+function faltaPlan(t){
   try{
     if(!t || t.cierre || t.fusionada_en || t.es_recordatorio || esDato(t) || esDormida264(t) || estadoReal(t)==="cerrada") return [];
     if(typeof esPropuesta256==="function" && esPropuesta256(t)) return [];
     if(!(t.duenio===yo || (!t.duenio && t.creada_por===yo))) return [];
-    var L=[]; if(!tieneFiniquito(t)) L.push("finiquito"); if(!tieneSeguimiento(t)) L.push("seguimiento"); return L;
+    var P=planDe(t), L=[]; if(!P.finiquito) L.push("finiquito"); if(!tieneSeguimientoPlan(P)) L.push("seguimiento"); if(!P.proximo_paso) L.push("proximo_paso"); return L;
   }catch(e){ return []; }
 }
-function faltanFechasTxt(t){ var L=faltanFechas(t); if(!L.length) return "";
-  if(L.length===2) return "Falta fecha de finiquito y próximo seguimiento";
-  return L[0]==="finiquito"?"Falta fecha de finiquito":"Falta próximo seguimiento"; }
+var FALTA_PLAN_TX={finiquito:"fecha de finiquito", seguimiento:"próximo seguimiento", proximo_paso:"próximo paso"};
+function faltaPlanTxt(t){ var L=faltaPlan(t).map(function(k){ return FALTA_PLAN_TX[k]; }); if(!L.length) return "";
+  return "Falta "+(L.length===1?L[0]:L.slice(0, -1).join(", ")+" y "+L[L.length-1]); }
+/* vigía: la fecha de seguimiento del plan ya pasó y nadie anotó en plan_log que se dio */
+function seguimientoPerdido(t){
+  try{ if(!t || t.cierre || estadoReal(t)==="cerrada" || !planGuardado(t)) return ""; var P=planDe(t); return (P.proximo && P.proximo<hoy())?P.proximo:""; }catch(e){ return ""; }
+}
+/* «Seguimiento: lun y jue · próximo jue 9» — lo que quedó, en una línea, para que lo confirme */
+function diasPlanTxt(L){ return L.length===1?L[0]:L.slice(0, -1).join(", ")+" y "+L[L.length-1]; }
+function lineaPlanTxt(t){
+  var P=planDe(t); if(!P.dias.length && !P.periodicidad && !P.proximo) return "";
+  var que=P.dias.length?(P.dias.length===5 && P.dias.join()==="lun,mar,mie,jue,vie"?"lunes a viernes":diasPlanTxt(P.dias.map(function(d){ return d==="mie"?"mié":(d==="sab"?"sáb":d); }))):P.periodicidad;
+  var f=P.proximo?fechaMovCorta(P.proximo).replace(/ \S+$/,""):"";
+  return "Seguimiento: "+(que||"por fecha")+(P.hora?" a las "+P.hora:"")+(f?" · próximo "+f:"");
+}
+function lineaPlan(t){ var x=""; try{ x=lineaPlanTxt(t); }catch(e){} return x?'<div class="plan-seg" data-plan-seg="1">'+esc(x)+'</div>':""; }
+/* escribir el plan: se junta con lo que ya tenía (merge) y se recalcula la próxima fecha */
+function escribePlan(t, c, por){
+  if(!t || !c) return null;
+  var n={}, G=planGuardado(t)||{}; Object.keys(G).forEach(function(k){ n[k]=G[k]; }); Object.keys(c).forEach(function(k){ n[k]=c[k]; });
+  n.actualizado={ts:Date.now(), por:por||yo||"app"}; t.plan_seguimiento=n;
+  var P=planDe(t); n.proximo=P.proximo||""; if(!n.finiquito && P.finiquito) n.finiquito=P.finiquito;
+  return n;
+}
+/* lo dictado que dice cada cuándo («dos veces a la semana, lunes y jueves», «diario a las 10») va al plan */
+function planDesdeDictado(t, v, forzar){
+  var s=_n179(v), r=leeRitmoPlan(v);
+  var dice=forzar || RITMO_RE.test(s) || r.dias.length>=2 || /\b(cada|todos los|todas las|seguimiento)\b/.test(s);
+  if(!dice || (!r.dias.length && !r.periodicidad)) return false;
+  var c={cada:String(v||"").replace(/\s+/g," ").trim().slice(0,120), dias:r.dias, periodicidad:r.dias.length?"":r.periodicidad};
+  if(r.hora) c.hora=r.hora;
+  escribePlan(t, c, yo); return true;
+}
+/* la respuesta a una pregunta de seguimiento, de próximo paso o de finiquito se queda en el plan */
+function planDesdeRespuesta(t, q, tx){
+  var qq=String(q||""), v=String(tx||"").replace(/\s+/g," ").trim(); if(!v) return false;
+  if(/pr[oó]ximo paso|siguiente paso/i.test(qq)){ escribePlan(t, {proximo_paso:v.slice(0,200)}, yo); return true; }
+  if(/seguimiento|recuerdo|cada cu[aá]nto/i.test(qq)) return planDesdeDictado(t, v, true);
+  if(/finiquito|terminar|indefinida/i.test(qq) && /indefinid|sin fin|no termina|permanente/.test(_n179(v))){ escribePlan(t, {finiquito:"indefinida"}, yo); return true; }
+  return false;
+}
 function faltaVieja(t){
   if(!t || t.cierre || t.es_recordatorio || esDato(t) || t.autorizada_asi || estadoReal(t)==="cerrada") return "";
   if(!(t.duenio===yo || t.creada_por===yo)) return "";
@@ -8588,6 +8695,7 @@ function extraeLocal(t, v){
   if(/indefinid|sin\s+fecha|no\s+tiene\s+(fecha|fin)|sin\s+fin|permanente/.test(s) && t.indefinida!==true){ t.indefinida=true; t.falta_fecha=false; hecho.push("indefinida"); }
   var rt=ritmoDicho(v);
   if(rt && !String(t.ritmo||"").trim()){ t.ritmo=conMayuscula(rt); hecho.push("ritmo: "+rt); }
+  try{ if(planDesdeDictado(t, v)) hecho.push(lineaPlanTxt(t)); }catch(e){}
   var _l248=aplicaLecturaFechas248(t, v, null); hecho=hecho.concat(_l248.hecho);   /* build 248: no termina / antes del / termina cuando */
   if(t.indefinida!==true && !_l248.bloquea){ var fd=fechaDictada(v); if(fd && fd.fecha && !fd.duda){ t.fecha_dictada=true; t.f_original=fd.fecha; t.f_vigente=fd.fecha; t.falta_fecha=false; hecho.push("termina el "+fechaBonita(fd.fecha)); } }
   var pal=String(v).split(/\s+/).filter(function(w){ return w.length>1; }).length;
@@ -9115,6 +9223,7 @@ function aplicaRevisionClaude(t, v, j, abiertas){
   var per=String(j.periodicidad||"").toLowerCase();
   if((per==="semanal"||per==="mensual") && /recurrente|se\s+repite|repetir|cada\s+(semana|mes)|semanal|mensual|todas\s+las\s+semanas|todos\s+los\s+meses/.test(s) && t.periodicidad!==per){ t.periodicidad=per; t.tipo="recurrente"; hecho.push(per==="semanal"?"recurrente cada semana":"recurrente cada mes"); }
   if(j.ritmo && String(j.ritmo).trim() && RITMO_RE.test(s)){ var rt=String(j.ritmo).trim().slice(0,80); if(_nn(rt)!==_nn(t.ritmo||"")){ t.ritmo=conMayuscula(rt); hecho.push("ritmo: "+rt.toLowerCase()); } }
+  try{ if(planDesdeDictado(t, v)) hecho.push(lineaPlanTxt(t)); }catch(e){}
   /* fecha SOLO si Claude la vio como fecha de la tarea Y se dicto (el candado manda la dictada); sin fecha dictada, ninguna */
   var _fdv=fechaDictada(v), _cf=(j.fecha && _fdv.todas.length) ? candadoFecha(v, j.fecha) : {ok:false, fecha:null, duda:_fdv.duda||""};
   if(t.indefinida===true){ _cf={ok:false, fecha:null, duda:""}; }   /* build 222: continua -> lo que tiene fecha es META, nunca finiquito */
@@ -9519,6 +9628,7 @@ function enviaPreguntas249(tid, P, A){
       if(/recuerdo/i.test(p.q)){ t.recordar_ninguno=true; }
       if(p.d263 && Array.isArray(t.falta263)) t.falta263=t.falta263.filter(function(f){ return !(f && f.q===p.q); });
       msg(t,"bi","Entendí: «"+corto238(p.q)+"» → ninguno."); var _mn=t.msgs[t.msgs.length-1]; _mn.canal="priv:"+yo; _mn.nota_ia=1; aplicadas++; return; }
+    if(!p.reg){ try{ planDesdeRespuesta(t, p.q, tx); }catch(e){} }   /* seguimiento / próximo paso / finiquito: al plan */
     if(p.k==="contradice259"){ var fc9=(H&&H.falta||[])[p.hi]; var op9=a.opt||(/\b(cambi\w+|esta)\b/.test(_n179(tx))&&!/\bnueva\b/.test(_n179(tx))?{id:"cambiar"}:(/\b(si|nueva|crea\w*)\b/.test(_n179(tx))?{id:"nueva"}:null));
       if(fc9 && op9){ var h9=resuelveContradice259(t, fc9, op9); if(h9 && H) H.hecho=(H.hecho||[]).concat([h9]); aplicadas++; } else if(p.hi!=null){ quitar.pop(); } return; }
     if(p.k==="vinc" && a.opt){ var pc=t.encargos; enlazaTareas(t.id, a.opt.id, "dictado"); var d=tareas.filter(function(x){ return x.id===a.opt.id; })[0];
@@ -10442,7 +10552,7 @@ function chipsTarea(t){
      Sin "1 cosa para ti", sin el renglon "Agendado ✓ · Calendario…" y sin el bloque grande del Resumen. */
   h+=vPastilla(t);
   h+='<button class="chip225 res234" data-chip="detalles">Resumen</button></div>';   /* build 234: la palabra "Resumen" (abre la hoja numerada) */
-  return h;
+  return h+(typeof lineaPlan==="function"?lineaPlan(t):"");
 }
 /* build 228: agendado = alerta de Doit Y evento en Google Calendar. Solo sale si es evento o ya se agendo algo. */
 function estadoAgenda228(t){
@@ -18524,9 +18634,9 @@ function faltaPreciso263(t){
   var pi=String(t.pendiente_info||"").trim();
   if(pi && !esDecisionSal(t)) Q.push(pi.length>160?pi.slice(0,159)+"…":pi);
   try{ var _fp283=(typeof faltaPasoClaude283==="function")?faltaPasoClaude283(t):""; if(_fp283 && Q.indexOf(_fp283)<0) Q.unshift(_fp283); }catch(e){}
-  var M={quien:"¿Quién la hace?", finiquito:"¿Para cuándo la quieres terminar, o es indefinida?", seguimiento:"¿Cuándo te recuerdo para darle seguimiento?", que:"¿Qué es esto?", de:"¿De quién o de qué proyecto es?", cifras:"¿Cuáles son las cifras?"};
+  var M={proximo_paso:"¿Cuál es el siguiente paso de esta tarea y quién lo hace?", quien:"¿Quién la hace?", finiquito:"¿Para cuándo la quieres terminar, o es indefinida?", seguimiento:"¿Cuándo te recuerdo para darle seguimiento?", que:"¿Qué es esto?", de:"¿De quién o de qué proyecto es?", cifras:"¿Cuáles son las cifras?"};
   c.items.forEach(function(x){ if(x.ok || x.k==="agenda") return; var q=M[x.k]; if(q && Q.indexOf(q)<0 && !bloqueaQ267(t, q)) Q.push(q); });
-  (typeof faltanFechas==="function"?faltanFechas(t):[]).forEach(function(k){ var q=M[k]; if(q && Q.indexOf(q)<0 && !respondida267(t, q)) Q.push(q); });
+  (typeof faltaPlan==="function"?faltaPlan(t):[]).forEach(function(k){ var q=M[k]; if(q && Q.indexOf(q)<0 && !respondida267(t, q)) Q.push(q); });
   if(!c.ctxOk && Q.length<4) Q.push("¿De qué se trata? Dame un poco más de contexto.");
   return Q.slice(0,4);
 }
@@ -18638,11 +18748,13 @@ function armaHome270(rev, det, venc, hoyL, futL){
   _q.concat(tareas.filter(function(t){ return t && t.duenio===yo && vivo(t) && !t.es_recordatorio; }))
     .forEach(function(t){ var p=null; try{ p=preguntaParaMi(t); }catch(e){} if(p) pon(out.preg, t, p.de+(p.todos?" pide opinión a todos":" te pregunta")); });
   tareas.forEach(function(t){ if(!vivo(t) || t.es_recordatorio || !(t.duenio===yo || (!t.duenio && t.creada_por===yo))) return;
-    var Q=[]; try{ Q=preguntas249(t); }catch(e){} if(Q.length) pon(out.preg, t, faltanFechasTxt(t)||String(Q[0].q||"Claude te pregunta")); });
+    var Q=[]; try{ Q=preguntas249(t); }catch(e){} if(Q.length) pon(out.preg, t, faltaPlanTxt(t)||String(Q[0].q||"Claude te pregunta")); });
   /* una decisión ya contestada no regresa como «falta info» si no hay una pregunta concreta nueva */
-  var sinPreguntaNueva=function(t){ var q=[]; try{ q=preguntas249(t); }catch(e){} return !q.length && !faltaPasoClaude283(t) && !faltanFechas(t).length; };
-  rev.filter(function(x){ return x.k==="falta" && !(contestada(x.t) && sinPreguntaNueva(x.t)); }).forEach(function(x){ var ff=faltanFechasTxt(x.t), fp=null; if(!ff) try{ fp=faltaPrimero(completitud(x.t)); }catch(e){} pon(out.preg, x.t, ff||(fp&&fp.txt)||"falta info"); });
-  venc.concat(hoyL, futL||[]).forEach(function(t){ if(suya270(t)){ var ff=faltanFechasTxt(t); if(ff) pon(out.preg, t, ff); } });
+  var sinPreguntaNueva=function(t){ var q=[]; try{ q=preguntas249(t); }catch(e){} return !q.length && !faltaPasoClaude283(t) && !faltaPlan(t).length; };
+  rev.filter(function(x){ return x.k==="falta" && !(contestada(x.t) && sinPreguntaNueva(x.t)); }).forEach(function(x){ var ff=faltaPlanTxt(x.t), fp=null; if(!ff) try{ fp=faltaPrimero(completitud(x.t)); }catch(e){} pon(out.preg, x.t, ff||(fp&&fp.txt)||"falta info"); });
+  venc.concat(hoyL, futL||[]).forEach(function(t){ if(suya270(t)){ var ff=faltaPlanTxt(t); if(ff) pon(out.preg, t, ff); } });
+  /* vigía del plan: tocaba seguimiento y nadie anotó que se dio */
+  tareas.forEach(function(t){ if(!t || t.es_recordatorio || !suya270(t) || !vivo(t)) return; var f=seguimientoPerdido(t); if(f) pon(out.preg, t, "No se dio el seguimiento del "+fechaMovCorta(f).replace(/ \S+$/,"")); });
   tareas.forEach(function(t){ try{ if(entrevistaPendiente(t)) pon(out.preg, t, "falta información · ¿cómo medimos a "+((PERSONAS[t.duenio]||{}).nombre||"")+"?"); }catch(e){} });
   rev.filter(function(x){ return x.k==="autorizar" || x.k==="vincular"; }).forEach(function(x){ pon(out.preg, x.t, x.k==="vincular"?"posible vinculación":"por autorizar"); });
   /* build 284: las decisiones ya contestadas (Aplicando… / Pendiente de aplicar / Listo · …) se quedan a la vista 24 h; no cuentan como pendientes */
@@ -18713,7 +18825,7 @@ function filtrosInicio(H, mis){
   F.hoy=vencHoy.concat(restoHoy);
   var pv=function(x, why){ if(enVenc[x.t.id]) return; enVenc[x.t.id]=1; F.venc.push(why==null?x:{t:x.t, why:why}); };
   (H.venc||[]).forEach(function(x){ pv(x); });
-  (H.preg||[]).concat(H.hoy||[]).forEach(function(x){ if(vencidaInicio(x.t) && !faltanFechas(x.t).length) pv(x, vencioTxt(x.t)); });
+  (H.preg||[]).concat(H.hoy||[]).forEach(function(x){ if(vencidaInicio(x.t) && !faltaPlan(x.t).length) pv(x, vencioTxt(x.t)); });
   F.enc.forEach(function(e){ var tid=e.tareaId||"";
     if(encargoVencido(e)) F.encVenc.push(e);
     if(encargoPideRespuesta(e) || (tid && enPreg[tid])){ if(!(tid && enPreg[tid])) F.encEsperan.push(e); }
@@ -20033,6 +20145,7 @@ function camAplicaQuiz276(t, A, cb){
     if(neg){ if(/seguimiento/i.test(p.q)){ T.ritmo=T.ritmo||"ninguno"; T.seg_ninguno=true; } if(/recuerdo/i.test(p.q)) T.recordar_ninguno=true;
       if(/finiquito|para cu[aá]ndo/i.test(p.q) && /indefinid/i.test(_camNv(tx))) T.indefinida=true;
       msg(T,"bi","Entendí: «"+camCorta(p.q, 80)+"» → ninguno."); var mn=T.msgs[T.msgs.length-1]; mn.canal="priv:"+yo; mn.nota_ia=1; return; }
+    try{ planDesdeRespuesta(T, p.q, tx); }catch(e){}
     textos.push("Respuesta a «"+p.q+"»: "+tx+"."); });
   if(H && quita.length){ quita.sort(function(a,b){ return b-a; }).forEach(function(ix){ (H.falta||[]).splice(ix,1); }); }
   guarda(T);
@@ -20510,7 +20623,7 @@ function nPreg272(t){ try{ return preguntas249(t).length; }catch(e){ return 0; }
 /* los renglones de una sección: preguntas agrupadas y, si se acaba de dar "Ya está", el renglón fantasma que se cierra */
 function filas272(k, L, base){
   var out=L.map(function(x){ var r=base(x);
-    if(k==='preg' && !faltanFechas(x.t).length){ var n=nPreg272(x.t); if(n>=2){   /* lo que falta de fechas se dice tal cual, no «N preguntas» */ r=r.replace('<button class="revr ttr" data-id=', '<button class="revr ttr" data-preg272="'+n+'" data-id=');
+    if(k==='preg' && !faltaPlan(x.t).length){ var n=nPreg272(x.t); if(n>=2){   /* lo que falta de fechas se dice tal cual, no «N preguntas» */ r=r.replace('<button class="revr ttr" data-id=', '<button class="revr ttr" data-preg272="'+n+'" data-id=');
       r=r.replace(/<small>[\s\S]*?<\/small>/, '<small>'+n+' preguntas</small>'); if(r.indexOf('<small>')<0) r=r.replace('</span></span></button>', '</span><small>'+n+' preguntas</small></span></button>'); } }
     return r; });
   var g=fantasma272(k, L);
@@ -21531,6 +21644,7 @@ function aplicaCamposNota(t, v, j){
   if((per==="semanal"||per==="mensual") && /recurrente|se\s+repite|repetir|cada\s+(semana|mes)|semanal|mensual/.test(s) && t.periodicidad!==per){ t.periodicidad=per; t.tipo="recurrente"; hecho.push(per==="semanal"?"recurrente cada semana":"recurrente cada mes"); }
   var rt=(j.ritmo && String(j.ritmo).trim() && RITMO_RE.test(s)) ? String(j.ritmo).trim().slice(0,80) : ritmoDicho(v);
   if(rt && _nn(rt)!==_nn(t.ritmo||"")){ t.ritmo=conMayuscula(rt); hecho.push("ritmo: "+rt.toLowerCase()); }
+  try{ if(planDesdeDictado(t, v)) hecho.push(lineaPlanTxt(t)); }catch(e){}
   var cx=String(j.contexto||"").replace(/\s+/g," ").trim();
   /* build 211 (Fiesta Navideña 07:46): antes un contexto con CUALQUIER dia o mes ("antes del 15 de diciembre", "un jueves")
      se tiraba completo (traeFecha) y la nota solo movia la fecha. Ahora solo se rechaza si trae una fecha que no se dicto. */

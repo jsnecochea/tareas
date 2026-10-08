@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-/* PRUEBAS de la regla «sin fechas = Falta información»: una tarea sin fecha de finiquito o sin próximo seguimiento no
-   cuenta en Hoy ni en Vencidas; va a Te esperan y dice qué le falta. Una indefinida cuenta completa solo si trae su
-   próximo seguimiento. 390 px, reloj fijo mié 2026-10-07 9:00 (Monterrey). */
+/* PRUEBAS del Plan de seguimiento (plan_seguimiento + plan_log): planDe lee lo guardado y, si falta, lo arma con los campos
+   de antes sin escribir; lo dictado («lunes y jueves») queda en plan_seguimiento.dias con su próxima fecha calculada y se
+   enseña en una línea; plan completo = nada que preguntar; incompleto = Te esperan con lo que falta; seguimiento que tocaba
+   y no se anotó en plan_log = «No se dio el seguimiento del …». Reloj fijo mié 2026-10-07 9:00 (Monterrey). */
 "use strict";
 var fs = require("fs"), path = require("path");
 var ok = 0, n = 0, malas = [];
@@ -45,41 +46,57 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
 
 
 
-    await p.evaluate(function () {
-      window.FXS = function () { return [
-        T("tSF", "Sin fecha", { f_vigente: "", ritmo: "" }),
-        T("tFS", "Vencida sin seguimiento", { f_vigente: "2026-10-03", ritmo: "" }),
-        T("tHS", "Hoy sin seguimiento", { ritmo: "" }),
-        T("tIS", "Indefinida con seguimiento", { indefinida: true, f_vigente: "2026-10-07", ritmo: "" }),
-        T("tIN", "Indefinida sin seguimiento", { indefinida: true, f_vigente: "", ritmo: "" }),
-        T("tAV", "Con aviso", { ritmo: "", avisos: [{ ts: 1, texto: "x", fecha: "2026-10-09", hora: "09:00" }] }),
-        T("tOK", "Completa vencida", { f_vigente: "2026-10-02" })
-      ]; };
-      window.idsF = function (L) { return L.map(function (x) { return x.t.id; }); };
-    });
-    var A = await p.evaluate(function () { encargos = []; home(FXS()); var H = window.__H274, F = filtrosInicio(H, []), r = {};
-      r.falta = ["tSF", "tFS", "tHS", "tIS", "tIN", "tAV", "tOK"].map(function (id) { return id + ":" + faltaPlanTxt(tareas.filter(function (t) { return t.id === id; })[0]); });
-      r.esperan = idsF(F.esperan).sort(); r.hoy = idsF(F.hoy); r.venc = idsF(F.venc);
-      r.fichas = [ficha("esperan").n, ficha("hoy").n];
-      r.filaVenc = (document.querySelector('.fila-inicio[data-grupo="venc"] .fl-n') || {}).textContent || "";
-      r.preg = tareas.filter(function (t) { return t.id === "tSF"; }).map(function (t) { return faltaPreciso263(t); })[0];
-      return r; });
-    eq("Qué le falta a cada una", A.falta, ["tSF:Falta fecha de finiquito y próximo seguimiento", "tFS:Falta próximo seguimiento", "tHS:Falta próximo seguimiento", "tIS:", "tIN:Falta próximo seguimiento", "tAV:", "tOK:"]);
-    eq("Las incompletas van a Te esperan", A.esperan, ["tFS", "tHS", "tIN", "tSF"]);
-    eq("Hoy sin incompletas (la vencida completa primero)", A.hoy, ["tOK", "tIS", "tAV"]);
-    eq("Vencidas solo la completa", [A.venc, A.filaVenc], [["tOK"], "1"]);
-    eq("Números de las fichas", A.fichas, ["4", "3"]);
-    eq("El cuestionario de siempre pregunta finiquito y seguimiento", A.preg.filter(function (q) { return /terminar|seguimiento/.test(q); }), ["¿Para cuándo la quieres terminar, o es indefinida?", "¿Cuándo te recuerdo para darle seguimiento?"]);
 
-    await p.click('.ficha-inicio[data-grupo="esperan"]'); await p.waitForTimeout(80);
-    var E = await p.evaluate(function () { var g = document.querySelector('[data-grupo-vista="esperan"]'), o = {};
-      ["tSF", "tFS", "tIN"].forEach(function (id) { var b = g.querySelector('.ttr[data-id="' + id + '"] small'); o[id] = b ? b.textContent : null; }); return o; });
-    eq("En Te esperan cada una dice en una línea qué le falta", E, { tSF: "Falta fecha de finiquito y próximo seguimiento", tFS: "Falta próximo seguimiento", tIN: "Falta próximo seguimiento" });
-    await foto("fechas-te-esperan.png");
-    await p.click("#binicio"); await p.waitForTimeout(50);
-    await p.click('.ficha-inicio[data-grupo="hoy"]'); await p.waitForTimeout(80);
-    eq("ritmo_seguimiento (lo escribe la Mac) cuenta como próximo seguimiento", await p.evaluate(function () { return tieneSeguimientoPlan(planDe({ id: "x", ritmo_seguimiento: "Diario hasta el viernes" })); }), true);
-    eq("Vista Hoy sin las incompletas", await p.evaluate(function () { return [].map.call(document.querySelectorAll('[data-grupo-vista="hoy"] .ttr[data-id]'), function (b) { return b.getAttribute("data-id"); }); }), ["tOK", "tIS", "tAV"]);
+
+    /* 1 · planDe desde los campos de antes, sin escribir nada */
+    var L = await p.evaluate(function () {
+      var a = T("tLEG", "Comedor", { plan_seguimiento: undefined, ritmo: "Seguimiento a Manuel Parra: diario a las 10:00", seg_a: { contacto: "Manuel Parra" }, resumen: { que_toca: "Manuel manda la muestra" } });
+      delete a.plan_seguimiento;
+      var b = T("tIND", "Mantenimiento", { indefinida: true, f_vigente: "", ritmo: "Cada lunes", resumen: { que_toca: "Revisar pendientes con Samuel" } }); delete b.plan_seguimiento;
+      var pa = planDe(a), pb = planDe(b);
+      return { a: [pa.finiquito, pa.periodicidad, pa.hora, pa.proximo, pa.proximo_paso, pa.con_quien, pa.guardado], b: [pb.finiquito, pb.dias, pb.proximo, pb.proximo_paso], escribio: [a.plan_seguimiento, b.plan_seguimiento] }; });
+    eq("Legado: finiquito, diario a las 10, próximo hoy, paso del resumen y con quién", L.a, ["2026-10-07", "diario", "10:00", "2026-10-07", "Manuel manda la muestra", "Manuel Parra", false]);
+    eq("Legado indefinida «Cada lunes»: próximo lunes 12", L.b, ["indefinida", ["lun"], "2026-10-12", "Revisar pendientes con Samuel"]);
+    eq("Leer no escribe nada", L.escribio, [null, null]);
+
+    /* 2 · lo dictado va al plan y se enseña en una línea */
+    var D = await p.evaluate(function () {
+      var t = T("tDIC", "Bardas", { ritmo: "" }); delete t.plan_seguimiento; tareas = [t];
+      aplicaCamposNota(t, "dale seguimiento dos veces a la semana, lunes y jueves", {});
+      var g = t.plan_seguimiento || {}, x = T("tLLA", "Llamada", { ritmo: "" }); delete x.plan_seguimiento; aplicaCamposNota(x, "llama a Pepe el lunes", {});
+      return { dias: g.dias, per: g.periodicidad, prox: g.proximo, por: g.actualizado && g.actualizado.por, linea: lineaPlanTxt(t), suelto: x.plan_seguimiento || null }; });
+    eq("«lunes y jueves» → dias y próxima fecha calculada (jue 8)", [D.dias, D.per, D.prox, D.por], [["lun", "jue"], "", "2026-10-08", "salvador"]);
+    eq("Se enseña en una línea", D.linea, "Seguimiento: lun y jue · próximo jue 8");
+    eq("«llama a Pepe el lunes» no es un ritmo: no toca el plan", D.suelto, null);
+
+    /* 3 · completo / incompleto / respuesta / vigía */
+    var A = await p.evaluate(function () {
+      var hace = function (f) { return new Date(f + "T12:00:00").getTime(); };
+      var L = [
+        T("tCOMP", "Completa", { plan_seguimiento: { dias: ["lun", "jue"], proximo_paso: "Claude le escribe a Pepe", actualizado: { ts: Date.now(), por: "salvador" } } }),
+        T("tINC", "Incompleta", { ritmo: "", plan_seguimiento: {} }),
+        T("tPERD", "Seguimiento perdido", { plan_seguimiento: { dias: ["lun"], proximo_paso: "Llamar a Samuel", actualizado: { ts: hace("2026-09-28"), por: "salvador" } } }),
+        T("tDADO", "Seguimiento dado", { plan_seguimiento: { dias: ["lun"], proximo_paso: "Llamar a Samuel", actualizado: { ts: hace("2026-09-28"), por: "salvador" } }, plan_log: [{ fecha: "2026-10-05", hecho: true, por: "mac", nota: "Le escribí a Samuel" }] })
+      ];
+      home(L); var H = window.__H274, w = {}; H.preg.forEach(function (x) { w[x.t.id] = x.why; });
+      var by = function (id) { return tareas.filter(function (t) { return t.id === id; })[0]; };
+      var r = { preg: H.preg.map(function (x) { return x.t.id; }).sort(), why: w, faltaComp: faltaPlan(by("tCOMP")), qComp: faltaPreciso263(by("tCOMP")).filter(function (q) { return /seguimiento|paso|terminar/.test(q); }),
+        qInc: faltaPreciso263(by("tINC")).filter(function (q) { return /seguimiento|paso/.test(q); }).sort(), proxDado: planDe(by("tDADO")).proximo, hoy: H.hoy.map(function (x) { return x.t.id; }) };
+      planDesdeRespuesta(by("tINC"), "¿Cuál es el próximo paso que Claude debe hacer aquí? (revisión 8-oct)", "Pedirle a Pepe la cotización");
+      planDesdeRespuesta(by("tINC"), "¿Cuándo te recuerdo para darle seguimiento?", "cada viernes a las 10");
+      r.resp = [by("tINC").plan_seguimiento.proximo_paso, by("tINC").plan_seguimiento.dias, by("tINC").plan_seguimiento.hora, faltaPlan(by("tINC"))];
+      return r; });
+    eq("Te esperan: la incompleta y el seguimiento que no se dio", A.preg, ["tINC", "tPERD"]);
+    eq("Dice qué falta", A.why.tINC, "Falta próximo seguimiento y próximo paso");
+    eq("Vigía: «No se dio el seguimiento del lun 5»", A.why.tPERD, "No se dio el seguimiento del lun 5");
+    eq("Completa: nada que preguntar y se queda en Hoy", [A.faltaComp, A.qComp, A.hoy.indexOf("tCOMP") >= 0, A.hoy.indexOf("tDADO") >= 0], [[], [], true, true]);
+    eq("Con plan_log del lunes 5, el próximo es el lunes 12", A.proxDado, "2026-10-12");
+    eq("Incompleta: el cuestionario pregunta seguimiento y paso", A.qInc, ["¿Cuál es el siguiente paso de esta tarea y quién lo hace?", "¿Cuándo te recuerdo para darle seguimiento?"].sort());
+    eq("Sus respuestas quedan en el plan y ya no falta nada", A.resp, ["Pedirle a Pepe la cotización", ["vie"], "10:00", []]);
+
+    /* 4 · la línea en la tarea abierta */
+    var V = await p.evaluate(async function () { abierta = "tCOMP"; vista = "hilo"; render(); await espera(40); var e = document.querySelector(".plan-seg"); return e ? e.textContent : null; });
+    eq("En la tarea: «Seguimiento: lun y jue · próximo jue 8»", V, "Seguimiento: lun y jue · próximo jue 8");
     eq("sin errores de página", errs, []);
   } catch (e) { malas.push("EXCEPCIÓN " + (e && e.stack || e)); }
   await b.close();
