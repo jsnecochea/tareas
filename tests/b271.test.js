@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* PRUEBAS build 271: "Mensajes por acomodar" en su propia pestañita plegable, debajo de Nuevas tareas para acomodar y arriba de Te pregunta Doit. 390 px, anti-regresión. */
+/* PRUEBAS build 271 (al día con el home de tres fichas): "Mensajes por acomodar" separado de las tareas nuevas — hoy es la pestaña Mensajes de Bandeja. 390 px, anti-regresión. */
 "use strict";
 var fs = require("fs"), path = require("path");
 var ok = 0, n = 0, malas = [];
@@ -31,7 +31,7 @@ eq("sw.js con versión build ≥ 271", +((/var SW_VERSION = 'build (\d+)'/.exec(
       document.getElementById("app").style.display = "flex"; window.espera = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
       var N = Date.now();
       window.T = function (id, nombre, ctx, extra) { var t = { id: id, nombre: nombre, duenio: "salvador", creada_por: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, autorizada: true, f_vigente: "2026-10-07", fecha_dictada: true, contexto: ctx || "Tarea de prueba con contexto suficiente para que no falte nada de contexto en la ficha de la tarea y se vea completa.", ritmo: "diario", msgs: [{ k: "bo", de: "salvador", t: "Va", ts: N - 100000, h: "07:00" }] }; for (var k in (extra || {})) t[k] = extra[k]; return t; };
-      window.home = function (L) { tareas = L; abierta = null; vista = "lista"; window.__clL263 = false; window.__ttAb = { venc: true, hoy: true }; window.__rfF263 = 0; render(); };
+      window.home = function (L) { tareas = L; abierta = null; vista = "lista"; window.__grupoInicio = null; window.__segBandeja = null; window.__clL263 = false; window.__ttAb = { venc: true, hoy: true }; window.__rfF263 = 0; render(); };
       window.filas = function () { return [].map.call(document.querySelectorAll(".ttl .ttr:not(.ttsum)"), function (b) { return b.querySelector(".rn").textContent; }); };
       window.sumas = function () { return [].map.call(document.querySelectorAll(".ttsum .rn"), function (b) { return b.textContent; }); };
       /* build 270: secciones siempre desplegadas del home (Te pregunta Doit · Vencidas mías · Hoy mías) */
@@ -49,51 +49,41 @@ eq("sw.js con versión build ≥ 271", +((/var SW_VERSION = 'build (\d+)'/.exec(
         T("tVES", "Vestidores", "", { f_vigente: "2026-10-20" })]; }
       try { localStorage.removeItem("bit_msg_pleg271"); } catch (e) {} window.__msgPleg271 = undefined; poneAcoPlegado260(false);
       home(fx());
-      var orden = function () { var o = []; [].forEach.call(document.querySelectorAll(".aco226:not(.msg271), .msg271, .h270 #sec272-preg"), function (e) { o.push(e.classList.contains("msg271") ? "msgs" : e.id === "sec272-preg" ? "preg" : "nuevas"); }); return o; };
-      r.orden = orden();
-      var top = function (sel) { var e = document.querySelector(sel); return e ? Math.round(e.getBoundingClientRect().top) : -1; };
-      r.y = [top(".aco226:not(.msg271)"), top(".msg271"), top(".h270 #sec272-preg")];
-      r.cab = [document.querySelector("#bmsg271 b").textContent, document.querySelector("#bmsg271 .ttn").textContent, document.getElementById("bmsg271").getAttribute("aria-expanded")];
+      var tab = function (k) { return document.querySelector('.seg-bandeja [data-seg="' + k + '"]'); };
+      r.ficha = document.querySelector('.ficha-inicio[data-grupo="bandeja"]').getAttribute("aria-label");
+      r.inicioLimpio = !document.querySelector(".aco226, .msg271");
+      abreGrupoInicio("bandeja");
+      r.orden = [].map.call(document.querySelectorAll(".seg-bandeja [data-seg]"), function (b) { return b.textContent + ":" + b.getAttribute("aria-selected"); });
       r.nuevasCab = document.querySelector(".aco226:not(.msg271) .acoh").textContent;
-      r.nuevasSinPlaticas = document.querySelectorAll(".aco226:not(.msg271) .g237").length;
+      r.nuevasSinPlaticas = document.querySelectorAll(".aco226 .g237").length;
+      tab("mensajes").click(); await espera(30);
+      r.cab = [tab("mensajes").getAttribute("aria-selected"), !document.querySelector("#bmsg271"), !document.querySelector(".aco226:not(.msg271)")];
       r.tarjetas = [].map.call(document.querySelectorAll(".msg271 .acor.g237"), function (f) { return [f.querySelector(".acow b").textContent, [].map.call(f.querySelectorAll(":scope > .acob > .ac226 button"), function (b) { return b.textContent; }).join("·")]; });
       r.ancho = [document.documentElement.scrollWidth <= 390, Math.round(document.querySelector(".msg271").getBoundingClientRect().right) <= 390];
-      /* plegar: se recuerda */
-      document.getElementById("bmsg271").click(); await espera(30);
-      r.plegada = [document.getElementById("bmsg271").getAttribute("aria-expanded"), document.querySelectorAll(".msg271 .acor").length, document.querySelector("#bmsg271 .ttn").textContent, localStorage.getItem("bit_msg_pleg271"), orden().join(">")];
-      window.__msgPleg271 = undefined; home(fx());   /* como si se reabriera la app */
-      r.recuerda = [msgPlegado271(), document.querySelectorAll(".msg271 .acor").length];
-      document.getElementById("bmsg271").click(); await espera(30);
-      r.desplegada = [document.getElementById("bmsg271").getAttribute("aria-expanded"), document.querySelectorAll(".msg271 .acor").length, localStorage.getItem("bit_msg_pleg271")];
       /* las tarjetas funcionan igual: OK en la de Lalo */
       var lalo = [].filter.call(document.querySelectorAll(".msg271 .acor.g237"), function (f) { return /Lalo/.test(f.textContent); })[0];
       lalo.querySelector(":scope > .acob > .ac226 [data-acok]").click(); await espera(30);
       var L = tareas.filter(function (t) { return t.id === "tLER"; })[0];
-      r.ok = [L.msgs.filter(function (x) { return /Lalo/.test(x.wa_c || "") && x.acomodo && x.acomodo.ok === 1; }).length, document.querySelectorAll(".msg271 .acor.g237").length, document.querySelector("#bmsg271 .ttn").textContent];
-      /* el banner de Nuevas tareas pliega SOLO las nuevas; los mensajes siguen */
-      document.getElementById("bprop256").click(); await espera(30);
-      r.banner = [!!document.querySelector(".aco226:not(.msg271)"), !!document.querySelector(".msg271"), orden().join(">")];
-      document.getElementById("bprop256").click(); await espera(30);
-      /* sin propuestas: la pestañita queda arriba de Te pregunta Doit */
-      var F = fx().filter(function (t) { return t.id !== "tPRO"; }); home(F); r.sinNuevas = orden().join(">");
-      /* sin mensajes por acomodar: no sale */
-      home([fx()[0], fx()[1]]); r.sinMsgs = [!!document.querySelector(".msg271"), orden().join(">")];
+      r.ok = [L.msgs.filter(function (x) { return /Lalo/.test(x.wa_c || "") && x.acomodo && x.acomodo.ok === 1; }).length, document.querySelectorAll(".msg271 .acor.g237").length, tab("mensajes").querySelector("em").textContent];
+      cierraGrupoInicio(); r.ficha2 = document.querySelector('.ficha-inicio[data-grupo="bandeja"]').getAttribute("aria-label");
+      /* sin propuestas: la Bandeja abre directo en Mensajes */
+      var F = fx().filter(function (t) { return t.id !== "tPRO"; }); home(F); abreGrupoInicio("bandeja"); r.sinNuevas = [tab("mensajes").getAttribute("aria-selected"), !!document.querySelector(".msg271 .acor.g237")];
+      /* sin mensajes por acomodar: la pestaña dice 0 y avisa que no hay */
+      home([fx()[0], fx()[1]]); abreGrupoInicio("bandeja"); tab("mensajes").click(); await espera(30);
+      r.sinMsgs = [!!document.querySelector(".msg271"), tab("mensajes").querySelector("em").textContent, (document.querySelector(".vacio-grupo") || {}).textContent];
+      cierraGrupoInicio();
       return r; });
     await foto("b271-home.png");
-    eq("orden: Nuevas tareas para acomodar → Mensajes por acomodar → Te pregunta Doit", A.orden, ["nuevas", "msgs", "preg"]);
-    eq("en pantalla, de arriba hacia abajo", A.y[0] < A.y[1] && A.y[1] < A.y[2], true);
-    eq("encabezado con contador, desplegada por defecto", A.cab, ["Mensajes por acomodar", "2", "true"]);
+    eq("la ficha Bandeja cuenta 1 tarea nueva + 2 pláticas y el inicio no pinta las tarjetas", [A.ficha, A.inicioLimpio], ["Bandeja: 3", true]);
+    eq("dentro: pestañas Tareas nuevas · Mensajes con su número, arranca en Tareas nuevas", A.orden, ["Tareas nuevas1:true", "Mensajes2:false"]);
+    eq("Mensajes: una pestaña a la vez, sin el encabezado plegable viejo", A.cab, ["true", true, true]);
     eq("Nuevas tareas ya no cuenta pláticas", A.nuevasCab, "Acomodo1 tarea nueva por revisar");
     eq("ninguna plática dentro de Nuevas tareas", A.nuevasSinPlaticas, 0);
     eq("tarjetas sin cambios (OK · Mover · Nueva · Dato · No guardar)", A.tarjetas, [["Lalo Madero", "OK·Mover·Nueva·Dato·No guardar"], ["Manuel Parra", "OK·Mover·Nueva·Dato·No guardar"]]);
     eq("cabe en 390 px sin scroll horizontal", A.ancho, [true, true]);
-    eq("plegada: sin tarjetas, contador visible, se guarda, sigue en su lugar", A.plegada, ["false", 0, "2", "1", "nuevas>msgs>preg"]);
-    eq("al reabrir sigue plegada", A.recuerda, [true, 0]);
-    eq("se despliega de nuevo", A.desplegada, ["true", 2, "0"]);
-    eq("OK funciona igual y el contador baja", A.ok, [1, 1, "1"]);
-    eq("el banner de nuevas tareas no pliega los mensajes", A.banner, [false, true, "msgs>preg"]);
-    eq("sin nuevas tareas: Mensajes arriba de Te pregunta Doit", A.sinNuevas, "msgs>preg");
-    eq("sin mensajes: la pestañita no sale", A.sinMsgs, [false, "nuevas>preg"]);
+    eq("OK funciona igual y el contador baja (pestaña y ficha)", [A.ok, A.ficha2], [[1, 1, "1"], "Bandeja: 2"]);
+    eq("sin nuevas tareas: la Bandeja abre en Mensajes", A.sinNuevas, ["true", true]);
+    eq("sin mensajes: la pestaña dice 0 y lo avisa", A.sinMsgs, [false, "0", "No hay mensajes por acomodar."]);
     eq("sin errores de página", errs, []);
   } catch (e) { malas.push("EXCEPCIÓN " + (e && e.stack || e)); }
   await b.close();

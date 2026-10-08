@@ -33,7 +33,7 @@ eq("las fichas de «Te pregunta Doit» ya no usan el fondo naranja (.l-preg)", /
       window.espera = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
       window.NOW = Date.now(); document.getElementById("app").style.display = "flex";
       var _cd = contestaDecision273; contestaDecision273 = function (t, v) { __CD.push([t.id, v]); return _cd.apply(this, arguments); };
-      window.home = function (L) { [].forEach.call(document.querySelectorAll("#preg249,#hoja254,#acom249,.leemask,.cnlbg,.cnlsheet"), function (e) { e.remove(); }); tareas = L; abierta = null; vista = "lista"; render(); };
+      window.home = function (L) { [].forEach.call(document.querySelectorAll("#preg249,#hoja254,#acom249,.leemask,.cnlbg,.cnlsheet"), function (e) { e.remove(); }); tareas = L; abierta = null; vista = "lista"; window.__grupoInicio = "esperan"; render(); };   /* home de tres fichas: «Decide tú» y «Te pregunta Doit» viven en la vista Te esperan */
       window.modelo = function (j, ms) { preguntaAClaude = function (msgs, mod, cb) { __LL.push({ modo: mod }); setTimeout(function () { if (j === "caido") cb(null, "No contesto a tiempo."); else cb(JSON.stringify(j)); }, ms || 20); }; };
       window.base = function (id, nom, extra) { var o = { id: id, nombre: nom, duenio: "salvador", creada_por: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, autorizada: true,
         f_vigente: "2026-10-20", f_original: "2026-10-20", fecha_dictada: true, contexto: "Contexto suficiente de la tarea para que no falte información.", resumen: { plan: [] }, msgs: [] }; for (var k in extra) o[k] = extra[k]; return o; };

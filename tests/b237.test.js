@@ -41,9 +41,9 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
         var TOL = { id: "tIATOLDO", nombre: "Cotización toldo terraza", duenio: "salvador", estado: "abierta", creada_por: "ia_revisor", origen: "wa_revisor", por_autorizar: true, tipo_item: "tarea", pendiente_info: "x",
           msgs: [m("Toldos Laguna", "Le comparto la cotización del toldo retráctil de 4x3 m: $38,500 con instalación", 90 * 60000), m("Toldos Laguna", "quedo atento", 88 * 60000)] };
         return [LER, PAD, COM, TOL]; };
-      tareas = F237(); abierta = null; vista = "lista"; render(); solo();
+      tareas = F237(); abierta = null; vista = "lista"; window.__grupoInicio = "bandeja"; window.__segBandeja = "mensajes"; render(); solo();   /* home de tres fichas: Bandeja › Mensajes */
       var aco = document.querySelector(".aco226");
-      o.cab = aco.querySelector(".msgh271 b").textContent + aco.querySelector(".msgh271 .ttn").textContent;   /* build 271: pestañita propia */
+      o.cab = document.querySelector('.seg-bandeja [data-seg="mensajes"]').textContent;   /* la pestaña Mensajes de Bandeja lleva el número */
       o.tarjetas = [].map.call(aco.querySelectorAll(".acor.g237"), function (f) { return [f.querySelector(".acow b").textContent, f.querySelector(".n237").textContent, f.querySelector(".x237").textContent, f.querySelector(".pill226").textContent, f.getAttribute("data-acg").split(",").length]; });
       return o; });
     if (process.env.CAP) await p.screenshot({ path: path.join(process.env.CAP, "b237-acomodo-3-platicas.png") });
@@ -88,7 +88,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
       [].forEach.call(document.body.children, function (x) { if (x.id !== "app") x.style.display = "none"; });
       document.querySelector(".msgs .cl238").closest("[data-mix]").click(); return [document.querySelectorAll("#det242 .ac226").length]; });
     if (process.env.CAP) await p.screenshot({ path: path.join(process.env.CAP, "b237-tarea-acomodo-claude.png") });
-    eq("Acomodo: 3 pláticas (no 10 mensajes)", r.cab, "Mensajes por acomodar3");
+    eq("Acomodo: 3 pláticas (no 10 mensajes)", r.cab, "Mensajes3");
     eq("tarjetas: contacto · N mensajes (sin 'ok/gracias/ahí estaremos') · extracto · creo que es · tamaño de la plática", r.tarjetas, [
       ["Manuel Parra", "2 mensajes", "Tema 2… Mesa comedor alto brillo: mañana te dejo la muestra de melamina para que la veas en tu casa", "creo que es: Casa Lerdo", 2],
       ["Lalo Madero", "1 mensaje", "¿Hay miercolitos esta semana? Reservé la cancha 3 de 8 a 9:30 en el club", "creo que es: Casa Lerdo", 6],

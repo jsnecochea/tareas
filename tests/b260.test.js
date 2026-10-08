@@ -32,7 +32,7 @@ eq("versión >= 260", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       window.WAP = function (id, nom) { return { id: id, nombre: nom, duenio: "salvador", creada_por: "ia", estado: "abierta", tipo_item: "tarea", wa_contactos: [{ nombre: "Ing. Pedro" }], msgs: [{ id: "m" + id, de: "Ing. Pedro", wa_in: 1, wa_c: "Ing. Pedro", t: "Ing. Pedro: mándame el plano de la azotea", ts: Date.now() - 60000 }] }; };
       window.DICT = function () { return { id: "tDIC", nombre: "Llamar al notario", duenio: "salvador", creada_por: "mac", origen: "dictado", estado: "abierta", tipo_item: "tarea", contexto: "Pedirle fecha de firma", msgs: [{ k: "bo", de: "salvador", t: "Llámale al notario para la firma", ts: Date.now() - 4000, dict238: 1 }] }; };
       window.NORMAL = function () { return { id: "tN", nombre: "Tarea normal mía", duenio: "salvador", creada_por: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, f_vigente: "2026-10-20", f_original: "2026-10-20", msgs: [] }; };
-      window.lista = function (T) { tareas = T; abierta = null; vista = "lista"; window.__p256f = {}; window.__acoPleg260 = undefined; try { localStorage.removeItem("bit_aco_pleg260"); } catch (e) {} render(); };
+      window.lista = function (T) { tareas = T; abierta = null; vista = "lista"; window.__p256f = {}; window.__acoPleg260 = undefined; try { localStorage.removeItem("bit_aco_pleg260"); } catch (e) {} window.__grupoInicio = "bandeja"; window.__segBandeja = "nuevas"; render(); };   /* home de tres fichas: Bandeja › Tareas nuevas */
     });
     /* 1) origen */
     var r1 = await p.evaluate(function () { lista([CORREO(), WAP("w1", "Plano de la azotea"), DICT(), NORMAL()]);
@@ -47,21 +47,22 @@ eq("versión >= 260", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     /* 2) banner: cuenta cuadrada, pliega y despliega, recuerda; X en Creada */
     var r2 = await p.evaluate(function () { lista([CORREO(), WAP("w1", "Plano de la azotea"), WAP("w2", "Otra A"), WAP("w3", "Otra B"), NORMAL()]);
       document.querySelector('[data-p256="w2"] [data-p256a="ok"]').click(); document.querySelector('[data-p256="w3"] [data-p256a="ok"]').click();
-      var cards = document.querySelectorAll("[data-p256]").length, creadas = document.querySelectorAll("[data-p256] .p256f").length, ban = document.getElementById("bprop256").innerText.replace(/\s+/g, " ").trim(), hdr = document.querySelector(".acoh span").textContent;
+      var cards = document.querySelectorAll("[data-p256]").length, creadas = document.querySelectorAll("[data-p256] .p256f").length, ban = document.querySelector('.seg-bandeja [data-seg="nuevas"]').textContent.replace(/\s+/g, " ").trim(), hdr = document.querySelector(".acoh span").textContent;
       return { cards: cards, creadas: creadas, ban: ban, hdr: hdr }; });
     eq("El número del banner cuadra con las tarjetas (2 propuestas + 2 'Creada')", [r2.cards, r2.creadas, /^Tareas nuevas ?4(?!\d)/.test(r2.ban), /4 tareas nuevas/.test(r2.hdr)], [4, 2, true, true]);
     await foto("b259-2-banner.png");
-    var r3 = await p.evaluate(function () { var b = document.getElementById("bprop256"); b.click();
-      var plegada = { aco: !!document.querySelector(".aco226:not(.msg271)"), exp: document.getElementById("bprop256").getAttribute("aria-expanded"), ls: localStorage.getItem("bit_aco_pleg260") };
-      window.__acoPleg260 = undefined; var recuerda = acoPlegado260();
-      document.getElementById("bprop256").click(); var abierta2 = { aco: !!document.querySelector(".aco226:not(.msg271)"), exp: document.getElementById("bprop256").getAttribute("aria-expanded"), ls: localStorage.getItem("bit_aco_pleg260") };
-      return { plegada: plegada, recuerda: recuerda, abierta2: abierta2 }; });
-    eq("Tocar el banner PLIEGA Acomodo (se recuerda en localStorage) y volver a tocarlo lo DESPLIEGA", r3, { plegada: { aco: false, exp: "false", ls: "1" }, recuerda: true, abierta2: { aco: true, exp: "true", ls: "0" } });
+    /* la Bandeja tiene dos pestañas; una a la vez (el plegado del banner se retiró con el home de tres fichas) */
+    var r3 = await p.evaluate(function () { var sel = function () { return [].map.call(document.querySelectorAll(".seg-bandeja [data-seg]"), function (b) { return b.getAttribute("aria-selected"); }); };
+      document.querySelector('.seg-bandeja [data-seg="mensajes"]').click();
+      var plegada = { aco: !!document.querySelector(".aco226:not(.msg271)"), sel: sel() };
+      document.querySelector('.seg-bandeja [data-seg="nuevas"]').click(); var abierta2 = { aco: !!document.querySelector(".aco226:not(.msg271)"), sel: sel(), cards: document.querySelectorAll("[data-p256]").length };
+      return { plegada: plegada, abierta2: abierta2 }; });
+    eq("La pestaña Mensajes esconde las tareas nuevas y la de Tareas nuevas las vuelve a mostrar con sus 4 tarjetas", r3, { plegada: { aco: false, sel: ["false", "true"] }, abierta2: { aco: true, sel: ["true", "false"], cards: 4 } });
     var r4 = await p.evaluate(function () { var t = tareas.filter(function (x) { return x.id === "w2"; })[0]; document.querySelector('[data-p256="w2"] .p256x').click();
       var otras = tareas.filter(function (x) { return x.id === "w2"; })[0];
-      return { cardSigue: !!document.querySelector('[data-p256="w2"]'), fecha: otras.f_vigente || "", elegida: !!otras.tipo_elegido, banner: document.getElementById("bprop256").innerText.replace(/\s+/g, " ").trim(), cards: document.querySelectorAll("[data-p256]").length }; });
+      return { cardSigue: !!document.querySelector('[data-p256="w2"]'), fecha: otras.f_vigente || "", elegida: !!otras.tipo_elegido, banner: document.querySelector('.seg-bandeja [data-seg="nuevas"]').textContent.replace(/\s+/g, " ").trim(), cards: document.querySelectorAll("[data-p256]").length }; });
     eq("La X de 'Creada · ¿Para cuándo?' la quita de ahí y la deja Sin fecha; el número baja a 3 y cuadra", r4, { cardSigue: false, fecha: "", elegida: true, banner: r4.banner, cards: 3 });
-    eq("Banner dice 3 (build 281: «Tareas nuevas» + globito)", /^Tareas nuevas ?3(?!\d)/.test(r4.banner), true);
+    eq("La pestaña dice 3 («Tareas nuevas» + número)", /^Tareas nuevas ?3(?!\d)/.test(r4.banner), true);
     /* 3) Te pregunta */
     var COB = function () { return { id: "tCOB", nombre: "Cobranza Moric Pádel Draw", duenio: "salvador", creada_por: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, autorizada: true, f_vigente: "2026-10-20", contexto: "Control de cobro de anuncios del restaurante Moric con vales. Se lleva el saldo por mes.", lista_pasos: [{ tx: "Pedir lista de vales", hecho: false }, { tx: "Cobrar septiembre", hecho: false }],
       msgs: [{ k: "bo", de: "salvador", t: "Revisa los vales de Moric", ts: Date.now() - 90000, h: "07:00" }] }; };

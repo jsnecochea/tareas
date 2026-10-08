@@ -26,29 +26,29 @@ eq("versión >= 257", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       document.getElementById("app").style.display = "flex";
       window.PR = function (id, nom, extra) { var t = { id: id, nombre: nom, duenio: "salvador", creada_por: "ia", estado: "abierta", tipo_item: "tarea", wa_contactos: [{ nombre: "Ing. Pedro" }], msgs: [{ id: "m" + id, de: "Ing. Pedro", t: "Ing. Pedro: mándame el plano de la azotea", ts: Date.now() - 60000 }] }; for (var k in (extra || {})) t[k] = extra[k]; return t; };
       window.NORMAL = function () { return { id: "tN", contexto: "algo", nombre: "Tarea normal mía", duenio: "salvador", creada_por: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, f_vigente: "2026-10-20", f_original: "2026-10-20", msgs: [] }; };
-      window.lista = function (T) { tareas = T; abierta = null; vista = "lista"; window.__aco256 = ""; window.__p256f = {}; window.__acoPleg260 = undefined; try { localStorage.removeItem("bit_aco_pleg260"); } catch (e) {} try { ponAbre285("aco", true); } catch (e) {} render(); };   /* build 285: el plegado vive en el estado del día; el helper lo reabre */
+      window.lista = function (T) { tareas = T; abierta = null; vista = "lista"; window.__aco256 = ""; window.__p256f = {}; window.__acoPleg260 = undefined; try { localStorage.removeItem("bit_aco_pleg260"); } catch (e) {} try { ponAbre285("aco", true); } catch (e) {} window.__grupoInicio = "bandeja"; window.__segBandeja = "nuevas"; render(); };   /* home de tres fichas: Bandeja › Tareas nuevas */   /* build 285: el plegado vive en el estado del día; el helper lo reabre */
     });
     var limpia = async function () { await p.evaluate(function () { [].forEach.call(document.querySelectorAll("#preg249,#hoja254,#acom249,#det242,.leemask,.cnlbg,.cnlsheet,.pop243"), function (e) { e.remove(); }); }); };
     /* 1) propuesta excluida de las listas y visible en Acomodo */
     var r1 = await p.evaluate(function () { lista([PR("p1", "Plano de la azotea"), NORMAL(), PR("p2", "Ya elegida", { tipo_elegido: true }), PR("p3", "A mano", { creada_por: "salvador" })]);
       var app = document.getElementById("app").innerText;
-      return { esP: [esPropuesta256(tareas[0]), esPropuesta256(tareas[1]), esPropuesta256(tareas[2]), esPropuesta256(tareas[3])], mias: mias().map(function (t) { return t.id; }), card: !!document.querySelector('[data-p256="p1"]'), txt: (document.querySelector('[data-p256="p1"]') || { innerText: "" }).innerText, fila: !!document.getElementById("bprop256"), filaTxt: (document.getElementById("bprop256") || { innerText: "" }).innerText.replace(/\s+/g, " "), enLista: /Plano de la azotea/.test(Array.prototype.map.call(document.querySelectorAll(".fila,.tar,.row"), function (x) { return x.innerText; }).join(" ")), ab: abiertaVisible(tareas[0]) }; });
+      return { esP: [esPropuesta256(tareas[0]), esPropuesta256(tareas[1]), esPropuesta256(tareas[2]), esPropuesta256(tareas[3])], mias: mias().map(function (t) { return t.id; }), card: !!document.querySelector('[data-p256="p1"]'), txt: (document.querySelector('[data-p256="p1"]') || { innerText: "" }).innerText, fila: !!document.querySelector('.seg-bandeja [data-seg="nuevas"]'), filaTxt: (document.querySelector('.seg-bandeja [data-seg="nuevas"]') || { innerText: "" }).textContent.replace(/\s+/g, " "), enLista: /Plano de la azotea/.test(Array.prototype.map.call(document.querySelectorAll(".fila,.tar,.row"), function (x) { return x.innerText; }).join(" ")), ab: abiertaVisible(tareas[0]) }; });
     eq("Solo la de la IA sin tipo_elegido es propuesta; no entra en mias() ni abiertaVisible", [r1.esP, r1.mias.indexOf("p1") < 0, r1.ab], [[true, false, false, false], true, false]);
     eq("Acomodo muestra la tarjeta con título, contacto y mensaje", [r1.card, /Tarea nueva propuesta: Plano de la azotea/.test(r1.txt), /WhatsApp · Ing\. Pedro/.test(r1.txt), /plano de la azotea/.test(r1.txt), /OK/.test(r1.txt), /Vincular/.test(r1.txt), /Dato/.test(r1.txt), /No guardar/.test(r1.txt)], [true, true, true, true, true, true, true, true]);
-    eq("Fila superior 'Tareas nuevas' + globito 1 (build 281) y la propuesta no sale en las listas", [r1.fila, /^Tareas nuevas ?1(?!\d)/.test(r1.filaTxt.trim()), r1.enLista], [true, true, false]);
+    eq("Pestaña 'Tareas nuevas' de Bandeja con su número 1 y la propuesta no sale en las listas", [r1.fila, /^Tareas nuevas ?1(?!\d)/.test(r1.filaTxt.trim()), r1.enLista], [true, true, false]);
     await foto("b256-1-propuesta.png");
     var r1b = await p.evaluate(function () { var ic = document.querySelector(".acoh span"); return ic ? ic.textContent : ""; });
     eq("Encabezado de Acomodo cuenta las tareas nuevas", /1 tarea nueva/.test(r1b), true);
     /* el banner pliega (260) */
-    await p.evaluate(function () { lista([PR("p1", "Plano de la azotea"), NORMAL()]); document.getElementById("bprop256").click(); });
-    eq("La fila (banner) pliega Acomodo (build 260)", await p.evaluate(function () { return !document.querySelector(".aco226"); }), true);
+    await p.evaluate(function () { lista([PR("p1", "Plano de la azotea"), NORMAL()]); document.querySelector('.seg-bandeja [data-seg="mensajes"]').click(); });
+    eq("La pestaña Mensajes esconde las tareas nuevas; Tareas nuevas las vuelve a mostrar", await p.evaluate(function () { var a = !document.querySelector(".aco226:not(.msg271)"); document.querySelector('.seg-bandeja [data-seg="nuevas"]').click(); return [a, !!document.querySelector('.aco226 [data-p256="p1"]')]; }), [true, true]);
     /* 2) OK sin fecha -> fechas rápidas -> Mañana -> arriba en Por ejecutar con 'Nueva' */
     var r2 = await p.evaluate(function () { lista([PR("p1", "Plano de la azotea"), NORMAL()]); document.querySelector('[data-p256="p1"] [data-p256a="ok"]').click();
       var t = tareas[0], f = document.querySelector('[data-p256="p1"] .p256f');
       return { te: t.tipo_elegido, tipo: t.tipo_item, hayFechas: !!f, btns: f ? [].map.call(f.querySelectorAll("button"), function (b) { return b.textContent; }) : [], noEnMias: mias().map(function (x) { return x.id; }).indexOf("p1") >= 0 }; });
     eq("OK: tipo_elegido tarea y misma tarjeta con Hoy · Mañana · Esta semana · Sin fecha", [r2.te, r2.tipo, r2.hayFechas, r2.btns], [true, "tarea", true, ["Hoy", "Mañana", "Esta semana", "Sin fecha"]]);
     await foto("b256-2-fechas.png");
-    var r3 = await p.evaluate(function () { var X = NORMAL(); X.id = "tX"; X.nombre = "Otra futura"; X.f_vigente = X.f_original = "2026-10-08"; tareas.unshift(X); document.querySelector('[data-p256="p1"] [data-p256d="man"]').click(); var bf = document.getElementById("bfut"); if (bf) bf.click(); var t = tareas.filter(function (x) { return x.id === "p1"; })[0];
+    var r3 = await p.evaluate(function () { var X = NORMAL(); X.id = "tX"; X.nombre = "Otra futura"; X.f_vigente = X.f_original = "2026-10-08"; tareas.unshift(X); document.querySelector('[data-p256="p1"] [data-p256d="man"]').click(); window.__grupoInicio = "prox"; render();   /* Próximas es su propio grupo */ var t = tareas.filter(function (x) { return x.id === "p1"; })[0];
       var filas = [].slice.call(document.querySelectorAll("#app .scroll *")).filter(function (e) { return e.children.length === 0 || /Nueva/.test(e.className); });
       var txt = document.getElementById("app").innerText;
       var nombres = [].map.call(document.querySelectorAll(".iatag.nueva256"), function (e) { return e.textContent; });
@@ -79,7 +79,7 @@ eq("versión >= 257", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     eq("No guardar muestra el popover '¿Sí era de X?'", r8.pop, true);
     await foto("b256-5-nogd.png");
     /* 6) migración: varias propuestas viejas aparecen de una vez; ia_revisor/mac/revisor también */
-    var r9 = await p.evaluate(function () { lista([PR("a", "Una"), PR("b", "Dos", { creada_por: "mac" }), PR("c", "Tres", { creada_por: "ia_revisor" }), PR("d", "Cuatro", { creada_por: "revisor" }), PR("e", "Cinco", { estado: "descartada" }), PR("f", "Seis", { fusionada_en: "x" })]); return { n: propuestas256().length, fila: (document.getElementById("bprop256") || { innerText: "" }).innerText.replace(/\s+/g, " ") }; });
+    var r9 = await p.evaluate(function () { lista([PR("a", "Una"), PR("b", "Dos", { creada_por: "mac" }), PR("c", "Tres", { creada_por: "ia_revisor" }), PR("d", "Cuatro", { creada_por: "revisor" }), PR("e", "Cinco", { estado: "descartada" }), PR("f", "Seis", { fusionada_en: "x" })]); return { n: propuestas256().length, fila: (document.querySelector('.seg-bandeja [data-seg="nuevas"]') || { textContent: "" }).textContent.replace(/\s+/g, " ") }; });
     eq("Migración: las abiertas sin tipo_elegido (ia, mac, revisor, ia_revisor) salen de una vez; descartadas y fusionadas no", [r9.n, /^Tareas nuevas ?4(?!\d)/.test(r9.fila.trim())], [4, true]);
     eq("Sin errores de página", errs, []);
   } catch (e) { malas.push("EXCEPCIÓN " + e.stack); }

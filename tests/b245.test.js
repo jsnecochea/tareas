@@ -39,7 +39,7 @@ eq("versión >= 245", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
         { k: "bi", wa_in: 1, wa_c: "Manuel Parra", t: "Manuel Parra: wa_1791209999999.png", ts: NOW - 29 * 60000, h: hh(NOW - 29 * 60000), wa_id: "m2", url: "" },
         { k: "bi", wa_in: 1, wa_c: "Manuel Parra", t: "Manuel Parra: IA avisó a Salvador que Manuel mandó fotos de la piedra", ts: NOW - 27 * 60000, h: hh(NOW - 27 * 60000), wa_id: "m4", nota_ia: 1 },
         { k: "bi", wa_in: 1, wa_c: "Manuel Parra", t: "Manuel Parra: IA avisó a Salvador que mandó otra foto", ts: NOW - 26 * 60000, h: hh(NOW - 26 * 60000), wa_id: "m5" }] };
-      tareas = [T, { id: "tOTRA", nombre: "Remodelación", duenio: "salvador", estado: "abierta", msgs: [] }]; abierta = null; vista = "lista"; render(); solo();
+      tareas = [T, { id: "tOTRA", nombre: "Remodelación", duenio: "salvador", estado: "abierta", msgs: [] }]; abierta = null; vista = "lista"; window.__grupoInicio = "bandeja"; window.__segBandeja = "mensajes"; render(); solo();
       var card = document.querySelector(".aco226 .acor.g237"), c1 = card.querySelector(".acom .img245");
       o.n = card.querySelector(".n237").textContent; o.filas = card.querySelectorAll(".ac226").length;
       o.chip = c1 ? [c1.tagName, getComputedStyle(c1).color, getComputedStyle(c1).textDecorationLine, !!c1.querySelector("svg"), !!c1.querySelector("img.it245"), c1.querySelector(".in245").textContent] : null;

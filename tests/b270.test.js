@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* PRUEBAS build 270: home reacomodado (Acomodo · Te pregunta Doit · Vencidas mías · Hoy mías · plegadas: Las lleva Claude con semáforo, Mías futuras, resto). 390 px, anti-regresión. */
+/* PRUEBAS build 270 (al día con el home de tres fichas): qué entra a Te pregunta Doit · Vencidas mías · Hoy mías, Las lleva Claude con semáforo, Próximas, Las revisas tú. 390 px, anti-regresión. */
 "use strict";
 var fs = require("fs"), path = require("path");
 var ok = 0, n = 0, malas = [];
@@ -35,7 +35,13 @@ eq("sw.js con versión build ≥ 270", +((/var SW_VERSION = 'build (\d+)'/.exec(
       window.filas = function () { return [].map.call(document.querySelectorAll(".ttl .ttr:not(.ttsum)"), function (b) { return b.querySelector(".rn").textContent; }); };
       window.sumas = function () { return [].map.call(document.querySelectorAll(".ttsum .rn"), function (b) { return b.textContent; }); };
       /* build 270: secciones siempre desplegadas del home (Te pregunta Doit · Vencidas mías · Hoy mías) */
-      window.secs = function () { var o = {}; [].forEach.call(document.querySelectorAll(".h270 .sep270, .h270 .hd284"), function (s) { var L = s.nextElementSibling; o[s.querySelector("span").textContent] = [].map.call(L.querySelectorAll(".ttr .rn, .f284n"), function (b) { return b.textContent; }); }); return o; };
+      /* home de tres fichas: cada sección vive en su propia vista (Te esperan · Vencidas · Hoy); se abren una por una y se regresa al inicio */
+      window.secs = function () { var o = {};
+        [["esperan"], ["venc", "Vencidas mías"], ["hoy", "Hoy mías"]].forEach(function (x) { window.__grupoInicio = x[0]; render(); var g = document.querySelector('[data-grupo-vista="' + x[0] + '"]'); if (!g) return;
+          if (x[1]) { var L = [].map.call(g.querySelectorAll(".ttr .rn"), function (b) { return b.textContent; }); if (L.length) o[x[1]] = L; }
+          else [].forEach.call(g.querySelectorAll(".sc284"), function (sc) { o[sc.getAttribute("aria-label")] = [].map.call(sc.querySelectorAll(".ttr .rn, .f284n"), function (b) { return b.textContent; }); }); });
+        window.__grupoInicio = null; render(); return o; };
+      window.enGrupo = function (g, fn) { window.__grupoInicio = g; render(); var r = fn(document.querySelector('[data-grupo-vista="' + g + '"]')); window.__grupoInicio = null; render(); return r; };
     });
     /* ===================== 1. ORDEN DEL HOME Y SECCIONES SIEMPRE DESPLEGADAS ===================== */
     var A = await p.evaluate(async function () {
@@ -60,50 +66,52 @@ eq("sw.js con versión build ≥ 270", +((/var SW_VERSION = 'build (\d+)'/.exec(
       home(L);
       var r = { secs: secs() };
       var y = function (sel) { var e = document.querySelector(sel); return e ? e.getBoundingClientRect().top + window.scrollY + (document.querySelector(".scroll") || { scrollTop: 0 }).scrollTop : -1; };
-      var seps = [].map.call(document.querySelectorAll(".h270 .sep270 span, .h270 .hd284 span"), function (s) { return s.textContent; });
-      r.seps = seps;
-      var pos = [y("#bprop256")].concat([].map.call(document.querySelectorAll(".h270 .sep270, .h270 .hd284"), function (s) { return s.getBoundingClientRect().top; })).concat([y(".abajo270")]);
-      r.orden = pos.every(function (v, i) { return v >= 0 && (i === 0 || v > pos[i - 1]); });
-      r.abajo = [].map.call(document.querySelectorAll(".abajo270 .clh263"), function (b) { return b.id; });
-      r.sinToggles = document.querySelectorAll(".h270 .ttsum, .h270 [data-ttab]").length; r.toggles285 = [].map.call(document.querySelectorAll(".h270 [data-pl285]"), function (b) { return b.getAttribute("data-pl285") + ":" + b.getAttribute("aria-expanded"); });   /* build 285: Salvador pidió que se plieguen tocando el encabezado */
-      var css = function (sel, prop) { var e = document.querySelector(sel); return e ? getComputedStyle(e)[prop] : ""; };
-      r.colores = [!document.querySelector(".l284 .ttr i"), css(".l-venc .ttr i", "backgroundColor"), css(".l-hoy .ttr i", "backgroundColor"), css(".hd284 span", "color")];   /* build 284: Te pregunta Doit limpio, sin puntito ni naranja */
-      r.fondoPreg = css(".l284", "backgroundColor");   /* build 284: bloque gris #1C1C1E, sin fondo naranja */
-      r.lee = [!document.querySelector(".h270 .sep270 #bttlee"), (window.__ttOrden || []).join(",")];   /* build 277: el audífono del separador se quitó (la Caminata va con el ícono junto al ⋯) */
+      r.seps = [].map.call(document.querySelectorAll(".fichas-inicio .fi-l"), function (s) { return s.textContent; }).concat(Object.keys(r.secs));
+      r.orden = y(".fichas-inicio") >= 0 && y(".fichas-inicio") < y(".lista-inicio");
+      r.abajo = [].map.call(document.querySelectorAll(".lista-inicio .fila-inicio"), function (b) { return b.getAttribute("data-grupo"); });
+      var css = function (root, sel, prop) { var e = root && root.querySelector(sel); return e ? getComputedStyle(e)[prop] : ""; };
+      var vE = enGrupo("esperan", function (g) { return { tog: [].slice.call(g.querySelectorAll(".ttsum, [data-ttab]")).length, pl: g.querySelectorAll("[data-pl285], [hidden]").length, sinPunto: !g.querySelector(".l284 .ttr i"), tit: css(g, ".hd284 span", "color"), fondo: css(g, ".l284", "backgroundColor") }; });
+      var vV = enGrupo("venc", function (g) { return { tog: g.querySelectorAll(".ttsum, [data-ttab]").length, pl: g.querySelectorAll("[data-pl285], [hidden]").length, c: css(g, ".l-venc .ttr i", "backgroundColor") }; });
+      var vH = enGrupo("hoy", function (g) { return { tog: g.querySelectorAll(".ttsum, [data-ttab]").length, pl: g.querySelectorAll("[data-pl285], [hidden]").length, c: css(g, ".l-hoy .ttr i", "backgroundColor") }; });
+      r.sinToggles = vE.tog + vV.tog + vH.tog; r.toggles285 = [vE.pl, vV.pl, vH.pl];
+      r.colores = [vE.sinPunto, vV.c, vH.c, vE.tit];   /* Te pregunta Doit limpio, sin puntito ni naranja */
+      r.fondoPreg = vE.fondo;   /* bloque gris #1C1C1E, sin fondo naranja */
+      r.lee = [!document.querySelector("#bttlee"), (window.__ttOrden || []).join(",")];   /* sin audífono en el inicio (la Caminata va con el ícono junto al ⋯) */
       r.swipe = (window.ordenSwipe || []).slice(0, 8).join(",");
       r.ancho = [document.documentElement.scrollWidth, document.querySelector("#app").scrollWidth];
-      /* Acomodo sigue plegándose como antes */
-      document.getElementById("bprop256").click(); await espera(30); r.acoPleg = [acoPlegado260(), !!document.querySelector(".aco226:not(.msg271)")];
-      document.getElementById("bprop256").click(); await espera(30); r.acoDesp = [acoPlegado260(), !!document.querySelector(".aco226:not(.msg271)")];
+      /* la propuesta de la IA está en Bandeja (su ficha la cuenta y la abre) */
+      r.bandeja = [document.querySelector('.ficha-inicio[data-grupo="bandeja"]').getAttribute("aria-label"), !document.querySelector(".aco226")];
+      document.querySelector('.ficha-inicio[data-grupo="bandeja"]').click(); await espera(30); r.bandeja.push(!!document.querySelector('[data-grupo-vista="bandeja"] [data-p256="tPRO"]'));
+      cierraGrupoInicio();
       return r; });
-    eq("Separadores en orden: Te pregunta Doit · Vencidas mías · Hoy mías", A.seps, ["Te pregunta Doit", "Vencidas mías", "Hoy mías"]);
-    eq("Orden vertical: Acomodo arriba, luego 2, 3, 4 y hasta abajo las plegadas", A.orden, true);
+    eq("Fichas Te esperan · Bandeja · Hoy y sus vistas: Te pregunta Doit · Vencidas mías · Hoy mías", A.seps, ["Te esperan", "Bandeja", "Hoy", "Te pregunta Doit", "Vencidas mías", "Hoy mías"]);
+    eq("Orden vertical: las fichas arriba y la lista agrupada abajo", A.orden, true);
     eq("Te pregunta Doit: la pregunta de Claude", A.secs["Te pregunta Doit"], ["Pregunta de Claude"]);
     eq("Vencidas mías: la vencida de Salvador", A.secs["Vencidas mías"], ["Pagar predial"]);
     eq("Hoy mías: primero lo que despertó (expediente), luego lo de hoy; nada de otro dueño", A.secs["Hoy mías"], ["Expediente colegio", "Llamar al notario"]);
     eq("Secciones 2-4 sin renglón resumen ni pestañas", A.sinToggles, 0);
-    eq("build 285: Te pregunta Doit, Vencidas y Hoy se pliegan tocando su encabezado (aquí abiertas)", A.toggles285, ["preg:true", "venc:true", "hoy:true"]);
+    eq("En su propia vista Te esperan, Vencidas y Hoy van siempre abiertas (nada plegado ni escondido)", A.toggles285, [0, 0, 0]);
     eq("Puntitos: rojo y gris en Vencidas / Hoy; Te pregunta Doit sin puntito y con título claro (build 284)", A.colores, [true, "rgb(255, 59, 48)", "rgb(142, 142, 147)", "rgb(245, 245, 247)"]);
     eq("Te pregunta Doit en bloque gris #1C1C1E, sin fondo naranja (build 284)", A.fondoPreg, "rgb(28, 28, 30)");
-    eq("Abajo, plegadas y en orden: Mías futuras · Las revisas tú · y hasta abajo Las lleva Claude (build 272)", A.abajo, ["bfut", "brev270", "bcl263"]);
+    eq("Lista agrupada en orden: Vencidas · Próximas · Las revisas tú · Las lleva Claude · Historial", A.abajo, ["venc", "prox", "rev", "claude", "hist"]);
     eq("build 277: sin audífono en el separador; el orden del home se conserva", A.lee, [true, "tNEC,tVEN,tEXP,tHOY"]);
     eq("El swipe entre tareas sigue el orden del home (2, 3, 4 y luego Claude)", A.swipe.split(",").slice(0, 4).join(","), "tNEC,tVEN,tEXP,tHOY");
     eq("Sin scroll horizontal a 390 px", A.ancho.every(function (w) { return w <= 390; }), true);
-    eq("Acomodo (Nuevas tareas para acomodar) se pliega y se despliega como antes", [A.acoPleg, A.acoDesp], [[true, false], [false, true]]);
+    eq("La propuesta de la IA: fuera del inicio, contada en Bandeja y dentro de su vista", A.bandeja, ["Bandeja: 1", true, true]);
     await foto("b270-1-home.png");
 
     /* ===================== 2. SEMÁFORO DE LAS LLEVA CLAUDE ===================== */
     var B = await p.evaluate(async function () {
-      var r = {}, b = document.getElementById("bcl263");
-      r.plegada = !document.querySelector(".abajo270 .cll263 .revl");
+      var r = {}, fl = document.querySelector('.fila-inicio[data-grupo="claude"]');
+      r.plegada = [!document.querySelector(".cll263"), fl.textContent, getComputedStyle(fl.querySelector(".fl-p")).backgroundColor];
+      fl.click(); await espera(40); var b = document.querySelector('[data-grupo-vista="claude"] .clh263');
       r.cab = b.innerText.replace(/\s+/g, " ").trim(); r.aria = b.getAttribute("aria-label");
       r.sem = [].map.call(b.querySelectorAll(".sem270 span"), function (s) { return [getComputedStyle(s.querySelector("i")).backgroundColor, s.textContent]; });
-      b.click(); await espera(40);
-      r.filas = [].map.call(document.querySelectorAll(".abajo270 .cl272 .ttr"), function (e) { return [e.getAttribute("data-id"), e.className.match(/sem-(\w+)/)[1], (e.querySelector(".semw270") || e.querySelector(".semsd270") || { textContent: "" }).textContent]; });
+      r.filas = [].map.call(document.querySelectorAll('[data-grupo-vista="claude"] .ttr'), function (e) { return [e.getAttribute("data-id"), e.className.match(/sem-(\w+)/)[1], (e.querySelector(".semw270") || e.querySelector(".semsd270") || { textContent: "" }).textContent]; });
       r.directo = ["cR", "cA", "cS", "cV", "cN"].map(function (id) { var t = tareas.filter(function (x) { return x.id === id; })[0]; var s = semaforo270(t, pelota263(t)); return [id, s.c, s.sinDato]; });
-      return r; });
-    eq("Las lleva Claude viene plegada", B.plegada, true);
-    eq("Encabezado con semáforo: 2 al corriente, 2 amarillo, 1 rojo", [B.cab, B.sem], ["Las lleva Claude 2 2 1", [["rgb(48, 209, 88)", "2"], ["rgb(255, 214, 10)", "2"], ["rgb(255, 69, 58)", "1"]]]);
+      cierraGrupoInicio(); return r; });
+    eq("Las lleva Claude: en el inicio un renglón con puntito verde y su número", B.plegada, [true, "Las lleva Claude5", "rgb(48, 209, 88)"]);
+    eq("Dentro, encabezado con semáforo: 2 al corriente, 2 amarillo, 1 rojo", [B.cab, B.sem], ["Semáforo 2 2 1", [["rgb(48, 209, 88)", "2"], ["rgb(255, 214, 10)", "2"], ["rgb(255, 69, 58)", "1"]]]);
     eq("Para lector de pantalla: al corriente y con problema", B.aria, "Las lleva Claude: 2 al corriente, 3 con problema de seguimiento");
     eq("Semáforo por tarea (encargo atrasado 4 días = rojo; Josué 1 día y Karina 2 días = amarillo; Pato contestó = verde; sin fecha = verde sin dato)", B.directo,
       [["cR", "rojo", false], ["cA", "amarillo", false], ["cS", "amarillo", false], ["cV", "verde", false], ["cN", "verde", true]]);
@@ -113,17 +121,17 @@ eq("sw.js con versión build ≥ 270", +((/var SW_VERSION = 'build (\d+)'/.exec(
       ["cS", "amarillo", "Karina no ha contestado · se esperaba el 5 oct (2 días)"],
       ["cV", "verde", ""],
       ["cN", "verde", "sin dato de seguimiento · cuenta como al corriente"]]);
-    await p.evaluate(function () { var e = document.getElementById("bcl263"); if (e) e.scrollIntoView({ block: "start" }); });
+    await p.evaluate(function () { var e = document.querySelector('.fila-inicio[data-grupo="claude"]'); if (e) e.scrollIntoView({ block: "start" }); });
     await foto("b270-2-claude-semaforo.png");
 
     /* ===================== 3. PLEGADAS DE ABAJO, SIN DEFINIR Y 100% SUYAS ===================== */
     var C = await p.evaluate(async function () {
       var r = {};
-      r.futAntes = !!document.querySelector('.abajo270 [data-id="tFUT"]') || document.body.innerText.indexOf("Renovar seguro del coche") >= 0;
-      document.getElementById("bfut").click(); await espera(30); r.futDesp = document.body.innerText.indexOf("Renovar seguro del coche") >= 0;
-      r.futCab = document.getElementById("bfut").innerText.replace(/\s+/g, " ").trim();
-      document.getElementById("brev270").click(); await espera(30);
-      r.rev = [].map.call(document.querySelectorAll('.abajo270 .ttr[data-id="tREV"]'), function (e) { return e.innerText.replace(/\s+/g, " "); });
+      r.futAntes = !!document.querySelector('[data-id="tFUT"]') || document.body.innerText.indexOf("Renovar seguro del coche") >= 0;
+      r.futCab = document.querySelector('.fila-inicio[data-grupo="prox"]').innerText.replace(/\s+/g, " ").trim();
+      document.querySelector('.fila-inicio[data-grupo="prox"]').click(); await espera(30); r.futDesp = document.body.innerText.indexOf("Renovar seguro del coche") >= 0;
+      cierraGrupoInicio(); document.querySelector('.fila-inicio[data-grupo="rev"]').click(); await espera(30);
+      r.rev = [].map.call(document.querySelectorAll('[data-grupo-vista="rev"] .ttr[data-id="tREV"]'), function (e) { return e.innerText.replace(/\s+/g, " "); }); cierraGrupoInicio();
       /* sin fecha definida (y sin pregunta pendiente) va a Vencidas mías, nunca a Hoy */
       var S = T("tSIN", "Sin fecha", "", { f_vigente: "" }), V = T("tV2", "Otra vencida", "", { f_vigente: "2026-10-01" }), Hh = T("tH2", "De hoy", "", {});
       var X = armaHome270([], [], [V], [S, Hh], []);
@@ -134,19 +142,19 @@ eq("sw.js con versión build ≥ 270", +((/var SW_VERSION = 'build (\d+)'/.exec(
       /* las funciones de siempre siguen ahí */
       r.funciones = ["opcionesUnico261", "abreEnlazar", "menuAcc254", "vPropuestas256", "okProp256", "descartaProp256", "faltaPreciso263", "esDormida264", "despiertaTodas264", "abreMover225", "vCompartidas", "pelota263", "reparte263"].filter(function (f) { return typeof window[f] !== "function"; });
       /* tocar un renglón de Te pregunta Doit abre la tarea */
-      window.__verRev270 = false; verFuturas = false; render();
+      window.__verRev270 = false; verFuturas = false; render(); abreGrupoInicio("esperan");
       document.querySelector('.l284 .ttr[data-id="tNEC"]').click(); await espera(60); r.abre = [vista, abierta];
-      vista = "lista"; abierta = null; render();
-      /* home vacío: una sola línea */
-      tareas = []; render(); r.vacio = (document.querySelector(".sep270.s-ok") || { textContent: "" }).textContent;
+      vista = "lista"; abierta = null; window.__grupoInicio = null; render();
+      /* home vacío: las tres fichas apagadas en cero y solo el renglón Historial */
+      tareas = []; render(); r.vacio = [[].map.call(document.querySelectorAll(".ficha-inicio.cero .fi-n"), function (e) { return e.textContent; }).join(","), [].map.call(document.querySelectorAll(".fila-inicio"), function (e) { return e.textContent; }).join(",")];
       return r; });
-    eq("Mías futuras plegada; al tocarla se ve la futura", [C.futAntes, C.futDesp, C.futCab], [false, true, "Mías futuras 1"]);
+    eq("Próximas (= Mías futuras) fuera del inicio; al tocar su renglón se ve la futura", [C.futAntes, C.futDesp, C.futCab], [false, true, "Próximas 1"]);
     eq("La de otro dueño que Salvador revisa baja a 'Las revisas tú' (con su dueño)", C.rev, ["Bitácora de obra de Samuel de Samuel · hoy"]);
     eq("Sin fecha definida → Vencidas mías (después de las vencidas); nunca en Hoy", C.sinDef, [["tV2:venció 1 oct", "tSIN:sin fecha · falta definir cuándo"], ["tH2"]]);
     eq("Una tarea ajena no entra a Vencidas ni Hoy mías", C.ajena, [0, 0, ["tO"]]);
     eq("Siguen todas las funciones (menú de pulsación larga, vincular, mover, propuestas, falta, expedientes, compartidas)", C.funciones, []);
     eq("Tocar un renglón abre la tarea", C.abre, ["hilo", "tNEC"]);
-    eq("Sin nada pendiente: 'Todo al día'", C.vacio, "Todo al día");
+    eq("Sin nada pendiente: fichas en cero y solo Historial", C.vacio, ["0,0,0", "Historial"]);
     eq("Sin errores de página", errs, []);
   } catch (e) { malas.push("EXCEPCION " + e.message + "\n" + (e.stack || "").split("\n").slice(0, 4).join("\n")); }
   await b.close();

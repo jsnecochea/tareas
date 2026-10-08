@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* PRUEBAS build 272: home súper minimalista (línea de estado, secciones vacías fuera, preguntas agrupadas, espera de terceros a Las lleva Claude, Ya está con la siguiente subiendo, Claude hasta abajo en gris). 390 px, anti-regresión. */
+/* PRUEBAS build 272 (al día con el home de tres fichas): secciones vacías fuera, preguntas agrupadas, espera de terceros a Las lleva Claude, Ya está con la siguiente subiendo. 390 px, anti-regresión. */
 "use strict";
 var fs = require("fs"), path = require("path");
 var ok = 0, n = 0, malas = [];
@@ -29,11 +29,17 @@ eq("sw.js con versión build ≥ 272", +((/var SW_VERSION = 'build (\d+)'/.exec(
       document.getElementById("app").style.display = "flex"; window.espera = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
       var N = Date.now();
       window.T = function (id, nombre, ctx, extra) { var t = { id: id, nombre: nombre, duenio: "salvador", creada_por: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, autorizada: true, f_vigente: "2026-10-07", fecha_dictada: true, contexto: ctx || "Tarea de prueba con contexto suficiente para que no falte nada de contexto en la ficha de la tarea y se vea completa.", ritmo: "diario", msgs: [{ k: "bo", de: "salvador", t: "Va", ts: N - 100000, h: "07:00" }] }; for (var k in (extra || {})) t[k] = extra[k]; return t; };
-      window.home = function (L) { tareas = L; abierta = null; vista = "lista"; window.__clL263 = false; window.__ttAb = { venc: true, hoy: true }; window.__rfF263 = 0; render(); };
+      window.home = function (L) { tareas = L; abierta = null; vista = "lista"; window.__grupoInicio = null; window.__clL263 = false; window.__ttAb = { venc: true, hoy: true }; window.__rfF263 = 0; render(); };
       window.filas = function () { return [].map.call(document.querySelectorAll(".ttl .ttr:not(.ttsum)"), function (b) { return b.querySelector(".rn").textContent; }); };
       window.sumas = function () { return [].map.call(document.querySelectorAll(".ttsum .rn"), function (b) { return b.textContent; }); };
       /* build 270: secciones siempre desplegadas del home (Te pregunta Doit · Vencidas mías · Hoy mías) */
-      window.secs = function () { var o = {}; [].forEach.call(document.querySelectorAll(".h270 .sep270, .h270 .hd284"), function (s) { var L = s.nextElementSibling; o[s.querySelector("span").textContent] = [].map.call(L.querySelectorAll(".ttr .rn, .f284n"), function (b) { return b.textContent; }); }); return o; };
+      /* home de tres fichas: cada sección vive en su propia vista (Te esperan · Vencidas · Hoy); se abren una por una y se regresa al inicio */
+      window.secs = function () { var o = {};
+        [["esperan"], ["venc", "Vencidas mías"], ["hoy", "Hoy mías"]].forEach(function (x) { window.__grupoInicio = x[0]; render(); var g = document.querySelector('[data-grupo-vista="' + x[0] + '"]'); if (!g) return;
+          if (x[1]) { var L = [].map.call(g.querySelectorAll(".ttr .rn"), function (b) { return b.textContent; }); if (L.length) o[x[1]] = L; }
+          else [].forEach.call(g.querySelectorAll(".sc284"), function (sc) { o[sc.getAttribute("aria-label")] = [].map.call(sc.querySelectorAll(".ttr .rn, .f284n"), function (b) { return b.textContent; }); }); });
+        window.__grupoInicio = null; render(); return o; };
+      window.cuentas = function () { return [].map.call(document.querySelectorAll(".ficha-inicio, .fila-inicio"), function (b) { return b.getAttribute("aria-label"); }); };
     });
 
 
@@ -48,57 +54,57 @@ eq("sw.js con versión build ≥ 272", +((/var SW_VERSION = 'build (\d+)'/.exec(
         T("tF1", "Futura", "", { f_vigente: "2026-10-20" })]; }
       window.fx272 = fx;
       home(fx());
-      var est = document.querySelector(".est272");
-      r.est = est ? est.textContent.replace(/\s*·\s*/g, " · ").replace(/\s+/g, " ").trim() : null;
-      r.estArriba = (function () { var e = est.getBoundingClientRect().top, s = document.querySelector(".h270 .sep270, .h270 .hd284").getBoundingClientRect().top; return e > s; })();   /* build 279: la línea de estado va hasta abajo */
+      r.est = cuentas();
+      r.estArriba = !document.querySelector(".est272, [data-est272]");   /* la línea de estado se retiró: sus números viven en las fichas */
+      r.ancho = document.documentElement.scrollWidth <= 390;
       r.secs = secs();
+      abreGrupoInicio("esperan");
       r.grupo = (function () { var b = document.querySelector('.l284 [data-id="tP3"]'); return b ? [b.getAttribute("data-preg272"), b.querySelector("small").textContent, document.querySelectorAll('.l284 [data-id="tP3"]').length] : null; })();
       r.sola = document.querySelector('.l284 [data-id="tP1"] small').textContent;
       r.solaSinGrupo = document.querySelector('.l284 [data-id="tP1"]').hasAttribute("data-preg272");
-      r.ancho = document.documentElement.scrollWidth <= 390;
+      r.ancho = r.ancho && document.documentElement.scrollWidth <= 390;
+      cierraGrupoInicio();
       /* abajo: Las lleva Claude hasta abajo, plegada, gris tenue (con una tarea de Claude) */
       var L2 = fx(); L2.push(T("tCL", "La lleva Claude", "", { encargos: [{ id: "e", estado: "pendiente" }] })); home(L2);
-      var ab = document.querySelectorAll(".abajo270 > .cll263"), ult = ab[ab.length - 1];
-      r.claudeUltima = [ult.classList.contains("cl272"), ult.querySelector("b").textContent, !ult.querySelector(".revl"), !!ult.querySelector(".sem270")];
-      var cs = getComputedStyle(ult.querySelector(".clh263 b")), ink3 = getComputedStyle(document.body).getPropertyValue("--ink-3").trim();
-      var tmp = document.createElement("span"); tmp.style.color = ink3; document.body.appendChild(tmp); var c3 = getComputedStyle(tmp).color; tmp.remove();
-      r.gris = [cs.color === c3, cs.fontWeight];
+      var fl = [].slice.call(document.querySelectorAll(".lista-inicio .fila-inicio")), ult = fl[fl.length - 2];
+      r.claudeUltima = [ult.getAttribute("data-grupo") === "claude" && fl[fl.length - 1].getAttribute("data-grupo") === "hist", ult.querySelector(".fl-t").textContent, !document.querySelector(".cll263, .revl"), (abreGrupoInicio("claude"), !!document.querySelector('[data-grupo-vista="claude"] .sem270'))];
+      cierraGrupoInicio(); ult = document.querySelector('.fila-inicio[data-grupo="claude"]');
+      var cs = getComputedStyle(ult.querySelector(".fl-n"));
+      r.gris = [cs.color === "rgb(142, 142, 147)", getComputedStyle(ult).fontSize];
       /* secciones vacías: solo Hoy -> ni título de preguntas ni de vencidas, y la línea de estado solo trae "hoy" */
       home([T("tH1", "Hoy uno", ""), T("tH2", "Hoy dos", "")]);
-      r.soloHoy = [document.querySelector(".est272").textContent.replace(/\s+/g, " ").trim(), Object.keys(secs()), document.body.innerText.indexOf("Te pregunta Doit") < 0, document.body.innerText.indexOf("Vencidas mías") < 0, !document.querySelector(".abajo270")];
-      /* todo vacío: sin línea de estado */
-      home([]); r.vacio = [!document.querySelector(".est272"), !document.querySelector(".h270"), !document.querySelector(".abajo270")];
+      r.soloHoy = [cuentas(), Object.keys(secs()), document.body.innerText.indexOf("Te pregunta Doit") < 0, !document.querySelector('.fila-inicio[data-grupo="venc"]'), !document.querySelector(".abajo270, .h270")];
+      /* todo vacío: fichas en cero, solo Historial */
+      home([]); r.vacio = [document.querySelectorAll(".ficha-inicio.cero").length, cuentas().slice(3), !document.querySelector(".h270, .abajo270, .est272")];
       return r; });
     if (process.env.CAP) { await p.evaluate(function () { var L = fx272(); L.push(T("tCL", "La lleva Claude", "", { encargos: [{ id: "e", estado: "pendiente" }] })); home(L); }); await foto("b272-inicio.png"); }
-    eq("Línea de estado: contadores chicos", A.est, "2 te preguntan · 2 vencidas · 3 hoy");
-    eq("La línea de estado va abajo de las secciones (build 279)", A.estArriba, true);
+    eq("Fichas y lista con los contadores de siempre (te preguntan 2 · vencidas 2 · hoy 3)", A.est, ["Te esperan: 2", "Bandeja: 0", "Hoy: 3", "Vencidas: 2", "Próximas: 1", "Historial"]);
+    eq("Ya no hay línea de estado", A.estArriba, true);
     eq("Secciones del home", A.secs, { "Te pregunta Doit": ["Junta con el banco", "Pregunta sola"], "Vencidas mías": ["Vencida uno", "Vencida dos"], "Hoy mías": ["Hoy uno", "Hoy dos", "Hoy tres"] });
     eq("3 preguntas de una tarea = un renglón 'N preguntas'", A.grupo, ["3", "3 preguntas", 1]);
     eq("Una sola pregunta se ve como antes (su texto)", [A.sola, A.solaSinGrupo], ["¿Cuál es la dirección?", false]);
     eq("Cabe en 390 px", A.ancho, true);
-    eq("Las lleva Claude: la última de abajo, plegada, con semáforo", A.claudeUltima, [true, "Las lleva Claude", true, true]);
-    eq("Encabezado de Las lleva Claude en gris tenue", A.gris, [true, "600"]);
-    eq("Sin preguntas ni vencidas: no salen ni sus títulos; la línea solo dice hoy", A.soloHoy, ["2 hoy", ["Hoy mías"], true, true, true]);
-    eq("Todo vacío: sin línea de estado ni secciones", A.vacio, [true, true, true]);
+    eq("Las lleva Claude: el último renglón antes de Historial, sin desplegar en el inicio, con semáforo al abrirla", A.claudeUltima, [true, "Las lleva Claude", true, true]);
+    eq("Renglón a 17 px con el número en gris #8E8E93", A.gris, [true, "17px"]);
+    eq("Sin preguntas ni vencidas: no salen ni sus títulos ni su renglón; Te esperan en cero", A.soloHoy, [["Te esperan: 0", "Bandeja: 0", "Hoy: 2", "Historial"], ["Hoy mías"], true, true, true]);
+    eq("Todo vacío: tres fichas en cero y solo Historial", A.vacio, [3, ["Historial"], true]);
 
     /* ===== tocar un contador: scroll suave a su sección ===== */
     var B = await p.evaluate(async function () {
       var L = fx272(); for (var i = 0; i < 14; i++) L.push(T("tX" + i, "Hoy extra " + i, ""));
-      home(L); var sc = document.querySelector(".scroll"), r = {};
-      var llamado = null, orig = Element.prototype.scrollIntoView;
-      Element.prototype.scrollIntoView = function (o) { llamado = [this.id, o && o.behavior]; return orig.call(this, o); };
-      document.querySelector('[data-est272="hoy"]').click(); await espera(900);
-      Element.prototype.scrollIntoView = orig;
-      r.llamado = llamado;
-      var s = document.getElementById("sec272-hoy").getBoundingClientRect().top, top = sc.getBoundingClientRect().top;
-      r.llego = [sc.scrollTop > 0, Math.abs(s - top) < 40];
+      home(L); var r = {};
+      document.querySelector('.ficha-inicio[data-grupo="hoy"]').click(); await espera(60);
+      var g = document.querySelector('[data-grupo-vista="hoy"]'), sc = document.querySelector(".scroll");
+      r.llamado = [!!g, g ? g.querySelectorAll(".ttr[data-id]").length : 0, !document.querySelector(".fichas-inicio")];
+      document.getElementById("binicio").click(); await espera(60);
+      r.llego = [sc.scrollTop === 0 || !!document.querySelector(".fichas-inicio"), !document.querySelector("[data-grupo-vista]")];
       return r; });
-    eq("Tocar 'hoy' hace scroll suave a Hoy mías", B.llamado, ["sec272-hoy", "smooth"]);
-    eq("La sección queda arriba", B.llego, [true, true]);
+    eq("Tocar la ficha Hoy abre su vista con las 17 de hoy y solo eso", B.llamado, [true, 17, true]);
+    eq("‹ Inicio regresa a las fichas", B.llego, [true, true]);
 
     /* ===== tocar el renglón agrupado: abre la tarea con el popup de preguntas ===== */
     var C = await p.evaluate(async function () {
-      home(fx272()); window.__pq255Last = "tP3";   /* aunque ya la hubiera cerrado antes, el renglón la vuelve a abrir */
+      home(fx272()); abreGrupoInicio("esperan"); window.__pq255Last = "tP3";   /* aunque ya la hubiera cerrado antes, el renglón la vuelve a abrir */
       document.querySelector('[data-preg272]').click(); await espera(300);
       var r = [vista, abierta, !!document.getElementById("preg249"), document.querySelectorAll("#preg249 .pq255l li").length];
       try { cierraPreg255(); } catch (e) {}
@@ -118,9 +124,9 @@ eq("sw.js con versión build ≥ 272", +((/var SW_VERSION = 'build (\d+)'/.exec(
         T("tYO", "Me espera a mí", "", { estado: "espera", espera: "salvador", espera_desde: N - 864e5 }),
         T("tPRE", "Detenida pero con pregunta para mí", "", { detenido: { quien: "Lalo", que: "x", desde: "2026-10-06", toques: [] }, hecho238: { ts: 1, hecho: [], falta: [{ k: "txt", q: "¿Le digo que sí?", ops: [] }] } })];
       L[3].msgs.push({ k: "bi", wa_in: 1, wa_c: "Pato", t: "Pato: ya te lo mandé", ts: N - 3600e3, h: "08:00" });
-      home(L); window.__clL263 = true; render();
+      home(L); abreGrupoInicio("claude");
+      r.claude = [].map.call(document.querySelectorAll('[data-grupo-vista="claude"] .ttr'), function (e) { return [e.getAttribute("data-id"), (e.querySelector(".pel263") || { textContent: "" }).textContent]; }).sort();
       r.secs = secs();
-      r.claude = [].map.call(document.querySelectorAll(".cl272 .ttr"), function (e) { return [e.getAttribute("data-id"), (e.querySelector(".pel263") || { textContent: "" }).textContent]; }).sort();
       return r; });
     eq("Te pregunta Doit: la que me espera a mí y la que me pregunta (aunque esté detenida)", D.secs["Te pregunta Doit"], ["Me espera a mí", "Detenida pero con pregunta para mí"]);
     eq("Hoy mías: la que ya contestó y la que no tiene quién (sin dato confiable no se mueve)", D.secs["Hoy mías"], ["Ya contestó", "Detenida sin quién"]);
@@ -129,7 +135,7 @@ eq("sw.js con versión build ≥ 272", +((/var SW_VERSION = 'build (\d+)'/.exec(
 
     /* ===== Ya está: la siguiente sube a su lugar (~250 ms) y no se cambia de pantalla dentro de la tarea ===== */
     var E = await p.evaluate(async function () {
-      var r = {}; home(fx272());
+      var r = {}; home(fx272()); abreGrupoInicio("hoy");
       abierta = "tH2"; vista = "hilo"; render();
       document.getElementById("bya").click(); await espera(800);
       r.flujo = [vista, abierta !== null];

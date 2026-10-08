@@ -81,7 +81,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
           m("Oye y lo de tu comedor: mi carpintero puede ir el jueves a medir la cubierta", 25 * 60000, { duda_tarea: { alternativa_id: "tCOMEDOR", alternativa_nombre: "Comedor nuevo" } }),
           m("ok", 22 * 60000), m("gracias", 21 * 60000), m("saludos", 20 * 60000)] },
         { id: "tCOMEDOR", nombre: "Comedor nuevo", duenio: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, msgs: [] }]; };
-      tareas = F238(); abierta = null; vista = "lista"; render(); [].forEach.call(document.body.children, function (x) { if (x.id !== "app") x.style.display = "none"; });
+      tareas = F238(); abierta = null; vista = "lista"; window.__grupoInicio = "bandeja"; window.__segBandeja = "mensajes"; render(); [].forEach.call(document.body.children, function (x) { if (x.id !== "app") x.style.display = "none"; });
       o.aco = !!document.querySelector(".aco226"); o.vista = vista; o.n = platicasAcomodo237().length; var cd = document.querySelector(".aco226 .acor.g237"); if (!cd) return o; cd.querySelector(".x237").click(); cd = document.querySelector(".aco226 .acor.g237");
       o.desplegada = [].map.call(cd.querySelectorAll(".m237"), function (x) { return [!!x.querySelector(".ac226"), (x.querySelector(".prop238") || {}).textContent || ""]; });
       return o; });

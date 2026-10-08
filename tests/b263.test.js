@@ -30,11 +30,16 @@ eq("versión >= 263", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       document.getElementById("app").style.display = "flex"; window.espera = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
       var N = Date.now();
       window.T = function (id, nombre, ctx, extra) { var t = { id: id, nombre: nombre, duenio: "salvador", creada_por: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, autorizada: true, f_vigente: "2026-10-06", fecha_dictada: true, contexto: ctx || "Tarea de prueba con contexto suficiente para que no falte nada de contexto en la ficha de la tarea y se vea completa.", ritmo: "diario", msgs: [{ k: "bo", de: "salvador", t: "Va", ts: N - 100000, h: "07:00" }] }; for (var k in (extra || {})) t[k] = extra[k]; return t; };
-      window.home = function (L) { tareas = L; abierta = null; vista = "lista"; window.__clL263 = false; window.__ttAb = { venc: true, hoy: true }; window.__rfF263 = 0; render(); };
-      window.filas = function () { return [].map.call(document.querySelectorAll(".ttl .ttr:not(.ttsum)"), function (b) { return b.querySelector(".rn").textContent; }); };
+      window.home = function (L) { tareas = L; abierta = null; vista = "lista"; window.__grupoInicio = null; window.__clL263 = false; window.__ttAb = { venc: true, hoy: true }; window.__rfF263 = 0; render(); };
+      window.filas = function () { var o = []; ["esperan", "venc", "hoy"].forEach(function (g) { window.__grupoInicio = g; render(); [].forEach.call(document.querySelectorAll('[data-grupo-vista="' + g + '"] .ttl .ttr:not(.ttsum)'), function (b) { o.push(b.querySelector(".rn").textContent); }); }); window.__grupoInicio = null; render(); return o; };
       window.sumas = function () { return [].map.call(document.querySelectorAll(".ttsum .rn"), function (b) { return b.textContent; }); };
       /* build 270: secciones siempre desplegadas del home (Te pregunta Doit · Vencidas mías · Hoy mías) */
-      window.secs = function () { var o = {}; [].forEach.call(document.querySelectorAll(".h270 .sep270, .h270 .hd284"), function (s) { var L = s.nextElementSibling; o[s.querySelector("span").textContent] = [].map.call(L.querySelectorAll(".ttr .rn, .f284n"), function (b) { return b.textContent; }); }); return o; };
+      /* home de tres fichas: cada sección vive en su propia vista (Te esperan · Vencidas · Hoy); se abren una por una y se regresa al inicio */
+      window.secs = function () { var o = {};
+        [["esperan"], ["venc", "Vencidas mías"], ["hoy", "Hoy mías"]].forEach(function (x) { window.__grupoInicio = x[0]; render(); var g = document.querySelector('[data-grupo-vista="' + x[0] + '"]'); if (!g) return;
+          if (x[1]) { var L = [].map.call(g.querySelectorAll(".ttr .rn"), function (b) { return b.textContent; }); if (L.length) o[x[1]] = L; }
+          else [].forEach.call(g.querySelectorAll(".sc284"), function (sc) { o[sc.getAttribute("aria-label")] = [].map.call(sc.querySelectorAll(".ttr .rn, .f284n"), function (b) { return b.textContent; }); }); });
+        window.__grupoInicio = null; render(); return o; };
     });
     /* ===================== 1. AVISOS UNA VEZ ===================== */
     var A = await p.evaluate(async function () {
@@ -104,12 +109,12 @@ eq("versión >= 263", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
         T("tFIE", "Fiesta Navideña", "", { resumen: { que_toca: "Definir fecha y forma de la fiesta" } }),
         T("tNEC", "Pregunta de Claude", "", { hecho238: { ts: 1, hecho: [], falta: [{ k: "txt", q: "¿A qué hora?", ops: [] }] } })];
       home(L); var r = { suma: sumas(), filas: filas(), secs: secs() };
-      r.plegada = !document.querySelector(".cll263 .revl"); r.cabecera = (document.querySelector("#bcl263") || {}).innerText || "";
-      document.getElementById("bcl263").click(); await espera(50); r.abierta = [].map.call(document.querySelectorAll(".cll263 .ttr"), function (b) { return b.innerText.replace(/\s+/g, " "); });
+      r.plegada = !document.querySelector(".cll263 .revl"); r.cabecera = (document.querySelector('.fila-inicio[data-grupo="claude"]') || {}).innerText || "";
+      document.querySelector('.fila-inicio[data-grupo="claude"]').click(); await espera(50); r.abierta = [].map.call(document.querySelectorAll('[data-grupo-vista="claude"] .ttr'), function (b) { return b.innerText.replace(/\s+/g, " "); });
       r.pelotas = L.map(function (t) { var q = pelota263(t); return [t.id, q.de, q.esperaA]; });
       return r; });
     eq("Build 270: 'Hoy mías' solo lo de Salvador (Bardas, Fiesta); la pregunta de Claude va en 'Te pregunta Doit'", [C.secs["Hoy mías"], C.secs["Te pregunta Doit"]], [["Proyecto Bardas Cumbres", "Fiesta Navideña"], ["Pregunta de Claude"]]);
-    eq("Las lleva Claude (7, semáforo: 7 al corriente) viene plegada", [C.plegada, C.cabecera.replace(/\s+/g, " ").trim()], [true, "Las lleva Claude 7"]   /* build 285: el chevron es un SVG que gira (ya no es texto) */);
+    eq("Las lleva Claude (7): en el inicio solo su renglón con el número", [C.plegada, C.cabecera.replace(/\s+/g, " ").trim()], [true, "Las lleva Claude 7"]   /* build 285: el chevron es un SVG que gira (ya no es texto) */);
     var rowOf = function (n) { return C.abierta.filter(function (x) { return x.indexOf(n) === 0; })[0] || ""; };
     eq("Al abrirla: Cena Jueves Amigos con su 'qué toca' y quién tiene la pelota", /Qué toca: Definir lugar y hora de la cena/.test(rowOf("Cena Jueves Amigos")) && /espera a Eduardo/.test(rowOf("Cena Jueves Amigos")), true);
     eq("Decoración Navideña: 'espera a Pato'; Inversiones: 'espera a Cynthia'", [/espera a Pato/.test(rowOf("Decoración Navideña")), /espera a Cynthia/.test(rowOf("Inversiones BBVA"))], [true, true]);
@@ -122,8 +127,8 @@ eq("versión >= 263", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       var L = [T("tVES", "Vestidores Carpintería", "", { f_vigente: "2026-10-05", resumen: { pendientes: [{ t: "Manuel ya tiene cita con el carpintero", de: "Manuel", fecha: "2026-10-07" }, { t: "Presupuesto del carpintero", de: "Manuel", fecha: "2026-10-10" }, { t: "Muestra pintada", de: "Manuel", fecha: "2026-10-14" }] } }),
         T("tVEN", "Vencida de verdad", "", { f_vigente: "2026-10-05" })];
       home(L); var r = { estado: [estadoReal(L[0]), estadoReal(L[1])], filas: filas(), suma: secs()["Vencidas mías"] };
-      document.getElementById("bcl263").click(); await espera(50);
-      r.fila = [].map.call(document.querySelectorAll(".cll263 .ttr"), function (b) { return b.innerText.replace(/\s+/g, " "); }); r.hito = esperaConHito263(L[0]); return r; });
+      abreGrupoInicio("claude"); await espera(50);
+      r.fila = [].map.call(document.querySelectorAll('[data-grupo-vista="claude"] .ttr'), function (b) { return b.innerText.replace(/\s+/g, " "); }); r.hito = esperaConHito263(L[0]); return r; });
     eq("Vestidores (siguiente paso de Manuel con fecha) pasa a 'espera' y NO es vencida", D.estado, ["espera", "vencida"]);
     eq("Solo cuenta como vencida la que de verdad lo es", [D.filas, D.suma], [["Vencida de verdad"], ["Vencida de verdad"]]);
     eq("Sale en Claude las lleva con la fecha del hito más próximo (mié 7 oct)", [D.hito && D.hito.fecha, /espera a Manuel/.test(D.fila[0] || "")], ["2026-10-07", true]);

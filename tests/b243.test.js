@@ -73,7 +73,7 @@ eq("la hoja ¿A dónde va? ya no trae 'Bien, pero sin importancia' en el código
         m("Javier Fernández", "Va a ir mi cuñado también, somos 4 en total para la comida", 40 * 60000, { duda_tarea: dud }),
         m("Rogelio Sada", "El precio del salón quedó en $12,500 por la tarde completa", 20 * 60000, { duda_tarea: dud }),
         m("Lalo Madero", "Mañana te llevo el contrato firmado del salón a la oficina", 10 * 60000, { duda_tarea: dud })] };
-      tareas = [FI, { id: "tPADEL", nombre: "Pádel miércoles", duenio: "salvador", estado: "abierta", msgs: [] }]; abierta = null; vista = "lista"; render();
+      tareas = [FI, { id: "tPADEL", nombre: "Pádel miércoles", duenio: "salvador", estado: "abierta", msgs: [] }]; abierta = null; vista = "lista"; window.__grupoInicio = "bandeja"; window.__segBandeja = "mensajes"; render();   /* home de tres fichas: Bandeja › Mensajes */
       window.solo2 = function () { [].forEach.call(document.body.children, function (x) { if (x.id !== "app" && x.id !== "ng243") x.style.display = "none"; }); document.getElementById("app").style.display = "flex"; }; solo2();
       function card(re) { return [].filter.call(document.querySelectorAll(".aco226 .acor.g237"), function (f) { return re.test(f.textContent); })[0]; }
       window.card243 = card;

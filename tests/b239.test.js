@@ -34,7 +34,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
         m("Lalo Madero", "Hola", 90 * 60000), m("Lalo Madero", "Igualmente", 89 * 60000), m("Lalo Madero", "¿Reservaste cancha para el miércoles a las 8?", 88 * 60000, { duda_tarea: DU }),
         m("Manuel Parra", "Mañana te dejo la muestra de melamina para la cubierta del comedor, a las 10", 30 * 60000, { duda_tarea: { alternativa_id: "tCOM", alternativa_nombre: "Comedor nuevo" } })] };
       tareas = [PAD, { id: "tFIESTA", nombre: "Fiesta Cumpleaños Papá", duenio: "salvador", estado: "abierta", msgs: [] }, { id: "tCOM", nombre: "Comedor nuevo", duenio: "salvador", estado: "abierta", msgs: [] }];
-      abierta = null; vista = "lista"; render();
+      abierta = null; vista = "lista"; window.__grupoInicio = "bandeja"; window.__segBandeja = "mensajes"; render();   /* home de tres fichas: Bandeja › Mensajes */
       o.saludos = ["Igualmente pollo", "Jajaja", "👍", "Buenas noches", "Bonita semana", "Un abrazo", "ahí estaremos", "va", "¿Vienes el miércoles?", "Te mando la cotización: $38,500"].map(function (tx) { return esSaludo239(PAD, { t: "X: " + tx, k: "bi", wa_in: 1, wa_c: "X" }); });
       return o; });
     await p.waitForTimeout(300);

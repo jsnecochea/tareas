@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 /* PRUEBAS build 285 (Salvador 8-oct). 390 px, reloj fijo jue 2026-10-08 9:00 (Monterrey).
-   «Tu historial» (hoy en la vista del renglón Historial del inicio): lo que hizo el usuario actual HOY, lo más reciente arriba (hora · tarea ·
-   qué hizo, en segunda persona, ícono SVG por tipo); ignora lo de otros usuarios y «Abrió la tarea»; picar el renglón abre la tarea;
-   «Ver días anteriores» carga 7 días más; sin nada hoy: «Hoy no has movido nada todavía». Eliminar y renombrar dejan rastro. Nada de fondo rojo.
-   (Las secciones plegables por día del home se retiraron con el home de tres fichas: su prueba quedó en tests/retiradas/b285-plegado.test.js.)
+   1) «Tu historial» hasta abajo del home: lo que hizo el usuario actual HOY, lo más reciente arriba (hora · tarea · qué hizo, en
+      segunda persona, ícono SVG por tipo); ignora lo de otros usuarios y «Abrió la tarea»; picar el renglón abre la tarea;
+      «Ver días anteriores» carga 7 días más; sin nada hoy: «Hoy no has movido nada todavía». Eliminar y renombrar dejan rastro.
+   2) Secciones plegables: día nuevo → todas plegadas menos «Decide tú»; tocar el encabezado abre/cierra y se recuerda en el día
+      (localStorage con la fecha); al día siguiente amanecen plegadas otra vez; contador visible plegada; encabezado ≥44 px,
+      chevron que gira, aria-expanded; el resumen de abajo abre la sección plegada. Nada de fondo rojo.
    Correr: node tests/b285.test.js */
 "use strict";
 var fs = require("fs"), path = require("path");
@@ -30,7 +32,7 @@ eq("sw.js con versión >= 285", +((/var SW_VERSION = 'build (\d+)'/.exec(fs.read
       pideWhatsApp = function () { return Promise.resolve({ id: "p" }); };
       window.espera = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
       document.getElementById("app").style.display = "flex";
-      window.home = function (L) { [].forEach.call(document.querySelectorAll("#preg249,#hoja254,#acom249,.leemask,.cnlbg,.cnlsheet"), function (e) { e.remove(); }); if (L) tareas = L; abierta = null; vista = "lista"; window.__grupoInicio = "hist"; render(); };   /* home de tres fichas: «Tu historial» es la vista del renglón Historial */
+      window.home = function (L) { [].forEach.call(document.querySelectorAll("#preg249,#hoja254,#acom249,.leemask,.cnlbg,.cnlsheet"), function (e) { e.remove(); }); if (L) tareas = L; abierta = null; vista = "lista"; render(); };
       window.base = function (id, nom, extra) { var o = { id: id, nombre: nom, duenio: "salvador", creada_por: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, autorizada: true,
         f_vigente: "2026-10-08", f_original: "2026-10-08", fecha_dictada: true, contexto: "Tarea de prueba con contexto suficiente para que no falte nada de contexto en la ficha de la tarea y se vea completa.", ritmo: "diario", resumen: { plan: [] }, msgs: [{ k: "bo", de: "salvador", t: "Va", ts: Date.now() - 100000, h: "07:00" }] }; for (var k in extra) o[k] = extra[k]; return o; };
       window.FX = function () { return [
@@ -45,6 +47,45 @@ eq("sw.js con versión >= 285", +((/var SW_VERSION = 'build (\d+)'/.exec(fs.read
       window.visible = function (sel) { var e = document.querySelector(sel); return !!(e && e.getClientRects().length && getComputedStyle(e).display !== "none"); };
       window.hist = function () { return [].map.call(document.querySelectorAll(".hist285 .h285r"), function (r) { return [r.querySelector(".h285n").textContent, r.querySelector(".h285q").textContent]; }); };
     });
+
+    /* ===== 2) plegado: día nuevo → todo plegado menos «Decide tú» ===== */
+    var A = await p.evaluate(function () { try { localStorage.clear(); } catch (e) {} window.__pl285 = null; home(FX());
+      return { dec: cab('.sc284[aria-label="Decide tú"] .hd284'), decV: visible('.sc284[aria-label="Decide tú"] .bl284'),
+        preg: cab('.sc284[aria-label="Te pregunta Doit"] .hd284'), pregV: visible('.sc284[aria-label="Te pregunta Doit"] .bl284'),
+        venc: cab("#sec272-venc"), vencV: visible(".l-venc"), hoy: cab("#sec272-hoy"), hoyV: visible(".l-hoy"),
+        fut: cab("#bfut"), futL: !!document.querySelector("#bfut + .list, .pl270 .list"), hi: cab("#sec285-hist"), hiV: visible(".hist285 .bl285"),
+        orden: [].map.call(document.querySelectorAll(".sc284,.sep270,.clh263,.est272"), function (e) { return e.getAttribute("aria-label") || e.className.split(" ")[0]; }).slice(-2) }; });
+    eq("día nuevo: «Decide tú» abierta (con su contenido visible)", [A.dec && A.dec.exp, A.decV], ["true", true]);
+    eq("día nuevo: Te pregunta Doit, Vencidas mías, Hoy mías, Mías futuras y Tu historial plegadas", [A.preg && A.preg.exp, A.pregV, A.venc && A.venc.exp, A.vencV, A.hoy && A.hoy.exp, A.hoyV, A.fut && A.fut.exp, A.futL, A.hi && A.hi.exp, A.hiV],
+      ["false", false, "false", false, "false", false, "false", false, "false", false]);
+    eq("plegadas muestran su contador", [A.preg.cuenta, A.venc.cuenta, A.hoy.cuenta, A.fut.cuenta], ["1", "1", "2", "1"]);
+    eq("encabezados ≥44 px con chevron", [A.dec.alto, A.dec.chev, A.preg.alto, A.venc.alto, A.venc.chev, A.hoy.alto, A.hi.alto, A.hi.chev, A.fut.chev], [true, true, true, true, true, true, true, true, true]);
+    eq("el chevron gira: abierto rotado, plegado sin rotar", [A.dec.gira !== "none", A.venc.gira], [true, "none"]);
+    eq("«Tu historial» va hasta abajo, después del resumen", A.orden, ["Lo que te toca", "Tu historial"]);
+
+    /* toggle: se abre y se recuerda en el día (re-render y localStorage con la fecha) */
+    var T = await p.evaluate(function () { document.getElementById("sec272-hoy").click(); var a = [cab("#sec272-hoy").exp, visible(".l-hoy")];
+      document.querySelector('.sc284[aria-label="Decide tú"] .hd284').click(); var d = [cab('.sc284[aria-label="Decide tú"] .hd284').exp, visible('.sc284[aria-label="Decide tú"] .bl284')];
+      window.__pl285 = null; home(); var c = [cab("#sec272-hoy").exp, visible(".l-hoy"), cab('.sc284[aria-label="Decide tú"] .hd284').exp];
+      var ls = JSON.parse(localStorage.getItem("doit_pleg285_salvador_2026-10-08") || "null");
+      document.getElementById("bfut").click(); var f = [cab("#bfut").exp, !!document.querySelector(".pl270 .list"), verFuturas];
+      return { a: a, d: d, c: c, ls: ls && ls.o, f: f }; });
+    eq("tocar «Hoy mías» la abre", T.a, ["true", true]);
+    eq("tocar «Decide tú» la pliega", T.d, ["false", false]);
+    eq("lo que abrió/cerró se recuerda en el día (aun recargando)", T.c, ["true", true, "false"]);
+    eq("localStorage con la fecha guarda lo tocado", T.ls, { hoy: true, decide: false });
+    eq("«Mías futuras» usa el mismo estado del día", T.f, ["true", true, true]);
+
+    /* al día siguiente: otra vez todo plegado menos «Decide tú» */
+    var N = await p.evaluate(function () { window.__dt = 24 * 3600000; window.__pl285 = null; home(FX().map(function (t) { if (t.id !== "tDEC" && t.id !== "tFUT") { t.f_vigente = "2026-10-09"; } return t; }));
+      var r = { dec: cab('.sc284[aria-label="Decide tú"] .hd284').exp, hoy: cab("#sec272-hoy").exp, hoyV: visible(".l-hoy"), fut: cab("#bfut").exp, viejo: localStorage.getItem("doit_pleg285_salvador_2026-10-08") };
+      document.getElementById("sec272-hoy").click(); r.viejo2 = localStorage.getItem("doit_pleg285_salvador_2026-10-08"); window.__dt = 0; window.__pl285 = null; return r; });
+    eq("día siguiente: amanecen plegadas otra vez, «Decide tú» abierta", [N.dec, N.hoy, N.hoyV, N.fut], ["true", "false", false, "false"]);
+    eq("el estado del día anterior se aparta al guardar el de hoy", [N.viejo !== null, N.viejo2], [true, null]);
+
+    /* el resumen de abajo («2 hoy») abre su sección plegada */
+    var E = await p.evaluate(function () { localStorage.clear(); window.__pl285 = null; home(FX()); var b = document.querySelector('[data-est272="hoy"]'); if (!b) return null; b.click(); return [cab("#sec272-hoy").exp, visible(".l-hoy")]; });
+    eq("tocar «2 hoy» del resumen abre «Hoy mías»", E, ["true", true]);
 
     /* ===== 1) «Tu historial» ===== */
     var V = await p.evaluate(function () { localStorage.clear(); window.__pl285 = null; window.__histRemoto240 = []; ponAbre285("hist", true); home(FX());

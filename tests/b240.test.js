@@ -56,7 +56,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
       var FI = { id: "tFIESTA", nombre: "Fiesta Cumpleaños Papá", duenio: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, msgs: [
         m("Javier Fernández", "Va a ir mi cuñado también, somos 4 en total para la comida", 40 * 60000, { duda_tarea: { alternativa_id: "tPADEL", alternativa_nombre: "Pádel miércoles" } }),
         m("Rogelio Sada", "El precio del salón quedó en $12,500 por la tarde completa", 20 * 60000, { duda_tarea: { alternativa_id: "tPADEL", alternativa_nombre: "Pádel miércoles" } })] };
-      tareas = [FI, { id: "tPADEL", nombre: "Pádel miércoles", duenio: "salvador", estado: "abierta", msgs: [] }]; abierta = null; vista = "lista"; render(); solo();
+      tareas = [FI, { id: "tPADEL", nombre: "Pádel miércoles", duenio: "salvador", estado: "abierta", msgs: [] }]; abierta = null; vista = "lista"; window.__grupoInicio = "bandeja"; window.__segBandeja = "mensajes"; render();   /* home de tres fichas: Bandeja › Mensajes */ solo();
       o.botones = [].map.call(document.querySelectorAll(".aco226 .acor.g237")[0].querySelectorAll(".ac226 button"), function (b) { return b.textContent; });
       return o; });
     if (process.env.CAP) await p.screenshot({ path: path.join(process.env.CAP, "b240-acomodo-dato-sinimportancia.png") });
@@ -77,7 +77,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
       var B = { id: "tB", nombre: "Fiesta", duenio: "salvador", estado: "abierta", msgs: [] };
       tareas = [A, B]; abierta = "tA"; vista = "hilo"; render();
       mueveFecha(A, "2026-10-12", "prueba"); mueveMensaje(A, 0, "tB", "mover"); cierraHecha(A);
-      abierta = null; vista = "lista"; render(); document.getElementById("bhmas").click(); document.getElementById("hmhist").click();
+      abierta = null; vista = "lista"; window.__grupoInicio = null; render(); document.getElementById("bhmas").click(); document.getElementById("hmhist").click();
       [].forEach.call(document.body.children, function (x) { if (x.id !== "app") x.style.display = "none"; }); document.getElementById("app").style.display = "flex";
       o.renglones = [].map.call(document.querySelectorAll(".hist240 li"), function (li) { return [li.querySelector(".ht b").textContent, li.querySelector(".ht span").textContent, !!li.querySelector("[data-hund]")]; });
       o.remoto = (function () { return true; })();
