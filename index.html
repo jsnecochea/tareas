@@ -1679,7 +1679,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 285 · «Tu historial» del día hasta abajo del home (lo que moviste, autorizaste, vinculaste o dictaste, con hora; picar abre la tarea) y secciones plegables: cada día amanecen compactas salvo «Decide tú»";
+var VERSION_APP = "build 286 · Caminata: todo lo que dices en una tarea se guarda primero como orden pendiente (antes de la IA); la IA solo clasifica y aplica lo rápido; «aclarar», una instrucción de trabajo o un «No» a «¿Lo hago?» nunca la descartan: queda viva para la Mac y se te pregunta después";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -18768,11 +18768,66 @@ function camEnvia274(){
   var t=camTarea274(); if(!t) return camSiguiente274(1);
   CAM.espera276=false;
   camCrudo276(t, v);   /* hotfix 276 (7-oct): lo que dijo queda escrito en la tarea YA, antes de la IA y del cuestionario */
+  camOrden286(t, v);   /* build 286: y queda como ORDEN pendiente (encargo) antes de la IA; solo se cierra cuando algo se aplicó de verdad */
   if(CAM.conf) return camConfResp277(v);   /* build 277: contesta «¿Lo hago?» */
   if(!CAM.qz){ CAM.pideConf277=camPideConf277(v) || !!CAM.confSig277 || !!(CAM.aclara && CAM.pideConf277); CAM.confSig277=false; }   /* build 277: «confírmame» / «¿entendiste bien?» = repetir y esperar su sí */
   if(CAM.qz) return camQuizResp276(v);   /* build 276: contesta una pregunta del cuestionario */
   if(camK276()==="msg") return camMsgEntiende276(v);   /* build 276: a qué tarea va el mensaje */
   camEntiende275(t, v);   /* build 275: lo que dijo va a la IA (sin palabras clave), se ejecuta sin reconfirmar */
+}
+/* ===== build 286 (Caminata 8-oct: testamentos, reloj, ICOSA): TODO LO QUE DICE SALVADOR EN UNA TAREA ES ORDEN Y NUNCA SE PIERDE =====
+   · Cada respuesta se guarda PRIMERO como orden pendiente (t.encargos, tipo "orden", origen app283, caminata:1) ANTES de llamar a la IA.
+   · La IA solo clasifica y aplica lo rápido (aprobar, rechazar, vincular, eliminar, dato, Decide tú). Solo entonces la orden se cierra (hecho + resultado).
+   · «aclarar», «después»/«detalle» con contenido, una «instrucción» (que pide TRABAJO), la IA caída o un «No» a «¿Lo hago?» NUNCA la descartan:
+     queda viva para la Mac (ejecutor 18z40) con su motivo; con «No» queda preguntar_despues y lo que entendió la app.
+   · Si después corrige o aclara en la misma tarea, se suma a la MISMA orden (no se duplica). Deshacer la marca «deshecho». ===== */
+/* solo el campo encargos (merge), como camCrudo276: no toca el nombre ni nada más; sin red queda en la cola de Firestore */
+function camGuardaEnc286(T){
+  try{ if(!T || esEjemplo(T) || !db) return;
+    db.collection(COL).doc(T.id).set({encargos:limpiaUndef(T.encargos||[])}, {merge:true})
+      .catch(function(e){ try{ console.error("caminata 286 orden", e); }catch(_e){} toast("No se pudo guardar la orden"); });
+  }catch(e){ try{ console.warn("caminata 286 guarda", e); }catch(_e){} }
+}
+function camOrdEnc286(T, id){ return (T && Array.isArray(T.encargos))?(T.encargos.filter(function(e){ return e && e.id===id; })[0]||null):null; }
+function camOrden286(t, v){
+  try{
+    if(!t || !String(v||"").trim()) return null;
+    var T=tareaId240(t.id)||t, o=CAM.ord286, ex=(o && o.tid===T.id)?camOrdEnc286(T, o.id):null, key=CAM.L && CAM.L[CAM.i];
+    if(ex && ex.estado!=="pendiente") ex=null;
+    if(ex && (CAM.conf || (CAM.aclara && (CAM.aclara.id===T.id || CAM.aclara.id===key)) || o.no)){   /* corrección / aclaración / respuesta a «¿Lo hago?»: misma orden */
+      ex.dichos286=(Array.isArray(ex.dichos286)?ex.dichos286:[]).concat([{ts:Date.now(), t:String(v).slice(0,600)}]).slice(-10);
+      if(camConContenido276(v)) ex.t=String((ex.t||"")+" · Luego dijo: "+v).slice(0,3000);
+      camGuardaEnc286(T);
+      return ex;
+    }
+    var z=CAM.qz, q=(z && z.id===T.id && z.Q && z.Q[z.i])?String(z.Q[z.i].q||""):"";
+    var e={ id:"enc283_"+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36), tipo:"orden", estado:"pendiente",
+      t:String(v||"").slice(0,1500), motivo:"caminata286", por:yo||"", creado:Date.now(), origen:"app283",   /* mismo contrato que ordenPendiente283 (la Mac ya los lee) */
+      caminata:1, origen286:"caminata", k:z?"cuestionario":(camK276()||""), dicho_ts:Date.now() };
+    if(q) e.pregunta=q.slice(0,300);
+    T.encargos=(Array.isArray(T.encargos)?T.encargos:[]).concat([e]);
+    camGuardaEnc286(T);
+    CAM.ord286={id:e.id, tid:T.id};
+    return e;
+  }catch(er){ try{ console.warn("caminata 286 orden", er); }catch(_e){} return null; }
+}
+/* la orden con la que se está trabajando para esta tarea (la que viaja en j._ord286 o la abierta) */
+function camOrdId286(t, j){ if(j && j._ord286) return j._ord286; var o=CAM.ord286; return (o && t && o.tid===t.id)?o.id:null; }
+/* se aplicó algo de verdad: la orden se cierra con lo que se hizo */
+function camOrdenCierra286(t, id, res, estado){
+  try{ if(!t || !id) return; var T=tareaId240(t.id)||t, e=camOrdEnc286(T, id); if(!e || e.estado!=="pendiente") return;
+    e.estado=estado||"hecho"; e.hecho_ts=Date.now(); e.resultado=String(res||"").slice(0,400); e.por286="app";
+    if(CAM.ord286 && CAM.ord286.id===id) CAM.ord286=null;
+    camGuardaEnc286(T);
+  }catch(er){ try{ console.warn("caminata 286 cierra", er); }catch(_e){} }
+}
+/* NO se aplicó (o solo quedó una nota): sigue pendiente para la Mac, con su motivo */
+function camOrdenSigue286(t, id, campos){
+  try{ if(!t || !id) return; var T=tareaId240(t.id)||t, e=camOrdEnc286(T, id); if(!e || e.estado!=="pendiente") return;
+    for(var k in (campos||{})) if(campos[k]!=null && campos[k]!=="") e[k]=campos[k];
+    e.motivos286=(Array.isArray(e.motivos286)?e.motivos286:[]).concat([String((campos||{}).motivo||"")]).filter(Boolean).slice(-6);
+    camGuardaEnc286(T);
+  }catch(er){ try{ console.warn("caminata 286 sigue", er); }catch(_e){} }
 }
 /* la respuesta dictada va al hilo como mensaje de Salvador (nota para Claude, la procesa la Mac) */
 function camGuarda274(t, v){
@@ -19099,12 +19154,14 @@ function camPrompt275(t, v){
 function camEntiende275(t, v){
   if(CAM.aclara && CAM.aclara.id===t.id) v=CAM.aclara.v+". "+v;   /* contesta la aclaración: va junto con lo de antes */
   CAM.aclara=null;
-  var tok=++CAM.tok, t0=Date.now(), listo=false;
+  var tok=++CAM.tok, t0=Date.now(), listo=false, ord=camOrdId286(t, null);   /* build 286 */
   try{ speechSynthesis.cancel(); }catch(e){}
   CAM.fase="pensando"; CAM.oyeTx=v; camPinta274(); camPiensa275(true);
   var fin=function(j, err){ if(listo) return; listo=true; clearTimeout(to); camPiensa275(false); camLat275("decide", Date.now()-t0, !!j);
     var vivo=(tok===CAM.tok && CAM.on);
+    if(j && ord) j._ord286=ord;
     if(!j){   /* la IA no contestó: no se pierde, queda como nota para Claude */
+      camOrdenSigue286(t, ord, {motivo:"ia_sin_respuesta"});   /* build 286: la orden sigue viva para la Mac */
       var u=camFoto275([t]); try{ camGuarda274(t, v); }catch(e){ console.warn("caminata guarda", e); } CAM.ult={foto:u, i:CAM.L.indexOf(t.id), desc:"anotar para Claude lo que dijiste"}; try{ ultRegistra278(CAM.ult, CAM.ult.desc); }catch(e){} CAM.hechas275=(CAM.hechas275||0)+1; CAM.res276=CAM.res276||{}; CAM.res276[t.id]=1;
       try{ console.warn("caminata 275: IA sin respuesta", err); }catch(e){}
       if(!vivo) return; CAM.fase="";
@@ -19118,8 +19175,8 @@ function camEntiende275(t, v){
 var CAM_ACC=/^(aprobar|rechazar|detalle|despues|vincular|eliminar|dato|instruccion|aclarar|deshacer)$/;   /* build 277: + deshacer */
 function camResuelve275(t, j, v, vivo, confirmado){
   var a=_camNv(j.accion).replace(/\s+/g,""); if(!CAM_ACC.test(a)) a="instruccion";
-  var dh=String(j.respuesta_hablada||"").replace(/\s+/g," ").trim();
-  if(a==="deshacer"){ CAM.pideConf277=false; if(vivo){ CAM.fase=""; camHaz274("deshaz"); } return; }   /* build 277: «no, esa no era» lo entiende la IA */
+  var dh=String(j.respuesta_hablada||"").replace(/\s+/g," ").trim(), ord=camOrdId286(t, j);   /* build 286 */
+  if(a==="deshacer"){ camOrdenCierra286(t, ord, "pidió deshacer lo anterior", "hecho"); CAM.pideConf277=false; if(vivo){ CAM.fase=""; camHaz274("deshaz"); } return; }   /* build 277: «no, esa no era» lo entiende la IA */
   var fv=null; try{ fv=camFiltraVinc278(t, a, j, v); }catch(e){ console.warn("caminata 278", e); }   /* build 278: su corrección y su «no tiene que ver» mandan */
   if(fv){
     if(fv.a==="no_vincular") return camNoVincula278(t, fv, v, vivo);
@@ -19129,15 +19186,22 @@ function camResuelve275(t, j, v, vivo, confirmado){
   }
   if(!confirmado && a!=="aclarar" && a!=="detalle" && a!=="despues" && (CAM.pideConf277 || j.pide_confirmar===true)){   /* build 277: repetir y esperar su sí */
     var dc=(a==="vincular")?camDestino275(t, j.destino):null;
-    if(a!=="vincular" || dc){ CAM.pideConf277=false; if(!vivo) return; CAM.fase=""; return camConfPide277({k:"tarea", id:CAM.L[CAM.i], t:t, j:j, v:v, a:a, desc:camDescribe277(t, a, j, dc)}); }
+    if(a!=="vincular" || dc){ CAM.pideConf277=false; var _dsc=camDescribe277(t, a, j, dc); camOrdenSigue286(t, ord, {motivo:"esperando_confirmacion", entendi:_dsc, clasif:a});   /* build 286 */
+      if(!vivo) return; CAM.fase=""; return camConfPide277({k:"tarea", id:CAM.L[CAM.i], t:t, j:j, v:v, a:a, desc:_dsc}); }
   }
   var _d7=""; try{ _d7=camDescribe277(t, a, j, a==="vincular"?camDestino275(t, j.destino):null); }catch(e){}
-  if(a==="aclarar"){ if(!vivo) return; CAM.fase=""; CAM.aclara={id:t.id, v:v};
+  if(a==="aclarar"){ camOrdenSigue286(t, ord, {motivo:"aclarar", pregunta_ia:dh, preguntar_despues:true});   /* build 286: «aclarar» nunca descarta la orden */
+    if(!vivo) return; CAM.fase=""; CAM.aclara={id:t.id, v:v};
     return camDi274([{v:"A", t:camCorta(dh && /\?/.test(dh)?dh:"¿Me lo dices de otra forma?", 140)}], function(){ camEscucha274("resp"); }); }
+  if(a==="detalle" || a==="despues"){ if(camConContenido276(v)) camOrdenSigue286(t, ord, {motivo:a, clasif:a}); else camOrdenCierra286(t, ord, a==="detalle"?"pidió más detalle":"la dejó para después"); }   /* build 286 */
   if(a==="detalle"){ if(vivo){ CAM.fase=""; camHaz274("detalle"); } return; }
   if(a==="despues"){ camNota276(t, v, "la dejó para después; dijo");   /* hotfix 276 */
     if(vivo){ CAM.fase=""; camHaz274("despues"); } return; }
   var r=camEjecuta275(t, a, j, v);
+  try{ if(CAM.ult && ord && !r.falta) CAM.ult.ord286={id:ord, tid:t.id}; }catch(e){}
+  if(r.falta) camOrdenSigue286(t, ord, {motivo:"aclarar", pregunta_ia:r.falta, preguntar_despues:true});   /* build 286 */
+  else if(r.soloNota) camOrdenSigue286(t, ord, {motivo:"instruccion", clasif:a, texto_ia:String(j.texto_para_tarea||"").slice(0,1500), entendi:_d7});   /* trabajo: lo hace la Mac */
+  else camOrdenCierra286(t, ord, _d7||a);
   if(!r.falta){ CAM.pideConf277=false; if(CAM.ult){ CAM.ult.desc=_d7; try{ ultRegistra278(CAM.ult, _d7); }catch(e){} } }   /* build 277: para «¿qué hiciste?» · 278: queda el ↩ en la tarea */
   if(!vivo) return; CAM.fase="";
   if(r.falta){ CAM.aclara={id:t.id, v:v}; return camDi274([{v:"A", t:r.falta}], function(){ camEscucha274("resp"); }); }
@@ -19167,28 +19231,29 @@ function camDestino275(t, d){
 function camEjecuta275(t, a, j, v){
   var k=CAM.g[t.id]||"dec", tx=String(j.texto_para_tarea||"").replace(/\s+/g," ").trim()||v, dest=null, nue=(k==="nue"||esPropuesta256(t)), d=null; try{ d=decision273(t); }catch(e){}
   if(a==="vincular"){ dest=camDestino275(t, j.destino); if(!dest) return {falta:"¿Con cuál tarea la junto?"}; }
-  var F=camFoto275([t, dest]), dicho="Listo.", vw={a:abierta, v:vista};
+  var F=camFoto275([t, dest]), dicho="Listo.", vw={a:abierta, v:vista}, soloNota=false;   /* build 286: soloNota = solo quedó un mensaje; la orden sigue para la Mac */
   try{
-    if(a==="aprobar"){ if(nue){ okProp256(t); camNota276(t, v); dicho=camVar275("ok", ["Listo, va.","Va, quedó creada.","Hecho."]); } else if(d){ contestaDecision273(t, tx); dicho=camVar275("ok", ["Listo.","Va, hecho.","Perfecto, quedó."]); } else { camGuarda274(t, tx); dicho=camVar275("ok", ["Listo.","Va, hecho."]); } }
+    if(a==="aprobar"){ if(nue){ okProp256(t); camNota276(t, v); dicho=camVar275("ok", ["Listo, va.","Va, quedó creada.","Hecho."]); } else if(d){ contestaDecision273(t, tx); dicho=camVar275("ok", ["Listo.","Va, hecho.","Perfecto, quedó."]); } else { camGuarda274(t, tx); soloNota=true; dicho=camVar275("ok", ["Listo.","Va, hecho."]); } }
     else if(a==="rechazar" && !nue && vincPend278(t)){ rechazaVinc278(t, vincPend278(t), "Salvador, caminata"); camGuarda274(t, tx); dicho=camVar275("no", ["Va, no la junto.","Entendido, se queda aparte."]); }   /* build 278 */
-    else if(a==="rechazar"){ if(nue){ descartaProp256(t); dicho=camVar275("no", ["Va, la quité.","Listo, fuera."]); } else if(d){ contestaDecision273(t, tx); dicho=camVar275("no", ["Entendido, no va.","Va, no se hace."]); } else { camGuarda274(t, tx); dicho="Entendido."; } }
+    else if(a==="rechazar"){ if(nue){ descartaProp256(t); dicho=camVar275("no", ["Va, la quité.","Listo, fuera."]); } else if(d){ contestaDecision273(t, tx); dicho=camVar275("no", ["Entendido, no va.","Va, no se hace."]); } else { camGuarda274(t, tx); soloNota=true; dicho="Entendido."; } }
     else if(a==="vincular"){ enlazaTareas(t.id, dest.id, "caminata"); camNota276(dest, v, "al juntar «"+String(t.nombre||"")+"»; dijo"); dicho="Listo, la junté con "+camCorta(limpiaHabla(dest.nombre), 50).replace(/[.\s]+$/,"")+"."; }
     else if(a==="eliminar"){ if(nue) descartaProp256(t); else { t.estado="cerrada"; t.cierre={tipo:"cancelado", motivo:"caminata", f:hoy()}; msg(t,"bi","Eliminada en la caminata: "+tx); guarda(t); try{ sincronizaAvisos(t); }catch(e){} }
       dicho=camVar275("del", ["Listo, eliminada.","Hecho, la quité."]); }
     else if(a==="dato"){ t.tipo_item="dato"; t.es_dato=true; t.tipo_elegido=true; t.autorizada=true; t.autorizada_ts=Date.now(); t.por_autorizar=false; t.falta_fecha=false; guarda(t); camNota276(t, v);
       try{ hist240("Caminata: como dato “"+String(t.nombre||"")+"”", t, null); }catch(e){} dicho=camVar275("dato", ["Va, queda como dato.","Listo, es dato."]); }
-    else { camGuarda274(t, tx); dicho=camVar275("ins", ["Anotado.","Listo, se lo paso a Claude.","Va, hecho."]); }
+    else { camGuarda274(t, tx); soloNota=true; dicho=camVar275("ins", ["Anotado.","Listo, se lo paso a Claude.","Va, hecho."]); }
   }catch(e){ console.warn("caminata 275 ejecuta", e); }
   abierta=vw.a; vista=vw.v;   /* vincular abre la tarea destino: la caminata se queda donde estaba */
   CAM.ult={foto:F, i:CAM.L.indexOf(t.id), a:a}; CAM.hechas275=(CAM.hechas275||0)+1;
   CAM.res276=CAM.res276||{}; CAM.res276[t.id]=1;   /* build 276 */
-  return {dicho:dicho};
+  return {dicho:dicho, soloNota:soloNota};
 }
 function camSigue275(id){ var k6=(CAM.g||{})[id]; if(k6==="msg") return camMsgVivo276(id); var t=tareaId240(id); if(!t) return false;
   if(k6==="fal"){ try{ return _camVivo(t) && camPreguntas276(t).length>0; }catch(e){ return false; } }   /* build 276 */ try{ return (CAM.g||{})[id]==="nue"?esPropuesta256(t):_camVivo(t); }catch(e){ return false; } }
 function camDeshaz275(){
   var u=CAM.ult; CAM.ult=null; if(!u) return camSiguiente274(-1);
   try{ deshazUlt278(u); }catch(e){ console.warn("caminata 275 deshaz", e); }   /* build 278: la misma función que el ↩ de la tarea (incluye la tarea o dato que nació de un mensaje) */
+  try{ if(u.ord286){ var T6=tareaId240(u.ord286.tid), e6=camOrdEnc286(T6, u.ord286.id); if(e6){ e6.estado="deshecho"; e6.hecho_ts=Date.now(); e6.resultado="Salvador lo deshizo en la caminata"; camGuardaEnc286(T6); } } }catch(e){}   /* build 286 */
   CAM.qz=null; try{ if(u.i>=0) delete CAM.res276[CAM.L[u.i]]; }catch(e){}
   CAM.hechas275=Math.max(0, (CAM.hechas275||1)-1);
   if(u.i>=0) CAM.i=u.i;
@@ -19439,6 +19504,7 @@ function camQuizFin276(abandona, ack){
    No se espera al cerebro: la caminata sigue; lo que él no alcance queda en la ficha Falta. */
 function camAplicaQuiz276(t, A, cb){
   if(!t) return; var T=tareaId240(t.id)||t, textos=[], quita=[], H=T.hecho238;
+  try{ (T.encargos||[]).forEach(function(e){ if(e && e.caminata && e.k==="cuestionario" && e.estado==="pendiente"){ e.estado="hecho"; e.hecho_ts=Date.now(); e.resultado="respuesta del cuestionario aplicada a la tarea"; e.por286="app"; } }); }catch(e){}   /* build 286 */
   A.forEach(function(o){ var p=o.q, tx=String(o.a||"").replace(/\s+/g," ").trim(); if(!tx) return;
     if(p.k==="persona"){ var r=null; try{ r=resuelvePersona(T, tx); }catch(e){} var per=(r && r.estado==="uno")?{id:r.persona.id, nombre:r.persona.nombre}:{id:"ext:"+tx, nombre:tx}; try{ resuelveDudaPersona(T, p.id, per); }catch(e){} return; }
     try{ T.resp267=(T.resp267||[]).concat([normQ267(p.q)]).slice(-60); }catch(e){}
@@ -19534,22 +19600,24 @@ function camMsgPrompt276(gr, t, C, v){
 function camMsgEntiende276(v){
   var gr=camMsgGr276(), t=camTarea274(), key=CAM.L[CAM.i]; if(!gr || !t) return camSiguiente274(1);
   if(CAM.aclara && CAM.aclara.id===key) v=CAM.aclara.v+". "+v; CAM.aclara=null;
-  var C=CAM.mc||camMsgCands276(gr), loc=camMsgLocal276(v, C);
-  if(loc) return camMsgEjecuta276(gr, t, loc, v, true);
+  var C=CAM.mc||camMsgCands276(gr), loc=camMsgLocal276(v, C), ord=camOrdId286(t, null);   /* build 286 */
+  if(loc){ if(ord) loc._ord286=ord; return camMsgEjecuta276(gr, t, loc, v, true); }
   var tok=++CAM.tok, t0=Date.now(), listo=false;
   try{ speechSynthesis.cancel(); }catch(e){}
   CAM.fase="pensando"; camPinta274(); camPiensa275(true);
   var fin=function(j){ if(listo) return; listo=true; clearTimeout(to); camPiensa275(false); camLat275("mensaje", Date.now()-t0, !!j);
     if(tok!==CAM.tok || !CAM.on) return; CAM.fase="";
-    if(!j) return camDi274([{v:"A", t:"No me contestó la IA. Lo dejo pendiente."}], function(){ camSiguiente274(1); });
-    camMsgEjecuta276(gr, t, j, v, true); };
+    if(!j){ camOrdenSigue286(t, ord, {motivo:"ia_sin_respuesta"}); return camDi274([{v:"A", t:"No me contestó la IA. Lo dejo pendiente."}], function(){ camSiguiente274(1); }); }
+    if(ord) j._ord286=ord; camMsgEjecuta276(gr, t, j, v, true); };
   var to=setTimeout(function(){ fin(null); }, CAM_IA_MS);
   try{ preguntaAClaude([{role:"user", content:camMsgPrompt276(gr, t, C, v)}], "rapido", function(txt, err){ if(err) return fin(null); var j=_camJSON275(txt); fin(j && j.accion?j:null); }); }
   catch(e){ fin(null); }
 }
 function camMsgEjecuta276(gr, t, j, v, vivo, confirmado){
-  var a=_camNv(j.accion).replace(/\s+/g,"_"), key=CAM.L[CAM.i], dh=String(j.respuesta_hablada||"").replace(/\s+/g," ").trim(), C=CAM.mc||[];
-  if(a==="deshacer"){ CAM.pideConf277=false; return camHaz274("deshaz"); }   /* build 277 */
+  var a=_camNv(j.accion).replace(/\s+/g,"_"), key=CAM.L[CAM.i], dh=String(j.respuesta_hablada||"").replace(/\s+/g," ").trim(), C=CAM.mc||[], ord=camOrdId286(t, j);   /* build 286 */
+  if(a==="deshacer"){ camOrdenCierra286(t, ord, "pidió deshacer lo anterior"); CAM.pideConf277=false; return camHaz274("deshaz"); }   /* build 277 */
+  if(a==="aclarar") camOrdenSigue286(t, ord, {motivo:"aclarar", pregunta_ia:dh, preguntar_despues:true});
+  if(a==="despues" || a==="detalle"){ if(camConContenido276(v)) camOrdenSigue286(t, ord, {motivo:a}); else camOrdenCierra286(t, ord, "mensaje: "+a); }
   if(a==="aclarar"){ CAM.aclara={id:key, v:v}; return camDi274([{v:"A", t:camCorta(dh && /\?/.test(dh)?dh:"¿A cuál de las dos?", 140)}], function(){ CAM.limpia=false; camEscucha274("resp"); }); }
   if(a==="despues") return camHaz274("despues");
   if(a==="detalle") return camHaz274("detalle");
@@ -19562,7 +19630,7 @@ function camMsgEjecuta276(gr, t, j, v, vivo, confirmado){
     else if(a==="a_tarea" && dest && niega278(v, dest)){ CAM.aclara={id:key, v:v}; return camDi274([{v:"A", t:"Dijiste que no es "+camNomT276(dest)+". ¿A cuál lo mando?"}], function(){ CAM.limpia=false; camEscucha274("resp"); }); } }catch(e){ console.warn("caminata 278 msg", e); }
   if(!/^(a_tarea|nueva|dato|no_guardar)$/.test(a)){ CAM.aclara={id:key, v:v}; return camDi274([{v:"A", t:"¿A qué tarea lo mando?"}], function(){ CAM.limpia=false; camEscucha274("resp"); }); }
   var _d7=camDescribeMsg277(gr, a, dest, j);   /* build 277 */
-  if(!confirmado && (CAM.pideConf277 || j.pide_confirmar===true)){ CAM.pideConf277=false; var jj={}; for(var _k in j) jj[_k]=j[_k]; jj.accion=a; if(dest) jj.destino=dest.id;
+  if(!confirmado && (CAM.pideConf277 || j.pide_confirmar===true)){ CAM.pideConf277=false; camOrdenSigue286(t, ord, {motivo:"esperando_confirmacion", entendi:_d7}); var jj={}; for(var _k in j) jj[_k]=j[_k]; jj.accion=a; if(dest) jj.destino=dest.id;
     return camConfPide277({k:"msg", id:key, gr:gr, t:t, j:jj, v:v, a:a, desc:_d7}); }
   CAM.pideConf277=false;
   var F=camFoto275([t, dest]), nueva=null, dicho="Listo.", vw={a:abierta, v:vista};
@@ -19574,6 +19642,7 @@ function camMsgEjecuta276(gr, t, j, v, vivo, confirmado){
   }catch(e){ console.warn("caminata 276 mensaje", e); }
   abierta=vw.a; vista=vw.v;
   CAM.ult={foto:F, i:CAM.i, a:"msg_"+a, nueva:nueva?nueva.id:"", desc:_d7}; try{ ultRegistra278(CAM.ult, _d7); }catch(e){} CAM.hechas275=(CAM.hechas275||0)+1;
+  if(ord){ CAM.ult.ord286={id:ord, tid:t.id}; camOrdenCierra286(t, ord, _d7||a); }   /* build 286 */
   CAM.res276=CAM.res276||{}; CAM.res276[key]=1;
   try{ render(); }catch(e){}
   var w=dh.split(" ").filter(Boolean).length; if(dh && w<=8 && !/\?/.test(dh) && !_camCodigo(dh)) dicho=camPunto(dh);
@@ -19671,7 +19740,10 @@ function camConfResp277(v){
   if(CAM_CONF_NO.test(n) || !_camNv277(v2) || CAM_CONF_NO.test(_camNv277(v2))){   /* no: no se hace nada */
     window.__conf277=(window.__conf277||[]).concat([{id:c.id, a:c.a, ok:false, ts:Date.now()}]).slice(-20);
     CAM.confSig277=true;   /* la orden que sigue también se confirma */
-    return camDi274([{v:"A", t:camVar275("confno", ["Va, no hice nada. Dímelo otra vez.","Sale, no lo hago. ¿Cómo sería?"])}], function(){ CAM.limpia=true; camEscucha274("resp"); });
+    /* build 286: el «No» es a CÓMO lo entendió, no a la orden: queda viva para la Mac y se le pregunta después */
+    var _o6=camOrdId286(c.t, c.j); camOrdenSigue286(c.t, _o6, {motivo:"dijo_no_a_confirmacion", entendi:c.desc, preguntar_despues:true});
+    if(CAM.ord286 && CAM.ord286.id===_o6) CAM.ord286.no=true;
+    return camDi274([{v:"A", t:camVar275("confno", ["Va, así no lo hago. Queda anotado para Claude; dímelo de otra forma o seguimos.","Sale, así no. Lo dejo anotado y te pregunto después. ¿Cómo sería?"])}], function(){ CAM.limpia=true; camEscucha274("resp"); });
   }
   /* otra cosa: es la corrección; se vuelve a entender y se vuelve a confirmar */
   CAM.pideConf277=true;

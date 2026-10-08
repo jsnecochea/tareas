@@ -148,7 +148,7 @@ eq("sw.js con versión >= 277", +((fs.readFileSync(path.join(__dirname, "..", "s
     eq("confírmame: repite lo que dijo, cómo lo entendió y pregunta", B.conf,
       ["Me dijiste: la de huella.", "Entendí: contestar la decisión de Reloj checador: Va con el ZKTeco de huella.", "¿Lo hago? Dime sí o no."]);
     eq("…y NO ejecuta todavía", B.sinEjecutar, true);
-    eq("«no»: no hace nada y pide la orden otra vez", [["Va, no hice nada. Dímelo otra vez.", "Sale, no lo hago. ¿Cómo sería?"].indexOf(B.no[0]) >= 0, B.sigueSin], [true, true]);
+    eq("«no»: no hace nada y pide la orden otra vez", [["Va, así no lo hago. Queda anotado para Claude; dímelo de otra forma o seguimos.", "Sale, así no. Lo dejo anotado y te pregunto después. ¿Cómo sería?"].indexOf(B.no[0]) >= 0, B.sigueSin], [true, true]);
     eq("la orden que sigue al «no» también se confirma", B.conf2, ["Me dijiste: la de tarjeta.", "Entendí: contestar la decisión de Reloj checador: Va con el Steren de tarjeta.", "¿Lo hago?"]);
     eq("«sí»: ahora sí se ejecuta", B.hecho, "Va con el Steren de tarjeta.");
 
