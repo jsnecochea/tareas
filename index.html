@@ -1759,7 +1759,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 292 · el token ya no va escrito en sw.js (lo pone el publicador)";
+var VERSION_APP = "build 293 · tareas en MySQL (push.php) para prueba_claude; el resto sigue en Firestore";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -2958,8 +2958,7 @@ function verificaAcuerdo(n, t){
   setTimeout(function(){
     if(n.cierre) return;   /* se deshizo */
     try{
-      db.collection(COL).doc(n.id).get().then(function(d){
-        var x=(d && d.exists) ? d.data() : null;
+      datosTareas.leer(n.id).then(function(x){
         if(!x) return falla("no aparece en la base");
         if(!x.acuerdo || x.acuerdo.dicho!==dicho || x.nombre!==nom) return falla("lo guardado no coincide");
         n.acuerdo.leido=Date.now(); guarda(n);
@@ -4433,6 +4432,164 @@ function pideWhatsApp(cuerpo){
       if(!r.ok || (j&&j.error)) throw new Error((j&&j.error)||("HTTP "+r.status)); return j; }); });
 }
 
+/* @@DATOS-TAREAS-INICIO
+   CAPA DE DATOS DE TAREAS. Toda lectura y escritura de bitacora_tareas pasa por aquí, con dos motores:
+   "firestore" (el de siempre) y "mysql" (push.php: fs_lista, fs_doc, fs_set, msg_agregar, hay_nuevo).
+   EL MOTOR SE ESCOGE POR USUARIO y en este orden: localStorage "doit_motor_tareas" (prueba en un teléfono),
+   el campo motor de su ficha (bitacora_personas/<usuario>.motor) y, si no hay, MOTOR_MYSQL_USUARIOS.
+   Mientras dure la transición, quien está en MySQL ESCRIBE EN LOS DOS (MySQL y Firestore) y LEE de MySQL;
+   así nada se pierde si hay que regresarlo a Firestore. En MySQL nada se borra: la tarea que se deshace
+   queda estado "descartada" (la app ya no la pinta).
+   SIN PÉRDIDA: lo que no alcanzó a subir a MySQL queda en una cola local (localStorage "doit_cola_mysql",
+   la última versión de cada tarea) y se reintenta solo, con espera creciente y al volver la red. */
+var MOTOR_MYSQL_USUARIOS={prueba_claude:true};
+var MYSQL_CADA_MS=20000;                       /* cada cuánto se vuelve a leer la lista en MySQL */
+var MYSQL_REINTENTOS_MS=[2000,5000,15000,60000];
+var datosTareas=(function(){
+  var COLA_KEY="doit_cola_mysql", MOTOR_KEY="doit_motor_tareas";
+  var cola=null, reintento=null, intento=0, sub=null, ultimoJSON="";
+  function ls(){ try{ return window.localStorage; }catch(e){ return null; } }
+  function motor(){
+    var m=null, s=ls();
+    try{ m=s && s.getItem(MOTOR_KEY); }catch(e){}
+    if(m!=="mysql" && m!=="firestore"){ try{ m=(PERSONAS[yo]||{}).motor; }catch(e){ m=null; } }
+    if(m!=="mysql" && m!=="firestore") m=MOTOR_MYSQL_USUARIOS[yo] ? "mysql" : "firestore";
+    return m;
+  }
+  function hayToken(){ return typeof APP_TOKEN!=="undefined" && String(APP_TOKEN).indexOf("__")!==0; }
+  /* una llamada a push.php: GET con parámetros o POST con cuerpo; error si HTTP falla o trae error */
+  function llama(accion, params, cuerpo){
+    if(!hayToken()) return Promise.reject(new Error("sin token"));
+    var q="?action="+encodeURIComponent(accion);
+    Object.keys(params||{}).forEach(function(k){ if(params[k]!=null && params[k]!=="") q+="&"+k+"="+encodeURIComponent(params[k]); });
+    var op={method:cuerpo?"POST":"GET", headers:{"x-app-token":APP_TOKEN,"x-usuario":yo||"anonimo"}};
+    if(cuerpo){ op.headers["content-type"]="application/json"; op.body=JSON.stringify(cuerpo); }
+    return fetch(PUSH+q, op).then(function(r){
+      return r.json().catch(function(){ return {}; }).then(function(j){
+        if(r.status===404 && accion==="fs_doc") return null;
+        if(!r.ok || (j && j.error && !Array.isArray(j))) throw new Error((j&&j.error)||("HTTP "+r.status));
+        return j;
+      });
+    });
+  }
+  /* ---- cola local de lo que falta subir a MySQL ---- */
+  function leeCola(){
+    if(cola) return cola;
+    cola={};
+    try{ var s=ls(), v=s && s.getItem(COLA_KEY); if(v) cola=JSON.parse(v)||{}; }catch(e){ cola={}; }
+    return cola;
+  }
+  function grabaCola(){ try{ var s=ls(); if(s) s.setItem(COLA_KEY, JSON.stringify(leeCola())); }catch(e){} }
+  function encola(id, campos){
+    var c=leeCola(), prev=c[id]||{};
+    c[id]=Object.assign({}, prev, JSON.parse(JSON.stringify(campos)));
+    grabaCola();
+  }
+  function vacia(){
+    var c=leeCola(), ids=Object.keys(c);
+    if(!ids.length){ intento=0; return Promise.resolve(true); }
+    return ids.reduce(function(p, id){
+      return p.then(function(){
+        var mandado=c[id]; if(!mandado) return;
+        return llama("fs_set", {col:COL}, {col:COL, id:id, data:mandado, merge:true}).then(function(){
+          if(c[id]===mandado){ delete c[id]; grabaCola(); }   /* si cambió mientras subía, se queda la versión nueva */
+        });
+      });
+    }, Promise.resolve()).then(function(){ intento=0; return true; }, function(e){
+      programaReintento(); throw e;
+    });
+  }
+  function programaReintento(){
+    if(reintento) return;
+    var ms=MYSQL_REINTENTOS_MS[Math.min(intento, MYSQL_REINTENTOS_MS.length-1)]; intento++;
+    reintento=setTimeout(function(){ reintento=null; vacia().catch(function(){}); }, ms);
+  }
+  function aMySQL(id, campos){
+    encola(id, campos);
+    return vacia().catch(function(e){
+      try{ console.warn("MySQL: queda en cola para reintento", e); }catch(_e){}
+      return false;
+    });
+  }
+  /* ---- lo que usa la app ---- */
+  function listar(){
+    return llama("fs_lista", {col:COL, limit:300}).then(function(j){
+      var arr=Array.isArray(j) ? j : ((j&&(j.docs||j.documentos))||[]);
+      var c=leeCola();   /* lo que aún no sube se ve como el usuario lo dejó */
+      var porId={}; arr.forEach(function(o){ if(o && o.id) porId[o.id]=o; });
+      Object.keys(c).forEach(function(id){ porId[id]=Object.assign({id:id}, porId[id]||{}, c[id]); });
+      return Object.keys(porId).map(function(id){ return porId[id]; });
+    });
+  }
+  function leer(id){
+    if(motor()==="mysql") return llama("fs_doc", {col:COL, id:id}).then(function(j){
+      if(!j) return null; var o=j.doc||j; return Object.assign({}, o, leeCola()[id]||{});
+    });
+    return db.collection(COL).doc(id).get().then(function(d){ return (d && d.exists) ? d.data() : null; });
+  }
+  /* guarda la tarea completa. Devuelve la promesa de Firestore (o la de MySQL si no hay Firestore). */
+  function guardar(t){
+    var pf=null;
+    if(db) pf=db.collection(COL).doc(t.id).set(t);
+    if(motor()!=="mysql") return pf;
+    var d=Object.assign({}, t); delete d.id;
+    var pm=aMySQL(t.id, d);
+    return pf || pm;
+  }
+  /* guarda solo unos campos (merge), en el motor elegido y en Firestore */
+  function guardarCampos(id, campos){
+    var pf=null;
+    if(db) pf=db.collection(COL).doc(id).set(campos, {merge:true});
+    if(motor()!=="mysql") return pf;
+    var pm=aMySQL(id, campos);
+    return pf || pm;
+  }
+  /* en MySQL no se borra: queda descartada. En Firestore, como siempre. */
+  function borrar(id){
+    if(db){ try{ db.collection(COL).doc(id).delete().catch(function(){}); }catch(e){} }
+    if(motor()==="mysql") aMySQL(id, {estado:"descartada", descartada_ts:Date.now()});
+  }
+  function agregarMsg(tarea_id, texto, privado){
+    return llama("msg_agregar", null, {tarea_id:tarea_id, texto:String(texto==null?"":texto), privado:privado?1:0});
+  }
+  function hayNuevo(desde_ts){ return llama("hay_nuevo", {usuario:yo, desde_ts:desde_ts}); }
+  /* la lista viva: en Firestore es el onSnapshot de siempre; en MySQL se vuelve a leer cada MYSQL_CADA_MS
+     y solo se avisa si cambió. El "snap" imita al de Firestore para que el resto de la app no cambie. */
+  function comoSnap(arr){
+    return { metadata:{fromCache:false}, forEach:function(g){ arr.forEach(function(o){
+      g({ id:o.id, data:function(){ var x=Object.assign({}, o); delete x.id; return x; } }); }); } };
+  }
+  function suscribir(alCambiar, alFallar){
+    para();
+    if(motor()!=="mysql"){ var u=db.collection(COL).onSnapshot(alCambiar, alFallar); sub={tipo:"firestore", fin:u}; return u; }
+    var vivo={tipo:"mysql", timer:null, fin:null}; sub=vivo; ultimoJSON="";
+    function vuelta(){
+      if(sub!==vivo) return;
+      listar().then(function(arr){
+        if(sub!==vivo) return;
+        var j=JSON.stringify(arr);
+        if(j!==ultimoJSON){ ultimoJSON=j; alCambiar(comoSnap(arr)); }
+        vivo.falla=false;
+      }, function(e){
+        if(sub!==vivo) return;
+        if(!vivo.falla){ vivo.falla=true; try{ toast("No se pudieron leer las tareas del servidor; reintento solo"); }catch(_t){} }
+        if(alFallar) alFallar(e);
+      })
+      .then(function(){ if(sub===vivo) vivo.timer=setTimeout(vuelta, MYSQL_CADA_MS); });
+    }
+    vuelta();
+    vacia().catch(function(){});
+    vivo.fin=function(){ if(vivo.timer) clearTimeout(vivo.timer); if(sub===vivo) sub=null; };
+    return vivo.fin;
+  }
+  function para(){ var s=sub; sub=null; if(!s) return; try{ if(s.tipo==="firestore"){ if(typeof s.fin==="function") s.fin(); } else s.fin(); }catch(e){} }
+  try{ window.addEventListener("online", function(){ vacia().catch(function(){}); }); }catch(e){}
+  return { motor:motor, listar:listar, leer:leer, guardar:guardar, guardarCampos:guardarCampos, borrar:borrar,
+           agregarMsg:agregarMsg, hayNuevo:hayNuevo, suscribir:suscribir, para:para, vacia:vacia,
+           pendientes:function(){ return Object.keys(leeCola()).length; } };
+})();
+/* @@DATOS-TAREAS-FIN */
+
 /* ============ DATOS ============ */
 function arranca(){
   try{
@@ -4466,6 +4623,7 @@ function arranca(){
         if(o.notif && typeof o.notif==="object") p.notif=o.notif;   /* build 200: notificaciones de cada quien */
         if(o.voces && typeof o.voces==="object") p.voces=o.voces;   /* el elenco de voces de cada quien (⋯ → Voces) */
         if(Array.isArray(o.apodos)) p.apodos=o.apodos;
+        if(o.motor==="mysql" || o.motor==="firestore") p.motor=o.motor;   /* motor de tareas de cada quien (capa datosTareas) */
         if(d.id===yo && Array.isArray(o.historial_acciones)) window.__histRemoto240=o.historial_acciones;
         if(o.nombre&&o.apellido) p.ini=iniciales(o.nombre,o.apellido);
       });
@@ -4477,7 +4635,7 @@ function arranca(){
       fichasLeidas=false;
       console.warn("No se pudieron leer las fichas de personas");
     });
-    db.collection(COL).onSnapshot(function(snap){
+    datosTareas.suscribir(function(snap){
       dbFail=false;   /* enganchó de verdad: no hay falla */
       tareas=[]; var _fus={}, _desc={}; snap.forEach(function(d){var o=d.data();o.id=d.id;
         /* build 155: una tarea fusionada (enlazada a otra) NO se pinta en ninguna vista;
@@ -4604,7 +4762,7 @@ function guarda(t){
       window.__sinRedAviso=_ahoraSR; toast("Sin red · queda guardado aqui y sube en cuanto haya conexion"); }
   }
   var _p;
-  try{ _p=db.collection(COL).doc(t.id).set(t); }
+  try{ _p=datosTareas.guardar(t); }
   catch(e){ try{console.error(e)}catch(_e){} toast("No se pudo guardar: "+String((e&&e.message)||e).slice(0,80)); return; }
   _p.catch(function(e){
     console.error(e);
@@ -15349,7 +15507,7 @@ function creaIncompleta(d, pregunta, tipo, foto){
 function borraTarea(id){
   var i=tareas.map(function(t){return t.id}).indexOf(id);
   if(i>=0) tareas.splice(i,1);
-  if(db){ try{ db.collection(COL).doc(id).delete().catch(function(){}); }catch(e){} }
+  datosTareas.borrar(id);
 }
 function deshaceReciente(id){
   borraTarea(id);
@@ -18966,7 +19124,7 @@ function camEnvia274(){
 /* solo el campo encargos (merge), como camCrudo276: no toca el nombre ni nada más; sin red queda en la cola de Firestore */
 function camGuardaEnc286(T){
   try{ if(!T || esEjemplo(T) || !db) return;
-    db.collection(COL).doc(T.id).set({encargos:limpiaUndef(T.encargos||[])}, {merge:true})
+    datosTareas.guardarCampos(T.id, {encargos:limpiaUndef(T.encargos||[])})
       .catch(function(e){ try{ console.error("caminata 286 orden", e); }catch(_e){} toast("No se pudo guardar la orden"); });
   }catch(e){ try{ console.warn("caminata 286 guarda", e); }catch(_e){} }
 }
@@ -19037,7 +19195,7 @@ function camCrudo276(t, v){
     T.caminata_dichos=(T.caminata_dichos||[]).concat([{ts:Date.now(), de:yo, t:String(v).slice(0,2000), k:camK276()||"", q:q}]).slice(-60);
     if(esEjemplo(T) || !db) return;
     /* solo este campo (merge): no toca nombre ni nada más; sin red queda en la cola de Firestore y sube sola */
-    db.collection(COL).doc(T.id).set({caminata_dichos:limpiaUndef(T.caminata_dichos)}, {merge:true})
+    datosTareas.guardarCampos(T.id, {caminata_dichos:limpiaUndef(T.caminata_dichos)})
       .catch(function(e){ try{ console.error("caminata crudo", e); }catch(_e){} toast("No se pudo guardar lo que dijiste"); });
   }catch(e){ try{ console.warn("caminata crudo", e); }catch(_e){} }
 }
