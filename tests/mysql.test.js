@@ -10,7 +10,7 @@ var i = html.indexOf("/* @@DATOS-TAREAS-INICIO"), j = html.indexOf("/* @@DATOS-T
 if (i < 0 || j < 0) { console.log("RESULTADO 0/1\nno encontre el bloque @@DATOS-TAREAS"); process.exit(1); }
 var codigo = html.slice(i, j);
 var ok = 0, n = 0, malas = [];
-function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
+function eq(nom, got, exp) { n++; var sin = function (k, v) { return k === "_tocado_por" ? undefined : v; }; var a = JSON.stringify(got, sin), b = JSON.stringify(exp, sin);   /* _tocado_por (quién cambió cada campo) se prueba en no-pisar */ if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
 
 /* ---- push.php simulado: tabla tareas en memoria ---- */
 function servidor() {

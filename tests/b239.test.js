@@ -24,7 +24,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
     /* build 285: las secciones del home amanecen plegadas; en esta prueba vieja Acomodo, Mensajes, Te pregunta Doit, Vencidas y Hoy arrancan abiertas como antes (lo que se toque se sigue recordando) */
     await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl285(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
     var r = await p.evaluate(function () {
-      yo = "salvador"; var o = {}, NOW = Date.now(), hm = function (ms) { var d = new Date(NOW - ms); return ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2); };
+      yo = "salvador"; var o = {}, NOW = (function () { var d = new Date(); return d.getHours() < 4 ? new Date(d.getFullYear(), d.getMonth(), d.getDate(), 3, 59).getTime() : d.getTime(); })(), hm = function (ms) { var d = new Date(NOW - ms); return ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2); };
       window.__ESCR = []; db = { collection: function (c) { return { doc: function (id) { return { set: function (v, op) { __ESCR.push([c, id]); return Promise.resolve(); }, get: function () { return Promise.resolve({ exists: false }); } }; } }; } };
       var DU = { alternativa_id: "tFIESTA", alternativa_nombre: "Fiesta Cumpleaños Papá" };
       function m(c, tx, hace, extra) { var x = { k: "bi", wa_in: 1, wa_c: c, t: c + ": " + tx, ts: NOW - hace, h: hm(hace), wa_id: "w" + hace }; for (var k in (extra || {})) x[k] = extra[k]; return x; }

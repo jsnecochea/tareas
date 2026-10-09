@@ -26,7 +26,7 @@ si("iconos: trazo 1.5 fijo", /var s=px\|\|18, w=1\.5, p=\{/.test(html));
     await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl285(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
     var r = await p.evaluate(function () {
       yo = "salvador"; if (!PERSONAS.salvador) PERSONAS.salvador = { nombre: "Salvador", jefe: true };
-      var NOW = Date.now(), o = {};
+      var NOW = (function () { var d = new Date(); return d.getHours() < 4 ? new Date(d.getFullYear(), d.getMonth(), d.getDate(), 3, 59).getTime() : d.getTime(); })(), o = {};   /* de madrugada los ejemplos de "hace 2 h" caerían en ayer: se anclan a las 3:59 de hoy */
       function LERDO() { return { id: "tIAMUVF22TRJF", nombre: "Mantenimiento Casa Lerdo/Eloísa", duenio: "salvador", revisa_ext: "Manuel Parra", indefinida: true, estado: "abierta", por_autorizar: false,
         contexto: "Filtración en recámara/estudio por el baño; azotea con ramas y posible panal; luego impermeabilizar.", compartir_con: ["María Eloísa (madre)", "Salvador N.S. (padre)", "Luis Mario"],
         checklist: { titulo: "Metas", items: [{ id: "a", tx: "Azotea: techo limpio, impermeabilizado y panal resuelto", fecha: "2026-10-09", estado: 0 }] },

@@ -1789,7 +1789,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 303 · Nadie pisa a nadie: la app manda solo lo que cambió, relee antes de escribir y junta mensajes y bitácoras con lo de la Mac";
+var VERSION_APP = "build 304 · Choques: si una persona y la Mac cambian el mismo dato, gana la persona y lo otro queda en el historial";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -4696,7 +4696,7 @@ var datosTareas=(function(){
   function cambiosDe(id, d, b0){
     var b=b0 || bases[id], c={}, cb={};
     if(!b) return { cambios:copia(d), base:{} };
-    Object.keys(d).forEach(function(k){ if(!igual(d[k], b[k])){ c[k]=copia(d[k]); if(esLista(k)) cb[k]=copia(b[k]); } });
+    Object.keys(d).forEach(function(k){ if(!igual(d[k], b[k])){ c[k]=copia(d[k]); cb[k]=copia(b[k]); } });
     return { cambios:c, base:cb };
   }
   /* ---- cola local de lo que falta subir a MySQL ---- */
@@ -4717,12 +4717,30 @@ var datosTareas=(function(){
   }
   function vistaCola(id){ var x=leeCola()[id]; return x ? entrada(x).cambios : null; }
   /* sube una entrada: relee la tarea, junta y escribe solo lo que cambió */
+  /* CHOQUE: el mismo dato lo cambiaron dos al mismo tiempo con valores distintos. Regla de Salvador (8-oct): lo que dice
+     una persona gana sobre lo que dice la Mac; entre dos personas gana el último, y lo del otro nunca se pierde: queda
+     en t.conflictos {campo, quedo, otro, otro_por, por, ts} y, si el otro era una persona, se avisa. _tocado_por guarda
+     quién cambió cada campo y cuándo (la Mac no lo pone: sin marca = la Mac). */
+  var SIN_CHOQUE={tocada:1, _tocado_por:1, conflictos:1, ultima:1, msg_imp:1, _fb_tocada:1, _fb_copia:1};
   function subeUna(id, ent){
     return llama("fs_doc", {col:COL, id:id}).then(function(j){
-      var S=j ? (j.doc||j) : {}; var data={};
+      var S=j ? (j.doc||j) : {}; var data={}, choques=[], ahora=Date.now(), tp=Object.assign({}, S._tocado_por||{});
       Object.keys(ent.cambios).forEach(function(k){
-        data[k]= esLista(k) ? junta3(ent.base[k], ent.cambios[k], S[k]) : ent.cambios[k]; });
+        if(esLista(k)){ data[k]=junta3(ent.base[k], ent.cambios[k], S[k]); return; }
+        data[k]=ent.cambios[k];
+        if(SIN_CHOQUE[k]) return;
+        tp[k]={por:yo||"app", ts:ahora};
+        if(j && (k in ent.base) && !igual(S[k], ent.base[k]) && !igual(S[k], ent.cambios[k])){
+          var otro=(S._tocado_por||{})[k]||{};
+          choques.push({campo:k, quedo:ent.cambios[k], otro:S[k], otro_por:otro.por||"mac", por:yo||"app", ts:ahora}); }
+      });
       if(!Object.keys(data).length) return S;
+      data._tocado_por=tp;
+      if(choques.length){
+        data.conflictos=(Array.isArray(S.conflictos)?S.conflictos:[]).concat(choques).slice(-50);
+        var personas=choques.filter(function(c){ return c.otro_por!=="mac" && c.otro_por!==(yo||"app"); });
+        if(personas.length){ try{ toast("Lo cambiaste al mismo tiempo que "+personas.map(function(c){ return c.otro_por; }).join(", ")+": quedó lo tuyo y lo suyo está en el historial"); }catch(e){} }
+      }
       return llama("fs_set", {col:COL}, {col:COL, id:id, data:data, merge:true}).then(function(){ return Object.assign({}, S, data); });
     });
   }

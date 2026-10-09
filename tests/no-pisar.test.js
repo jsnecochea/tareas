@@ -18,7 +18,7 @@ function arma() {
       if (S.caido) return Promise.reject(new TypeError("Failed to fetch"));
       if (a === "fs_lista") return r(200, Object.keys(S.tareas).map(function (k) { return Object.assign({ id: k }, JSON.parse(JSON.stringify(S.tareas[k]))); }));
       if (a === "fs_doc") { var d = S.tareas[u.searchParams.get("id")]; return d ? r(200, Object.assign({ id: u.searchParams.get("id") }, JSON.parse(JSON.stringify(d)))) : r(404, { error: "no" }); }
-      if (a === "fs_set") { S.sets.push(Object.keys(cu.data).sort()); S.tareas[cu.id] = Object.assign({}, S.tareas[cu.id] || {}, cu.data); return r(200, { ok: true }); }
+      if (a === "fs_set") { S.sets.push(Object.keys(cu.data).filter(function (k) { return k !== "_tocado_por" && k !== "conflictos"; }).sort()); S.tareas[cu.id] = Object.assign({}, S.tareas[cu.id] || {}, cu.data); return r(200, { ok: true }); }
       return r(200, { ok: true }); } };
   vm.createContext(c); vm.runInContext(html.slice(i, j), c); return { c: c, S: S, d: c.datosTareas };
 }
@@ -56,6 +56,13 @@ var m = function (ts, t) { return { ts: ts, k: "bi", t: t }; };
     A.S.caido = false; A.S.tareas.tX.msgs.push(m(6, "Mac mientras no había red")); await A.d.vacia();
     eq("al volver la red: junta lo de los dos", A.S.tareas.tX.msgs.map(function (x) { return x.t; }), ["de la Mac", "de la app", "otro de la Mac", "sin red", "Mac mientras no había red"]);
     eq("cola vacía", A.d.pendientes(), 0);
+    /* choque: el mismo dato cambiado por la Mac y por la app → gana la persona; lo de la Mac queda en conflictos */
+    L = await A.d.listar(); T = JSON.parse(JSON.stringify(L.filter(function (x) { return x.id === "tX"; })[0]));
+    A.S.tareas.tX.f_vigente = "2026-11-14"; T.f_vigente = "2026-11-13"; await A.d.guardar(T);
+    var Z = A.S.tareas.tX, cf = (Z.conflictos || []).slice(-1)[0] || {};
+    eq("choque con la Mac: gana la persona", Z.f_vigente, "2026-11-13");
+    eq("lo de la Mac queda en el historial de choques", [cf.campo, cf.otro, cf.otro_por, cf.quedo], ["f_vigente", "2026-11-14", "mac", "2026-11-13"]);
+    eq("se anota quién cambió el campo", Z._tocado_por.f_vigente.por, "salvador");
     /* guardado tardío: la app tiene la tarea (con su base), la Mac escribe, la lista se vuelve a leer, y DESPUÉS la app guarda
        el objeto viejo (como una respuesta del modelo que tarda 8 s): no deshace lo de la Mac */
     var snapObj = null; A.d.suscribir(function (sn) { sn.forEach(function (d) { if (d.id === "tX") { snapObj = d.data(); snapObj.id = d.id; } }); }, function () {});
