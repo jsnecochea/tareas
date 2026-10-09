@@ -775,6 +775,11 @@ var datosTareas=(function(){
      en t.conflictos {campo, quedo, otro, otro_por, por, ts} y, si el otro era una persona, se avisa. _tocado_por guarda
      quién cambió cada campo y cuándo (la Mac no lo pone: sin marca = la Mac). */
   var SIN_CHOQUE={tocada:1, _tocado_por:1, conflictos:1, ultima:1, msg_imp:1, _fb_tocada:1, _fb_copia:1};
+  /* "gana la persona" vale solo para lo que una persona cambia a mano. Lo que la app recalcula sola (hecho238, falta_*,
+     pendiente_info, resumen, sabemos…) no es una decisión: en un choque gana la versión del servidor (la Mac lo acaba de escribir). */
+  var DE_PERSONA={nombre:1, f_vigente:1, f_original:1, fecha_dictada:1, indefinida:1, estado:1, cierre:1, cierra:1, duenio:1, encargado:1, espera_a:1,
+    checklist:1, checklist_apartado:1, avisos:1, citas:1, evento:1, plan_seguimiento:1, contexto:1, contexto_detalle:1, autorizada:1, autorizada_ts:1,
+    tipo_item:1, tipo_elegido:1, es_dato:1, criticidad:1, ritmo:1, periodicidad:1, compartida_con:1, revisores:1, claves:1, metas:1, gasto:1};
   function subeUna(id, ent){
     return llama("fs_doc", {col:COL, id:id}).then(function(j){
       var S=j ? (j.doc||j) : {}; var data={}, choques=[], ahora=Date.now(), tp=Object.assign({}, S._tocado_por||{});
@@ -782,9 +787,11 @@ var datosTareas=(function(){
         if(esLista(k)){ data[k]=junta3(ent.base[k], ent.cambios[k], S[k]); return; }
         data[k]=ent.cambios[k];
         if(SIN_CHOQUE[k]) return;
-        tp[k]={por:yo||"app", ts:ahora};
-        if(j && (k in ent.base) && !igual(S[k], ent.base[k]) && !igual(S[k], ent.cambios[k])){
+        var real=(k in ent.base);   /* un cambio medido contra la base; una subida completa (conciliación, tarea nueva) no marca a nadie */
+        if(real && DE_PERSONA[k]) tp[k]={por:yo||"app", ts:ahora};
+        if(j && real && !igual(S[k], ent.base[k]) && !igual(S[k], ent.cambios[k])){
           var otro=(S._tocado_por||{})[k]||{};
+          if(!DE_PERSONA[k]){ data[k]=S[k]; choques.push({campo:k, quedo:S[k], otro:ent.cambios[k], otro_por:"app", por:"mac", ts:ahora}); return; }
           choques.push({campo:k, quedo:ent.cambios[k], otro:S[k], otro_por:otro.por||"mac", por:yo||"app", ts:ahora}); }
       });
       if(!Object.keys(data).length) return S;

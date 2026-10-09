@@ -15,7 +15,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 307 · Código ordenado: la app se edita en archivos chicos y 401 funciones ya sin número de build en el nombre";
+var VERSION_APP = "build 308 · Choques solo en lo que cambia una persona; «(revisión 7-oct)» ya no se lee como fecha";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 

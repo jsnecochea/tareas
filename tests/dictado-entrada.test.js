@@ -66,6 +66,8 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
       [].forEach.call(document.querySelectorAll(".leemask,.cnlbg,.cnlsheet,#busq"), function (e) { e.remove(); });
       return (tareas.filter(function (x) { return x.id === "tMOR"; })[0].dictados || []).map(function (d) { return d.estado; }); });
     eq("búsqueda: queda «consulta», no se avisa como perdida", C, ["consulta"]);
+    var P = await p.evaluate(function () { var T = MORIC(); tareas = [T]; return promptRevision(T, "Respuesta a «¿Cuál es el próximo paso que Claude debe hacer aquí? (revisión 7-oct)»: el 10 de noviembre recuérdales", []); });
+    eq("la etiqueta «(revisión 7-oct)» no llega al modelo (la tomaba como fecha de finiquito)", [/revisi[oó]n 7-oct/.test(P), /10 de noviembre/.test(P)], [false, true]);
     eq("sin errores de página", errs, []);
   } catch (e) { malas.push("EXCEPCIÓN " + e.stack); }
   await b.close();

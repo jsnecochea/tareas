@@ -63,6 +63,11 @@ var m = function (ts, t) { return { ts: ts, k: "bi", t: t }; };
     eq("choque con la Mac: gana la persona", Z.f_vigente, "2026-11-13");
     eq("lo de la Mac queda en el historial de choques", [cf.campo, cf.otro, cf.otro_por, cf.quedo], ["f_vigente", "2026-11-14", "mac", "2026-11-13"]);
     eq("se anota quién cambió el campo", Z._tocado_por.f_vigente.por, "salvador");
+    /* lo que la app recalcula sola (hecho238) no es decisión de una persona: en un choque gana lo que escribió la Mac */
+    L = await A.d.listar(); T = JSON.parse(JSON.stringify(L.filter(function (x) { return x.id === "tX"; })[0]));
+    A.S.tareas.tX.hecho238 = { falta: [{ q: "¿Cuál es la fecha?" }] }; T.hecho238 = { falta: [] }; await A.d.guardar(T);
+    eq("choque en un campo calculado: se queda lo de la Mac", A.S.tareas.tX.hecho238, { falta: [{ q: "¿Cuál es la fecha?" }] });
+    eq("y no se marca como de persona", !!(A.S.tareas.tX._tocado_por || {}).hecho238, false);
     /* guardado tardío: la app tiene la tarea (con su base), la Mac escribe, la lista se vuelve a leer, y DESPUÉS la app guarda
        el objeto viejo (como una respuesta del modelo que tarda 8 s): no deshace lo de la Mac */
     var snapObj = null; A.d.suscribir(function (sn) { sn.forEach(function (d) { if (d.id === "tX") { snapObj = d.data(); snapObj.id = d.id; } }); }, function () {});

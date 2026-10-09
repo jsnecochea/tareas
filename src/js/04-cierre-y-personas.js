@@ -1803,6 +1803,8 @@ function estadoParaClaude(t){
    dictado y a ESTA tarea, sin la lista de 30 tareas (5 solo si habla de vincular). Sin op: el cerebro de «Falta info» (21 días, 15 tareas).
    Los dos piden además pasos / hechos / que_toca / entendi en el formato del plan que usa la Mac (18z38). */
 function promptRevision(t, v, abiertas, op){
+  /* «(revisión 7-oct)» es la etiqueta de la pregunta de la Mac, no una fecha que dijo Salvador: el modelo la tomaba como finiquito */
+  v=String(v||"").replace(/\s*\(revisi[oó]n \d{1,2}-[a-zé]{3,4}\)/gi, "");
   op=op||{}; var rap=!!op.rapido, s283=_fsa(v);
   var gente=Object.keys(PERSONAS).map(function(k){ return PERSONAS[k].nombre; }).join(", ");
   var R283=[
