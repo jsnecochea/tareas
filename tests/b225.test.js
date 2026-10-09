@@ -108,7 +108,7 @@ si("ficha atrasada: fecha en ROJO", /<span class="v red">vie 2 oct|<span class="
 /* ---------- 5 Detalles en orden ---------- */
 var de = c.vDetalles25 ? "" : c.vDetalles(L), tit = []; de.replace(/<h4><i>\d+<\/i>([^<]*)<\/h4>/g, function (_, x) { tit.push(x); });
 eq("Detalles: Resumen, Lo que sigue, Metas, Contexto, Seguimiento, Origen (sin Lista ni Falta vacías)", tit,
-  ["Resumen vivo", "Lo que sigue · de quién se espera", "Metas", "Contexto", "Seguimiento y con quién se comparte", "Origen"]);
+  ["Resumen vivo", "Lo que sigue · de quién se espera", "Metas", "Contexto", "Seguimiento y con quién se comparte", "Contactos", "Origen"]);
 si("Origen plegado con 'Creada con'", /Creada con/.test(de) && /data-orig225/.test(de) && !/class="dquote"/.test(de));
 var tit2 = []; c.vDetalles(FA).replace(/<h4><i>\d+<\/i>([^<]*)<\/h4>/g, function (_, x) { tit2.push(x); });
 si("build 231: Detalles en orden fijo; lo que falta va en su ficha 'Falta' (no se repite)", tit2.indexOf("Falta por poner") < 0);

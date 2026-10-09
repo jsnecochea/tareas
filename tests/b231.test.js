@@ -2,7 +2,7 @@
 /* PRUEBAS build 231 (Salvador 17:00): UNA sola fila más compacta: fecha o Indefinida · Metas/Lista n/m · Agendado (si hay evento) · Filtro ⌄ ·
    Detalles (ⓘ). Sin ficha de personas (los integrantes viven en la hoja del filtro, que termina en "Invitar a nuevo miembro") ni ficha
    "Resumen" (vive en Importante y en Detalles). Detalles en orden fijo y numerado: 1 Resumen vivo (campo resumen: texto, acuerdos con
-   palomita, Falta) · 2 Lo que sigue · 3 Metas · 4 Contexto (con clip) · 5 Seguimiento · 6 Origen; con minimizar y cerrar.
+   palomita, Falta) · 2 Lo que sigue · 3 Metas · 4 Contexto (con clip) · 5 Seguimiento · 6 Contactos (agregar de la agenda, 9-oct) · 7 Origen; con minimizar y cerrar.
    App completa sin red, 390 px. Correr: node tests/b231.test.js */
 "use strict";
 var fs = require("fs"), path = require("path");
@@ -54,7 +54,7 @@ eq("versión 231 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
     eq("indefinida con metas: Indefinida · Metas 1/3 · filtro · ⓘ, cabe", r.lerdo, [["Indefinida", "Metas 1/3", "Manuel", "Resumen"], true, true, 0]);
     eq("hoja del filtro: Todo · Importante · Claude · integrantes · Invitar a nuevo miembro", [r.hoja, r.invita],
       [["Importanteacuerdos y conclusiones", "Todotodo junto", "Claudelo que le pediste y lo que contestó", "Eduardo Maderoexterno · por WhatsApp · solo ve lo suyo", "Arturo Tijerinaexterno · por WhatsApp · solo ve lo suyo", "Contacto sin nombre ·1884no está en tu agenda", "Invitar a nuevo miembroagregar o quitar integrantes"], true]);
-    eq("Detalles en orden fijo y numerado", r.det, ["1Resumen vivo", "2Lo que sigue · de quién se espera", "3Metas", "4Contexto", "5Seguimiento y con quién se comparte", "6Origen"]);
+    eq("Detalles en orden fijo y numerado", r.det, ["1Resumen vivo", "2Lo que sigue · de quién se espera", "3Metas", "4Contexto", "5Seguimiento y con quién se comparte", "6Contactos", "7Origen"]);
     eq("1 Resumen vivo con el campo resumen: texto, acuerdos con palomita y Falta", r.res1, ["Esteban y Martín cortan ramas; Manuel manda fotos del techo esta semana para confirmar si hay panal.", 2, true]);
     eq("4 Contexto con el clip de evidencia", r.ctxClip, true);
     eq("minimizar y cerrar", r.botones, [true, true]);

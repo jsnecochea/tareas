@@ -1738,6 +1738,8 @@ function integrantesDe(t){
   if(_enc && PERSONAS[_enc]) pon(_enc,"hace");
   try{ contactosWA(t).forEach(function(G){ pon(G.eq?G.eq:"ext:"+G.nombre, G.eq?"opina":"externo"); }); }catch(e){}
   if(t.revisa_ext) pon("ext:"+String(t.revisa_ext),"externo");
+  (t.wa_contactos||[]).forEach(function(c){ var nm=String((c&&c.nombre)||c||"").trim(); if(!nm) return;   /* los contactos de la tarea siempre se ven */
+    if(out.some(function(x){ return _n179(nombreInt(x.k))===_n179(nm); })) return; pon("ext:"+nm,"externo"); });
   return out.filter(function(x){ return !(t.integrantes_fuera||[]).some(function(f){ return f===x.k; }) || x.rol==="hace"; });
 }
 function nombreInt(k){ return String(k).indexOf("ext:")===0 ? String(k).slice(4) : ((PERSONAS[k]&&PERSONAS[k].nombre)||k); }
@@ -1746,6 +1748,11 @@ function agregaIntegrante(t, k){
   t.integrantes=t.integrantes||[];
   t.integrantes_fuera=(t.integrantes_fuera||[]).filter(function(x){ return x!==k; });
   if(t.integrantes.indexOf(k)<0 && k!==t.duenio) t.integrantes.push(k);
+  if(String(k).indexOf("ext:")===0){   /* un contacto de fuera también queda como contacto de la tarea: la Mac lo usa para recordatorios y para ligar su chat */
+    var nm=String(k).slice(4), a=(window.AGENDA_WA||[]).filter(function(x){ return _n179(x.nombre)===_n179(nm); })[0];
+    t.wa_contactos=t.wa_contactos||[];
+    if(!t.wa_contactos.some(function(c){ return _n179(String((c&&c.nombre)||c))===_n179(nm); })) t.wa_contactos.push(Object.assign({nombre:nm, desde:Date.now()}, a&&a.jid?{jid:a.jid}:{}, a&&a.numero?{numero:a.numero}:{}));
+    t.wa_excluidos=(t.wa_excluidos||[]).filter(function(x){ return _n179(x)!==_n179(nm); }); }
   guarda(t);
 }
 /* quitar: solo el dueño, y nunca a sus jefes (hacia arriba) ni al dueño */
@@ -1759,6 +1766,7 @@ function quitaIntegrante(t, k){
   t.integrantes=(t.integrantes||[]).filter(function(x){ return x!==k; });
   t.revisores=(t.revisores||[]).filter(function(x){ return x!==k; });
   t.integrantes_fuera=(t.integrantes_fuera||[]).concat([k]);
+  if(String(k).indexOf("ext:")===0){ var nm=_n179(String(k).slice(4)); t.wa_contactos=(t.wa_contactos||[]).filter(function(c){ return _n179(String((c&&c.nombre)||c))!==nm; }); }
   guarda(t); return true;
 }
 /* contactos para proponer: equipo + nombres de WhatsApp vistos en todas las tareas, con cuanto se platica */

@@ -176,16 +176,23 @@ function vDetalles(t){
   if(pp.compartir.length) sq.push("Se comparte con: "+pp.compartir.map(function(c){ return c.nombre; }).join(" · "));
   else if(pp.ints.length) sq.push("Participan: "+pp.ints.map(function(x){ return nombreVisible(nombreInt(x.k), t); }).join(" · "));
   if(sq.length) B.push(["Seguimiento y con quién se comparte", '<p>'+sq.map(esc).join('<br>')+'</p>']);
+  B.push(["Contactos", vPersonas(t, true)]);   /* quién está en la tarea y cómo agregar a alguien de tu agenda (la fila de fichas queda sin personas) */
   var cc=creadaCon(t); if(String(cc.texto||"").trim()){ var ab=!!((window.__orig225||{})[t.id]), cu=cc.ts?fechaCorta(new Date(cc.ts))+" "+hhmm(new Date(cc.ts)):"";
     B.push(["Origen", '<button class="d225o" data-orig225="1"><b>Creada con'+(cc.quien?" · "+esc(cc.quien):"")+(cu?" · "+esc(cu):"")+'</b> '+(ab?'▴':'▾')+'</button>'+
       (ab?'<div class="dquote">“'+esc(cc.texto)+'”</div>'+lineaOrigen(t):'<p class="tenue">“'+esc(cc.texto.length>70?cc.texto.slice(0,69)+"…":cc.texto)+'”</p>')]); }
   return B.map(function(b,i){ return '<div class="d225b'+(b[2]?' '+b[2]:'')+'"><h4><i>'+(i+1)+'</i>'+esc(b[0])+'</h4>'+b[1]+'</div>'; }).join("");
 }
-function vPersonas(t){
+function vPersonas(t, plano){
   var pp=personas225(t), h="";
+  if(plano){   /* dentro del Resumen: sin subtítulos (los bloques del Resumen van numerados) */
+    if(pp.ints.length) h+='<p>'+pp.ints.map(function(x){ return esc(nombreVisible(nombreInt(x.k), t))+' <span class="tenue">· '+esc({hace:"lo hace",revisa:"revisa",opina:"opina",externo:"contacto"}[x.rol]||x.rol)+'</span>'; }).join('<br>')+'</p>';
+    pp={compartir:[], ints:[]}; }
   if(pp.compartir.length) h+='<div class="d225b"><h4>Se comparte con</h4><p>'+pp.compartir.map(function(c){ return esc(c.nombre); }).join('<br>')+'</p></div>';
   if(pp.ints.length) h+='<div class="d225b"><h4>Participan</h4><p>'+pp.ints.map(function(x){ return esc(nombreInt(x.k))+' <span class="tenue">· '+esc({hace:"lo hace",revisa:"revisa",opina:"opina",externo:"externo"}[x.rol]||x.rol)+'</span>'; }).join('<br>')+'</p></div>';
-  return (h||'<p class="h225v0">Nadie más en esta tarea.</p>')+'<button class="d225m" data-int227="1"><span>Agregar o quitar integrantes</span><span>'+ico("chev",14)+'</span></button>';
+  try{ cargaAgendaWA(function(){ if(hoja225(t)) render(); }); }catch(e){}
+  var ag=window.AGENDA_WA, agTx=ag?('Tu agenda de WhatsApp en Doit: '+ag.length+' contactos.'):(window.__agendaNo?'La agenda completa de WhatsApp todavía no llega a la app: por ahora busco en los contactos que ya conozco (equipo y quienes te han escrito).':'Cargando tu agenda de WhatsApp…');
+  return (h||'<p class="h225v0">Nadie más en esta tarea.</p>')+'<button class="d225m" data-int227="1"><span>Agregar o quitar contactos</span><span>'+ico("chev",14)+'</span></button>'+
+    '<p class="tenue" style="margin-top:8px">'+esc(agTx)+'</p>';
 }
 /* la hoja de abajo (una a la vez) */
 function hoja225(t){ var H=window.__hoja225; return (H && H.tid===t.id)?H:null; }

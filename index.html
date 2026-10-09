@@ -1789,7 +1789,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 311 · Mensajes sin «X, de parte de Salvador:»: van escritos como tú, con «IA: »";
+var VERSION_APP = "build 312 · «Contactos» en el Resumen de cada tarea (agregar de tu agenda); eliminar fotos ya no saca al contacto";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -3882,26 +3882,8 @@ function eliminaAdjuntos(t, refs){
     if(String(r).split(":")[0]==="ms"){ if(f.url) urls.push(String(f.url)); }
     else { if(f.data && !/^https?:/.test(String(f.data))) f.data=""; else if(f.data) urls.push(String(f.data)); } });
   if(urls.length){ t.eliminar_pendiente=(t.eliminar_pendiente||[]).concat(urls.map(function(u){ return {url:u, ts:ahora}; })); }
-  if(n){ guarda(t); setTimeout(function(){ try{ preguntaExcluir(t.id); }catch(e){} }, 500); }
+  if(n) guarda(t);
   return {n:n, urls:urls};
-}
-/* APRENDER DE LO QUE SE ELIMINA (Salvador 9-oct: «borré imágenes que no tienen nada que ver y volvieron; que aprenda»).
-   Si ya quitó 2 o más cosas que mandó el mismo contacto, se le ofrece sacar a ese contacto de la tarea: la Mac (18z53) deja de
-   pegar aquí lo suyo por la liga del contacto y lo manda a Acomodo. Se pregunta una vez por contacto. */
-function preguntaExcluir(tid){
-  var t=tareas.filter(function(x){ return x.id===tid; })[0]; if(!t) return;
-  var cuenta={}; (t.msgs||[]).forEach(function(m){ if(m && m.wa_c && (m.eliminado||m.apartado) && (m.wa_in===1 || m.k==="bi")) cuenta[m.wa_c]=(cuenta[m.wa_c]||0)+1; });
-  var ya=(t.wa_excluidos||[]).concat(t.wa_no_excluir||[]);
-  var c=Object.keys(cuenta).filter(function(k){ return cuenta[k]>=2 && ya.indexOf(k)<0; })[0]; if(!c) return;
-  var corto=nombreCorto(c);
-  sobreHoja('<div class="mov225" role="dialog" aria-label="¿Saco a este contacto?"><div class="h225g"></div><div class="h225h"><b>¿Ya no meto aquí lo de '+esc(corto)+'?</b><button class="h225b" data-hx254="1" aria-label="Cerrar">×</button></div>'+
-    '<div class="h225c"><p class="h225v0">Quitaste '+cuenta[c]+' cosas que mandó '+esc(corto)+'. Si dices que sí, lo que mande ya no cae solo en esta tarea: se va a Acomodo para que tú decidas.</p>'+
-    '<button class="hop big254 pri" data-h254="si">Sí, ya no lo metas aquí</button><button class="hop big254" data-h254="no">No, sí es de esta tarea</button></div></div>',
-    function(k){ var T=tareas.filter(function(x){ return x.id===tid; })[0]||t;
-      if(k==="si"){ T.wa_excluidos=(T.wa_excluidos||[]).concat([c]); T.wa_contactos=(T.wa_contactos||[]).filter(function(x){ return x && x.nombre!==c; });
-        msg(T,"bi","Listo: lo que mande "+corto+" ya no cae solo en esta tarea; va a Acomodo."); var m=T.msgs[T.msgs.length-1]; m.canal="priv:"+yo; m.res238=1; }
-      else T.wa_no_excluir=(T.wa_no_excluir||[]).concat([c]);
-      guarda(T); try{ render(); }catch(e){} });
 }
 function borraEnServidor(tid, url){
   if(typeof APP_TOKEN==="undefined" || String(APP_TOKEN).indexOf("__")===0) return Promise.resolve(false);
@@ -11094,16 +11076,23 @@ function vDetalles(t){
   if(pp.compartir.length) sq.push("Se comparte con: "+pp.compartir.map(function(c){ return c.nombre; }).join(" · "));
   else if(pp.ints.length) sq.push("Participan: "+pp.ints.map(function(x){ return nombreVisible(nombreInt(x.k), t); }).join(" · "));
   if(sq.length) B.push(["Seguimiento y con quién se comparte", '<p>'+sq.map(esc).join('<br>')+'</p>']);
+  B.push(["Contactos", vPersonas(t, true)]);   /* quién está en la tarea y cómo agregar a alguien de tu agenda (la fila de fichas queda sin personas) */
   var cc=creadaCon(t); if(String(cc.texto||"").trim()){ var ab=!!((window.__orig225||{})[t.id]), cu=cc.ts?fechaCorta(new Date(cc.ts))+" "+hhmm(new Date(cc.ts)):"";
     B.push(["Origen", '<button class="d225o" data-orig225="1"><b>Creada con'+(cc.quien?" · "+esc(cc.quien):"")+(cu?" · "+esc(cu):"")+'</b> '+(ab?'▴':'▾')+'</button>'+
       (ab?'<div class="dquote">“'+esc(cc.texto)+'”</div>'+lineaOrigen(t):'<p class="tenue">“'+esc(cc.texto.length>70?cc.texto.slice(0,69)+"…":cc.texto)+'”</p>')]); }
   return B.map(function(b,i){ return '<div class="d225b'+(b[2]?' '+b[2]:'')+'"><h4><i>'+(i+1)+'</i>'+esc(b[0])+'</h4>'+b[1]+'</div>'; }).join("");
 }
-function vPersonas(t){
+function vPersonas(t, plano){
   var pp=personas225(t), h="";
+  if(plano){   /* dentro del Resumen: sin subtítulos (los bloques del Resumen van numerados) */
+    if(pp.ints.length) h+='<p>'+pp.ints.map(function(x){ return esc(nombreVisible(nombreInt(x.k), t))+' <span class="tenue">· '+esc({hace:"lo hace",revisa:"revisa",opina:"opina",externo:"contacto"}[x.rol]||x.rol)+'</span>'; }).join('<br>')+'</p>';
+    pp={compartir:[], ints:[]}; }
   if(pp.compartir.length) h+='<div class="d225b"><h4>Se comparte con</h4><p>'+pp.compartir.map(function(c){ return esc(c.nombre); }).join('<br>')+'</p></div>';
   if(pp.ints.length) h+='<div class="d225b"><h4>Participan</h4><p>'+pp.ints.map(function(x){ return esc(nombreInt(x.k))+' <span class="tenue">· '+esc({hace:"lo hace",revisa:"revisa",opina:"opina",externo:"externo"}[x.rol]||x.rol)+'</span>'; }).join('<br>')+'</p></div>';
-  return (h||'<p class="h225v0">Nadie más en esta tarea.</p>')+'<button class="d225m" data-int227="1"><span>Agregar o quitar integrantes</span><span>'+ico("chev",14)+'</span></button>';
+  try{ cargaAgendaWA(function(){ if(hoja225(t)) render(); }); }catch(e){}
+  var ag=window.AGENDA_WA, agTx=ag?('Tu agenda de WhatsApp en Doit: '+ag.length+' contactos.'):(window.__agendaNo?'La agenda completa de WhatsApp todavía no llega a la app: por ahora busco en los contactos que ya conozco (equipo y quienes te han escrito).':'Cargando tu agenda de WhatsApp…');
+  return (h||'<p class="h225v0">Nadie más en esta tarea.</p>')+'<button class="d225m" data-int227="1"><span>Agregar o quitar contactos</span><span>'+ico("chev",14)+'</span></button>'+
+    '<p class="tenue" style="margin-top:8px">'+esc(agTx)+'</p>';
 }
 /* la hoja de abajo (una a la vez) */
 function hoja225(t){ var H=window.__hoja225; return (H && H.tid===t.id)?H:null; }
@@ -18504,6 +18493,8 @@ function integrantesDe(t){
   if(_enc && PERSONAS[_enc]) pon(_enc,"hace");
   try{ contactosWA(t).forEach(function(G){ pon(G.eq?G.eq:"ext:"+G.nombre, G.eq?"opina":"externo"); }); }catch(e){}
   if(t.revisa_ext) pon("ext:"+String(t.revisa_ext),"externo");
+  (t.wa_contactos||[]).forEach(function(c){ var nm=String((c&&c.nombre)||c||"").trim(); if(!nm) return;   /* los contactos de la tarea siempre se ven */
+    if(out.some(function(x){ return _n179(nombreInt(x.k))===_n179(nm); })) return; pon("ext:"+nm,"externo"); });
   return out.filter(function(x){ return !(t.integrantes_fuera||[]).some(function(f){ return f===x.k; }) || x.rol==="hace"; });
 }
 function nombreInt(k){ return String(k).indexOf("ext:")===0 ? String(k).slice(4) : ((PERSONAS[k]&&PERSONAS[k].nombre)||k); }
@@ -18512,6 +18503,11 @@ function agregaIntegrante(t, k){
   t.integrantes=t.integrantes||[];
   t.integrantes_fuera=(t.integrantes_fuera||[]).filter(function(x){ return x!==k; });
   if(t.integrantes.indexOf(k)<0 && k!==t.duenio) t.integrantes.push(k);
+  if(String(k).indexOf("ext:")===0){   /* un contacto de fuera también queda como contacto de la tarea: la Mac lo usa para recordatorios y para ligar su chat */
+    var nm=String(k).slice(4), a=(window.AGENDA_WA||[]).filter(function(x){ return _n179(x.nombre)===_n179(nm); })[0];
+    t.wa_contactos=t.wa_contactos||[];
+    if(!t.wa_contactos.some(function(c){ return _n179(String((c&&c.nombre)||c))===_n179(nm); })) t.wa_contactos.push(Object.assign({nombre:nm, desde:Date.now()}, a&&a.jid?{jid:a.jid}:{}, a&&a.numero?{numero:a.numero}:{}));
+    t.wa_excluidos=(t.wa_excluidos||[]).filter(function(x){ return _n179(x)!==_n179(nm); }); }
   guarda(t);
 }
 /* quitar: solo el dueño, y nunca a sus jefes (hacia arriba) ni al dueño */
@@ -18525,6 +18521,7 @@ function quitaIntegrante(t, k){
   t.integrantes=(t.integrantes||[]).filter(function(x){ return x!==k; });
   t.revisores=(t.revisores||[]).filter(function(x){ return x!==k; });
   t.integrantes_fuera=(t.integrantes_fuera||[]).concat([k]);
+  if(String(k).indexOf("ext:")===0){ var nm=_n179(String(k).slice(4)); t.wa_contactos=(t.wa_contactos||[]).filter(function(c){ return _n179(String((c&&c.nombre)||c))!==nm; }); }
   guarda(t); return true;
 }
 /* contactos para proponer: equipo + nombres de WhatsApp vistos en todas las tareas, con cuanto se platica */
