@@ -159,7 +159,7 @@ eq("sw.js con versión >= 276", +((fs.readFileSync(path.join(__dirname, "..", "s
     /* ---------- 3 · interrumpir con la respuesta: lo dicho no se pierde ---------- */
     var C2 = await p.evaluate(async function () {
       var r = {}; window.__lento = 600;
-      CAM.limpia = true; camPresenta274(true);
+      CAM.limpia = true; camPresenta(true);
       await hasta(function () { return hablando() && !!srBarge(); }, 3000);
       __iaMap["la de huella está bien"] = { accion: "aprobar", texto_para_tarea: "Va con el ZKTeco de huella.", respuesta_hablada: "Listo, va el de huella." };
       diB("la de huella", false); await espera(10);
@@ -185,7 +185,7 @@ eq("sw.js con versión >= 276", +((fs.readFileSync(path.join(__dirname, "..", "s
       var d0 = __dichos.length; di("sí va hazla", true); di("terminé", true);
       await hasta(function () { return CAM.qz && !!srViva() && !hablando(); }, 5000);
       r.qz1 = dichos(d0); r.st = document.getElementById("c274st").textContent;
-      r.esTarea = !esPropuesta256(tid("tNUE"));
+      r.esTarea = !esPropuesta(tid("tNUE"));
       var d1 = __dichos.length, n0 = __dichos.length; di("el viernes", true);
       await espera(1500); r.noEnvia1s = __dichos.length === n0;
       await hasta(function () { return __dichos.length > d1 && !!srViva() && !hablando(); }, 5000);
@@ -247,7 +247,7 @@ eq("sw.js con versión >= 276", +((fs.readFileSync(path.join(__dirname, "..", "s
     /* ---------- 7 · bandeja limpia ---------- */
     var G = await p.evaluate(async function () {
       home(fx6().filter(function (t) { return ["tDEC", "tCOM"].indexOf(t.id) >= 0; })); __iaMap["va"] = { accion: "aprobar", texto_para_tarea: "Va.", respuesta_hablada: "Listo." };
-      camEmpieza274(); await esp2(); di("va", true);
+      camEmpieza(); await esp2(); di("va", true);
       await hasta(function () { return !CAM.on; }, 5000);
       return dichos().slice(-1)[0]; });
     eq("todo resuelto: «Bandeja limpia.»", G, "Bandeja limpia.");
@@ -255,18 +255,18 @@ eq("sw.js con versión >= 276", +((fs.readFileSync(path.join(__dirname, "..", "s
     /* ---------- 8 · iOS: si la voz se corta al abrir el micrófono, se apaga la interrupción y repite la frase ---------- */
     var H = await p.evaluate(async function () {
       home(fx6()); window.__iosCorta = true; window.__lento = 200; var r = {};
-      var d0 = __dichos.length; camEmpieza274(); await hasta(function () { return window.__barge276 && window.__barge276.off; }, 3000);
+      var d0 = __dichos.length; camEmpieza(); await hasta(function () { return window.__barge276 && window.__barge276.off; }, 3000);
       window.__iosCorta = false;
       await hasta(function () { return !!srViva(); }, 6000); await espera(30);
       var D = dichos(d0); r.D = D.slice(0, 3); r.repite = D[0] === D[1] && /^Tienes /.test(D[0]);
       r.off = [window.__barge276.off, /se cortó/.test(window.__barge276.por), CAM.bargeNo];
       r.sinBarge = __srs.filter(function (s) { return s.__barge; }).length;
-      var n = r.sinBarge; CAM.limpia = true; camPresenta274(true); await hasta(function () { return hablando(); }, 2000); await espera(50);
+      var n = r.sinBarge; CAM.limpia = true; camPresenta(true); await hasta(function () { return hablando(); }, 2000); await espera(50);
       r.despues = __srs.filter(function (s) { return s.__barge; }).length === n;
       /* tocar el círculo interrumpe */
       document.getElementById("c274o").click(); await espera(20);
       r.toca = [CAM.fase, !!srViva()];
-      window.__lento = 5; camSal274(false);
+      window.__lento = 5; camSal(false);
       return r; });
     eq("iOS: la frase cortada se repite con el micrófono cerrado", [H.repite, H.D], [true, H.D]);
     eq("iOS: interrupción apagada en la sesión con el motivo", H.off, [true, true, true]);

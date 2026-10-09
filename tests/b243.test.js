@@ -26,7 +26,7 @@ eq("la hoja ¿A dónde va? ya no trae 'Bien, pero sin importancia' en el código
   try {
     await p.goto("file://" + path.join(__dirname, "..", "index.html")); await p.waitForTimeout(600);
     /* build 285: las secciones del home amanecen plegadas; en esta prueba vieja Acomodo, Mensajes, Te pregunta Doit, Vencidas y Hoy arrancan abiertas como antes (lo que se toque se sigue recordando) */
-    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl285(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
+    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
     /* ---------- 1) después de vincular ---------- */
     var r = await p.evaluate(function (FX) {
       yo = "salvador"; var o = {};
@@ -101,7 +101,7 @@ eq("la hoja ¿A dónde va? ya no trae 'Bien, pero sin importancia' en el código
     var r4 = await p.evaluate(function () { return [!!document.getElementById("ng243"), __ESCR.filter(function (e) { return e[2] && e[2].acomodo_reglas; }).length]; });
     /* hoja ¿A dónde va? y detalle del globo */
     var r5 = await p.evaluate(function () { var o = {}, G = { id: "tG", nombre: "Comedor nuevo", duenio: "salvador", estado: "abierta", msgs: [{ k: "bi", wa_in: 1, wa_c: "Lalo", t: "Lalo: jajaja igualmente", ts: Date.now() - 1000, h: "21:00", wa_id: "zz" }] };
-      tareas.push(G); abreMover225(G, 0); o.hoja = [].map.call(document.querySelectorAll("#mov225 .opt226.plain .two > span"), function (x) { return x.textContent; });
+      tareas.push(G); abreMover(G, 0); o.hoja = [].map.call(document.querySelectorAll("#mov225 .opt226.plain .two > span"), function (x) { return x.textContent; });
       document.querySelector("#mov225 [data-movx]").click();
       var H = { id: "tH", nombre: "Comedor nuevo 2", duenio: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, msgs: [{ k: "bi", wa_in: 1, wa_c: "Manuel Parra", t: "Manuel Parra: Te mando la cotización de la piedra mañana temprano", ts: Date.now() - 2000, h: "20:10", wa_id: "hh" }] };
       tareas = [H]; abierta = H.id; vista = "hilo"; render();

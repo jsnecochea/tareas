@@ -112,12 +112,12 @@ eq("sw.js con versión >= 278", +((fs.readFileSync(path.join(__dirname, "..", "s
 
     /* ---------- 0 · nombres, negación y corrección (sin voz) ---------- */
     var Z = await p.evaluate(function () {
-      home(fx8()); var t = tid("tEDC"), bb = tid("tBBVA"), C = camCandidatas275(t);
+      home(fx8()); var t = tid("tEDC"), bb = tid("tBBVA"), C = camCandidatas(t);
       var frase = "No tiene nada que ver con mis inversiones de BBVA. Esa es la tarea de estado de cuenta inversiones";
       var c1 = correccion278(t, frase), c2 = correccion278(t, "¿es esta tarea?"), c3 = correccion278(t, "no, es la tarea de comedor"), c4 = correccion278(t, "no es la tarea de comedor");
       return {
-        dest: [camDestino275(t, "inversiones"), (camDestino275(t, "inversiones bbva") || {}).id || null, (camDestino275(t, "tBBVA") || {}).id || null, camDestino275(t, "estado de cuenta inversiones")],
-        nom: (resuelveNombre278("estado de cuenta inversiones", C.concat([t])) || {}).id,
+        dest: [camDestino(t, "inversiones"), (camDestino(t, "inversiones bbva") || {}).id || null, (camDestino(t, "tBBVA") || {}).id || null, camDestino(t, "estado de cuenta inversiones")],
+        nom: (resuelveNombre("estado de cuenta inversiones", C.concat([t])) || {}).id,
         niega: [niega278(frase, bb), niega278(frase, t), niega278("no es la de BBVA, es la de estado de cuenta inversiones", t), niega278("júntala con inversiones bbva", bb), niega278("no, júntala con inversiones bbva", bb)],
         corr: [c1 && c1.misma, c2 && c2.misma, c3 && c3.x.id, c4] }; });
     eq("destino: una palabra suelta ya NO alcanza; el nombre completo o el id sí; el nombre de ESTA tarea no es destino", Z.dest, [null, "tBBVA", "tBBVA", null]);
@@ -130,7 +130,7 @@ eq("sw.js con versión >= 278", +((fs.readFileSync(path.join(__dirname, "..", "s
       var r = {}; window.__nivel276 = 0.2;
       document.getElementById("bcam274").click(); await esp2();
       if (CAM.L.indexOf("tEDC") < 0) { CAM.L.push("tEDC"); CAM.g.tEDC = "dec"; }
-      CAM.i = CAM.L.indexOf("tEDC"); camPresenta274(); await esp2();
+      CAM.i = CAM.L.indexOf("tEDC"); camPresenta(); await esp2();
       var frase = "No tiene nada que ver con mis inversiones de BBVA. Esa es la tarea de estado de cuenta inversiones";
       __iaMap[frase] = { accion: "vincular", destino: "tBBVA", texto_para_tarea: "", respuesta_hablada: "Hecho, la junté." };
       var nB = tid("tBBVA").msgs.length, d0 = __dichos.length;
@@ -141,7 +141,7 @@ eq("sw.js con versión >= 278", +((fs.readFileSync(path.join(__dirname, "..", "s
       r.datos = [tid("tBBVA").msgs.length === nB, !!t && !t.fusionada_en && _camVivo(t), ((t.hecho238 || {}).falta || []).filter(function (f) { return f.k === "vinc"; }).length, !!(t.censo_vinc_no && t.censo_vinc_no.propuestas[0].id === "tBBVA")];
       var ia = __ia.filter(function (x) { return /LO QUE DIJO/.test(x.c); }).slice(-1)[0];
       r.prompt = [/ESTA TAREA: id tEDC/.test(ia.c), /REGLAS DE VINCULAR/.test(ia.c)];
-      r.ult = !!ultDe278("tEDC");
+      r.ult = !!ultDe("tEDC");
       return r; });
     eq("lo dice: no la junta con Inversiones BBVA", A.dicho, "Va, no la junto con Inversiones BBVA. Se queda aparte.");
     eq("BBVA intacta · la tarea sigue viva · sin la pregunta de vincular · queda el rechazo", A.datos, [true, true, 0, true]);
@@ -151,7 +151,7 @@ eq("sw.js con versión >= 278", +((fs.readFileSync(path.join(__dirname, "..", "s
     /* ---------- 2 · la IA quiere vincular a una tarea que él NO nombró → primero confirma ---------- */
     var B = await p.evaluate(async function () {
       var r = {};
-      CAM.i = CAM.L.indexOf("tNUE"); camPresenta274(); await esp2();
+      CAM.i = CAM.L.indexOf("tNUE"); camPresenta(); await esp2();
       __iaMap["júntala con la otra de los lockers"] = { accion: "vincular", destino: "tVES", texto_para_tarea: "", respuesta_hablada: "Hecho." };
       var nV = tid("tVES").msgs.length, d0 = __dichos.length;
       di("júntala con la otra de los lockers", true); di("terminé", true);
@@ -173,7 +173,7 @@ eq("sw.js con versión >= 278", +((fs.readFileSync(path.join(__dirname, "..", "s
       di("sí", true);
       await hasta(function () { var x = tid("tNUE"); return !x || !!x.fusionada_en; }, 6000);
       r.r = [tid("tVES").msgs.length === nV, (tid("tCOM").enlazadas || []).some(function (e) { return e.id === "tNUE"; })];
-      camSal274(false); return r; });
+      camSal(false); return r; });
     eq("«no, es la tarea de comedor»: lo que se confirma es Comedor, aunque la IA dijo Vestidores", C.conf, "Entendí: juntar Cotizar cámaras extra con la tarea Comedor.");
     eq("…y con su sí va a Comedor", C.r, [true, true]);
 
@@ -212,16 +212,16 @@ eq("sw.js con versión >= 278", +((fs.readFileSync(path.join(__dirname, "..", "s
     /* ---------- 6 · una sola función; lo enviado por WhatsApp no deja ↩; tocar ↩ otra vez = no ---------- */
     var F = await p.evaluate(async function () {
       var r = {};
-      r.misma = [/function camDeshaz275\(\)\{[\s\S]*?deshazUlt278\(u\)/.test(document.documentElement.innerHTML), typeof deshazUlt278];
-      var f = ultEnvuelve278(function (t) { window.__ultPila278.env = true; t.x8 = 1; }, function (t) { return [t]; }, function () { return "algo"; }, 1);
-      f(tid("tCOM")); r.wa = !ultDe278("tCOM");
+      r.misma = [/function camDeshaz\(\)\{[\s\S]*?deshazUlt\(u\)/.test(document.documentElement.innerHTML), typeof deshazUlt];
+      var f = ultEnvuelve(function (t) { window.__ultPila278.env = true; t.x8 = 1; }, function (t) { return [t]; }, function () { return "algo"; }, 1);
+      f(tid("tCOM")); r.wa = !ultDe("tCOM");
       mueveFecha(tid("tCOM"), "2026-10-29", "prueba"); abierta = "tCOM"; vista = "hilo"; render();
       document.getElementById("bund278").click(); await espera(20); var on = !!document.getElementById("und278");
       document.getElementById("bund278").click(); await espera(20);
       r.toggle = [on, !document.getElementById("und278"), tid("tCOM").f_vigente];
       r.sinHist = !document.querySelector("[data-mn='historial']") && !/Historial de deshacer/.test(document.body.innerHTML);
       return r; });
-    eq("voz y ↩ usan la MISMA función (deshazUlt278)", F.misma, [true, "function"]);
+    eq("voz y ↩ usan la MISMA función (deshazUlt)", F.misma, [true, "function"]);
     eq("si se mandó algo por WhatsApp no queda ↩", F.wa, true);
     eq("tocar ↩ otra vez cierra la línea sin deshacer", F.toggle, [true, true, "2026-10-29"]);
     eq("no se agregó ningún historial", F.sinHist, true);

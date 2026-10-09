@@ -62,7 +62,7 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
       r.esperan = idsF(F.esperan).sort(); r.hoy = idsF(F.hoy); r.venc = idsF(F.venc);
       r.fichas = [ficha("esperan").n, ficha("hoy").n];
       r.filaVenc = (document.querySelector('.fila-inicio[data-grupo="venc"] .fl-n') || {}).textContent || "";
-      r.preg = tareas.filter(function (t) { return t.id === "tSF"; }).map(function (t) { return faltaPreciso263(t); })[0];
+      r.preg = tareas.filter(function (t) { return t.id === "tSF"; }).map(function (t) { return faltaPreciso(t); })[0];
       return r; });
     eq("Qué le falta a cada una", A.falta, ["tSF:Falta fecha de finiquito y próximo seguimiento", "tFS:Falta próximo seguimiento", "tHS:Falta próximo seguimiento", "tIS:", "tIN:Falta próximo seguimiento", "tAV:", "tOK:"]);
     eq("Las incompletas van a Te esperan", A.esperan, ["tFS", "tHS", "tIN", "tSF"]);

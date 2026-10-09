@@ -80,8 +80,8 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
       ];
       home(L); var H = window.__H274, w = {}; H.preg.forEach(function (x) { w[x.t.id] = x.why; });
       var by = function (id) { return tareas.filter(function (t) { return t.id === id; })[0]; };
-      var r = { preg: H.preg.map(function (x) { return x.t.id; }).sort(), why: w, faltaComp: faltaPlan(by("tCOMP")), qComp: faltaPreciso263(by("tCOMP")).filter(function (q) { return /seguimiento|paso|terminar/.test(q); }),
-        qInc: faltaPreciso263(by("tINC")).filter(function (q) { return /seguimiento|paso/.test(q); }).sort(), proxDado: planDe(by("tDADO")).proximo, hoy: H.hoy.map(function (x) { return x.t.id; }) };
+      var r = { preg: H.preg.map(function (x) { return x.t.id; }).sort(), why: w, faltaComp: faltaPlan(by("tCOMP")), qComp: faltaPreciso(by("tCOMP")).filter(function (q) { return /seguimiento|paso|terminar/.test(q); }),
+        qInc: faltaPreciso(by("tINC")).filter(function (q) { return /seguimiento|paso/.test(q); }).sort(), proxDado: planDe(by("tDADO")).proximo, hoy: H.hoy.map(function (x) { return x.t.id; }) };
       planDesdeRespuesta(by("tINC"), "¿Cuál es el próximo paso que Claude debe hacer aquí? (revisión 8-oct)", "Pedirle a Pepe la cotización");
       planDesdeRespuesta(by("tINC"), "¿Cuándo te recuerdo para darle seguimiento?", "cada viernes a las 10");
       r.resp = [by("tINC").plan_seguimiento.proximo_paso, by("tINC").plan_seguimiento.dias, by("tINC").plan_seguimiento.hora, faltaPlan(by("tINC"))];

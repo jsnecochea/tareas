@@ -20,9 +20,9 @@ function bloque(a, b) { var i = html.indexOf(a), j = html.indexOf(b); return htm
 var ft = fs.readFileSync(path.join(__dirname, "fechas.test.js"), "utf8"), t221 = fs.readFileSync(path.join(__dirname, "b221.test.js"), "utf8");
 var F_VARS = eval(ft.match(/var VARS = (\[[\s\S]*?\]);/)[1]);
 var B221 = eval(t221.match(/var FUNCS = F_FUNCS\.concat\((\[[\s\S]*?\])\)/)[1]), F_FUNCS = eval(ft.match(/var FUNCS = (\[[\s\S]*?\]);/)[1]);
-var NUEVAS = ["min225", "togMin225", "_txMsg", "msgVisible225", "metasEnCurso", "palMeta", "metaDeMsg", "resumenVivo", "cosasParaTi", "personas225", "chipsTarea", "vResumenVivo", "filtroMeta", "vFiltroMeta",
-  "evidenciaMeta225", "vFichaMeta", "vDetalles225", "vPersonas225", "dudasDeNotas237", "aplicaDudasNota237", "confirmado237", "acomodoIA237", "esPlatica237", "platicas237", "botonesG237", "esSaludo238", "_fsa", "claudeAcomodo238", "icoCl238", "nombreLimpio", "esImp230", "msgId230", "hoja225", "abreHoja225", "vHoja225", "tareasParaMover", "mueveMensaje", "vDudaTarea", "_nmz", "mezclaDicho", "tareaNombrada", "mensajesMezclados", "arreglaMezcla",
-  "clasif236", "esIA240", "estadoAgenda228", "citas234", "vFecha234", "claves235", "semClaves235", "vChipClaves235", "evidClave235", "vClaves235", "vAgenda228", "vClipEvid", "evidenciaDe", "vista230", "nombreVisible230", "_nomWA", "_telDe", "vPastilla", "canalActual", "modoClaude", "canalesDe", "externosDe", "censoAcomodo", "soloPlatica", "nombreSugerido", "nuevaDesdeMsg", "inicialesDe", "nombreLimpio", "sinEmojiUI", "ico", "chipEncabezado", "integrantesDe", "nombreInt", "quitaEtiquetasWA", "dDif", "soloMeFalta", "completitud", "contextoDe", "contextoPct", "esRecurrente", "fechaCorta", "lineaOrigen", "origenDe", "vChecklist", "tieneChecklist",
+var NUEVAS = ["min225", "togMin", "_txMsg", "msgVisible", "metasEnCurso", "palMeta", "metaDeMsg", "resumenVivo", "cosasParaTi", "personas225", "chipsTarea", "vResumenVivo", "filtroMeta", "vFiltroMeta",
+  "evidenciaMeta225", "vFichaMeta", "vDetalles", "vPersonas", "dudasDeNotas", "aplicaDudasNota", "confirmado237", "acomodoIA", "esPlatica", "platicas237", "botonesG", "esSaludo238", "_fsa", "claudeAcomodo", "icoCl", "nombreLimpio", "esImp", "msgId", "hoja225", "abreHoja", "vHoja", "tareasParaMover", "mueveMensaje", "vDudaTarea", "_nmz", "mezclaDicho", "tareaNombrada", "mensajesMezclados", "arreglaMezcla",
+  "clasif236", "esIA", "estadoAgenda", "citas234", "vFecha", "claves235", "semClaves", "vChipClaves", "evidClave", "vClaves", "vAgenda228", "vClipEvid", "evidenciaDe", "vista230", "nombreVisible", "_nomWA", "_telDe", "vPastilla", "canalActual", "modoClaude", "canalesDe", "externosDe", "censoAcomodo", "soloPlatica", "nombreSugerido", "nuevaDesdeMsg", "inicialesDe", "nombreLimpio", "sinEmojiUI", "ico", "chipEncabezado", "integrantesDe", "nombreInt", "quitaEtiquetasWA", "dDif", "soloMeFalta", "completitud", "contextoDe", "contextoPct", "esRecurrente", "fechaCorta", "lineaOrigen", "origenDe", "vChecklist", "tieneChecklist",
   "_notaPriv", "mensajeDicho", "_minus1", "armaMensaje", "resuelveDestino", "borradorMensaje", "pideMensaje", "msjEnCurso", "vBorradorMsj", "srJunta", "srCorte", "srArranca", "vQuienDudas", "_nn"];
 var FUNCS = F_FUNCS.concat(B221).concat(NUEVAS).filter(function (x, i, a) { return a.indexOf(x) === i; });
 var VARS = F_VARS.concat(["SEG_HORA_DEFECTO", "ESCALA_DIAS", "AVISO_INM_RE", "CHK_EST", "AGENDA_HORA_TODO_DIA", "PALOMEO_MS", "TITULO_CONECTORES", "RITMO_RE", "CITA_RE", "MESES229", "CTX_MIN_PAL", "SINONIMOS", "BUSCA_VACIAS", "REV_DESDE",
@@ -85,16 +85,16 @@ eq("resumen vivo: lo que sigue, a quién se espera y lo último (solo con lo que
   "Sigue: Azotea · vie 9 oct · Se espera de Manuel Parra · Último: Manuel 11:51 «Tema 2… Mesa Comedor Alt Brillo. Maribel Gonzál…»");
 eq("sin nada que decir, no se muestra", c.resumenVivo({ id: "x", nombre: "x", duenio: "salvador", indefinida: true, contexto: "algo que ya tiene contexto suficiente", msgs: [] }).una, "");
 eq("build 228: el resumen está plegado en su ficha (no hay bloque fijo)", c.vResumenVivo(L), "");
-c.togMin225(L.id, "rvab"); si("build 231: ya no hay ficha 'Resumen' ni de personas (viven en el filtro y en Detalles)", !/data-chip="(resumen|personas)"/.test(c.chipsTarea(L)));
+c.togMin(L.id, "rvab"); si("build 231: ya no hay ficha 'Resumen' ni de personas (viven en el filtro y en Detalles)", !/data-chip="(resumen|personas)"/.test(c.chipsTarea(L)));
 eq("y se recuerda (localStorage)", JSON.parse(ALMACEN.doit_min225), { "tIAMUVF22TRJF|rvab": 1 });
-c.togMin225(L.id, "rvab");
+c.togMin(L.id, "rvab");
 var LA = LERDO(); LA.checklist.items[0].fecha = "2026-10-02";
 eq("meta atrasada: en rojo en el resumen", c.resumenVivo(LA).partes.filter(function (p) { return p.rojo; }).map(function (p) { return p.tx; }), ["Azotea: atrasada 3 días"]);
 /* ---------- 3 filtro por meta ---------- */
 eq("clasificación por palabras de la meta (lo que no encaja: Otro)", L.msgs.map(function (x) { return c.metaDeMsg(L, x); }), ["otro", "a", "a", "a", "otro"]);
 var fm = c.vFiltroMeta(L), bot = []; fm.replace(/data-mfil="(\w*)">([^<]*)</g, function (_, k, tx) { bot.push(tx); });
 eq("filtro: Todo · Azotea · Interior · Otro", bot, ["Todo", "Azotea", "Interior", "Otro"]);
-c.togMin225(L.id, "fm"); si("filtro minimizable", /fmb min/.test(c.vFiltroMeta(L))); c.togMin225(L.id, "fm");
+c.togMin(L.id, "fm"); si("filtro minimizable", /fmb min/.test(c.vFiltroMeta(L))); c.togMin(L.id, "fm");
 /* ---------- 4 ficha de meta ---------- */
 var fi = c.vFichaMeta(L, "a");
 si("ficha: fecha en tiempo SIN rojo", /<span class="k">Fecha<\/span><span class="v">vie 9 oct · en tiempo<\/span>/.test(fi));
@@ -106,11 +106,11 @@ var fe = c.vFichaMeta(LE, "a");
 si("ficha con entrega: por aprobar, 1 foto, Aprobar / Pedir corrección", /por aprobar/.test(fe) && /1 foto/.test(fe) && /data-entok="a">Aprobar/.test(fe) && /data-entcor="a">Pedir corrección/.test(fe));
 si("ficha atrasada: fecha en ROJO", /<span class="v red">vie 2 oct|<span class="v red">2026-10-02 · atrasada 3 días/.test(c.vFichaMeta(LA, "a")));
 /* ---------- 5 Detalles en orden ---------- */
-var de = c.vDetalles25 ? "" : c.vDetalles225(L), tit = []; de.replace(/<h4><i>\d+<\/i>([^<]*)<\/h4>/g, function (_, x) { tit.push(x); });
+var de = c.vDetalles25 ? "" : c.vDetalles(L), tit = []; de.replace(/<h4><i>\d+<\/i>([^<]*)<\/h4>/g, function (_, x) { tit.push(x); });
 eq("Detalles: Resumen, Lo que sigue, Metas, Contexto, Seguimiento, Origen (sin Lista ni Falta vacías)", tit,
   ["Resumen vivo", "Lo que sigue · de quién se espera", "Metas", "Contexto", "Seguimiento y con quién se comparte", "Origen"]);
 si("Origen plegado con 'Creada con'", /Creada con/.test(de) && /data-orig225/.test(de) && !/class="dquote"/.test(de));
-var tit2 = []; c.vDetalles225(FA).replace(/<h4><i>\d+<\/i>([^<]*)<\/h4>/g, function (_, x) { tit2.push(x); });
+var tit2 = []; c.vDetalles(FA).replace(/<h4><i>\d+<\/i>([^<]*)<\/h4>/g, function (_, x) { tit2.push(x); });
 si("build 231: Detalles en orden fijo; lo que falta va en su ficha 'Falta' (no se repite)", tit2.indexOf("Falta por poner") < 0);
 /* ---------- 6 sin botón verde gigante ---------- */
 eq("cosas para ti: la duda de tarea del 11:51", c.cosasParaTi(L), 1);
@@ -118,7 +118,7 @@ si("build 228: sin la pastilla '1 cosa para ti'; la ficha Todo va en la fila", !
 si("vFaltaInfo ya no trae el botón verde gigante", !/class="autbtn"/.test(html.slice(html.indexOf("function vFaltaInfo("), html.indexOf("function vDatoCuerpo("))));
 /* ---------- 7 mensaje mal acomodado ---------- */
 var bd = c.vDudaTarea(L, L.msgs[4], 4);
-si("burbuja con duda (242): debajo del globo ya no va nada; OK · Mover · Nueva · Dato viven en la hoja del globo", bd === "" && /function abreDetalle242\(t, ix\)/.test(html) && /botonesG237\(ix, \[ix\], " hj242"\)/.test(html));
+si("burbuja con duda (242): debajo del globo ya no va nada; OK · Mover · Nueva · Dato viven en la hoja del globo", bd === "" && /function abreDetalle\(t, ix\)/.test(html) && /botonesG\(ix, \[ix\], " hj242"\)/.test(html));
 var LM = LERDO(), CM = COMEDOR(); c.tareas = [LM, CM, { id: "tOtra", nombre: "Fideicomiso", duenio: "salvador", msgs: [] }];
 eq("Mover: primero las del mismo contacto", c.tareasParaMover(LM, LM.msgs[4]).map(function (o) { return [o.d.id, o.mismo]; }), [["tCOMEDOR_NUEVO_300926", true], ["tOtra", false]]);
 GUARDADAS.length = 0; r = c.mueveMensaje(LM, 4, "tCOMEDOR_NUEVO_300926");
@@ -128,7 +128,7 @@ eq("Mover: en el destino 'Movido desde <origen>: <texto>' marcado NUEVO", [dst.t
 eq("se guardan las dos tareas", GUARDADAS, ["tIAMUVF22TRJF", "tCOMEDOR_NUEVO_300926"]);
 eq("lo oculto ya no cuenta ni sale en el resumen", [c.cosasParaTi(LM), c.resumenVivo(LM).una.indexOf("Comedor") < 0], [0, true]);
 si("el hilo no pinta lo oculto y marca NUEVO lo movido", /if\(x && x\.oculto\) return;/.test(html) && /NUEVO · movido desde/.test(html));
-si("dejar presionado: 'Mover a otra tarea' en el menú", /_ops\.push\(\["Mover a otra tarea",function\(\)\{ abreMover225\(t, ix\); \}\]\)/.test(html));
+si("dejar presionado: 'Mover a otra tarea' en el menú", /_ops\.push\(\["Mover a otra tarea",function\(\)\{ abreMover\(t, ix\); \}\]\)/.test(html));
 /* ---------- 8 "me mezclaste": mueve, nunca toca metas ---------- */
 eq("frases de mezcla", ["me mezclaste", "esto es de otra tarea", "Oye, este mensaje no es de esta tarea", "esto es del comedor", "esto es de la fiesta", "ponle un mensaje a Fernando", "ya quedó el techo"].map(function (v) { return c.mezclaDicho(v, LERDO()); }),
   [true, true, true, true, false, false, false]);
@@ -166,11 +166,11 @@ c.resuelveDudaPersona(FID, FID.quien_dudas[0].id, { id: "ext:Fernando Martinez S
 eq("al escoger: borrador para confirmar", [FID.msj_borrador && FID.msj_borrador.texto, FID.msj_borrador && FID.msj_borrador.contacto], ["Hola Fernando, ¿ya tiene el fideicomiso actualizado conforme a lo que vimos en la última reunión?", "Fernando Martinez Smith"]);
 si("la tarjeta trae Mandar / Cambiar / No mandar", /data-mbact="manda">Mandar<\/button><button class="dmk" data-mbact="cambia">Cambiar<\/button><button class="dmk" data-mbact="no">No mandar/.test(c.vBorradorMsj(FID)));
 /* ---------- hojas ---------- */
-c.window.__hoja225 = null; c.abreHoja225(L, "metas"); var hm = c.vHoja225(L);
+c.window.__hoja225 = null; c.abreHoja(L, "metas"); var hm = c.vHoja(L);
 si("hoja Metas (232): Todo + un renglón por meta que filtra el chat (› abre su ficha) + Otro", /data-mfil="">.*Todo/.test(hm) && /data-mfil="a"><span>Azotea<\/span><small class="">vie 9 oct<\/small>/.test(hm) && /data-fmeta="a"/.test(hm) && /data-mfil="otro"/.test(hm) && /Cumplidas \(historial\)/.test(hm));
-c.abreHoja225(F, "lista"); var hl = c.vHoja225(F);
+c.abreHoja(F, "lista"); var hl = c.vHoja(F);
 si("hoja Lista a media altura, ampliable a completa, con la lista abierta", /class="h225 media"/.test(hl) && /data-h225alto="completa"/.test(hl) && /class="plst"/.test(hl));
-c.window.__hoja225.alto = "min"; si("hoja minimizada: una barrita", /^<button class="h225bar" data-h225alto="media">Invitados ▴<\/button>$/.test(c.vHoja225(F)));
+c.window.__hoja225.alto = "min"; si("hoja minimizada: una barrita", /^<button class="h225bar" data-h225alto="media">Invitados ▴<\/button>$/.test(c.vHoja(F)));
 si("versión 225 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || [])[1] || 0) >= 225);
 /* ---------- render real en el navegador ---------- */
 (async function () {
@@ -180,13 +180,13 @@ si("versión 225 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
   var tmp = path.join(os.tmpdir(), "b225-" + process.pid + ".html");
   fs.writeFileSync(tmp, '<!doctype html><meta charset="utf-8"><style>' + css + '</style><body style="background:#000;color:#f5f5f7;font-family:-apple-system,sans-serif;margin:0;width:390px"><div id="m"></div></body>');
   try { await p.goto("file://" + tmp);
-    c.togMin225("tIAMUVF22TRJF", "rvab"); var hh = c.chipsTarea(LERDO()) + c.vResumenVivo(LERDO()) + c.vFiltroMeta(LERDO()); c.togMin225("tIAMUVF22TRJF", "rvab");
+    c.togMin("tIAMUVF22TRJF", "rvab"); var hh = c.chipsTarea(LERDO()) + c.vResumenVivo(LERDO()) + c.vFiltroMeta(LERDO()); c.togMin("tIAMUVF22TRJF", "rvab");
     var o = await p.evaluate(function (h) { var m = document.getElementById("m"); m.innerHTML = '<div style="display:flex;flex-direction:column">' + h + '</div>';
       var ch = m.querySelectorAll(".chip225"), tops = Array.prototype.map.call(ch, function (x) { return Math.round(x.getBoundingClientRect().top); });
       return { unaLinea: tops.every(function (y) { return y === tops[0]; }), rv: !!m.querySelector(".rv228 .rvt"), fm: m.querySelectorAll(".fm225 .fmb").length }; }, hh);
     eq("en pantalla: chips en una sola línea, resumen y filtro", o, { unaLinea: true, rv: true, fm: 4 });
-    c.window.__hoja225 = null; c.abreHoja225(LERDO(), "detalles");
-    await p.evaluate(function (h) { document.getElementById("m").innerHTML = h; }, c.chipsTarea(LERDO()) + c.vHoja225(LERDO()));
+    c.window.__hoja225 = null; c.abreHoja(LERDO(), "detalles");
+    await p.evaluate(function (h) { document.getElementById("m").innerHTML = h; }, c.chipsTarea(LERDO()) + c.vHoja(LERDO()));
     await p.screenshot({ path: path.join(os.tmpdir(), "b225-detalles.png") });
     eq("sin errores de página", errs, []);
   } finally { await b.close(); try { fs.unlinkSync(tmp); } catch (e) {} }

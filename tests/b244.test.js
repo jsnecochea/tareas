@@ -59,7 +59,7 @@ eq("versión >= 244", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
         { k: "bi", wa_in: 1, wa_c: "Lalo Madero", t: "Lalo Madero: Ya quedó el salón para el sábado, mil quinientos por el mariachi", ts: NOW - 90 * 60000, h: hh(NOW - 90 * 60000), wa_id: "l1" },
         { k: "bi", wa_in: 1, wa_c: "Jorge Soto", t: "Jorge Soto: ¿Qué onda Puesto, oye, te puedo llamar o andas ocupado?", ts: NOW - 50 * 60000, h: hh(NOW - 50 * 60000), wa_id: "jq", duda_tarea: { alternativa_id: "tPADEL", alternativa_nombre: "Pádel miércoles" } },
         { k: "bi", wa_in: 0, wa_c: "Jorge Soto", t: "✉️ Enviado: Ahorita te llamo, andaba en la regadera", ts: NOW - 49 * 60000, h: hh(NOW - 49 * 60000), tipo: "texto", wa_id: "s1" }] };
-      tareas = [F, { id: "tPADEL", nombre: "Pádel miércoles", duenio: "salvador", estado: "abierta", msgs: [] }]; abierta = F.id; vista = "hilo"; poneVista230(F, ""); window.__cnl = window.__cnl || {}; window.__cnl[F.id] = "todo"; render(); solo(); });   /* vista Todo: se ve la pregunta y la respuesta */
+      tareas = [F, { id: "tPADEL", nombre: "Pádel miércoles", duenio: "salvador", estado: "abierta", msgs: [] }]; abierta = F.id; vista = "hilo"; poneVista(F, ""); window.__cnl = window.__cnl || {}; window.__cnl[F.id] = "todo"; render(); solo(); });   /* vista Todo: se ve la pregunta y la respuesta */
     await foto("b244-fiesta-sin-tarjeta.png");
     eq("pregunta sin respuesta: sigue contando (Jorge)", r.sinRespuesta, ["Jorge", 1]);
     eq("saliente wa_in 0 al mismo contacto: ya no cuenta", r.salienteWaIn0, null);
@@ -97,7 +97,7 @@ eq("versión >= 244", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
         { k: "bi", wa_in: 1, wa_c: "Cynthia", t: "Cynthia: wa_1791130000003.jpeg", ts: NOW + 700000, h: hh(NOW + 700000), wa_id: "c1" },               /* sin url, sola */
         { k: "bi", wa_in: 0, wa_c: "Salvador N.S.", t: "📷 Archivo enviado: wa_1791130000004.jpeg", ts: NOW + 800000, h: hh(NOW + 800000), wa_id: "e1", tipo: "foto", url: IMG[2] },
         { k: "bi", wa_in: 1, wa_c: "Cynthia", t: "Cynthia: [foto] mira este mueble para el comedor", ts: NOW + 900000, h: hh(NOW + 900000), wa_id: "c2", tipo: "foto", url: IMG[3] }] };
-      window.T244 = T; tareas = [T]; abierta = T.id; vista = "hilo"; poneVista230(T, "imp"); render(); solo();
+      window.T244 = T; tareas = [T]; abierta = T.id; vista = "hilo"; poneVista(T, "imp"); render(); solo();
       var msgs = [].slice.call(document.querySelectorAll(".msgs [data-mix]"));
       o.imp = msgs.map(function (e) { return e.classList.contains("bfoto244") ? ["FOTOS", e.querySelectorAll(".ft244").length, e.querySelectorAll("img").length, (e.querySelector(".fn244") || {}).textContent || ""] : e.textContent.replace(/\s+/g, " ").trim().slice(0, 40); });
       o.sinNombreArchivo = !/wa_\d+\.(jpe?g|png|webp|heic)/i.test(document.querySelector(".msgs").textContent);
@@ -122,7 +122,7 @@ eq("versión >= 244", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     eq("el globo cabe en 390 px", r2.ancho[1] && r2.ancho[2], true);
     eq("el hueco sin url tiene tamaño de miniatura", r2.tamSinUrl, true);
     /* en Todo: lo mismo, un globo por grupo; tocar una miniatura abre el visor con las del grupo */
-    var r3 = await p.evaluate(function () { var o = {}; poneVista230(T244, ""); window.__cnl = window.__cnl || {}; window.__cnl[T244.id] = "todo"; render(); solo();
+    var r3 = await p.evaluate(function () { var o = {}; poneVista(T244, ""); window.__cnl = window.__cnl || {}; window.__cnl[T244.id] = "todo"; render(); solo();
       o.todo = [].map.call(document.querySelectorAll(".msgs .bfoto244"), function (e) { return e.querySelectorAll(".ft244").length; });
       o.todoSinNombre = !/wa_\d+\.(jpe?g|png|webp|heic)/i.test(document.querySelector(".msgs").textContent);
       document.querySelectorAll(".bfoto244")[0].querySelectorAll("button.ft244")[2].click();
@@ -138,7 +138,7 @@ eq("versión >= 244", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     /* separador entre dos globos de la misma persona: fotos con 2 min exactos de distancia NO se juntan */
     var r4 = await p.evaluate(function () { var NOW = Date.now() - 600000; var mk = function (i, d) { return { k: "bi", wa_in: 1, wa_c: "Rogelio Sada", t: "Rogelio Sada: wa_" + i + ".jpeg", ts: NOW + d, h: "10:00", wa_id: "r" + i, url: IMG[i % 5] }; };
       var T = { id: "tR", nombre: "Prueba", duenio: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, msgs: [mk(1, 0), mk(2, 119000), mk(3, 119000 + 120000)] };
-      tareas = [T]; abierta = T.id; vista = "hilo"; poneVista230(T, "imp"); render();
+      tareas = [T]; abierta = T.id; vista = "hilo"; poneVista(T, "imp"); render();
       return [].map.call(document.querySelectorAll(".msgs .bfoto244"), function (e) { return e.querySelectorAll(".ft244").length; }); });
     eq("1m59s se junta; 2m00s exactos ya es otro globo", r4, [2, 1]);
     eq("sin errores de página", errs, []);

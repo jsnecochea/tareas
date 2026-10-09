@@ -74,7 +74,7 @@ function mundoSW() {
     await p.evaluate(function () {
       window.__rfF263 = Date.now() + 1e12; window.__NOTIFS = [];
       window.addN = function (tag, data) { window.__NOTIFS.push({ tag: tag, data: data || {}, closed: false, close: function () { this.closed = true; } }); };
-      window.swReg268 = function () { return Promise.resolve({ getNotifications: function (f) { return Promise.resolve(window.__NOTIFS.filter(function (n) { return !n.closed && (!f || !f.tag || n.tag === f.tag); })); } }); };
+      window.swReg = function () { return Promise.resolve({ getNotifications: function (f) { return Promise.resolve(window.__NOTIFS.filter(function (n) { return !n.closed && (!f || !f.tag || n.tag === f.tag); })); } }); };
       window.TT = function (id, extra) { var N = Date.now(); var t = { id: id, nombre: "Tarea " + id, duenio: "salvador", creada_por: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, autorizada: true, f_vigente: "2026-10-20", contexto: "Tarea de prueba con contexto suficiente para que no falte nada.", msgs: [{ k: "bo", de: "salvador", t: "Va", ts: N - 99999, h: "07:00" }] }; for (var k in (extra || {})) t[k] = extra[k]; return t; };
     });
     /* 1) resolver (Ya está) cierra su notificación */
@@ -82,7 +82,7 @@ function mundoSW() {
       var t = TT("tA", { avisos: [{ ts: "a1", fecha: "2026-10-07", hora: "10:00", texto: "x" }] }); var u = TT("tB", { hecho238: { ts: 1, hecho: [], falta: [{ k: "txt", q: "¿Qué marca?", ops: [] }] } });
       tareas = [t, u]; abierta = null; vista = "lista"; render();
       addN("rec:tA:a1", { id: "tA" }); addN("q:tB:p1", { id: "tB" }); addN("acuerdo:z9", {});
-      var a0 = await barreNotifs268(true), abiertas0 = __NOTIFS.filter(function (n) { return !n.closed; }).map(function (n) { return n.tag; });
+      var a0 = await barreNotifs(true), abiertas0 = __NOTIFS.filter(function (n) { return !n.closed; }).map(function (n) { return n.tag; });
       cierraHecha(t); await espera(50);
       return { barrido0: a0, abiertas0: abiertas0, tras: __NOTIFS.filter(function (n) { return !n.closed; }).map(function (n) { return n.tag; }) }; });
     eq("Con todo vigente el barrido no cierra nada", [r1.barrido0, r1.abiertas0], [0, ["rec:tA:a1", "q:tB:p1", "acuerdo:z9"]]);
@@ -90,11 +90,11 @@ function mundoSW() {
     /* 2) contestar la pregunta cierra la suya */
     var r2 = await p.evaluate(async function () {
       var u = TT("tB", { hecho238: { ts: 1, hecho: [], falta: [{ k: "txt", q: "¿Qué marca?", ops: [] }] } }); tareas = [u]; abierta = "tB"; vista = "hilo"; render(); await espera(60);
-      var antes = pendientePreg268(u);
+      var antes = pendientePreg(u);
       preguntaAClaude = function (m, mo, cb) { setTimeout(function () { cb(JSON.stringify(/Reparte su respuesta/.test(m[0].content) ? { respuestas: [{ n: 1, r: "Telcel" }] } : { tipo: "tarea", fecha: null, recordar: [], vinculos: [], ordenes: [], dudas: [], pregunta: null })); }, 20); };
       window.__NOTIFS.length = 0; addN("q:tB:p1", { id: "tB" });
       var tx = document.getElementById("txt"); tx.value = "Telcel"; document.getElementById("tenv").click(); await espera(1800);
-      return { antes: antes, despues: pendientePreg268(tareas[0]), abiertas: __NOTIFS.filter(function (n) { return !n.closed; }).length }; });
+      return { antes: antes, despues: pendientePreg(tareas[0]), abiertas: __NOTIFS.filter(function (n) { return !n.closed; }).length }; });
     eq("Contestar la pregunta cierra su notificación", [r2.antes, r2.despues, r2.abiertas], [true, false, 0]);
     /* 3) al abrir la app se barren las de cosas ya resueltas */
     var r3 = await p.evaluate(async function () {

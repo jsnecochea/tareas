@@ -77,7 +77,7 @@ eq("versión >= 246", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       var o = {}; o.filtro = document.getElementById("cnlpill").textContent;
       o.vis = [].map.call(document.querySelectorAll(".msgs .b, .msgs [data-mix], .msgs [data-hab]"), function (b) { return b.textContent.replace(/\s+/g, " ").trim().slice(0, 70); });
       o.todo = document.querySelector(".msgs").textContent.replace(/\s+/g, " ");
-      o.es = {}; ["Esta tarea está se vincula", "OK prográmame el recordatorio", "no están las indicaciones", "Es: Tarea", "Enviar mensaje a Cynthia", "Maria Eloisa Albores:", "corrigen en el contexto"].forEach(function (q) { var x = T.msgs.filter(function (y) { return String(y.t || "").indexOf(q) === 0; })[0]; o.es[q] = x ? esImp230(T, x) : "NO ESTÁ"; });
+      o.es = {}; ["Esta tarea está se vincula", "OK prográmame el recordatorio", "no están las indicaciones", "Es: Tarea", "Enviar mensaje a Cynthia", "Maria Eloisa Albores:", "corrigen en el contexto"].forEach(function (q) { var x = T.msgs.filter(function (y) { return String(y.t || "").indexOf(q) === 0; })[0]; o.es[q] = x ? esImp(T, x) : "NO ESTÁ"; });
       return o; }, FX);
     await foto("b246-testamentos-importante.png", 1900);
     var txt = r3.todo;
@@ -90,11 +90,11 @@ eq("versión >= 246", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       var A = m("Quedó pendiente revisar con calma el asunto de las firmas de los testigos allá", 10), B = m("Quedó pendiente revisar con calma el asunto de las firmas de los testigos allá", 2),
         C = m("Ok", 20, { id: "mC" }), Dd = m("Son 4 partes iguales entre los hermanos", 20), E = m("Se aprobó el borrador", 20), F = m("Mándame la foto", 20, { url: "https://x/y.jpg", tipo: "foto" }), G = m("Quedó pendiente revisar con calma el asunto de las firmas de los testigos allá", 1, { id: "mG" });
       T.msg_imp = { mC: 1, mG: 0 };
-      o.r = [A, B, C, Dd, E, F, G].map(function (x) { return esImp230(T, x); });
+      o.r = [A, B, C, Dd, E, F, G].map(function (x) { return esImp(T, x); });
       var I = { k: "bo", de: "salvador", t: "Claude muévela para el viernes", ts: NOW - 3600000 }, I2 = { k: "bo", de: "salvador", t: "Recuérdame el lunes", ts: NOW - 3600000 }; T.msgs = [I, I2];
-      o.ind = [indicacionCaduca246(T, I)];
-      T.msgs.push({ k: "bi", t: "Listo, reprogramada.", ts: NOW - 1800000 }); o.ind.push(indicacionCaduca246(T, I), indicacionCaduca246(T, I2));
-      var J = { k: "bo", de: "salvador", t: "Prográmame el recordatorio para el lunes", ts: NOW - 25 * 3600000 }; o.ind.push(indicacionCaduca246(T, J));
+      o.ind = [indicacionCaduca(T, I)];
+      T.msgs.push({ k: "bi", t: "Listo, reprogramada.", ts: NOW - 1800000 }); o.ind.push(indicacionCaduca(T, I), indicacionCaduca(T, I2));
+      var J = { k: "bo", de: "salvador", t: "Prográmame el recordatorio para el lunes", ts: NOW - 25 * 3600000 }; o.ind.push(indicacionCaduca(T, J));
       return o; });
     eq("personas: viejo largo sin cifra NO; reciente largo SÍ; msg_imp=1 SÍ; cifra vieja SÍ; decisión vieja SÍ; archivo SÍ; msg_imp=0 NO", r4.r, [false, true, true, true, true, true, false]);
     eq("indicación a Claude caduca: de menos de 24 h y sin respuesta no; con 'Listo' o >24 h, no", r4.ind, [false, true, true, true]);

@@ -100,7 +100,7 @@ eq("sw.js con versión build ≥ 273", +((/var SW_VERSION = 'build (\d+)'/.exec(
     eq("al tocar otra vez se pliega", B.pleg, ["Plática anterior (2) ▸", 0]);
 
     /* ===== 3. el plegado también en la vista Todo ===== */
-    var C = await p.evaluate(async function () { poneVista230(tareas[0], ""); window.__cnl = { tCAM: "todo" }; render(); await espera(30);
+    var C = await p.evaluate(async function () { poneVista(tareas[0], ""); window.__cnl = { tCAM: "todo" }; render(); await espera(30);
       return [!!document.querySelector(".cp273w4"), document.querySelectorAll(".ar273").length, globos().filter(function (g) { return /Pide tres cotizaciones/.test(g); }).length]; });
     eq("en Todo: sin capas (son de Importante), la plática archivada sigue plegada", C, [false, 1, 0]);
 

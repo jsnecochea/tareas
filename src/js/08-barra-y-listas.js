@@ -115,7 +115,7 @@ function respChecklist(t, r){
    en la lista de la tarea, con la sección del día. La fecha de finiquito NO se toca. Fecha dudosa = una pregunta, nada
    se guarda. Lo que no encaja exacto (sin fecha, una sola cosa, otra fecha dentro de las cosas) sigue su camino de siempre. */
 var VERBO282=/^[a-zñ]*(ar|er|ir)(le|les|lo|la|los|las|se|selo|sela|selos|selas|me|nos)?$/;
-function recuerdaLista282(v){
+function recuerdaLista(v){
   var s=sinPrefijoClaude(String(v||"")).replace(/\s+/g," ").trim().replace(/[.!]+$/,"");
   var m=/^(?:por\s+favor\s+)?(?:recu[eé]rda(?:me|nos)|acu[eé]rda(?:me|te)|av[ií]same)\s+(.+)$/i.exec(s); if(!m) return null;
   var w=m[1].split(" "), nw=function(x){ return _nv(x); }, ini=-1;
@@ -137,7 +137,7 @@ function recuerdaLista282(v){
   if(out.length<2 || !VERBO282.test(nw(out[0].split(" ")[0]))) return null;
   return {fecha:fd.fecha, duda:fd.duda||"", cuando:cuando, cosas:out.map(function(x){ return conMayuscula(x.replace(/\s+/g," ").trim()).slice(0,120); })};
 }
-function aplicaRecuerdaLista282(t, v, r){
+function aplicaRecuerdaLista(t, v, r){
   msg(t,"bo",v); var mo=t.msgs[t.msgs.length-1]; mo.de=yo; mo.canal="priv:"+yo; mo.nota_claude=1;
   if(r.duda){ msg(t,"bi",r.duda+" No puse nada; dímelo otra vez con la fecha."); var md=t.msgs[t.msgs.length-1]; md.canal="priv:"+yo; md.nota_claude=1; guarda(t); render(); return; }
   var hr=horaDicha(r.cuando)?horaValor(r.cuando):"", hora=hr?horaCercana(r.fecha,hr,r.cuando):"09:00";
@@ -376,33 +376,33 @@ function revisaClaridadTodas(ahora){
    Registros que antes eran ficha: decision_dato (DECIDE · SIN DATO CLARO / repregunta), decision_meta (DECIDE · META ATRASADA),
    pendiente_tipo "decision_salvador" (Esperando tu decisión) y "Te espera". Las opciones pasan a ser texto de la pregunta.
    Si la pelota no es de Salvador (pelota263 sin contar estos registros) no se muestra ninguna: arriba solo va "Qué toca". */
-function pelotaMia266(t){
+function pelotaMia(t){
   window.__sinReg266=1; var o=null; try{ o=pelota263(t); }catch(e){ o=null; } finally{ window.__sinReg266=0; }
   return !o || o.de==="yo";
 }
-function _contacto266(m, c){ if(!m || !c) return false; var a=_nn(String(m.wa_c||m.chat||(PERSONAS[m.de]&&PERSONAS[m.de].nombre)||m.de||"")).split(/\s+/)[0], b=_nn(String(c)).split(/\s+/)[0]; return !!a && a===b; }
+function _contacto(m, c){ if(!m || !c) return false; var a=_nn(String(m.wa_c||m.chat||(PERSONAS[m.de]&&PERSONAS[m.de].nombre)||m.de||"")).split(/\s+/)[0], b=_nn(String(c)).split(/\s+/)[0]; return !!a && a===b; }
 /* el contacto ya contestó algo útil DESPUÉS de la pregunta: la ficha no sale (la Mac la va a cerrar) */
-function contestoUtil266(t, d){
+function contestoUtil(t, d){
   var ts=+d.ts||0; if(!ts) return false;
-  return (t.msgs||[]).some(function(m){ return m && !m.oculto && m.wa_in && (+m.ts||0)>ts && _contacto266(m, d.contacto) && m.claridad==="ok"; });
+  return (t.msgs||[]).some(function(m){ return m && !m.oculto && m.wa_in && (+m.ts||0)>ts && _contacto(m, d.contacto) && m.claridad==="ok"; });
 }
-function ultimoOtroTs266(t){ var ms=t.msgs||[]; for(var i=ms.length-1;i>=0;i--){ var x=ms[i]; if(x && x.k!=="bi" && (x.wa_in || (x.de && x.de!==yo))) return +x.ts||1; } return 0; }
-function registroPreg266(t){
+function ultimoOtroTs(t){ var ms=t.msgs||[]; for(var i=ms.length-1;i>=0;i--){ var x=ms[i]; if(x && x.k!=="bi" && (x.wa_in || (x.de && x.de!==yo))) return +x.ts||1; } return 0; }
+function registroPreg(t){
   var R=[]; if(!t || t.cierre || t.fusionada_en || window.__sinReg266) return R;
   var dds=t.decision_dato||[], dms=t.decision_meta||[], hay=dds.length||dms.length||esDecisionSal(t)||(meDetiene(t) && !t.pendiente_info);
-  if(!hay || !pelotaMia266(t)) return R;
-  dds.forEach(function(d){ if(contestoUtil266(t,d)) return; var n=nombreCorto(d.contacto);
+  if(!hay || !pelotaMia(t)) return R;
+  dds.forEach(function(d){ if(contestoUtil(t,d)) return; var n=nombreCorto(d.contacto);
     R.push({k:"dd", id:d.id, q:n+" no da el dato «"+d.falta+"». ¿Hablas tú con él, le vuelvo a preguntar o ya no hace falta?", ops:[], reg:1}); });
   dms.forEach(function(d){ var ej=d.ejecutor?nombreCorto(d.ejecutor):"el responsable";
     R.push({k:"dm", id:d.id, q:"La meta «"+(d.corta||d.meta)+"» lleva "+d.atraso+" día"+(d.atraso===1?"":"s")+" de atraso con "+ej+". ¿Le pongo nueva fecha"+(d.nueva?" ("+fechaMeta(d.nueva)+")":"")+", hablas tú con él"+(d.costo?" o autorizas "+d.costo:"")+"?", ops:[], reg:1}); });
   if(esDecisionSal(t) && !(t.pendiente_dato && dds.some(function(d){ return d.id===t.pendiente_dato; })) && !(t.pendiente_meta && dms.some(function(d){ return d.id===t.pendiente_meta; })) && !(t.pendiente_dato && !dds.some(function(d){ return d.id===t.pendiente_dato; }) && false)){
     var pi=String(t.pendiente_info||"").trim(); R.push({k:"dsal", q:/[?¿]/.test(pi)?pi:pi+". ¿Qué decides?", ops:[], reg:1}); }
-  else if(meDetiene(t) && !t.pendiente_info && !esDecisionSal(t)){ var uo=ultimoOtroTs266(t); if(uo && t.espera266!==uo){ var q0=ultimoDeOtro(t)||quienEspera(t)||"";
+  else if(meDetiene(t) && !t.pendiente_info && !esDecisionSal(t)){ var uo=ultimoOtroTs(t); if(uo && t.espera266!==uo){ var q0=ultimoDeOtro(t)||quienEspera(t)||"";
     R.push({k:"espera", q:quienTeEspera(t)+" te espera"+(q0?": «"+(q0.length>160?q0.slice(0,159)+"…":q0)+"»":"")+". ¿Qué le contesto?", ops:[], uo:uo, reg:1}); } }
   return R;
 }
 /* la respuesta dictada o escrita cierra el registro de origen (la acción fina la aplica el cerebro con la pregunta como contexto) */
-function resuelveReg266(t, p, tx){
+function resuelveReg(t, p, tx){
   var n=_n179(tx);
   if(p.k==="dd"){ var d=(t.decision_dato||[]).filter(function(x){ return x.id===p.id; })[0]; if(!d) return;
     var acc=/\b(yo (le )?hablo|hablo yo|le hablo yo|yo hablo|hablo con el)\b/.test(n)?"hablo":(/\b(repregunt\w*|otra vez|vuelve a preguntar|vuelvele a preguntar|pregunt\w* otra vez)\b/.test(n)?"otra":(/\b(ya no hace falta|no hace falta|ya no|dejalo|olvidalo)\b/.test(n)?"ya":""));
@@ -416,7 +416,7 @@ function resuelveReg266(t, p, tx){
     t.decision_meta=t.decision_meta.filter(function(x){ return x.id!==p.id; }); if(t.pendiente_meta===p.id){ t.pendiente_info=""; t.pendiente_tipo=""; delete t.pendiente_meta; }
     msg(t,"bi","Decidiste sobre la meta «"+(dm.corta||dm.meta)+"»: "+tx); guarda(t); return; }
   if(p.k==="dsal"){ msg(t,"bi","Ya decidiste: "+t.pendiente_info); t.pendiente_tipo=""; t.pendiente_info=""; t.decision_ts=Date.now(); guarda(t); return; }
-  if(p.k==="espera"){ t.espera266=p.uo||ultimoOtroTs266(t); guarda(t); return; }
+  if(p.k==="espera"){ t.espera266=p.uo||ultimoOtroTs(t); guarda(t); return; }
 }
 /* build 268: duerme264 / resolución también barren */
 function decideDato(t, did, accion){
@@ -989,7 +989,7 @@ function quitaHoraNombre(n){
 /* CREAR TAREA — campos reales del motor. La fecha ya viene de Claude (si faltaba,
    se pregunto); si de plano no hay, hoy. */
 /* build 241: la condición de cierre solo es obligación si Salvador la dijo (sus palabras están en lo dictado); si la inventó la IA, es sugerencia */
-function cierraDicho241(d){ var c=String((d&&d.cierra)||"").trim(); if(!c) return true; var s=_fsa((d&&(d.dicho||d.texto))||"");
+function cierraDicho(d){ var c=String((d&&d.cierra)||"").trim(); if(!c) return true; var s=_fsa((d&&(d.dicho||d.texto))||"");
   var ws=_fsa(c).replace(/[^a-z0-9ñ ]+/g," ").split(/\s+/).filter(function(w){ return w.length>=4 && !/^(para|como|esta|este|cuando|donde|quede|queda|hecho|hecha|listo|lista)$/.test(w); });
   return !!s.trim() && ws.length>0 && ws.some(function(w){ return s.indexOf(" "+w.slice(0,5))>=0; }) &&
     /\b(se cierra|cierra con|cerrarla|cerrarlo|para cerrar|la cierras?|lo cierras?|hasta que|cuando (me )?(mande|manden|entregue|entreguen|llegue|traiga)|con (la|el|su|una|un) (foto|comprobante|ticket|evidencia|recibo|factura|firma))\b/.test(s); }
@@ -1003,7 +1003,7 @@ function creaTarea(d){
     f_original:f, f_vigente:f, movidas:0,
     recuperable:(d.recuperable===false?false:true),
     criticidad:(["diario","normal","lento"].indexOf(d.criticidad)>=0?d.criticidad:"normal"),
-    periodicidad:per, cierra:cierraDicho241(d)?(d.cierra||""):"", cierra_sugerido:cierraDicho241(d)?"":(d.cierra||""), revisar:d.revisar||"", ritmo:d.ritmo||"", gasto:d.gasto||"",
+    periodicidad:per, cierra:cierraDicho(d)?(d.cierra||""):"", cierra_sugerido:cierraDicho(d)?"":(d.cierra||""), revisar:d.revisar||"", ritmo:d.ritmo||"", gasto:d.gasto||"",
     estado:"abierta", detenido:null, cierre:null, encargado:null,
     /* REVISION: esta tarea es el respaldo de otra que ejecuta alguien mas.
        revisa_a = id de la tarea del que ejecuta; revisa_ext = nombre, si el que
@@ -1107,7 +1107,7 @@ window.recienCreadas = window.recienCreadas || [];
 /* las que estan a medias, para el bote naranja (del que las dicto) */
 function pendientesInfo(){
   return tareas.filter(function(t){
-    return t.pendiente_info && !esDecisionSal(t) && !esPropuesta256(t) && (t.creada_por===yo || t.duenio===yo) &&
+    return t.pendiente_info && !esDecisionSal(t) && !esPropuesta(t) && (t.creada_por===yo || t.duenio===yo) &&
            !t.cierre && estadoReal(t)!=="cerrada";
   }).sort(function(a,b){ return (b.creada||0)-(a.creada||0); });
 }
@@ -1285,8 +1285,8 @@ function escribeAvisoEspejo(t, a){
     cada:normalizaCada(a.cada), deep:key, activo:true, actualizado:Date.now() };
   /* build 263: antes cada guardado reescribía el documento con avisado_en:null y el servidor volvía a disparar el aviso en cada barrido (~15 min).
      Ahora se escribe con merge y avisado_en SOLO se pone en null cuando el aviso cambió de verdad (otra fecha, hora, texto o repetición). */
-  var _sg=sigAviso263({texto:doc.texto, cuando:doc.fecha+" "+doc.hora, cada:doc.cada, f_fin:"", usuario:doc.owner}), _mm=memAv263(), _k="esp:"+key;
-  if(!_mm[_k] || _mm[_k].sig!==_sg){ doc.avisado_en=null; _mm[_k]={sig:_sg, ts:Date.now()}; guardaMemAv263(); }
+  var _sg=sigAviso({texto:doc.texto, cuando:doc.fecha+" "+doc.hora, cada:doc.cada, f_fin:"", usuario:doc.owner}), _mm=memAv(), _k="esp:"+key;
+  if(!_mm[_k] || _mm[_k].sig!==_sg){ doc.avisado_en=null; _mm[_k]={sig:_sg, ts:Date.now()}; guardaMemAv(); }
   try{ db.collection(COLAV).doc(key).set(doc,{merge:true}); }catch(e){}
   avisoAlServidor(t, a, key);
 }
@@ -1335,10 +1335,10 @@ function proximaVez(fecha, hora, cada){
 }
 function avisoAlServidor(t, a, key){
   if(!a || !a.fecha || !/^\d{4}-\d{2}-\d{2}$/.test(a.fecha) || !/^\d{2}:\d{2}$/.test(a.hora||"")) return;
-  var cada=normalizaCada(a.cada), f=proximaVez(a.fecha, a.hora, cada), kk=key||claveAviso(t,a), mm=memAv263();
+  var cada=normalizaCada(a.cada), f=proximaVez(a.fecha, a.hora, cada), kk=key||claveAviso(t,a), mm=memAv();
   /* build 263: a Salvador no le llegan los recordatorios de "revisar avance" de lo que lleva Claude; y solo suena lo que permite su tablero de Notificaciones */
-  var prohibido=false; try{ prohibido=avisoEsDeClaude263(t, a) || !notifPermite(t.duenio||yo, "recordatorio"); }catch(e){}
-  if(prohibido){ if(mm[kk]){ delete mm[kk]; guardaMemAv263(); llamaPush("aviso_del", {id:kk}); } return; }
+  var prohibido=false; try{ prohibido=avisoEsDeClaude(t, a) || !notifPermite(t.duenio||yo, "recordatorio"); }catch(e){}
+  if(prohibido){ if(mm[kk]){ delete mm[kk]; guardaMemAv(); llamaPush("aviso_del", {id:kk}); } return; }
   if(!f) return;
   var cuerpo={id:kk, usuario:(t.duenio||yo), tarea:t.id,
     texto:String(a.texto||t.nombre||"Recordatorio").slice(0,180), cuando:f+" "+a.hora+":00", tipo:"recordatorio", repite_max:1,
@@ -1351,9 +1351,9 @@ function avisoAlServidor(t, a, key){
     else cuerpo.f_fin="sin_fin";
   }
   /* build 263: el mismo aviso no se vuelve a mandar en cada guardado ni en cada arranque: solo si cambió o pasó un día (para sanar el servidor) */
-  var sg=sigAviso263(cuerpo), ya=mm[kk];
+  var sg=sigAviso(cuerpo), ya=mm[kk];
   if(ya && ya.sig===sg && Date.now()-(+ya.ts||0)<20*3600000) return;
-  mm[kk]={sig:sg, ts:Date.now()}; guardaMemAv263();
+  mm[kk]={sig:sg, ts:Date.now()}; guardaMemAv();
   llamaPush("aviso_set", cuerpo);
 }
 /* una vez por arranque: sube los avisos FUTUROS de mis tareas vivas, para los
@@ -1367,7 +1367,7 @@ function subeAvisosPendientes(){
 }
 function sincronizaAvisos(t){
   if(!db||!t) return;
-  var cerr=!!(t.cierre) || !!t.fusionada_en || estadoReal(t)==="cerrada" || esDormida264(t);   /* build 155: una fusionada no suena */
+  var cerr=!!(t.cierre) || !!t.fusionada_en || estadoReal(t)==="cerrada" || esDormida(t);   /* build 155: una fusionada no suena */
   var av=cerr?[]:avisosDe(t);
   var ahora=av.map(function(a){ return claveAviso(t,a); });
   /* Salvador 2026-09-24: al cerrar o quitar la alarma se borra en el servidor
@@ -1607,7 +1607,7 @@ function completaPendiente(id, texto){
   /* build 150 (Salvador 2026-09-29): si contesta que YA SE HIZO ("ya lo mande", "ya lo
      envie", "ya quedo", "es para mi mismo y ya lo envie"), la tarea NO es una fecha
      pendiente: se anota lo que dijo y se CIERRA. Antes se quedaba pidiendo fecha. */
-  if(/\bya\s+(?:se\s+|lo\s+|la\s+|los\s+|las\s+)*(?:envi|mand|hice|hizo|hic|termin|qued|resolv|contest|cumpl|pas[eé]|dej[eé])|\bya\s+est[aá](?:\s+hech[oa])?\b|\bya\s+lo\s+hic/i.test(texto.normalize("NFD").replace(/[\u0300-\u036f]/g,"")) && !(tienePasos(t) && pasosFaltan(t).length && !cierreExplicito259(texto))){   /* build 259: con pasos sin palomear no se cierra sola */
+  if(/\bya\s+(?:se\s+|lo\s+|la\s+|los\s+|las\s+)*(?:envi|mand|hice|hizo|hic|termin|qued|resolv|contest|cumpl|pas[eé]|dej[eé])|\bya\s+est[aá](?:\s+hech[oa])?\b|\bya\s+lo\s+hic/i.test(texto.normalize("NFD").replace(/[\u0300-\u036f]/g,"")) && !(tienePasos(t) && pasosFaltan(t).length && !cierreExplicito(texto))){   /* build 259: con pasos sin palomear no se cierra sola */
     msg(t,"bi","Contestaste: “"+texto+"”.");
     t.pendiente_info=""; t.pendiente_tipo=""; t.falta_fecha=false;
     cierraHecha(t);

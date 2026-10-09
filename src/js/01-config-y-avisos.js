@@ -15,7 +15,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 306 · Cada dictado se mide: tiempo total, tiempo del modelo y tamaño de lo que se le manda";
+var VERSION_APP = "build 307 · Código ordenado: la app se edita en archivos chicos y 401 funciones ya sin número de build en el nombre";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -124,7 +124,7 @@ function guardaNotif(tipos){
   PERSONAS[yo]=PERSONAS[yo]||{}; PERSONAS[yo].notif=o;
   try{ if(db) db.collection(COLP).doc(yo).set({notif:o},{merge:true}).catch(function(){ toast("No se pudieron guardar tus notificaciones"); }); }catch(e){}
   try{ localStorage.setItem("bit_notif_"+yo, JSON.stringify(o)); }catch(e){}
-  try{ resyncAvisosNotif263(); }catch(e){}   /* build 263: lo que se apagó deja de sonar desde el servidor y lo que se prendió se vuelve a mandar */
+  try{ resyncAvisosNotif(); }catch(e){}   /* build 263: lo que se apagó deja de sonar desde el servidor y lo que se prendió se vuelve a mandar */
   return o;
 }
 function vNotif(){
@@ -290,34 +290,34 @@ function bindVoces(){
    El sw.js reemplaza (mismo tag) y no repite (mismo tag + mismo cuerpo en 24 h); aquí se cierran las que ya se resolvieron. */
 function hash268(s){ var h=5381; s=String(s||""); for(var i=0;i<s.length;i++){ h=((h<<5)+h+s.charCodeAt(i))|0; } return (h>>>0).toString(36); }
 function tagDe268(tipo, url, cuerpo){ return "p:"+(tipo||"")+"|"+(url||"")+"|"+hash268(cuerpo); }
-function tidDeUrl268(url){ var m=String(url||"").match(/[?&](?:recordatorio|tarea|id)=([^&#]+)/); try{ return m?decodeURIComponent(m[1]):""; }catch(e){ return m?m[1]:""; } }
-function tareaResuelta268(t){ return !!t && (!!t.cierre || t.estado==="dormida" || t.estado==="cerrada" || !!t.fusionada_en || (typeof estadoReal==="function" && estadoReal(t)==="cerrada")); }
-function pendientePreg268(t){
+function tidDeUrl(url){ var m=String(url||"").match(/[?&](?:recordatorio|tarea|id)=([^&#]+)/); try{ return m?decodeURIComponent(m[1]):""; }catch(e){ return m?m[1]:""; } }
+function tareaResuelta(t){ return !!t && (!!t.cierre || t.estado==="dormida" || t.estado==="cerrada" || !!t.fusionada_en || (typeof estadoReal==="function" && estadoReal(t)==="cerrada")); }
+function pendientePreg(t){
   try{ if(preguntas249(t).length) return true; }catch(e){}
   try{ if(preguntaParaMi(t)) return true; }catch(e){}
   try{ if(esDecisionSal(t)) return true; }catch(e){}
   return false;
 }
 /* ¿esta notificación ya es de algo resuelto? (n: {tag, data}) */
-function resueltaNotif268(n){
+function resueltaNotif(n){
   var tag=String((n&&n.tag)||(n&&n.data&&n.data.tag)||""), m, L=(typeof tareas!=="undefined"&&tareas)||[], tt=function(id){ return L.filter(function(x){ return x && x.id===id; })[0]; };
-  if((m=tag.match(/^q:([^:]+):(.*)$/))){ var t=tt(m[1]); return !!t && (tareaResuelta268(t) || !pendientePreg268(t)); }
-  if((m=tag.match(/^rec:([^:]+):(.*)$/))){ var t2=tt(m[1]); if(!t2) return false; if(tareaResuelta268(t2)) return true;
+  if((m=tag.match(/^q:([^:]+):(.*)$/))){ var t=tt(m[1]); return !!t && (tareaResuelta(t) || !pendientePreg(t)); }
+  if((m=tag.match(/^rec:([^:]+):(.*)$/))){ var t2=tt(m[1]); if(!t2) return false; if(tareaResuelta(t2)) return true;
     try{ return !avisosDe(t2).some(function(a){ return a && (a.id===m[2] || (a.self && m[2]==="self")); }); }catch(e){ return false; } }
-  var id=String((n&&n.data&&(n.data.id||n.data.tarea_id||n.data.tareaId))||tidDeUrl268(n&&n.data&&n.data.url)||""); if(id && !/^acuerdo:/.test(tag)){ var t3=tt(id); if(t3 && tareaResuelta268(t3)) return true; }
+  var id=String((n&&n.data&&(n.data.id||n.data.tarea_id||n.data.tareaId))||tidDeUrl(n&&n.data&&n.data.url)||""); if(id && !/^acuerdo:/.test(tag)){ var t3=tt(id); if(t3 && tareaResuelta(t3)) return true; }
   return false;
 }
-function swReg268(){ try{ if(!("serviceWorker" in navigator)) return Promise.resolve(null); return navigator.serviceWorker.ready.catch(function(){ return null; }); }catch(e){ return Promise.resolve(null); } }
+function swReg(){ try{ if(!("serviceWorker" in navigator)) return Promise.resolve(null); return navigator.serviceWorker.ready.catch(function(){ return null; }); }catch(e){ return Promise.resolve(null); } }
 /* barre las notificaciones abiertas y cierra las de cosas resueltas. force = sin esperar el respiro de 20 s */
-function barreNotifs268(force){
+function barreNotifs(force){
   try{ if(!force && window.__barreN268 && Date.now()-window.__barreN268<20000) return Promise.resolve(0); window.__barreN268=Date.now();
-    return swReg268().then(function(reg){ if(!reg || !reg.getNotifications) return 0; return reg.getNotifications().then(function(L){ var n=0; L.forEach(function(x){ try{ if(resueltaNotif268(x)){ x.close(); n++; } }catch(e){} }); return n; }); }).catch(function(){ return 0; });
+    return swReg().then(function(reg){ if(!reg || !reg.getNotifications) return 0; return reg.getNotifications().then(function(L){ var n=0; L.forEach(function(x){ try{ if(resueltaNotif(x)){ x.close(); n++; } }catch(e){} }); return n; }); }).catch(function(){ return 0; });
   }catch(e){ return Promise.resolve(0); }
 }
 function disparaPushInstantaneo(para, titulo, cuerpo, url, tipo, tag) {
   if (!para || para === yo) return; // No auto-notificar si la acción la hace uno mismo
   /* build 268: no se dispara el push de un recordatorio o una pregunta que ya está resuelto */
-  try{ if(/^(recordatorio|espera|te_necesito|pregunta)$/.test(tipo||"") && typeof tareas!=="undefined"){ var _tid=tidDeUrl268(url), _tr=tareas.filter(function(x){ return x && x.id===_tid; })[0]; if(_tr && tareaResuelta268(_tr)) return; } }catch(e){}
+  try{ if(/^(recordatorio|espera|te_necesito|pregunta)$/.test(tipo||"") && typeof tareas!=="undefined"){ var _tid=tidDeUrl(url), _tr=tareas.filter(function(x){ return x && x.id===_tid; })[0]; if(_tr && tareaResuelta(_tr)) return; } }catch(e){}
   /* build 200: lo que esa persona apago en Notificaciones no se le manda; el tipo viaja al servidor */
   tipo = tipo || tipoDePush(titulo, cuerpo);
   var sub = (tipo==="te_necesito") ? subtipoDePush(titulo, cuerpo) : "";
@@ -473,7 +473,7 @@ function bannerAvisos(){
 
 var MODO_CEREBRO="pesado";   /* build 251: dictados, indicaciones a Claude y respuestas de la tarjeta de preguntas; el servidor (claude.php) decide qué modelo es cada modo */
 /* build 283 (casos Comedor y Moric, 7-oct): dictados, indicaciones a Claude y respuestas a «Decide tú» van en "rapido" (2-3 s, corte a los 8 s,
-   sin reintento). "pesado" queda solo para «Falta info» / tarea nueva. Lo que el rápido no resuelve queda de encargo para la Mac (ordenPendiente283). */
+   sin reintento). "pesado" queda solo para «Falta info» / tarea nueva. Lo que el rápido no resuelve queda de encargo para la Mac (ordenPendiente). */
 var MODO_RAPIDO283="rapido";
 window.__MODELO_CLAUDE=window.__MODELO_CLAUDE||{};
 /* Pregunta al Claude de la app. modelo: "rapido" o "pesado".
@@ -717,7 +717,7 @@ function estadoReal(t){
      Las RECURRENTES si salen vencida, pero solo si la vuelta paso SIN confirmar
      (confirmar = siguienteVuelta, que corre la fecha); el texto va en tono positivo. */
   if(t.indefinida===true) return "hoy";
-  if(typeof esperaConHito263==="function" && esperaConHito263(t)) return "espera";   /* build 263: el siguiente paso es de un tercero con fecha conocida: espera, no vencida */
+  if(typeof esperaConHito==="function" && esperaConHito(t)) return "espera";   /* build 263: el siguiente paso es de un tercero con fecha conocida: espera, no vencida */
   return "vencida";
 }
 function sinFinal(t){ return !!(t && (t.indefinida===true || t.tipo==="recurrente" || esRecurrente(t))); }
@@ -977,7 +977,7 @@ function candadoFecha(dicho, fModelo){
    · "antes del X" -> la FECHA META (f_vigente);
    · "termina cuando <evento>" / "continúa hasta que <evento>" -> "Cierra con: <evento>" (t.cierra), sin fecha. */
 var EMPRESAS248=["bbva","banorte","santander","hsbc","banamex","citibanamex","scotiabank","inbursa","afirme","bancomer","azteca","telcel","telmex","cfe","imss","sat","infonavit","fovissste","amazon","google","walmart","soriana","costco","liverpool","femsa","cemex","oxxo","coppel","elektra","mercadolibre","pemex","bimbo","apple","microsoft","samsung","toyota","ford","nissan","chevrolet"];
-function _hitsFecha248(s){
+function _hitsFecha(s){
   var out=[], m, re, noNum=/^\s*(?:%|por\s+ciento|mil\b|pesos|minutos?|horas?|hrs?|personas|veces|y\s+media|de\s+(?:la|las|los|el)\b)/;
   re=new RegExp("\\b(?:(antes|despues)\\s+del?\\s+|(?:para\\s+)?(?:el|al)\\s+(?:dia\\s+)?)(\\d{1,2})(?:\\s+de\\s+("+_MESRE+"))?(?![a-z0-9])","g");
   while((m=re.exec(s))){
@@ -989,8 +989,8 @@ function _hitsFecha248(s){
   while((m=re.exec(s))){ var fw=fechaDictada(m[2]); if(fw.fecha && !fw.duda) out.push({i:m.index, end:m.index+m[0].length, pref:m[1]||"", f:fw.fecha}); }
   return out.sort(function(a,b){ return a.i-b.i; });
 }
-function lecturaFechas248(v){
-  var s=_fsa(v), L={noCierre:[], meta:"", avisos:[], continua:false, evento:"", libres:0, hay:false}, H=_hitsFecha248(s), H0=hoy();
+function lecturaFechas(v){
+  var s=_fsa(v), L={noCierre:[], meta:"", avisos:[], continua:false, evento:"", libres:0, hay:false}, H=_hitsFecha(s), H0=hoy();
   H.forEach(function(h, k){
     var antes=s.slice(Math.max(0,h.i-50), h.i), sig=H[k+1]?H[k+1].i:h.end+130, desp=s.slice(h.end, Math.min(sig, h.end+130));
     if(!h.pref && /\bno\s+(?:va\s+a\s+|ira\s+a\s+)?(?:termin\w*|cierr\w*|cerr\w*|acab\w*|venc\w*)\s+(?:(?:para|hasta|en)\s+)?$/.test(antes)){
@@ -1007,7 +1007,7 @@ function lecturaFechas248(v){
   return L;
 }
 /* el evento dicho ("tengamos firmado el fideicomiso", "firmemos") -> el texto de "Cierra con" ("Fideicomiso firmado") */
-function cierraDeEvento248(ev, t){
+function cierraDeEvento(ev, t){
   var e=String(ev||"").replace(/\s+/g," ").trim().replace(/[.,;:]+$/,""), low=e.toLowerCase(), m; if(!e) return "";
   var r=low.replace(/^(?:que\s+)?(?:ya\s+)?(?:tengamos|tengan|tenga|tenemos|tengo|tienen|hayamos|hayan|haya|quede|queden|este|esten|estemos)\s+/,"");
   if((m=r.match(/^([a-zñ]+(?:ado|ada|ido|ida|ados|adas|idos|idas))\s+(?:el|la|los|las)\s+(.+)$/))) return conMayuscula(m[2]+" "+m[1]);
@@ -1016,15 +1016,15 @@ function cierraDeEvento248(ev, t){
     return conMayuscula((tema?tema+" ":"")+P[m[1]]); }
   return conMayuscula(low);
 }
-function aplicaLecturaFechas248(t, v, j, op){
-  op=op||{}; var L=lecturaFechas248(v), hecho=[], H0=hoy(), R={L:L, hecho:hecho, bloquea:false};
+function aplicaLecturaFechas(t, v, j, op){
+  op=op||{}; var L=lecturaFechas(v), hecho=[], H0=hoy(), R={L:L, hecho:hecho, bloquea:false};
   if(!L.hay) return R;
   R.bloquea=!!(L.noCierre.length || L.meta || (L.continua && !L.libres));
   if(L.meta && t.indefinida!==true && L.meta!==t.f_vigente){
     if(op.mueve && t.f_vigente){ var rr=mueveFecha(t, L.meta, "lo dijo "+((PERSONAS[yo]||{}).nombre||"")+" (fecha meta)"); if(!(rr && rr.ok===false)){ t.falta_fecha=false; hecho.push("fecha meta: antes del "+fechaBonita(L.meta)); } }
     else { t.fecha_dictada=true; t.f_original=L.meta; t.f_vigente=L.meta; t.falta_fecha=false; hecho.push("fecha meta: antes del "+fechaBonita(L.meta)); } }
   L.avisos.forEach(function(f){ if(f<H0 || avisoMismoDia(t, f)) return; nuevoAviso(t, {texto:"Revisión: "+(t.nombre||"la tarea"), fecha:f, hora:"", dicho:""}); hecho.push("aviso "+fechaBonita(f)); });
-  if(L.evento){ var c=cierraDeEvento248(L.evento, t);
+  if(L.evento){ var c=cierraDeEvento(L.evento, t);
     if(c===conMayuscula(L.evento.toLowerCase()) && j && typeof j.cierra==="string" && j.cierra.trim().length>=4 && j.cierra.trim().length<=120) c=conMayuscula(j.cierra.trim());
     var ya=String(t.cierra||""), ws=_nn(c).split(/\s+/).filter(function(w){ return w.length>=4; });
     if(c && (!ya || !ws.every(function(w){ return _nn(ya).indexOf(w.slice(0,5))>=0; }))){ t.cierra=c; hecho.push("cierra con: "+c.toLowerCase()); } }
@@ -1675,7 +1675,7 @@ function cierraHecha(t){
   var tarde=t.f_original&&dDif(t.f_original,hoy())>0;
   msg(t,"bi",tarde?"Cerrada. Lo importante es que ya quedó.":"Cerrada a tiempo. Bien hecho.");
   t.estado="cerrada"; t.pide_atoro=false; t.pide_tel=false; t.pide_fecha=false; guarda(t); sincronizaAvisos(t);
-  try{ barreNotifs268(true); }catch(e){}
+  try{ barreNotifs(true); }catch(e){}
 }
 /* REABRIR: la tarea vuelve a estar viva tal cual estaba, con su historial.
    Se anota quien y por que la reabrio. Si la fecha ya paso, se pide la nueva
@@ -1693,37 +1693,37 @@ function reabre(t, porque){
 }
 /* ===== build 264: TAREAS EXPEDIENTE. "Ya está" en una indefinida no la cierra: queda DORMIDA ("Enterado · queda viva para lo que llegue").
    Sale de Hoy, Vencidas y toda lista, nunca empuja; despierta sola cuando entra algo (WhatsApp, correo, vincular, mover) y sube con "Nuevo". ===== */
-function esExpediente264(t){ return !!t && !t.es_recordatorio && !t.cierre && (t.indefinida===true || t.expediente===true || t.tipo==="indefinida") && !esRecurrente(t); }
-function esDormida264(t){ return !!t && t.estado==="dormida" && !t.cierre && !t.fusionada_en; }
-function etq264(x){ if(!x) return ""; if(esDormida264(x)) return "dormida"; if(x.cierre || (typeof estadoReal==="function" && estadoReal(x)==="cerrada")) return "cerrada"; return ""; }
+function esExpediente(t){ return !!t && !t.es_recordatorio && !t.cierre && (t.indefinida===true || t.expediente===true || t.tipo==="indefinida") && !esRecurrente(t); }
+function esDormida(t){ return !!t && t.estado==="dormida" && !t.cierre && !t.fusionada_en; }
+function etq264(x){ if(!x) return ""; if(esDormida(x)) return "dormida"; if(x.cierre || (typeof estadoReal==="function" && estadoReal(x)==="cerrada")) return "cerrada"; return ""; }
 function entrante264(m){ return !!m && !m.oculto && (m.k!=="bi" || !!m.movido_de || !!m.canal || !!m.wa_in || !!m.wa_c); }
-function cuentaEntra264(t){ return (t.msgs||[]).filter(entrante264).length; }
+function cuentaEntra(t){ return (t.msgs||[]).filter(entrante264).length; }
 function duerme264(t){
   var prev={estado:t.estado, indefinida:t.indefinida, expediente:t.expediente, dormida:t.dormida||null, nuevo264:t.nuevo264||null, n:(t.msgs||[]).length};
   t.expediente=true; t.indefinida=true; t.estado="dormida"; t.nuevo264=null;
   t.pide_atoro=false; t.pide_tel=false; t.pide_fecha=false; t.revisar_hoy=null;
   msg(t,"bi","Enterado · queda viva para lo que llegue");
-  t.dormida={ts:Date.now(), q:cuentaEntra264(t), e:(t.evidencias||[]).length};
+  t.dormida={ts:Date.now(), q:cuentaEntra(t), e:(t.evidencias||[]).length};
   guarda(t); try{ sincronizaAvisos(t); }catch(e){}
-  try{ barreNotifs268(true); }catch(e){}
+  try{ barreNotifs(true); }catch(e){}
   return prev;
 }
-function restauraDormir264(t, prev){
+function restauraDormir(t, prev){
   t.estado=prev.estado||"abierta"; t.indefinida=prev.indefinida; t.expediente=prev.expediente; t.dormida=prev.dormida; t.nuevo264=prev.nuevo264;
   if(t.msgs && t.msgs.length>prev.n) t.msgs.length=prev.n; guarda(t); try{ sincronizaAvisos(t); }catch(e){}
 }
 function despierta264(t, porque){
-  if(!esDormida264(t)) return false;
+  if(!esDormida(t)) return false;
   t.estado="abierta"; t.dormida=null; t.nuevo264=Date.now();
   t.dormida_porque=String(porque||"").slice(0,120);
   guarda(t); try{ sincronizaAvisos(t); }catch(e){}
   return true;
 }
 /* barrido: cualquier dormida con algo nuevo (mensaje entrante, archivo) despierta sola; corre en mias() y en misMensajes() */
-function despiertaTodas264(){
+function despiertaTodas(){
   var n=0;
-  (tareas||[]).forEach(function(t){ if(!esDormida264(t)) return; var d=t.dormida||{q:0,e:0};
-    if(cuentaEntra264(t)>(d.q||0) || (t.evidencias||[]).length>(d.e||0)){ if(despierta264(t,"llegó algo nuevo")) n++; } });
+  (tareas||[]).forEach(function(t){ if(!esDormida(t)) return; var d=t.dormida||{q:0,e:0};
+    if(cuentaEntra(t)>(d.q||0) || (t.evidencias||[]).length>(d.e||0)){ if(despierta264(t,"llegó algo nuevo")) n++; } });
   return n;
 }
 function cierraSinEjecutar(t,motivoK){
@@ -2004,7 +2004,7 @@ function transfiere(t, nuevo, razon){
 /* ============ ESTADO ============ */
 var menuOpen=false, encAbierto=null, sueltoOpen=false, yoOpen=false;
 /* despliega la lista de tareas con fecha por delante — build 285: verFuturas y los demás interruptores de secciones del home
-   (window.__verEnc270, __verRev270, __verComp, __clL263) leen y escriben el estado plegado del día (abre285/ponAbre285, más abajo) */
+   (window.__verEnc270, __verRev270, __verComp, __clL263) leen y escriben el estado plegado del día (abre285/ponAbre, más abajo) */
 var masDias=0;          /* cuántos días extra de "Próximas" pidió ver */
 var secAbierta=null;   /* Salvador 2026-09-22: acordeon de las 7 secciones del home
    (atora/pend/venc/msg/hoy/rec/prox). null = todas colapsadas; si trae una clave, esa

@@ -94,7 +94,7 @@ eq("versión >= 254", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     eq("En duda sin respuesta de Claude: lo seguro, hoja de indicación", await p.evaluate(function () { var h = document.getElementById("hoja254"); return h ? h.querySelector("b").textContent : null; }), "Esto parece indicación para Claude");
     /* 7) menú de pulsación larga */
     await p.evaluate(function () { window.modelo({ tipo: "tarea", fecha: null, recordar: [], vinculos: [], dudas: [], pregunta: null, ordenes: [] }, 20); });
-    await abreT(); await p.evaluate(function () { var T = tareas[0]; msg(T, "bo", "Pásale el avance a iqosa"); var m = T.msgs[T.msgs.length - 1]; m.de = "salvador"; m.canal = "ext:iqosa team"; m.wa_auto = "iqosa team"; m.wa_pid = "px"; guarda(T); window.__cnl[T.id] = "todo"; poneVista230(T, ""); window.__cnl[T.id] = "todo"; render(); });
+    await abreT(); await p.evaluate(function () { var T = tareas[0]; msg(T, "bo", "Pásale el avance a iqosa"); var m = T.msgs[T.msgs.length - 1]; m.de = "salvador"; m.canal = "ext:iqosa team"; m.wa_auto = "iqosa team"; m.wa_pid = "px"; guarda(T); window.__cnl[T.id] = "todo"; poneVista(T, ""); window.__cnl[T.id] = "todo"; render(); });
     var ixP = await p.evaluate(function () { return tareas[0].msgs.length - 1; });
     var menu = async function (ix) { return await p.evaluate(function (ix) { var el = document.querySelector('.msgs [data-mix="' + ix + '"]'); if (!el) return null; var ops = leeOpcionesDe(el); return ops ? ops.map(function (o) { return o[0]; }) : null; }, ix); };
     var mo = await menu(ixP);
@@ -108,7 +108,7 @@ eq("versión >= 254", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     await foto("b254-4-aviso-ya-llego.png");
     /* Editar desde el menú largo */
     await p.evaluate(function () { var h = document.getElementById("hoja254"); if (h) h.remove(); });
-    await abreT(); await p.evaluate(function () { var T = tareas[0]; msg(T, "bo", "Texto para editar"); var m = T.msgs[T.msgs.length - 1]; m.de = "salvador"; poneVista230(T, ""); window.__cnl[T.id] = "todo"; render(); });
+    await abreT(); await p.evaluate(function () { var T = tareas[0]; msg(T, "bo", "Texto para editar"); var m = T.msgs[T.msgs.length - 1]; m.de = "salvador"; poneVista(T, ""); window.__cnl[T.id] = "todo"; render(); });
     var ixE = await p.evaluate(function () { return tareas[0].msgs.length - 1; });
     await p.evaluate(function (ix) { leeOpcionesDe(document.querySelector('.msgs [data-mix="' + ix + '"]')).filter(function (o) { return o[0] === "Editar"; })[0][1](); }, ixE); await p.waitForTimeout(100);
     eq("Editar desde el menú largo abre el editor del mensaje", await p.evaluate(function () { return !!document.querySelector("#det242 #ed247t"); }), true);

@@ -70,7 +70,7 @@ eq("versión >= 255", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     /* 4) si la pelota no es de Salvador, no hay pregunta: solo Qué toca */
     await limpia();
     var r4 = await p.evaluate(async function () { var T = VEST({ resumen: { que_toca: "Esperando respuesta de Manuel Parra con el costo (para el 10 oct)" } }); tareas = [T]; abierta = "tVEST"; vista = "hilo"; render(); await espera(80);
-      return { n: preguntas249(T).length, bloque: !!document.getElementById("preg249"), fichas: document.querySelectorAll(".c-decmeta,.decban,[data-ddact]").length, pelota: pelotaMia266(T) ? "yo" : "claude" }; });
+      return { n: preguntas249(T).length, bloque: !!document.getElementById("preg249"), fichas: document.querySelectorAll(".c-decmeta,.decban,[data-ddact]").length, pelota: pelotaMia(T) ? "yo" : "claude" }; });
     eq("Pelota de Claude: sin pregunta ni ficha", [r4.n, r4.bloque, r4.fichas, r4.pelota], [0, false, 0, "claude"]);
     eq("Sin errores de página", errs, []);
   } catch (e) { malas.push("EXCEPCION " + e.message + "\n" + (e.stack || "").split("\n").slice(0, 4).join("\n")); }

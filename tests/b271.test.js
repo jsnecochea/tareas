@@ -22,7 +22,7 @@ eq("sw.js con versión build ≥ 271", +((/var SW_VERSION = 'build (\d+)'/.exec(
   try {
     await p.goto("file://" + path.join(__dirname, "..", "index.html")); await p.waitForTimeout(600);
     /* build 285: las secciones del home amanecen plegadas; en esta prueba vieja Acomodo, Mensajes, Te pregunta Doit, Vencidas y Hoy arrancan abiertas como antes (lo que se toque se sigue recordando) */
-    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl285(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
+    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
     await p.evaluate(function () { yo = "salvador"; PERSONAS.salvador = PERSONAS.salvador || { nombre: "Salvador", jefe: true }; PERSONAS.salvador.jefe = true;
       window.__esp = []; window.__push = []; window.__pids = [];
       db = { collection: function () { return { doc: function (k) { return { set: function (d, o) { window.__esp.push([k, d, o]); return Promise.resolve(); }, get: function () { return Promise.resolve({ exists: false }); }, delete: function () { return Promise.resolve(); } }; } }; } };
@@ -47,7 +47,7 @@ eq("sw.js con versión build ≥ 271", +((/var SW_VERSION = 'build (\d+)'/.exec(
           { k: "bi", wa_in: 1, wa_c: "Manuel Parra", t: "Manuel Parra: mañana te dejamos la muestra de la melamina al alto brillo para la mesa", ts: N - 5e6, h: "11:51", duda_tarea: { alternativa_id: "tVES", alternativa_nombre: "Vestidores" } },
           { k: "bi", wa_in: 1, wa_c: "Lalo Madero", t: "Lalo Madero: ¿Hay miercolitos esta semana para revisar la cotización de 12,500?", ts: N - 1e6, h: "13:50", duda_tarea: { alternativa_id: "tVES", alternativa_nombre: "Vestidores" } }] }),
         T("tVES", "Vestidores", "", { f_vigente: "2026-10-20" })]; }
-      try { localStorage.removeItem("bit_msg_pleg271"); } catch (e) {} window.__msgPleg271 = undefined; poneAcoPlegado260(false);
+      try { localStorage.removeItem("bit_msg_pleg271"); } catch (e) {} window.__msgPleg271 = undefined; poneAcoPlegado(false);
       home(fx());
       var tab = function (k) { return document.querySelector('.seg-bandeja [data-seg="' + k + '"]'); };
       r.ficha = document.querySelector('.ficha-inicio[data-grupo="bandeja"]').getAttribute("aria-label");

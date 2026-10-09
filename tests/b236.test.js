@@ -54,7 +54,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
       abre(NOTA()); dicta("es tarea"); o.vozTarea = tareas[0].tipo_item;
       abre(NOTA()); dicta("es dato"); o.vozDato = tareas[0].tipo_item;
       abre(NOTA()); dicta("vincúlala al fideicomiso"); var q = document.getElementById("enlq"); o.vozVinc = [!!q, q && q.value, [].map.call(document.querySelectorAll("#enll .enlr .enln"), function (x) { return x.textContent; }), tareas[0].tipo_item || ""]; cierraEnlazar();
-      o.frases = ["vincúlala a golf", "Vincúlalo con la tarea de Golf simulador", "vincular a fideicomiso.", "vincúlala", "vamos a vincular luego"].map(vincDicho236);
+      o.frases = ["vincúlala a golf", "Vincúlalo con la tarea de Golf simulador", "vincular a fideicomiso.", "vincúlala", "vamos a vincular luego"].map(vincDicho);
       return o; });
     var W = "rgb(255, 255, 255)", AZ = "rgb(10, 132, 255)", MO = "rgb(124, 100, 255)", T0 = "rgba(0, 0, 0, 0)";
     eq("sin clasificar: Tarea · Dato · Vincular, 48 px, mismo ancho, esquinas 12, solo contorno (azul, blanco, morado)", r.sin.botones.map(function (b) { return [b[0], b[1], b[3], b[4], b[5], b[6]]; }),

@@ -107,7 +107,7 @@ eq("sw.js con versión build ≥ 272", +((/var SW_VERSION = 'build (\d+)'/.exec(
       home(fx272()); abreGrupoInicio("esperan"); window.__pq255Last = "tP3";   /* aunque ya la hubiera cerrado antes, el renglón la vuelve a abrir */
       document.querySelector('[data-preg272]').click(); await espera(300);
       var r = [vista, abierta, !!document.getElementById("preg249"), document.querySelectorAll("#preg249 .pq255l li").length];
-      try { cierraPreg255(); } catch (e) {}
+      try { cierraPreg(); } catch (e) {}
       return r; });
     eq("Renglón agrupado → tarea abierta con el popup de sus 3 preguntas", C, ["hilo", "tP3", true, 3]);
 

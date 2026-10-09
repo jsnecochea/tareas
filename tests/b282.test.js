@@ -43,7 +43,7 @@ var MALO = /\b(veces|callado|ahorita|regañ\w*|salvador|jefe)\b|por\s+qu[eé]\s+
     /* ===== F39 ===== */
     var F = await p.evaluate(function () {
       var o = {}, L = [];
-      for (var i = 0; i < 7; i++) L.push(textoEmpujon282("Hablar con José Mijares", i));
+      for (var i = 0; i < 7; i++) L.push(textoEmpujon("Hablar con José Mijares", i));
       o.L = L;
       /* empujon() real sobre una tarea vencida, 1a, 2a, 3a y 4a vez */
       var T = { id: "tJM", nombre: "Hablar con José Mijares", duenio: "salvador", estado: "abierta", tipo: "unica", f_original: "2026-09-30", f_vigente: "2026-09-30", msgs: [] };
@@ -78,7 +78,7 @@ var MALO = /\b(veces|callado|ahorita|regañ\w*|salvador|jefe)\b|por\s+qu[eé]\s+
         "recuérdame el martes de llamar a Pato",
         "recuérdame llamar a Pato y a Chuy",
         "recuérdame el martes de llamar a Pato y el 15 de revisar la grúa"];
-      return L.map(function (v) { var r = recuerdaLista282(v); return r ? { f: r.fecha, d: r.duda, c: r.cosas } : null; });
+      return L.map(function (v) { var r = recuerdaLista(v); return r ? { f: r.fecha, d: r.duda, c: r.cosas } : null; });
     });
     eq("F36 caso real: martes 6-oct, 3 cosas (el verbo se hereda: 'pedir el material'; 'Pato y Chuy' no se parte)", R[0], { f: "2026-10-06", d: "", c: ["Darle seguimiento a pato y Chuy", "Pedir la grúa", "Pedir el material"] });
     eq("F36 con hora y comas", R[1], { f: "2026-10-05", d: "", c: ["Llamar a Pato", "Revisar la grúa", "Comprar focos"] });

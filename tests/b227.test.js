@@ -31,7 +31,7 @@ eq("versión 227 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
           { k: "bi", wa_in: 1, wa_c: "Javier Fernández", t: "Javier Fernández: Muy bien, fecha separada", ts: NOW - 7e6, h: "10:10" },
           { k: "bi", wa_in: 1, wa_c: "Eduardo Madero", t: "Eduardo Madero: ¿Hay miercolitos esta semana?", ts: NOW - 6e6, h: "13:50", duda_tarea: { alternativa_id: "tPADEL", alternativa_nombre: "Pádel miércoles" } }] }; }
       function pinta() { [].forEach.call(document.body.children, function (x) { if (x.id !== "app" && !/cnl|mov225|leemask/.test(x.className + x.id)) x.style.display = "none"; }); var A = document.getElementById("app"); A.style.display = "flex"; }
-      tareas = [FIESTA(), { id: "tPADEL", nombre: "Pádel miércoles", duenio: "salvador", estado: "abierta", msgs: [] }]; abierta = "tIAMUUK9ZCWJW"; vista = "hilo"; render(); poneVista230(tareas[0], ""); render(); pinta();   /* 235: elige Todo */
+      tareas = [FIESTA(), { id: "tPADEL", nombre: "Pádel miércoles", duenio: "salvador", estado: "abierta", msgs: [] }]; abierta = "tIAMUUK9ZCWJW"; vista = "hilo"; render(); poneVista(tareas[0], ""); render(); pinta();   /* 235: elige Todo */
       var tt = document.querySelector(".top .t"), cs = getComputedStyle(tt);
       o.titulo = [cs.whiteSpace, tt.scrollWidth > tt.clientWidth, Math.round(tt.getBoundingClientRect().height) < 40, !document.querySelector(".top .d")];
       tt.click(); var t2 = document.querySelector(".top .t"); o.tituloFull = [getComputedStyle(t2).whiteSpace, t2.textContent];
@@ -53,7 +53,7 @@ eq("versión 227 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
       document.querySelector(".ptcard [data-acmov]").click(); var mv = document.getElementById("mov225"); o.mover = (mv.querySelector("#mops253 .opt226.sim262") || {}).textContent;
       mv.querySelector('[data-movto="tPADEL"]').click(); o.moverSale = [!!document.querySelector(".ptcard"), !!tareas[0].msgs[3].oculto, tareas[1].msgs.length];
       tareas = [FIESTA(), { id: "tPADEL", nombre: "Pádel miércoles", duenio: "salvador", estado: "abierta", msgs: [] }]; render();
-      var _va = vaATareaNueva249; vaATareaNueva249 = function () { render(); }; document.querySelector(".ptcard [data-acnueva]").click(); (function(){ var ok=document.querySelector('[data-nom249="ok"]'); if(ok) ok.click(); })(); o.nuevaSale = [!!document.querySelector(".ptcard"), tareas.length]; vaATareaNueva249 = _va;
+      var _va = vaATareaNueva; vaATareaNueva = function () { render(); }; document.querySelector(".ptcard [data-acnueva]").click(); (function(){ var ok=document.querySelector('[data-nom249="ok"]'); if(ok) ok.click(); })(); o.nuevaSale = [!!document.querySelector(".ptcard"), tareas.length]; vaATareaNueva = _va;
       /* resumen plegable */
       tareas = [FIESTA()]; render(); o.rvAbierto = [!!document.querySelector('[data-chip="resumen"]'), !!document.querySelector(".res230")];
       (function(){ document.getElementById("cnlpill").click(); document.querySelector('.fil227h [data-fil="imp"]').click(); })(); o.rvMin = [document.getElementById("cnlpill").textContent, !!document.querySelector(".res230")];

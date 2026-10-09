@@ -40,7 +40,7 @@ eq("versión >= 249", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     });
 
     /* ===== 1) Tarea nueva pide nombre ===== */
-    var r1 = await p.evaluate(async function () { var T = ORIGEN(); abre(T); abreMover225(T, 0); document.querySelector("[data-movnueva]").click(); await espera(60);
+    var r1 = await p.evaluate(async function () { var T = ORIGEN(); abre(T); abreMover(T, 0); document.querySelector("[data-movnueva]").click(); await espera(60);
       var d = document.getElementById("nom249"), i = d && d.querySelector("#nom249i"), nTar = tareas.length, mov = !!document.getElementById("mov225");
       return { hay: !!d, etiqueta: d ? /Nombre de la tarea nueva/.test(d.textContent) : false, valor: i ? i.value : "", botones: d ? [].map.call(d.querySelectorAll("button"), function (x) { return x.textContent; }) : [], nTar: nTar, hojaMover: mov, origen: T.nombre }; });
     eq("Nueva: sale la ventanita con el campo y la sugerencia", [r1.hay, r1.etiqueta, r1.botones.filter(Boolean)], [true, true, ["Cancelar", "Crear"]]);
@@ -51,7 +51,7 @@ eq("versión >= 249", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     var r1b = await p.evaluate(async function () { document.querySelector('[data-nom249="x"]').click(); await espera(30); return { hay: !!document.getElementById("nom249"), nTar: tareas.length, ocultos: tareas[0].msgs.filter(function (m) { return m.oculto; }).length }; });
     eq("Cancelar: no crea ni mueve", r1b, { hay: false, nTar: 1, ocultos: 0 });
     /* nombre vacío no crea; con nombre crea y va a la tarea nueva */
-    var r1c = await p.evaluate(async function () { var T = tareas[0]; abreMover225(T, 0); document.querySelector("[data-movnueva]").click(); await espera(40);
+    var r1c = await p.evaluate(async function () { var T = tareas[0]; abreMover(T, 0); document.querySelector("[data-movnueva]").click(); await espera(40);
       var i = document.getElementById("nom249i"); i.value = "   "; document.querySelector('[data-nom249="ok"]').click(); await espera(30); var sigue = !!document.getElementById("nom249"), nT = tareas.length;
       i.value = "Material del Portón Eléctrico"; document.querySelector('[data-nom249="ok"]').click(); await espera(80);
       var N = tareas.filter(function (x) { return x.id !== "tORIGEN"; })[0];
@@ -65,20 +65,20 @@ eq("versión >= 249", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       return { hay: hay, val: val !== T.nombre && val !== "", nombre: N && N.nombre, va: abierta === (N && N.id) }; });
     eq("Acomodo > Nueva: pide nombre, crea y va a la nueva", r1d, { hay: true, val: true, nombre: "Cotización del Motor", va: true });
     /* lote: Mover todos > Tarea nueva */
-    var r1e = await p.evaluate(async function () { var T = ORIGEN(); abre(T); abreMover225(T, 0, [0, 1], { lote: true }); document.querySelector("[data-movnueva]").click(); await espera(40);
+    var r1e = await p.evaluate(async function () { var T = ORIGEN(); abre(T); abreMover(T, 0, [0, 1], { lote: true }); document.querySelector("[data-movnueva]").click(); await espera(40);
       var hay = !!document.getElementById("nom249"); document.getElementById("nom249i").value = "Portón eléctrico y motor"; document.querySelector('[data-nom249="ok"]').click(); await espera(100);
       var N = tareas.filter(function (x) { return x.id !== "tORIGEN"; })[0];
       return { hay: hay, nombre: N && N.nombre, msgsN: N ? N.msgs.filter(function (m) { return m.nuevo_mov; }).length : 0, va: abierta === (N && N.id), ocultos: T.msgs.filter(function (m) { return m.oculto; }).length }; });
     eq("Lote: Tarea nueva pide nombre; pasan los 2 mensajes y va a la nueva", r1e, { hay: true, nombre: "Portón Eléctrico y Motor", msgsN: 2, va: true, ocultos: 2 });
     /* barra de selección */
-    var r1f = await p.evaluate(async function () { var T = ORIGEN(); abre(T); window.__sel245 = { tid: T.id, set: { 0: 1 } }; pintaSel245(); var b = document.querySelector('[data-sel245="nueva"]'); b.click(); await espera(40);
+    var r1f = await p.evaluate(async function () { var T = ORIGEN(); abre(T); window.__sel245 = { tid: T.id, set: { 0: 1 } }; pintaSel(); var b = document.querySelector('[data-sel245="nueva"]'); b.click(); await espera(40);
       var hay = !!document.getElementById("nom249"); document.getElementById("nom249i").value = "Llegada del material"; document.querySelector('[data-nom249="ok"]').click(); await espera(100);
       var N = tareas.filter(function (x) { return x.id !== "tORIGEN"; })[0]; var bar = !!document.getElementById("selbar245");
       return { hay: hay, nombre: N && N.nombre, va: abierta === (N && N.id), bar: bar }; });
     eq("Barra de selección > Nueva: pide nombre y va a la nueva", r1f, { hay: true, nombre: "Llegada del Material", va: true, bar: false });
     /* Te pregunta > Mover > Tarea nueva */
     var r1g = await p.evaluate(async function () { var T = ORIGEN(); T.msgs.push({ k: "bi", wa_in: 1, wa_c: "Carlos Ibarra", t: "Carlos Ibarra: ¿Quieres que te cotice también las lámparas del jardín?", ts: NOW - 1000, h: "07:19", wa_id: "w3" }); abre(T);
-      abreMover225(T, 2, [2, 3 - 1].filter(function (x, i, a) { return a.indexOf(x) === i; })); document.querySelector("[data-movnueva]").click(); await espera(40);
+      abreMover(T, 2, [2, 3 - 1].filter(function (x, i, a) { return a.indexOf(x) === i; })); document.querySelector("[data-movnueva]").click(); await espera(40);
       var i = document.getElementById("nom249i"), val = i ? i.value : ""; return { hay: !!i, val: val, distinto: _nn(val) !== _nn(T.nombre) }; });
     eq("Te pregunta/Mover > Nueva: ventanita y sugerencia distinta de la tarea de origen", [r1g.hay, r1g.distinto, /l[aá]mparas|cotice|jard[ií]n|carlos/i.test(r1g.val)], [true, true, true]);
     await p.evaluate(function () { var d = document.getElementById("nom249"); if (d) d.remove(); });
@@ -89,7 +89,7 @@ eq("versión >= 249", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       wa_contactos: [{ nombre: "Carlos Ibarra", desde: 1 }], contexto: "Carlos: ya llegó el material del portón.", msgs: [{ k: "bi", wa_in: 1, wa_c: "Carlos Ibarra", t: "Carlos Ibarra: ya llegó el material del portón", ts: Date.now() - 1e6, h: "06:50", wa_id: "w9" }] }; };
     await p.evaluate(function (src) { window.NUEVA = eval("(" + src + ")"); }, NUEVA.toString());
     var r2 = await p.evaluate(async function (D) { __WA.length = 0; var T = NUEVA(); abre(T);
-      var enRev = enRevision249(T), enRevNormal = enRevision249(ORIGEN());
+      var enRev = enRevision(T), enRevNormal = enRevision(ORIGEN());
       window.__ESC249 = 0; var _pw = pideWhatsApp; pideWhatsApp = function (c) { __WA.push(c); return Promise.resolve({ id: "p" + __WA.length }); };
       modelo({ tipo: "tarea", fecha: "2026-10-15", contexto: "Remodelación del acceso de la casa: portón eléctrico nuevo, Carlos instala el motor y Manuel termina la pintura del frente.", quien: null, recordar: [], vinculos: [], dudas: [], pregunta: null, palabras: ["portón", "motor"],
         ordenes: [{ tipo: "mensaje", a: "Carlos Ibarra", canal: "whatsapp", texto: "¿Me confirmas mañana si ya instalaron el motor del portón?" }] }, 900);
@@ -99,7 +99,7 @@ eq("versión >= 249", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       /* mientras trabaja, el snapshot reemplaza los objetos (como Firestore) */
       tareas = JSON.parse(JSON.stringify(tareas));
       window.__durante = durante; return { enRev: enRev, enRevNormal: enRevNormal, durante: durante }; }, D2);
-    eq("enRevision249: la nueva sí, una normal no", [r2.enRev, r2.enRevNormal], [true, false]);
+    eq("enRevision: la nueva sí, una normal no", [r2.enRev, r2.enRevNormal], [true, false]);
     eq("Revisión: mientras trabaja se difumina con 'Claude está acomodando…' y nada salió crudo al WhatsApp", [r2.durante.hay, r2.durante.blur, /Claude está acomodando/.test(r2.durante.texto), r2.durante.waCrudo], [true, true, true, 0]);
     await foto("b249-2-acomodando.png");
     await p.waitForTimeout(2600);
@@ -118,7 +118,7 @@ eq("versión >= 249", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       var O1 = { id: "tO1", nombre: "Blue Cup", duenio: "salvador", estado: "abierta", wa_contactos: [{ nombre: "Fernando Fuentes BBVA", desde: 1 }, { nombre: "Fernando Ruiz BBVA", desde: 1 }], msgs: [] };
       var O2 = { id: "tO2", nombre: "Obra Cumbres", duenio: "salvador", estado: "abierta", wa_contactos: [{ nombre: "Fernando Garza", desde: 1 }], revisa_ext: "Fernando Lozano Constructora", msgs: [{ k: "bi", wa_in: 1, wa_c: "Fer Peñaloza", t: "Fer Peñaloza: hola", ts: 1, h: "05:00" }] };
       abre(T, [O1, O2]); window.AGENDA_WA = null;
-      var cont0 = contactosApp249().length, cont = contactosApp249().map(function (c) { return c.nombre; });
+      var cont0 = contactosApp().length, cont = contactosApp().map(function (c) { return c.nombre; });
       modelo({ tipo: "tarea", fecha: null, recordar: [], vinculos: [], ordenes: [], pregunta: null, dudas: [{ pregunta: "¿A qué hora le escribo?", opciones: ["a las 10", "a las 12"] }],
         seguimiento_a: { quien: "Fernando", meta: "tener listo el fideicomiso", cada: "hoy y el jueves", fechas: ["2026-10-06", "2026-10-08"], hora: null, texto: "IA: Hola Fernando, ¿ya tienen listo el fideicomiso?" } }, 30);
       document.getElementById("txt").value = D; document.getElementById("txt").dispatchEvent(new Event("input")); document.getElementById("tenv").click();

@@ -54,7 +54,7 @@ Contestada si:
 `anotaRespuesta(t, pregunta, texto, por, via, ts)` agrega a `respuestas_log` y también a `resp267` (lo leen las versiones
 viejas del bot hasta que se reinicie). No duplica.
 
-- App: `respondida267`, `bloqueaQ267`, el cuestionario de la tarea, la Caminata y `purga267` usan `yaContestada` / `anotaRespuesta`.
+- App: `respondida`, `bloqueaQ`, el cuestionario de la tarea, la Caminata y `purga267` usan `yaContestada` / `anotaRespuesta`.
 - Bot: `preguntaResuelta` (avisos y recordatorios), PASOS37 (`yaContestada37`) usan `yaContestada`. Escribe `respuestas_log`
   cuando Salvador contesta por WhatsApp una pregunta de la app (`item.tipo === "app"`) y cuando PASOS37 convierte su respuesta.
 
@@ -81,7 +81,7 @@ espera_a: { id: "samuel" | "",          // id del equipo, o "" si es externo
 `deMi` = la espera es de quien usa la app (Salvador en el bot). Una tarea cerrada (`estaAbierta` = no) o un recordatorio no espera.
 `espera266` no es «a quién espera»: es la marca de «ya vi lo último que me escribió» y sigue igual.
 
-- App: `esperaTercero272` (lo que pasa a «Las lleva Claude») es la primera espera que no es tuya; `meDetiene` también cuenta
+- App: `esperaTercero` (lo que pasa a «Las lleva Claude») es la primera espera que no es tuya; `meDetiene` también cuenta
   `espera_a` a ti. Al pedir autorización a Salvador se escribe `espera_a` además de `estado/espera` (y se limpia al contestar).
 - La función de la fila que decía cómo va el encargo se llama ahora `respuestaEncargoTxt`.
 

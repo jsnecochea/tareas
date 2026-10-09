@@ -11,7 +11,7 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
 var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 eq("versión >= 286", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[1] >= 286, true);
 eq("sw.js con versión >= 286", +((fs.readFileSync(path.join(__dirname, "..", "sw.js"), "utf8").match(/var SW_VERSION = 'build (\d+)'/) || [0, 0])[1]) >= 286, true);
-eq("camEnvia274: la orden se escribe antes de la IA y de la confirmación", /camCrudo276\(t, v\);[^\n]*\n\s*camOrden286\(t, v\);[^\n]*\n\s*if\(CAM\.conf\) return camConfResp277\(v\);/.test(html), true);
+eq("camEnvia: la orden se escribe antes de la IA y de la confirmación", /camCrudo\(t, v\);[^\n]*\n\s*camOrden\(t, v\);[^\n]*\n\s*if\(CAM\.conf\) return camConfResp\(v\);/.test(html), true);
 (async function () {
   var pw = require("/opt/node22/lib/node_modules/playwright"), b = await pw.chromium.launch(), p = await b.newPage({ viewport: { width: 390, height: 844 }, timezoneId: "America/Monterrey" }), errs = [];
   p.on("pageerror", function (e) { if (!/firebase is not defined/.test(e.message)) errs.push(e.message); });
@@ -85,7 +85,7 @@ eq("camEnvia274: la orden se escribe antes de la IA y de la confirmación", /cam
         window.__ia.push({ ya: ya, subio: subio });
         setTimeout(function () { if (j === "caido") cb(null, "No contesto a tiempo."); else cb(JSON.stringify(j)); }, ms || 20); }; };
       window.ords = function (id) { return (tid(id).encargos || []).filter(function (e) { return e.caminata; }).map(function (e) { return { t: e.t, estado: e.estado, motivo: e.motivo === "caminata286" ? (e.motivos286 || []).slice(-1)[0] || "" : e.motivo, tipo: e.tipo, origen: e.origen, pd: !!e.preguntar_despues, ent: e.entendi || "", res: e.resultado || "" }; }); };
-      window.dile = async function (id, k, v) { CAM.on = true; if (CAM.L[0] !== id) { CAM.L = [id]; CAM.i = 0; } CAM.g = {}; CAM.g[id] = k; CAM.buf = v; CAM.par = ""; window.camSiguiente274 = function () {}; camEnvia274(); await espera(250); };
+      window.dile = async function (id, k, v) { CAM.on = true; if (CAM.L[0] !== id) { CAM.L = [id]; CAM.i = 0; } CAM.g = {}; CAM.g[id] = k; CAM.buf = v; CAM.par = ""; window.camSiguiente = function () {}; camEnvia(); await espera(250); };
     });
     /* 1 · Caso reloj: «dame el link» = instrucción de TRABAJO → orden guardada ANTES de la IA y sigue pendiente para la Mac */
     var A = await p.evaluate(async function () {
@@ -155,8 +155,8 @@ eq("camEnvia274: la orden se escribe antes de la IA y de la confirmación", /cam
       home([T("tFAL", "Cotizar portón", { f_vigente: "" })]);
       var Q = [{ q: "¿Para cuándo la quieres terminar, o es indefinida?", k: "fecha" }, { q: "¿Cada cuánto le doy seguimiento?", k: "ritmo" }];
       CAM.on = true; CAM.L = ["tFAL"]; CAM.g = { tFAL: "fal" }; CAM.i = 0; CAM.qz = { id: "tFAL", Q: Q, i: 0, A: [], salt: [] }; CAM.buf = "el viernes"; CAM.par = "";
-      camEnvia274(); var o1 = ords("tFAL"); await espera(200);
-      CAM.buf = "cada dos días"; CAM.par = ""; camEnvia274(); await espera(300);
+      camEnvia(); var o1 = ords("tFAL"); await espera(200);
+      CAM.buf = "cada dos días"; CAM.par = ""; camEnvia(); await espera(300);
       var r = { o1: o1, o2: ords("tFAL"), cr: window.__cr.slice(-1) }; CAM.qz = null; CAM.on = false; return r; });
     eq("cuestionario: la respuesta quedó como orden al instante", G.o1.map(function (o) { return [o.t, o.estado]; }), [["el viernes", "pendiente"]]);
     eq("cuestionario: al aplicarse, las dos órdenes se cierran", G.o2.map(function (o) { return [o.t, o.estado]; }), [["el viernes", "hecho"], ["cada dos días", "hecho"]]);
@@ -165,7 +165,7 @@ eq("camEnvia274: la orden se escribe antes de la IA y de la confirmación", /cam
       home(fx());
       modelo({ accion: "dato", texto_para_tarea: "", respuesta_hablada: "Va." });
       await dile("tLLA", "dec", "esto déjalo como dato por favor ya");
-      camDeshaz275(); await espera(150);
+      camDeshaz(); await espera(150);
       var r = ords("tLLA"); CAM.on = false; return r; });
     eq("deshacer: la orden queda deshecho", H.map(function (o) { return o.estado; }), ["deshecho"]);
     eq("sin errores de página", errs, []);

@@ -1,11 +1,11 @@
 /* medidor de volumen: getUserMedia con cancelación de eco; si no hay, decide el filtro de texto */
-function camMedidor276(){
+function camMedidor(){
   if(CAM.med || window.__sinMedidor276 || CAM.bargeNo) return;
   try{ if(localStorage.getItem("doit_medidor276_off")==="1") return; }catch(e){}   /* apagador por si en el iPhone el medidor baja el volumen de la voz */
   CAM.med={ok:false, picos:[], base:0};
   try{ var md=navigator.mediaDevices; if(!md || !md.getUserMedia){ CAM.med.err="sin getUserMedia"; return; }
     md.getUserMedia({audio:{echoCancellation:true, noiseSuppression:true, autoGainControl:false}}).then(function(st){
-      var ac=camAudio275(); if(!ac || !CAM.on){ st.getTracks().forEach(function(x){ x.stop(); }); CAM.med=null; return; }
+      var ac=camAudio(); if(!ac || !CAM.on){ st.getTracks().forEach(function(x){ x.stop(); }); CAM.med=null; return; }
       var src=ac.createMediaStreamSource(st), an=ac.createAnalyser(); an.fftSize=1024; src.connect(an);
       var buf=new Float32Array(an.fftSize), M={ok:true, st:st, picos:[], base:0, ec:null};
       try{ var se=st.getAudioTracks()[0].getSettings(); M.ec=se.echoCancellation; }catch(e){}
@@ -16,114 +16,114 @@ function camMedidor276(){
     }).catch(function(e){ CAM.med={ok:false, picos:[], base:0, err:String((e&&e.name)||e)}; });
   }catch(e){ CAM.med={ok:false, picos:[], base:0, err:String(e&&e.message)}; }
 }
-function camMedidorApaga276(){ var M=CAM.med; CAM.med=null; if(M){ clearInterval(M.iv); try{ M.st.getTracks().forEach(function(x){ x.stop(); }); }catch(e){} } }
-function camNivelOk276(){
+function camMedidorApaga(){ var M=CAM.med; CAM.med=null; if(M){ clearInterval(M.iv); try{ M.st.getTracks().forEach(function(x){ x.stop(); }); }catch(e){} } }
+function camNivelOk(){
   if(typeof window.__nivel276==="number") return window.__nivel276>=CAM_BARGE_UMBRAL;   /* pruebas */
   var M=CAM.med; if(!M || !M.ok) return true;
   var now=Date.now(), pico=0; M.picos.forEach(function(p){ if(now-p.ts<=700 && p.r>pico) pico=p.r; });
   return pico>=Math.max(CAM_BARGE_UMBRAL, (M.base||0)*2.5);
 }
-function camBargeAbre276(tok){
-  camBargeCierra276();
-  if(!camBargeOk276()) return;
+function camBargeAbre(tok){
+  camBargeCierra();
+  if(!camBargeOk()) return;
   var SR=window.SpeechRecognition||window.webkitSpeechRecognition, r=null; try{ r=new SR(); }catch(e){} if(!r) return;
   r.__barge=true; r.lang="es-MX"; r.continuous=true; r.interimResults=true; try{ r.maxAlternatives=1; }catch(e){}
   r.onresult=function(e){ if(r.__muerto || tok!==CAM.tok) return; var tx="", fin=false;
     for(var j=0;j<e.results.length;j++){ var x=e.results[j]; tx+=x[0].transcript+" "; if(x.isFinal) fin=true; }
-    camBargeOye276(tx.replace(/\s+/g," ").trim(), tok, fin); };
-  r.onerror=function(ev){ var er=(ev&&ev.error)||""; if(er==="not-allowed"||er==="service-not-allowed"||er==="audio-capture"){ r.__muerto=true; if(CAM.brec===r) camBargeFalla276("micrófono mientras habla: "+er); } };
-  r.onend=function(){ if(r.__muerto || CAM.brec!==r) return; setTimeout(function(){ if(CAM.brec===r && CAM.fase==="hablando" && tok===CAM.tok) camBargeAbre276(tok); }, 150); };
+    camBargeOye(tx.replace(/\s+/g," ").trim(), tok, fin); };
+  r.onerror=function(ev){ var er=(ev&&ev.error)||""; if(er==="not-allowed"||er==="service-not-allowed"||er==="audio-capture"){ r.__muerto=true; if(CAM.brec===r) camBargeFalla("micrófono mientras habla: "+er); } };
+  r.onend=function(){ if(r.__muerto || CAM.brec!==r) return; setTimeout(function(){ if(CAM.brec===r && CAM.fase==="hablando" && tok===CAM.tok) camBargeAbre(tok); }, 150); };
   CAM.brec=r;
   try{ r.start(); }catch(e){ CAM.brec=null; }
 }
-function camBargeCierra276(){ var r=CAM.brec; CAM.brec=null; CAM.oyeBarge=false; if(r){ r.__muerto=true; try{ r.abort ? r.abort() : r.stop(); }catch(e){ try{ r.stop(); }catch(e2){} } } }
-function camBargeFalla276(por){
-  camBargeCierra276(); CAM.bargeNo=true; camMedidorApaga276();   /* sin interrupción el medidor no sirve: se suelta el micrófono */
+function camBargeCierra(){ var r=CAM.brec; CAM.brec=null; CAM.oyeBarge=false; if(r){ r.__muerto=true; try{ r.abort ? r.abort() : r.stop(); }catch(e){ try{ r.stop(); }catch(e2){} } } }
+function camBargeFalla(por){
+  camBargeCierra(); CAM.bargeNo=true; camMedidorApaga();   /* sin interrupción el medidor no sirve: se suelta el micrófono */
   window.__barge276={off:true, por:por, ts:Date.now()};
   try{ localStorage.setItem("doit_barge276", JSON.stringify(window.__barge276)); }catch(e){}
   try{ console.warn("caminata 276: interrupción apagada en esta sesión — "+por); }catch(e){}
 }
 var CAM_BARGE_CMD=/^(espera|esperame|esperate|un momento|para|a ver|voy|a ver voy|ahi voy|oye|no|no no|repite|repiteme lo ultimo|que dijiste|siguiente|pausa|alto|repiteme|deshaz|deshazlo|cancela|retrocede|regresa|si|confirmame)$/;   /* build 277: + repíteme, deshazlo, cancela, retrocede, sí */
-function camBargeOye276(tx, tok, fin){
+function camBargeOye(tx, tok, fin){
   var n=_camNv(tx); if(!n || !CAM.on || CAM.fase!=="hablando") return;
-  if(camEco276(n)){ window.__eco276=(window.__eco276||0)+1; return; }   /* es su propia voz */
-  if(!camNivelOk276()){ window.__bajo276=(window.__bajo276||0)+1; return; }   /* muy bajito: no es él */
+  if(camEco(n)){ window.__eco276=(window.__eco276||0)+1; return; }   /* es su propia voz */
+  if(!camNivelOk()){ window.__bajo276=(window.__bajo276||0)+1; return; }   /* muy bajito: no es él */
   CAM.oyeBarge=true;
   if(!fin && n.split(" ").length<2 && !CAM_BARGE_CMD.test(n)) return;   /* una palabra suelta a medias: espera a confirmar */
   window.__barge276n=(window.__barge276n||0)+1;
-  CAM.tok++; clearTimeout(CAM.wd); camBargeCierra276();
+  CAM.tok++; clearTimeout(CAM.wd); camBargeCierra();
   try{ speechSynthesis.cancel(); }catch(e){}
   if(CAM.rest) CAM.rest.cortado=true;
-  camHablo276(); CAM.fase=""; camPinta274();
-  camInterrumpido276(tx);
+  camHablo(); CAM.fase=""; camPinta();
+  camInterrumpido(tx);
 }
-function camInterrumpido276(tx){
-  var c=camComando274(tx);
+function camInterrumpido(tx){
+  var c=camComando(tx);
   if(c) return camHaz274(c);
   CAM.limpia=false; CAM.buf=String(tx||"").trim(); CAM.par="";   /* es el inicio de su respuesta: se queda y se sigue escuchando */
-  if(CAM_CORTO.test(_camNv(CAM.buf)) || (CAM.conf && camConfCorto277(CAM.buf))) return camEnvia274();   /* build 277: sí / no a la confirmación */
-  camEscucha274("resp"); camPinta274(); camRelojSilencio();
+  if(CAM_CORTO.test(_camNv(CAM.buf)) || (CAM.conf && camConfCorto(CAM.buf))) return camEnvia();   /* build 277: sí / no a la confirmación */
+  camEscucha("resp"); camPinta(); camRelojSilencio();
 }
 /* tocar el círculo mientras habla también interrumpe (respaldo si iOS no deja escuchar mientras habla) */
-function camToca276(){ if(!CAM.on || CAM.pausa || CAM.fase!=="hablando") return;
-  CAM.tok++; clearTimeout(CAM.wd); camBargeCierra276(); try{ speechSynthesis.cancel(); }catch(e){} if(CAM.rest) CAM.rest.cortado=true;
-  camHablo276(); CAM.fase=""; CAM.limpia=true; camEscucha274("resp"); camPinta274(); }
-function camRepiteUlt276(){
-  var R=CAM.rest; if(!R || !R.G || !R.G.length) return camPresenta274(true);
+function camToca(){ if(!CAM.on || CAM.pausa || CAM.fase!=="hablando") return;
+  CAM.tok++; clearTimeout(CAM.wd); camBargeCierra(); try{ speechSynthesis.cancel(); }catch(e){} if(CAM.rest) CAM.rest.cortado=true;
+  camHablo(); CAM.fase=""; CAM.limpia=true; camEscucha("resp"); camPinta(); }
+function camRepiteUlt(){
+  var R=CAM.rest; if(!R || !R.G || !R.G.length) return camPresenta(true);
   var from=Math.max(0, Math.min(R.k, R.G.length-1)-1);
-  camDi274(R.G.slice(from), R.done);
+  camDi(R.G.slice(from), R.done);
 }
 /* los comandos nuevos; true = ya lo atendió */
-function camAux276(G){ G.aux=true; return G; }   /* frases de servicio: no cambian "lo último" ni dónde iba */
+function camAux(G){ G.aux=true; return G; }   /* frases de servicio: no cambian "lo último" ni dónde iba */
 function camHaz276(c){
-  if(c==="ultimo"){ camRepiteUlt276(); return true; }
-  if(c==="espera"){ CAM.espera276=true; camDi274(camAux276([{v:"A", t:camVar275("espera", ["Va, te espero.","Sale, aquí estoy."]), bajito:true}]), function(){ CAM.limpia=false; camEscucha274("resp"); }); return true; }
-  if(c==="voy"){ camDi274(camAux276([{v:"A", t:camVar275("voy", ["Te escucho.","Dime."]), bajito:true}]), function(){ CAM.limpia=true; camEscucha274("resp"); }); return true; }
+  if(c==="ultimo"){ camRepiteUlt(); return true; }
+  if(c==="espera"){ CAM.espera276=true; camDi(camAux([{v:"A", t:camVar("espera", ["Va, te espero.","Sale, aquí estoy."]), bajito:true}]), function(){ CAM.limpia=false; camEscucha("resp"); }); return true; }
+  if(c==="voy"){ camDi(camAux([{v:"A", t:camVar("voy", ["Te escucho.","Dime."]), bajito:true}]), function(){ CAM.limpia=true; camEscucha("resp"); }); return true; }
   if(c==="continua"){ var R=CAM.rest; CAM.espera276=false;
-    if(R && R.cortado && R.k<R.G.length){ camDi274(R.G.slice(R.k), R.done); return true; }
-    CAM.limpia=true; camEscucha274("resp"); return true; }
+    if(R && R.cortado && R.k<R.G.length){ camDi(R.G.slice(R.k), R.done); return true; }
+    CAM.limpia=true; camEscucha("resp"); return true; }
   if(CAM.qz){   /* dentro del cuestionario */
     var z=CAM.qz;
-    if(c==="siguiente"){ camQuizResp276("paso"); return true; }
-    if(c==="repite"){ camQuizPregunta276(true); return true; }
-    if(c==="atras"){ if(z.i>0){ z.i--; var q=z.Q[z.i]; z.A=z.A.filter(function(o){ return o.q!==q; }); z.salt=z.salt.filter(function(o){ return o!==q; }); } camQuizPregunta276(true); return true; }
-    if(c==="despues"){ camQuizFin276(true); return true; }
-    if(c==="deshaz"){ if(CAM.ult && (z.desdeNue || !z.A.length)){ CAM.qz=null; camDeshaz275(); } else { CAM.qz=null; camPresenta274(true); } return true; }   /* build 277: sin respuestas aún, "deshazlo" deshace lo de la tarea anterior */
-    if(c==="detalle"){ var t=camTarea274(); if(t) camDi274(camDetalle275(t), function(){ camQuizPregunta276(true); }); return true; }
+    if(c==="siguiente"){ camQuizResp("paso"); return true; }
+    if(c==="repite"){ camQuizPregunta(true); return true; }
+    if(c==="atras"){ if(z.i>0){ z.i--; var q=z.Q[z.i]; z.A=z.A.filter(function(o){ return o.q!==q; }); z.salt=z.salt.filter(function(o){ return o!==q; }); } camQuizPregunta(true); return true; }
+    if(c==="despues"){ camQuizFin(true); return true; }
+    if(c==="deshaz"){ if(CAM.ult && (z.desdeNue || !z.A.length)){ CAM.qz=null; camDeshaz(); } else { CAM.qz=null; camPresenta(true); } return true; }   /* build 277: sin respuestas aún, "deshazlo" deshace lo de la tarea anterior */
+    if(c==="detalle"){ var t=camTarea(); if(t) camDi(camDetalle275(t), function(){ camQuizPregunta(true); }); return true; }
   }
-  if(camK276()==="msg"){
-    if(c==="detalle"){ camDi274(camMsgDetalle276(), function(){ CAM.limpia=true; camEscucha274("resp"); }); return true; }
-    if(c==="deshaz" && !CAM.ult){ camSiguiente274(-1); return true; }
+  if(camK()==="msg"){
+    if(c==="detalle"){ camDi(camMsgDetalle(), function(){ CAM.limpia=true; camEscucha("resp"); }); return true; }
+    if(c==="deshaz" && !CAM.ult){ camSiguiente(-1); return true; }
   }
   return false;
 }
 /* ---------- 2 · la lista completa ---------- */
-function camEsFalta276(t){
+function camEsFalta(t){
   if(!t || t.es_recordatorio || !_camVivo(t)) return false;
   if(!(t.duenio===yo || (!t.duenio && t.creada_por===yo))) return false;
   try{ if(esDato(t)) return false; }catch(e){}
-  return camPreguntas276(t).length>0 && camChipFalta276(t);
+  return camPreguntas(t).length>0 && camChipFalta(t);
 }
 /* la ficha roja "Falta N" de la tarea (la misma regla de chipsTarea) */
-function camChipFalta276(t){
+function camChipFalta(t){
   var f=[], np=0; try{ if(tipoRevisar(t)==="falta" && !vistaSup(t) && clasif236(t)) f=soloMeFalta(t); }catch(e){}
   try{ np=preguntas249(t).length; }catch(e){}
   return !!(np || f.length);
 }
 function camLista276(){
   var C=camLista275(), ya={}, F=[], M=[], mg={}, conMsg={};
-  var D=[]; try{ D=platicasAcomodo237(); }catch(e){}
+  var D=[]; try{ D=platicasAcomodo(); }catch(e){}
   D.forEach(function(gr){ if(!gr || !gr.t || !gr.ixs || !gr.ixs.length) return; var k="msg:"+gr.t.id+"|"+gr.ixs[0]; if(mg[k]) return; mg[k]=gr; C.g[k]="msg"; M.push(k); conMsg[gr.t.id]=1; });
   /* "Te pregunta Doit" que NO es decisión: si lo que falta son datos, va al cuestionario (4); si son mensajes, a los mensajes (5) */
   var dec=[]; C.L.forEach(function(id){ var t=tareaId240(id); if(C.g[id]!=="dec" || !t){ dec.push(id); return; }
-    var real=false; try{ real=!!decision273(t) || esDecisionSal(t) || registroPreg266(t).length>0; }catch(e){ real=true; }
+    var real=false; try{ real=!!decision273(t) || esDecisionSal(t) || registroPreg(t).length>0; }catch(e){ real=true; }
     if(real){ dec.push(id); return; }
-    var fa=false; try{ fa=camEsFalta276(t); }catch(e){}
+    var fa=false; try{ fa=camEsFalta(t); }catch(e){}
     if(fa){ C.g[id]="fal"; F.push(id); return; }
     if(conMsg[id]){ delete C.g[id]; return; }
     dec.push(id); });
   C.L=dec; dec.forEach(function(id){ ya[id]=1; }); F.forEach(function(id){ ya[id]=1; });
-  (tareas||[]).forEach(function(t){ if(!t || ya[t.id]) return; var ok=false; try{ ok=camEsFalta276(t); }catch(e){} if(ok){ ya[t.id]=1; C.g[t.id]="fal"; F.push(t.id); } });
+  (tareas||[]).forEach(function(t){ if(!t || ya[t.id]) return; var ok=false; try{ ok=camEsFalta(t); }catch(e){} if(ok){ ya[t.id]=1; C.g[t.id]="fal"; F.push(t.id); } });
   var n={dec:0, lla:0, nue:0}; C.L.forEach(function(id){ n[C.g[id]]=(n[C.g[id]]||0)+1; });
   C.L=C.L.concat(F, M); n.fal=F.length; n.msg=M.length; C.n=n; C.mg=mg;
   return C;
@@ -131,9 +131,9 @@ function camLista276(){
 /* ---------- el cuestionario ---------- */
 var CAM_QM={quien:"¿Quién la hace?", finiquito:"¿Para cuándo la quieres terminar, o es indefinida?", seguimiento:"¿Cuándo te recuerdo para darle seguimiento?", que:"¿Qué es esto?", de:"¿De quién o de qué proyecto es?", cifras:"¿Cuáles son las cifras?"};
 var CAM_MONTO=/\b(cotiz\w*|pag[oa]r?|pagos?|precio|costo|cuesta|monto|presupuesto|factura\w*|cobr\w*|abono|anticipo|renta|deposit\w*|transfer\w*)\b|\$/;
-function camPreguntas276(t){
+function camPreguntas(t){
   var Q=[], ya={}; if(!t) return Q;
-  var pon=function(o){ var k=_camNv(o.q); if(!k || ya[k]) return; try{ if(!o.reg && o.k!=="persona" && bloqueaQ267(t, o.q)) return; }catch(e){} ya[k]=1; Q.push(o); };
+  var pon=function(o){ var k=_camNv(o.q); if(!k || ya[k]) return; try{ if(!o.reg && o.k!=="persona" && bloqueaQ(t, o.q)) return; }catch(e){} ya[k]=1; Q.push(o); };
   try{ preguntas249(t).forEach(function(p){ if(p && p.q && !p.reg && ["txt","persona","resp","falta273"].indexOf(p.k||"txt")>=0) pon(p); }); }catch(e){}
   var c=null; try{ c=completitud(t); }catch(e){}
   if(c){
@@ -145,7 +145,7 @@ function camPreguntas276(t){
   }
   return Q.slice(0, CAM_QZ_MAX);
 }
-function camEtiqueta276(q){
+function camEtiqueta(q){
   var s=String((q&&q.q)||q||""), k=q&&q.c276;
   if(k==="ctx" || /contexto|de qu[eé] se trata/i.test(s)) return "el contexto";
   if(k==="finiquito" || /finiquito|para cu[aá]ndo|cu[aá]ndo termina|fecha/i.test(s)) return "la fecha";
@@ -156,50 +156,50 @@ function camEtiqueta276(q){
   return camCorta(s.replace(/[¿?]/g,"").trim(), 60).replace(/[.\s]+$/,"");
 }
 var CAM_QZ_SALTA=/^(paso|lo paso|no se|no lo se|no se todavia|todavia no se|ni idea|no tengo ese dato|no tengo idea|no sabria decirte|luego te digo|despues te digo|no tengo|sin dato|ahorita no se)$/;
-function camQuizTrasAcomodar276(t, a){
+function camQuizTrasAcomodar(t, a){
   if(!t || (CAM.g[t.id]||"")!=="nue" || a!=="aprobar") return [];
-  try{ if(esPropuesta256(t) || esDato(t) || t.fusionada_en || t.cierre) return []; }catch(e){ return []; }
-  return camPreguntas276(t);
+  try{ if(esPropuesta(t) || esDato(t) || t.fusionada_en || t.cierre) return []; }catch(e){ return []; }
+  return camPreguntas(t);
 }
-function camQuizEmpieza276(t, Q, G0, op){
+function camQuizEmpieza(t, Q, G0, op){
   op=op||{};
   CAM.qz={id:t.id, Q:Q, i:0, A:[], salt:[], desdeNue:!!op.desdeNue};
   var G=(G0||[]).slice();
   if(op.desdeNue) G.push({v:"A", t:Q.length===1?"Le falta un dato.":"Le faltan "+Q.length+" datos."});
   if(!CAM.qzExpl){ CAM.qzExpl=true; G.push({v:"A", t:"Una por una. Si no lo sabes, di paso."}); }
-  camQuizPregunta276(false, G);
+  camQuizPregunta(false, G);
 }
-function camQuizPregunta276(rep, G0){
-  var z=CAM.qz; if(!z) return camSiguiente274(1);
-  if(z.i>=z.Q.length) return camQuizFin276(false);
+function camQuizPregunta(rep, G0){
+  var z=CAM.qz; if(!z) return camSiguiente(1);
+  if(z.i>=z.Q.length) return camQuizFin(false);
   var G=(G0||[]).slice(); G.push({v:"A", t:z.Q[z.i].q});
-  CAM.limpia=true; CAM.vacioDicho=false; camPinta274();
-  camDi274(G, function(){ camEscucha274("resp"); });
+  CAM.limpia=true; CAM.vacioDicho=false; camPinta();
+  camDi(G, function(){ camEscucha("resp"); });
 }
-function camQuizResp276(v){
-  var z=CAM.qz; if(!z) return camSiguiente274(1);
+function camQuizResp(v){
+  var z=CAM.qz; if(!z) return camSiguiente(1);
   var q=z.Q[z.i], n=_camNv(v), salta=CAM_QZ_SALTA.test(n);
   if(salta) z.salt.push(q); else z.A.push({q:q, a:String(v).replace(/\s+/g," ").trim()});
   z.i++;
-  var ack=salta?camVar275("qsal", ["Va, queda pendiente.","Sale, lo dejamos."]):camVar275("qok", ["Va.","Anotado.","Sale."]);
-  if(z.i>=z.Q.length) return camQuizFin276(false, ack);
-  camQuizPregunta276(false, [{v:"A", t:ack}]);
+  var ack=salta?camVar("qsal", ["Va, queda pendiente.","Sale, lo dejamos."]):camVar("qok", ["Va.","Anotado.","Sale."]);
+  if(z.i>=z.Q.length) return camQuizFin(false, ack);
+  camQuizPregunta(false, [{v:"A", t:ack}]);
 }
-function camQuizFin276(abandona, ack){
-  var z=CAM.qz; CAM.qz=null; if(!z) return camSiguiente274(1);
+function camQuizFin(abandona, ack){
+  var z=CAM.qz; CAM.qz=null; if(!z) return camSiguiente(1);
   var t=tareaId240(z.id);
   if(abandona) z.salt=z.salt.concat(z.Q.slice(z.i));
-  var pend=[], ya={}; z.salt.forEach(function(q){ var e=camEtiqueta276(q); if(!ya[e]){ ya[e]=1; pend.push(e); } });
-  if(t && z.A.length){ try{ camAplicaQuiz276(t, z.A); }catch(e){ console.warn("caminata 276 cuestionario", e); } }
+  var pend=[], ya={}; z.salt.forEach(function(q){ var e=camEtiqueta(q); if(!ya[e]){ ya[e]=1; pend.push(e); } });
+  if(t && z.A.length){ try{ camAplicaQuiz(t, z.A); }catch(e){ console.warn("caminata 276 cuestionario", e); } }
   CAM.res276=CAM.res276||{}; if(t) CAM.res276[t.id]=1;
   if(pend.length && t) CAM.pendQ=(CAM.pendQ||[]).concat([juntaY(pend.slice(0,3))+" de "+camNombre(t)]);
-  var tx=!pend.length?camVar275("qfin", ["Listo, ya tiene todo.","Quedó completa."]):(pend.length===1?"Quedó pendiente: ":"Quedaron pendientes: ")+juntaY(pend.slice(0,4))+".";
+  var tx=!pend.length?camVar("qfin", ["Listo, ya tiene todo.","Quedó completa."]):(pend.length===1?"Quedó pendiente: ":"Quedaron pendientes: ")+juntaY(pend.slice(0,4))+".";
   var G=[]; if(ack && !pend.length) G.push({v:"A", t:ack}); G.push({v:"A", t:tx});
-  camDi274(G, function(){ camSiguiente274(1); });
+  camDi(G, function(){ camSiguiente(1); });
 }
-/* las respuestas van a la tarea como la tarjeta de preguntas (enviaPreguntas249): persona, "ninguno", y lo demás junto a completaRevision.
+/* las respuestas van a la tarea como la tarjeta de preguntas (enviaPreguntas): persona, "ninguno", y lo demás junto a completaRevision.
    No se espera al cerebro: la caminata sigue; lo que él no alcance queda en la ficha Falta. */
-function camAplicaQuiz276(t, A, cb){
+function camAplicaQuiz(t, A, cb){
   if(!t) return; var T=tareaId240(t.id)||t, textos=[], quita=[], H=T.hecho238;
   try{ (T.encargos||[]).forEach(function(e){ if(e && e.caminata && e.k==="cuestionario" && e.estado==="pendiente"){ e.estado="hecho"; e.hecho_ts=Date.now(); e.resultado="respuesta del cuestionario aplicada a la tarea"; e.por286="app"; } }); }catch(e){}
   A.forEach(function(o){ var p=o.q, tx=String(o.a||"").replace(/\s+/g," ").trim(); if(!tx) return;
@@ -207,7 +207,7 @@ function camAplicaQuiz276(t, A, cb){
     try{ anotaRespuesta(T, p.q, tx, yo, "caminata"); }catch(e){}
     if(p.hi!=null) quita.push(p.hi);
     if(p.d263 && Array.isArray(T.falta263)) T.falta263=T.falta263.filter(function(f){ return !(f && f.q===p.q); });
-    var neg=false; try{ neg=esNegativa267(tx); }catch(e){}
+    var neg=false; try{ neg=esNegativa(tx); }catch(e){}
     if(neg){ if(/seguimiento/i.test(p.q)){ T.ritmo=T.ritmo||"ninguno"; T.seg_ninguno=true; } if(/recuerdo/i.test(p.q)) T.recordar_ninguno=true;
       if(/finiquito|para cu[aá]ndo/i.test(p.q) && /indefinid/i.test(_camNv(tx))) T.indefinida=true;
       msg(T,"bi","Entendí: «"+camCorta(p.q, 80)+"» → ninguno."); var mn=T.msgs[T.msgs.length-1]; mn.canal="priv:"+yo; mn.nota_ia=1; return; }
@@ -222,72 +222,72 @@ function camAplicaQuiz276(t, A, cb){
       window.__qz276=(window.__qz276||[]).concat([{id:T.id, r:r, ts:Date.now()}]).slice(-20); if(cb) cb(true, r); }}); }
   catch(e){ console.warn("caminata 276 completaRevision", e); if(cb) cb(false); }
 }
-function camFalPresenta276(repite){
-  var t=camTarea274(); if(!t) return camSiguiente274(1);
-  var Q=camPreguntas276(t); if(!Q.length) return camSiguiente274(1);
+function camFalPresenta(repite){
+  var t=camTarea(); if(!t) return camSiguiente(1);
+  var Q=camPreguntas(t); if(!Q.length) return camSiguiente(1);
   CAM.limpia=true; CAM.vacioDicho=false; CAM.aclara=null;
   var G=[], pos=CAM.i, prevK=pos>0?CAM.g[CAM.L[pos-1]]:"";
-  if(!repite && pos>0 && prevK!=="fal") G.push({v:"A", t:camVar275("gf", ["Ahora las que tienen datos pendientes.","Vamos con las que les faltan datos."])});
-  G.push({v:"A", t:(repite?camVar275("otra", ["Otra vez: ","De nuevo: "]):camVar275("abfal", ["Le faltan datos a: ","Sigue: ","Ahora: "]))+camNombre(t)+"."});
+  if(!repite && pos>0 && prevK!=="fal") G.push({v:"A", t:camVar("gf", ["Ahora las que tienen datos pendientes.","Vamos con las que les faltan datos."])});
+  G.push({v:"A", t:(repite?camVar("otra", ["Otra vez: ","De nuevo: "]):camVar("abfal", ["Le faltan datos a: ","Sigue: ","Ahora: "]))+camNombre(t)+"."});
   G.push({v:"B", t:Q.length===1?"Es una pregunta.":"Son "+Q.length+" preguntas."});
-  camQuizEmpieza276(t, Q, G);
+  camQuizEmpieza(t, Q, G);
 }
 /* ---------- 5 · mensajes por acomodar ---------- */
-function camMsgGr276(){ return (CAM.mg||{})[CAM.L[CAM.i]]||null; }
-function camMsgVivo276(id){
+function camMsgGr(){ return (CAM.mg||{})[CAM.L[CAM.i]]||null; }
+function camMsgVivo(id){
   var gr=(CAM.mg||{})[id]; if(!gr) return false; var t=tareaId240(gr.t.id); if(!t) return false;
   return gr.ixs.some(function(ix){ var x=(t.msgs||[])[ix]; return x && !x.oculto && !x.eliminado && !confirmado237(x); });
 }
-function camNomT276(x){ return camCorta(limpiaHabla(tareaCorta(x)||x.nombre||""), 60).replace(/[.\s]+$/,""); }
+function camNomT(x){ return camCorta(limpiaHabla(tareaCorta(x)||x.nombre||""), 60).replace(/[.\s]+$/,""); }
 /* las 2 tareas más probables: la que adivinó la IA, la alternativa de su duda y si no, la mejor parecida (motor de Vincular) */
-function camMsgCands276(gr){
+function camMsgCands(gr){
   var t=tareaId240(gr.t.id), C=[]; if(!t) return C; C.push(t);
   var d=gr.duda && gr.duda.duda_tarea;
   if(d){ var a=d.alternativa_id?tareaId240(d.alternativa_id):null;
     if(!a && d.alternativa_nombre) a=(tareas||[]).filter(function(x){ return x && x.id!==t.id && _camNv(x.nombre)===_camNv(d.alternativa_nombre); })[0]||null;
     if(a && a.id!==t.id) C.push(a); }
-  if(C.length<2){ try{ var S=sugeridasPara262(t, gr.ixs); (S.sims||[]).some(function(x){ if(x && x.id!==t.id && _camVivo(x)){ C.push(x); return true; } return false; }); }catch(e){} }
+  if(C.length<2){ try{ var S=sugeridasPara(t, gr.ixs); (S.sims||[]).some(function(x){ if(x && x.id!==t.id && _camVivo(x)){ C.push(x); return true; } return false; }); }catch(e){} }
   return C.slice(0,2);
 }
-function camMsgPresenta276(repite){
-  var gr=camMsgGr276(), t=camTarea274(); if(!gr || !t) return camSiguiente274(1);
+function camMsgPresenta(repite){
+  var gr=camMsgGr(), t=camTarea(); if(!gr || !t) return camSiguiente(1);
   CAM.limpia=true; CAM.vacioDicho=false; CAM.aclara=null;
-  var C=camMsgCands276(gr); CAM.mc=C;
+  var C=camMsgCands(gr); CAM.mc=C;
   var G=[], pos=CAM.i, prevK=pos>0?CAM.g[CAM.L[pos-1]]:"";
-  if(!repite && pos>0 && prevK!=="msg") G.push({v:"A", t:camVar275("gm", ["Y ahora, los mensajes por acomodar.","Ahora los mensajes sin tarea."])});
+  if(!repite && pos>0 && prevK!=="msg") G.push({v:"A", t:camVar("gm", ["Y ahora, los mensajes por acomodar.","Ahora los mensajes sin tarea."])});
   var quien=limpiaHabla(nombreCorto(gr.contacto||"")||gr.contacto||"alguien");
-  G.push({v:"A", t:(repite?camVar275("otra", ["Otra vez: ","De nuevo: "]):"")+(repite?"mensaje":"Mensaje")+" de "+quien+"."});
+  G.push({v:"A", t:(repite?camVar("otra", ["Otra vez: ","De nuevo: "]):"")+(repite?"mensaje":"Mensaje")+" de "+quien+"."});
   var ex=camFrases(gr.extracto, 1)[0]||camCorta(limpiaHabla(gr.extracto||""), 150);
   if(ex) G.push({v:"B", t:camPunto("Dice: "+ex)});
-  var preg=C.length>=2?"¿Va a "+camNomT276(C[0])+" o a "+camNomT276(C[1])+"?":(C.length?"¿Va a "+camNomT276(C[0])+"?":"¿A qué tarea va?");
+  var preg=C.length>=2?"¿Va a "+camNomT(C[0])+" o a "+camNomT(C[1])+"?":(C.length?"¿Va a "+camNomT(C[0])+"?":"¿A qué tarea va?");
   G.push({v:"A", t:preg});
-  camDi274(G, function(){ camEscucha274("resp"); });
+  camDi(G, function(){ camEscucha("resp"); });
 }
-function camMsgDetalle276(){
-  var gr=camMsgGr276(), t=camTarea274(), G=[]; if(!gr || !t) return [{v:"B", t:"No tengo más."}];
+function camMsgDetalle(){
+  var gr=camMsgGr(), t=camTarea(), G=[]; if(!gr || !t) return [{v:"B", t:"No tengo más."}];
   gr.ixs.slice(0,4).forEach(function(ix){ var x=t.msgs[ix]; if(!x) return; var s=camFrases(_txMsg(x).replace(/^[^:\n]{1,40}:\s*/,""), 2).join(" "); if(s) G.push({v:"B", t:camPunto(s)}); });
   if(!G.length) G.push({v:"B", t:"No tengo más."});
   G.push({v:"A", t:"¿A dónde va?"});
   return G;
 }
 /* sin IA: "la primera", "la segunda", o el nombre de UNA de las dos */
-function camMsgLocal276(v, C){
+function camMsgLocal(v, C){
   var n=_camNv(v).replace(/^(a|al|va a|va al|va en|en|es de|es|a la|la de|lo de|el de|pa|para)\s+/,"");
   if(/^(la )?(primera|1|uno|la primera opcion)$/.test(n) && C[0]) return {accion:"a_tarea", destino:C[0].id};
   if(/^(la )?(segunda|2|dos|otra|la otra|la segunda opcion)$/.test(n) && C[1]) return {accion:"a_tarea", destino:C[1].id};
-  var pal=function(x){ return _camNv(camNomT276(x)+" "+(x.nombre||"")).split(" ").filter(function(w){ return w.length>3 && !/^(para|con|del|las|los|una|unos|tarea|llamar|revisar|hacer|pagar|ver)$/.test(w); }); };
+  var pal=function(x){ return _camNv(camNomT(x)+" "+(x.nombre||"")).split(" ").filter(function(w){ return w.length>3 && !/^(para|con|del|las|los|una|unos|tarea|llamar|revisar|hacer|pagar|ver)$/.test(w); }); };
   var hit=C.map(function(x){ return pal(x).some(function(w){ return (" "+_camNv(v)+" ").indexOf(" "+w+" ")>=0; }); });
   if(hit.filter(Boolean).length===1){ var i=hit.indexOf(true); if(_camNv(v).split(" ").length<=6) return {accion:"a_tarea", destino:C[i].id}; }
   if(/^(no lo guardes|no guardar|no se guarda|es platica|solo platica|ninguna|a ninguna|no va|no va a ninguna|borralo|bórralo|no sirve)$/.test(n)) return {accion:"no_guardar"};
   if(/^(es (un )?dato|dato|como dato|solo un dato)$/.test(n)) return {accion:"dato"};
   return null;
 }
-function camMsgPrompt276(gr, t, C, v){
+function camMsgPrompt(gr, t, C, v){
   var L=[];
   L.push("Eres Doit, el asistente de Salvador. Van caminando y él te contesta por voz (puede venir impreciso). Hay un MENSAJE que no se sabe a qué tarea va. Entiende a dónde lo manda y conviértelo en UNA acción.");
   L.push("MENSAJE de "+String(gr.contacto||"")+": “"+gr.ixs.map(function(ix){ var x=t.msgs[ix]; return x?_txMsg(x).replace(/^[^:\n]{1,40}:\s*/,""):""; }).join(" / ").slice(0,700)+"”");
   L.push("LAS 2 MÁS PROBABLES:\n"+C.map(function(x, i){ return (i+1)+") "+x.id+" · "+String(x.nombre||""); }).join("\n"));
-  L.push("OTRAS TAREAS ABIERTAS (destino = el id):\n"+camCandidatas275(t).filter(function(x){ return !C.some(function(c){ return c.id===x.id; }); }).map(function(x){ return x.id+" · "+String(x.nombre||"").slice(0,80); }).join("\n"));
+  L.push("OTRAS TAREAS ABIERTAS (destino = el id):\n"+camCandidatas(t).filter(function(x){ return !C.some(function(c){ return c.id===x.id; }); }).map(function(x){ return x.id+" · "+String(x.nombre||"").slice(0,80); }).join("\n"));
   L.push("LO QUE DIJO: “"+v+"”");
   L.push("ACCIONES:\n- a_tarea: va a una tarea; destino = el id (de las 2 o de la lista).\n- nueva: es una tarea nueva; nombre = nombre corto.\n- dato: es solo un dato.\n- no_guardar: plática, no va a ninguna.\n- despues: lo deja para después.\n- aclarar: SOLO si de verdad no se entiende; respuesta_hablada = UNA pregunta corta.");
   L.push("respuesta_hablada: 2 a 5 palabras, como un amigo (ej. \"Listo, a Vestidores.\"). Nunca pidas confirmación.");
@@ -295,65 +295,65 @@ function camMsgPrompt276(gr, t, C, v){
   L.push("Contesta SOLO JSON: {\"accion\":\"...\",\"destino\":\"\",\"nombre\":\"\",\"respuesta_hablada\":\"...\",\"pide_confirmar\":false}");
   return L.join("\n");
 }
-function camMsgEntiende276(v){
-  var gr=camMsgGr276(), t=camTarea274(), key=CAM.L[CAM.i]; if(!gr || !t) return camSiguiente274(1);
+function camMsgEntiende(v){
+  var gr=camMsgGr(), t=camTarea(), key=CAM.L[CAM.i]; if(!gr || !t) return camSiguiente(1);
   if(CAM.aclara && CAM.aclara.id===key) v=CAM.aclara.v+". "+v; CAM.aclara=null;
-  var C=CAM.mc||camMsgCands276(gr), loc=camMsgLocal276(v, C), ord=camOrdId286(t, null);
-  if(loc){ if(ord) loc._ord286=ord; return camMsgEjecuta276(gr, t, loc, v, true); }
+  var C=CAM.mc||camMsgCands(gr), loc=camMsgLocal(v, C), ord=camOrdId(t, null);
+  if(loc){ if(ord) loc._ord286=ord; return camMsgEjecuta(gr, t, loc, v, true); }
   var tok=++CAM.tok, t0=Date.now(), listo=false;
   try{ speechSynthesis.cancel(); }catch(e){}
-  CAM.fase="pensando"; camPinta274(); camPiensa275(true);
-  var fin=function(j){ if(listo) return; listo=true; clearTimeout(to); camPiensa275(false); camLat275("mensaje", Date.now()-t0, !!j);
+  CAM.fase="pensando"; camPinta(); camPiensa(true);
+  var fin=function(j){ if(listo) return; listo=true; clearTimeout(to); camPiensa(false); camLat("mensaje", Date.now()-t0, !!j);
     if(tok!==CAM.tok || !CAM.on) return; CAM.fase="";
-    if(!j){ camOrdenSigue286(t, ord, {motivo:"ia_sin_respuesta"}); return camDi274([{v:"A", t:"No me contestó la IA. Lo dejo pendiente."}], function(){ camSiguiente274(1); }); }
-    if(ord) j._ord286=ord; camMsgEjecuta276(gr, t, j, v, true); };
+    if(!j){ camOrdenSigue(t, ord, {motivo:"ia_sin_respuesta"}); return camDi([{v:"A", t:"No me contestó la IA. Lo dejo pendiente."}], function(){ camSiguiente(1); }); }
+    if(ord) j._ord286=ord; camMsgEjecuta(gr, t, j, v, true); };
   var to=setTimeout(function(){ fin(null); }, CAM_IA_MS);
-  try{ preguntaAClaude([{role:"user", content:camMsgPrompt276(gr, t, C, v)}], "rapido", function(txt, err){ if(err) return fin(null); var j=_camJSON275(txt); fin(j && j.accion?j:null); }); }
+  try{ preguntaAClaude([{role:"user", content:camMsgPrompt(gr, t, C, v)}], "rapido", function(txt, err){ if(err) return fin(null); var j=_camJSON(txt); fin(j && j.accion?j:null); }); }
   catch(e){ fin(null); }
 }
-function camMsgEjecuta276(gr, t, j, v, vivo, confirmado){
-  var a=_camNv(j.accion).replace(/\s+/g,"_"), key=CAM.L[CAM.i], dh=String(j.respuesta_hablada||"").replace(/\s+/g," ").trim(), C=CAM.mc||[], ord=camOrdId286(t, j);
-  if(a==="deshacer"){ camOrdenCierra286(t, ord, "pidió deshacer lo anterior"); CAM.pideConf277=false; return camHaz274("deshaz"); }
-  if(a==="aclarar") camOrdenSigue286(t, ord, {motivo:"aclarar", pregunta_ia:dh, preguntar_despues:true});
-  if(a==="despues" || a==="detalle"){ if(camConContenido276(v)) camOrdenSigue286(t, ord, {motivo:a}); else camOrdenCierra286(t, ord, "mensaje: "+a); }
-  if(a==="aclarar"){ CAM.aclara={id:key, v:v}; return camDi274([{v:"A", t:camCorta(dh && /\?/.test(dh)?dh:"¿A cuál de las dos?", 140)}], function(){ CAM.limpia=false; camEscucha274("resp"); }); }
+function camMsgEjecuta(gr, t, j, v, vivo, confirmado){
+  var a=_camNv(j.accion).replace(/\s+/g,"_"), key=CAM.L[CAM.i], dh=String(j.respuesta_hablada||"").replace(/\s+/g," ").trim(), C=CAM.mc||[], ord=camOrdId(t, j);
+  if(a==="deshacer"){ camOrdenCierra(t, ord, "pidió deshacer lo anterior"); CAM.pideConf277=false; return camHaz274("deshaz"); }
+  if(a==="aclarar") camOrdenSigue(t, ord, {motivo:"aclarar", pregunta_ia:dh, preguntar_despues:true});
+  if(a==="despues" || a==="detalle"){ if(camConContenido(v)) camOrdenSigue(t, ord, {motivo:a}); else camOrdenCierra(t, ord, "mensaje: "+a); }
+  if(a==="aclarar"){ CAM.aclara={id:key, v:v}; return camDi([{v:"A", t:camCorta(dh && /\?/.test(dh)?dh:"¿A cuál de las dos?", 140)}], function(){ CAM.limpia=false; camEscucha("resp"); }); }
   if(a==="despues") return camHaz274("despues");
   if(a==="detalle") return camHaz274("detalle");
   var dest=null;
   if(a==="a_tarea" || a==="mover" || a==="vincular"){ a="a_tarea"; var dd=String(j.destino||"").trim();
-    dest=tareaId240(dd); if(!dest){ try{ dest=camDestino275(t, dd); }catch(e){} }
+    dest=tareaId240(dd); if(!dest){ try{ dest=camDestino(t, dd); }catch(e){} }
     if(!dest && dd){ dest=C.filter(function(x){ return _camNv(x.nombre).indexOf(_camNv(dd))>=0; })[0]||null; }
-    if(!dest){ CAM.aclara={id:key, v:v}; return camDi274([{v:"A", t:C.length>=2?"¿A "+camNomT276(C[0])+" o a "+camNomT276(C[1])+"?":"¿A cuál tarea?"}], function(){ CAM.limpia=false; camEscucha274("resp"); }); } }
+    if(!dest){ CAM.aclara={id:key, v:v}; return camDi([{v:"A", t:C.length>=2?"¿A "+camNomT(C[0])+" o a "+camNomT(C[1])+"?":"¿A cuál tarea?"}], function(){ CAM.limpia=false; camEscucha("resp"); }); } }
   try{ var cx8=correccion278(t, v); if(cx8){ a="a_tarea"; dest=cx8.x; }   /* build 278: "es la de X" / "es esta" manda sobre la IA */
-    else if(a==="a_tarea" && dest && niega278(v, dest)){ CAM.aclara={id:key, v:v}; return camDi274([{v:"A", t:"Dijiste que no es "+camNomT276(dest)+". ¿A cuál lo mando?"}], function(){ CAM.limpia=false; camEscucha274("resp"); }); } }catch(e){ console.warn("caminata 278 msg", e); }
-  if(!/^(a_tarea|nueva|dato|no_guardar)$/.test(a)){ CAM.aclara={id:key, v:v}; return camDi274([{v:"A", t:"¿A qué tarea lo mando?"}], function(){ CAM.limpia=false; camEscucha274("resp"); }); }
-  var _d7=camDescribeMsg277(gr, a, dest, j);
-  if(!confirmado && (CAM.pideConf277 || j.pide_confirmar===true)){ CAM.pideConf277=false; camOrdenSigue286(t, ord, {motivo:"esperando_confirmacion", entendi:_d7}); var jj={}; for(var _k in j) jj[_k]=j[_k]; jj.accion=a; if(dest) jj.destino=dest.id;
-    return camConfPide277({k:"msg", id:key, gr:gr, t:t, j:jj, v:v, a:a, desc:_d7}); }
+    else if(a==="a_tarea" && dest && niega278(v, dest)){ CAM.aclara={id:key, v:v}; return camDi([{v:"A", t:"Dijiste que no es "+camNomT(dest)+". ¿A cuál lo mando?"}], function(){ CAM.limpia=false; camEscucha("resp"); }); } }catch(e){ console.warn("caminata 278 msg", e); }
+  if(!/^(a_tarea|nueva|dato|no_guardar)$/.test(a)){ CAM.aclara={id:key, v:v}; return camDi([{v:"A", t:"¿A qué tarea lo mando?"}], function(){ CAM.limpia=false; camEscucha("resp"); }); }
+  var _d7=camDescribeMsg(gr, a, dest, j);
+  if(!confirmado && (CAM.pideConf277 || j.pide_confirmar===true)){ CAM.pideConf277=false; camOrdenSigue(t, ord, {motivo:"esperando_confirmacion", entendi:_d7}); var jj={}; for(var _k in j) jj[_k]=j[_k]; jj.accion=a; if(dest) jj.destino=dest.id;
+    return camConfPide({k:"msg", id:key, gr:gr, t:t, j:jj, v:v, a:a, desc:_d7}); }
   CAM.pideConf277=false;
-  var F=camFoto275([t, dest]), nueva=null, dicho="Listo.", vw={a:abierta, v:vista};
+  var F=camFoto([t, dest]), nueva=null, dicho="Listo.", vw={a:abierta, v:vista};
   try{
-    if(a==="a_tarea"){ if(dest.id===t.id) okG237(t, gr.ixs); else moverG237(t, gr.ixs, dest.id); dicho="Listo, a "+camNomT276(dest)+"."; }
-    else if(a==="nueva"){ nueva=nuevaG237(t, gr.ixs, false, String(j.nombre||"").trim()||undefined); dicho=camVar275("mnu", ["Listo, tarea nueva.","Va, la creé."]); }
-    else if(a==="dato"){ nueva=datoG240(t, gr.ixs); dicho="Va, queda como dato."; }
-    else { gr.ixs.forEach(function(ix){ soloPlatica(t, ix); }); try{ reglasPorMsg238("platica", t, gr.ixs, null); }catch(e){} dicho=camVar275("mng", ["Va, no lo guardo.","Listo, fuera."]); }
+    if(a==="a_tarea"){ if(dest.id===t.id) okG(t, gr.ixs); else moverG(t, gr.ixs, dest.id); dicho="Listo, a "+camNomT(dest)+"."; }
+    else if(a==="nueva"){ nueva=nuevaG(t, gr.ixs, false, String(j.nombre||"").trim()||undefined); dicho=camVar("mnu", ["Listo, tarea nueva.","Va, la creé."]); }
+    else if(a==="dato"){ nueva=datoG(t, gr.ixs); dicho="Va, queda como dato."; }
+    else { gr.ixs.forEach(function(ix){ soloPlatica(t, ix); }); try{ reglasPorMsg("platica", t, gr.ixs, null); }catch(e){} dicho=camVar("mng", ["Va, no lo guardo.","Listo, fuera."]); }
   }catch(e){ console.warn("caminata 276 mensaje", e); }
   abierta=vw.a; vista=vw.v;
-  CAM.ult={foto:F, i:CAM.i, a:"msg_"+a, nueva:nueva?nueva.id:"", desc:_d7}; try{ ultRegistra278(CAM.ult, _d7); }catch(e){} CAM.hechas275=(CAM.hechas275||0)+1;
-  if(ord){ CAM.ult.ord286={id:ord, tid:t.id}; camOrdenCierra286(t, ord, _d7||a); }
+  CAM.ult={foto:F, i:CAM.i, a:"msg_"+a, nueva:nueva?nueva.id:"", desc:_d7}; try{ ultRegistra(CAM.ult, _d7); }catch(e){} CAM.hechas275=(CAM.hechas275||0)+1;
+  if(ord){ CAM.ult.ord286={id:ord, tid:t.id}; camOrdenCierra(t, ord, _d7||a); }
   CAM.res276=CAM.res276||{}; CAM.res276[key]=1;
   try{ render(); }catch(e){}
   var w=dh.split(" ").filter(Boolean).length; if(dh && w<=8 && !/\?/.test(dh) && !_camCodigo(dh)) dicho=camPunto(dh);
-  camDi274([{v:"A", t:dicho}], function(){ camSiguiente274(1); });
+  camDi([{v:"A", t:dicho}], function(){ camSiguiente(1); });
 }
 /* ---------- el cierre ---------- */
-function camEtiq276(id){
+function camEtiq(id){
   var k=(CAM.g||{})[id];
   if(k==="msg"){ var gr=(CAM.mg||{})[id]; var c=gr?limpiaHabla(nombreCorto(gr.contacto||"")||gr.contacto||""):""; return "el mensaje de "+(String(c).split(" ")[0]||"un contacto"); }
   var t=tareaId240(id); return t?camCorta(camNombre(t), 50).replace(/[.\s]+$/,""):"una tarea";
 }
-function camFin276(){
-  var P=[]; (CAM.L||[]).forEach(function(id){ if((CAM.res276||{})[id]) return; var vivo=false; try{ vivo=camSigue275(id); }catch(e){} if(vivo) P.push(camEtiq276(id)); });
+function camFin(){
+  var P=[]; (CAM.L||[]).forEach(function(id){ if((CAM.res276||{})[id]) return; var vivo=false; try{ vivo=camSigue(id); }catch(e){} if(vivo) P.push(camEtiq(id)); });
   (CAM.pendQ||[]).forEach(function(s){ P.push(s); });
   window.__fin276=P.slice();
   if(!P.length) return "Bandeja limpia.";
@@ -382,10 +382,10 @@ var CAM_PROMPT278="REGLAS DE VINCULAR: usa vincular SOLO si él nombra la otra t
 var CAM_PROMPT277="- deshacer: quiere deshacer o cancelar lo que acabas de hacer en la tarea ANTERIOR (\"no, esa no era\", \"la vinculaste mal\", \"regrésalo como estaba\").\n"+
   "pide_confirmar: true SOLO si te pide que le confirmes o le repitas lo que entendiste ANTES de hacerlo (\"confírmame\", \"¿entendiste bien?\", \"dime qué vas a hacer\"); esa parte NO es parte de la orden. Si no, false.";
 function _camNv277(s){ return _camNv(s).replace(/^(oye|doit|claude)\s+/,"").replace(/\s+(por favor|porfa)$/,""); }
-function camPideConf277(v){ return CAM_CONF_PIDE.test(_camNv(v)); }
-function camConfCorto277(txt){ var n=_camNv277(camQuitaFin(txt)); return !!n && (CAM_CORTO.test(n) || CAM_CONF_SI.test(n) || CAM_CONF_NO.test(n)); }
+function camPideConf(v){ return CAM_CONF_PIDE.test(_camNv(v)); }
+function camConfCorto(txt){ var n=_camNv277(camQuitaFin(txt)); return !!n && (CAM_CORTO.test(n) || CAM_CONF_SI.test(n) || CAM_CONF_NO.test(n)); }
 /* frase corta con un verbo de deshacer ("no, deshazlo, la juntaste con otra", "cancela lo que hiciste") */
-function camDeshazSuelto277(n){
+function camDeshazSuelto(n){
   n=String(n||""); var w=n.split(" ").filter(Boolean); if(!w.length || w.length>9) return false;
   if(/\b(un poco|tantito|un poquito|poquito)\b/.test(n)) return false;   /* "regresa un poco" es releer, no deshacer */
   if(/\bno (lo |la )?(deshagas|reviertas|canceles|anules)\b/.test(n)) return false;
@@ -394,14 +394,14 @@ function camDeshazSuelto277(n){
     /\b(lo hiciste mal|la (vinculaste|juntaste|mandaste|pusiste) (mal|en otra|con otra|a otra)|te equivocaste de tarea|no era esa tarea)\b/.test(n);
 }
 /* lo dicho sin el "confírmame" (para repetírselo) */
-function camSinConf277(v){
+function camSinConf(v){
   var s=String(v||"").replace(/[,.;:\s]*¿?\s*(conf[ií]rm(amelo|amela|ame|a)( antes| primero)?|me confirmas|(me )?entendiste( bien)?|dime (si|qu[eé]|lo que) (me )?entendiste|dime qu[eé] vas a hacer|rep[ií]teme (lo )?qu[eé] (vas a hacer|entendiste|te dije)|qu[eé] vas a hacer|antes de hacerlo|antes de que lo hagas|no lo hagas todav[ií]a)\s*\??[.,;!]*/gi, " ");
   return s.replace(/\s+/g," ").replace(/^[\s,.;:]+|[\s,.;:]+$/g,"").trim();
 }
 /* cómo entendió la orden, en palabras (sin ejecutar nada) */
-function camDescribe277(t, a, j, dest){
+function camDescribe(t, a, j, dest){
   var nom=camNombre(t), tx=camCorta(limpiaHabla(String((j&&j.texto_para_tarea)||"").replace(/\s+/g," ").trim()), 160).replace(/[.\s]+$/,""), nue=false, d=null;
-  try{ nue=((CAM.g||{})[t.id]==="nue") || esPropuesta256(t); }catch(e){} try{ d=decision273(t); }catch(e){}
+  try{ nue=((CAM.g||{})[t.id]==="nue") || esPropuesta(t); }catch(e){} try{ d=decision273(t); }catch(e){}
   if(a==="vincular") return dest?"juntar "+nom+" con la tarea "+camCorta(limpiaHabla(dest.nombre||""), 60).replace(/[.\s]+$/,""):"juntar "+nom+" con otra tarea";
   if(a==="aprobar") return nue?"crear la tarea nueva "+nom:(d?"contestar la decisión de "+nom+(tx?": "+tx:" con lo que recomiendo"):"anotar en "+nom+(tx?": "+tx:" que va"));
   if(a==="rechazar") return nue?"quitar la tarea nueva "+nom:"anotar en "+nom+" que no va"+(tx?": "+tx:"");
@@ -409,63 +409,63 @@ function camDescribe277(t, a, j, dest){
   if(a==="dato") return "guardar "+nom+" como dato, no como tarea";
   return "anotar en "+nom+(tx?": "+tx:" lo que me dijiste");
 }
-function camDescribeMsg277(gr, a, dest, j){
+function camDescribeMsg(gr, a, dest, j){
   var q=limpiaHabla(nombreCorto((gr&&gr.contacto)||"")||(gr&&gr.contacto)||"el contacto"), de="el mensaje de "+q;
-  if(a==="a_tarea") return "mandar "+de+" a la tarea "+(dest?camNomT276(dest):"que dijiste");
+  if(a==="a_tarea") return "mandar "+de+" a la tarea "+(dest?camNomT(dest):"que dijiste");
   if(a==="nueva") return "crear una tarea nueva con "+de+(j && j.nombre?": "+camCorta(limpiaHabla(String(j.nombre)), 60).replace(/[.\s]+$/,""):"");
   if(a==="dato") return "guardar "+de+" como dato";
   return "no guardar "+de;
 }
 /* repite la orden y cómo la entendió, y espera su sí */
-function camConfPide277(c){
+function camConfPide(c){
   CAM.conf=c; CAM.aclara=null;
-  var dijo=camSinConf277(c.v), G=[];
+  var dijo=camSinConf(c.v), G=[];
   if(dijo) G.push({v:"A", t:camPunto("Me dijiste: "+camCorta(dijo, 170))});
   G.push({v:"A", t:camPunto("Entendí: "+c.desc)});
   G.push({v:"A", t:CAM.confExpl277?"¿Lo hago?":"¿Lo hago? Dime sí o no."}); CAM.confExpl277=true;
-  camDi274(G, function(){ CAM.limpia=true; camEscucha274("resp"); });
+  camDi(G, function(){ CAM.limpia=true; camEscucha("resp"); });
 }
-function camConfResp277(v){
-  var c=CAM.conf; CAM.conf=null; if(!c) return camEscucha274("resp");
+function camConfResp(v){
+  var c=CAM.conf; CAM.conf=null; if(!c) return camEscucha("resp");
   var n=_camNv277(v);
   if(CAM_CORTO.test(n) || CAM_CONF_SI.test(n)){   /* sí: ahora sí se ejecuta, tal cual lo entendió */
     window.__conf277=(window.__conf277||[]).concat([{id:c.id, a:c.a, ok:true, ts:Date.now()}]).slice(-20);
-    if(c.k==="msg") return camMsgEjecuta276(c.gr, c.t, c.j, c.v, true, true);
-    return camResuelve275(c.t, c.j, c.v, true, true);
+    if(c.k==="msg") return camMsgEjecuta(c.gr, c.t, c.j, c.v, true, true);
+    return camResuelve(c.t, c.j, c.v, true, true);
   }
   var v2=String(v||"").replace(/^\s*(no|nel)\b[\s,.;:]*/i,"").trim();
   if(CAM_CONF_NO.test(n) || !_camNv277(v2) || CAM_CONF_NO.test(_camNv277(v2))){   /* no: no se hace nada */
     window.__conf277=(window.__conf277||[]).concat([{id:c.id, a:c.a, ok:false, ts:Date.now()}]).slice(-20);
     CAM.confSig277=true;   /* la orden que sigue también se confirma */
     /* build 286: el «No» es a CÓMO lo entendió, no a la orden: queda viva para la Mac y se le pregunta después */
-    var _o6=camOrdId286(c.t, c.j); camOrdenSigue286(c.t, _o6, {motivo:"dijo_no_a_confirmacion", entendi:c.desc, preguntar_despues:true});
+    var _o6=camOrdId(c.t, c.j); camOrdenSigue(c.t, _o6, {motivo:"dijo_no_a_confirmacion", entendi:c.desc, preguntar_despues:true});
     if(CAM.ord286 && CAM.ord286.id===_o6) CAM.ord286.no=true;
-    return camDi274([{v:"A", t:camVar275("confno", ["Va, así no lo hago. Queda anotado para Claude; dímelo de otra forma o seguimos.","Sale, así no. Lo dejo anotado y te pregunto después. ¿Cómo sería?"])}], function(){ CAM.limpia=true; camEscucha274("resp"); });
+    return camDi([{v:"A", t:camVar("confno", ["Va, así no lo hago. Queda anotado para Claude; dímelo de otra forma o seguimos.","Sale, así no. Lo dejo anotado y te pregunto después. ¿Cómo sería?"])}], function(){ CAM.limpia=true; camEscucha("resp"); });
   }
   /* otra cosa: es la corrección; se vuelve a entender y se vuelve a confirmar */
   CAM.pideConf277=true;
-  if(c.k==="msg") return camMsgEntiende276(v2);
-  return camEntiende275(c.t, v2);
+  if(c.k==="msg") return camMsgEntiende(v2);
+  return camEntiende(c.t, v2);
 }
 /* "regresa un poco": vuelve a leer desde dos frases antes de donde iba */
-function camRebobina277(){
-  var R=CAM.rest; if(!R || !R.G || !R.G.length) return camPresenta274(true);
+function camRebobina(){
+  var R=CAM.rest; if(!R || !R.G || !R.G.length) return camPresenta(true);
   var from=Math.max(0, Math.min(R.k, R.G.length-1)-2);
-  camDi274(R.G.slice(from), R.done);
+  camDi(R.G.slice(from), R.done);
 }
 /* los comandos del 277; true = ya lo atendió */
 function camHaz277(c){
   if(CAM.conf){
-    if(c==="deshaz"){ camConfResp277("no"); return true; }   /* "eso no" / "cancela" a la confirmación = no */
-    if(c==="entendiste" || c==="repite"){ var cc=CAM.conf; CAM.conf=null; camConfPide277(cc); return true; }
+    if(c==="deshaz"){ camConfResp("no"); return true; }   /* "eso no" / "cancela" a la confirmación = no */
+    if(c==="entendiste" || c==="repite"){ var cc=CAM.conf; CAM.conf=null; camConfPide(cc); return true; }
     if(/^(siguiente|despues|atras|salir|pausa)$/.test(c)){ CAM.conf=null; CAM.pideConf277=false; return false; }
   }
-  if(c==="rebobina"){ camRebobina277(); return true; }
+  if(c==="rebobina"){ camRebobina(); return true; }
   if(c==="entendiste"){
-    if(CAM.qz){ camQuizPregunta276(true); return true; }
+    if(CAM.qz){ camQuizPregunta(true); return true; }
     var u=CAM.ult;
-    if(u && u.desc) camDi274([{v:"A", t:camPunto("Lo último que hice: "+u.desc)}, {v:"A", t:"Si está mal, di deshazlo."}], function(){ CAM.limpia=true; camEscucha274("resp"); });
-    else { CAM.confSig277=true; camDi274([{v:"A", t:"Todavía no hago nada. Dime qué hacemos y te lo confirmo antes de hacerlo."}], function(){ CAM.limpia=true; camEscucha274("resp"); }); }
+    if(u && u.desc) camDi([{v:"A", t:camPunto("Lo último que hice: "+u.desc)}, {v:"A", t:"Si está mal, di deshazlo."}], function(){ CAM.limpia=true; camEscucha("resp"); });
+    else { CAM.confSig277=true; camDi([{v:"A", t:"Todavía no hago nada. Dime qué hacemos y te lo confirmo antes de hacerlo."}], function(){ CAM.limpia=true; camEscucha("resp"); }); }
     return true;
   }
   return false;
@@ -474,7 +474,7 @@ function camHaz277(c){
    El caso: la caminata preguntó "¿Es el mismo tema que «Inversiones BBVA»? Si sí, la vinculo." sobre «Estado de Cuenta Inversión
    Septiembre». Salvador dijo que NO tenía nada que ver con sus inversiones BBVA, que esa era la tarea de estado de cuenta inversiones,
    y la caminata la juntó con Inversiones BBVA. Causas: (1) la IA solo veía las OTRAS tareas para vincular (la actual no estaba), sin
-   regla para "es esta misma" ni para "no tiene que ver con X"; (2) camDestino275 aceptaba una sola palabra suelta ("inversiones")
+   regla para "es esta misma" ni para "no tiene que ver con X"; (2) camDestino aceptaba una sola palabra suelta ("inversiones")
    o que un nombre contuviera al otro (0.9); (3) vincular se ejecutaba sin confirmar aunque la frase NEGABA esa tarea.
    Ahora:
    1 NOMBRES: una tarea se reconoce por su nombre, nombres anteriores, sinónimos y alias, sin acentos, en singular/plural, sin
@@ -485,23 +485,23 @@ function camHaz277(c){
    3 SU CORRECCIÓN MANDA: "¿es esta tarea?", "es esta misma", "es la tarea de X", "esa es la de X", "no, es X" → si X es la tarea
      actual, no se vincula y se quita la propuesta pendiente (no se vuelve a preguntar); si X es otra tarea, va a esa, por encima de
      lo que haya dicho la IA. Vale también en la confirmación del 277 (la corrección vuelve a pasar por aquí) y en los mensajes.
-   4 Si la IA pide vincular a una tarea que él NO nombró en lo que dijo, primero se le confirma (camConfPide277).
-   5 DESHACER, UNA SOLA FUNCIÓN (deshazUlt278) para la voz ("deshazlo") y para el ícono ↩ de la pantalla de la tarea: lo último que
+   4 Si la IA pide vincular a una tarea que él NO nombró en lo que dijo, primero se le confirma (camConfPide).
+   5 DESHACER, UNA SOLA FUNCIÓN (deshazUlt) para la voz ("deshazlo") y para el ícono ↩ de la pantalla de la tarea: lo último que
      se hizo EN ESA tarea (vínculo, fecha, nombre, mensaje movido, nota, datos). Se muestra junto al ⋯ solo si hay algo que deshacer;
      al tocarlo dice "Se deshace: …" y pide un toque más. Sin historial ni lista. Lo enviado por WhatsApp no se puede des-enviar:
      esas acciones no dejan ↩. */
 var STOP278={de:1,del:1,la:1,las:1,el:1,los:1,y:1,e:1,a:1,al:1,en:1,con:1,para:1,por:1,que:1,mi:1,mis:1,tu:1,tus:1,su:1,sus:1,un:1,una:1,unos:1,unas:1,es:1,esta:1,este:1,esa:1,ese:1,eso:1,esto:1,tarea:1,tareas:1,lo:1,le:1,les:1,se:1,si:1,no:1,ni:1,ya:1,mas:1,muy:1,pero:1,como:1,otra:1,otro:1,misma:1,mismo:1,
   enero:1,febrero:1,marzo:1,abril:1,mayo:1,junio:1,julio:1,agosto:1,septiembre:1,setiembre:1,octubre:1,noviembre:1,diciembre:1,mes:1};
-function _st278(w){ w=String(w||""); return w.length>4?w.replace(/(es|s|e)$/,""):w; }   /* singular/plural: "inversiones" = "inversión", "clientes" = "cliente" */
-function _tok278(s){ return _camNv(s).split(" ").filter(function(w){ return w.length>1 && !STOP278[w]; }).map(_st278); }
-function _flat278(v){ return [].concat(v||[]).map(function(z){ return (z&&typeof z==="object")?(z.nombre||z.tx||""):String(z||""); }).filter(Boolean); }
+function _st(w){ w=String(w||""); return w.length>4?w.replace(/(es|s|e)$/,""):w; }   /* singular/plural: "inversiones" = "inversión", "clientes" = "cliente" */
+function _tok(s){ return _camNv(s).split(" ").filter(function(w){ return w.length>1 && !STOP278[w]; }).map(_st); }
+function _flat(v){ return [].concat(v||[]).map(function(z){ return (z&&typeof z==="object")?(z.nombre||z.tx||""):String(z||""); }).filter(Boolean); }
 /* todos los nombres con los que Salvador puede llamar a una tarea */
 function nombres278(x){ if(!x) return [];
-  return [x.nombre].concat(_flat278(x.nombre_anterior), _flat278(x.nombres_anteriores), _flat278(x.sinonimos), _flat278(x.alias), _flat278(x.alias_tarea)).map(function(s){ return String(s||"").trim(); }).filter(Boolean); }
+  return [x.nombre].concat(_flat(x.nombre_anterior), _flat(x.nombres_anteriores), _flat(x.sinonimos), _flat(x.alias), _flat(x.alias_tarea)).map(function(s){ return String(s||"").trim(); }).filter(Boolean); }
 /* ¿qué tanto nombra el texto a la tarea x? 0 = no la nombra */
-function puntaje278(P, x){
+function puntaje(P, x){
   var best=0, Ps={}; P.forEach(function(w){ Ps[w]=1; });
-  nombres278(x).forEach(function(nm){ var T=_tok278(nm); if(!T.length) return;
+  nombres278(x).forEach(function(nm){ var T=_tok(nm); if(!T.length) return;
     var c=T.filter(function(w){ return Ps[w]; }).length, s=0;
     if(c===T.length && (T.length>=2 || P.length<=2)) s=T.length*2+(P.length===T.length?3:0);   /* todas las palabras de un nombre */
     else if(P.length>=2 && P.every(function(w){ return T.indexOf(w)>=0; })) s=P.length*2-1;   /* lo dicho es parte de su nombre (2+ palabras) */
@@ -509,9 +509,9 @@ function puntaje278(P, x){
   return best;
 }
 /* la tarea que el texto nombra, entre L; null si ninguna o si hay empate */
-function resuelveNombre278(texto, L){
-  var P=_tok278(texto); if(!P.length) return null;
-  var R=(L||[]).filter(Boolean).map(function(x){ return {x:x, s:puntaje278(P, x)}; }).filter(function(r){ return r.s>0; }).sort(function(a,b){ return b.s-a.s; });
+function resuelveNombre(texto, L){
+  var P=_tok(texto); if(!P.length) return null;
+  var R=(L||[]).filter(Boolean).map(function(x){ return {x:x, s:puntaje(P, x)}; }).filter(function(r){ return r.s>0; }).sort(function(a,b){ return b.s-a.s; });
   if(!R.length) return null;
   if(R.length>1 && R[1].s===R[0].s && R[1].x.id!==R[0].x.id) return null;   /* empate: no se adivina */
   return R[0].x;
@@ -520,9 +520,9 @@ function resuelveNombre278(texto, L){
 var NEG278=/\b(nada que ver|no tiene (nada )?que ver|no tienen (nada )?que ver|no es|no son|no era|no la de|no el de|no con|no a|no en|ni con|ni a|tampoco|no (la |lo )?(juntes|vincules|pegues|mandes|metas|pongas|mezcles|relaciones)|sin relacion|otra cosa que)\b/;
 function niega278(v, x){
   if(!x) return false;
-  var w=String(v||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[,;:.!?¿¡()]+/g," | ").replace(/["'«»“”]/g," ").replace(/\s+/g," ").trim().split(" ").filter(Boolean), ws=w.map(_st278);   /* la coma cuenta: «no, es la de X» no niega a X */
+  var w=String(v||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[,;:.!?¿¡()]+/g," | ").replace(/["'«»“”]/g," ").replace(/\s+/g," ").trim().split(" ").filter(Boolean), ws=w.map(_st);   /* la coma cuenta: «no, es la de X» no niega a X */
   if(!w.length) return false;
-  return nombres278(x).some(function(nm){ var T=_tok278(nm); if(!T.length) return false;
+  return nombres278(x).some(function(nm){ var T=_tok(nm); if(!T.length) return false;
     for(var i=0;i<ws.length;i++){ if(ws[i]!==T[0]) continue;
       var win=ws.slice(i, i+T.length+4); if(!T.every(function(t){ return win.indexOf(t)>=0; })) continue;
       var ini=Math.max(0, i-8);
@@ -532,22 +532,22 @@ function niega278(v, x){
     return false; });
 }
 /* ¿la nombró (sin negarla)? */
-function nombra278(v, x){ return !!x && puntaje278(_tok278(v), x)>0 && !niega278(v, x); }
+function nombra278(v, x){ return !!x && puntaje(_tok(v), x)>0 && !niega278(v, x); }
 /* su corrección explícita: "¿es esta tarea?", "es esta misma", "es la tarea de X", "esa es la de X", "no, es X" → {x, misma} o null */
 var CORR278=/\b(es esta( misma)?( tarea)?|esta es( la tarea)?|es la misma|es la tarea de|es la de|esa es la( tarea)?( de)?|esta es la( tarea)?( de)?|la tarea es|la tarea de|no es esa es|no es otra|es otra tarea|va en la de|va con la de|va en la tarea de|es de la tarea)\b/;
 function correccion278(t, v){
   var n=_camNv(v); if(!t || !n) return null;
   var m=n.match(CORR278); if(!m) return null;
   var tras=n.slice(m.index+m[0].length).trim(), tras2=tras.split(/\b(y|pero|porque|pues)\b/)[0].trim();
-  var L=camCandidatas275(t).concat([t]);
-  var x=tras2?resuelveNombre278(tras2, L):null;
+  var L=camCandidatas(t).concat([t]);
+  var x=tras2?resuelveNombre(tras2, L):null;
   if(!x && /^(es esta( misma)?( tarea)?|esta es( la tarea)?|es la misma)$/.test(m[0]) && !tras2) x=t;   /* "¿es esta tarea?" sin nombre = esta */
-  if(!x){ var y=resuelveNombre278(n, L); if(y && !niega278(v, y)) x=y; }   /* el nombre puede venir antes ("estado de cuenta inversiones, esa es") */
+  if(!x){ var y=resuelveNombre(n, L); if(y && !niega278(v, y)) x=y; }   /* el nombre puede venir antes ("estado de cuenta inversiones, esa es") */
   if(!x || niega278(v, x)) return null;
   return {x:x, misma:x.id===t.id};
 }
 /* "no se vincula": quita la pregunta / propuesta pendiente de vincular (a dest o a cualquiera) para que no se vuelva a preguntar */
-function rechazaVinc278(t, dest, por){
+function rechazaVinc(t, dest, por){
   if(!t) return false; var H=t.hecho238, quito=false, did=dest&&dest.id;
   if(H && Array.isArray(H.falta)){ var antes=H.falta.length;
     H.falta=H.falta.filter(function(f){ if(!f || f.k!=="vinc") return true; if(!did) return false; return !(f.ops||[]).some(function(o){ return o && o.id===did; }); });
@@ -557,14 +557,14 @@ function rechazaVinc278(t, dest, por){
   return quito;
 }
 /* lo que hace con la acción de la IA antes de ejecutarla; devuelve {a, dest, no, misma, conf} */
-function vincPend278(t){ var Q=[]; try{ Q=preguntas249(t); }catch(e){} var p=Q[0]; if(!p || p.k!=="vinc") return null; var op=(p.ops||[])[0]; return (op && tareaId240(op.id)) || {id:"", nombre:""}; }
-function camFiltraVinc278(t, a, j, v){
-  var r={a:a, dest:null}, cx=correccion278(t, v), pend=vincPend278(t);
+function vincPend(t){ var Q=[]; try{ Q=preguntas249(t); }catch(e){} var p=Q[0]; if(!p || p.k!=="vinc") return null; var op=(p.ops||[])[0]; return (op && tareaId240(op.id)) || {id:"", nombre:""}; }
+function camFiltraVinc(t, a, j, v){
+  var r={a:a, dest:null}, cx=correccion278(t, v), pend=vincPend(t);
   if(String((j&&j.destino)||"")===t.id) cx={x:t, misma:true};   /* la IA "vinculó" a la misma tarea */
   if(cx && !cx.misma){ r.a="vincular"; r.dest=cx.x; r.corr=1; return r; }   /* su corrección manda sobre la IA */
   if(cx && cx.misma){ r.misma=1; if(a==="vincular" || (pend && (a==="aprobar" || a==="rechazar"))){ r.a="no_vincular"; r.dest=(pend&&pend.id)?pend:null; } return r; }
   if(a!=="vincular") return r;
-  var dest=camDestino275(t, j.destino); r.dest=dest; if(!dest) return r;
+  var dest=camDestino(t, j.destino); r.dest=dest; if(!dest) return r;
   if(dest.id===t.id || niega278(v, dest)){ r.a="no_vincular"; r.niega=1; if(dest.id===t.id) r.dest=(pend&&pend.id)?pend:null; return r; }
   if(!nombra278(v, dest) && !/^(si|va|sale|dale|ok|okey|claro|de acuerdo|si vinculala|si juntala|vinculala|juntala|si es el mismo|si es lo mismo|es lo mismo|es el mismo)( tema)?$/.test(_camNv277(v))) r.conf=1;   /* no la nombró: se le confirma */
   return r;
@@ -572,32 +572,32 @@ function camFiltraVinc278(t, a, j, v){
 /* ---------- 5 · DESHACER: una sola función para la voz y para el ícono ---------- */
 var ULT278_K="doit_ult278", ULT278_MS=24*3600*1000;
 window.__ult278=window.__ult278||null;
-function _ultCarga278(){ if(window.__ult278) return window.__ult278; var o={}; try{ o=JSON.parse(localStorage.getItem(ULT278_K)||"{}")||{}; }catch(e){ o={}; } window.__ult278=o; return o; }
-function _ultGuarda278(){ var o=_ultCarga278(), ks=Object.keys(o).sort(function(a,b){ return (o[b].ts||0)-(o[a].ts||0); });
+function _ultCarga(){ if(window.__ult278) return window.__ult278; var o={}; try{ o=JSON.parse(localStorage.getItem(ULT278_K)||"{}")||{}; }catch(e){ o={}; } window.__ult278=o; return o; }
+function _ultGuarda(){ var o=_ultCarga(), ks=Object.keys(o).sort(function(a,b){ return (o[b].ts||0)-(o[a].ts||0); });
   ks.slice(20).forEach(function(k){ delete o[k]; });
   try{ var s=JSON.stringify(o); if(s.length>1500000){ ks.slice(5).forEach(function(k){ delete o[k]; }); s=JSON.stringify(o); } localStorage.setItem(ULT278_K, s); }catch(e){ try{ localStorage.removeItem(ULT278_K); }catch(e2){} } }
-/* u = {foto (camFoto275), que, nueva?} · se apunta en cada tarea de la foto (o en tids) */
-function ultRegistra278(u, que, tids){
+/* u = {foto (camFoto), que, nueva?} · se apunta en cada tarea de la foto (o en tids) */
+function ultRegistra(u, que, tids){
   if(!u || !u.foto) return null; u.que=String(que||u.que||u.desc||"lo último que se hizo"); u.ts=u.ts||Date.now();
   var ids=(tids||(u.foto.copias||[]).map(function(c){ return c && c.id; })).filter(Boolean); u.tids=ids;
   window.__ultN278=(window.__ultN278||0)+1;
-  var o=_ultCarga278(), slim={foto:u.foto, que:u.que, ts:u.ts, nueva:u.nueva||"", tids:ids};
-  ids.forEach(function(id){ o[id]=slim; }); _ultGuarda278(); return slim;
+  var o=_ultCarga(), slim={foto:u.foto, que:u.que, ts:u.ts, nueva:u.nueva||"", tids:ids};
+  ids.forEach(function(id){ o[id]=slim; }); _ultGuarda(); return slim;
 }
-function ultDe278(tid){ var o=_ultCarga278(), u=o[tid]; if(!u) return null; if(Date.now()-(u.ts||0)>ULT278_MS){ delete o[tid]; _ultGuarda278(); return null; } return u; }
-function _ultOlvida278(u){ var o=_ultCarga278(); Object.keys(o).forEach(function(k){ var x=o[k]; if(x===u || (x && u && x.ts===u.ts && String(x.tids)===String(u.tids))) delete o[k]; }); _ultGuarda278(); }
+function ultDe(tid){ var o=_ultCarga(), u=o[tid]; if(!u) return null; if(Date.now()-(u.ts||0)>ULT278_MS){ delete o[tid]; _ultGuarda(); return null; } return u; }
+function _ultOlvida(u){ var o=_ultCarga(); Object.keys(o).forEach(function(k){ var x=o[k]; if(x===u || (x && u && x.ts===u.ts && String(x.tids)===String(u.tids))) delete o[k]; }); _ultGuarda(); }
 /* LA función: regresa las tareas como estaban antes de la acción. Lo que llegó DESPUÉS de la acción (WhatsApp, notas de la IA) se conserva. */
-function deshazUlt278(u){
+function deshazUlt(u){
   if(!u || !u.foto) return false;
   var nuevos={}, ya={};   /* lo que ya estaba en CUALQUIERA de las tareas de la foto (incluye lo que la acción copió de una a otra) */
   (u.foto.copias||[]).forEach(function(c){ (c.msgs||[]).forEach(function(m){ if(m) ya[(m.ts||0)+"|"+String(m.t||"").slice(0,60)]=1; }); });
   (u.foto.copias||[]).forEach(function(c){ var vivo=tareaId240(c.id); if(!vivo) return;
     nuevos[c.id]=(vivo.msgs||[]).filter(function(m){ return m && (+m.ts||0)>(u.ts||0)+1500 && !ya[(m.ts||0)+"|"+String(m.t||"").slice(0,60)] && !m.movido_de && (m.wa_in===1 || m.nota_ia || m.origen==="revisor"); }); });
-  camRestaura275(u.foto);
+  camRestaura(u.foto);
   Object.keys(nuevos).forEach(function(id){ var L=nuevos[id]; if(!L.length) return; var x=tareaId240(id); if(!x) return;
     x.msgs=(x.msgs||[]).concat(L).sort(function(a,b){ return ((a&&a.ts)||0)-((b&&b.ts)||0); }); guarda(x); });
   if(u.nueva){ try{ borraTarea(u.nueva); }catch(e){} }
-  _ultOlvida278(u);
+  _ultOlvida(u);
   try{ hist240("Deshizo: "+(u.que||""), tareaId240((u.tids||[])[0])||null, null); }catch(e){}
   return true;
 }
@@ -605,8 +605,8 @@ function deshazUlt278(u){
    queda UNA sola entrada: la foto más vieja de cada tarea y el texto de la acción más importante (pri). Si en medio se mandó algo
    por WhatsApp, no se deja deshacer (no se puede des-enviar). */
 window.__ultPila278=null;
-function ultEnvuelve278(fn, quienes, que, pri){
-  return function(){ var a=arguments, F=null; try{ F=camFoto275((quienes.apply(this, a)||[]).filter(Boolean)); }catch(e){}
+function ultEnvuelve(fn, quienes, que, pri){
+  return function(){ var a=arguments, F=null; try{ F=camFoto((quienes.apply(this, a)||[]).filter(Boolean)); }catch(e){}
     var raiz=!window.__ultPila278, t0=Date.now(); if(raiz) window.__ultPila278={fotos:[], q:"", p:-1, env:false};
     var P=window.__ultPila278; if(F) P.fotos.push(F);
     var r;
@@ -617,7 +617,7 @@ function ultEnvuelve278(fn, quienes, que, pri){
       if(raiz){ window.__ultPila278=null;
         try{ if(P.q && !P.env && !(typeof CAM!=="undefined" && CAM.on)){ var ya={}, cop=[], p2=[];
             P.fotos.forEach(function(f){ (f.copias||[]).forEach(function(c, i){ if(c && !ya[c.id]){ ya[c.id]=1; cop.push(c); p2.push((f.p256f||[])[i]); } }); });
-            ultRegistra278({foto:{copias:cop, p256f:p2.filter(Boolean)}, ts:t0}, P.q); if(vista==="hilo") render(); } }catch(e){ console.warn("ult278", e); } }
+            ultRegistra({foto:{copias:cop, p256f:p2.filter(Boolean)}, ts:t0}, P.q); if(vista==="hilo") render(); } }catch(e){ console.warn("ult278", e); } }
     }
     return r; };
 }
@@ -627,55 +627,55 @@ function ultEnvuelve278(fn, quienes, que, pri){
   var env=function(){ if(window.__ultPila278) window.__ultPila278.env=true; };
   var _ma=mandaAExterno; mandaAExterno=function(){ env(); return _ma.apply(this, arguments); };
   var _md=mandaDM; mandaDM=function(){ env(); return _md.apply(this, arguments); };
-  enlazaTareas=ultEnvuelve278(enlazaTareas, function(oid, did){ return [T(oid), T(did)]; },
+  enlazaTareas=ultEnvuelve(enlazaTareas, function(oid, did){ return [T(oid), T(did)]; },
     function(r, oid, did){ var d=T(did), o=null; try{ window.__ultPila278.fotos.forEach(function(f){ (f.copias||[]).forEach(function(c){ if(c && c.id===oid && !o) o=c; }); }); }catch(e){}
       var fus=(tareas||[]).every(function(x){ return x.id!==oid; }) || ((T(oid)||{}).fusionada_en===did);
       return (d && fus)?"se juntó aquí «"+camCorta(String((o&&o.nombre)||"otra tarea"), 50)+"»":""; }, 3);
-  moverG237=ultEnvuelve278(moverG237, function(t, ixs, did){ return [t, T(did)]; }, function(r, t, ixs, did){ var d=T(did); return "se movió "+((ixs||[]).length>1?(ixs.length+" mensajes"):"un mensaje")+" a «"+camCorta(String((d&&d.nombre)||"otra tarea"), 50)+"»"; }, 3);
-  mueveMensaje=ultEnvuelve278(mueveMensaje, function(t, ix, did){ return [t, T(did)]; }, function(r, t, ix, did){ var d=T(did); return r?"se movió un mensaje a «"+camCorta(String((d&&d.nombre)||"otra tarea"), 50)+"»":""; }, 2);
-  mueveFecha=ultEnvuelve278(mueveFecha, function(t){ return [t]; }, function(r, t, nueva){ return (r && r.ok!==false && t && t.f_vigente===nueva)?"se movió la fecha al "+fechaMovCorta(nueva):""; }, 2);
-  mandar=ultEnvuelve278(mandar, function(t){ return [t]; }, function(r, t, txt){ return "se anotó: “"+camCorta(String(txt||"").replace(/\s+/g," "), 50)+"”"; }, 1);
-  notaClaude=ultEnvuelve278(notaClaude, function(t){ return [t]; }, function(r, t, v){ return "se le pidió a Claude: “"+camCorta(String(v||"").replace(/\s+/g," "), 50)+"”"; }, 1);
-  enviaPreguntas249=ultEnvuelve278(enviaPreguntas249, function(tid){ return [T(tid)]; }, function(){ return "se guardaron tus respuestas"; }, 1);
+  moverG=ultEnvuelve(moverG, function(t, ixs, did){ return [t, T(did)]; }, function(r, t, ixs, did){ var d=T(did); return "se movió "+((ixs||[]).length>1?(ixs.length+" mensajes"):"un mensaje")+" a «"+camCorta(String((d&&d.nombre)||"otra tarea"), 50)+"»"; }, 3);
+  mueveMensaje=ultEnvuelve(mueveMensaje, function(t, ix, did){ return [t, T(did)]; }, function(r, t, ix, did){ var d=T(did); return r?"se movió un mensaje a «"+camCorta(String((d&&d.nombre)||"otra tarea"), 50)+"»":""; }, 2);
+  mueveFecha=ultEnvuelve(mueveFecha, function(t){ return [t]; }, function(r, t, nueva){ return (r && r.ok!==false && t && t.f_vigente===nueva)?"se movió la fecha al "+fechaMovCorta(nueva):""; }, 2);
+  mandar=ultEnvuelve(mandar, function(t){ return [t]; }, function(r, t, txt){ return "se anotó: “"+camCorta(String(txt||"").replace(/\s+/g," "), 50)+"”"; }, 1);
+  notaClaude=ultEnvuelve(notaClaude, function(t){ return [t]; }, function(r, t, v){ return "se le pidió a Claude: “"+camCorta(String(v||"").replace(/\s+/g," "), 50)+"”"; }, 1);
+  enviaPreguntas=ultEnvuelve(enviaPreguntas, function(tid){ return [T(tid)]; }, function(){ return "se guardaron tus respuestas"; }, 1);
 })();
 /* caminata: NO se vincula (dijo "es esta" o "no tiene que ver con X"): se quita la propuesta pendiente, queda anotado y se puede deshacer */
-function camNoVincula278(t, fv, v, vivo){
-  var F=camFoto275([t]), d=(fv && fv.dest && fv.dest.id)?fv.dest:null, dn=d?camCorta(limpiaHabla(String(d.nombre||"")), 50).replace(/[.\s]+$/,""):"";
-  try{ rechazaVinc278(t, d, "Salvador, caminata");
+function camNoVincula(t, fv, v, vivo){
+  var F=camFoto([t]), d=(fv && fv.dest && fv.dest.id)?fv.dest:null, dn=d?camCorta(limpiaHabla(String(d.nombre||"")), 50).replace(/[.\s]+$/,""):"";
+  try{ rechazaVinc(t, d, "Salvador, caminata");
     msg(t,"bi","No la junté"+(dn?" con «"+dn+"»":"")+": "+(fv.misma?"dijiste que es esta misma tarea.":"dijiste que no tiene que ver.")+" Lo que dijiste: “"+String(v||"").replace(/\s+/g," ").slice(0,200)+"”");
     var m=t.msgs[t.msgs.length-1]; m.canal="priv:"+(yo||""); m.nota_ia=1; guarda(t); }catch(e){ console.warn("caminata 278 no vincula", e); }
   var desc="no juntar "+camNombre(t)+(dn?" con "+dn:"");
-  CAM.ult={foto:F, i:CAM.L.indexOf(t.id), a:"no_vincular", desc:desc}; try{ ultRegistra278(CAM.ult, desc); }catch(e){}
+  CAM.ult={foto:F, i:CAM.L.indexOf(t.id), a:"no_vincular", desc:desc}; try{ ultRegistra(CAM.ult, desc); }catch(e){}
   CAM.hechas275=(CAM.hechas275||0)+1; CAM.res276=CAM.res276||{}; CAM.res276[t.id]=1; CAM.pideConf277=false;
   if(!vivo) return; CAM.fase="";
-  camDi274([{v:"A", t:"Va, no la junto"+(dn?" con "+dn:"")+". Se queda aparte."}], function(){ camSiguiente274(1); });
+  camDi([{v:"A", t:"Va, no la junto"+(dn?" con "+dn:"")+". Se queda aparte."}], function(){ camSiguiente(1); });
 }
 /* el nombre de la tarea, a mano (menú ⋯ → Cambiar nombre) */
-function ultNombre278(t, F, antes){ if(!t || !F) return; ultRegistra278({foto:F, ts:Date.now()}, "se cambió el nombre (era «"+camCorta(String(antes||""), 40)+"»)"); }
+function ultNombre(t, F, antes){ if(!t || !F) return; ultRegistra({foto:F, ts:Date.now()}, "se cambió el nombre (era «"+camCorta(String(antes||""), 40)+"»)"); }
 /* el ícono ↩ (línea, estilo SF Symbols) junto al ⋯ de la tarea */
-function vUndoIco278(t){ var u=t && ultDe278(t.id); if(!u) return "";
+function vUndoIco(t){ var u=t && ultDe(t.id); if(!u) return "";
   return '<button class="iconbtn hb233 und278b'+(window.__undoAsk278===t.id?' on':'')+'" id="bund278" aria-label="Deshacer lo último en esta tarea">'+ico("undo",20)+'</button>'; }
-function vUndoLinea278(t){ var u=t && ultDe278(t.id); if(!u || window.__undoAsk278!==t.id) return "";
+function vUndoLinea(t){ var u=t && ultDe(t.id); if(!u || window.__undoAsk278!==t.id) return "";
   return '<div class="und278" id="und278" role="status"><span>Se deshace: '+esc(u.que||"lo último")+'</span><button type="button" id="bund278ok">Deshacer</button></div>'; }
-function bindUndo278(t){
+function bindUndo(t){
   var b=$("bund278"); if(b) b.onclick=function(ev){ ev.stopPropagation(); menuOpen=false;
     if(window.__undoAsk278===t.id){ window.__undoAsk278=null; render(); return; }   /* tocarlo otra vez = no */
     window.__undoAsk278=t.id; clearTimeout(window.__undoAskT278);
     window.__undoAskT278=setTimeout(function(){ if(window.__undoAsk278===t.id){ window.__undoAsk278=null; if(vista==="hilo") render(); } }, 7000);
     render(); };
   var ok=$("bund278ok"); if(ok) ok.onclick=function(ev){ ev.stopPropagation(); window.__undoAsk278=null; clearTimeout(window.__undoAskT278);
-    var u=ultDe278(t.id); if(!u){ render(); return; }
-    var que=u.que; deshazUlt278(u); abierta=tareaId240(t.id)?t.id:((u.tids||[]).filter(function(id){ return tareaId240(id); })[0]||null); vista=abierta?"hilo":"lista"; render(); toast("Deshecho: "+que); };
+    var u=ultDe(t.id); if(!u){ render(); return; }
+    var que=u.que; deshazUlt(u); abierta=tareaId240(t.id)?t.id:((u.tids||[]).filter(function(id){ return tareaId240(id); })[0]||null); vista=abierta?"hilo":"lista"; render(); toast("Deshecho: "+que); };
 }
 
 /* ---------- 4 · el ícono chico del home (junto al ⋯) ---------- */
 /* build 277b (Salvador 7-oct): silueta SÓLIDA en zancada (tipo peatón), trazo propio — no es copia de ningún ícono de terceros */
-function _icoCamina277(){ return '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="13.6" cy="3.2" r="2.3" fill="currentColor" stroke="none"/><path d="M12.9 7.4L11.5 12.9" stroke-width="3.9"/><path d="M12.2 8.5L9.2 10 7.7 12.9M13.1 8.7L15.3 11 17.9 9.9M11.7 13.3L15.3 15.6 16.6 20.7M11.1 13.6L9.6 17.4 5.6 19.9" stroke-width="2.6"/></svg>'; }
-function vCamIco277(){
+function _icoCamina(){ return '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="13.6" cy="3.2" r="2.3" fill="currentColor" stroke="none"/><path d="M12.9 7.4L11.5 12.9" stroke-width="3.9"/><path d="M12.2 8.5L9.2 10 7.7 12.9M13.1 8.7L15.3 11 17.9 9.9M11.7 13.3L15.3 15.6 16.6 20.7M11.1 13.6L9.6 17.4 5.6 19.9" stroke-width="2.6"/></svg>'; }
+function vCamIco(){
   if(!window.SpeechSynthesisUtterance && !window.speechSynthesis) return "";
   var n=0; try{ n=camLista274().length; }catch(e){}
   if(!n) return "";
-  return '<button class="iconbtn cam277" id="bcam274" aria-label="Caminata: '+n+(n===1?' pendiente':' pendientes')+' en voz">'+_icoCamina277()+'</button>';
+  return '<button class="iconbtn cam277" id="bcam274" aria-label="Caminata: '+n+(n===1?' pendiente':' pendientes')+' en voz">'+_icoCamina()+'</button>';
 }
 
 /* ===================== build 272 (Salvador 7-oct): HOME SÚPER MINIMALISTA =====================
@@ -685,11 +685,11 @@ function vCamIco277(){
    5 "Ya está": al volver al home, el renglón se cierra en ~250 ms y la siguiente sube a su lugar.
    6 "Las lleva Claude" hasta abajo, plegada, con su semáforo y el encabezado en gris tenue. */
 /* las preguntas de Claude pendientes en una tarea (las mismas del popup) */
-function nPreg272(t){ try{ return preguntas249(t).length; }catch(e){ return 0; } }
+function nPreg(t){ try{ return preguntas249(t).length; }catch(e){ return 0; } }
 /* los renglones de una sección: preguntas agrupadas y, si se acaba de dar "Ya está", el renglón fantasma que se cierra */
 function filas272(k, L, base){
   var out=L.map(function(x){ var r=base(x);
-    if(k==='preg' && !faltaPlan(x.t).length){ var n=nPreg272(x.t); if(n>=2){   /* lo que falta de fechas se dice tal cual, no «N preguntas» */ r=r.replace('<button class="revr ttr" data-id=', '<button class="revr ttr" data-preg272="'+n+'" data-id=');
+    if(k==='preg' && !faltaPlan(x.t).length){ var n=nPreg(x.t); if(n>=2){   /* lo que falta de fechas se dice tal cual, no «N preguntas» */ r=r.replace('<button class="revr ttr" data-id=', '<button class="revr ttr" data-preg272="'+n+'" data-id=');
       r=r.replace(/<small>[\s\S]*?<\/small>/, '<small>'+n+' preguntas</small>'); if(r.indexOf('<small>')<0) r=r.replace('</span></span></button>', '</span><small>'+n+' preguntas</small></span></button>'); } }
     return r; });
   var g=fantasma272(k, L);
@@ -715,17 +715,17 @@ function anima272(){
     setTimeout(quita, 400);
   });
 }
-function bindHome272(){
-  try{ bindDec284(); }catch(e){ console.warn("dec284", e); }
-  try{ bindPl285(); bindHist285(); }catch(e){ console.warn("pl285", e); }
+function bindHome(){
+  try{ bindDec(); }catch(e){ console.warn("dec284", e); }
+  try{ bindPl(); bindHist(); }catch(e){ console.warn("pl285", e); }
   Array.prototype.forEach.call(document.querySelectorAll('[data-preg272]'), function(b){ b.addEventListener('click', function(){
     var id=b.getAttribute('data-id'); window.__pq255Last=null;
-    setTimeout(function(){ try{ if(vista==='hilo' && abierta===id && !document.getElementById('preg249')) abrePreguntas249(id, {gesto:true}); }catch(e){} }, 120); }, true); });
+    setTimeout(function(){ try{ if(vista==='hilo' && abierta===id && !document.getElementById('preg249')) abrePreguntas(id, {gesto:true}); }catch(e){} }, 120); }, true); });
   anima272();
 }
 /* espera de un tercero, SOLO con los campos que ya existen: detenido (quién la detiene), estado "espera" de otra persona, encargo sin contestar.
    Si la pelota es de Salvador (le preguntan, decide) o ya contestaron después de la espera, no. Sin quién confiable, no. */
-function esperaTercero272(t){
+function esperaTercero(t){
   if(!t || !estaAbierta(t) || t.es_recordatorio) return null;
   var p=null; try{ p=pelota263(t); }catch(e){} if(p && p.por==='te_necesito') return null;
   var c=null; esperasDe(t).some(function(w){ if(w.deMi || !w.quien || (w.fuente==='espera' && w.jefe)) return false; c={quien:w.quien, desde:w.desde}; return true; });   /* esperaDe: el lector único */
@@ -983,7 +983,7 @@ function leeArranca(t, cola, modo){
 function leeDesde(t, ix){ leeArranca(t, _leeMsgs(t, ix, (t.msgs||[]).length), "desde"); }
 function leeTarea(t){
   var c=[_leeEntrada(t)], r=_leeResumen(t, true); if(r) c.push(r);
-  var _ag=_leeAgenda229(t); if(_ag) c.push(_ag);   /* build 229: la franja Agendar tambien se lee */
+  var _ag=_leeAgenda(t); if(_ag) c.push(_ag);   /* build 229: la franja Agendar tambien se lee */
   leeArranca(t, c.concat(_leeMsgs(t,0,(t.msgs||[]).length)), "tarea");
 }
 function leeNuevo(t){
@@ -993,7 +993,7 @@ function leeNuevo(t){
   var antes=_leeMsgs(t,0,k).slice(-3), nuevos=_leeMsgs(t,k,ms.length);
   var leidos=antes.concat(nuevos).map(function(x){ return x.ix; });
   var c=[_leeEntrada(t)], r0=_leeResumen(t), r=(r0 && leidos.indexOf(r0.pix)>=0)?_leeResumen(t,true):r0; if(r) c.push(r);
-  var _ag2=_leeAgenda229(t); if(_ag2) c.push(_ag2);
+  var _ag2=_leeAgenda(t); if(_ag2) c.push(_ag2);
   if(antes.length && mk){ c.push({tx:"Lo último que escuchaste."}); antes.forEach(function(x){ c.push(x); }); }
   if(nuevos.length){ if(antes.length && mk) c.push({tx:"Ahora lo nuevo."}); nuevos.forEach(function(x){ c.push(x); }); }
   else c.push({tx:"No hay mensajes nuevos."});
@@ -1105,7 +1105,7 @@ function ctx261(el){
   var rs=el.closest(".rsm246, .rtx, .sub246"); if(rs){ c.kind="resumen"; c.texto=(rs.closest(".rsm246")||rs.parentNode||rs).innerText.replace(/\s+/g," ").trim(); return c; }
   return c;
 }
-function opcionesUnico261(el){
+function opcionesUnico(el){
   if(el && el.closest && el.closest(".top .tnm")) return leeOpcionesDe(el);
   var c=ctx261(el), t=c.t, x=c.x, ix=c.ix, k=c.kind, hayMsg=!!(t && x && !x.oculto && ix!=null), propio=hayMsg && propio247(x);
   var inner=function(sel){ return c.card && c.card.querySelector(sel); };
@@ -1117,15 +1117,15 @@ function opcionesUnico261(el){
   /* Es para Claude: lo propio va directo; lo ajeno que suena a indicación, como indicación */
   if(hayMsg){ if(propio) pon(2, function(){ accion247(t, ix, "claude", document.createElement("div")); }); else if(puedeSerIndicacion(x, t)) pon(2, function(){ convierteEnIndicacion(t, ix); }); }
   /* Mover / Nueva / Dato / No guardar: sobre el mensaje, sobre la plática (acomodo) o sobre la propuesta */
-  if(hayMsg){ pon(3, function(){ abreMover225(t, ix); }); pon(4, function(){ menuAcc254(t, ix, '[data-acnueva]'); }); pon(5, function(){ menuAcc254(t, ix, '[data-acdato]'); }); pon(9, function(){ menuAcc254(t, ix, '[data-acng]'); }); }
+  if(hayMsg){ pon(3, function(){ abreMover(t, ix); }); pon(4, function(){ menuAcc(t, ix, '[data-acnueva]'); }); pon(5, function(){ menuAcc(t, ix, '[data-acdato]'); }); pon(9, function(){ menuAcc(t, ix, '[data-acng]'); }); }
   if(k==="acomodo"){ var pr=c.card.hasAttribute("data-p256");
     var b3=inner(pr?'[data-p256a="vinc"]':'[data-acmov]'), b4=inner(pr?'[data-p256a="ok"]':'[data-acnueva]'), b5=inner(pr?'[data-p256a="dato"]':'[data-acdato]'), b9=inner(pr?'[data-p256a="ng"]':'[data-acng]');
     if(b3) pon(3, function(){ b3.click(); }); if(b4) pon(4, function(){ b4.click(); }); if(b5) pon(5, function(){ b5.click(); }); if(b9) pon(9, function(){ b9.click(); }); }
   pon(6, function(){ _leeCopia(c.texto); });
-  if(propio) pon(7, function(){ menuAcc254(t, ix, '[data-d247="edit"]'); });
+  if(propio) pon(7, function(){ menuAcc(t, ix, '[data-d247="edit"]'); });
   if(k==="pt" && c.p) pon(8, function(){ var y=t.msgs[c.p.ix]; if(y){ y.contestada247=Date.now(); guarda(t); try{ hist240("Te pregunta: ya la contesté", t, {tipo:"contestada247", ts:y.ts}); }catch(e){} } render(); toast("Listo: ya no te la pregunta"); });
-  if(k==="pt" && c.p){ pon(3, function(){ abreMover225(t, c.p.ix, [c.p.ix]); }); pon(4, function(){ menuAcc254(t, c.p.ix, '[data-acnueva]'); }); pon(5, function(){ menuAcc254(t, c.p.ix, '[data-acdato]'); });
-    pon(9, function(){ noEsDeAqui247(t, c.p.ix); render(); toast("Quitada de aquí. Deshacer en el Historial"); });
+  if(k==="pt" && c.p){ pon(3, function(){ abreMover(t, c.p.ix, [c.p.ix]); }); pon(4, function(){ menuAcc(t, c.p.ix, '[data-acnueva]'); }); pon(5, function(){ menuAcc(t, c.p.ix, '[data-acdato]'); });
+    pon(9, function(){ noEsDeAqui(t, c.p.ix); render(); toast("Quitada de aquí. Deshacer en el Historial"); });
     pon(10, function(){ if(aparta247(t, c.p.ix, "eliminado")){ guarda(t); try{ hist240("Eliminó la pregunta de “"+c.p.de+"”", t, {tipo:"ng_lote", tss:[(t.msgs[c.p.ix]||{}).ts]}); }catch(e){} } render(); toast("Apartada, no borrada. Deshacer en el Historial"); }); }
   if(hayMsg && k==="msg") pon(10, function(){ if(aparta247(t, ix, "eliminado")){ guarda(t); try{ hist240("Eliminó un mensaje", t, {tipo:"ng_lote", tss:[x.ts]}); }catch(e){} } render(); toast("Apartado, no borrado. Deshacer en el Historial"); });
   A.unico261=true; A.kind261=k; return A;
@@ -1142,15 +1142,15 @@ function leeOpcionesDe(el){
   var b=el.closest(".msgs [data-mix], .msgs [data-hab]"); if(!b) return null;
   var ix=b.hasAttribute("data-mix")?+b.getAttribute("data-mix"):+String(b.getAttribute("data-hab")).split("|").pop();
   if(isNaN(ix)) return null;
-  var _ops=[["Seleccionar",function(){ iniciaSel245(t, ix); }], ["Leer desde aquí",function(){ leeDesde(t, ix); }], actual,
+  var _ops=[["Seleccionar",function(){ iniciaSel(t, ix); }], ["Leer desde aquí",function(){ leeDesde(t, ix); }], actual,
     ["Copiar",function(){ var x=t.msgs[ix]; _leeCopia((x&&(x.tr||x.t))||""); }]];
   /* build 254: el MISMO menú que al tocar el globo (247): Editar · Eliminar · Es para Claude · Mover · Nueva · Dato · No guardar */
   var _x254=t.msgs[ix];
   if(_x254 && !_x254.oculto){
-    if(propio247(_x254)){ _ops.push(["Editar",function(){ menuAcc254(t, ix, '[data-d247="edit"]'); }], ["Eliminar",function(){ accion247(t, ix, "del", document.createElement("div")); }], ["Es para Claude",function(){ accion247(t, ix, "claude", document.createElement("div")); }]); }
+    if(propio247(_x254)){ _ops.push(["Editar",function(){ menuAcc(t, ix, '[data-d247="edit"]'); }], ["Eliminar",function(){ accion247(t, ix, "del", document.createElement("div")); }], ["Es para Claude",function(){ accion247(t, ix, "claude", document.createElement("div")); }]); }
     else if(puedeSerIndicacion(_x254, t)) _ops.push(["Indicación",function(){ convierteEnIndicacion(t, ix); }]);
-    _ops.push(["Mover a otra tarea",function(){ abreMover225(t, ix); }]);
-    _ops.push(["Nueva",function(){ menuAcc254(t, ix, '[data-acnueva]'); }], ["Dato",function(){ menuAcc254(t, ix, '[data-acdato]'); }], ["No guardar",function(){ menuAcc254(t, ix, '[data-acng]'); }]);
+    _ops.push(["Mover a otra tarea",function(){ abreMover(t, ix); }]);
+    _ops.push(["Nueva",function(){ menuAcc(t, ix, '[data-acnueva]'); }], ["Dato",function(){ menuAcc(t, ix, '[data-acdato]'); }], ["No guardar",function(){ menuAcc(t, ix, '[data-acng]'); }]);
   }
   return _ops;
 }
@@ -1161,7 +1161,7 @@ function leeOpcionesDe(el){
     if(vista!=="hilo" && !(vista==="lista" && e.target.closest && e.target.closest(".acor"))) return; var el=e.target.closest && e.target.closest(SEL); if(!el) return;
     if(e.target.closest("button,a,input,[contenteditable]")) return;
     var p=e.touches[0]; x0=p.clientX; y0=p.clientY; el0=el; clearTimeout(tm);
-    tm=setTimeout(function(){ var ops=opcionesUnico261(el0); if(!ops) return; window.__leeLP=Date.now();   /* build 261: UN solo menú, igual en cualquier texto */
+    tm=setTimeout(function(){ var ops=opcionesUnico(el0); if(!ops) return; window.__leeLP=Date.now();   /* build 261: UN solo menú, igual en cualquier texto */
       try{ navigator.vibrate&&navigator.vibrate(12); }catch(_){} leeMenu(x0,y0,ops); }, 520);
   },{passive:true});
   document.addEventListener("touchmove",function(e){ if(!tm) return; var p=e.touches[0]; if(Math.abs(p.clientX-x0)>10||Math.abs(p.clientY-y0)>10){ clearTimeout(tm); tm=null; } },{passive:true});
@@ -1169,7 +1169,7 @@ function leeOpcionesDe(el){
   document.addEventListener("contextmenu",function(e){
     if(vista!=="hilo" && !(vista==="lista" && e.target.closest && e.target.closest(".acor"))) return; var el=e.target.closest && e.target.closest(SEL); if(!el) return;
     e.preventDefault(); if(window.__leeLP && Date.now()-window.__leeLP<900) return;
-    var ops=opcionesUnico261(el); if(ops){ window.__leeLP=Date.now(); leeMenu(e.clientX,e.clientY,ops); }
+    var ops=opcionesUnico(el); if(ops){ window.__leeLP=Date.now(); leeMenu(e.clientX,e.clientY,ops); }
   });
   document.addEventListener("click",function(e){ if(window.__leeLP && Date.now()-window.__leeLP<700 && !(e.target.closest&&e.target.closest("#leemask"))){ e.stopPropagation(); e.preventDefault(); } },true);
 })();
@@ -1178,14 +1178,14 @@ document.addEventListener("click",function(e){
   if(window.__leeLP && Date.now()-window.__leeLP<700) return; var t0=e.target; if(!t0 || !t0.closest) return;
   if(t0.closest("button,a,input,textarea,summary,select,[data-hc238x]")) return;
   var el=t0.closest(".hc238, .rsm246 .rtx, .rtx, .sub246, #preg249 li"); if(!el) return;
-  var ops=opcionesUnico261(el); if(ops){ window.__leeLP=Date.now(); leeMenu(e.clientX, e.clientY, ops); }
+  var ops=opcionesUnico(el); if(ops){ window.__leeLP=Date.now(); leeMenu(e.clientX, e.clientY, ops); }
 });
 /* lo que ya viste en pantalla cuenta como leido: al salir de una tarea se marca hasta su ultimo mensaje */
 (function(){
   var _r=render;
   render=function(){
     var antes=window.__leeHilo||null;
-    if(window.__pq255Last && !(vista==="hilo" && abierta===window.__pq255Last)){ window.__pq255Last=null; try{ cierraPreg255(); }catch(e){} }   /* build 255: al salir de la tarea el bloque se va y vuelve a salir al entrar */
+    if(window.__pq255Last && !(vista==="hilo" && abierta===window.__pq255Last)){ window.__pq255Last=null; try{ cierraPreg(); }catch(e){} }   /* build 255: al salir de la tarea el bloque se va y vuelve a salir al entrar */
     var r=_r.apply(this, arguments);
     var ahora=(vista==="hilo"&&abierta)?abierta:null;
     if(antes && antes!==ahora && !(LEE.act && LEE.t && LEE.t.id===antes)){
@@ -1205,11 +1205,11 @@ function leeExtras(){
     if(g && !document.getElementById("bleeh")){
       var b=document.createElement("button"); b.className="iconbtn"; b.id="bleeh"; b.setAttribute("aria-label","Escuchar esta tarea"); b.innerHTML=_icoAudif();
       g.parentNode.insertBefore(b, g.nextSibling);
-      b.onclick=function(ev){ ev.stopPropagation(); var t=_leeTareaAbierta(); if(!t) return; if(CAM.on) return camSal274(false); camEmpieza274(t.id); };   /* build 274: el audífono de la tarea abre la Caminata desde esta tarea */
+      b.onclick=function(ev){ ev.stopPropagation(); var t=_leeTareaAbierta(); if(!t) return; if(CAM.on) return camSal(false); camEmpieza(t.id); };   /* build 274: el audífono de la tarea abre la Caminata desde esta tarea */
     }
   }
   var bt=document.getElementById("bttlee");
-  if(bt) bt.onclick=function(ev){ ev.stopPropagation(); camEmpieza274(); };   /* build 274: el audífono del home abre la Caminata */
+  if(bt) bt.onclick=function(ev){ ev.stopPropagation(); camEmpieza(); };   /* build 274: el audífono del home abre la Caminata */
 }
 
 /* ===== build 185 (Salvador 2026-10-03 06:47): LECTURA = PODCAST EN VIVO =====
@@ -1652,7 +1652,7 @@ function notaClaude(t, v){
   if(_pgN && (_pgN.duda || _pgN.texto==="__ESTO__")) _pgN=null;   /* build 283: sin contacto o texto claro lo decide Claude (nunca «No programé nada») */
   if(_pgN){
     var _rn=function(tx){ msg(t,"bi",tx); var r=t.msgs[t.msgs.length-1]; r.canal="priv:"+yo; r.nota_claude=1; guarda(t); render(); };
-    if(revisaPG263(t,_pgN)) return;
+    if(revisaPG(t,_pgN)) return;
     _pgN.contacto=contactoDeTarea(t,_pgN.contacto); mandaProgramado(t,_pgN,null);
     _rn("Programé el WhatsApp a "+_pgN.contacto+(_pgN.a_las?" para el "+fechaMovCorta(_pgN.a_las.fecha)+" a las "+horaCorta(_pgN.a_las.hora):" ahora")+(_pgN.sino_desde?", solo si no contesta":"")+(_pgN.seguimiento?"; si no contesta, le insisto el "+fechaMovCorta(_pgN.seguimiento.a_las.fecha)+" a las "+horaCorta(_pgN.seguimiento.a_las.hora):"")+".");
     return;
@@ -1715,7 +1715,7 @@ function aplicaCamposNota(t, v, j){
     t.contexto=(modo==="reemplazar" || !String(t.contexto||"").trim()) ? cx.slice(0,1500) : (String(t.contexto).trim()+" "+cx).slice(0,1500);   /* build 211: 600 cortaba lo dictado */
     if(Array.isArray(j.palabras) && j.palabras.length) t.palabras=j.palabras.map(function(w){ return String(w).toLowerCase().trim(); }).filter(Boolean).slice(0,6);
     hecho.push(modo==="reemplazar"?"contexto nuevo":"contexto"); }
-  var _l248=aplicaLecturaFechas248(t, v, j, {mueve:true}); hecho=hecho.concat(_l248.hecho);   /* build 248: no termina el X / antes del X / termina cuando */
+  var _l248=aplicaLecturaFechas(t, v, j, {mueve:true}); hecho=hecho.concat(_l248.hecho);   /* build 248: no termina el X / antes del X / termina cuando */
   if(a!=="fecha" && j.fecha && t.indefinida!==true){ var fd=fechaDictada(v); if(_l248.bloquea) fd={todas:[]};   /* build 222: en una continua la fecha es meta */
     if(fd.todas.length){ var cf=candadoFecha(v, j.fecha);
       if(cf.duda) dudas.push(cf.duda);
@@ -1723,7 +1723,7 @@ function aplicaCamposNota(t, v, j){
   if(hecho.length && (t.indefinida===true || t.f_vigente || t.periodicidad)){ t.pendiente_info=""; t.pendiente_tipo=""; }
   var pq=String(j.pregunta||"").trim(), rr2=String(j.respuesta||"").trim();
   if(!pq && j.pregunta===undefined && !hecho.length && /\?/.test(rr2)) pq=rr2.replace(/^\s*(no\s+entend[ií]\s+bien|no\s+me\s+qued[oó]\s+claro)[:,.]?\s*/i,"");
-  if(pq && !traeFecha(pq) && !preguntaQuienYaResuelta248(t, pq)) dudas.push(pq);
+  if(pq && !traeFecha(pq) && !preguntaQuienYaResuelta(t, pq)) dudas.push(pq);
   return {hecho:hecho, dudas:dudas, bloquea248:_l248.bloquea};
 }
 /* junta lo anotado con lo que hizo la accion y lo que falta preguntar ("No cambié nada" ya no aplica si se anotó algo) */
@@ -1772,7 +1772,7 @@ function ejecutaNotaClaude(t, v){
     "- dato: corrige o aclara información (precios, medidas, quién dijo qué). valor = el dato ya corregido, claro y completo.\n- renombrar: valor = nombre nuevo.\n- fecha: valor = AAAA-MM-DD.\n- cerrar: ya se hizo.\n- eliminar: ya no se va a hacer.\n- pasar: valor = nombre de la persona.\nNo inventes; si no entiendes, accion nada y pregunta en respuesta.\n\nNOTA: "+v+"\n\nULTIMOS MENSAJES:\n"+ls.join("\n");
   var _c206={hecho:[], dudas:[]}, _falta206=false; try{ _falta206=(tipoRevisar(t)==="falta"); }catch(e){}
   var _LP283=(typeof LO_PASO283==="string"?LO_PASO283:"No cambié nada todavía: lo paso a Claude para que lo aplique.");
-  var nota=function(tx){ tx=juntaNota(_c206, tx); if(tx.indexOf(_LP283)>=0){ try{ ordenPendiente283(t, v, "nota_sin_accion"); }catch(e283){} }
+  var nota=function(tx){ tx=juntaNota(_c206, tx); if(tx.indexOf(_LP283)>=0){ try{ ordenPendiente(t, v, "nota_sin_accion"); }catch(e283){} }
     msg(t,"bi",tx); var m=t.msgs[t.msgs.length-1]; m.canal="priv:"+yo; m.nota_claude=1; guarda(t);
     try{ if(_c206.hecho.length && _falta206 && revisaCompleta(t)) return; }catch(e){}
     if(vista==="hilo"&&abierta===t.id) render(); };

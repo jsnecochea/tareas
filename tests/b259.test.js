@@ -60,7 +60,7 @@ eq("versión >= 259", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     eq("+ Crear tarea nueva: pide el nombre (popup), crea, pasa lo de la origen y navega a la nueva", r4, { hay: true, nueva: true, fusion: true, va: true, vista: "hilo", msgs: r4.msgs });
     /* 5) la hoja de Mover (¿A dónde va?) comparte título, buscador y orden */
     await limpia();
-    var r5 = await p.evaluate(function () { tareas = MUNDO(); abierta = "tORI"; vista = "hilo"; render(); abreMover225(tareas[0], 0); var m = document.getElementById("mov225"); var tit = m.querySelector(".mvh").textContent, primero = m.querySelector(".nueva259 .two span").textContent;
+    var r5 = await p.evaluate(function () { tareas = MUNDO(); abierta = "tORI"; vista = "hilo"; render(); abreMover(tareas[0], 0); var m = document.getElementById("mov225"); var tit = m.querySelector(".mvh").textContent, primero = m.querySelector(".nueva259 .two span").textContent;
       var alf = [].map.call(m.querySelectorAll("#mops253 .opt226:not(.sim262) .ot"), function (x) { return x.textContent; }); var i = document.getElementById("mbus253"); i.value = "moric"; i.dispatchEvent(new Event("input", { bubbles: true }));
       return { tit: tit, primero: primero, alf: alf, res: [].map.call(m.querySelectorAll("#mres253 .ot"), function (x) { return x.textContent; }) }; });
     eq("Mover: mismo título, '+ Crear tarea nueva' primero, el resto alfabético y el mismo buscador", [r5.tit, r5.primero, r5.alf.length > 0, JSON.stringify(r5.alf) === JSON.stringify(r5.alf.slice().sort(function (a, b) { return a.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() < b.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() ? -1 : 1; })), r5.res], ["Vincular · Nueva", "+ Crear tarea nueva", true, true, ["Cobranza Moric Pádel Draw"]]);
@@ -81,7 +81,7 @@ eq("versión >= 259", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     await foto("b259-3-pregunta.png");
     /* 6b) responder 'Sí, crear nueva' crea la tarea y mueve los mensajes de Carlos */
     var r7 = await p.evaluate(async function () { var T = tareas[0], P = preguntas249(T), i = P.map(function (x) { return x.k; }).indexOf("contradice259"); var op = P[i].ops[0];
-      enviaPreguntas249(T.id, P, P.map(function (x, k) { return k === i ? { texto: "sí, crea una nueva", persona: null, opt: op } : { texto: "", persona: null, opt: null }; })); await espera(300);
+      enviaPreguntas(T.id, P, P.map(function (x, k) { return k === i ? { texto: "sí, crea una nueva", persona: null, opt: op } : { texto: "", persona: null, opt: null }; })); await espera(300);
       var N = tareas.filter(function (x) { return x.nombre === "App Doit Programación Carlos"; })[0], O = tareas.filter(function (x) { return x.id === "tmuq8c6"; })[0] || tareas[0];
       return { nueva: !!N, movidosNueva: N ? N.msgs.filter(function (m) { return m.movido_de; }).length : -1, ocultosOrigen: O.msgs.filter(function (m) { return m.oculto; }).length, origenNombre: O.nombre, siguePregunta: ((O.hecho238 || {}).falta || []).some(function (x) { return x.k === "contradice259"; }) }; });
     eq("'Sí, crear nueva': tarea nueva con los 2 mensajes de Carlos; la original sigue intacta (más el dictado procesado, oculto) y la pregunta se va", r7, { nueva: true, movidosNueva: 2, ocultosOrigen: 3, origenNombre: "Cobranza Moric Pádel Draw", siguePregunta: false });
@@ -89,7 +89,7 @@ eq("versión >= 259", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     var r8 = await p.evaluate(async function () { tareas = [COBRA()]; abierta = "tmuq8c6"; vista = "hilo"; render();
       modelo({ nombre: "App Doit Programación Carlos", tipo: "tarea", contexto: "Todo lo que escribe Carlos.", ya_hecha: false, ordenes: [], dudas: [], vinculos: [], pregunta: null });
       completaRevision(tareas[0], DICTADO, {}); await espera(500); var T = tareas[0], P = preguntas249(T), i = P.map(function (x) { return x.k; }).indexOf("contradice259");
-      enviaPreguntas249(T.id, P, P.map(function (x, k) { return k === i ? { texto: "cambiar esta", persona: null, opt: P[i].ops[1] } : { texto: "", persona: null, opt: null }; })); await espera(200); return { n: tareas[0].nombre }; });
+      enviaPreguntas(T.id, P, P.map(function (x, k) { return k === i ? { texto: "cambiar esta", persona: null, opt: P[i].ops[1] } : { texto: "", persona: null, opt: null }; })); await espera(200); return { n: tareas[0].nombre }; });
     eq("'Cambiar esta' aplica el nombre nuevo", r8.n, "App Doit Programación Carlos");
     /* 6d) renombre explícito sí se hace; sin historia (tarea recién nacida) se renombra libre */
     var r9 = await p.evaluate(async function () { tareas = [COBRA()]; abierta = "tmuq8c6"; vista = "hilo"; render();

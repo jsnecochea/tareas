@@ -25,7 +25,7 @@ eq("versión >= 245", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
   try {
     await p.goto("file://" + path.join(__dirname, "..", "index.html")); await p.waitForTimeout(600);
     /* build 285: las secciones del home amanecen plegadas; en esta prueba vieja Acomodo, Mensajes, Te pregunta Doit, Vencidas y Hoy arrancan abiertas como antes (lo que se toque se sigue recordando) */
-    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl285(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
+    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
     await p.evaluate(function () { yo = "salvador"; window.__ESCR = [];
       db = { collection: function (c) { return { doc: function (id) { return { set: function (v) { __ESCR.push([c, id, JSON.parse(JSON.stringify(v))]); return Promise.resolve(); }, get: function () { return Promise.resolve({ exists: false }); } }; } }; } };
       window.solo = function () { [].forEach.call(document.body.children, function (x) { if (["app", "undopill", "ng243", "mov225", "det242", "visor", "selbar245", "leemask"].indexOf(x.id) < 0) x.style.display = "none"; }); document.getElementById("app").style.display = "flex"; };
@@ -95,7 +95,7 @@ eq("versión >= 245", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
         sal(G + ": Va, ahí nos vemos", 40, { de: "salvador" }),
         sal("📷 Archivo enviado: wa_1791209996617.jpeg", 38, { wa_in: 0, tipo: "foto", url: IMG }),
         inn("Sale, gracias", 36)] };
-      tareas = [T]; abierta = T.id; vista = "hilo"; render(); poneVista230(T, ""); window.__cnl = window.__cnl || {}; window.__cnl[T.id] = "todo"; window.__chatModo = window.__chatModo || {}; window.__chatModo[T.id] = "todo"; render(); solo();
+      tareas = [T]; abierta = T.id; vista = "hilo"; render(); poneVista(T, ""); window.__cnl = window.__cnl || {}; window.__cnl[T.id] = "todo"; window.__chatModo = window.__chatModo || {}; window.__chatModo[T.id] = "todo"; render(); solo();
       var bs = [].slice.call(document.querySelectorAll(".msgs [data-mix]")), W = 390;
       o.filas = bs.map(function (e) { var rc = e.getBoundingClientRect(); return [e.classList.contains("bo") ? "bo" : (e.classList.contains("bi") ? "bi" : "?"), rc.right >= 370, e.textContent.replace(/\s+/g, " ").trim().slice(0, 70)]; });
       o.sinNombre = bs.filter(function (e) { return e.classList.contains("bo"); }).every(function (e) { return !/Guillermo/.test(e.textContent); });
@@ -118,7 +118,7 @@ eq("versión >= 245", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       ms.push({ nota_ia: 1, k: "bi", origen: "revisor", canal: "priv:salvador", t: "📝 Nota IA 23:10: no estoy seguro del tema", ts: NOW - 8 * 60000, h: hh(NOW - 8 * 60000), nid: "nia1" });
       var T = { id: "tCONS2", nombre: "Proyectos Consejo Colonia Cumbres", duenio: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, msgs: ms };
       var D = { id: "tPADEL2", nombre: "Pádel miércoles", duenio: "salvador", estado: "abierta", msgs: [] };
-      tareas = [T, D]; abierta = T.id; vista = "hilo"; render(); poneVista230(T, ""); window.__cnl = window.__cnl || {}; window.__chatModo = window.__chatModo || {}; window.__chatModo[T.id] = "todo";
+      tareas = [T, D]; abierta = T.id; vista = "hilo"; render(); poneVista(T, ""); window.__cnl = window.__cnl || {}; window.__chatModo = window.__chatModo || {}; window.__chatModo[T.id] = "todo";
       render(); var cn = canalesDe(T).filter(function (c) { return c.ext && /Guillermo/.test(c.nom); })[0]; o.canal = cn ? cn.id : null;
       o.barraEnTodo = !!document.querySelector(".lote245");
       window.__cnl[T.id] = cn.id; render(); solo();
@@ -139,7 +139,7 @@ eq("versión >= 245", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       v.querySelector('[data-movto="tPADEL2"]').click();
       var G = T.msgs.filter(function (x) { return x.wa_c && /Guillermo/.test(x.wa_c); });
       o.ocultos = [G.filter(function (x) { return x.oculto; }).length, G.length]; o.samuel = T.msgs.filter(function (x) { return /Samuel/.test(x.wa_c || "") && !x.oculto; }).length; o.destino = D.msgs.length;
-      var h = histLee240(); o.hist = [h.length, h[0] && h[0].que, h[0] && h[0].undo && h[0].undo.tipo, h[0] && h[0].undo && h[0].undo.items.length];
+      var h = histLee(); o.hist = [h.length, h[0] && h[0].que, h[0] && h[0].undo && h[0].undo.tipo, h[0] && h[0].undo && h[0].undo.items.length];
       var reglas = []; __ESCR.forEach(function (e) { var ar = e[2] && e[2].acomodo_reglas; if (ar) Object.keys(ar).forEach(function (k) { reglas.push([ar[k].contacto, ar[k].tipo, ar[k].mensajes, ar[k].lote === true, ar[k].tarea_destino]); }); });
       o.reglas = reglas; o.pill = !!document.getElementById("undopill");
       return o; });
@@ -147,24 +147,24 @@ eq("versión >= 245", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     eq("Historial: UN renglón 'Movió 5 mensajes…' con Deshacer de lote", r5c.hist, [1, "Movió 5 mensajes de Guillermo a “Pádel Miércoles”", "mover_lote", 5]);
     eq("reglas en lote: UNA por contacto y tema (no una por mensaje)", r5c.reglas, [["Guillermo Herrera", "mover", 5, true, "tPADEL2"]]);
     eq("sale la pastilla 'Deshacer' al momento", r5c.pill, true);
-    var r5d = await p.evaluate(function () { var o = {}, T = tareas[0], D = tareas[1]; var e = histLee240()[0]; var m = deshaz240(e);
-      var G = T.msgs.filter(function (x) { return x.wa_c && /Guillermo/.test(x.wa_c); }); o.m = m; o.ocultos = G.filter(function (x) { return x.oculto; }).length; o.destino = D.msgs.length; o.hecho = histLee240()[0].hecho; return o; });
+    var r5d = await p.evaluate(function () { var o = {}, T = tareas[0], D = tareas[1]; var e = histLee()[0]; var m = deshaz240(e);
+      var G = T.msgs.filter(function (x) { return x.wa_c && /Guillermo/.test(x.wa_c); }); o.m = m; o.ocultos = G.filter(function (x) { return x.oculto; }).length; o.destino = D.msgs.length; o.hecho = histLee()[0].hecho; return o; });
     eq("Deshacer del Historial regresa los 5 y limpia el destino", r5d, { m: "Deshecho: Movió 5 mensajes de Guillermo a “Pádel Miércoles”", ocultos: 0, destino: 0, hecho: true });
     /* No guardar todos */
     var r5e = await p.evaluate(function () { var o = {}, T = tareas[0]; render(); solo(); __ESCR.length = 0;
       document.querySelector('[data-lote245="ng"]').click(); var v = document.getElementById("mov225"); o.sheet = [v.querySelector(".mvh").textContent, !!v.querySelector("#desde245"), v.querySelectorAll("[data-movto]").length, v.querySelector("#ngt245").textContent];
       v.querySelector("[data-movplatica]").click();
       var G = T.msgs.filter(function (x) { return x.wa_c && /Guillermo/.test(x.wa_c); }); o.ocultos = [G.filter(function (x) { return x.oculto; }).length, G.filter(function (x) { return x.oculto_motivo === "platica"; }).length];
-      var h = histLee240()[0]; o.hist = [h.que, h.undo && h.undo.tipo, h.undo && h.undo.tss.length]; o.pop = !!document.getElementById("ng243");
+      var h = histLee()[0]; o.hist = [h.que, h.undo && h.undo.tipo, h.undo && h.undo.tss.length]; o.pop = !!document.getElementById("ng243");
       var q = document.getElementById("ng243"); if (q) q.querySelector('[data-ngr="si"]').click();
       var reglas = []; __ESCR.forEach(function (e) { var ar = e[2] && e[2].acomodo_reglas; if (ar) Object.keys(ar).forEach(function (k) { reglas.push([ar[k].contacto, ar[k].tipo, ar[k].mensajes, ar[k].acierto_tema]); }); }); o.reglas = reglas;
       o.sam = T.msgs.filter(function (x) { return /Samuel/.test(x.wa_c || "") && !x.oculto; }).length; return o; });
     eq("No guardar todos: hoja corta (sin lista de tareas), con 'solo desde' y la cuenta", r5e.sheet, ["No guardar", true, 0, "No guardar 14 mensajes"]);
     eq("No guardar todos: los 14 quedan ocultos como plática, Historial con Deshacer y regla única", [r5e.ocultos, r5e.hist, r5e.pop, r5e.reglas, r5e.sam], [[14, 14], ["No guardar (14 mensajes)", "ng_lote", 14], true, [["Guillermo Herrera", "no_guardar", 14, true]], 2]);
-    var r5f = await p.evaluate(function () { var T = tareas[0], e = histLee240()[0]; var m = deshaz240(e); var G = T.msgs.filter(function (x) { return x.wa_c && /Guillermo/.test(x.wa_c); }); return [m, G.filter(function (x) { return x.oculto; }).length]; });
+    var r5f = await p.evaluate(function () { var T = tareas[0], e = histLee()[0]; var m = deshaz240(e); var G = T.msgs.filter(function (x) { return x.wa_c && /Guillermo/.test(x.wa_c); }); return [m, G.filter(function (x) { return x.oculto; }).length]; });
     eq("Deshacer de No guardar todos los regresa", r5f, ["Deshecho: No guardar (14 mensajes)", 0]);
     /* ---------- selección por mantener presionado ---------- */
-    var r6 = await p.evaluate(function () { var o = {}, T = tareas[0]; window.__cnl[T.id] = "todo"; poneVista230(T, ""); render(); solo(); window.__ESCR.length = 0;
+    var r6 = await p.evaluate(function () { var o = {}, T = tareas[0]; window.__cnl[T.id] = "todo"; poneVista(T, ""); render(); solo(); window.__ESCR.length = 0;
       var bs = [].slice.call(document.querySelectorAll(".msgs [data-mix]")), b0 = bs.filter(function (e) { return /número 2 del partido/.test(e.textContent); })[0];
       var ops = leeOpcionesDe(b0); o.ops = ops.map(function (x) { return x[0]; }); ops[0][1]();
       o.bar = (function () { var br = document.getElementById("selbar245"); return br ? [br.textContent.replace(/\s+/g, " ").trim(), br.querySelectorAll("button").length] : null; })();
@@ -179,16 +179,16 @@ eq("versión >= 245", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     var r7 = await p.evaluate(function () { var o = {}, T = tareas[0], D = tareas[1]; __ESCR.length = 0; try { localStorage.removeItem("doit_hist240"); } catch (e) {}
       document.querySelector('[data-sel245="mover"]').click(); var v = document.getElementById("mov225"); o.desde = !!v.querySelector("#desde245"); v.querySelector('[data-movto="tPADEL2"]').click();
       o.mov = [T.msgs.filter(function (x) { return x.oculto && x.movido_a; }).length, D.msgs.length, !!window.__sel245, !document.getElementById("selbar245")];
-      var h = histLee240(); o.hist = [h.length, h[0].que, h[0].undo.tipo];
+      var h = histLee(); o.hist = [h.length, h[0].que, h[0].undo.tipo];
       var reglas = []; __ESCR.forEach(function (e) { var ar = e[2] && e[2].acomodo_reglas; if (ar) Object.keys(ar).forEach(function (k) { reglas.push([ar[k].contacto, ar[k].mensajes]); }); }); o.reglas = reglas;
       deshaz240(h[0]); o.vuelve = [T.msgs.filter(function (x) { return x.oculto; }).length, D.msgs.length];
       /* No guardar y Nueva desde la selección */
       var pon = function (re) { var b = [].filter.call(document.querySelectorAll(".msgs [data-mix]"), function (e) { return re.test(e.textContent); })[0]; return b; };
       render(); solo(); var l = ops2 = leeOpcionesDe(pon(/número 6 del partido/)); l[0][1](); pon(/número 7 del partido/).click(); document.querySelector('[data-sel245="ng"]').click();
-      o.ng = [T.msgs.filter(function (x) { return x.oculto && x.oculto_motivo === "platica"; }).length, !!window.__sel245, histLee240()[0].undo.tipo];
+      o.ng = [T.msgs.filter(function (x) { return x.oculto && x.oculto_motivo === "platica"; }).length, !!window.__sel245, histLee()[0].undo.tipo];
       var q = document.getElementById("ng243"); if (q) q.remove();
       render(); solo(); leeOpcionesDe(pon(/número 8 del partido/))[0][1](); pon(/número 9 del partido/).click(); var nt = tareas.length; document.querySelector('[data-sel245="nueva"]').click(); (function(){ var ok=document.querySelector('[data-nom249="ok"]'); if(ok) ok.click(); })();
-      o.nueva = [tareas.length === nt + 1, T.msgs.filter(function (x) { return x.oculto && x.movido_a; }).length, histLee240().filter(function (h) { return !/^Abri/.test(h.que); })[0].que.replace(/“.*”/, "“…”"), histLee240().filter(function (h) { return !/^Abri/.test(h.que); })[0].undo.tipo];
+      o.nueva = [tareas.length === nt + 1, T.msgs.filter(function (x) { return x.oculto && x.movido_a; }).length, histLee().filter(function (h) { return !/^Abri/.test(h.que); })[0].que.replace(/“.*”/, "“…”"), histLee().filter(function (h) { return !/^Abri/.test(h.que); })[0].undo.tipo];
       return o; });
     eq("Mover desde la selección: sin 'solo desde', mueve los 2 marcados, cierra la selección", [r7.desde, r7.mov], [false, [2, 2, false, true]]);
     eq("Historial UN renglón con Deshacer; reglas: una por contacto", [r7.hist, r7.reglas], [[1, "Movió 2 mensajes de Guillermo a “Pádel Miércoles”", "mover_lote"], [["Guillermo Herrera", 2]]]);

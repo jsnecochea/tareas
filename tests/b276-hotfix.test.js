@@ -83,10 +83,10 @@ eq("sw.js con versión >= 276", +((fs.readFileSync(path.join(__dirname, "..", "s
     var A = await p.evaluate(async function () {
       home([T("tVEN", "Pagar predial de Lerdo", { f_vigente: "2026-10-03" })]); window.__esp = [];
       CAM.on = true; CAM.L = ["tVEN"]; CAM.g = { tVEN: "dec" }; CAM.i = 0; CAM.qz = null; CAM.buf = "la pago el viernes quince con la transferencia"; CAM.par = "";
-      camEnvia274(); var inmediato = dichosDe("tVEN");
+      camEnvia(); var inmediato = dichosDe("tVEN");
       await espera(300); var t = tid("tVEN");
       var notas = (t.msgs || []).filter(function (m) { return m.caminata274 && m.nota_claude; }).map(function (m) { return m.t; });
-      camSal274(false);
+      camSal(false);
       return { inmediato: inmediato, notas: notas, local: (t.caminata_dichos || []).length, nombre: t.nombre }; });
     eq("se escribe al instante, con merge y solo caminata_dichos", A.inmediato, [[["la pago el viernes quince con la transferencia", "dec", ""]]]);
     eq("IA dice 'después' y aun así queda nota para Claude", A.notas, ["la pago el viernes quince con la transferencia"]);
@@ -96,12 +96,12 @@ eq("sw.js con versión >= 276", +((fs.readFileSync(path.join(__dirname, "..", "s
       home([T("tFAL", "Pagar renta del local", { f_vigente: "", fecha_dictada: false })]); window.__esp = []; window.__cr = [];
       var Q = [{ k: "txt", q: "¿Para cuándo la quieres terminar, o es indefinida?" }, { k: "txt", q: "¿Quién la hace?" }];
       CAM.on = true; CAM.L = ["tFAL"]; CAM.g = { tFAL: "fal" }; CAM.i = 0; CAM.qz = { id: "tFAL", Q: Q, i: 0, A: [], salt: [] }; CAM.buf = "el viernes"; CAM.par = "";
-      camEnvia274(); var crudo = dichosDe("tFAL"), antes = window.__cr.length;
+      camEnvia(); var crudo = dichosDe("tFAL"), antes = window.__cr.length;
       Object.defineProperty(document, "visibilityState", { value: "hidden", configurable: true });
       document.dispatchEvent(new Event("visibilitychange"));
       var r = { crudo: crudo, antes: antes, cr: window.__cr.slice(), quedan: CAM.qz ? CAM.qz.A.length : -1 };
       Object.defineProperty(document, "visibilityState", { value: "visible", configurable: true });
-      CAM.qz = null; camSal274(false); return r; });
+      CAM.qz = null; camSal(false); return r; });
     eq("cuestionario: crudo con la pregunta", B.crudo, [[["el viernes", "fal", "¿Para cuándo la quieres terminar, o es indefinida?"]]]);
     eq("cuestionario: antes solo vivía en memoria", B.antes, 0);
     eq("cuestionario: al esconderse se aplica", B.cr, [["tFAL", "Respuesta a «¿Para cuándo la quieres terminar, o es indefinida?»: el viernes."]]);
@@ -109,13 +109,13 @@ eq("sw.js con versión >= 276", +((fs.readFileSync(path.join(__dirname, "..", "s
     /* 3 · vincular: lo que dijo llega a la tarea destino */
     var C = await p.evaluate(function () {
       home([T("tA", "Estado de cuenta inversión"), T("tB", "Inversiones BBVA")]); window.enlazaTareas = function () {};
-      window.camCandidatas275 = function () { return [tid("tB")]; };
+      window.camCandidatas = function () { return [tid("tB")]; };
       CAM.on = true; CAM.L = ["tA"]; CAM.g = { tA: "dec" }; CAM.i = 0;
-      camEjecuta275(tid("tA"), "vincular", { destino: "tB", texto_para_tarea: "" }, "es recurrente cada mes del cinco al diez con Hernando");
+      camEjecuta(tid("tA"), "vincular", { destino: "tB", texto_para_tarea: "" }, "es recurrente cada mes del cinco al diez con Hernando");
       var n = (tid("tB").msgs || []).filter(function (m) { return m.caminata274; }).map(function (m) { return m.t; }); CAM.on = false; return n; });
     eq("vincular: nota en la tarea destino", C, ["es recurrente cada mes del cinco al diez con Hernando"]);
     var D = await p.evaluate(function () { home([T("tC", "Algo")]); CAM.on = true; CAM.L = ["tC"]; CAM.g = { tC: "dec" }; CAM.i = 0;
-      camResuelve275(tid("tC"), { accion: "despues" }, "va", false); var n = (tid("tC").msgs || []).filter(function (m) { return m.caminata274; }).length; CAM.on = false; return n; });
+      camResuelve(tid("tC"), { accion: "despues" }, "va", false); var n = (tid("tC").msgs || []).filter(function (m) { return m.caminata274; }).length; CAM.on = false; return n; });
     eq("un 'va' suelto no genera nota", D, 0);
     eq("sin errores de página", errs, []);
   } catch (e) { malas.push("EXCEPCIÓN " + (e && e.stack || e)); }

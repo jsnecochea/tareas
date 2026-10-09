@@ -1,11 +1,11 @@
 /* ¿va en la vista Claude? lo que se le pidió a Claude y lo que contestó (no las notas automaticas de seguimiento) */
-function esClaude230(x){
+function esClaude(x){
   if(!x) return false;
   if(x.nota_ia || /^\s*(📝\s*)?Nota IA\b/i.test(String(x.t||""))) return false;
   if(x.k==="bo") return !!(x.nota_claude || x.indicacion_ts);
   return !!(x.nota_claude && !x.wa_in && !x.wa_c);
 }
-function vResumen230(t){
+function vResumen(t){
   var r=(t.resumen && typeof t.resumen==="object")?t.resumen:null;
   if(!r || !(String(r.texto||"").trim() || String(r.que_toca||"").trim() || (r.acuerdos||[]).length || (r.pendientes||[]).length)){
     /* build 240: sin resumen de Claude se arma uno local (2 o 3 líneas: contexto, lo que sigue y el último dato real) */
@@ -18,7 +18,7 @@ function vResumen230(t){
   /* build 246 (Salvador 6-oct 07:01): PRIMERO "Qué toca" (resumen.que_toca; sin él, se arma con resumen.pendientes: lo que sigue y de quién se espera);
      DEBAJO el resumen (2-3 renglones), plegado con "ver resumen" si no agrega nada a Qué toca. */
   var qt=String(r.que_toca||"").replace(/\s+/g," ").trim(), qtLocal=false, tx=String(r.texto||"").trim();
-  if(/·\s*hecho\s*$/i.test(qt) || /\bya se confirm/i.test(qt)) qt=pasoSiguiente263(t);   /* build 263: lo hecho no va arriba; arriba va el siguiente paso y quién lo tiene */
+  if(/·\s*hecho\s*$/i.test(qt) || /\bya se confirm/i.test(qt)) qt=pasoSiguiente(t);   /* build 263: lo hecho no va arriba; arriba va el siguiente paso y quién lo tiene */
   if(!qt && (r.pendientes||[]).length){ qtLocal=true;
     qt=r.pendientes.map(function(p){ var a=String(p.t||p.texto||"").trim().replace(/[.\s]+$/,""); return a+((p.de && a.toLowerCase().indexOf(String(p.de).toLowerCase())<0)?" ("+p.de+")":""); }).filter(Boolean).join(" · "); }
   var plegar=false;
@@ -62,8 +62,8 @@ function sabemos273(t){
       var tp=_n179(String(r.tipo||r.k||"")); L.push({t:y, tipo:/descart/.test(tp)?"descartado":(/decisi|decid/.test(tp)?"decision":(/cifra|monto|numero|dato/.test(tp)?"cifra":(/idea/.test(tp)?"idea":""))), por:limpia(r.por_que||r.porque||r.motivo)}); } });
   return L;
 }
-function quienPaso273(de, tx){
-  var d=dueno263(de); if(!d && tx) d=infiereDe263(tx);
+function quienPaso(de, tx){
+  var d=dueno263(de); if(!d && tx) d=infiereDe(tx);
   if(d==="yo") return "Tú";
   if(d==="claude") return "Claude";
   if(d==="otro" && de) return nombreCorto(de).split(" ")[0];
@@ -73,24 +73,24 @@ function quienPaso273(de, tx){
 function vamos273(t){
   var R=(t.resumen && typeof t.resumen==="object")?t.resumen:{}, tx="", quien="", f="";
   var L=pasos263(t).filter(function(p){ return !p.hecho; });
-  if(L.length){ var p=L[0]; tx=p.tx.replace(/[.\s]+$/,"")+(p.nota?" ("+p.nota+")":""); quien=quienPaso273(p.de, p.tx); f=p.fecha||fechaEnTexto263(p.tx)||""; }
+  if(L.length){ var p=L[0]; tx=p.tx.replace(/[.\s]+$/,"")+(p.nota?" ("+p.nota+")":""); quien=quienPaso(p.de, p.tx); f=p.fecha||fechaEnTexto263(p.tx)||""; }
   else { var qt=String(R.que_toca||"").replace(/\s+/g," ").trim();
-    if(qt && !/·\s*hecho\s*$/i.test(qt) && !/\bya se confirm/i.test(qt)){ tx=qt; quien=quienPaso273("", qt); f=fechaEnTexto263(qt)||""; } }
+    if(qt && !/·\s*hecho\s*$/i.test(qt) && !/\bya se confirm/i.test(qt)){ tx=qt; quien=quienPaso("", qt); f=fechaEnTexto263(qt)||""; } }
   if(tx && !f && _fReal(t.f_vigente||"") && !t.indefinida) f=t.f_vigente;
   return {tx:tx, quien:quien, fecha:f};
 }
-function vCapaVamos273(t){
+function vCapaVamos(t){
   var v=vamos273(t);
-  if(!v.tx) return '<section class="cp273 cp273v" id="cp273v"><h4>En qué vamos</h4>'+vResumen230(t)+'</section>';   /* sin siguiente paso: el resumen de siempre */
+  if(!v.tx) return '<section class="cp273 cp273v" id="cp273v"><h4>En qué vamos</h4>'+vResumen(t)+'</section>';   /* sin siguiente paso: el resumen de siempre */
   var meta=[v.quien?'<span class="cp273w">'+esc(v.quien==="Tú"?"Te toca a ti":(v.quien==="Claude"?"Lo lleva Claude":"Espera a "+v.quien))+'</span>':'',
             v.fecha?'<span class="cp273f">'+ico("cal",13)+esc(fechaChip(v.fecha)||fechaMovCorta(v.fecha))+'</span>':''].filter(Boolean).join("");
   /* el resumen de siempre (texto, acuerdos, act. hh:mm) va completo debajo, plegado en "Ver resumen"; su "Qué toca" ya es la línea de arriba */
-  var res=vResumen230(t).replace(/<details class="rsm246"><summary>ver resumen<\/summary>([\s\S]*?)<\/details>/, "$1"), det=/class="rtx"|class="racu"/.test(res);
+  var res=vResumen(t).replace(/<details class="rsm246"><summary>ver resumen<\/summary>([\s\S]*?)<\/details>/, "$1"), det=/class="rtx"|class="racu"/.test(res);
   return '<section class="cp273 cp273v" id="cp273v"><h4>En qué vamos</h4><p class="cp273sig">'+esc(v.tx)+'</p>'+(meta?'<div class="cp273m">'+meta+'</div>':'')+
     (det?'<details class="cp273r"><summary>Ver resumen</summary>'+res+'</details>':'')+'</section>';
 }
-function vCapaDecide273(t){
-  var d=decision273(t); if(!d) return (typeof vDecAplicada283==="function")?vDecAplicada283(t):"";   /* build 283: ya aplicada -> «Aplicado» y lo que cambió */
+function vCapaDecide(t){
+  var d=decision273(t); if(!d) return (typeof vDecAplicada==="function")?vDecAplicada(t):"";   /* build 283: ya aplicada -> «Aplicado» y lo que cambió */
   var ops=d.opciones, reqs=[], vis={};
   ops.forEach(function(o){ var c=(o.cumple && typeof o.cumple==="object")?o.cumple:{}; Object.keys(c).forEach(function(k){ if(!vis[k]){ vis[k]=1; reqs.push(k); } }); });
   var recN=_n179(d.recomendacion), esRec=function(o){ if(o.recomendada===true) return true; if(ops.some(function(z){ return z.recomendada===true; })) return false; var n=_n179(o.nombre); return !!(n && n.length>=3 && recN.indexOf(n)>=0); };
@@ -116,24 +116,24 @@ function vCapaDecide273(t){
     (d.recomendacion?'<div class="cp273rec"><b>Recomiendo</b><span>'+esc(d.recomendacion)+'</span></div>':'')+
     tabla+caja+'</section>';
 }
-function vCapaSabemos273(t){
+function vCapaSabemos(t){
   var L=sabemos273(t); if(!L.length) return "";
   var MAX=6, li=function(x){ return '<li class="'+(x.tipo||"")+'">'+(x.tipo==="descartado"?'<s>'+esc(x.t)+'</s>'+(x.por?' <span class="pq">— '+esc(x.por)+'</span>':''):esc(x.t)+(x.por?' <span class="pq">— '+esc(x.por)+'</span>':''))+'</li>'; };
   var ab=!!((window.__sab273||{})[t.id]), vis=ab?L:L.slice(0,MAX);
   return '<section class="cp273 cp273s" id="cp273s"><h4>Lo que sabemos</h4><ul>'+vis.map(li).join("")+'</ul>'+
     (L.length>MAX?'<button class="cp273mas" data-sab273="1">'+(ab?'Ver menos':'Ver '+(L.length-MAX)+' más')+'</button>':'')+'</section>';
 }
-function vCapas273(t){
-  return '<div class="cp273w4">'+vCapaVamos273(t)+vCapaDecide273(t)+vCapaSabemos273(t)+'<div class="cp273h" id="cp273h">Plática</div></div>';
+function vCapas(t){
+  return '<div class="cp273w4">'+vCapaVamos(t)+vCapaDecide(t)+vCapaSabemos(t)+'<div class="cp273h" id="cp273h">Plática</div></div>';
 }
 /* ¿se pliega este mensaje? archivado:true y no reciente */
 function archivado273(x){ return !!(x && x.archivado===true && !(x.ts && Date.now()-(+x.ts)<ARCH273_RECIENTE)); }
-function vPlegado273(t, n){
+function vPlegado(t, n){
   var ab=!!((window.__arch273||{})[t.id]);
   return '<button class="ar273" data-ar273="1" aria-expanded="'+(ab?'true':'false')+'">Plática anterior ('+n+') '+(ab?'▾':'▸')+'</button>';
 }
 /* contestar la decisión ahí mismo: la respuesta va al hilo (nota para Claude) y queda en t.decision.respuesta */
-function contestaDecision273(t, v){
+function contestaDecision(t, v){
   v=String(v||"").replace(/\s+/g," ").trim(); if(!v || !t || !t.decision) return false;
   msg(t,"bo",v); var m=t.msgs[t.msgs.length-1]; m.de=yo; m.canal="priv:"+yo; m.nota_claude=1; m.resp_decision273=1;
   if(t.decision.pregunta) m.cita_decision273=String(t.decision.pregunta).slice(0,200);
@@ -142,15 +142,15 @@ function contestaDecision273(t, v){
   if(window.__dec273) delete window.__dec273[t.id];
   try{ hist240("Contestó la decisión: "+v, t, null); }catch(e){}
   /* build 283: queda de encargo (la Mac 18z38 la aplica si la app no puede) y el clasificador rápido la aplica en el acto (2-3 s) */
-  delete t.decision.aplicado38; var _enc283=null; try{ _enc283=ordenPendiente283(t, v, "respuesta_decision", "decision_resp"); if(_enc283) _enc283.resp_ts=t.decision.respuesta.ts; }catch(e){}
+  delete t.decision.aplicado38; var _enc283=null; try{ _enc283=ordenPendiente(t, v, "respuesta_decision", "decision_resp"); if(_enc283) _enc283.resp_ts=t.decision.respuesta.ts; }catch(e){}
   /* build 284: la fila del home dice «Aplicando…» mientras corre y «Pendiente de aplicar» si no se pudo */
   var _tid284=t.id, _rts284=t.decision.respuesta.ts; window.__dec284=window.__dec284||{}; window.__dec284[_tid284]={st:"aplicando", resp_ts:_rts284};
   guarda(t); render(); toast("Entendido, lo aplico…");
-  try{ clasificaDecision283(t, v, _enc283, function(ok){ var m=(window.__dec284||{})[_tid284]; if(m && m.resp_ts===_rts284) m.st=ok?"hecho":"fallo"; try{ if(vista==="lista") render(); }catch(e){} }); }
+  try{ clasificaDecision(t, v, _enc283, function(ok){ var m=(window.__dec284||{})[_tid284]; if(m && m.resp_ts===_rts284) m.st=ok?"hecho":"fallo"; try{ if(vista==="lista") render(); }catch(e){} }); }
   catch(e){ var m0=(window.__dec284||{})[_tid284]; if(m0) m0.st="fallo"; }
   return true;
 }
-function bindCapas273(t){
+function bindCapas(t){
   var ar=document.querySelectorAll("[data-ar273]");
   Array.prototype.forEach.call(ar, function(b){ b.onclick=function(ev){ ev.stopPropagation(); window.__arch273=window.__arch273||{}; window.__arch273[t.id]=!window.__arch273[t.id]; render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-sab273]"), function(b){ b.onclick=function(ev){ ev.stopPropagation(); window.__sab273=window.__sab273||{}; window.__sab273[t.id]=!window.__sab273[t.id]; render(); }; });
@@ -161,19 +161,19 @@ function bindCapas273(t){
     style:{}, scrollHeight:0, focus:function(){ var e=$("dec273t"); if(e) e.focus(); } };
   ta.oninput=function(){ window.__dec273[tid]=ta.value; };
   var manda=function(){ var e=$("dec273t"), v=(e?e.value:"")||window.__dec273[tid]||""; if(window.__oyendo){ try{ paraDictadoHilo(); cierraDictado(); }catch(er){} }
-    var T=tareas.filter(function(x){ return x.id===tid; })[0]; if(!String(v).trim()){ if(e) e.focus(); return; } contestaDecision273(T||t, v); };
+    var T=tareas.filter(function(x){ return x.id===tid; })[0]; if(!String(v).trim()){ if(e) e.focus(); return; } contestaDecision(T||t, v); };
   ta.onkeydown=function(ev){ if(ev.key==="Enter" && !ev.shiftKey){ ev.preventDefault(); manda(); } };
   var be=$("dec273e"); if(be) be.onclick=function(ev){ ev.stopPropagation(); manda(); };
   var bm=$("dec273m"); if(bm) bm.onclick=function(ev){ ev.stopPropagation(); arrancaDictadoRev(bm, px); };
 }
 /* build 273: la ficha roja "Falta" SIEMPRE abre el cuestionario. Si no hay preguntas precisas (preguntas249), se arma con lo que
    falta (soloMeFalta); lo dictado o escrito con ese bloque abierto completa la tarea (completaRevision), como antes del 255. */
-function faltaComoPreg273(t){
+function faltaComoPreg(t){
   var f=[]; try{ if(tipoRevisar(t)==="falta" && !vistaSup(t)) f=soloMeFalta(t); }catch(e){}
   return f.map(function(x){ var s=String(x||"").trim(); return {k:"falta273", q:"Dime "+s+".", ops:[]}; });
 }
 /* nombre que se puede mostrar: un "nombre" de puro numero se busca en la agenda o en otro mensaje del mismo numero */
-function nombreVisible230(nom, t){
+function nombreVisible(nom, t){
   var s=String(nom||"").trim(), d=s.replace(/\D/g,"");
   if(!(d.length>=8 && /^[\s+\d()-]+$/.test(s))) return s;
   var fin=function(x){ return String(x||"").replace(/@.*$/,"").replace(/\D/g,""); }, igual=function(a){ return a && (a===d || (a.length>=10 && d.length>=10 && a.slice(-10)===d.slice(-10))); };
@@ -187,7 +187,7 @@ function nombreVisible230(nom, t){
 function vHilo(){
   var t=tareas.filter(function(x){return x.id===abierta})[0];
   if(!t){vista="lista";return vLista()}
-  window.__g237r={}; window.__dia242=""; try{ aplicaDudasNota237(t); }catch(e){}   /* build 237; 242: separadores de día */
+  window.__g237r={}; window.__dia242=""; try{ aplicaDudasNota(t); }catch(e){}   /* build 237; 242: separadores de día */
   /* si es una REVISION ligada, su hilo es el de la tarea que revisa */
   if(t.revisa_a){
     var _org=tareas.filter(function(x){return x.id===t.revisa_a})[0];
@@ -214,9 +214,9 @@ function vHilo(){
     /* build 233: audifono (lo pone leeExtras) · clip SOLO si hay archivos, con la cantidad en azul · ⋯ siempre. Sin fondo ni borde. */
     (adj.length?'<button class="iconbtn hb233" id="bgal" aria-label="Archivos de esta tarea">'+ico("clip",20,1.5)+
        '<span class="cnt cnt233">'+adj.length+'</span></button>':'')+
-    vUndoIco278(t)+   /* build 278: ↩ deshace lo último en esta tarea (solo si hay algo) */
+    vUndoIco(t)+   /* build 278: ↩ deshace lo último en esta tarea (solo si hay algo) */
     '<button class="iconbtn hb233" id="bmenu" aria-label="Qué hago con esta tarea">'+ico("more",22)+'</button>'+
-    '</div>'+vUndoLinea278(t)+
+    '</div>'+vUndoLinea(t)+
     /* TODO LO QUE NO ES RESPUESTA DEL DÍA VIVE AQUÍ. Nadie lo usa a diario,
        así que no merece lugar permanente en la pantalla. */
     (menuOpen?'<div class="hoja"><button class="hop" data-mn="renombrar">Cambiar nombre</button>'+
@@ -281,11 +281,11 @@ function vHilo(){
   var _ch=chipEncabezado(t);
   /* build 225: chips en una linea (cada uno abre su hoja) + "Resumen vivo · Claude". El ▾ y su detalle viven en ⓘ Detalles */
   h+=chipsTarea(t);   /* build 228/230: una fila de fichas; el resumen vive en la vista Importante */
-  h+=vHecho238(t);   /* build 238: Hecho / Me falta */
-  h+=vCondicional250(t);   /* build 250: Esperando respuesta de A → confirmar a B */
-  if(tipoRevisar(t)==="falta" && !vistaSup(t) && esIA240(t)) h+=vTipoToggle(t);   /* build 240: solo las que creó la IA */   /* build 236: lo primero que se ve, justo debajo de las fichas */
+  h+=vHecho(t);   /* build 238: Hecho / Me falta */
+  h+=vCondicional(t);   /* build 250: Esperando respuesta de A → confirmar a B */
+  if(tipoRevisar(t)==="falta" && !vistaSup(t) && esIA(t)) h+=vTipoToggle(t);   /* build 240: solo las que creó la IA */   /* build 236: lo primero que se ve, justo debajo de las fichas */
   /* build 228: el renglon "Agendado ✓ · Calendario…" ahora es la ficha "Agendado" (lineaAgenda queda para otras vistas) */
-  h+=vQuienDudas(t)+vBorradorMsj(t);   /* build 266: DECIDE (meta / dato) ya no son fichas de botones: van como pregunta en texto (registroPreg266) */
+  h+=vQuienDudas(t)+vBorradorMsj(t);   /* build 266: DECIDE (meta / dato) ya no son fichas de botones: van como pregunta en texto (registroPreg) */
      /* build 225: mensaje por confirmar; "Se comparte con" va en 👥 */   /* build 221; 222: decisión de meta atrasada */
 
   /* Si esta tarea es MI REVISION de algo que ejecuta otro, aqui va el acceso
@@ -326,12 +326,12 @@ function vHilo(){
   /* build 224: notas del campo "notas" (nota_privada del conector/Mac): en su lugar por hora; las privadas solo para Salvador */
   var _nts=(Array.isArray(t.notas)?t.notas:[]).filter(function(n){ return n && String(n.t||"").trim() && !n.oculto && (!n.privado || yo==="salvador"); }).sort(function(a,b){ return (a.ts||0)-(b.ts||0); }), _ntI=0;
   function _ntHasta(ts){ while(_ntI<_nts.length && (ts===Infinity || (_nts[_ntI].ts||0)<=ts)){ var n=_nts[_ntI++];
-    if(_v230==="claude" || (_v230==="imp" && !esImp230(t, {id:n.id||n.nid, ts:n.ts, t:n.t, nota_ia:1}))) continue;   /* 230: las notas automaticas no van en Claude; en Importante solo si estan en msg_imp */
+    if(_v230==="claude" || (_v230==="imp" && !esImp(t, {id:n.id||n.nid, ts:n.ts, t:n.t, nota_ia:1}))) continue;   /* 230: las notas automaticas no van en Claude; en Importante solo si estan en msg_imp */
     m+='<div class="b bi bnota'+(n.privado?' priv':'')+'">'+esc(sinEmojiUI(n.t))+'<span class="st">'+esc((n.h||"")+(n.privado?" · solo tú":""))+'</span></div>'; } }
   var _fc244={};   /* build 244: fotos que ya fueron en el globo de otra */
   var _nAr273=0, _abAr273=!!((window.__arch273||{})[t.id]), _TK273='\u0001AR273\u0001';
   function _ar273(x){ if(!archivado273(x)) return false; _nAr273++; if(_nAr273===1) m+=_TK273; return !_abAr273; }
-  m+=barraLote245(t, _cn);   /* build 245: Mover todos / No guardar todos cuando el filtro está en una persona */
+  m+=barraLote(t, _cn);   /* build 245: Mover todos / No guardar todos cuando el filtro está en una persona */
   (t.msgs||[]).forEach(function(x,ix){
     if(x && x.ts){ _evHasta(x.ts); _ntHasta(x.ts); }
     if(_fc244[ix]) return;
@@ -354,14 +354,14 @@ function vHilo(){
     var _exAr=false; if(_v230!=="claude" && archivado273(x)){ if(_ar273(x)) return; _exAr=true; }   /* build 273: plática anterior (archivado:true) plegada; abierta, se ve completa */
     /* build 242: lo que escribió la IA (aunque venga con otro autor) es nota gris de Claude; nunca en Importante. Si trae el texto
        original entre comillas, ese original es el globo de la persona (y sí puede salir en Importante). */
-    if(esNotaIA242(x)){ var _or242=originalDe242(x);
+    if(esNotaIA(x)){ var _or242=originalDe(x);
       if(_v230==="claude") return;
-      if(_or242){ _visibles++; m+=sepDia242(x)+'<div class="b bi orig242" data-mix="'+ix+'"><b class="cn">'+esc(nombreCorto(partesMsg(x).de).split(" ")[0])+':</b> '+esc(_or242)+'<span class="st">'+icoCl238(t,x,ix)+'</span></div>'; }
+      if(_or242){ _visibles++; m+=sepDia(x)+'<div class="b bi orig242" data-mix="'+ix+'"><b class="cn">'+esc(nombreCorto(partesMsg(x).de).split(" ")[0])+':</b> '+esc(_or242)+'<span class="st">'+icoCl(t,x,ix)+'</span></div>'; }
       if(_v230==="imp" && !_exAr) return;
       if(!_or242) _visibles++;
-      m+=(_or242?'':sepDia242(x))+vNotaIA242(x, t.id+"|"+ix); return; }
-    if(_v230==="imp" && !esImp230(t,x) && !_exAr) return;        /* build 230: solo lo importante */
-    if(_v230==="claude" && !esClaude230(x)) return;    /* build 230: solo lo que le pediste a Claude y lo que contesto */
+      m+=(_or242?'':sepDia(x))+vNotaIA(x, t.id+"|"+ix); return; }
+    if(_v230==="imp" && !esImp(t,x) && !_exAr) return;        /* build 230: solo lo importante */
+    if(_v230==="claude" && !esClaude(x)) return;    /* build 230: solo lo que le pediste a Claude y lo que contesto */
     if(!_v230 && !_exAr && !esImportante(x, ix, _rmp)){ _ocultos++; return; }   /* build 197: aviso reemplazado por uno mas nuevo del mismo tema */
     if(x.nota_claude && x.k!=="bo" && !x.visto_ts && !_pln.set[ix]){ x.visto_ts=Date.now(); _vistoNuevo=true; }   /* build 197: ya la viste */
     /* build 193 (F36): las notas/indicaciones a Claude y sus respuestas se pliegan en un renglon */
@@ -369,14 +369,14 @@ function vHilo(){
        no sale (indicaciones viejas, avisos del sistema, avisos de seguimiento atendidos); en Todo sale todo */
     if(!_v230 && !_exAr && (_pln.set[ix] || _pls.set[ix] || _plg.set[ix])){ _ocultos++; return; }
     _visibles++;
-    m+=sepDia242(x);   /* build 242: separador de día estilo iMessage, solo cuando cambia el día */
+    m+=sepDia(x);   /* build 242: separador de día estilo iMessage, solo cuando cambia el día */
     var q=autorMsg(x,t);
     if(x.hab){ m+=burbujaHablada(x, (q||""), t.id+"|"+ix); return; }
-    if(esFoto244(x)){
-      var _g244=grupoFotos244(t, ix, function(z, jz){ return canalDe(z,t)===_cx && msgEnCanal(z,_v230?"todo":_cn.id,t) && !(_mf225 && metaDeMsg(t,z)!==_mf225) &&
-        (_v230==="imp"?esImp230(t,z):(_v230==="claude"?esClaude230(z):esImportante(z, jz, _rmp))); });
+    if(esFoto(x)){
+      var _g244=grupoFotos(t, ix, function(z, jz){ return canalDe(z,t)===_cx && msgEnCanal(z,_v230?"todo":_cn.id,t) && !(_mf225 && metaDeMsg(t,z)!==_mf225) &&
+        (_v230==="imp"?esImp(t,z):(_v230==="claude"?esClaude(z):esImportante(z, jz, _rmp))); });
       _g244.forEach(function(i){ if(i!==ix) _fc244[i]=1; });
-      m+=vFotos244(t, _g244, t.id+"|"+ix); return; }
+      m+=vFotos(t, _g244, t.id+"|"+ix); return; }
     var meta=(q?esc(q)+" · ":"")+esc(x.h)+(x.wa_auto?" · → "+esc(String(x.wa_auto).split(" ")[0])+" por WhatsApp":"")+(_cx.indexOf("dm:")===0?" · privado":"")+(x.nota_mia?" · nota para ti":"")+(x.wa_eq&&x.wa_eq.length?" · por WhatsApp a "+esc(x.wa_eq.map(function(c){ return String(c).split(" ")[0]; }).join(" y ")):"");   /* build 216/217 */
     /* Salvador 2026-09-22: el ULTIMO mensaje mio trae un botecito 5 minutos,
        por si se subio mal y era otra cosa. Se borra sin preguntar. */
@@ -401,9 +401,9 @@ function vHilo(){
        solo "Nombre: texto" y un puntito tenue que despliega el detalle. */
     if(x.k==="bi" && (x.wa_in||x.wa_c||x.origen||x.tipo)){
       var tx=sinEmojiUI(quitaEtiquetasWA(String(x.t||""))), mm=tx.match(/^([^:\n]{1,40}):\s*([\s\S]*)$/);   /* 226: sin emojis */
-      var _sal245=esSaliente245(x);   /* build 245: lo que mandó Salvador va a la derecha, verde, sin el nombre del otro */
-      if(_sal245 && mm && autorSalida245(x, mm[1])){ tx=sinEmojiUI(mm[2]); mm=null; }
-      var cab=mm?'<b class="cn">'+esc(nombreVisible230(nombreLimpio(mm[1]), t))+':</b> '+htmlTx245(sinEmojiUI(mm[2]), x):htmlTx245(tx, x);
+      var _sal245=esSaliente(x);   /* build 245: lo que mandó Salvador va a la derecha, verde, sin el nombre del otro */
+      if(_sal245 && mm && autorSalida(x, mm[1])){ tx=sinEmojiUI(mm[2]); mm=null; }
+      var cab=mm?'<b class="cn">'+esc(nombreVisible(nombreLimpio(mm[1]), t))+':</b> '+htmlTx(sinEmojiUI(mm[2]), x):htmlTx(tx, x);
       var dt="";
       if(msgAn[ix]){
         var fd=x.ts?new Date(x.ts).toLocaleString("es-MX",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):(x.h||"");
@@ -414,15 +414,15 @@ function vHilo(){
            (x.analisis?'<br>'+esc(x.analisis):'')+'</div>';
       }
       var _xc=(_cx.indexOf("ext:")===0)?colorExt(t,_cx.slice(4)):((_cx.indexOf("dm:")===0 && nombreWADe(t,_cx))?CNL_COL.dm:"");
-      m+='<div class="b '+(_sal245?'bo':'bi')+' bcomp'+((_xc&&!_sal245)?' ext" style="--xc:'+_xc:'')+'" data-mix="'+ix+'">'+(x.movido_de?'<span class="mvnuevo">NUEVO · movido desde '+esc(tareaCorta({nombre:x.movido_de.nombre||""}))+'</span>':'')+cab+icoCl238(t,x,ix)+palomitasHTML(x)+'<button class="mdot" data-an="'+ix+'" aria-label="Ver detalle del mensaje">·</button>'+dt+'</div>'+((_pq227===ix && x.duda_tarea && !x.duda_resuelta)?'':vDudaTarea(t,x,ix));   /* build 226: OK · Mover · Nueva abajo */
+      m+='<div class="b '+(_sal245?'bo':'bi')+' bcomp'+((_xc&&!_sal245)?' ext" style="--xc:'+_xc:'')+'" data-mix="'+ix+'">'+(x.movido_de?'<span class="mvnuevo">NUEVO · movido desde '+esc(tareaCorta({nombre:x.movido_de.nombre||""}))+'</span>':'')+cab+icoCl(t,x,ix)+palomitasHTML(x)+'<button class="mdot" data-an="'+ix+'" aria-label="Ver detalle del mensaje">·</button>'+dt+'</div>'+((_pq227===ix && x.duda_tarea && !x.duda_resuelta)?'':vDudaTarea(t,x,ix));   /* build 226: OK · Mover · Nueva abajo */
       return;
     }
-    m+='<div class="b '+(x.k==="bal"?"bal":(x.k==="bo"?"bo":"bi"))+(x.abre?' liga" data-abre="'+esc(x.abre):'')+'" data-mix="'+ix+'">'+(x.movido_de?'<span class="mvnuevo">NUEVO · movido desde '+esc(tareaCorta({nombre:x.movido_de.nombre||""}))+'</span>':'')+citaHTML(x)+htmlTx245(sinEmojiUI(quitaEtiquetasWA(x.t)), x)+
+    m+='<div class="b '+(x.k==="bal"?"bal":(x.k==="bo"?"bo":"bi"))+(x.abre?' liga" data-abre="'+esc(x.abre):'')+'" data-mix="'+ix+'">'+(x.movido_de?'<span class="mvnuevo">NUEVO · movido desde '+esc(tareaCorta({nombre:x.movido_de.nombre||""}))+'</span>':'')+citaHTML(x)+htmlTx(sinEmojiUI(quitaEtiquetasWA(x.t)), x)+
        (x.abre?'<span class="abre">Abrir ›</span>':'')+'<span class="st">'+   /* build 242: sin autor ni hora (van en la hoja de detalle) */
        (tieneAn?'<button class="mdel" data-an="'+ix+'" aria-label="Ver cómo se decidió este mensaje">'+ico("info",15,1.8)+'</button>':'')+
        (waCan?'<button class="mdel" data-wacan="'+ix+'" aria-label="Cancelar este WhatsApp">'+ico("trash",15,1.8)+'</button>':'')+
        (undo?'<button class="mdel" data-mdel="'+ix+'" aria-label="Borrar este mensaje">'+ico("trash",15,1.8)+'</button>':'')+
-       icoCl238(t,x,ix)+palomitasHTML(x)+'</span>'+(tieneAn&&msgAn[ix]?'<div class="dt">'+esc(x.analisis)+'</div>':'')+'</div>'+((_pq227===ix && x.duda_tarea && !x.duda_resuelta)?'':vDudaTarea(t,x,ix));
+       icoCl(t,x,ix)+palomitasHTML(x)+'</span>'+(tieneAn&&msgAn[ix]?'<div class="dt">'+esc(x.analisis)+'</div>':'')+'</div>'+((_pq227===ix && x.duda_tarea && !x.duda_resuelta)?'':vDudaTarea(t,x,ix));
   });
   if(t.puntos){
     var mk=t.marcados||{}, ft=t.fotos||{}, n=Object.keys(mk).length;
@@ -443,7 +443,7 @@ function vHilo(){
     }
   }
   _evHasta(Infinity); _ntHasta(Infinity);
-  if(_nAr273) m=m.replace(_TK273, vPlegado273(t, _nAr273));
+  if(_nAr273) m=m.replace(_TK273, vPlegado(t, _nAr273));
   if(t.evidencias&&t.evidencias.length){
     /* build 183 (Salvador 22:09): sin burbuja de coordenadas/hora; la ubicacion queda guardada en la foto */
   }
@@ -514,7 +514,7 @@ function vHilo(){
   /* build 198: si en Importante el chat queda vacio, una pista chiquita para que no parezca roto */
   if(_v230==="claude" && !_visibles) m+='<div class="vac230">Aquí sale lo que le pidas a Claude y lo que te conteste.</div>';
   if(!_v230 && !_todo && !_visibles && _ocultos && !(t.evidencias||[]).length) m+='<button class="avfold" data-cmodo="todo">Hay '+_ocultos+' mensaje'+(_ocultos===1?'':'s')+' oculto'+(_ocultos===1?'':'s')+' · Todo</button>';
-  m=_v230==='imp'?vCapas273(t)+(!_visibles && /res230 (vacio|local240)/.test(vResumen230(t))?'<button class="vt235" data-vt235="1">Ver todo</button>':'')+m:m;   /* build 235: sin nada importante ni resumen, "Ver todo" */   /* build 230: Importante arriba con su Resumen; 232: sin el selector "Importante | Todo" (Importante vive en el filtro) */
+  m=_v230==='imp'?vCapas(t)+(!_visibles && /res230 (vacio|local240)/.test(vResumen(t))?'<button class="vt235" data-vt235="1">Ver todo</button>':'')+m:m;   /* build 235: sin nada importante ni resumen, "Ver todo" */   /* build 230: Importante arriba con su Resumen; 232: sin el selector "Importante | Todo" (Importante vive en el filtro) */
   return h+(esDato(t)?vDatoCuerpo(t):vDatosTarea(t))+vVuelta(t)+vEntregas(t)+bannerDecision(t)+_pre179+'<div class="scroll'+(_conPill?' cnl" style="--cc:'+_cc:'')+'"><div class="msgs">'+m+pre+'</div></div>'+vTarjetaRev(t)+
     /* LA MISMA BARRA DE TODAS LAS VISTAS — 2026-09-04. Antes el hilo tenia la
        camara a la IZQUIERDA y una flecha de enviar a la derecha, distinto de la
@@ -533,7 +533,7 @@ function vHilo(){
         '<button class="mic" id="tmic" aria-label="Dictar">'+ico("mic",26,1.7)+'</button>'+
       '</div>'+
     '</div></div>'+
-    (alarmaRoja(t)?vAlarmaRoja(t):(window.__avSheet===t.id?vAvisosSheet(t):vHoja225(t)));   /* build 225: la hoja del chip */
+    (alarmaRoja(t)?vAlarmaRoja(t):(window.__avSheet===t.id?vAvisosSheet(t):vHoja(t)));   /* build 225: la hoja del chip */
 }
 /* build 141 (Salvador 2026-09-25): ALARMA ROJA. Al abrir algo cuya alarma ya
    sono y no se atendio, sale al centro esta tarjeta y NO se quita tocando

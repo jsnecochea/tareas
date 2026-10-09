@@ -103,9 +103,9 @@ eq("sw.js con versión >= 277", +((fs.readFileSync(path.join(__dirname, "..", "s
     var Z = await p.evaluate(function () {
       var F = ["deshazlo", "cancela eso", "retrocede", "no, deshazlo, la juntaste con otra", "esa no era", "la vinculaste mal", "regresa un poco", "regrésate tantito", "más atrás",
         "repíteme", "repite", "regresa", "¿entendiste bien?", "confírmame", "dile a Rubén que hay que deshacer el muro", "anula la factura de Rubén", "no lo deshagas", "cancela la cita con Rubén"];
-      return { cmd: F.map(function (f) { return camComando274(f); }),
-        pide: [camPideConf277("Júntala con Vestidores, ¿entendiste bien?"), camPideConf277("la de huella confírmame"), camPideConf277("Júntala con Vestidores")],
-        sin: camSinConf277("Júntala con Vestidores, ¿entendiste bien?") }; });
+      return { cmd: F.map(function (f) { return camComando(f); }),
+        pide: [camPideConf("Júntala con Vestidores, ¿entendiste bien?"), camPideConf("la de huella confírmame"), camPideConf("Júntala con Vestidores")],
+        sin: camSinConf("Júntala con Vestidores, ¿entendiste bien?") }; });
     eq("comandos: deshacer · regresa un poco · repíteme · ¿entendiste? (y órdenes que NO son deshacer)", Z.cmd,
       ["deshaz", "deshaz", "deshaz", "deshaz", "deshaz", "deshaz", "rebobina", "rebobina", "rebobina", "ultimo", "repite", "deshaz", "entendiste", "entendiste", "", "", "", ""]);
     eq("detecta el pedido de confirmación dentro de la orden", Z.pide, [true, true, false]);
@@ -186,7 +186,7 @@ eq("sw.js con versión >= 277", +((fs.readFileSync(path.join(__dirname, "..", "s
     /* ---------- 5 · vincular a la tarea equivocada y «cancela eso» ---------- */
     var E = await p.evaluate(async function () {
       var r = {}; await esp2();
-      CAM.i = CAM.L.indexOf("tNUE"); camPresenta274(); await esp2();
+      CAM.i = CAM.L.indexOf("tNUE"); camPresenta(); await esp2();
       var nV = tid("tVES").msgs.length;
       __iaMap["júntala con vestidores"] = { accion: "vincular", destino: "tVES", texto_para_tarea: "", respuesta_hablada: "Hecho, la junté." };
       di("júntala con vestidores", true); di("terminé", true);
@@ -196,7 +196,7 @@ eq("sw.js con versión >= 277", +((fs.readFileSync(path.join(__dirname, "..", "s
       var d1 = __dichos.length; di("cancela eso", true);
       await hasta(function () { return document.getElementById("c274tit").textContent === "Cotizar cámaras extra" && !!srViva() && !hablando() || (tid("tVES").msgs.length === nV && dichos(d1).length >= 1 && !!srViva() && !hablando()); }, 5000);
       r.undo = dichos(d1)[0];
-      var tn2 = tid("tNUE"); r.regreso = [tid("tVES").msgs.length === nV, !!tn2 && !tn2.fusionada_en, !!tn2 && esPropuesta256(tn2)];
+      var tn2 = tid("tNUE"); r.regreso = [tid("tVES").msgs.length === nV, !!tn2 && !tn2.fusionada_en, !!tn2 && esPropuesta(tn2)];
       return r; });
     eq("vinculó (a la equivocada)", E.junto, [true, true]);
     eq("«cancela eso» (aunque ya esté en el cuestionario de la siguiente) lo deshace", ["Va, lo deshice.", "Listo, lo regresé.", "Sale, como estaba."].indexOf(E.undo) >= 0, true);
@@ -205,7 +205,7 @@ eq("sw.js con versión >= 277", +((fs.readFileSync(path.join(__dirname, "..", "s
     /* ---------- 6 · mensaje por acomodar con «confírmame» ---------- */
     var F = await p.evaluate(async function () {
       var r = {};
-      CAM.i = CAM.L.filter(function (k) { return /^msg:tVES/.test(k); }).map(function (k) { return CAM.L.indexOf(k); })[0]; camPresenta274(); await esp2();
+      CAM.i = CAM.L.filter(function (k) { return /^msg:tVES/.test(k); }).map(function (k) { return CAM.L.indexOf(k); })[0]; camPresenta(); await esp2();
       var d0 = __dichos.length; di("a comedor confírmame", true); di("terminé", true);
       await hasta(function () { return CAM.conf && !!srViva() && !hablando(); }, 5000);
       r.conf = dichos(d0);
@@ -220,7 +220,7 @@ eq("sw.js con versión >= 277", +((fs.readFileSync(path.join(__dirname, "..", "s
     /* ---------- 7 · «regrésate un poco» y «repíteme» a media lectura ---------- */
     var G = await p.evaluate(async function () {
       var r = {}; window.__lento = 600;
-      CAM.i = CAM.L.indexOf("tDEC"); camPresenta274(true);
+      CAM.i = CAM.L.indexOf("tDEC"); camPresenta(true);
       await hasta(function () { return hablando() && !!srBarge() && CAM.rest && CAM.rest.k >= 3; }, 6000);
       var R = CAM.rest, esp = R.G.slice(R.k - 2, R.k + 1).map(function (x) { return x.t; }), d0 = __dichos.length;
       diB("regrésate un poco", true);
@@ -231,7 +231,7 @@ eq("sw.js con versión >= 277", +((fs.readFileSync(path.join(__dirname, "..", "s
       diB("repíteme", true);
       await hasta(function () { return __dichos.length >= d1 + 2; }, 5000);
       r.rep = [dichos(d1).slice(0, 2), esp2_];
-      window.__lento = 5; camSal274(false);
+      window.__lento = 5; camSal(false);
       return r; });
     eq("«regrésate un poco» relee desde dos frases antes", G.reb[0], G.reb[1]);
     eq("«repíteme» repite lo último (la anterior y la que iba)", G.rep[0], G.rep[1]);

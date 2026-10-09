@@ -153,7 +153,7 @@ eq("sw.js con versión >= 275", +((fs.readFileSync(path.join(__dirname, "..", "s
       r.vinc = [!tid("tNUE"), tid("tDEST").msgs.length > nDest, vista, abierta];
       var d1 = __dichos.length; di("no, eso no", true);
       await hasta(function () { return document.getElementById("c274tit").textContent.toLowerCase() === "cotizar cámaras extra" && dichos(d1).some(function (x) { return /Cotizar cámaras extra/.test(x); }) || (!!tid("tNUE") && !tid("tNUE").fusionada_en && tid("tDEST").msgs.length === nDest && dichos(d1).length >= 1 && CAM.fase !== "hablando"); }, 4000); await esp2();
-      var t = tid("tNUE"); r.undo = [!!t, t && !t.fusionada_en, t && esPropuesta256(t), tid("tDEST").msgs.length === nDest, dichos(d1).slice(0, 2)];
+      var t = tid("tNUE"); r.undo = [!!t, t && !t.fusionada_en, t && esPropuesta(t), tid("tDEST").msgs.length === nDest, dichos(d1).slice(0, 2)];
       __iaMap["elimínala ya no sirve"] = { accion: "eliminar", texto_para_tarea: "No sirve.", respuesta_hablada: "Listo, eliminada." };
       di("elimínala ya no sirve", true); di("terminé", true);
       await hasta(function () { return document.getElementById("c274tit").textContent === "Teléfono del cerrajero"; }, 4000); await esp2();
@@ -184,7 +184,7 @@ eq("sw.js con versión >= 275", +((fs.readFileSync(path.join(__dirname, "..", "s
 
     /* ---------- 6 · IA caída: no se pierde; mecánica del 274 intacta (2.5 s pregunta, pausa, salir) ---------- */
     var G = await p.evaluate(async function () {
-      var r = {}; home(fx5()); camEmpieza274("tHOY"); await esp2();
+      var r = {}; home(fx5()); camEmpieza("tHOY"); await esp2();
       __iaMap["revisa la cláusula de renta"] = "ERR";
       var d0 = __dichos.length;
       di("revisa la cláusula de renta", true);

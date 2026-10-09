@@ -40,7 +40,7 @@ eq("versión >= 262", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
         abierta = "tVAL"; vista = "hilo"; window.__sug262 = {}; window.__sem262 = {}; render(); };
       window.nombresDe = function (sel) { return [].map.call(document.querySelectorAll(sel), function (b) { return { n: b.querySelector(".ot,.enln").childNodes[0].textContent.trim(), par: /parecida/.test(b.textContent) }; }); };
       window.abreV = function () { var c = document.getElementById("enlv"); if (c) c.remove(); abreEnlazar("tVAL"); };
-      window.abreM = function () { var c = document.getElementById("mov225"); if (c) c.remove(); abreMover225(tareas[0], 0, [0, 1]); };
+      window.abreM = function () { var c = document.getElementById("mov225"); if (c) c.remove(); abreMover(tareas[0], 0, [0, 1]); };
     });
     await p.evaluate(function () { arma(); window.preguntaAClaude = function (m, mo, cb) { window.__LLM = (window.__LLM || 0) + 1; cb("", "sin servidor"); }; });
     /* 1) mismas parecidas en Vincular y en Mover */

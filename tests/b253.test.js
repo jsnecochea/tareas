@@ -51,11 +51,11 @@ eq("versión >= 253", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
         base({ id: "tA", nombre: "Instalación de cámaras", palabras: ["seguridad"], sinonimos: ["videovigilancia"], contexto: "Cámaras en la bodega de Torreón" }),
         base({ id: "tB", nombre: "Pago de nómina", contexto: "Quincena del personal de la planta" }),
         base({ id: "tC", nombre: "Reparación del portón", contexto: "El portón eléctrico de la casa Lerdo" }),
-        base({ id: "tD", nombre: "Revisión de planos de la ampliación", cierre: { f: fechaMty238(-5) }, estado: "cerrada" }),
-        base({ id: "tE", nombre: "Planos viejos del terreno", cierre: { f: fechaMty238(-60) }, estado: "cerrada" }),
+        base({ id: "tD", nombre: "Revisión de planos de la ampliación", cierre: { f: fechaMty(-5) }, estado: "cerrada" }),
+        base({ id: "tE", nombre: "Planos viejos del terreno", cierre: { f: fechaMty(-60) }, estado: "cerrada" }),
         base({ id: "tF", nombre: "Reunión de consejo Cumbres" }) ]; }; });
     var busca = async function (q) { await p.fill("#mbus253", q); await p.waitForTimeout(60); return await p.evaluate(function () { return { res: [].map.call(document.querySelectorAll("#mres253 .opt226 .ot"), function (x) { return x.textContent; }), props: document.getElementById("mops253").style.display, vacio: (document.querySelector("#mres253 .bus253x") || {}).textContent || "" }; }); };
-    await p.evaluate(function () { tareas = MUNDO(); abierta = "tORIGEN"; vista = "hilo"; render(); abreMover225(tareas[0], 0); __FOC.length = 0; });
+    await p.evaluate(function () { tareas = MUNDO(); abierta = "tORIGEN"; vista = "hilo"; render(); abreMover(tareas[0], 0); __FOC.length = 0; });
     var h = await p.evaluate(function () { return { campo: !!document.querySelector("#mov225 #mbus253"), ph: document.getElementById("mbus253").placeholder, lupa: !!document.querySelector("#mov225 [data-lupa253]"), arriba: document.querySelector("#mov225 .bus253").compareDocumentPosition(document.getElementById("mops253")) & 4 ? true : false }; });
     eq("La hoja trae el campo con lupa 'Buscar tarea…' arriba de la lista", h, { campo: true, ph: "Buscar tarea…", lupa: true, arriba: true });
     await p.click("[data-lupa253]"); await p.waitForTimeout(60);
@@ -81,15 +81,15 @@ eq("versión >= 253", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     var m1 = await p.evaluate(function () { var B = tareas.filter(function (x) { return x.id === "tB"; })[0]; return { hoja: !!document.getElementById("mov225"), origen: tareas[0].msgs[0].oculto === true, destino: (B.msgs || []).length }; });
     eq("Elegir un resultado = mover ahí (el mensaje queda oculto en el origen y pasa a esa tarea)", m1, { hoja: false, origen: true, destino: 1 });
     /* lote */
-    var m2 = await p.evaluate(async function () { tareas = MUNDO(); abierta = "tORIGEN"; vista = "hilo"; render(); abreMover225(tareas[0], 0, [0, 1], { lote: true }); var i = document.getElementById("mbus253"); i.value = "videovigilancia"; i.dispatchEvent(new Event("input", { bubbles: true })); await espera(40);
+    var m2 = await p.evaluate(async function () { tareas = MUNDO(); abierta = "tORIGEN"; vista = "hilo"; render(); abreMover(tareas[0], 0, [0, 1], { lote: true }); var i = document.getElementById("mbus253"); i.value = "videovigilancia"; i.dispatchEvent(new Event("input", { bubbles: true })); await espera(40);
       document.querySelector('#mres253 [data-movto="tA"]').click(); await espera(150); var A = tareas.filter(function (x) { return x.id === "tA"; })[0]; return { hoja: !!document.getElementById("mov225"), ocultos: tareas[0].msgs.filter(function (m) { return m.oculto; }).length, destino: (A.msgs || []).length }; });
     eq("En lote: el resultado mueve toda la selección", m2, { hoja: false, ocultos: 2, destino: 2 });
     /* cerrada */
-    var m3 = await p.evaluate(async function () { tareas = MUNDO(); abierta = "tORIGEN"; vista = "hilo"; render(); abreMover225(tareas[0], 0); var i = document.getElementById("mbus253"); i.value = "ampliacion"; i.dispatchEvent(new Event("input", { bubbles: true })); await espera(40);
+    var m3 = await p.evaluate(async function () { tareas = MUNDO(); abierta = "tORIGEN"; vista = "hilo"; render(); abreMover(tareas[0], 0); var i = document.getElementById("mbus253"); i.value = "ampliacion"; i.dispatchEvent(new Event("input", { bubbles: true })); await espera(40);
       document.querySelector('#mres253 [data-movto="tD"]').click(); await espera(150); return (tareas.filter(function (x) { return x.id === "tD"; })[0].msgs || []).length; });
     eq("Mover a una cerrada la REABRE (queda el mensaje y la nota 'Reabierta')", m3, 2);
     /* sin buscar: las 5 propuestas siguen igual */
-    var m4 = await p.evaluate(function () { tareas = MUNDO(); abierta = "tORIGEN"; render(); abreMover225(tareas[0], 0); return { props: document.querySelectorAll("#mops253 [data-movto]").length > 0, nueva: !!document.querySelector("[data-movnueva]"), ng: !!document.querySelector("[data-movplatica]") }; });
+    var m4 = await p.evaluate(function () { tareas = MUNDO(); abierta = "tORIGEN"; render(); abreMover(tareas[0], 0); return { props: document.querySelectorAll("#mops253 [data-movto]").length > 0, nueva: !!document.querySelector("[data-movnueva]"), ng: !!document.querySelector("[data-movplatica]") }; });
     eq("Las propuestas, Tarea nueva y Solo plática siguen ahí", m4, { props: true, nueva: true, ng: true });
     eq("sin errores de página", errs, []);
   } catch (e) { malas.push("EXCEPCION " + (e && e.stack || e)); }

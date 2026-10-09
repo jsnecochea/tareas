@@ -24,7 +24,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
   try {
     await p.goto("file://" + path.join(__dirname, "..", "index.html")); await p.waitForTimeout(600);
     /* build 285: las secciones del home amanecen plegadas; en esta prueba vieja Acomodo, Mensajes, Te pregunta Doit, Vencidas y Hoy arrancan abiertas como antes (lo que se toque se sigue recordando) */
-    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl285(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
+    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
     var DICT = "Esta tarea está se vincula a la del nuevo fideicomiso de tanto mi padre como de mi madre son dos fideicomisos en una sola tarea el fideicomiso de mi padre me lo tienes que revisar a este mañana pídele a Cynthia que que te ponga ambos ya sea que nos los mande por WhatsApp o por correo para que tú los los revises y que revises que estén bien todos los datos de mi padre de mi madre y de mi de mis hermanos y en el caso específico del fideicomiso de mi padre en el testamento por donde mi padre Todos sus bienes se van a dividir entre cuatro partes entre uno para mi madre y uno para mí y uno para mi hermano Luis Mario y otro para mi hermana lo hice y en el testamento de mi madre Este tiene una propiedad en Lerdo que es la propiedad de Ocampo 777 que le llamamos casa Eloísa esa propiedad se la heredaría única exclusivamente a mí y a mi hermano Luis Mari y todo lo demás de bienes que tenga de de dinero y de otros bienes eso se dividen entre entre tres en partes iguales entre mi hermano y mi hermana y yo";
     var r = await p.evaluate(function (DICT) {
       yo = "salvador"; var o = {}, NOW = Date.now();
@@ -34,7 +34,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
         quien: "Cynthia", responsable: "Cynthia Contadora GrupoNec Rangel", palabras: ["testamento", "fideicomiso", "herencia"], vinculos: [],
         ordenes: [{ tipo: "vincular", busca: "el nuevo fideicomiso de mi padre y de mi madre", tareas: ["tFIDEI", "tTESTAM", "tLERDO"] },
           { tipo: "mensaje", a: "Cynthia", canal: "whatsapp", texto: "¿Me mandas por WhatsApp o por correo los dos testamentos, el de mi padre y el de mi madre? Son para que Claude revise que estén bien todos los datos." },
-          { tipo: "claude", que: "Revisar los testamentos de mi padre y de mi madre: que estén bien los datos de todos y el reparto", fecha: fechaMty238(1), hora: null }],
+          { tipo: "claude", que: "Revisar los testamentos de mi padre y de mi madre: que estén bien los datos de todos y el reparto", fecha: fechaMty(1), hora: null }],
         dudas: [] })); }, 30); };
       function solo() { [].forEach.call(document.body.children, function (x) { if (x.id !== "app") x.style.display = "none"; }); document.getElementById("app").style.display = "flex"; }
       var T = { id: "tIAMUVUZNUD1K", nombre: "Firma de Testamento en Notaría 14", duenio: "salvador", estado: "abierta", creada_por: "ia_revisor", origen: "wa_revisor", por_autorizar: true, tipo_item: "tarea",
@@ -57,7 +57,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
       o.modelo = [__MOD, /ordenes/.test(__PROMPT), /dudas/.test(__PROMPT), /HOY en Monterrey es/.test(__PROMPT)];
       o.duenio = [T.duenio, T.revisa_ext || "", T.transferida || null];
       o.wa = __WA.map(function (w) { return [w.contacto, /^IA: Cynthia, de parte de Salvador: ¿Me mandas/.test(w.texto), w.tarea_id]; });
-      o.encargos = (T.encargos || []).map(function (e) { return [/Revisar los testamentos/.test(e.t), e.cuando === fechaMty238(1) + "T09:00:00-06:00", e.origen, e.estado, typeof e.creado]; });
+      o.encargos = (T.encargos || []).map(function (e) { return [/Revisar los testamentos/.test(e.t), e.cuando === fechaMty(1) + "T09:00:00-06:00", e.origen, e.estado, typeof e.creado]; });
       o.contexto = /4 partes/.test(T.contexto) && /Ocampo 777/.test(T.contexto);
       o.tarjeta = c ? { hecho: [].map.call(c.querySelectorAll(".hch li"), function (x) { return x.textContent; }), falta: [].map.call(document.querySelectorAll("#preg249 .pq255l li"), function (x) { return x.firstChild.textContent; }), ops: ((document.querySelector("#preg249 .pq255l small") || { textContent: "" }).textContent.replace(/[()]/g, "").split(" · ")).filter(Boolean) } : null;   /* build 255: las preguntas van en el bloque difuminado */
       o.limpio = [document.querySelectorAll(".solofalta,.fic.info,.fic.ctx").length, [].filter.call(document.querySelectorAll(".msgs [data-mix]"), function (b) { return /Esta tarea está se vincula/.test(b.textContent); }).length, [].filter.call(document.querySelectorAll(".msgs [data-mix]"), function (b) { return /^Anoté/.test(b.textContent.trim()); }).length];
@@ -69,7 +69,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
       var _p0 = preguntaAClaude; preguntaAClaude = function (m, mo, cb) { if (/Reparte su respuesta/.test(m[0].content)) { setTimeout(function () { cb(JSON.stringify({ respuestas: [{ n: 1, r: "Mandar a Hacer Testamentos" }] })); }, 5); } else _p0(m, mo, cb); };
       document.getElementById("txt").value = "a Mandar a Hacer Testamentos"; document.getElementById("tenv").click(); await new Promise(function (r) { setTimeout(r, 900); }); var d = tareas.filter(function (x) { return x.id === "tTESTAM"; })[0];
       o.vinc = [abierta, (d.encargos || []).length, (d.hecho238 && d.hecho238.hecho || []).some(function (x) { return /Vinculada a “Mandar a Hacer Testamentos”/.test(x); })];
-      o.dueno = [["pídele a Cynthia que mande los testamentos", duenoDicho238("pídele a Cynthia que mande los testamentos", "Cynthia")], ["pásasela a Cynthia", duenoDicho238("pásasela a Cynthia", "Cynthia")], ["que la haga Cynthia", duenoDicho238("que la haga Cynthia", "Cynthia")], ["Cynthia me dio los datos", duenoDicho238("Cynthia me dio los datos", "Cynthia")]].map(function (x) { return x[1]; });
+      o.dueno = [["pídele a Cynthia que mande los testamentos", duenoDicho("pídele a Cynthia que mande los testamentos", "Cynthia")], ["pásasela a Cynthia", duenoDicho("pásasela a Cynthia", "Cynthia")], ["que la haga Cynthia", duenoDicho("que la haga Cynthia", "Cynthia")], ["Cynthia me dio los datos", duenoDicho("Cynthia me dio los datos", "Cynthia")]].map(function (x) { return x[1]; });
       o.ordenesDichas = [ordenesDichas238("ok gracias"), ordenesDichas238("Manuel revisa la azotea"), ordenesDichas238(document.getElementById ? "Claude revisa esto mañana" : "")];
       return o; });
     /* ---- B) Eduardo: 6 mensajes, 2 con destino distinto y 4 saludos ---- */
@@ -82,7 +82,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
           m("ok", 22 * 60000), m("gracias", 21 * 60000), m("saludos", 20 * 60000)] },
         { id: "tCOMEDOR", nombre: "Comedor nuevo", duenio: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, msgs: [] }]; };
       tareas = F238(); abierta = null; vista = "lista"; window.__grupoInicio = "bandeja"; window.__segBandeja = "mensajes"; render(); [].forEach.call(document.body.children, function (x) { if (x.id !== "app") x.style.display = "none"; });
-      o.aco = !!document.querySelector(".aco226"); o.vista = vista; o.n = platicasAcomodo237().length; var cd = document.querySelector(".aco226 .acor.g237"); if (!cd) return o; cd.querySelector(".x237").click(); cd = document.querySelector(".aco226 .acor.g237");
+      o.aco = !!document.querySelector(".aco226"); o.vista = vista; o.n = platicasAcomodo().length; var cd = document.querySelector(".aco226 .acor.g237"); if (!cd) return o; cd.querySelector(".x237").click(); cd = document.querySelector(".aco226 .acor.g237");
       o.desplegada = [].map.call(cd.querySelectorAll(".m237"), function (x) { return [!!x.querySelector(".ac226"), (x.querySelector(".prop238") || {}).textContent || ""]; });
       return o; });
     if (process.env.CAP) await p.screenshot({ path: path.join(process.env.CAP, "b238-platica-eduardo.png") });
@@ -94,7 +94,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
       o.destinos = [C.msgs.filter(function (x) { return /comedor/.test(x.t); }).length, P.msgs.filter(function (x) { return x.acomodo && x.acomodo.ok === 1; }).length, P.msgs.filter(function (x) { return x.oculto; }).length];
       o.reglas = __ESCR.filter(function (e) { return e[0] === "bitacora_personas"; }).map(function (e) { var r = e[2].acomodo_reglas[Object.keys(e[2].acomodo_reglas)[0]]; return [r.tipo, r.tarea_destino, r.mensajes]; });
       /* ---- globo dentro de la tarea ---- */
-      tareas = F238(); abierta = "tPADEL"; vista = "hilo"; window.__cl238 = {}; render(); poneVista230(tareas[0], ""); render();
+      tareas = F238(); abierta = "tPADEL"; vista = "hilo"; window.__cl238 = {}; render(); poneVista(tareas[0], ""); render();
       [].forEach.call(document.body.children, function (x) { if (x.id !== "app") x.style.display = "none"; });
       o.iconos = [].map.call(document.querySelectorAll(".msgs [data-mix]"), function (b) { return !!b.querySelector(".cl238"); });
       [].filter.call(document.querySelectorAll(".msgs [data-mix]"), function (b) { return /miercolitos/.test(b.textContent); })[0].click();

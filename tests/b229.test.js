@@ -51,7 +51,7 @@ eq("versión 229 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
       o.franja = [ag.querySelector(".agk").textContent, ag.querySelector(".agp").textContent, ag.querySelector(".agp").classList.contains("ambar"), (ag.querySelector(".evclip") || {}).textContent, !!ag.querySelector("[data-agenda=si]"), !!ag.querySelector("[data-agmenu]"), !!ag.querySelector('input[type="time"]')];
       o.sinRenglonDatos = !/agendo/i.test((document.querySelector(".fic.info") || {}).textContent || "");
       o.clipCtx = !!document.querySelector(".fic.ctx [data-evid]");
-      o.lee = _leeAgenda229(tareas[0]).tx;
+      o.lee = _leeAgenda(tareas[0]).tx;
       ag.querySelector("[data-evid]").click(); var ev = document.getElementById("evi229");
       o.evi = [].map.call(ev.querySelectorAll(".evr"), function (x) { return [!!x.querySelector("svg"), x.querySelector(".evt span").textContent, x.querySelector(".evt small").textContent]; });
       ev.querySelector('[data-evi="0"]').click(); o.texto = (ev.querySelector(".evtx p") || {}).textContent;

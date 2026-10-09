@@ -35,7 +35,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
     async function foto(nom) { if (!process.env.CAP) return; var hh = await p.evaluate(function () { var sc = document.querySelector(".scroll"); return sc ? sc.scrollHeight : 700; }); await p.setViewportSize({ width: 390, height: Math.min(3200, hh + 260) }); await p.evaluate(function () { var sc = document.querySelector(".scroll"); if (sc) sc.scrollTop = 0; });
       await p.screenshot({ path: path.join(process.env.CAP, nom) }); await p.setViewportSize({ width: 390, height: 844 }); }
     await foto("b242-navidena-importante.png");
-    var r2 = await p.evaluate(function () { var o = {}; poneVista230(N242, ""); window.__cnl = window.__cnl || {}; window.__cnl[N242.id] = "todo"; render(); solo();   /* como tocar "Todo" en la hoja del filtro */
+    var r2 = await p.evaluate(function () { var o = {}; poneVista(N242, ""); window.__cnl = window.__cnl || {}; window.__cnl[N242.id] = "todo"; render(); solo();   /* como tocar "Todo" en la hoja del filtro */
       o.todo = [].map.call(document.querySelectorAll(".msgs [data-mix], .msgs [data-hab], .msgs .nia242, .msgs .dia242"), function (b) { return (b.classList.contains("nia242") ? "NOTA " : b.classList.contains("dia242") ? "DIA " : "") + b.textContent.replace(/\s+/g, " ").trim().slice(0, 45); });
       o.metaTexto = [].filter.call(document.querySelectorAll(".msgs .b .st"), function (s) { return /\d{1,2}:\d{2}|acomodó|Salvador ·|Claude ·/.test(s.textContent); }).length;
       o.sinTextoAcomodo = !/acomodó Claude/.test(document.querySelector(".msgs").textContent);
@@ -49,7 +49,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
     if (process.env.CAP) await p.screenshot({ path: path.join(process.env.CAP, "b242-detalle-globo.png") });
     var r4 = await p.evaluate(function () { var o = {}; var h = document.getElementById("det242"); if (h) h.remove();
       document.querySelector('[data-chip="pasos"]').click(); var hj = document.querySelector(".h225"); o.pasos = [hj.querySelector(".h225h b").textContent, /Dar seguimiento a Pato/.test(hj.textContent)];
-      o.nia = [esNotaIA242({ k: "bo", de: "salvador", t: "HILO (WhatsApp, Chuy), hoy: …" }), esNotaIA242({ k: "bi", wa_in: 1, wa_c: "Chuy", t: "Chuy: Chuy pregunta (3:22pm): \"Ya nomas\"" }), esNotaIA242({ k: "bi", t: "📝 Nota IA 19:35: x" }), esNotaIA242({ k: "bi", wa_in: 1, wa_c: "Chuy", t: "Chuy: Ya quedó lo del cable" }), esNotaIA242({ k: "bo", de: "salvador", t: "Ya le dije que comience" })];
+      o.nia = [esNotaIA({ k: "bo", de: "salvador", t: "HILO (WhatsApp, Chuy), hoy: …" }), esNotaIA({ k: "bi", wa_in: 1, wa_c: "Chuy", t: "Chuy: Chuy pregunta (3:22pm): \"Ya nomas\"" }), esNotaIA({ k: "bi", t: "📝 Nota IA 19:35: x" }), esNotaIA({ k: "bi", wa_in: 1, wa_c: "Chuy", t: "Chuy: Ya quedó lo del cable" }), esNotaIA({ k: "bo", de: "salvador", t: "Ya le dije que comience" })];
       return o; });
     var I = r.imp.join(" | "), T = r2.todo.join(" | ");
     eq("arranca en Importante, con 'Pasos 0/4' como ficha (no el bloque grande)", [r.filtro, r.fichas.indexOf("Pasos 0/4") >= 0, r.pasosBloque], ["Importante", true, 0]);

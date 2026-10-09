@@ -2,7 +2,7 @@
 /* PRUEBAS build 284 (mockup «C · Filas con respuesta rápida», aprobado por Salvador 7-oct). 390 px, reloj fijo mié 2026-10-07 21:30 (Monterrey).
    1) «Decide tú» en el home: encabezado limpio con contador, bloque gris #1C1C1E, SIN fondo rojo/naranja ni degradado en sus fichas.
    2) Botones con las opciones de la decisión (la recomendada primero y clara); sin opciones «Sí» / «Todavía no»; micrófono «Contestar dictando».
-   3) Responder con un botón va por contestaDecision273 (encargo decision_resp + clasificaDecision283).
+   3) Responder con un botón va por contestaDecision (encargo decision_resp + clasificaDecision).
    4) Estado de la fila: «Aplicando…» mientras corre · «Listo · <lo que hizo>» en verde solo con aplicado38 · «Pendiente de aplicar» si falla.
    5) Resueltas fuera del home a las 24 h; sin decisiones la sección no aparece; lo que no es decisión queda en filas limpias con chevron.
    Correr: node tests/b284.test.js */
@@ -32,7 +32,7 @@ eq("las fichas de «Te pregunta Doit» ya no usan el fondo naranja (.l-preg)", /
       pideWhatsApp = function () { return Promise.resolve({ id: "p" }); };
       window.espera = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
       window.NOW = Date.now(); document.getElementById("app").style.display = "flex";
-      var _cd = contestaDecision273; contestaDecision273 = function (t, v) { __CD.push([t.id, v]); return _cd.apply(this, arguments); };
+      var _cd = contestaDecision; contestaDecision = function (t, v) { __CD.push([t.id, v]); return _cd.apply(this, arguments); };
       window.home = function (L) { [].forEach.call(document.querySelectorAll("#preg249,#hoja254,#acom249,.leemask,.cnlbg,.cnlsheet"), function (e) { e.remove(); }); tareas = L; abierta = null; vista = "lista"; window.__grupoInicio = "esperan"; render(); };   /* home de tres fichas: «Decide tú» y «Te pregunta Doit» viven en la vista Te esperan */
       window.modelo = function (j, ms) { preguntaAClaude = function (msgs, mod, cb) { __LL.push({ modo: mod }); setTimeout(function () { if (j === "caido") cb(null, "No contesto a tiempo."); else cb(JSON.stringify(j)); }, ms || 20); }; };
       window.base = function (id, nom, extra) { var o = { id: id, nombre: nom, duenio: "salvador", plan_seguimiento: { proximo_paso: "Dar seguimiento" }, creada_por: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, autorizada: true,
@@ -72,7 +72,7 @@ eq("las fichas de «Te pregunta Doit» ya no usan el fondo naranja (.l-preg)", /
     eq("sin opciones: «Sí» / «Todavía no» (t.decision y «esperando tu decisión»)", [B.tSIM.map(function (x) { return x[0]; }), B.tSAL.map(function (x) { return x[0]; })], [["Sí", "Todavía no"], ["Sí", "Todavía no"]]);
     eq("botón de micrófono «Contestar dictando» con ícono SVG, ≥36 px", B.mic, ["Contestar dictando", true, true]);
 
-    /* ===== 3+4) responder: contestaDecision273, Aplicando… y Listo · lo que hizo ===== */
+    /* ===== 3+4) responder: contestaDecision, Aplicando… y Listo · lo que hizo ===== */
     var R = await p.evaluate(async function () { __CD.length = 0; __LL.length = 0;
       window.modelo({ tipo: "decision", entendi: "Autorizas la de Hikvision", hechos: [], decision_resuelta: true, que_toca: "Claude le confirma a Pepe",
         pasos: [{ quien: "IA", que: "Confirmarle a Pepe que va Hikvision", fecha: "2026-10-08", seguir: { en: "2026-10-08T09:00", a: "Pepe Instalador", texto: "IA: Pepe, va Hikvision." } }], campos: {} }, 300);
@@ -81,7 +81,7 @@ eq("las fichas de «Te pregunta Doit» ya no usan el fondo naranja (.l-preg)", /
       for (var i = 0; i < 30; i++) { await espera(100); if (tareas[0].decision.aplicado38) break; } await espera(30);
       return { cd: __CD.slice(), modos: __LL.map(function (l) { return l.modo; }), antes: antes, enc: enc, despues: estado("tDEC"), sec: !!document.querySelector('.sc284[aria-label="Decide tú"]'), cuenta: (document.querySelector('.sc284[aria-label="Decide tú"] .hd284 em') || {}).textContent || "",
         q: (document.querySelector('.f284[data-dec284="tDEC"] .f284q') || {}).textContent, cont: (document.querySelector(".cont284 > summary") || {}).textContent || "", plegada: !!document.querySelector('.cont284:not([open]) .f284[data-dec284="tDEC"]') }; });
-    eq("el botón contesta por contestaDecision273 con la opción", R.cd, [["tDEC", "Hikvision"]]);
+    eq("el botón contesta por contestaDecision con la opción", R.cd, [["tDEC", "Hikvision"]]);
     eq("mientras se aplica: «Aplicando…» en gris, sin botones, con el encargo decision_resp", [R.antes, R.enc], [{ e: "aplicando", txt: "Aplicando…", color: "rgb(142, 142, 147)", svg: false, botones: 0 }, [["decision_resp", "pendiente"]]]);
     eq("aplicado: «Listo · <lo que hizo>» en verde con palomita (de la nota Hice: …)", [R.modos, R.despues && R.despues.e, R.despues && /^Listo · Claude le escribe a Pepe/.test(R.despues.txt), R.despues && R.despues.color, R.despues && R.despues.svg], [["rapido"], "listo", true, "rgb(48, 209, 88)", true]);
     eq("ya listo: la fila YA NO enseña la pregunta/recomendación vieja, sino el próximo paso actualizado (que_toca)", R.q, "Claude le confirma a Pepe");
@@ -103,7 +103,7 @@ eq("las fichas de «Te pregunta Doit» ya no usan el fondo naranja (.l-preg)", /
     var S = await p.evaluate(async function () { __CD.length = 0; window.modelo({ tipo: "decision", entendi: "Vas tú solo", hechos: [], decision_resuelta: true, que_toca: "Salvador va solo a la reunión del viernes", pasos: [{ quien: "Salvador", que: "Ir a la reunión del viernes", fecha: "2026-10-09", seguir: null }], campos: {} }, 50);
       home([SAL()]); document.querySelector('.f284[data-dec284="tSAL"] .p284p').click(); await espera(400); var T = tareas[0];
       return { cd: __CD.slice(), preg: T.decision && T.decision.pregunta, ap: !!(T.decision && T.decision.aplicado38), pt: T.pendiente_tipo, e: (estado("tSAL") || {}).e }; });
-    eq("«esperando tu decisión»: el botón contesta por contestaDecision273 y, aplicado, se limpia como «Ya decidí»", S, { cd: [["tSAL", "Sí"]], preg: "¿Vas tú solo a la reunión del viernes?", ap: true, pt: "", e: "listo" });
+    eq("«esperando tu decisión»: el botón contesta por contestaDecision y, aplicado, se limpia como «Ya decidí»", S, { cd: [["tSAL", "Sí"]], preg: "¿Vas tú solo a la reunión del viernes?", ap: true, pt: "", e: "listo" });
 
     /* ===== 5) lo que no es decisión: filas limpias con chevron, sin botones; sin decisiones no hay «Decide tú» ===== */
     var N = await p.evaluate(function () { home([FALTA()]); var s = [].slice.call(document.querySelectorAll(".sc284:not(.hist285)"));   /* build 285: «Tu historial» también usa el bloque 284 */

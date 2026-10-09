@@ -50,7 +50,7 @@ eq("la línea de estado vieja ya no existe en el código", /function vEstado272|
     var A = await p.evaluate(function () { home(FX()); var H = window.__H274, r = {};
       r.fichas = [].map.call(document.querySelectorAll(".fichas-inicio > .ficha-inicio"), function (f) { return f.getAttribute("data-grupo"); });
       r.esperan = ficha("esperan"); r.bandeja = ficha("bandeja"); r.hoy = ficha("hoy");
-      var F = filtrosInicio(H, misEncargos()); r.cuentas = [F.esperan.length + F.encEsperan.length, propuestas256().length + platicasAcomodo237().length, F.hoy.length + F.encHoy.length];
+      var F = filtrosInicio(H, misEncargos()); r.cuentas = [F.esperan.length + F.encEsperan.length, propuestas256().length + platicasAcomodo().length, F.hoy.length + F.encHoy.length];
       r.mismoAncho = r.esperan.w === r.bandeja.w && r.bandeja.w === r.hoy.w;
       r.sinIconos = !document.querySelector(".fichas-inicio svg, .fichas-inicio img");
       r.filas = [].map.call(document.querySelectorAll(".lista-inicio .fila-inicio"), function (f) { return f.textContent; });

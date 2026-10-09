@@ -66,7 +66,7 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
       r.why = {}; H.preg.forEach(function (x) { r.why[x.t.id] = x.why; });
       r.ficha = ficha("esperan").n;
       var by = function (id) { return tareas.filter(function (t) { return t.id === id; })[0]; };
-      r.paso = [faltaPasoClaude283(by("tREP")), faltaPasoClaude283(by("tAPA"))];
+      r.paso = [faltaPasoClaude(by("tREP")), faltaPasoClaude(by("tAPA"))];
       r.resp = (by("tANT").resp267 || []).slice();
       return r; });
     eq("En Te esperan solo lo vivo: decisión viva, pregunta nueva y la del contacto", A.preg, ["tCON", "tNUE", "tVIVA"]);
@@ -86,7 +86,7 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
     await foto("contestadas-te-esperan.png");
 
     /* contestar una decisión desde el home: sale al instante */
-    var C = await p.evaluate(async function () { window.contestaDecision273 = function (t, v) { t.decision.respuesta = { de: "salvador", t: v, ts: Date.now() }; render(); };
+    var C = await p.evaluate(async function () { window.contestaDecision = function (t, v) { t.decision.respuesta = { de: "salvador", t: v, ts: Date.now() }; render(); };
       document.querySelector('.f284[data-dec284="tVIVA"] .p284p').click(); await espera(30);
       return { dec: document.querySelectorAll('.sc284[aria-label="Decide tú"] .f284').length, cont: (document.querySelector(".cont284 > summary") || {}).textContent, n: window.__H274.preg.map(function (x) { return x.t.id; }).indexOf("tVIVA") }; });
     eq("Al contestar, la decisión sale de la lista y entra a las contestadas", C, { dec: 0, cont: "3 contestadas hoy · ver", n: -1 });

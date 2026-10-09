@@ -47,13 +47,13 @@ var VEST = "Claus a ver aquí todo dar todo el contexto y las fechas vamos a rem
     });
 
     /* ===== 1) Fechas por su papel ===== */
-    var r1 = await p.evaluate(function (D) { var L = lecturaFechas248(D.D2), L1 = lecturaFechas248(D.D1), o = {};
+    var r1 = await p.evaluate(function (D) { var L = lecturaFechas(D.D2), L1 = lecturaFechas(D.D1), o = {};
       o.noCierre = L.noCierre; o.meta = L.meta; o.avisos = L.avisos; o.continua = L.continua; o.evento = L.evento;
       o.d1 = { evento: L1.evento, continua: L1.continua, avisos: L1.avisos, meta: L1.meta };
       o.antesDel = fechaDictada("me gustaría firmar antes del 15").todas;
-      o.normal = lecturaFechas248("la tarea termina el 8 de octubre").hay;
-      o.normal2 = lecturaFechas248("para el 8 de octubre").hay;
-      o.cierraDe = [cierraDeEvento248("tengamos firmado el fideicomiso", { nombre: "x" }), cierraDeEvento248("firmemos", { nombre: "Fideicomiso: Seguimiento con BBVA" })];
+      o.normal = lecturaFechas("la tarea termina el 8 de octubre").hay;
+      o.normal2 = lecturaFechas("para el 8 de octubre").hay;
+      o.cierraDe = [cierraDeEvento("tengamos firmado el fideicomiso", { nombre: "x" }), cierraDeEvento("firmemos", { nombre: "Fideicomiso: Seguimiento con BBVA" })];
       return o; }, { D1: D1, D2: D2 });
     eq("lectura: no termina el 8", r1.noCierre, ["2026-10-08"]);
     eq("lectura: antes del 15 = meta", r1.meta, "2026-10-15");
@@ -127,7 +127,7 @@ var VEST = "Claus a ver aquí todo dar todo el contexto y las fechas vamos a rem
       modelo({ tipo: "tarea", fecha: null, recordar: [], vinculos: [], ordenes: [], dudas: [], pregunta: null, seguimiento_a: a.SEG });
       completaRevision(T, a.DF, {}); await listoRev(T, 2600);
       var antes = (T.quien_dudas || []).length, waAntes = __WA.length;
-      window.AGENDA_WA = [{ nombre: "Fernando Fuentes BBVA" }]; reintentaDudas248(); await espera(300);
+      window.AGENDA_WA = [{ nombre: "Fernando Fuentes BBVA" }]; reintentaDudas(); await espera(300);
       return { antes: antes, waAntes: waAntes, despues: (T.quien_dudas || []).length, wa: __WA.map(function (w) { return w.contacto; }), tx: ultimoBi(T) }; }, { SEG: SEG, DF: DF });
     eq("Fernando sin agenda: queda la pregunta", [r3c.antes, r3c.waAntes], [1, 0]);
     eq("Fernando: llega la agenda y se resuelve solo", [r3c.despues, r3c.wa.length >= 2, r3c.wa[0]], [0, true, "Fernando Fuentes BBVA"]);
@@ -186,7 +186,7 @@ var VEST = "Claus a ver aquí todo dar todo el contexto y las fechas vamos a rem
       modelo({ tipo: "tarea", fecha: null, recordar: [], vinculos: ["wa_abbea09d95fd8a79", "tBLUE_CUP_BBVA_051026", "tmullpqubtxafy"], ordenes: [], dudas: [], pregunta: null });
       completaRevision(T, D, {}); await listoRev(T, 2600);
       var prompt = window.__PROMPT, pd = posibleDup(T).map(function (x) { return x.id; });
-      return { lista: lista, prompt: /tmullpqubtxafy \| Revisar fideicomiso terminado y corregido de BBVA \(cerrada\)/.test(prompt), dup: T.posible_dup || [], pd: pd, tx: ultimoBi(T), vieja: /tVIEJA/.test(prompt), nombre: nombreVinc248(C) }; },
+      return { lista: lista, prompt: /tmullpqubtxafy \| Revisar fideicomiso terminado y corregido de BBVA \(cerrada\)/.test(prompt), dup: T.posible_dup || [], pd: pd, tx: ultimoBi(T), vieja: /tVIEJA/.test(prompt), nombre: nombreVinc(C) }; },
       "hay que revisar el fideicomiso terminado y corregido que manda BBVA para firmar, revisarlo contra el memorándum");
     eq("vínculos: sale la cerrada del fideicomiso", r5.lista.indexOf("tmullpqubtxafy") >= 0, true);
     eq("vínculos: no sale la cerrada de hace más de 30 días", [r5.lista.indexOf("tVIEJA") < 0, r5.vieja], [true, false]);
@@ -194,14 +194,14 @@ var VEST = "Claus a ver aquí todo dar todo el contexto y las fechas vamos a rem
     eq("vínculos: solo la del tema (no Inversiones BBVA ni Blue Cup BBVA)", r5.dup, ["tmullpqubtxafy"]);
     eq("vínculos: posibleDup la incluye (cerrada)", r5.pd, ["tmullpqubtxafy"]);
     eq("vínculos: el texto dice (cerrada) y no nombra las de empresa", [/Revisar fideicomiso terminado y corregido de BBVA \(cerrada\)/.test(r5.tx), /Inversiones BBVA|Blue Cup/.test(r5.tx)], [true, false]);
-    eq("nombreVinc248", r5.nombre, "Revisar fideicomiso terminado y corregido de BBVA (cerrada)");
+    eq("nombreVinc", r5.nombre, "Revisar fideicomiso terminado y corregido de BBVA (cerrada)");
     var r5b = await p.evaluate(function () { var T = tareas[0]; T.hecho238 = null; T.tipo_elegido = true; var h = vFaltaInfo(T), d = document.createElement("div"); d.innerHTML = h + fichaRevision(T); var fr = d.querySelector(".c-vincular"), ff = d.textContent;
       return { franja: fr ? fr.textContent : "", txtBtn: fr && fr.querySelector(".rvb") ? fr.querySelector(".rvb").textContent : "", fila: /Revisar fideicomiso terminado y corregido de BBVA \(cerrada\) \(no vinculado\)/.test(ff) }; });
     eq("franja de vínculo muestra (cerrada) y botón Ver", [/\(cerrada\)/.test(r5b.franja), r5b.txtBtn], [true, "Ver"]);
     eq("ficha: Vínculo propuesto con (cerrada)", r5b.fila, true);
-    var r5c = await p.evaluate(function () { var T = FIDEI(); var base = palTema248([T.nombre, "firmar el contrato con BBVA"].join(" "));
-      return { solo: temaComun248(base, "Inversiones BBVA estado de cuenta"), dos: temaComun248(palTema248("fideicomiso firma BBVA"), "Revisar fideicomiso firma BBVA corregido") }; });
-    eq("temaComun248: BBVA solo no cuenta; 2 palabras sí", [r5c.solo < 2, r5c.dos >= 2], [true, true]);
+    var r5c = await p.evaluate(function () { var T = FIDEI(); var base = palTema([T.nombre, "firmar el contrato con BBVA"].join(" "));
+      return { solo: temaComun(base, "Inversiones BBVA estado de cuenta"), dos: temaComun(palTema("fideicomiso firma BBVA"), "Revisar fideicomiso firma BBVA corregido") }; });
+    eq("temaComun: BBVA solo no cuenta; 2 palabras sí", [r5c.solo < 2, r5c.dos >= 2], [true, true]);
 
     eq("sin errores de página", errs, []);
   } catch (e) { malas.push("EXCEPCION " + (e && e.stack || e)); }

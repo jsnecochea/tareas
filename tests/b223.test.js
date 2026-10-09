@@ -38,6 +38,6 @@ c.WA.length = 0; c.LLAMADAS = 0; c.IA = NOCLARA; c.tareas = [LERDO()];
 c.revisaClaridadTodas(H(11, 0));
 eq("revisaClaridadTodas no llama a Claude ni manda WhatsApp", [c.LLAMADAS, c.WA.length], [0, 0]);
 si("ya no corre junto a hitos y metas", !/try\{ revisaClaridadTodas\(\); \}catch\(e3\)/.test(html));
-si("build 266: la ficha de botones ya no sale en la tarea; es pregunta en texto (registroPreg266)", !/h\+=vDecisionMeta\(t\)\+vDecisionDato\(t\)/.test(html) && /registroPreg266/.test(html));
+si("build 266: la ficha de botones ya no sale en la tarea; es pregunta en texto (registroPreg)", !/h\+=vDecisionMeta\(t\)\+vDecisionDato\(t\)/.test(html) && /registroPreg/.test(html));
 console.log((malas.length ? malas.map(function (x) { return "  X " + x; }).join("\n") + "\n" : "") + "RESULTADO " + ok + "/" + n);
 process.exit(malas.length ? 1 : 0);

@@ -20,19 +20,19 @@ eq("versión >= 257", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
   try {
     await p.goto("file://" + path.join(__dirname, "..", "index.html")); await p.waitForTimeout(600);
     /* build 285: las secciones del home amanecen plegadas; en esta prueba vieja Acomodo, Mensajes, Te pregunta Doit, Vencidas y Hoy arrancan abiertas como antes (lo que se toque se sigue recordando) */
-    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl285(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
+    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
     await p.evaluate(function () { yo = "salvador"; window.__agendaNo = 1;
       db = { collection: function () { return { doc: function () { return { set: function () { return Promise.resolve(); }, get: function () { return Promise.resolve({ exists: false }); } }; } }; } };
       document.getElementById("app").style.display = "flex";
       window.PR = function (id, nom, extra) { var t = { id: id, nombre: nom, duenio: "salvador", creada_por: "ia", estado: "abierta", tipo_item: "tarea", wa_contactos: [{ nombre: "Ing. Pedro" }], msgs: [{ id: "m" + id, de: "Ing. Pedro", t: "Ing. Pedro: mándame el plano de la azotea", ts: Date.now() - 60000 }] }; for (var k in (extra || {})) t[k] = extra[k]; return t; };
       window.NORMAL = function () { return { id: "tN", contexto: "algo", nombre: "Tarea normal mía", duenio: "salvador", plan_seguimiento: { proximo_paso: "Dar seguimiento" }, creada_por: "salvador", estado: "abierta", tipo_item: "tarea", tipo_elegido: true, f_vigente: "2026-10-20", f_original: "2026-10-20", msgs: [] }; };
-      window.lista = function (T) { tareas = T; abierta = null; vista = "lista"; window.__aco256 = ""; window.__p256f = {}; window.__acoPleg260 = undefined; try { localStorage.removeItem("bit_aco_pleg260"); } catch (e) {} try { ponAbre285("aco", true); } catch (e) {} window.__grupoInicio = "bandeja"; window.__segBandeja = "nuevas"; render(); };   /* home de tres fichas: Bandeja › Tareas nuevas */   /* build 285: el plegado vive en el estado del día; el helper lo reabre */
+      window.lista = function (T) { tareas = T; abierta = null; vista = "lista"; window.__aco256 = ""; window.__p256f = {}; window.__acoPleg260 = undefined; try { localStorage.removeItem("bit_aco_pleg260"); } catch (e) {} try { ponAbre("aco", true); } catch (e) {} window.__grupoInicio = "bandeja"; window.__segBandeja = "nuevas"; render(); };   /* home de tres fichas: Bandeja › Tareas nuevas */   /* build 285: el plegado vive en el estado del día; el helper lo reabre */
     });
     var limpia = async function () { await p.evaluate(function () { [].forEach.call(document.querySelectorAll("#preg249,#hoja254,#acom249,#det242,.leemask,.cnlbg,.cnlsheet,.pop243"), function (e) { e.remove(); }); }); };
     /* 1) propuesta excluida de las listas y visible en Acomodo */
     var r1 = await p.evaluate(function () { lista([PR("p1", "Plano de la azotea"), NORMAL(), PR("p2", "Ya elegida", { tipo_elegido: true }), PR("p3", "A mano", { creada_por: "salvador" })]);
       var app = document.getElementById("app").innerText;
-      return { esP: [esPropuesta256(tareas[0]), esPropuesta256(tareas[1]), esPropuesta256(tareas[2]), esPropuesta256(tareas[3])], mias: mias().map(function (t) { return t.id; }), card: !!document.querySelector('[data-p256="p1"]'), txt: (document.querySelector('[data-p256="p1"]') || { innerText: "" }).innerText, fila: !!document.querySelector('.seg-bandeja [data-seg="nuevas"]'), filaTxt: (document.querySelector('.seg-bandeja [data-seg="nuevas"]') || { innerText: "" }).textContent.replace(/\s+/g, " "), enLista: /Plano de la azotea/.test(Array.prototype.map.call(document.querySelectorAll(".fila,.tar,.row"), function (x) { return x.innerText; }).join(" ")), ab: abiertaVisible(tareas[0]) }; });
+      return { esP: [esPropuesta(tareas[0]), esPropuesta(tareas[1]), esPropuesta(tareas[2]), esPropuesta(tareas[3])], mias: mias().map(function (t) { return t.id; }), card: !!document.querySelector('[data-p256="p1"]'), txt: (document.querySelector('[data-p256="p1"]') || { innerText: "" }).innerText, fila: !!document.querySelector('.seg-bandeja [data-seg="nuevas"]'), filaTxt: (document.querySelector('.seg-bandeja [data-seg="nuevas"]') || { innerText: "" }).textContent.replace(/\s+/g, " "), enLista: /Plano de la azotea/.test(Array.prototype.map.call(document.querySelectorAll(".fila,.tar,.row"), function (x) { return x.innerText; }).join(" ")), ab: abiertaVisible(tareas[0]) }; });
     eq("Solo la de la IA sin tipo_elegido es propuesta; no entra en mias() ni abiertaVisible", [r1.esP, r1.mias.indexOf("p1") < 0, r1.ab], [[true, false, false, false], true, false]);
     eq("Acomodo muestra la tarjeta con título, contacto y mensaje", [r1.card, /Tarea nueva propuesta: Plano de la azotea/.test(r1.txt), /WhatsApp · Ing\. Pedro/.test(r1.txt), /plano de la azotea/.test(r1.txt), /OK/.test(r1.txt), /Vincular/.test(r1.txt), /Dato/.test(r1.txt), /No guardar/.test(r1.txt)], [true, true, true, true, true, true, true, true]);
     eq("Pestaña 'Tareas nuevas' de Bandeja con su número 1 y la propuesta no sale en las listas", [r1.fila, /^Tareas nuevas ?1(?!\d)/.test(r1.filaTxt.trim()), r1.enLista], [true, true, false]);
@@ -53,7 +53,7 @@ eq("versión >= 257", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       var txt = document.getElementById("app").innerText;
       var nombres = [].map.call(document.querySelectorAll(".iatag.nueva256"), function (e) { return e.textContent; });
       var pos1 = txt.toLowerCase().indexOf("plano de la azotea"), pos2 = txt.indexOf("Otra futura");
-      window.__TXT = txt; return { f: t.f_vigente, man: (function () { var d = new Date(hoy() + "T12:00:00"); d.setDate(d.getDate() + 1); return iso(d); })(), tags: nombres, arriba: pos1 >= 0 && pos2 >= 0 && pos1 < pos2, cardSigue: !!document.querySelector('[data-p256="p1"]'), es: esPropuesta256(t), est: estadoReal(t) }; });
+      window.__TXT = txt; return { f: t.f_vigente, man: (function () { var d = new Date(hoy() + "T12:00:00"); d.setDate(d.getDate() + 1); return iso(d); })(), tags: nombres, arriba: pos1 >= 0 && pos2 >= 0 && pos1 < pos2, cardSigue: !!document.querySelector('[data-p256="p1"]'), es: esPropuesta(t), est: estadoReal(t) }; });
     eq("Mañana: fecha de mañana, etiqueta 'Nueva', arriba de las demás en Próximas (por ejecutar) y la tarjeta se va", [r3.f === r3.man, r3.tags, r3.arriba, r3.cardSigue, r3.es, r3.est], [true, ["Nueva"], true, false, false, "por_ejecutar"]);
     await foto("b256-3-arriba.png");
     /* 3) Vincular */
@@ -69,7 +69,7 @@ eq("versión >= 257", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     var r6 = await p.evaluate(function () { lista([PR("p1", "Plano de la azotea"), NORMAL()]); document.querySelector('[data-p256="p1"] [data-p256a="dato"]').click(); return /Dato suelto/.test(document.body.innerText); });
     eq("Dato abre el selector con la opción 'Dato suelto'", r6, true);
     await p.evaluate(function () { var els = [].slice.call(document.querySelectorAll("button")).filter(function (e) { return /Dato suelto/.test(e.textContent); }); els[0].click(); });
-    var r7 = await p.evaluate(function () { var t = tareas.filter(function (x) { return x.id === "p1"; })[0]; return { dato: t.es_dato, tipo: t.tipo_item, te: t.tipo_elegido, es: esPropuesta256(t) }; });
+    var r7 = await p.evaluate(function () { var t = tareas.filter(function (x) { return x.id === "p1"; })[0]; return { dato: t.es_dato, tipo: t.tipo_item, te: t.tipo_elegido, es: esPropuesta(t) }; });
     eq("Dato: queda como dato (tipo_elegido) y deja de ser propuesta", r7, { dato: true, tipo: "dato", te: true, es: false });
     /* 5) No guardar -> descartada + popover */
     await limpia();

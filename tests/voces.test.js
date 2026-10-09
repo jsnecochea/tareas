@@ -121,11 +121,11 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
     /* ---------- 5 · la Caminata rota el elenco: turno nuevo = voz distinta ---------- */
     var E = await p.evaluate(async function () {
       window.__vocTok++; await espera(200); CAM.on = true; VOZ_ROT.i = -1; var d0 = __dichos.length, listo = false;
-      camDi274([{ v: "A", t: "¿Cuál reloj compramos?" }, { v: "B", t: "Yo haría el de huella." }, { v: "B", t: "Cuesta tres mil." }, { v: "A", t: "¿Lo compro?" }], function () { listo = true; });
+      camDi([{ v: "A", t: "¿Cuál reloj compramos?" }, { v: "B", t: "Yo haría el de huella." }, { v: "B", t: "Cuesta tres mil." }, { v: "A", t: "¿Lo compro?" }], function () { listo = true; });
       await hasta(function () { return listo; }, 3000);
       var a = __dichos.slice(d0).map(function (d) { return d.voz; });
       d0 = __dichos.length; listo = false;
-      camDi274([{ v: "A", t: "Anotado." }], function () { listo = true; }); await hasta(function () { return listo; }, 3000);
+      camDi([{ v: "A", t: "Anotado." }], function () { listo = true; }); await hasta(function () { return listo; }, 3000);
       CAM.on = false; CAM.tok++;
       return { a: a, sig: __dichos.slice(d0).map(function (d) { return d.voz; }) }; });
     eq("Caminata: pregunta y respuesta con voces distintas; el mismo que sigue hablando conserva su voz", E.a, ["Paulina (Premium)", "Marisol (Mejorada)", "Marisol (Mejorada)", "Diego (Mejorada)"]);
@@ -144,7 +144,7 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
       PERSONAS.salvador.voces = { v: 1, elenco: ["voz.fantasma.de.otro.telefono", "com.apple.voice.compact.es-MX.Juan"], ritmo: 1.1, tono: 1, ts: 1 };
       VOZ_ROT.i = -1; var el = vozElenco().map(function (v) { return v.name; });
       CAM.on = true; var d0 = __dichos.length, listo = false, err = null;
-      try { camDi274([{ v: "A", t: "Hola." }, { v: "B", t: "Qué tal." }], function () { listo = true; }); } catch (e) { err = e.message; }
+      try { camDi([{ v: "A", t: "Hola." }, { v: "B", t: "Qué tal." }], function () { listo = true; }); } catch (e) { err = e.message; }
       await hasta(function () { return listo; }, 3000); CAM.on = false; CAM.tok++;
       vista = "voces"; render(); var fil = document.querySelectorAll('.vocsel[aria-checked="true"]').length;
       return { el: el, err: err, voces: __dichos.slice(d0).map(function (d) { return [d.voz, d.pitch !== undefined && d.pitch !== 1]; }), fil: fil }; });
@@ -155,9 +155,9 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
     /* ---------- 8 · sin elenco: la mejor es-MX (Premium antes que normal) ---------- */
     var H = await p.evaluate(async function () {
       PERSONAS.salvador.voces = { v: 1, elenco: [], tono: 1, ts: 2 };
-      var r = { mejor: vozMejor().name, lee: _leeVoz().name, cam: camVoces274().A.name };
+      var r = { mejor: vozMejor().name, lee: _leeVoz().name, cam: camVoces().A.name };
       CAM.on = true; var d0 = __dichos.length, listo = false;
-      camDi274([{ v: "A", t: "Hola." }], function () { listo = true; }); await hasta(function () { return listo; }, 3000); CAM.on = false; CAM.tok++;
+      camDi([{ v: "A", t: "Hola." }], function () { listo = true; }); await hasta(function () { return listo; }, 3000); CAM.on = false; CAM.tok++;
       r.dicho = __dichos[d0].voz; return r; });
     eq("sin elenco: Paulina Premium (es-MX) en lectura y Caminata", H, { mejor: "Paulina (Premium)", lee: "Paulina (Premium)", cam: "Paulina (Premium)", dicho: "Paulina (Premium)" });
 
@@ -186,7 +186,7 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
       var av = document.getElementById("vocaviso");
       return { filas: [].map.call(document.querySelectorAll(".vocsel .tx"), function (x) { return x.childNodes[0].textContent; }),
         aviso: av ? /alta calidad/.test(av.textContent) && /Ajustes → Accesibilidad → Contenido leído/.test(av.textContent) && /Mejoradas.*Premium.*gratis/.test(av.textContent) : false,
-        mejor: vozMejor().name, cam: /Eddy|Sandy/.test(camVoces274().A.name + " " + (camVoces274().B || {}).name) }; });
+        mejor: vozMejor().name, cam: /Eddy|Sandy/.test(camVoces().A.name + " " + (camVoces().B || {}).name) }; });
     eq("sin alta calidad: solo las 3 mejores (México, Latinoamérica, España), sin juguete", J.filas, ["Paulina", "Juan", "Diego"]);
     eq("sin alta calidad: aviso claro de cómo descargar las Mejoradas/Premium gratis", J.aviso, true);
     eq("sin alta calidad: la Caminata y la lectura nunca toman una voz de juguete", [J.mejor, J.cam], ["Paulina", false]);

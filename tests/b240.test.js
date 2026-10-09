@@ -23,7 +23,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
     var fs0 = { enablePersistence: P, collection: function () { return { doc: function () { return { set: P, get: P, delete: P, onSnapshot: function () {} }; }, where: function () { return this; }, onSnapshot: function () {}, get: P }; } };
     window.firebase = { apps: [1], initializeApp: function () {}, firestore: function () { return fs0; }, auth: function () { return { onAuthStateChanged: function () {}, signOut: P }; } }; window.firebase.auth.GoogleAuthProvider = function () {};
     /* build 240 fix (2026-10-07): el fixture tiene fechas fijas (23-sep a 4-oct); la regla de "reciente (7 días)" de
-       esImp230 depende del reloj real, así que con el paso de los días los mensajes de Garza se iban saliendo de
+       esImp depende del reloj real, así que con el paso de los días los mensajes de Garza se iban saliendo de
        Importante y la prueba empezaba a fallar sola, sin que nadie tocara el código. Se congela el reloj justo
        después del último mensaje del fixture para que la prueba no se pudra con el tiempo. */
     var RD240 = Date, base240 = RD240.parse("2026-10-04T12:00:00Z"), t0240 = RD240.now();
@@ -32,7 +32,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
   try {
     await p.goto("file://" + path.join(__dirname, "..", "index.html")); await p.waitForTimeout(600);
     /* build 285: las secciones del home amanecen plegadas; en esta prueba vieja Acomodo, Mensajes, Te pregunta Doit, Vencidas y Hoy arrancan abiertas como antes (lo que se toque se sigue recordando) */
-    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl285(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
+    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
     var r = await p.evaluate(function (FX) {
       yo = "salvador"; var o = {};
       try { localStorage.removeItem("doit_hist240"); } catch (e) {}
@@ -68,7 +68,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
       o.dato = [n.tipo_item, n.es_dato, n.tipo_elegido, n.msgs.filter(function (x) { return x.movido_de; }).length, FI.msgs[1].oculto];
       /* en la hoja ¿A dónde va? */
       var G = { id: "tG", nombre: "Comedor nuevo", duenio: "salvador", estado: "abierta", msgs: [{ k: "bi", wa_in: 1, wa_c: "Lalo", t: "Lalo: jajaja igualmente", ts: Date.now() - 1000, h: "21:00", wa_id: "zz" }] };
-      tareas.push(G); abreMover225(G, 0); o.hoja = [].map.call(document.querySelectorAll("#mov225 .opt226.plain .two > span"), function (x) { return x.textContent; });
+      tareas.push(G); abreMover(G, 0); o.hoja = [].map.call(document.querySelectorAll("#mov225 .opt226.plain .two > span"), function (x) { return x.textContent; });
       o.hojaTriv = [!!document.querySelector("#mov225 [data-movtriv]")]; document.querySelector("#mov225 [data-movx]").click();
       return o; });
     /* ---- Historial ---- */

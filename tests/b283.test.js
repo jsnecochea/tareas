@@ -125,7 +125,7 @@ eq("sin reintento en serie del 251 en completaRevision", /_lanza251\(promptRevis
     var D1 = await p.evaluate(async function () { __LL.length = 0;
       window.modelo({ tipo: "decision", entendi: "Autorizas la de Dahua", hechos: [], decision_resuelta: true, que_toca: "Claude le confirma a Pepe la instalación de Dahua",
         pasos: [{ quien: "IA", que: "Confirmarle a Pepe que va la cotización de Dahua", fecha: "2026-10-08", seguir: { en: "2026-10-08T09:00", a: "Pepe Instalador", texto: "IA: Pepe, va la cotización de Dahua; ¿cuándo puedes instalar?" } }], campos: {} }, 200);
-      var T = DEC(); abre(T); var t0 = Date.now(); contestaDecision273(T, "Autorizo la de Dahua");
+      var T = DEC(); abre(T); var t0 = Date.now(); contestaDecision(T, "Autorizo la de Dahua");
       var antes = ((document.querySelector("#cp273d .cp273ok span") || {}).textContent || "");
       var encAntes = (T.encargos || []).map(function (e) { return [e.tipo, e.estado]; });
       var V = null; for (var i = 0; i < 30; i++) { await espera(100); V = tareas.filter(function (x) { return x.id === "tDEC"; })[0]; if (V.decision.aplicado38) break; }
@@ -140,7 +140,7 @@ eq("sin reintento en serie del 251 en completaRevision", /_lanza251\(promptRevis
     eq("Decide tú con red: el encargo se cierra y la capa dice «Aplicado.» con lo que cambió", [D1.enc, D1.ui, /^Entendí: Autorizas la de Dahua · Hice: .*Claude le escribe a Pepe/.test(D1.nota)], [[["decision_resp", "hecho"]], "Contestaste: «Autorizo la de Dahua». Aplicado.", true]);
 
     /* 4b) sin red: «aplicando…» hasta que la Mac pone aplicado38; luego «Aplicado.» con la nota de la Mac */
-    var D2 = await p.evaluate(async function () { __LL.length = 0; window.modelo("caido", 30); var T = DEC(); abre(T); contestaDecision273(T, "Que sea la de Hikvision"); await espera(300);
+    var D2 = await p.evaluate(async function () { __LL.length = 0; window.modelo("caido", 30); var T = DEC(); abre(T); contestaDecision(T, "Que sea la de Hikvision"); await espera(300);
       var V = tareas[0]; render(); await espera(30);
       var o = { ui: ((document.querySelector("#cp273d .cp273ok span") || {}).textContent || ""), ap: !!V.decision.aplicado38, enc: (V.encargos || []).map(function (e) { return [e.tipo, e.estado]; }),
         bi: (V.msgs || []).filter(function (m) { return m.k === "bi"; }).length };
@@ -166,15 +166,15 @@ eq("sin reintento en serie del 251 en completaRevision", /_lanza251\(promptRevis
     /* ===== 5) falta_paso_claude -> «Falta info» con su pregunta ===== */
     var FP = await p.evaluate(function () { var T = COMEDOR(); T.id = "tFP"; tareas = [T];
       var a = tipoRevisar(T); T.falta_paso_claude = { pregunta: "¿Con quién confirmo la instalación de la mesa?", ts: Date.now() };
-      var b = tipoRevisar(T), q = faltaPreciso263(T)[0]; T.falta_paso_claude.estado = "resuelto"; var c = tipoRevisar(T); T.falta_paso_claude = true; var d = faltaPasoClaude283(T);
+      var b = tipoRevisar(T), q = faltaPreciso(T)[0]; T.falta_paso_claude.estado = "resuelto"; var c = tipoRevisar(T); T.falta_paso_claude = true; var d = faltaPasoClaude(T);
       return { antes: a, con: b, q: q, resuelto: c, true_: d }; });
     eq("falta_paso_claude: cuenta como «falta» con su pregunta; resuelto ya no", FP, { antes: null, con: "falta", q: "¿Con quién confirmo la instalación de la mesa?", resuelto: null, true_: "¿Cuál es el siguiente paso de esta tarea?" });
 
     /* encargos de órdenes que la Mac ya convirtió en paso se cierran; los viejos vencen a las 24 h */
     var CE = await p.evaluate(function () { var T = MORIC(); T.encargos = [{ id: "e1", tipo: "orden", estado: "pendiente", origen: "app283", creado: Date.now() - 60000 }, { id: "e2", tipo: "orden", estado: "pendiente", origen: "app283", creado: Date.now() - 25 * 3600000 }, { id: "e3", tipo: "condicional", estado: "esperando", creado: 1 }];
       T.resumen = { plan: [{ id: "x", quien: "IA", que: "Pedir el pago", estado: "pendiente", origen: "salvador37", dicho_ts: Date.now() - 50000 }] };
-      var ch = cierraEncargos283(T); return [ch].concat(T.encargos.map(function (e) { return e.estado; })); });
-    eq("cierraEncargos283: convertido -> hecho, viejo -> vencido, los de la Mac no se tocan", CE, [true, "hecho", "vencido", "esperando"]);
+      var ch = cierraEncargos(T); return [ch].concat(T.encargos.map(function (e) { return e.estado; })); });
+    eq("cierraEncargos: convertido -> hecho, viejo -> vencido, los de la Mac no se tocan", CE, [true, "hecho", "vencido", "esperando"]);
 
     eq("sin errores de página", errs, []);
   } catch (e) { malas.push("EXCEPCIÓN " + (e && e.stack || e)); }

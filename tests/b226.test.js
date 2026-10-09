@@ -23,7 +23,7 @@ si("iconos: trazo 1.5 fijo", /var s=px\|\|18, w=1\.5, p=\{/.test(html));
   try {
     await p.goto("file://" + path.join(__dirname, "..", "index.html")); await p.waitForTimeout(600);
     /* build 285: las secciones del home amanecen plegadas; en esta prueba vieja Acomodo, Mensajes, Te pregunta Doit, Vencidas y Hoy arrancan abiertas como antes (lo que se toque se sigue recordando) */
-    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl285(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
+    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
     var r = await p.evaluate(function () {
       yo = "salvador"; if (!PERSONAS.salvador) PERSONAS.salvador = { nombre: "Salvador", jefe: true };
       var NOW = (function () { var d = new Date(); return d.getHours() < 4 ? new Date(d.getFullYear(), d.getMonth(), d.getDate(), 3, 59).getTime() : d.getTime(); })(), o = {};   /* de madrugada los ejemplos de "hace 2 h" caerían en ayer: se anclan a las 3:59 de hoy */
@@ -38,8 +38,8 @@ si("iconos: trazo 1.5 fijo", /var s=px\|\|18, w=1\.5, p=\{/.test(html));
       function VEST() { return { id: "tVEST", nombre: "Vestidores Carpintería", duenio: "salvador", estado: "abierta", msgs: [] }; }
       function pinta() { [].forEach.call(document.body.children, function (x) { if (x.id !== "app") x.style.display = "none"; }); var A = document.getElementById("app"); A.style.display = "flex"; document.body.style.height = "844px"; }
       /* ---- dentro de la tarea ---- */
-      tareas = [LERDO(), COMEDOR(), VEST()]; abierta = "tIAMUVF22TRJF"; vista = "hilo"; render(); poneVista230(tareas[0], ""); render(); pinta();   /* 235: elige Todo */
-      abreDetalle242(tareas[0], 1); var ac = document.querySelector("#det242 .ac226");   /* 242: OK · Mover · Nueva · Dato viven en la hoja del globo */
+      tareas = [LERDO(), COMEDOR(), VEST()]; abierta = "tIAMUVF22TRJF"; vista = "hilo"; render(); poneVista(tareas[0], ""); render(); pinta();   /* 235: elige Todo */
+      abreDetalle(tareas[0], 1); var ac = document.querySelector("#det242 .ac226");   /* 242: OK · Mover · Nueva · Dato viven en la hoja del globo */
       o.botones = ac ? [].map.call(ac.querySelectorAll("button"), function (x) { return x.textContent; }) : null;
       o.debajo = !!(ac && ac.closest("#det242"));
       o.sinPregunta = !/¿Es de/.test(document.querySelector(".msgs").textContent);
@@ -58,13 +58,13 @@ si("iconos: trazo 1.5 fijo", /var s=px\|\|18, w=1\.5, p=\{/.test(html));
       o.censo = (L.censo_acomodo || []).map(function (c) { return [c.contacto, c.de, c.a, c.tipo, c.texto.slice(0, 22)]; });
       /* OK */
       tareas = [LERDO(), COMEDOR(), VEST()]; abierta = "tIAMUVF22TRJF"; render(); pinta();
-      abreDetalle242(tareas[0], 1); document.querySelector('#det242 [data-acok]').click();
+      abreDetalle(tareas[0], 1); document.querySelector('#det242 [data-acok]').click();
       var L2 = tareas[0]; o.ok = [L2.msgs[1].duda_resuelta, L2.msgs[1].acomodo.ok, (L2.censo_acomodo || [])[0].tipo, document.querySelectorAll(".msgs .ac226").length, !!L2.msgs[1].oculto];
       /* Solo plática */
-      tareas = [LERDO(), COMEDOR(), VEST()]; render(); abreDetalle242(tareas[0], 1); document.querySelector('#det242 [data-acmov]').click(); document.querySelector('#mov225 [data-movplatica]').click();
+      tareas = [LERDO(), COMEDOR(), VEST()]; render(); abreDetalle(tareas[0], 1); document.querySelector('#det242 [data-acmov]').click(); document.querySelector('#mov225 [data-movplatica]').click();
       o.platica = [!!tareas[0].msgs[1].oculto, tareas[0].msgs[1].oculto_motivo, tareas[0].censo_acomodo[0].tipo, tareas.length];
       /* Nueva */
-      tareas = [LERDO(), COMEDOR(), VEST()]; render(); abreDetalle242(tareas[0], 1); document.querySelector('#det242 [data-acnueva]').click(); (function(){ var ok=document.querySelector('[data-nom249="ok"]'); if(ok) ok.click(); })();
+      tareas = [LERDO(), COMEDOR(), VEST()]; render(); abreDetalle(tareas[0], 1); document.querySelector('#det242 [data-acnueva]').click(); (function(){ var ok=document.querySelector('[data-nom249="ok"]'); if(ok) ok.click(); })();
       var nv = tareas[tareas.length - 1];
       o.nueva = [tareas.length, nv.nombre, tipoRevisar(nv), !!nv.msgs.filter(function (m) { return m.movido_de; }).length, !!tareas[0].msgs[1].oculto, tareas[0].censo_acomodo[0].tipo];
       /* ---- Inicio ---- */
@@ -99,7 +99,7 @@ si("iconos: trazo 1.5 fijo", /var s=px\|\|18, w=1\.5, p=\{/.test(html));
     eq("OK desde el Inicio quita el renglón", r.okInicio, [1, 1]);
     eq("nombre sugerido de tarea nueva", r.sugerido, ["Mesa Comedor Alt Brillo con Manuel", "Miercolitos Semana con Lalo"]);
     eq("sin emojis en la interfaz (los del sistema al inicio se quitan; los del contacto se respetan)", r.emojiUI, ["Nota IA 11:52: x", "Enviado: hola", "Gracias 👍"]);
-    si("deslizar en el Inicio: derecha OK, izquierda Mover (237: toda la plática)", /if\(dx>80\)\{ var s=okG237\(t, _gx\);[^}]*\} else if\(dx<-80\) abreMover225\(t, ix, _gx\);/.test(html));
+    si("deslizar en el Inicio: derecha OK, izquierda Mover (237: toda la plática)", /if\(dx>80\)\{ var s=okG\(t, _gx\);[^}]*\} else if\(dx<-80\) abreMover\(t, ix, _gx\);/.test(html));
     eq("sin errores de página", errs, []);
     await p.screenshot({ path: require("os").tmpdir() + "/b226-inicio.png" });
   } finally { await b.close(); }

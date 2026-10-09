@@ -375,7 +375,7 @@ function entrar(u){ yo=u; $("gate").classList.remove("on"); $("app").style.displ
   setTimeout(function(){ resincronizaAvisos(); }, 2500);
   /* y los avisos que nunca llegaron al servidor nuevo (2026-09-23) */
   setTimeout(function(){ try{ subeAvisosPendientes(); }catch(e){} }, 9000);
-  setTimeout(function(){ try{ limpiaWABasura263(); }catch(e){} }, 11000);
+  setTimeout(function(){ try{ limpiaWABasura(); }catch(e){} }, 11000);
   /* build 136: le dice al servidor que este usuario acaba de ver la app, para
      que no le repita por push lo que ya vio (Carlos: nunca se llamaba visto) */
   setTimeout(function(){ try{ avisaVisto(); }catch(e){} }, 1500); }
@@ -554,7 +554,7 @@ function programaWA(texto, ahora){
   var cu=cuandoDe(frases, ahora, null);
   if(cu && cu.duda) out.duda=out.duda||cu.duda; else if(cu) out.a_las=cu;
   /* build 263: "desde hoy" / "hoy" sin hora = hoy en la siguiente ventana hábil (8–20, lunes a sábado); fuera de ella, el siguiente día hábil a las 9 */
-  if(!out.duda && (desdeHoy || (frases.length && frases.every(function(f){ return /^hoy$/i.test(String(f).trim()); }))) && !(cu && cu.hora && frases.some(function(f){ return horaDicha(f); }))) out.a_las=ventanaHabil263(ahora);
+  if(!out.duda && (desdeHoy || (frases.length && frases.every(function(f){ return /^hoy$/i.test(String(f).trim()); }))) && !(cu && cu.hora && frases.some(function(f){ return horaDicha(f); }))) out.a_las=ventanaHabil(ahora);
   if(condicional){ var d0=new Date(ahora); out.sino_desde={fecha:iso(d0), hora:_hm(d0)}; if(!out.a_las) out.duda=out.duda||"¿A qué hora se lo mando si no contesta?"; }
   if(seg){
     var sq=seg.search(/\s(?:para\s+)?que\s|:\s/i), sz=sq>=0?seg.slice(0,sq):seg, sb=sq>=0?seg.slice(sq):"";
@@ -1079,7 +1079,7 @@ function esEjemplo(t){
 /* ENTRADA ÚNICA DEL DICTADO. Todo lo que se dicta o escribe dentro de una tarea queda primero en t.dictados (estado
    "recibido") y se sube al servidor en ese momento; después se interpreta. Al guardar la tarea con lo aplicado pasa a
    "aplicado" (o "consulta" si solo era una búsqueda). Si a los 90 s sigue "recibido" (una hoja que se cerró sin terminar,
-   un modelo caído), queda "sin_aplicar", se vuelve encargo para la Mac (ordenPendiente283, que la Mac aplica en ~2 min)
+   un modelo caído), queda "sin_aplicar", se vuelve encargo para la Mac (ordenPendiente, que la Mac aplica en ~2 min)
    y se dice en la plática con el texto completo. */
 var DICTADO_ESPERA_MS=90000;
 function registraDictado(t, v){
@@ -1104,7 +1104,7 @@ function revisaDictado(tid, did){
   if((t.encargos||[]).some(function(e){ return e && e.origen==="app283" && e.creado>=d.ts && String(e.t||"")===String(d.t).slice(0,1500); })){ d.estado="encargado"; d.ap_ts=Date.now(); guarda(t); return; }   /* ya quedó de encargo (IA caída): no se duplica */
   if(window.__dict && window.__dict.id===did) window.__dict=null;
   d.estado="sin_aplicar"; d.ap_ts=Date.now();
-  var e=null; try{ if(typeof ordenPendiente283==="function"){ window.__dict=null; e=ordenPendiente283(t, d.t, "dictado_sin_aplicar"); } }catch(er){}
+  var e=null; try{ if(typeof ordenPendiente==="function"){ window.__dict=null; e=ordenPendiente(t, d.t, "dictado_sin_aplicar"); } }catch(er){}
   if(e) d.encargo_id=e.id;
   msg(t,"bi","⚠️ Tu indicación «"+String(d.t).slice(0,300)+"» no quedó aplicada aquí: ya se la pasé a Claude en la Mac y te confirmo en un par de minutos qué quedó.");
   var m=t.msgs[t.msgs.length-1]; m.canal="priv:"+yo; m.nota_claude=1; m.dictado_id=did;
@@ -1114,7 +1114,7 @@ function guarda(t){
   t.tocada=Date.now();
   if(t && t.nombre && !t.es_recordatorio) t.nombre=tituloTarea(t.nombre);   /* build 196: titulos con mayuscula inicial */
   if(t && window.__dict && window.__dict.tid===t.id && !window.__dict.registrando && !window.__dict.espera) marcaDictado(t, "aplicado");
-  try{ if(t && (t.duenio===yo || t.creada_por===yo)) recalculaFalta263(t); }catch(e){}   /* build 263: la marca de Falta info se recalcula al guardar */
+  try{ if(t && (t.duenio===yo || t.creada_por===yo)) recalculaFalta(t); }catch(e){}   /* build 263: la marca de Falta info se recalcula al guardar */
   /* CANDADO: un ejemplo se ve, pero NUNCA sube a la base que comparte el
      equipo. Y se dice, para que nadie crea que quedó guardado. */
   if(esEjemplo(t)){ toast("Es una tarea de ejemplo: no se guarda"); render(); return }

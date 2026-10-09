@@ -21,7 +21,7 @@ eq("versión >= 264", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
   try {
     await p.goto("file://" + path.join(__dirname, "..", "index.html")); await p.waitForTimeout(600);
     /* build 285: las secciones del home amanecen plegadas; en esta prueba vieja Acomodo, Mensajes, Te pregunta Doit, Vencidas y Hoy arrancan abiertas como antes (lo que se toque se sigue recordando) */
-    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl285(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
+    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
     await p.evaluate(function () { yo = "salvador"; PERSONAS.salvador = PERSONAS.salvador || { nombre: "Salvador", jefe: true }; PERSONAS.salvador.jefe = true;
       window.__esp = []; window.__push = []; window.__pids = [];
       db = { collection: function () { return { doc: function (k) { return { set: function (d, o) { window.__esp.push([k, d, o]); return Promise.resolve(); }, get: function () { return Promise.resolve({ exists: false }); }, delete: function () { return Promise.resolve(); } }; } }; } };
@@ -106,7 +106,7 @@ eq("versión >= 264", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       var ce = T("tC", "Junta Colegio CAT anterior", "Reunión de padres del colegio CAT", { cierre: { tipo: "hecha", motivo: "", f: "2026-09-30" }, estado: "cerrada" });
       var org = T("tX", "Mensajes", "x", { msgs: [{ k: "bo", de: "salvador", wa_in: 1, t: "Junta de padres del colegio CAT el viernes", ts: Date.now(), h: "08:00" }] });
       tareas = [ab, ce, org];
-      var S = sugeridasPara262(org, [0]);
+      var S = sugeridasPara(org, [0]);
       r.sims = S.sims.map(function (d) { return d.id; }); r.rest = S.rest.map(function (d) { return d.id; });
       return r; });
     eq("Parecidas: la cerrada también sale, después de la abierta, y no en el resto", [D.sims, D.rest.indexOf("tC") >= 0], [["tA", "tC"], false]);

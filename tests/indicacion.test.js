@@ -24,7 +24,7 @@ function saca(tipo, nombre) {
 }
 var FUNCS = ["_nn", "esDelEquipo", "_telDe", "_nomWA", "esMsgWA", "miembroDeNombre", "contactosWA", "_contactosWA",
   "_contactoDeNombre", "canalDe", "externosDe", "nombreWADe", "canalesDe", "canalActual", "msgEnCanal", "integrantesDe",
-  "responsableExt", "waDest254", "modoWA254", "phCanal", "vPastilla", "vista230", "nombreVisible230", "ico", "nombreCorto", "modoClaude", "puedeSerIndicacion", "convierteEnIndicacion", "notasPlegadas",
+  "responsableExt", "waDest", "modoWA", "phCanal", "vPastilla", "vista230", "nombreVisible", "ico", "nombreCorto", "modoClaude", "puedeSerIndicacion", "convierteEnIndicacion", "notasPlegadas",
   "notaClaude", "preguntaExterno", "nombreInt", "iniInt"];
 var VARS = ["CNL_COL", "CNL_EXT", "CLAUDE_COL", "_cwMemo", "SVG_DESTELLO", "SVG_CHAT"];
 function campos() { var i = html.indexOf("/* @@CAMPOS-UNICOS-INICIO"), j = html.indexOf("/* @@CAMPOS-UNICOS-FIN */"); return html.slice(i, j) + "\n"; }   /* lectores únicos (docs/campos-unicos.md) */

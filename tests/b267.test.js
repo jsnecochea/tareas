@@ -57,8 +57,8 @@ eq("versión >= 255", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       return { antes: antes, dsp: dsp, ritmo: V.ritmo, nota: (V.msgs || []).some(function (m) { return /^Entendí: «¿El próximo seguimiento\?» → ninguno/.test(m.t || ""); }), bloque: !!document.getElementById("preg249"), noClaro: (V.msgs || []).concat(((V.hecho238 || {}).falta || [])).some(function (m) { return /No me quedó claro/.test(m.t || m.q || ""); }) }; });
     eq("Con fecha y terceros la de seguimiento sí sale", r2.antes, ["¿El próximo seguimiento?"]);
     eq("Contestar 'Ninguno' la cierra, deja el campo en ninguno y no crea otra", [r2.dsp, r2.ritmo, r2.nota, r2.bloque, r2.noClaro], [[], "ninguno", true, false, false]);
-    for (var w of ["no", "nada", "no hace falta", "sin seguimiento", "no quiero"]) eq("'" + w + "' es respuesta válida", await p.evaluate(function (x) { return esNegativa267(x); }, w), true);
-    eq("'jueves' no es negativa", await p.evaluate(function () { return [esNegativa267("el jueves a las 9"), esNegativa267("sí"), esNegativa267("ok")]; }), [false, false, false]);
+    for (var w of ["no", "nada", "no hace falta", "sin seguimiento", "no quiero"]) eq("'" + w + "' es respuesta válida", await p.evaluate(function (x) { return esNegativa(x); }, w), true);
+    eq("'jueves' no es negativa", await p.evaluate(function () { return [esNegativa("el jueves a las 9"), esNegativa("sí"), esNegativa("ok")]; }), [false, false, false]);
     /* 3) respuesta incomprensible: se aplica con "Entendí: …" y cierra */
     await limpia();
     var r3 = await p.evaluate(async function () { var T = ESIM({ hecho238: { ts: Date.now(), hecho: [], falta: [{ k: "txt", q: "¿Qué marca de chip prefieres?", ops: [] }] } }); tareas = [T]; abierta = "tESIM"; vista = "hilo"; render(); await espera(80);
@@ -74,7 +74,7 @@ eq("versión >= 255", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       return { r: r, msgs: T.msgs.length - n0, repreg: T.repreg || null, dd: T.decision_dato || null, pend: T.pendiente_tipo || "", wa: window.__WAx, claridad: T.msgs[1].claridad || null }; });
     eq("aplicaNoClara y revisaClaridadTodas ya no escriben ni mandan nada", r4, { r: "", msgs: 0, repreg: null, dd: null, pend: "", wa: 0, claridad: null });
     /* 5) lo viejo se limpia solo */
-    var r5 = await p.evaluate(function () { var T = ESIM({ decision_dato: [{ id: "dd1", contacto: "Manuel Parra", pregunta: "x", falta: "y", resp: [], n: 2, ts: 1 }], repreg: [{ contacto: "Manuel Parra" }], pendiente_tipo: "decision_salvador", pendiente_dato: "dd1", pendiente_info: "Manuel no da el dato" }); tareas = [T]; refrescaFalta263();
+    var r5 = await p.evaluate(function () { var T = ESIM({ decision_dato: [{ id: "dd1", contacto: "Manuel Parra", pregunta: "x", falta: "y", resp: [], n: 2, ts: 1 }], repreg: [{ contacto: "Manuel Parra" }], pendiente_tipo: "decision_salvador", pendiente_dato: "dd1", pendiente_info: "Manuel no da el dato" }); tareas = [T]; refrescaFalta();
       return { dd: (T.decision_dato || []).length, repreg: !!T.repreg, pend: T.pendiente_tipo || "", hf: ((T.hecho238 || {}).falta || []).map(function (f) { return f.q; }) }; });
     eq("Se limpian repreg, decision_dato, la decisión pendiente y 'No me quedó claro…'", r5, { dd: 0, repreg: false, pend: "", hf: ["¿Qué marca de chip prefieres?"] });
     eq("Sin errores de página", errs, []);

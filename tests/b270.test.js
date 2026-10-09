@@ -22,7 +22,7 @@ eq("sw.js con versión build ≥ 270", +((/var SW_VERSION = 'build (\d+)'/.exec(
   try {
     await p.goto("file://" + path.join(__dirname, "..", "index.html")); await p.waitForTimeout(600);
     /* build 285: las secciones del home amanecen plegadas; en esta prueba vieja Acomodo, Mensajes, Te pregunta Doit, Vencidas y Hoy arrancan abiertas como antes (lo que se toque se sigue recordando) */
-    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl285(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
+    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
     await p.evaluate(function () { yo = "salvador"; PERSONAS.salvador = PERSONAS.salvador || { nombre: "Salvador", jefe: true }; PERSONAS.salvador.jefe = true;
       window.__esp = []; window.__push = []; window.__pids = [];
       db = { collection: function () { return { doc: function (k) { return { set: function (d, o) { window.__esp.push([k, d, o]); return Promise.resolve(); }, get: function () { return Promise.resolve({ exists: false }); }, delete: function () { return Promise.resolve(); } }; } }; } };
@@ -62,7 +62,7 @@ eq("sw.js con versión build ≥ 270", +((/var SW_VERSION = 'build (\d+)'/.exec(
         T("cV", "Instalación con Pato", "", { resumen: { pendientes: [{ t: "Confirmar fecha de instalación", de: "Pato", fecha: "2026-10-05" }] },
           msgs: [{ k: "bo", wa_c: "Pato", t: "¿Ya tienes fecha?", ts: N - 3 * D, h: "09:00" }, { k: "bi", wa_in: 1, wa_c: "Pato", t: "Ya quedó, el jueves", ts: N - 3600e3, h: "08:00" }] }),
         T("cN", "Mantenimiento Cumbres", "", { encargos: [{ id: "e2", estado: "pendiente" }] })];
-      poneAcoPlegado260(false); window.__verEnc270 = false; window.__verRev270 = false; window.__verComp = false; verFuturas = false;
+      poneAcoPlegado(false); window.__verEnc270 = false; window.__verRev270 = false; window.__verComp = false; verFuturas = false;
       home(L);
       var r = { secs: secs() };
       var y = function (sel) { var e = document.querySelector(sel); return e ? e.getBoundingClientRect().top + window.scrollY + (document.querySelector(".scroll") || { scrollTop: 0 }).scrollTop : -1; };
@@ -134,13 +134,13 @@ eq("sw.js con versión build ≥ 270", +((/var SW_VERSION = 'build (\d+)'/.exec(
       r.rev = [].map.call(document.querySelectorAll('[data-grupo-vista="rev"] .ttr[data-id="tREV"]'), function (e) { return e.innerText.replace(/\s+/g, " "); }); cierraGrupoInicio();
       /* sin fecha definida (y sin pregunta pendiente) va a Vencidas mías, nunca a Hoy */
       var S = T("tSIN", "Sin fecha", "", { f_vigente: "" }), V = T("tV2", "Otra vencida", "", { f_vigente: "2026-10-01" }), Hh = T("tH2", "De hoy", "", {});
-      var X = armaHome270([], [], [V], [S, Hh], []);
+      var X = armaHome([], [], [V], [S, Hh], []);
       r.sinDef = [X.venc.map(function (x) { return x.t.id + ":" + x.why; }), X.hoy.map(function (x) { return x.t.id; }), X.preg.filter(function (x) { return x.t.id === "tSIN"; }).map(function (x) { return x.t.id + ":" + x.why; })];
       /* una tarea de otro dueño nunca entra a 3 ni a 4 */
-      var O = T("tO", "De Samuel", "", { duenio: "samuel" }), Y = armaHome270([], [], [O], [O], []);
+      var O = T("tO", "De Samuel", "", { duenio: "samuel" }), Y = armaHome([], [], [O], [O], []);
       r.ajena = [Y.venc.length, Y.hoy.length, Y.otros.map(function (x) { return x.t.id; })];
       /* las funciones de siempre siguen ahí */
-      r.funciones = ["opcionesUnico261", "abreEnlazar", "menuAcc254", "vPropuestas256", "okProp256", "descartaProp256", "faltaPreciso263", "esDormida264", "despiertaTodas264", "abreMover225", "vCompartidas", "pelota263", "reparte263"].filter(function (f) { return typeof window[f] !== "function"; });
+      r.funciones = ["opcionesUnico", "abreEnlazar", "menuAcc", "vPropuestas", "okProp", "descartaProp", "faltaPreciso", "esDormida", "despiertaTodas", "abreMover", "vCompartidas", "pelota263", "reparte263"].filter(function (f) { return typeof window[f] !== "function"; });
       /* tocar un renglón de Te pregunta Doit abre la tarea */
       window.__verRev270 = false; verFuturas = false; render(); abreGrupoInicio("esperan");
       document.querySelector('.l284 .ttr[data-id="tNEC"]').click(); await espera(60); r.abre = [vista, abierta];

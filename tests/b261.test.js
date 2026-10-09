@@ -62,7 +62,7 @@ eq("versión >= 261", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     var r5 = await p.evaluate(function () { cierraMenu(); return menuEn(".hc238 .hch"); });
     eq("Tarjeta Hecho: las 11 opciones; solo Leer lo actual y Copiar activas", [nombres(r5), on(r5)], [ORDEN, ["Leer lo actual", "Copiar"]]);
     /* pregunta de Claude (bloque difuminado) */
-    var r6 = await p.evaluate(async function () { cierraMenu(); abrePreguntas249("tCOB"); await espera(60); var li = document.querySelector("#preg249 li"); if (!li) return { hay: false }; var ev = new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: 200, clientY: 300 }); li.dispatchEvent(ev); var m = document.getElementById("leemask"); return m ? { hay: true, ops: [].map.call(m.querySelectorAll("button"), function (b) { return [b.textContent, !b.disabled]; }) } : { hay: true, sinMenu: true }; });
+    var r6 = await p.evaluate(async function () { cierraMenu(); abrePreguntas("tCOB"); await espera(60); var li = document.querySelector("#preg249 li"); if (!li) return { hay: false }; var ev = new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: 200, clientY: 300 }); li.dispatchEvent(ev); var m = document.getElementById("leemask"); return m ? { hay: true, ops: [].map.call(m.querySelectorAll("button"), function (b) { return [b.textContent, !b.disabled]; }) } : { hay: true, sinMenu: true }; });
     eq("Pregunta de Claude: las 11 opciones en orden (Copiar activa)", [r6.hay, nombres(r6), (on(r6) || []).indexOf("Copiar") >= 0], [true, ORDEN, true]);
     await foto("b261-4-pregunta.png");
     await p.evaluate(function () { cierraMenu(); var v = document.getElementById("preg249"); if (v) v.remove(); window.__preg255 = null; });

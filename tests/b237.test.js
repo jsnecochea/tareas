@@ -22,10 +22,10 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
   try {
     await p.goto("file://" + path.join(__dirname, "..", "index.html")); await p.waitForTimeout(600);
     /* build 285: las secciones del home amanecen plegadas; en esta prueba vieja Acomodo, Mensajes, Te pregunta Doit, Vencidas y Hoy arrancan abiertas como antes (lo que se toque se sigue recordando) */
-    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl285(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
+    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
     var r = await p.evaluate(function () {
       yo = "salvador"; var o = {}, NOW = Date.now(), hm = function (ms) { var d = new Date(NOW - ms); return ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2); };
-      window.esPropuesta256 = function () { return false; };   /* build 256: este suite prueba el camino viejo de la plática sin clasificar; las propuestas lo tienen b256 */ window.__ESCR = []; db = { collection: function (c) { return { doc: function (id) { return { set: function (v, op) { window.__ESCR.push([c, id, JSON.parse(JSON.stringify(v)), op || null]); return Promise.resolve(); }, get: function () { return Promise.resolve({ exists: false, data: function () { return null; } }); } }; } }; } };
+      window.esPropuesta = function () { return false; };   /* build 256: este suite prueba el camino viejo de la plática sin clasificar; las propuestas lo tienen b256 */ window.__ESCR = []; db = { collection: function (c) { return { doc: function (id) { return { set: function (v, op) { window.__ESCR.push([c, id, JSON.parse(JSON.stringify(v)), op || null]); return Promise.resolve(); }, get: function () { return Promise.resolve({ exists: false, data: function () { return null; } }); } }; } }; } };
       function solo() { [].forEach.call(document.body.children, function (x) { if (x.id !== "app" && x.id !== "mov225") x.style.display = "none"; }); document.getElementById("app").style.display = "flex"; }
       function m(c, tx, hace, extra) { var x = { k: "bi", wa_in: 1, wa_c: c, t: c + ": " + tx, ts: NOW - hace, h: hm(hace), wa_id: "w" + Math.random().toString(36).slice(2, 8) }; for (var k in (extra || {})) x[k] = extra[k]; return x; }
       window.F237 = function () {
@@ -67,7 +67,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
       card(/Toldos/).querySelector("[data-acnueva]").click(); (function(){ var ok=document.querySelector('[data-nom249="ok"]'); if(ok) ok.click(); })(); var nv = tareas[tareas.length - 1]; o.nueva = [nv.id !== "tIATOLDO", nv.msgs.filter(function (x) { return x.movido_de; }).length, tareas[3].msgs.filter(function (x) { return x.oculto; }).length];
       o.quedan = document.querySelectorAll(".aco226 .acor.g237").length;
       /* dentro de la tarea */
-      tareas = F237(); abierta = "tLERDO"; vista = "hilo"; poneVista230(tareas[0], ""); render(); poneVista230(tareas[0], ""); render();
+      tareas = F237(); abierta = "tLERDO"; vista = "hilo"; poneVista(tareas[0], ""); render(); poneVista(tareas[0], ""); render();
       [].forEach.call(document.body.children, function (x) { if (x.id !== "app") x.style.display = "none"; });
       o.dentro = { botones: [].map.call(document.querySelectorAll("#app .ac226"), function (x) { return x.getAttribute("data-acg").split(",").length; }), marquitas: [].map.call(document.querySelectorAll(".msgs .cl238"), function (x) { return x.getAttribute("aria-label"); }) };
       return o; });
@@ -84,7 +84,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
         msgs: [{ k: "bo", de: "salvador", t: "Manuel, ¿cómo va lo del techo?", ts: NOW - 40 * 60000, h: hm(40 * 60000) },
           { k: "bi", wa_in: 1, wa_c: "Manuel Parra", t: "Manuel Parra: Esteban ya cortó las ramas del techo y mañana empiezan a impermeabilizar", ts: NOW - 30 * 60000, h: hm(30 * 60000), wa_id: "a1" },
           { k: "bi", wa_in: 1, wa_c: "Manuel Parra", t: "Manuel Parra: te mando 3 fotos del techo limpio en un rato", ts: NOW - 28 * 60000, h: hm(28 * 60000), wa_id: "a2" }] };
-      tareas = [T]; abierta = T.id; vista = "hilo"; window.__cl238 = {}; render(); poneVista230(T, ""); render();
+      tareas = [T]; abierta = T.id; vista = "hilo"; window.__cl238 = {}; render(); poneVista(T, ""); render();
       [].forEach.call(document.body.children, function (x) { if (x.id !== "app") x.style.display = "none"; });
       document.querySelector(".msgs .cl238").closest("[data-mix]").click(); return [document.querySelectorAll("#det242 .ac226").length]; });
     if (process.env.CAP) await p.screenshot({ path: path.join(process.env.CAP, "b237-tarea-acomodo-claude.png") });

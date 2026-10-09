@@ -47,11 +47,11 @@ eq("sw.js con versión >= 285", +((/var SW_VERSION = 'build (\d+)'/.exec(fs.read
     });
 
     /* ===== 1) «Tu historial» ===== */
-    var V = await p.evaluate(function () { localStorage.clear(); window.__pl285 = null; window.__histRemoto240 = []; ponAbre285("hist", true); home(FX());
+    var V = await p.evaluate(function () { localStorage.clear(); window.__pl285 = null; window.__histRemoto240 = []; ponAbre("hist", true); home(FX());
       return [cab("#sec285-hist").cuenta, (document.querySelector(".hist285 .h285v") || {}).textContent, document.querySelectorAll(".hist285 .h285r").length]; });
     eq("sin acciones hoy: «Hoy no has movido nada todavía»", V, ["", "Hoy no has movido nada todavía", 0]);
 
-    var H = await p.evaluate(async function () { localStorage.clear(); window.__pl285 = null; window.__histRemoto240 = []; ponAbre285("hist", true); home(FX());
+    var H = await p.evaluate(async function () { localStorage.clear(); window.__pl285 = null; window.__histRemoto240 = []; ponAbre("hist", true); home(FX());
       var T = function (id) { return tareas.filter(function (x) { return x.id === id; })[0]; };
       var ayer = Date.now() - 20 * 3600000;   /* 7 oct, 14:00 */
       localStorage.setItem("doit_hist240", JSON.stringify([
@@ -91,14 +91,14 @@ eq("sw.js con versión >= 285", +((/var SW_VERSION = 'build (\d+)'/.exec(fs.read
     eq("picar el renglón abre la tarea", O, ["hilo", "tDEC"]);
 
     /* otro usuario en el mismo teléfono solo ve lo suyo */
-    var U = await p.evaluate(function () { window.__hist285dias = 0; yo = "luismario"; PERSONAS.luismario = PERSONAS.luismario || { nombre: "Luis Mario" }; window.__pl285 = null; ponAbre285("hist", true); home();
+    var U = await p.evaluate(function () { window.__hist285dias = 0; yo = "luismario"; PERSONAS.luismario = PERSONAS.luismario || { nombre: "Luis Mario" }; window.__pl285 = null; ponAbre("hist", true); home();
       var r = hist(); yo = "salvador"; window.__pl285 = null; return r; });
     eq("cada usuario ve solo lo suyo", U, [["Llamar a Manuel", "Cambiaste la fecha al 9 oct"]]);
 
     /* renombrar deja rastro */
     var R = await p.evaluate(function () { var t = tareas.filter(function (x) { return x.id === "tHOY"; })[0]; abierta = "tHOY"; vista = "hilo"; editaNombre = "tHOY"; render();
       var e = document.getElementById("enom"); if (!e) return "sin campo"; e.value = "Llamar a Manuel Parra"; e.dispatchEvent(new Event("blur")); if (e.onblur) e.onblur(); if (e.onkeydown) e.onkeydown({ key: "Enter", preventDefault: function () {} });
-      return histLee240().filter(function (x) { return x.tid === "tHOY" && /^Cambió el nombre/.test(x.que); }).map(function (x) { return tu285(x.que); })[0] || "nada"; });
+      return histLee().filter(function (x) { return x.tid === "tHOY" && /^Cambió el nombre/.test(x.que); }).map(function (x) { return tu285(x.que); })[0] || "nada"; });
     eq("cambiar el nombre queda en el historial", R, "Renombraste a “Llamar a Manuel Parra” (era “Llamar a Manuel”)");
 
     eq("sin errores de página", errs, []);

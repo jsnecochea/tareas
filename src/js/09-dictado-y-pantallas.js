@@ -169,7 +169,7 @@ function bindCaja2(){
 /* ============ BINDS ============ */
 function bindLista(){
   try{ bindAcomodoInicio(); }catch(e){ console.warn("acomodo",e); }
-  try{ bindPropuestas256(); }catch(e){ console.warn("propuestas256",e); }
+  try{ bindPropuestas(); }catch(e){ console.warn("propuestas256",e); }
   recargaMic();   /* canal de audio fresco en cuanto se vuelve al home */
   /* la pantalla de la foto reusa estos binds: su flecha suelta la foto */
   var bbk=$("bback"); if(bbk) bbk.onclick=function(){ fotoEnMano=null; vista="lista"; render() };
@@ -202,9 +202,9 @@ function bindLista(){
   var bc=$("bclr"); if(bc) bc.onclick=function(){ consulta=""; render() };
   var bcp=$("bcomp"); if(bcp) bcp.onclick=function(){ window.__verComp=!window.__verComp; render(); };
   var bcl=$("bcl263"); if(bcl) bcl.onclick=function(){ window.__clL263=!window.__clL263; render(); };
-  try{ bindHome272(); }catch(e){ console.warn("home272", e); }
+  try{ bindHome(); }catch(e){ console.warn("home272", e); }
   try{ bindInicio(); }catch(e){ console.warn("inicio", e); }
-  try{ bindCam274(); }catch(e){ console.warn("cam274", e); }
+  try{ bindCam(); }catch(e){ console.warn("cam274", e); }
   var be270=$("benc270"); if(be270) be270.onclick=function(){ window.__verEnc270=!window.__verEnc270; render(); };
   var br270=$("brev270"); if(br270) br270.onclick=function(){ window.__verRev270=!window.__verRev270; render(); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-ttmas]"),function(b){ b.onclick=function(){ window.__ttMas=window.__ttMas||{}; var g=b.getAttribute("data-ttmas"); window.__ttMas[g]=!window.__ttMas[g]; render(); }; }); var bkc=$("bback"); if(bkc && consulta) bkc.onclick=function(){ consulta=""; render() };
@@ -356,7 +356,7 @@ function bindHilo(){
     var guardaNombre146=function(){
       var v146=(enm146.value||"").trim();
       editaNombre=null;
-      if(v146 && v146!==t.nombre){ var F278=null, n278=t.nombre; try{ F278=camFoto275([t]); }catch(e){} t.nombre=v146; guarda(t); try{ ultNombre278(t, F278, n278); }catch(e){} try{ hist240("Cambió el nombre a “"+v146+"” (era “"+n278+"”)", t, null); }catch(e){} toast("Nombre actualizado"); }
+      if(v146 && v146!==t.nombre){ var F278=null, n278=t.nombre; try{ F278=camFoto([t]); }catch(e){} t.nombre=v146; guarda(t); try{ ultNombre(t, F278, n278); }catch(e){} try{ hist240("Cambió el nombre a “"+v146+"” (era “"+n278+"”)", t, null); }catch(e){} toast("Nombre actualizado"); }
       render();
     };
     enm146.onkeydown=function(ev){
@@ -419,8 +419,8 @@ function bindHilo(){
   Array.prototype.forEach.call(document.querySelectorAll("[data-ai]"),function(el){
     el.onclick=function(){abreVisor(adj,+el.getAttribute("data-ai"))};
   });
-  bindFotos244(document, t);
-  bindLote245(document, t);
+  bindFotos(document, t);
+  bindLote(document, t);
   Array.prototype.forEach.call(document.querySelectorAll(".fot img"),function(el,i){
     el.style.cursor="pointer";
     el.onclick=function(){ var _ims=adj.filter(function(f){return f.img;}), s=el.getAttribute("src"), k=-1;
@@ -503,17 +503,17 @@ function bindHilo(){
     /* build 192: censo — la vinculacion propuesta NO era */
     t.censo_vinc_no={ts:Date.now(), por:yo||"", propuestas:posibleDup(t).slice(0,3).map(function(x){ return {id:x.id, nombre:x.nombre||""}; })};
     msg(t,"bi","Queda como tarea aparte."); guarda(t); render(); };
-  try{ bindCapas273(t); }catch(e){ console.warn("capas273",e); }
-  try{ if(cierraEncargos283(t)) guarda(t); }catch(e){}   /* build 283: los encargos que la Mac ya aplicó se cierran solos */
+  try{ bindCapas(t); }catch(e){ console.warn("capas273",e); }
+  try{ if(cierraEncargos(t)) guarda(t); }catch(e){}   /* build 283: los encargos que la Mac ya aplicó se cierran solos */
   /* build 225: chips -> su hoja; Falta -> dictado; resumen y filtro minimizables; ficha de meta; duda de tarea */
   Array.prototype.forEach.call(document.querySelectorAll("[data-chip]"),function(el){ el.onclick=function(ev){ ev.stopPropagation();
     var k=el.getAttribute("data-chip");
-    if(k==="falta"){ window.__hoja225=null; abrePreguntas249(t.id, {gesto:true}); if(document.getElementById("preg249")) return; }   /* build 255; 273: SIEMPRE abre el cuestionario */
+    if(k==="falta"){ window.__hoja225=null; abrePreguntas(t.id, {gesto:true}); if(document.getElementById("preg249")) return; }   /* build 255; 273: SIEMPRE abre el cuestionario */
     if(k==="falta"){ window.__hoja225=null; var f=[]; try{ f=soloMeFalta(t); }catch(e){} render();
       setTimeout(function(){ if(f.length) toast("Toca el micrófono y dímelo: "+f.join(" · ")); }, 60); return; }   /* build 265: sin autoarranque */
-    if(k==="resumen"){ var _imp=vista230(t)==="imp"; poneVista230(t, _imp?"":"imp"); if(!_imp){ window.__cnl=window.__cnl||{}; window.__cnl[t.id]="todo"; } render(); return; }   /* build 230: un solo resumen = la vista Importante */
-    abreHoja225(t, k); render(); }; });
-  Array.prototype.forEach.call(document.querySelectorAll("[data-min225]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); togMin225(t.id, el.getAttribute("data-min225")); render(); }; });
+    if(k==="resumen"){ var _imp=vista230(t)==="imp"; poneVista(t, _imp?"":"imp"); if(!_imp){ window.__cnl=window.__cnl||{}; window.__cnl[t.id]="todo"; } render(); return; }   /* build 230: un solo resumen = la vista Importante */
+    abreHoja(t, k); render(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-min225]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); togMin(t.id, el.getAttribute("data-min225")); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-mfil]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); window.__mfil225=window.__mfil225||{}; window.__mfil225[t.id]=el.getAttribute("data-mfil"); if(el.closest(".h225")) window.__hoja225=null; render(); }; });   /* build 232: desde la hoja de Metas: filtra y cierra */
   /* build 235: claves (palomear a mano, ver la confirmacion, agregar) y "Ver todo" de Importante */
   /* build 238: tarjeta Hecho / Me falta */
@@ -524,8 +524,8 @@ function bindHilo(){
     if(f.k==="vinc"){ var pc=t.encargos, hh=H; enlazaTareas(t.id, o.id, "dictado"); var d=tareas.filter(function(x){ return x.id===o.id; })[0];
       if(d && t.fusionada_en===d.id){ if(Array.isArray(pc) && pc.length) d.encargos=(Array.isArray(d.encargos)?d.encargos:[]).concat(pc);
         hh.hecho=(hh.hecho||[]).concat(["Vinculada a “"+(d.nombre||"")+"”"]); d.hecho238=hh; guarda(d); render(); } return; }
-    if(f.k==="cond"){ var _h250=resuelveCond250(t, f, o); if(_h250) H.hecho=(H.hecho||[]).concat([_h250]); guarda(t); render(); return; }
-    if(f.k==="msg"){ var per=(candidatosPersona(t).filter(function(c){ return c.id===o.id; })[0])||{id:o.id, nombre:o.label}; var por=mandaOrden238(t, per, f.texto); H.hecho=(H.hecho||[]).concat(["Le escribí a "+nombreCorto(per.nombre)+" "+por+": “"+f.texto+"”"]); }
+    if(f.k==="cond"){ var _h250=resuelveCond(t, f, o); if(_h250) H.hecho=(H.hecho||[]).concat([_h250]); guarda(t); render(); return; }
+    if(f.k==="msg"){ var per=(candidatosPersona(t).filter(function(c){ return c.id===o.id; })[0])||{id:o.id, nombre:o.label}; var por=mandaOrden(t, per, f.texto); H.hecho=(H.hecho||[]).concat(["Le escribí a "+nombreCorto(per.nombre)+" "+por+": “"+f.texto+"”"]); }
     guarda(t); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-clv]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var id=el.getAttribute("data-clv");
     (t.claves||[]).forEach(function(c){ if(c && String(c.id)===id){ try{ hist240((c.ok?"Quitó la palomita: ":"Palomeó: ")+c.t, t, {tipo:"palomita", clave:id, prev:!!c.ok}); }catch(e){} c.ok=!c.ok; c.por=c.ok?yo:null; c.ok_ts=c.ok?Date.now():null; } }); guarda(t); render(); }; });
@@ -535,13 +535,13 @@ function bindHilo(){
     var id="c"+Date.now().toString(36); t.claves.push({id:id, t:v.charAt(0).toUpperCase()+v.slice(1), ok:false, por:yo, creado:Date.now()}); guarda(t); render(); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-clvadd]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); _cad(); }; });
   var _cin=$("clvnew"); if(_cin) _cin.onkeydown=function(ev){ if(ev.key==="Enter"){ ev.preventDefault(); _cad(); } };
-  Array.prototype.forEach.call(document.querySelectorAll("[data-vt235]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); poneVista230(t, ""); window.__cnl=window.__cnl||{}; render(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-vt235]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); poneVista(t, ""); window.__cnl=window.__cnl||{}; render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-f234]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); window.__hoja225=null; menuOpen=false;   /* build 234: igual que ⋯ > Mover la fecha */
     t.pide_fecha=true; msg(t,"bi","¿Para cuándo la muevo? Dime por ejemplo: el viernes, en 15 días o a fin de mes."); guarda(t); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-h225x]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); window.__hoja225=null; render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-h225alto]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var H=hoja225(t); if(H){ H.alto=el.getAttribute("data-h225alto"); render(); } }; });
-  Array.prototype.forEach.call(document.querySelectorAll("[data-fmeta]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); abreHoja225(t, "meta", el.getAttribute("data-fmeta")); render(); }; });
-  Array.prototype.forEach.call(document.querySelectorAll(".h225 .mt[data-meta] .mtx"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var r=el.closest("[data-meta]"); abreHoja225(t, "meta", r.getAttribute("data-meta")); render(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-fmeta]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); abreHoja(t, "meta", el.getAttribute("data-fmeta")); render(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll(".h225 .mt[data-meta] .mtx"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); var r=el.closest("[data-meta]"); abreHoja(t, "meta", r.getAttribute("data-meta")); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-orig225]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); window.__orig225=window.__orig225||{}; window.__orig225[t.id]=!window.__orig225[t.id]; render(); }; });
   try{ var _ms226=document.querySelector(".msgs"); if(_ms226) bindAcomodo(_ms226, function(){ return t; }); var _pt227=document.querySelector(".ptcard"); if(_pt227) bindAcomodo(_pt227, function(){ return t; }); }catch(e){}   /* build 226: OK · Mover · Nueva */
   var _ib227=document.querySelector("[data-int227]"); if(_ib227) _ib227.onclick=function(ev){ ev.stopPropagation(); window.__hoja225=null; render(); abreIntegrantes(t); };
@@ -564,7 +564,7 @@ function bindHilo(){
   Array.prototype.forEach.call(document.querySelectorAll("[data-rvx]"),function(el){ el.onclick=function(ev){ ev.stopPropagation(); descartaVinculos(t); render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-rvinc]"),function(el){
     el.onclick=function(){ var did=el.getAttribute("data-rvinc"), d=tareas.filter(function(x){ return x.id===did; })[0]; if(!d) return;
-      if(esCerradaReciente248(d)){ abierta=d.id; vista="hilo"; render(); return; }   /* build 248: una cerrada no se vincula, se abre para verla */
+      if(esCerradaReciente(d)){ abierta=d.id; vista="hilo"; render(); return; }   /* build 248: una cerrada no se vincula, se abre para verla */
       hojaConfirma({titulo:"Pasar todo a \u201c"+corta40(d.nombre)+"\u201d", sub:"Lo de \u201c"+corta40(t.nombre)+"\u201d se junta all\u00e1.",
         accion:"Vincular", cb:function(){ d.autorizada=true; enlazaTareas(t.id, did, "trabajador (posible duplicado)"); }}); };
   });
@@ -600,9 +600,9 @@ function bindHilo(){
     /* Salvador 2026-09-24: "Ya esta" no te saca de la tarea. Si de verdad se
        cerro, sello de palomita, titulo tachado y "Hecha · Deshacer". */
     /* build 264: un expediente (indefinida) no se cierra: queda dormido, enterado */
-    if(esExpediente264(t)){
+    if(esExpediente(t)){
       var _pd=duerme264(t);
-      selloYSigue(t,{tipo:"hecha", texto:t.nombre, textoPill:"Enterado · queda viva", restaurar:function(){ restauraDormir264(t,_pd); }});
+      selloYSigue(t,{tipo:"hecha", texto:t.nombre, textoPill:"Enterado · queda viva", restaurar:function(){ restauraDormir(t,_pd); }});
       return;
     }
     var prev={estado:t.estado, cierre:t.cierre||null, n:(t.msgs||[]).length};
@@ -673,7 +673,7 @@ function bindHilo(){
     guarda(t);
   };
   var bmn=$("bmenu"); if(bmn) bmn.onclick=function(){ menuOpen=!menuOpen; window.__undoAsk278=null; render() };
-  try{ bindUndo278(t); }catch(e){ console.warn("undo278", e); }
+  try{ bindUndo(t); }catch(e){ console.warn("undo278", e); }
   Array.prototype.forEach.call(document.querySelectorAll("[data-mn]"),function(el){
     el.onclick=function(){
       var k=el.getAttribute("data-mn");
@@ -710,7 +710,7 @@ function bindHilo(){
   };
 
   try{ bindDeslizar(t); }catch(e){ console.warn("deslizar",e); }
-  var _cp=$("cnlpill"); if(_cp) _cp.onclick=function(ev){ if(ev) ev.stopPropagation(); abreFiltro227(t); };   /* build 227: una sola pastilla */
+  var _cp=$("cnlpill"); if(_cp) _cp.onclick=function(ev){ if(ev) ev.stopPropagation(); abreFiltro(t); };   /* build 227: una sola pastilla */
   var _t227=$("tit227"); if(_t227) _t227.onclick=function(){ window.__tit227=window.__tit227||{}; window.__tit227[t.id]=!window.__tit227[t.id]; render(); };
   var _ar=$("autrev"); if(_ar) _ar.onclick=function(){ if(!autorizaRevision(t)) render(); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-fedit]"),function(b){ b.onclick=function(){ var tx=$("txt"); if(!tx) return;   /* build 209: tocar un campo = corregirlo dictando */
@@ -722,12 +722,12 @@ function bindHilo(){
     try{ hist240("Tocó “"+(k==="dato"?"Dato":"Tarea")+"”", t, {tipo:"tipo", prev:t.tipo_item||"", elegido:!!t.tipo_elegido}); }catch(e){}
     t.tipo_item=k; t.es_dato=(k==="dato"); t.tipo_elegido=true; guarda(t); if(!revisaCompleta(t)) render(); }; });   /* build 195; 237: tipo_elegido */
   Array.prototype.forEach.call(document.querySelectorAll("[data-agenda]"),function(b){ b.onclick=function(){ if(b.getAttribute("data-agenda")==="si"){ var _ev=eventoDe(t); agendaEvento(t, "", !(_ev&&_ev.hora)); } else noAgendar(t); }; });   /* build 202/203; 229: sin hora = todo el dia (lo que propone la franja) */
-  Array.prototype.forEach.call(document.querySelectorAll("[data-agmenu]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); menuAgenda229(t, b); }; });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-agmenu]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); menuAgenda(t, b); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-evid]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); abreEvidencia(t); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-agtododia]"),function(b){ b.onclick=function(){ window.__agTodoDia=window.__agTodoDia||{}; window.__agTodoDia[t.id]=window.__agTodoDia[t.id]?0:1; render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-agcambia]"),function(b){ b.onclick=function(){ window.__agEdit=window.__agEdit||{}; window.__agEdit[t.id]=1; render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-agguarda]"),function(b){ b.onclick=function(){ var f=$("agf"), h=$("agh"); if(guardaFechaEvento(t, f&&f.value, h&&h.value)) render(); }; });
-  var _d254=$("tdest254"); if(_d254) _d254.onclick=function(ev){ if(ev) ev.stopPropagation(); abreDestino254(t); };
+  var _d254=$("tdest254"); if(_d254) _d254.onclick=function(ev){ if(ev) ev.stopPropagation(); abreDestino(t); };
   var _ccl=$("cnlclaude"); if(_ccl) _ccl.onclick=function(){ window.__cnlClaude=window.__cnlClaude||{}; window.__cnlClaude[t.id]=window.__cnlClaude[t.id]?0:1; render(); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-progc]"),function(b){ b.onclick=function(){ var mx=(t.msgs||[])[+b.getAttribute("data-progc")]; if(!mx||!mx.prog) return;
     hojaConfirma({titulo:"Mensaje programado a "+mx.prog.contacto, sub:"“"+_corto(mx.prog.texto)+"”", accion:"Cancelar el mensaje", rojo:true, cb:function(){ cancelaProgramado(t, mx); }}); }; });
@@ -738,7 +738,7 @@ function bindHilo(){
   Array.prototype.forEach.call(document.querySelectorAll("[data-ptab]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); window.__ptAb=window.__ptAb||{}; window.__ptAb[t.id]=b.getAttribute("data-ptab")==="1"; render(); }; });
   Array.prototype.forEach.call(document.querySelectorAll(".ptcard"),function(c){ c.addEventListener("click",function(ev){   /* build 247: tocar la tarjeta (o un Dato:) = su menú */
     if(ev.target.closest("button,a,input,[data-irmsg]") || (window.__leeLP && Date.now()-window.__leeLP<700)) return;
-    var e2=ev.target.closest("[data-pt247]"), n=e2?+e2.getAttribute("data-pt247"):NaN; abreMenuPregunta247(t, isNaN(n)?undefined:n); }); });
+    var e2=ev.target.closest("[data-pt247]"), n=e2?+e2.getAttribute("data-pt247"):NaN; abreMenuPregunta(t, isNaN(n)?undefined:n); }); });
   Array.prototype.forEach.call(document.querySelectorAll(".ptcard [data-irmsg]"),function(q){ q.onclick=function(ev){ ev.stopPropagation();
     window.__cnl=window.__cnl||{}; if(window.__cnl[t.id]!=="todo"){ window.__cnl[t.id]="todo"; render(); }
     var o=document.querySelector('.msgs [data-mix="'+q.getAttribute("data-irmsg")+'"]'); if(o){ o.scrollIntoView({behavior:"smooth",block:"center"}); o.classList.add("flash"); setTimeout(function(){ o.classList.remove("flash"); },1200); } }; });
@@ -761,12 +761,12 @@ function bindHilo(){
     if(!window.__ctxPasa) registraDictado(t, v);   /* lo dicho se guarda ANTES de interpretarlo: nunca se pierde */
     /* build 255: con el bloque de preguntas abierto, lo dictado o escrito las contesta TODAS (un solo paso) */
     if(window.__preg255===t.id && document.getElementById("preg249")){ $("txt").value=""; marcaEnvio("tenv","");
-      if(!preguntas249(t).length){ cierraPreg255(); completaRevision(t, sinPrefijoClaude(v), {sinRevision:tipoRevisar(t)!=="falta"}); return; }   /* build 273: el cuestionario de lo que falta */
-      enviaRespuestas255(t.id, v); return; }
+      if(!preguntas249(t).length){ cierraPreg(); completaRevision(t, sinPrefijoClaude(v), {sinRevision:tipoRevisar(t)!=="falta"}); return; }   /* build 273: el cuestionario de lo que falta */
+      enviaRespuestas(t.id, v); return; }
     /* build 249 (Salvador 07:58): en la vista de revisión (nueva, incompleta o con preguntas) TODO lo dictado o escrito es indicación para el
        cerebro del 238 (si pide un mensaje, el cerebro lo arma; nunca sale tal cual al WhatsApp). Solo siguen su camino "es dato/es tarea",
        "autorízala así" y la corrección del borrador de un mensaje que ya está en curso. */
-    if(enRevision249(t) && !window.__msjEdit && !t.pide_msj && !(tipoRevisar(t)==="falta" && vincDicho236(v)!==null) && !(tipoDicho(v) && String(v).split(/\s+/).filter(Boolean).length<=6) && !/^\s*(autor[ií]za(la|lo)?|aut[oó]rizal[ao])\s+(as[ií]|como\s+est[aá])\b/i.test(v)){
+    if(enRevision(t) && !window.__msjEdit && !t.pide_msj && !(tipoRevisar(t)==="falta" && vincDicho(v)!==null) && !(tipoDicho(v) && String(v).split(/\s+/).filter(Boolean).length<=6) && !/^\s*(autor[ií]za(la|lo)?|aut[oó]rizal[ao])\s+(as[ií]|como\s+est[aá])\b/i.test(v)){
       $("txt").value=""; marcaEnvio("tenv","");
       var _tp249=tipoDicho(v); if(_tp249 && tipoRevisar(t)==="falta"){ t.tipo_item=_tp249; t.es_dato=(_tp249==="dato"); t.tipo_elegido=true; }
       completaRevision(t, sinPrefijoClaude(v), {sinRevision:tipoRevisar(t)!=="falta"}); return; }
@@ -776,9 +776,9 @@ function bindHilo(){
     /* build 225: mensaje en curso (lo que faltaba decirle, o el cambio al borrador) y "ponle un mensaje a X para…" */
     /* build 225: "me mezclaste / esto es de otra tarea / esto es de <tarea>" -> se mueven los mensajes; NUNCA se tocan metas ni lista */
     /* build 236: en una tarea por clasificar, "vincúlala a X" hace lo mismo que el botón Vincular (la hoja, con X ya buscado) */
-    var _vin236=tipoRevisar(t)==="falta"?vincDicho236(v):null;
+    var _vin236=tipoRevisar(t)==="falta"?vincDicho(v):null;
     if(_vin236!==null){ $("txt").value=""; marcaEnvio("tenv",""); abreEnlazar(t.id, {similares:similares229(t).map(function(d){ return d.id; }), q:_vin236, tareaNueva:function(){ t.tipo_item="tarea"; t.es_dato=false; t.tipo_elegido=true; guarda(t); if(!revisaCompleta(t)) render(); }}); return; }
-    if(mezclaDicho(v, t)){ $("txt").value=""; marcaEnvio("tenv",""); var _am=arreglaMezcla(t, v); render(); if(_am.movidos) toast("Moví "+_am.movidos+" mensaje"+(_am.movidos===1?"":"s")); else if(_am.pregunta!=null) abreMover225(t, _am.pregunta); return; }
+    if(mezclaDicho(v, t)){ $("txt").value=""; marcaEnvio("tenv",""); var _am=arreglaMezcla(t, v); render(); if(_am.movidos) toast("Moví "+_am.movidos+" mensaje"+(_am.movidos===1?"":"s")); else if(_am.pregunta!=null) abreMover(t, _am.pregunta); return; }
     if(msjEnCurso(t, v)){ $("txt").value=""; marcaEnvio("tenv",""); return; }
     var _md225=mensajeDicho(v), _pg225=null; if(_md225){ try{ _pg225=programaWA(v); }catch(e){} }
     if(_md225 && !(_pg225 && (_pg225.a_las || _pg225.sino_desde))){ $("txt").value=""; marcaEnvio("tenv",""); pideMensaje(t, v, _md225); return; }
@@ -790,8 +790,8 @@ function bindHilo(){
       msg(t,"bi",respChecklist(t,_ck)); var _rc=t.msgs[t.msgs.length-1]; _rc.canal="priv:"+yo; _rc.nota_claude=1;
       window.__chkOpen=window.__chkOpen||{}; window.__chkOpen[t.id]=true; guarda(t); render(); return; }
     /* build 282 (F36): "recuérdame el martes de X y Y" = aviso ese día + pasos, sin IA y sin tocar el finiquito */
-    var _rl282=recuerdaLista282(v);
-    if(_rl282){ $("txt").value=""; marcaEnvio("tenv",""); aplicaRecuerdaLista282(t, v, _rl282); return; }
+    var _rl282=recuerdaLista(v);
+    if(_rl282){ $("txt").value=""; marcaEnvio("tenv",""); aplicaRecuerdaLista(t, v, _rl282); return; }
     /* build 205 (Salvador 21:14, "Agendar Reunión Consejo Colonia Cumbres"): en "Falta info" lo dictado COMPLETA la tarea
        aunque suene a nota para Claude ("…es para que sepas el contexto" caia en esNotaClaude -> notaClaude -> "No cambié nada").
        Solo las ordenes claras (eliminar, pasarla, encargarla) siguen yendo a Claude. */
@@ -807,11 +807,11 @@ function bindHilo(){
        nada.» ni una nota suelta que nadie aplica. Siguen en el teléfono, como siempre: los modos abiertos a mano (agregar/reprogramar aviso, paso,
        contexto, ¿am o pm?) y las órdenes que el teléfono ya resuelve completas: «dile a <nombre> mañana a las 9 que…», renombrar, «es de X»,
        mover la fecha, «recuérdame / avísame…» y la entrevista. */
-    if(waDest254(t) && !modoWA254(t)){
+    if(waDest(t) && !modoWA(t)){
       var _ui283=window.__avAdd===t.id || (window.__avEdit && window.__avEdit.taskId===t.id) || window.__pasoAdd===t.id || (fichaOpen && !window.__ctxPasa) || !!(t.pide_ampm && (Date.now()-t.pide_ampm.ts)<3600000);
       var _loc283=false; try{ var _pg283=programaWA(v); _loc283=!!(_pg283 && !_pg283.duda && _pg283.texto!=="__ESTO__") || !!detectaRenombre(v) || !!(t.duenio===yo && duenioDicho(v)) || !!(!t.cierre && esMovida(v)) ||
         /^\s*(recu[eé]rdame|av[ií]same)\b/i.test(v) || !!pideEntrevista(v); }catch(e){}
-      if(!_ui283 && !_loc283){ $("txt").value=""; marcaEnvio("tenv",""); aClaude254(t, v); return; } }
+      if(!_ui283 && !_loc283){ $("txt").value=""; marcaEnvio("tenv",""); aClaude(t, v); return; } }
     var _pg238=null; try{ _pg238=programaWA(v); }catch(e){}
     if(tipoRevisar(t)!=="falta" && !_pg238 && ordenesDichas238(v)){ $("txt").value=""; marcaEnvio("tenv",""); completaRevision(t, sinPrefijoClaude(v), {sinRevision:true}); return; }
     if(typeof esNotaClaude==="function" && esNotaClaude(v)){ $("txt").value=""; marcaEnvio("tenv",""); notaClaude(t, v); return; }
@@ -823,7 +823,7 @@ function bindHilo(){
       if(_pgH.texto==="__ESTO__"){ var _ct=(window.__cita&&window.__cita.tid===t.id&&window.__cita.t)||((t.msgs||[]).filter(function(x){ return x && x.k==="bo" && (!x.de||x.de===yo) && !x.nota_claude; }).slice(-1)[0]||{}).t||""; if(_ct) _pgH.texto=_ct; else _pgH.duda="¿Qué le mando a "+_pgH.contacto+"?"; }
       msg(t,"bo",v); t.msgs[t.msgs.length-1].de=yo;
       if(_pgH.duda){ msg(t,"bi",_pgH.duda+" No programé nada."); guarda(t); render(); return; }
-      if(revisaPG263(t,_pgH)) return;   /* build 263: el contacto tiene que ser alguien de la agenda o de la tarea */
+      if(revisaPG(t,_pgH)) return;   /* build 263: el contacto tiene que ser alguien de la agenda o de la tarea */
       _pgH.contacto=contactoDeTarea(t,_pgH.contacto); mandaProgramado(t,_pgH,null); render(); return; }
     /* build 195: en un DATO, "¿de dónde sacaste esto?" abre el ▾ con la foto o el texto de origen */
     if(esDato(t) && /\bde\s+d[oó]nde\s+(lo\s+|la\s+|los\s+)?(sacaste|sali[oó]|salieron|viene|vienen|tomaste)\b/i.test(v)){ $("txt").value=""; marcaEnvio("tenv",""); fichaOpen=true; render(); return; }
@@ -883,14 +883,14 @@ function bindHilo(){
     var _cnA=canalActual(t), _esOrden=(aQuienRespondo(t,v,{tid:t.id,wa:"x"})==="" || /^\s*(recu[eé]rda(me|le)|av[ií]sa(me|le)|apunta|anota|agrega|p[oó]n(me|le)|c[aá]mbia(le)?|dile|m[aá]nda(le|me)|preg[uú]nta(le)?|abre|busca|cierra|borra|elimina|crea|hazme)\b/i.test(v));
     if(_cnA.ext && !_esOrden){
       var _dest=_cnA.nom, _vE=v;
-      if(!modoWA254(t)){ aClaude254(t, _vE); return; }   /* build 254: lo de abajo es para Claude; WhatsApp directo solo con el selector */
-      salidaWA254(t, _dest, _vE, _cita); return;
+      if(!modoWA(t)){ aClaude(t, _vE); return; }   /* build 254: lo de abajo es para Claude; WhatsApp directo solo con el selector */
+      salidaWA(t, _dest, _vE, _cita); return;
     }
     /* build 193 (F38): alguien del equipo con WhatsApp en la tarea (Samuel): sale a su WhatsApp */
     if(_cnA.id.indexOf("dm:")===0 && _cnA.wa && !_esOrden){
       var _dW=_cnA.wa, _vW=v, _cW=_cnA.id;
-      if(!modoWA254(t)){ aClaude254(t, _vW); return; }
-      salidaWA254(t, _dW, _vW, _cita, _cW); return;
+      if(!modoWA(t)){ aClaude(t, _vW); return; }
+      salidaWA(t, _dW, _vW, _cita, _cW); return;
     }
     if(_cnA.id.indexOf("dm:")===0 && !_esOrden){
       $("txt").value=""; marcaEnvio("tenv","");
@@ -899,9 +899,9 @@ function bindHilo(){
     var _exN=(!_esOrden)?externoNombrado(t, v):null;
     if(_exN){
       var _vN=v;
-      if(!modoWA254(t)){ aClaude254(t, _vN); return; }   /* build 254: por defecto, para Claude */
+      if(!modoWA(t)){ aClaude(t, _vN); return; }   /* build 254: por defecto, para Claude */
       $("txt").value=""; marcaEnvio("tenv","");
-      preguntaExterno(_exN, _vN, function(){ salidaWA254(t, _exN, _vN, _cita); },
+      preguntaExterno(_exN, _vN, function(){ salidaWA(t, _exN, _vN, _cita); },
         hayEquipo(t)?function(){ mandaAlEquipo(t, _vN, _cita); }:null,
         function(){ notaClaude(t, _vN); }, function(){ notaParaMi(t, _vN); });
       return;
@@ -910,15 +910,15 @@ function bindHilo(){
     var _aq188=(!_esOrden && !_cita && _cnA.id==="todo")?aQuienRespondo(t,v,null):"";
     if(_aq188 && externosDe(t).some(function(n){ return _nn(n)===_nn(_aq188); })){
       var _vA=v, _dA=externosDe(t).filter(function(n){ return _nn(n)===_nn(_aq188); })[0];
-      if(!modoWA254(t)){ aClaude254(t, _vA); return; }
-      salidaWA254(t, _dA, _vA, null); return;
+      if(!modoWA(t)){ aClaude(t, _vA); return; }
+      salidaWA(t, _dA, _vA, null); return;
     }
     var _rx186=(!_esOrden && !_cita && _cnA.id==="todo")?responsableExt(t):null;
     if(_rx186){
       var _vR=v;
-      if(!modoWA254(t)){ aClaude254(t, _vR); return; }
+      if(!modoWA(t)){ aClaude(t, _vR); return; }
       $("txt").value=""; marcaEnvio("tenv","");
-      preguntaExterno(_rx186, _vR, function(){ salidaWA254(t, _rx186, _vR, null); },
+      preguntaExterno(_rx186, _vR, function(){ salidaWA(t, _rx186, _vR, null); },
         hayEquipo(t)?function(){ mandaAlEquipo(t, _vR, null); }:null,
         function(){ notaClaude(t, _vR); }, function(){ notaParaMi(t, _vR); });
       return;
@@ -1111,7 +1111,7 @@ function bindHilo(){
   ta.onfocus=function(){ setTimeout(alFondo,120); setTimeout(alFondo,420) };
   if(window.visualViewport) window.visualViewport.addEventListener("resize",alFondo);
   /* build 255: al entrar a una tarea con preguntas pendientes, el bloque sale solo (difuminado); build 265: el micrófono NO arranca solo */
-  try{ if(window.__pq255Last!==t.id && !t._leyendo && !document.getElementById("acom249") && preguntas249(t).length) abrePreguntas249(t.id, {gesto:true}); }catch(e){ console.warn("preguntas255",e); }
+  try{ if(window.__pq255Last!==t.id && !t._leyendo && !document.getElementById("acom249") && preguntas249(t).length) abrePreguntas(t.id, {gesto:true}); }catch(e){ console.warn("preguntas255",e); }
 }
 /* quien ha entrado = las fichas reales en bitacora_personas. Cada una con su
    bote para quitarle el acceso (a bitacora_bloqueados) y borrar su ficha. */
@@ -1790,7 +1790,7 @@ function cargaAgendaWA(alLlegar){
   window.__agendaPide=1;
   fetch(PUSH+"?action=wa_agenda",{method:"POST", headers:{"content-type":"application/json","x-app-token":APP_TOKEN}, body:JSON.stringify({usuario:yo})})
     .then(function(r){ return r.json().catch(function(){ return {error:"HTTP "+r.status}; }); })
-    .then(function(j){ window.__agendaPide=0; var l=_agendaDe(j); if(!l){ window.__agendaNo=1; return; } window.AGENDA_WA=l; if(alLlegar) try{ alLlegar(); }catch(e){} try{ reintentaDudas248(); }catch(e){} })
+    .then(function(j){ window.__agendaPide=0; var l=_agendaDe(j); if(!l){ window.__agendaNo=1; return; } window.AGENDA_WA=l; if(alLlegar) try{ alLlegar(); }catch(e){} try{ reintentaDudas(); }catch(e){} })
     .catch(function(){ window.__agendaPide=0; window.__agendaNo=1; });
 }
 function todosLosContactos(){
@@ -1943,16 +1943,16 @@ function misNombres(){
 function PIDE_RXf(){ return /\?|¿|\b(autoriza|autorizas|me (pasas|mandas|confirmas|dices|apruebas)|necesito|ocupo|pasame|mandame|confirmame|dime|que opinas|como ves|le doy|lo compro|cuanto|cual|apruebas|vobo|visto bueno)\b/; }
 /* la ultima pregunta o pedido de OTRO dirigido a mi, que no he contestado bien */
 /* build 260: ¿este mensaje es de OTRO tema? movido_de, o la Mac dudó de la tarea (apunta a otra), o la tarea ya tiene historia y el mensaje no comparte ni una raíz de palabra con su nombre/contexto/pasos (y no es respuesta directa a lo último que dijo Salvador) */
-function temaAjeno260(t, y, respondeAlUltimo){
+function temaAjeno(t, y, respondeAlUltimo){
   if(!y) return false; if(y.movido_de) return true;
   if(y.duda_tarea && !y.duda_resuelta) return false;   /* con duda de la Mac, la tarjeta ofrece OK · Mover · Nueva: ahí se acomoda */
-  try{ if(dudasDeNotas237(t).some(function(d){ return _n179(d.c).split(" ")[0]===_n179(y.wa_c||"").split(" ")[0]; })) return false; }catch(e){}
-  if(y.cita || !historiaTarea259(t)) return false;
-  var cuerpo=String(y.tr||y.t||"").replace(/^\s*[^:\n]{1,40}:\s*/,""), ms=stems259(cuerpo); if(ms.length<2) return false;
-  var base=stems259([t.nombre, contextoDe(t)||t.contexto||"", (t.lista_pasos||[]).map(function(p){ return p&&p.tx; }).join(" ")].join(" "));
+  try{ if(dudasDeNotas(t).some(function(d){ return _n179(d.c).split(" ")[0]===_n179(y.wa_c||"").split(" ")[0]; })) return false; }catch(e){}
+  if(y.cita || !historiaTarea(t)) return false;
+  var cuerpo=String(y.tr||y.t||"").replace(/^\s*[^:\n]{1,40}:\s*/,""), ms=stems(cuerpo); if(ms.length<2) return false;
+  var base=stems([t.nombre, contextoDe(t)||t.contexto||"", (t.lista_pasos||[]).map(function(p){ return p&&p.tx; }).join(" ")].join(" "));
   if(ms.length<3 || ms.some(function(w){ return base.indexOf(w)>=0; })) return false;
   var c0=_n179(y.wa_c||"").split(" ")[0]; if(c0 && (t.wa_contactos||[]).some(function(w){ return _n179((w&&w.nombre)||w||"").split(" ")[0]===c0; })) return false;   /* un contacto de la tarea no es ajeno */
   var c=_n179(y.wa_c||"").split(" ")[0];   /* ¿quien lo manda ya hablaba del tema de esta tarea? entonces no es ajeno */
-  if(c && (t.msgs||[]).some(function(m){ if(!m || m===y || m.oculto || m.movido_de || _n179(m.wa_c||"").split(" ")[0]!==c) return false; return stems259(String(m.t||"").replace(/^\s*[^:\n]{1,40}:\s*/,"")).some(function(w){ return base.indexOf(w)>=0; }); })) return false;
+  if(c && (t.msgs||[]).some(function(m){ if(!m || m===y || m.oculto || m.movido_de || _n179(m.wa_c||"").split(" ")[0]!==c) return false; return stems(String(m.t||"").replace(/^\s*[^:\n]{1,40}:\s*/,"")).some(function(w){ return base.indexOf(w)>=0; }); })) return false;
   return true;
 }

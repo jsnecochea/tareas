@@ -23,7 +23,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
     async function caso(T, nom, hoja) {
       var r = await p.evaluate(function (a) { var T = a[0], hoja = a[1];
         yo = "salvador"; window.__vf230 = {}; window.__cnlClaude = {}; window.__cnl = {}; window.__mfil225 = {}; window.__hoja225 = null;
-        tareas = [T]; abierta = T.id; vista = "hilo"; render(); poneVista230(T, ""); render();
+        tareas = [T]; abierta = T.id; vista = "hilo"; render(); poneVista(T, ""); render();
         [].forEach.call(document.body.children, function (x) { if (x.id !== "app") x.style.display = "none"; }); document.getElementById("app").style.display = "flex";
         var w = document.querySelector(".chips225"), bs = [].slice.call(w.querySelectorAll(":scope > button")), f = w.querySelector('[data-chip="fecha"]');
         var o = { fichas: bs.map(function (x) { return x.textContent; }), unaFila: bs.every(function (x) { return Math.round(x.getBoundingClientRect().top) === Math.round(bs[0].getBoundingClientRect().top); }),

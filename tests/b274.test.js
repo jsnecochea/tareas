@@ -204,7 +204,7 @@ if (+(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[1] >= 275) { conso
       var b = document.getElementById("bleeh"); r.hay = !!b; if (b) b.click();
       await hasta(function () { return !!srViva(); }, 4000);
       r.primera = [document.getElementById("c274tit").textContent, CAM.L[0]];
-      camSal274(false);
+      camSal(false);
       home([]); r.sinBoton = !document.getElementById("bcam274");
       return r; });
     eq("el audífono de la tarea abre la Caminata empezando por esa tarea", [F.hay, F.primera], [true, ["Revisar contrato de la bodega", "tHOY"]]);

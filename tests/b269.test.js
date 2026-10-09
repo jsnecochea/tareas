@@ -21,7 +21,7 @@ function saca(tipo, nombre) {
   return out.join("\n");
 }
 var FUNCS = ["_nn", "notifDePreset", "notifDefectoDe", "notifPrefs", "notifGuardadas", "notifPresetDe", "notifPermite", "tipoDePush", "guardaNotif",
-  "vNotif", "tituloTarea", "disparaPushInstantaneo", "esJefe269", "subtipoDePush", "hash268", "tagDe268", "tidDeUrl268", "tareaResuelta268"];
+  "vNotif", "tituloTarea", "disparaPushInstantaneo", "esJefe269", "subtipoDePush", "hash268", "tagDe268", "tidDeUrl", "tareaResuelta"];
 var VARS = ["NOTIF_VERSION", "NOTIF_TIPOS", "NOTIF_PRESETS", "NOTIF_NIVEL", "NOTIF_DEFECTO", "TITULO_CONECTORES", "NOTIF_ESENCIAL"];
 var codigo = VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" + FUNCS.map(function (f) { return saca("function", f); }).join("\n");
 var escritos = [], enviados = [];

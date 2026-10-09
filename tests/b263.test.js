@@ -21,7 +21,7 @@ eq("versión >= 263", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
   try {
     await p.goto("file://" + path.join(__dirname, "..", "index.html")); await p.waitForTimeout(600);
     /* build 285: las secciones del home amanecen plegadas; en esta prueba vieja Acomodo, Mensajes, Te pregunta Doit, Vencidas y Hoy arrancan abiertas como antes (lo que se toque se sigue recordando) */
-    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl285(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
+    await p.evaluate(function () { if (typeof abre285 === "function") abre285 = function (k) { var o = _pl(); return Object.prototype.hasOwnProperty.call(o.o, k) ? !!o.o[k] : /^(aco|msg|decide|preg|venc|hoy)$/.test(k); }; });
     await p.evaluate(function () { yo = "salvador"; PERSONAS.salvador = PERSONAS.salvador || { nombre: "Salvador", jefe: true }; PERSONAS.salvador.jefe = true;
       window.__esp = []; window.__push = []; window.__pids = [];
       db = { collection: function () { return { doc: function (k) { return { set: function (d, o) { window.__esp.push([k, d, o]); return Promise.resolve(); }, get: function () { return Promise.resolve({ exists: false }); }, delete: function () { return Promise.resolve(); } }; } }; } };
@@ -128,7 +128,7 @@ eq("versión >= 263", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
         T("tVEN", "Vencida de verdad", "", { f_vigente: "2026-10-05" })];
       home(L); var r = { estado: [estadoReal(L[0]), estadoReal(L[1])], filas: filas(), suma: secs()["Vencidas mías"] };
       abreGrupoInicio("claude"); await espera(50);
-      r.fila = [].map.call(document.querySelectorAll('[data-grupo-vista="claude"] .ttr'), function (b) { return b.innerText.replace(/\s+/g, " "); }); r.hito = esperaConHito263(L[0]); return r; });
+      r.fila = [].map.call(document.querySelectorAll('[data-grupo-vista="claude"] .ttr'), function (b) { return b.innerText.replace(/\s+/g, " "); }); r.hito = esperaConHito(L[0]); return r; });
     eq("Vestidores (siguiente paso de Manuel con fecha) pasa a 'espera' y NO es vencida", D.estado, ["espera", "vencida"]);
     eq("Solo cuenta como vencida la que de verdad lo es", [D.filas, D.suma], [["Vencida de verdad"], ["Vencida de verdad"]]);
     eq("Sale en Claude las lleva con la fecha del hito más próximo (mié 7 oct)", [D.hito && D.hito.fecha, /espera a Manuel/.test(D.fila[0] || "")], ["2026-10-07", true]);
@@ -139,13 +139,13 @@ eq("versión >= 263", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       var ok = T("tOK", "Tarea completa", "", {});
       home([rel, ok]); var r = { marca: porRevisar().map(function (x) { return x.t.id + ":" + x.k; }), preg: preguntas249(rel).map(function (q) { return q.q; }), filas: filas() };
       /* al abrirla sale la pregunta precisa */
-      abierta = "tREL"; vista = "hilo"; render(); r.bloque = !!document.getElementById("preg249"); r.bloqueTx = (document.getElementById("preg249") || { innerText: "" }).innerText.replace(/\s+/g, " ").slice(0, 160); cierraPreg255(); window.__pq255Last = null;
+      abierta = "tREL"; vista = "hilo"; render(); r.bloque = !!document.getElementById("preg249"); r.bloqueTx = (document.getElementById("preg249") || { innerText: "" }).innerText.replace(/\s+/g, " ").slice(0, 160); cierraPreg(); window.__pq255Last = null;
       /* se completa lo que faltaba: al guardar se recalcula y se quita la marca */
       rel.f_vigente = "2026-10-20"; rel.fecha_dictada = true; rel.ritmo = "diario"; rel.contexto = "Reloj checador de la casa para registrar la entrada y salida del personal doméstico y de los trabajadores, con su instalación y su configuración completas.";
       guarda(rel); r.despues = porRevisar().map(function (x) { return x.t.id + ":" + x.k; }); r.falta263 = rel.falta263 || null;
       /* invariante: toda marca 'falta' del home tiene pregunta al abrir (o su tarjeta propia) */
-      var X = T("tX", "Otra sin dictar", "", { f_vigente: "", fecha_dictada: false }); tareas = [X, rel, ok]; refrescaFalta263();
-      r.inv = porRevisar().filter(function (x) { return x.k === "falta"; }).every(function (x) { return preguntas249(x.t).length > 0 || !hiddenManual263(x.t); });
+      var X = T("tX", "Otra sin dictar", "", { f_vigente: "", fecha_dictada: false }); tareas = [X, rel, ok]; refrescaFalta();
+      r.inv = porRevisar().filter(function (x) { return x.k === "falta"; }).every(function (x) { return preguntas249(x.t).length > 0 || !hiddenManual(x.t); });
       return r; });
     eq("Reloj Checador (le falta fecha/ritmo/contexto) sale en Falta info Y trae sus preguntas precisas", [E.marca, E.preg.length > 0, E.filas.indexOf("Reloj Checador Casa") >= 0], [["tREL:falta"], true, true]);
     eq("Al abrir la tarea sale en el centro el bloque de preguntas con la pregunta precisa", [E.bloque, /¿Para cuándo la quieres terminar/.test(E.bloqueTx)], [true, true]);
@@ -165,7 +165,7 @@ eq("versión >= 263", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       var nuevo = "Pato, necesito los costos de las luces de navidad completos para decidir";
       completaRevision(t, nuevo, { sinRevision: true }); await espera(800);
       var n2 = t.msgs.filter(function (m) { return m.k === "bo" && m.t === nuevo; });
-      return { iguales: iguales.length, ocultos: iguales.every(function (m) { return m.oculto === true; }), imp: iguales.some(function (m) { return esImp230(t, m); }), n2: n2.length, n2oc: n2.every(function (m) { return m.oculto === true && m.dict238; }) }; });
+      return { iguales: iguales.length, ocultos: iguales.every(function (m) { return m.oculto === true; }), imp: iguales.some(function (m) { return esImp(t, m); }), n2: n2.length, n2oc: n2.every(function (m) { return m.oculto === true && m.dict238; }) }; });
     eq("El mismo dictado procesado tres veces queda UNA sola vez y oculto (no sale en Importante)", [F.iguales, F.ocultos, F.imp], [1, true, false]);
     eq("Un dictado nuevo procesado como indicación se guarda una vez y oculto", [F.n2, F.n2oc], [1, true]);
 
@@ -175,17 +175,17 @@ eq("versión >= 263", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       var r = {};
       var junk = programaWA("Desde hoy mándale un WhatsApp nomás para confirmar que ya quedaron las luces de Navidad", Date.parse("2026-10-06T19:20:00Z"));
       r.contactoCrudo = junk && junk.contacto; r.aLas = junk && junk.a_las;
-      r.bloqueado = revisaPG263(t, junk); await espera(200);
+      r.bloqueado = revisaPG(t, junk); await espera(200);
       r.wa = t.wa_contactos.map(function (c) { return c.nombre; }); r.pidio = window.__pids.length; r.falta = ((t.hecho238 || {}).falta || []).map(function (f) { return [f.k, (f.ops || []).map(function (o) { return o.label; })]; }); r.candidatos = candidatosPersona(t).map(function (c) { return [c.nombre, c.prio]; }); r.card = !!document.getElementById("preg249");
-      cierraPreg255();
-      var bien = programaWA("Desde hoy mándale a Pato luces Navidad que ya quedó el pedido", Date.parse("2026-10-06T19:20:00Z")); r.bien = [bien.contacto, bien.a_las, revisaPG263(t, bien), bien.contacto];
-      r.ventana = [ventanaHabil263(Date.parse("2026-10-06T19:20:00Z")), ventanaHabil263(new Date(2026, 9, 6, 22, 30).getTime()), ventanaHabil263(new Date(2026, 9, 4, 12, 0).getTime()), ventanaHabil263(new Date(2026, 9, 6, 6, 0).getTime())];
+      cierraPreg();
+      var bien = programaWA("Desde hoy mándale a Pato luces Navidad que ya quedó el pedido", Date.parse("2026-10-06T19:20:00Z")); r.bien = [bien.contacto, bien.a_las, revisaPG(t, bien), bien.contacto];
+      r.ventana = [ventanaHabil(Date.parse("2026-10-06T19:20:00Z")), ventanaHabil(new Date(2026, 9, 6, 22, 30).getTime()), ventanaHabil(new Date(2026, 9, 4, 12, 0).getTime()), ventanaHabil(new Date(2026, 9, 6, 6, 0).getTime())];
       r.fechas = [(programaWA("Desde hoy mándale a Pato luces Navidad que ya quedó", new Date(2026, 9, 6, 12, 0).getTime()) || {}).a_las, (programaWA("Desde hoy mándale a Pato luces Navidad que ya quedó", new Date(2026, 9, 6, 22, 0).getTime()) || {}).a_las];
       /* limpieza de lo ya armado mal */
       var s = T("tSUC", "Con basura", "", { wa_contactos: [{ nombre: "un WhatsApp nomás para confirmar" }, { nombre: "Pato luces Navidad" }] });
       s.msgs.push({ k: "bi", wa: 1, wa_c: "un WhatsApp nomás para confirmar", t: "Programado", ts: Date.now(), h: "13:20", wa_pid: "wa_64c21258c3364ac228fea94f", prog: { a_las: { fecha: "2026-10-07", hora: "09:00" }, contacto: "un WhatsApp nomás para confirmar", texto: "x" } });
       tareas = [s]; window.__push = []; try { localStorage.removeItem("bit_limpia263"); } catch (e) {}
-      limpiaWABasura263(); r.limpio = s.wa_contactos.map(function (c) { return c.nombre; }); r.cancelado = s.msgs[s.msgs.length - 1].prog.cancelado === true; r.marcas = window.__push.filter(function (x) { return x[0] === "wa_marca"; }).map(function (x) { return x[1].id; }).sort();
+      limpiaWABasura(); r.limpio = s.wa_contactos.map(function (c) { return c.nombre; }); r.cancelado = s.msgs[s.msgs.length - 1].prog.cancelado === true; r.marcas = window.__push.filter(function (x) { return x[0] === "wa_marca"; }).map(function (x) { return x[1].id; }).sort();
       return r; });
     eq("El dictado crudo trae un contacto basura y 'desde hoy' deja el envío en la ventana hábil (a las 13:20 es horario hábil: sale ahora)", [G.contactoCrudo, G.aLas], ["un WhatsApp nomás para confirmar", null]);
     eq("Un contacto que no es de la agenda ni de la tarea NO se programa: es pregunta con autocompletar y sin basura en wa_contactos", [G.bloqueado, G.pidio, G.wa], [true, 0, ["Pato luces Navidad", "Karina"]]);
@@ -201,7 +201,7 @@ eq("versión >= 263", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       tareas = [t]; abierta = "tCEN"; vista = "hilo"; render(); var r = {};
       r.cond = !!document.querySelector(".cond250"); r.qt = (document.querySelector(".res230 .qtx") || {}).textContent || ""; r.hecho = /· hecho/.test(document.body.innerText);
       t.encargos[0].estado = "esperando"; render(); r.condEsperando = !!document.querySelector(".cond250");
-      var u = T("tX2", "Otra", "", { resumen: { texto: "x", que_toca: "Esperando respuesta de Karina → confirmar a Eduardo · hecho", pendientes: [] } }); r.sinPaso = pasoSiguiente263(u);
+      var u = T("tX2", "Otra", "", { resumen: { texto: "x", que_toca: "Esperando respuesta de Karina → confirmar a Eduardo · hecho", pendientes: [] } }); r.sinPaso = pasoSiguiente(u);
       return r; });
     eq("Arriba va el siguiente paso y quién lo tiene, no lo hecho", H.qt, "Definir lugar y hora de la cena — espera a Eduardo (él invita)");
     eq("La tarjeta condicional 'hecho' se oculta sola; si sigue esperando, se ve", [H.cond, H.hecho, H.condEsperando], [false, false, true]);

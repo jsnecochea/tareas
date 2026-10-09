@@ -83,15 +83,15 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
         T("tVIVA", "Sin contestar", { f_vigente: "2026-10-20", hecho238: { ts: 1, hecho: [], falta: [Qx("¿Le pido a Pepe otra cotización?")] } })
       ];
       home(L); var t = { id: "z" }, a = anotaRespuesta(t, "IA · ¿Le pido otra?", "sí", "salvador", "app", 10), b = anotaRespuesta(t, "¿Le pido otra?", "sí", "salvador", "app", 11);
-      return { preg: window.__H274.preg.map(function (x) { return x.t.id; }), bloquea: [bloqueaQ267(L[0], "¿A quién le mando el plano?"), bloqueaQ267(L[1], "¿Cuál es la dirección de la obra?"), bloqueaQ267(L[2], "¿Le pido a Pepe otra cotización?")],
+      return { preg: window.__H274.preg.map(function (x) { return x.t.id; }), bloquea: [bloqueaQ(L[0], "¿A quién le mando el plano?"), bloqueaQ(L[1], "¿Cuál es la dirección de la obra?"), bloqueaQ(L[2], "¿Le pido a Pepe otra cotización?")],
         anota: [a, b, t.respuestas_log.length, t.respuestas_log[0].clave, t.respuestas_log[0].via, t.resp267] }; });
     eq("Te esperan: solo la que no se ha contestado", Q.preg, ["tVIVA"]);
-    eq("bloqueaQ267 usa el lector único", Q.bloquea, [true, true, false]);
+    eq("bloqueaQ usa el lector único", Q.bloquea, [true, true, false]);
     eq("anotaRespuesta: registro + resp267, sin duplicar", Q.anota, [true, false, 1, "le pido otra", "app", ["le pido otra"]]);
 
     /* 5 · contestar el cuestionario de la tarea escribe el registro */
     var W = await p.evaluate(function () { var t = T("tCUE", "Cuestionario", { hecho238: { ts: 1, hecho: [], falta: [{ k: "txt", q: "¿Para cuándo la quieres terminar, o es indefinida?", ops: [] }] } }); tareas = [t];
-      window.completaRevision = function () {}; try { enviaPreguntas249("tCUE", [{ k: "txt", q: "¿Para cuándo la quieres terminar, o es indefinida?", ops: [], hi: 0 }], [{ texto: "el viernes" }]); } catch (e) { return "error " + e.message; }
+      window.completaRevision = function () {}; try { enviaPreguntas("tCUE", [{ k: "txt", q: "¿Para cuándo la quieres terminar, o es indefinida?", ops: [], hi: 0 }], [{ texto: "el viernes" }]); } catch (e) { return "error " + e.message; }
       var r = (t.respuestas_log || [])[0] || {}; return [r.pregunta, r.texto, r.por, r.via, yaContestada(t, "¿Para cuándo la quieres terminar, o es indefinida?")]; });
     eq("El cuestionario anota la respuesta en respuestas_log", W, ["¿Para cuándo la quieres terminar, o es indefinida?", "el viernes", "salvador", "app", true]);
 
@@ -99,9 +99,9 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
     var E = await p.evaluate(function () { encargos = [];
       var L = [T("tESA", "Espera a Samuel", { espera_a: { id: "samuel", quien: "Samuel", desde: Date.now() - 3600000, motivo: "la cotización" } }), T("tH2", "Hoy dos"),
         T("tYO", "Me esperan", { espera_a: { id: "salvador", quien: "Salvador", desde: Date.now() - 3600000 } })];
-      home(L); return { hoy: window.__H274.hoy.map(function (x) { return x.t.id; }), terc: (esperaTercero272(L[0]) || {}).corto, yo: [meDetiene(L[2]), meDetiene(L[0]), esperaTercero272(L[2])] }; });
+      home(L); return { hoy: window.__H274.hoy.map(function (x) { return x.t.id; }), terc: (esperaTercero(L[0]) || {}).corto, yo: [meDetiene(L[2]), meDetiene(L[0]), esperaTercero(L[2])] }; });
     eq("espera_a a un tercero sale de Hoy", E.hoy.indexOf("tESA") < 0 && E.hoy.indexOf("tH2") >= 0, true);
-    eq("esperaTercero272 sale de esperaDe", E.terc, "Samuel");
+    eq("esperaTercero sale de esperaDe", E.terc, "Samuel");
     eq("espera_a a Salvador = lo detiene él (y no es de un tercero)", E.yo, [true, false, null]);
 
     /* 7 · encargado en cualquier forma: la fila nunca truena */

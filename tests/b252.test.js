@@ -50,7 +50,7 @@ eq("versión >= 252", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     await p.evaluate(function () { window.__FOC = []; var _f = HTMLElement.prototype.focus; document.addEventListener("click", function () { window.__inClick = true; setTimeout(function () { window.__inClick = false; }, 0); }, true);
       HTMLElement.prototype.focus = function () { window.__FOC.push([this.id || this.className || this.tagName, !!window.__inClick]); return _f.apply(this, arguments); }; });
     var CLK = async function (sel) { await p.click(sel); await p.waitForTimeout(80); };
-    var r1 = await p.evaluate(async function () { var T = ORIGEN(); abre(T); __FOC.length = 0; abreMover225(T, 0); return 1; });
+    var r1 = await p.evaluate(async function () { var T = ORIGEN(); abre(T); __FOC.length = 0; abreMover(T, 0); return 1; });
     await CLK("[data-movnueva]");
     var f1 = await p.evaluate(function () { return { foc: __FOC.filter(function (f) { return f[0] === "nom249i"; }), act: document.activeElement && document.activeElement.id, mic: !!document.querySelector("#nom249 [data-mic252]") }; });
     eq("Nueva (Mover): el focus del campo ocurre DENTRO del toque y el campo queda activo", [f1.foc, f1.act], [[["nom249i", true]], "nom249i"]);
@@ -72,20 +72,20 @@ eq("versión >= 252", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     await CLK("#pruebaAc [data-acnueva]");
     var f6 = await p.evaluate(function () { var o = { foc: __FOC.filter(function (f) { return f[0] === "nom249i"; }), act: document.activeElement && document.activeElement.id }; var n = document.getElementById("nom249"); if (n) n.remove(); var d = document.getElementById("pruebaAc"); if (d) d.remove(); return o; });
     eq("Acomodo > Nueva: focus dentro del toque", [f6.foc, f6.act], [[["nom249i", true]], "nom249i"]);
-    var f7 = await p.evaluate(function () { var T = ORIGEN(); abre(T); window.__sel245 = { tid: T.id, set: { 0: 1 } }; pintaSel245(); __FOC.length = 0; return 1; });
+    var f7 = await p.evaluate(function () { var T = ORIGEN(); abre(T); window.__sel245 = { tid: T.id, set: { 0: 1 } }; pintaSel(); __FOC.length = 0; return 1; });
     await CLK('[data-sel245="nueva"]');
-    var f8 = await p.evaluate(function () { var o = { foc: __FOC.filter(function (f) { return f[0] === "nom249i"; }), act: document.activeElement && document.activeElement.id }; var n = document.getElementById("nom249"); if (n) n.remove(); window.__sel245 = null; pintaSel245(); return o; });
+    var f8 = await p.evaluate(function () { var o = { foc: __FOC.filter(function (f) { return f[0] === "nom249i"; }), act: document.activeElement && document.activeElement.id }; var n = document.getElementById("nom249"); if (n) n.remove(); window.__sel245 = null; pintaSel(); return o; });
     eq("Barra de selección > Nueva: focus dentro del toque", [f8.foc, f8.act], [[["nom249i", true]], "nom249i"]);
     /* bloque de preguntas (build 255): abierto por el cerebro (sin toque) no roba el focus y no trae campos por renglón */
     var f9 = await p.evaluate(async function () { var T = { id: "tFIDE", nombre: "Fideicomiso: Seguimiento", duenio: "salvador", creada_por: "ia_revisor", origen: "wa_revisor", por_autorizar: true, estado: "abierta", tipo_item: "tarea", pendiente_info: "x", pendiente_tipo: "dato", falta_fecha: true, contexto: "Seguimiento con BBVA.", wa_contactos: [], msgs: [],
         quien_dudas: [{ id: "q1", dicho: "Fernando", rol: "mensaje", cands: [], extra: {}, ts: 1 }], hecho238: { ts: 1, hecho: [], falta: [{ k: "txt", q: "¿Para qué día?", ops: [] }] } };
       var O = { id: "tO1", nombre: "Blue Cup", duenio: "salvador", estado: "abierta", wa_contactos: [{ nombre: "Fernando Fuentes BBVA", desde: 1 }, { nombre: "Fernando Ruiz BBVA", desde: 1 }], msgs: [] };
-      abre(T, [O]); var m0 = document.getElementById("preg249"); if (m0) m0.remove(); __FOC.length = 0; abrePreguntas249("tFIDE"); var sinGesto = __FOC.filter(function (f) { return /qi/.test(f[0]); }).length;
+      abre(T, [O]); var m0 = document.getElementById("preg249"); if (m0) m0.remove(); __FOC.length = 0; abrePreguntas("tFIDE"); var sinGesto = __FOC.filter(function (f) { return /qi/.test(f[0]); }).length;
       return { sinGesto: sinGesto, hay: !!document.getElementById("preg249"), campos: document.querySelectorAll("#preg249 input").length }; });
     eq("Bloque de preguntas abierto por el cerebro (sin toque): no roba el focus y no trae un campo por pregunta", [f9.sinGesto, f9.hay, f9.campos], [0, true, 0]);
     await p.evaluate(function () { var m = document.getElementById("preg249"); if (m) m.remove(); });
     /* Editar mensaje */
-    var f12 = await p.evaluate(async function () { var T = { id: "tED", nombre: "Mensajes", duenio: "salvador", estado: "abierta", msgs: [{ k: "bo", t: "Hola", ts: Date.now() - 1000, h: "07:00", de: "salvador" }] }; abre(T); __FOC.length = 0; abreDetalle242(T, 0); return 1; });
+    var f12 = await p.evaluate(async function () { var T = { id: "tED", nombre: "Mensajes", duenio: "salvador", estado: "abierta", msgs: [{ k: "bo", t: "Hola", ts: Date.now() - 1000, h: "07:00", de: "salvador" }] }; abre(T); __FOC.length = 0; abreDetalle(T, 0); return 1; });
     await CLK('[data-d247="edit"]');
     var f13 = await p.evaluate(function () { return { foc: __FOC.filter(function (f) { return f[0] === "ed247t"; }), act: document.activeElement && document.activeElement.id, mic: !!document.querySelector("#det242 [data-mic252]") }; });
     eq("Editar mensaje: focus dentro del toque y micrófono propio", [f13.foc, f13.act, f13.mic], [[["ed247t", true]], "ed247t", true]);
@@ -111,11 +111,11 @@ eq("versión >= 252", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
         base({ id: "tOTRA2", nombre: "Otra persona", msgs: [{ k: "bi", wa_in: 1, wa_c: "Carlos Ibarra", t: "Carlos Ibarra: no es de Cynthia", ts: N - 3 * D, h: "08:00", wa_id: "wc1" }] })];
       window.NN = N; });
     var g1 = await p.evaluate(function () { tareas = CY.map(function (t) { return JSON.parse(JSON.stringify(t)); }); abierta = "tTESTA"; vista = "hilo"; render();
-      var it = platicaDe252("Cynthia Contadora GrupoNec Rangel", 7); return it.map(function (i) { return [i.txt.slice(0, 20), i.tag, i.kind]; }); });
+      var it = platicaDe("Cynthia Contadora GrupoNec Rangel", 7); return it.map(function (i) { return [i.txt.slice(0, 20), i.tag, i.kind]; }); });
     eq("Plática: últimos 7 días, de TODAS las tareas, en orden de hora, con ocultos y 'no guardado' marcados; sin notas de Claude, sin otros contactos, sin lo de hace 10 días y el movido sale una vez (en su destino)", g1,
       [["Salvador buenas tard", "Testamentos de los papás", "t"], ["¿Puedes pasar a firm", "Testamentos de los papás", "t"], ["IA: Cynthia, de part", "Testamentos de los papás", "t"], ["Ya hablé con el nota", "Fideicomiso BBVA", "t"], ["jaja ok gracias", "no guardado", "ng"], ["Mensaje que se movió", "no guardado", "ng"], ["Último mensaje, de h", "sin acomodar", "sa"]]);
     /* el botón en el detalle de cualquier globo de una persona */
-    var g2 = await p.evaluate(function () { abreDetalle242(tareas[0], 0); var b = document.querySelector('#det242 [data-d252="plat"]'); return b ? b.textContent : ""; });
+    var g2 = await p.evaluate(function () { abreDetalle(tareas[0], 0); var b = document.querySelector('#det242 [data-d252="plat"]'); return b ? b.textContent : ""; });
     eq("Detalle del globo: 'Ver toda la plática con Cynthia'", g2, "Ver toda la plática con Cynthia");
     await CLK('#det242 [data-d252="plat"]');
     var g3 = await p.evaluate(function () { var v = document.getElementById("plat252"); return { hay: !!v, det: !!document.getElementById("det242"), n: v ? v.querySelectorAll(".pl252").length : 0, tags: v ? [].map.call(v.querySelectorAll(".pg"), function (x) { return x.textContent; }) : [], of: v ? v.querySelectorAll(".pl252.of").length : 0, pie: v ? /bandeja del servidor aún no se consulta/.test(v.textContent) : false, cab: v ? v.querySelector(".ph b").textContent : "" }; });
@@ -128,26 +128,26 @@ eq("versión >= 252", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     var g4 = await p.evaluate(function () { return { abierta: abierta, vista: vista, plat: !!document.getElementById("plat252"), msg: !!document.querySelector('.msgs [data-mix="0"]'), flash: !!document.querySelector(".msgs .flash") }; });
     eq("Tocar la etiqueta abre esa tarea en ese mensaje", [g4.abierta, g4.vista, g4.plat, g4.msg], ["tFIDE2", "hilo", false, true]);
     /* desde la plática: tocar un mensaje abre su detalle; No guardar lo marca y la plática se repinta */
-    await p.evaluate(function () { abreDetalle242(tareas[0], 0); document.querySelector('#det242 [data-d252="plat"]').click(); });
+    await p.evaluate(function () { abreDetalle(tareas[0], 0); document.querySelector('#det242 [data-d252="plat"]').click(); });
     await p.evaluate(function () { document.querySelector('#plat252 [data-plm="1"]').click(); });
     var g5 = await p.evaluate(function () { var d = document.getElementById("det242"); return { det: !!d, botones: d ? [].map.call(d.querySelectorAll(".ac226 button"), function (b) { return b.textContent; }) : [] }; });
     eq("Desde la plática: el detalle del mensaje trae Mover · Nueva · No guardar (y OK · Dato)", [g5.det, ["Mover", "No guardar", "Nueva", "Dato"].every(function (b) { return g5.botones.indexOf(b) >= 0; })], [true, true]);
     await p.evaluate(function () { document.querySelector('#det242 [data-acng]').click(); });
     await p.waitForTimeout(800);
-    var g6 = await p.evaluate(function () { var v = document.getElementById("plat252"); var it = platicaDe252("Cynthia Contadora GrupoNec Rangel", 7).filter(function (i) { return /pasar a firmar/.test(i.txt); })[0];
+    var g6 = await p.evaluate(function () { var v = document.getElementById("plat252"); var it = platicaDe("Cynthia Contadora GrupoNec Rangel", 7).filter(function (i) { return /pasar a firmar/.test(i.txt); })[0];
       return { plat: !!v, det: !!document.getElementById("det242"), tag: it && it.tag, ng: v ? v.querySelectorAll(".pg.ng").length : 0 }; });
     eq("No guardar desde ahí: la plática sigue abierta, se repinta y el mensaje queda marcado 'no guardado'", [g6.plat, g6.det, g6.tag, g6.ng], [true, false, "no guardado", 3]);
     /* escondido: volver a mostrarlo */
-    await p.evaluate(function () { var idx = platicaDe252("Cynthia Contadora GrupoNec Rangel", 7).findIndex(function (i) { return /pasar a firmar/.test(i.txt); }); document.querySelector('#plat252 [data-plm="' + idx + '"]').click(); });
+    await p.evaluate(function () { var idx = platicaDe("Cynthia Contadora GrupoNec Rangel", 7).findIndex(function (i) { return /pasar a firmar/.test(i.txt); }); document.querySelector('#plat252 [data-plm="' + idx + '"]').click(); });
     var g7 = await p.evaluate(function () { var b = document.querySelector('#det242 [data-d252="restaura"]'); return b ? b.textContent : ""; });
     eq("Un mensaje escondido ofrece 'Volver a mostrarlo'", /^Volver a mostrarlo en /.test(g7), true);
     await p.evaluate(function () { document.querySelector('#det242 [data-d252="restaura"]').click(); });
     await p.waitForTimeout(800);
-    var g8 = await p.evaluate(function () { var it = platicaDe252("Cynthia Contadora GrupoNec Rangel", 7).filter(function (i) { return /pasar a firmar/.test(i.txt); })[0]; return [it.tag, it.oculto, !!document.getElementById("det242")]; });
+    var g8 = await p.evaluate(function () { var it = platicaDe("Cynthia Contadora GrupoNec Rangel", 7).filter(function (i) { return /pasar a firmar/.test(i.txt); })[0]; return [it.tag, it.oculto, !!document.getElementById("det242")]; });
     eq("Restaurado: vuelve a su tarea y su detalle ya trae Mover · Nueva · No guardar", [g8[0], g8[1], g8[2]], ["Testamentos de los Papás", false, true]);
     /* Nueva desde la plática */
     var g9 = await p.evaluate(async function () { var dst = document.getElementById("det242"); if (dst) dst.remove(); var pl = document.getElementById("plat252"); if (pl) pl.remove();
-      tareas = CY.map(function (t) { return JSON.parse(JSON.stringify(t)); }); abierta = "tTESTA"; vista = "hilo"; render(); abreDetalle242(tareas[0], 0); document.querySelector('#det242 [data-d252="plat"]').click(); document.querySelector('#plat252 [data-plm="0"]').click();
+      tareas = CY.map(function (t) { return JSON.parse(JSON.stringify(t)); }); abierta = "tTESTA"; vista = "hilo"; render(); abreDetalle(tareas[0], 0); document.querySelector('#det242 [data-d252="plat"]').click(); document.querySelector('#plat252 [data-plm="0"]').click();
       document.querySelector('#det242 [data-acnueva]').click(); await espera(60); var nom = document.getElementById("nom249i"); var hay = !!nom; if (nom){ nom.value = "Notaría 14"; document.querySelector('[data-nom249="ok"]').click(); } await espera(120);
       return { hay: hay, nueva: tareas.filter(function (t) { return t.nombre === "Notaría 14"; }).length }; });
     eq("Nueva desde la plática: pide nombre y crea la tarea", g9, { hay: true, nueva: 1 });
