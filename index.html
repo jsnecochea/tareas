@@ -1789,7 +1789,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 300 · Campos únicos: abierta, contestada, a quién espera y encargado con un solo lector cada uno, igual en la app y la Mac";
+var VERSION_APP = "build 301 · Una sola base: la app de todos lee y escribe en MySQL, igual que la Mac, y junta lo que quedó solo en Firestore";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -4581,13 +4581,53 @@ function pideWhatsApp(cuerpo){
    CAPA DE DATOS DE TAREAS. Toda lectura y escritura de bitacora_tareas pasa por aquí, con dos motores:
    "firestore" (el de siempre) y "mysql" (push.php: fs_lista, fs_doc, fs_set, msg_agregar, hay_nuevo).
    EL MOTOR SE ESCOGE POR USUARIO y en este orden: localStorage "doit_motor_tareas" (prueba en un teléfono),
-   el campo motor de su ficha (bitacora_personas/<usuario>.motor) y, si no hay, MOTOR_MYSQL_USUARIOS.
+   el campo motor de su ficha (bitacora_personas/<usuario>.motor) y, si no hay, MOTOR_POR_OMISION.
+   MySQL es el de todos: desde que push.php resuelve bitacora_tareas en MySQL, la Mac y el conector leen y escriben
+   ahí; un teléfono que se quedara en Firestore trabaja en una base que nadie más ve.
    Mientras dure la transición, quien está en MySQL ESCRIBE EN LOS DOS (MySQL y Firestore) y LEE de MySQL;
    así nada se pierde si hay que regresarlo a Firestore. En MySQL nada se borra: la tarea que se deshace
    queda estado "descartada" (la app ya no la pinta).
    SIN PÉRDIDA: lo que no alcanzó a subir a MySQL queda en una cola local (localStorage "doit_cola_mysql",
    la última versión de cada tarea) y se reintenta solo, con espera creciente y al volver la red. */
-var MOTOR_MYSQL_USUARIOS={prueba_claude:true};
+var MOTOR_POR_OMISION="mysql";
+/* Conciliación: lo que un teléfono guardó solo en Firestore después de que las tareas se copiaron a MySQL
+   (8-oct 08:55 Monterrey) se junta en MySQL al arrancar: mensajes y bitácoras se suman, y en lo demás gana
+   la versión tocada más reciente. La versión de Firestore queda copiada en _fb_copia (nada se pierde). */
+var CONCILIA_DESDE=Date.parse("2026-10-08T14:55:00Z");
+var CONCILIA_HASTA=Date.parse("2026-10-20T06:00:00Z");   /* después de esta fecha ningún teléfono escribe solo en Firestore */
+var CONCILIA_UNEN=["msgs","notas_claude","respuestas_log","plan_log","notas","evidencia","censo_acomodo","encargos"];
+var CONCILIA_JUNTA=["msg_imp","contestadas","_historico"];
+/* junta la versión de Firestore (F) sobre la de MySQL (M). Devuelve null si F no trae nada nuevo. */
+function mezclaFirestore(M, F){
+  if(!F) return null;
+  var fT=+F.tocada||0;
+  if(!M) return fT>CONCILIA_DESDE ? Object.assign({}, F, {_fb_tocada:fT}) : null;
+  if(fT<=CONCILIA_DESDE || fT<=(+M._fb_tocada||0)) return null;
+  var clave=function(x){ return (x && typeof x==="object") ? (x.id || x.nid || x.wa_id || ((x.ts||"")+"|"+(x.k||"")+"|"+String(x.t||x.texto||"").slice(0,80))) : JSON.stringify(x); };
+  var R=Object.assign({}, M), gana=fT>(+M.tocada||0), cambio=false;
+  Object.keys(F).forEach(function(k){
+    if(k==="id" || k==="_fb_copia" || k==="_fb_tocada") return;
+    var f=F[k], m=M[k];
+    if(JSON.stringify(f)===JSON.stringify(m)) return;
+    if(CONCILIA_UNEN.indexOf(k)>=0 && (Array.isArray(f) || Array.isArray(m))){
+      var vistos={}, out=[];
+      (Array.isArray(m)?m:[]).concat(Array.isArray(f)?f:[]).forEach(function(x){ var c=clave(x); if(!vistos[c]){ vistos[c]=1; out.push(x); } });
+      if(k==="msgs") out.sort(function(a,b){ return ((a&&+a.ts)||0)-((b&&+b.ts)||0); });
+      if(JSON.stringify(out)!==JSON.stringify(m)){ R[k]=out; cambio=true; }
+      return;
+    }
+    if(CONCILIA_JUNTA.indexOf(k)>=0 && f && m && typeof f==="object" && typeof m==="object" && !Array.isArray(f)){
+      var j=Object.assign({}, m, f); if(JSON.stringify(j)!==JSON.stringify(m)){ R[k]=j; cambio=true; } return;
+    }
+    if(m===undefined || gana){ R[k]=f; cambio=true; }
+  });
+  if(!cambio) return null;
+  var copia=Object.assign({}, F); delete copia.msgs; delete copia._fb_copia;
+  R._fb_copia=JSON.stringify(copia).slice(0, 60000);
+  R._fb_tocada=fT;
+  if(gana) R.tocada=fT;
+  return R;
+}
 var MYSQL_CADA_MS=20000;                       /* cada cuánto se vuelve a leer la lista en MySQL */
 var MYSQL_REINTENTOS_MS=[2000,5000,15000,60000];
 var datosTareas=(function(){
@@ -4598,7 +4638,7 @@ var datosTareas=(function(){
     var m=null, s=ls();
     try{ m=s && s.getItem(MOTOR_KEY); }catch(e){}
     if(m!=="mysql" && m!=="firestore"){ try{ m=(PERSONAS[yo]||{}).motor; }catch(e){ m=null; } }
-    if(m!=="mysql" && m!=="firestore") m=MOTOR_MYSQL_USUARIOS[yo] ? "mysql" : "firestore";
+    if(m!=="mysql" && m!=="firestore") m=MOTOR_POR_OMISION;
     return m;
   }
   function hayToken(){ return typeof APP_TOKEN!=="undefined" && String(APP_TOKEN).indexOf("__")!==0; }
@@ -4658,7 +4698,7 @@ var datosTareas=(function(){
   }
   /* ---- lo que usa la app ---- */
   function listar(){
-    return llama("fs_lista", {col:COL, limit:300}).then(function(j){
+    return llama("fs_lista", {col:COL, usuario:yo, limit:1000}).then(function(j){
       var arr=Array.isArray(j) ? j : ((j&&(j.docs||j.documentos))||[]);
       var c=leeCola();   /* lo que aún no sube se ve como el usuario lo dejó */
       var porId={}; arr.forEach(function(o){ if(o && o.id) porId[o.id]=o; });
@@ -4697,6 +4737,19 @@ var datosTareas=(function(){
   function agregarMsg(tarea_id, texto, privado){
     return llama("msg_agregar", null, {tarea_id:tarea_id, texto:String(texto==null?"":texto), privado:privado?1:0});
   }
+  /* sube a MySQL lo que este teléfono dejó solo en Firestore (ver mezclaFirestore). Una vez por arranque. */
+  function concilia(){
+    if(!db || !hayToken() || Date.now()>CONCILIA_HASTA) return Promise.resolve(0);
+    return Promise.all([db.collection(COL).get(), listar()]).then(function(r){
+      var porId={}; (r[1]||[]).forEach(function(o){ if(o && o.id) porId[o.id]=o; });
+      var subir=[];
+      r[0].forEach(function(d){ var F=d.data(); if(!F) return; var M=porId[d.id]||null;
+        var X=mezclaFirestore(M, F); if(X){ var x=Object.assign({}, X); delete x.id; subir.push({id:d.id, data:x}); } });
+      return subir.reduce(function(p, u){ return p.then(function(){ return aMySQL(u.id, u.data); }); }, Promise.resolve()).then(function(){
+        try{ if(subir.length) console.warn("Conciliación Firestore→MySQL: "+subir.length+" tareas"); }catch(e){}
+        return subir.length; });
+    }).catch(function(e){ try{ console.warn("Conciliación falló", e); }catch(_e){} return 0; });
+  }
   function hayNuevo(desde_ts){ return llama("hay_nuevo", {usuario:yo, desde_ts:desde_ts}); }
   /* la lista viva: en Firestore es el onSnapshot de siempre; en MySQL se vuelve a leer cada MYSQL_CADA_MS
      y solo se avisa si cambió. El "snap" imita al de Firestore para que el resto de la app no cambie. */
@@ -4722,15 +4775,17 @@ var datosTareas=(function(){
       })
       .then(function(){ if(sub===vivo) vivo.timer=setTimeout(vuelta, MYSQL_CADA_MS); });
     }
-    vuelta();
-    vacia().catch(function(){});
+    /* primero se junta lo que quedó solo en Firestore y luego se lee: así nunca se pinta (ni se edita) la versión vieja */
+    var _arranco=false, _arranca=function(){ if(_arranco) return; _arranco=true; vuelta(); };
+    vacia().catch(function(){}).then(function(){ return concilia(); }).then(_arranca, _arranca);
+    setTimeout(_arranca, 15000);
     vivo.fin=function(){ if(vivo.timer) clearTimeout(vivo.timer); if(sub===vivo) sub=null; };
     return vivo.fin;
   }
   function para(){ var s=sub; sub=null; if(!s) return; try{ if(s.tipo==="firestore"){ if(typeof s.fin==="function") s.fin(); } else s.fin(); }catch(e){} }
   try{ window.addEventListener("online", function(){ vacia().catch(function(){}); }); }catch(e){}
   return { motor:motor, listar:listar, leer:leer, guardar:guardar, guardarCampos:guardarCampos, borrar:borrar,
-           agregarMsg:agregarMsg, hayNuevo:hayNuevo, suscribir:suscribir, para:para, vacia:vacia,
+           agregarMsg:agregarMsg, hayNuevo:hayNuevo, suscribir:suscribir, para:para, vacia:vacia, concilia:concilia,
            pendientes:function(){ return Object.keys(leeCola()).length; } };
 })();
 /* @@DATOS-TAREAS-FIN */

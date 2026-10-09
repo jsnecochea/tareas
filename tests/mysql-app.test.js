@@ -48,11 +48,11 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
       return new Promise(function (ok) { setTimeout(function () { ok({ my: window.__srv.tareas.tMY1.ultima, fs: window.__fsSet.filter(function (x) { return x.id === "tMY1"; }).length > 0, cola: datosTareas.pendientes() }); }, 400); }); });
     eq("guarda(): escribe en MySQL y en Firestore, sin nada en cola", e2, { my: "probado desde la app", fs: true, cola: 0 });
     await A.ctx.close();
-    /* 2 · salvador sigue en Firestore */
+    /* 2 · salvador también en MySQL (MySQL es el de todos) */
     var B = await pagina();
     await B.p.evaluate(function () { APP_TOKEN = "tok-prueba"; entrar("salvador"); }); await B.p.waitForTimeout(600);
     var e3 = await B.p.evaluate(function () { return { motor: datosTareas.motor(), snapFS: (window.__snaps.bitacora_tareas || []).length, lista: window.__srv.llamadas.indexOf("fs_lista") >= 0 }; });
-    eq("salvador: Firestore, onSnapshot de siempre y sin fs_lista", e3, { motor: "firestore", snapFS: 1, lista: false });
+    eq("salvador: MySQL, sin onSnapshot de tareas y con fs_lista", e3, { motor: "mysql", snapFS: 0, lista: true });
     await B.ctx.close();
     eq("sin errores de página", errs.filter(function (m) { return !/firebase is not defined/.test(m); }), []);
   } catch (e) { malas.push("EXCEPCIÓN " + e.stack); }

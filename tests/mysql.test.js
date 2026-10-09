@@ -64,14 +64,14 @@ async function vueltas(k) { for (var x = 0; x < (k || 6); x++) await espera(); }
 (async function () {
   try {
     /* 1 · motor por usuario */
-    eq("salvador sigue en Firestore", arma("salvador").d.motor(), "firestore");
+    eq("salvador ya en MySQL (todos en MySQL por omisión)", arma("salvador").d.motor(), "mysql");
     eq("prueba_claude arranca en MySQL", arma("prueba_claude").d.motor(), "mysql");
-    eq("la ficha (bitacora_personas.motor) manda sobre el catálogo", arma("josue", { personas: { josue: { motor: "mysql" } } }).d.motor(), "mysql");
+    eq("la ficha (bitacora_personas.motor) manda sobre la omisión", arma("josue", { personas: { josue: { motor: "firestore" } } }).d.motor(), "firestore");
     var lsF = memLS(); lsF.setItem("doit_motor_tareas", "firestore");
     eq("localStorage manda sobre todo (regreso a Firestore en un teléfono)", arma("prueba_claude", { ls: lsF }).d.motor(), "firestore");
 
     /* 2 · Firestore intacto para quien sigue ahí */
-    var A = arma("salvador"); A.d.guardar({ id: "t1", nombre: "Uno" }); await vueltas();
+    var lsA = memLS(); lsA.setItem("doit_motor_tareas", "firestore"); var A = arma("salvador", { ls: lsA }); A.d.guardar({ id: "t1", nombre: "Uno" }); await vueltas();
     eq("Firestore: guardar escribe en Firestore", A.F.docs.t1, { id: "t1", nombre: "Uno" });
     eq("Firestore: no toca push.php", A.S.llamadas.length, 0);
     A.d.suscribir(function () {}, function () {}); eq("Firestore: la lista sigue siendo el onSnapshot", A.F.snaps, 1);
@@ -80,7 +80,7 @@ async function vueltas(k) { for (var x = 0; x < (k || 6); x++) await espera(); }
     var B = arma("prueba_claude"); B.S.tareas = { tA: { nombre: "Planos Parra", duenio: "prueba_claude" }, tB: { nombre: "Otra", duenio: "salvador" } };
     var lista = await B.d.listar();
     eq("listar trae todo de fs_lista", lista.map(function (o) { return o.id + ":" + o.nombre; }).sort(), ["tA:Planos Parra", "tB:Otra"]);
-    var q = B.S.llamadas[0]; eq("fs_lista con col=bitacora_tareas, limit 300 y el token", [q.action, q.q.col, q.q.limit, q.metodo, q.token], ["fs_lista", "bitacora_tareas", "300", "GET", "tok-prueba"]);
+    var q = B.S.llamadas[0]; eq("fs_lista con col=bitacora_tareas, limit 1000 y el token", [q.action, q.q.col, q.q.limit, q.metodo, q.token], ["fs_lista", "bitacora_tareas", "1000", "GET", "tok-prueba"]);
 
     /* 4 · leer */
     eq("leer una (fs_doc)", (await B.d.leer("tA")).nombre, "Planos Parra");

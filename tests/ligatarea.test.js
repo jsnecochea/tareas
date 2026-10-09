@@ -25,7 +25,7 @@ var T = [{ id: "tREAL", nombre: "Comedor nuevo", duenio: "salvador", estado: "ab
         signInWithPopup: function () { return Promise.reject({ code: "auth/popup-blocked" }); }, signInWithRedirect: function () { window.__redirect = true; return Promise.resolve(); } }; } };
       window.firebase.auth.GoogleAuthProvider = function () { this.setCustomParameters = function () {}; };
       window.__emit = function (name, docs, cache) { (window.__snaps[name] || []).forEach(function (f) { f({ metadata: { fromCache: !!cache }, forEach: function (g) { docs.forEach(function (d) { g({ id: d.id, data: function () { var o = Object.assign({}, d); delete o.id; return o; } }); }); } }); }); };
-      try { localStorage.setItem("bit_avisos_visto_salvador", "1"); } catch (e) {} });
+      try { localStorage.setItem("bit_avisos_visto_salvador", "1"); localStorage.setItem("doit_motor_tareas", "firestore"); } catch (e) {}   /* la liga es igual en los dos motores; aquí se simula Firestore */ });
     await p.goto("file://" + IDX + url); await p.waitForTimeout(400); return { ctx: ctx, p: p };
   }
   var entra = function (p) { return p.evaluate(function (u) { window.__authCb(u); }, SAL).then(function () { return p.waitForTimeout(300); }); };
