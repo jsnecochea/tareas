@@ -1789,7 +1789,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 308 · Choques solo en lo que cambia una persona; «(revisión 7-oct)» ya no se lee como fecha";
+var VERSION_APP = "build 309 · Candado de datos: si dictas una fecha o un monto distinto al documentado, pregunta antes de cambiarlo";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -10085,6 +10085,48 @@ function faltaPasoClaude(t){
   if(typeof f==="string" && f.trim().length>3 && !/^(1|si|true)$/i.test(f.trim())) return f.replace(/\s+/g," ").trim().slice(0,160);
   return "¿Cuál es el siguiente paso de esta tarea?";
 }
+/* CANDADO DE DATOS DOCUMENTADOS (Salvador 9-oct: «dicto pensando en otra cosa; avísame antes de cambiar una fecha o un monto
+   que ya está documentado»). Si lo dictado cambia la fecha de la tarea, la del evento o el monto y ya había un valor, el
+   cambio NO se aplica solo: se regresa el valor de antes y se pregunta con lo que dice la documentación (lo que sabemos,
+   la evidencia, el contexto). */
+function datosClave(t){ var e=(t && t.evento && typeof t.evento==="object")?t.evento:{};
+  var fDoc=!!(t && t.f_vigente && !t.falta_fecha && !(typeof fechaPuestaSola==="function" && fechaPuestaSola(t)));
+  return {f_vigente:fDoc?String(t.f_vigente):"", ev_fecha:String(e.fecha||""), ev_hora:String(e.hora||""), gasto:String((t&&t.gasto)||"")}; }
+var CLAVE_NOMBRE={f_vigente:"la fecha de la tarea", ev_fecha:"la fecha del evento", ev_hora:"la hora del evento", gasto:"el monto"};
+function ponClave(t, k, val){ if(k==="f_vigente") t.f_vigente=val; else if(k==="gasto") t.gasto=val;
+  else { t.evento=(t.evento && typeof t.evento==="object")?t.evento:{}; if(k==="ev_fecha") t.evento.fecha=val; else t.evento.hora=val; } }
+/* compara contra lo de antes: lo que cambió un valor que ya existía se regresa y se devuelve para preguntar */
+/* si lo dicho corrige a propósito («ya no es el 8», «cámbiala al 15», «en vez de…»), es un cambio pedido: no se pregunta */
+var CAMBIO_A_PROPOSITO=/\b(no (termina|es|va a ser|sera|será)|ya no|cambi[oóa]\w*|c[aá]mbia\w*|mu[eé]ve\w*|en vez de|en lugar de|se pas[oó]|se movi[oó]|recorr\w*|pospon\w*|adelant\w*)\b/i;
+function revisaClave(t, antes, v){ if(!t || !antes) return []; if(CAMBIO_A_PROPOSITO.test(String(v||""))) return []; var ahora=datosClave(t), out=[];
+  Object.keys(antes).forEach(function(k){ if(antes[k] && ahora[k] && antes[k]!==ahora[k]){ out.push({k:k, antes:antes[k], nuevo:ahora[k]}); ponClave(t, k, antes[k]); } });
+  return out; }
+/* dónde dice el valor de antes: lo que sabemos, la evidencia (invitación, ticket, foto) o el contexto */
+function fuenteDe(t, val){
+  var d=String(val||""), pats=[d];
+  if(/^\d{4}-\d{2}-\d{2}$/.test(d)){ var dd=+d.slice(8,10), mm=+d.slice(5,7)-1, M=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"][mm];
+    pats=[d, dd+"-"+M, dd+" de "+M, dd+" "+M]; }
+  var re=new RegExp("("+pats.map(function(x){ return x.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); }).join("|")+")","i");
+  var cand=[];
+  (Array.isArray(t.evidencia)?t.evidencia:[]).forEach(function(x){ if(x) cand.push({de:(x.tipo==="texto"?"un mensaje":"la "+(x.tipo||"evidencia"))+(x.de?" de "+x.de:""), tx:String(x.texto||x.titulo||"")}); });
+  (Array.isArray(t.sabemos)?t.sabemos:[]).forEach(function(x){ cand.push({de:"Lo que sabemos", tx:String((x&&(x.t||x.texto))||x||"")}); });
+  cand.push({de:"el contexto", tx:String(t.contexto||"")});
+  for(var i=0;i<cand.length;i++){ var m=cand[i].tx.match(re); if(m){ var p=Math.max(0, m.index-50); return {de:cand[i].de, tx:(p?"…":"")+cand[i].tx.slice(p, m.index+70).replace(/\s+/g," ")+"…"}; } }
+  return null;
+}
+function valorBonito(k, v){ return (k==="f_vigente"||k==="ev_fecha")?fechaBonita(v):(k==="gasto"?"$"+v:v); }
+function confirmaClave(tid, lista){
+  var t=tareas.filter(function(x){ return x.id===tid; })[0]; if(!t || !lista.length) return;
+  var c=lista[0], resto=lista.slice(1), f=fuenteDe(t, c.antes);
+  sobreHoja('<div class="mov225" role="dialog" aria-label="¿Seguro que lo cambio?"><div class="h225g"></div><div class="h225h"><b>⚠️ Ojo: ¿seguro?</b><button class="h225b" data-hx254="1" aria-label="Cerrar">×</button></div>'+
+    '<div class="h225c"><p class="h225v0">Aquí '+esc(CLAVE_NOMBRE[c.k])+' es <b>'+esc(valorBonito(c.k, c.antes))+'</b> y dictaste <b>'+esc(valorBonito(c.k, c.nuevo))+'</b>.</p>'+
+    (f?'<p class="h225v0">Lo dice '+esc(f.de)+': «'+esc(f.tx)+'»</p>':'')+
+    '<button class="hop big254 pri" data-h254="queda">No, se queda '+esc(valorBonito(c.k, c.antes))+'</button><button class="hop big254" data-h254="cambia">Sí, cambiar a '+esc(valorBonito(c.k, c.nuevo))+'</button></div></div>',
+    function(k){ var T=tareas.filter(function(x){ return x.id===tid; })[0]||t;
+      if(k==="cambia"){ ponClave(T, c.k, c.nuevo); msg(T,"bi","Cambié "+CLAVE_NOMBRE[c.k]+" a "+valorBonito(c.k, c.nuevo)+" (antes "+valorBonito(c.k, c.antes)+")."); var m=T.msgs[T.msgs.length-1]; m.canal="priv:"+yo; m.res238=1; guarda(T); render(); }
+      else { msg(T,"bi","Se quedó "+CLAVE_NOMBRE[c.k]+" en "+valorBonito(c.k, c.antes)+"; no cambié nada."); var m2=T.msgs[T.msgs.length-1]; m2.canal="priv:"+yo; m2.res238=1; guarda(T); render(); }
+      if(resto.length) setTimeout(function(){ confirmaClave(tid, resto); }, 300); });
+}
 function completaRevision(t, v, op){
   op=op||{};   /* build 210: {alTerminar(r), sinRevision}: audifonos (respuesta hablada; en una tarea ya autorizada no la regresa a Falta info) */
   /* build 283: "pesado" (y pantalla difuminada) solo para «Falta info» / tarea nueva; dictados e indicaciones van en "rapido", sin difuminar */
@@ -10137,6 +10179,7 @@ function completaRevision(t, v, op){
       var j=null; try{ var mm=String(txt||"").match(/\{[\s\S]*\}/); j=mm?JSON.parse(mm[0]):null; }catch(e){ j=null; }
       if(!j){ _respaldo(); return; }
       t=viva249(t); _T238=t;
+      var _clave=(typeof datosClave==="function")?datosClave(t):null;   /* lo que la tarea ya tiene documentado (fechas, monto): un dictado no lo cambia sin preguntar */
       var r=aplicaRevisionClaude(t, v, j, _ab); _j238=j;
       var _err251=false;
       try{ if(!r.yaHecha){ _or238=ejecutaOrdenes(t, v, j, _ab); _T238=_or238.T||t; } }catch(e238){ _err251=true; try{ console.warn("ordenes238", e238); }catch(_e){} }
@@ -10150,7 +10193,9 @@ function completaRevision(t, v, op){
         if(/^Respuesta a «/.test(String(v||""))){ _or238.hecho=(_or238.hecho||[]).concat(["Entendí: "+String(v).replace(/Respuesta a «[^»]*»:\s*/g,"").replace(/\s+/g," ").trim().slice(0,160)]); }   /* build 267: nunca una pregunta sobre una respuesta */
         _pend283="sin_resultado"; }
       if(r.yaHecha){ delete t._leyendo; t.pendiente_info=""; t.pendiente_tipo=""; t.falta_fecha=false; t.autorizada=true; cierraHecha(t); render(); ocultaAcomoda(); if(op.alTerminar) try{ op.alTerminar({hecho:["la cerré como hecha"], dudas:[], vinc:[], falta:[], cerrada:true}); }catch(e){} return; }
+      var _cg=(_clave && typeof revisaClave==="function")?revisaClave(_T238||t, _clave, v):[];
       _fin(r.hecho, r.dudas, r.vinc);
+      if(_cg.length) setTimeout(function(){ confirmaClave((_T238||t).id, _cg); }, 400);
     });
   }catch(e){ _respaldo(); }
   };
