@@ -32,7 +32,7 @@ var pagina = '<!doctype html><meta charset="utf-8"><style>' + css + '</style><bo
   'function guarda(){ GUARDADO++; } function toast(t){ TOAST.push(t); } function render(){ RENDER++; } function hhmm(){ return "9:30"; }' +
   'function pideWhatsApp(c){ PED.push(c); return Promise.resolve({id:"p"+PED.length}); }' +
   'window.fetch=function(u,o){ FETCH.push({u:u, b:JSON.parse(o.body)}); return Promise.resolve({ok:true, status:200, json:function(){ return Promise.resolve(RESP); }}); };' +
-  F.map(saca).join("\n").replace(/<\/script>/g, "<\\/script>") + '</script>';
+  (html.slice(html.indexOf("/* @@CAMPOS-UNICOS-INICIO"), html.indexOf("/* @@CAMPOS-UNICOS-FIN */")) + "\n" + saca("ctxCampos") + "\n" + F.map(saca).join("\n")).replace(/<\/script>/g, "<\\/script>") + '</script>';
 var tmp = path.join(os.tmpdir(), "b217-" + process.pid + ".html"); fs.writeFileSync(tmp, pagina);
 (async function () {
   var pw = require("/opt/node22/lib/node_modules/playwright"), b = await pw.chromium.launch(), p = await b.newPage({ viewport: { width: 390, height: 844 } }), errs = [];

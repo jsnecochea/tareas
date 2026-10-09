@@ -27,7 +27,7 @@ var NUEVAS = ["min225", "togMin225", "_txMsg", "msgVisible225", "metasEnCurso", 
 var FUNCS = F_FUNCS.concat(B221).concat(NUEVAS).filter(function (x, i, a) { return a.indexOf(x) === i; });
 var VARS = F_VARS.concat(["SEG_HORA_DEFECTO", "ESCALA_DIAS", "AVISO_INM_RE", "CHK_EST", "AGENDA_HORA_TODO_DIA", "PALOMEO_MS", "TITULO_CONECTORES", "RITMO_RE", "CITA_RE", "MESES229", "CTX_MIN_PAL", "SINONIMOS", "BUSCA_VACIAS", "REV_DESDE",
   "CNL_COL", "CNL_EXT", "CLAUDE_COL", "MIN225_KEY", "META_VACIAS", "MEZCLA_RE", "MEZCLA_DE_RE", "MSJ_RE", "MSJ_CORTE"]).filter(function (x, i, a) { return a.indexOf(x) === i; });
-var codigo = bloque("/* @@FECHAS-INICIO", "/* @@FECHAS-FIN */") + "\n" + VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" + FUNCS.map(function (f) { return saca("function", f); }).join("\n");
+var codigo = bloque("/* @@CAMPOS-UNICOS-INICIO", "/* @@CAMPOS-UNICOS-FIN */") + "\n" + saca("function", "ctxCampos") + "\n" + bloque("/* @@FECHAS-INICIO", "/* @@FECHAS-FIN */") + "\n" + VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" + FUNCS.map(function (f) { return saca("function", f); }).join("\n");
 var RealDate = Date, NOW = new RealDate(2026, 9, 5, 13, 30, 0).getTime();
 function FakeDate() { var a = Array.prototype.slice.call(arguments); if (!(this instanceof FakeDate)) return new RealDate(NOW).toString();
   return a.length ? new (Function.prototype.bind.apply(RealDate, [null].concat(a)))() : new RealDate(NOW); }

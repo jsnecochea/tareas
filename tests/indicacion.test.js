@@ -27,7 +27,8 @@ var FUNCS = ["_nn", "esDelEquipo", "_telDe", "_nomWA", "esMsgWA", "miembroDeNomb
   "responsableExt", "waDest254", "modoWA254", "phCanal", "vPastilla", "vista230", "nombreVisible230", "ico", "nombreCorto", "modoClaude", "puedeSerIndicacion", "convierteEnIndicacion", "notasPlegadas",
   "notaClaude", "preguntaExterno", "nombreInt", "iniInt"];
 var VARS = ["CNL_COL", "CNL_EXT", "CLAUDE_COL", "_cwMemo", "SVG_DESTELLO", "SVG_CHAT"];
-var codigo = VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" +
+function campos() { var i = html.indexOf("/* @@CAMPOS-UNICOS-INICIO"), j = html.indexOf("/* @@CAMPOS-UNICOS-FIN */"); return html.slice(i, j) + "\n"; }   /* lectores únicos (docs/campos-unicos.md) */
+var codigo = campos() + saca("function", "ctxCampos") + "\n" + VARS.map(function (v) { return saca("var", v); }).join("\n") + "\n" +
   FUNCS.map(function (f) { return saca("function", f); }).join("\n");
 
 function ctx() {

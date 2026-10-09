@@ -1,0 +1,70 @@
+{
+  "_leeme": "Casos de los cuatro lectores únicos (docs/campos-unicos.md). Los usa tests/campos-unicos.test.js (app) y el bot de la Mac (campos18z46.test.mjs) para comprobar que los dos dan lo mismo. Fechas en ms; zona America/Monterrey.",
+  "ctx": {
+    "yo": "salvador",
+    "personas": { "salvador": { "nombre": "Salvador", "jefe": true }, "samuel": { "nombre": "Samuel" }, "karina": { "nombre": "Karina" }, "josue": { "nombre": "Josué" } },
+    "encargos": [ { "id": "e1", "para": "samuel", "cerrado": 0, "creado": 1791300000000, "texto": "Cotizar el toldo" }, { "id": "e2", "a": "karina", "cerrado": 1, "creado": 1791300000000 } ],
+    "nombresYo": [ "Salvador", "chava" ]
+  },
+  "abierta": [
+    ["abierta", { "id": "a1", "estado": "abierta" }, true],
+    ["sin estado", { "id": "a2" }, true],
+    ["dormida sigue abierta", { "id": "a3", "estado": "dormida" }, true],
+    ["con cierre", { "id": "a4", "estado": "abierta", "cierre": { "tipo": "hecha", "f": "2026-10-01" } }, false],
+    ["vinculada_a (la cerró la Mac)", { "id": "a5", "estado": "abierta", "vinculada_a": "tOTRA" }, false],
+    ["fusionada_en", { "id": "a6", "estado": "abierta", "fusionada_en": "tOTRA" }, false],
+    ["estado cerrada sin cierre", { "id": "a7", "estado": "cerrada" }, false],
+    ["estado no_ejecutada", { "id": "a8", "estado": "no_ejecutada" }, false],
+    ["descartada", { "id": "a9", "estado": "descartada" }, false],
+    ["Cerrada con mayúscula", { "id": "a10", "estado": "Cerrada" }, false],
+    ["cierre null", { "id": "a11", "estado": "abierta", "cierre": null }, true],
+    ["no es tarea", null, false]
+  ],
+  "contestada": [
+    ["respuestas_log", { "id": "c1", "respuestas_log": [ { "pregunta": "¿A quién le mando el plano?", "clave": "a quien le mando el plano", "texto": "A Manuel", "por": "salvador", "via": "app", "ts": 1791400000000 } ] }, "¿A quién le mando el plano?", true],
+    ["respuestas_log con «IA ·» y otra fecha de revisión", { "id": "c2", "respuestas_log": [ { "pregunta": "¿Cuál es el próximo paso que Claude debe hacer aquí? (revisión 7-oct)", "texto": "ninguno", "ts": 1 } ] }, "IA · ¿Cuál es el próximo paso que Claude debe hacer aquí? (revisión 8-oct)", true],
+    ["resp267 de antes", { "id": "c3", "resp267": [ "cual es el proximo paso que claude debe hacer aqui revision 7 oct" ] }, "¿Cuál es el próximo paso que Claude debe hacer aquí? (revisión 8-oct)", true],
+    ["resp267 cortada a 80 letras (bot)", { "id": "c4", "resp267": [ "necesito que me digas a quien le mando la transferencia y con que numero de cuenta o clabe" ] }, "¿Necesito que me digas a quién le mando la transferencia y con qué número de cuenta o CLABE interbancaria completa?", true],
+    ["apartada por Salvador", { "id": "c5", "falta_paso_claude_apartado": { "apartado": "2026-10-08", "q": "¿Cuál es el próximo paso que Claude debe hacer aquí? (revisión 7-oct)", "motivo": "Resuelto" } }, "¿Cuál es el próximo paso que Claude debe hacer aquí? (revisión 8-oct)", true],
+    ["«Respuesta a «q»: …» en la plática", { "id": "c6", "msgs": [ { "k": "bo", "de": "salvador", "t": "Respuesta a «¿Para cuándo la quieres terminar, o es indefinida?»: el viernes.", "ts": 1791400000000 } ] }, "¿Para cuándo la quieres terminar, o es indefinida?", true],
+    ["pregunta hecha antes de su última respuesta", { "id": "c7", "duenio": "salvador", "msgs": [ { "k": "bo", "de": "salvador", "t": "Ya lo mandé", "ts": 1791400000000 } ] }, { "q": "¿Ya mandaste los planos?", "ts": 1791390000000 }, true],
+    ["pregunta hecha después de su última respuesta", { "id": "c8", "duenio": "salvador", "msgs": [ { "k": "bo", "de": "salvador", "t": "Ya lo mandé", "ts": 1791400000000 } ] }, { "q": "¿Ya mandaste los planos?", "ts": 1791410000000 }, false],
+    ["otra pregunta distinta", { "id": "c9", "resp267": [ "a quien le mando el plano" ], "respuestas_log": [ { "pregunta": "¿Cuál es la dirección?", "ts": 1 } ] }, "¿Le pido a Pepe otra cotización?", false],
+    ["prefijo corto no cuenta", { "id": "c10", "resp267": [ "cual es" ] }, "¿Cuál es la dirección de la obra?", false],
+    ["sin nada", { "id": "c11" }, "¿Cuál es la dirección?", false],
+    ["pregunta vacía", { "id": "c12", "resp267": [ "x" ] }, "", false],
+    ["decisión contestada cuenta como su última respuesta", { "id": "c13", "decision": { "respuesta": { "t": "A", "ts": 1791400000000 } } }, { "pregunta": "¿Cuál compro?", "ts": 1791399000000 }, true]
+  ],
+  "espera": [
+    ["espera_a (campo único)", { "id": "w1", "espera_a": { "id": "samuel", "quien": "Samuel", "desde": 1791300000000, "motivo": "la cotización" } }, { "id": "samuel", "quien": "Samuel", "desde": 1791300000000, "motivo": "la cotización", "fuente": "espera_a", "deMi": false, "jefe": false }],
+    ["espera_a de un externo", { "id": "w2", "espera_a": { "quien": "Manuel Parra", "desde": "2026-10-06" } }, { "id": "", "quien": "Manuel Parra", "desde": 1791266400000, "motivo": "", "fuente": "espera_a", "deMi": false, "jefe": false }],
+    ["espera_a como texto", { "id": "w3", "espera_a": "karina" }, { "id": "karina", "quien": "Karina", "desde": 0, "motivo": "", "fuente": "espera_a", "deMi": false, "jefe": false }],
+    ["espera_a a Salvador", { "id": "w4", "espera_a": { "id": "salvador", "quien": "Salvador", "desde": 1791300000000, "motivo": "autorizar" } }, { "id": "salvador", "quien": "Salvador", "desde": 1791300000000, "motivo": "autorizar", "fuente": "espera_a", "deMi": true, "jefe": true }],
+    ["detenido (de antes)", { "id": "w5", "detenido": { "quien": "Karina", "desde": "2026-10-05", "que": "el pago" } }, { "id": "karina", "quien": "Karina", "desde": 1791180000000, "motivo": "el pago", "fuente": "detenido", "deMi": false, "jefe": false }],
+    ["estado espera + espera (de antes)", { "id": "w6", "estado": "espera", "espera": "samuel", "espera_desde": 1791200000000 }, { "id": "samuel", "quien": "Samuel", "desde": 1791200000000, "motivo": "", "fuente": "espera", "deMi": false, "jefe": false }],
+    ["estado esperando + nombre", { "id": "w7", "estado": "esperando", "espera": "Lalo Madero" }, { "id": "", "quien": "Lalo Madero", "desde": 0, "motivo": "", "fuente": "espera", "deMi": false, "jefe": false }],
+    ["encargo abierto {a,id}", { "id": "w8", "encargado": { "a": "samuel", "id": "e1", "desde": "2026-10-06" } }, { "id": "samuel", "quien": "Samuel", "desde": 1791266400000, "motivo": "Cotizar el toldo", "fuente": "encargo", "deMi": false, "jefe": false }],
+    ["encargo abierto {id} (se busca en encargos)", { "id": "w9", "encargado": { "id": "e1" } }, { "id": "samuel", "quien": "Samuel", "desde": 1791300000000, "motivo": "Cotizar el toldo", "fuente": "encargo", "deMi": false, "jefe": false }],
+    ["encargo ya contestado", { "id": "w10", "encargado": { "id": "e2", "desde": "2026-10-06" } }, null],
+    ["encargado como texto no es espera", { "id": "w11", "encargado": "salvador" }, null],
+    ["responsable no es espera", { "id": "w12", "responsable": "Alejandro Mozo" }, null],
+    ["cerrada no espera", { "id": "w13", "estado": "espera", "espera": "samuel", "cierre": { "tipo": "hecha" } }, null],
+    ["vinculada no espera", { "id": "w14", "espera_a": { "id": "samuel" }, "vinculada_a": "tX" }, null],
+    ["sin nada", { "id": "w15" }, null]
+  ],
+  "encargado": [
+    ["texto con id", { "id": "n1", "encargado": "samuel" }, { "id": "samuel", "nombre": "Samuel", "encargo": "", "desde": "", "fuente": "encargado" }],
+    ["texto con nombre del equipo", { "id": "n2", "encargado": "Josue" }, { "id": "josue", "nombre": "Josué", "encargo": "", "desde": "", "fuente": "encargado" }],
+    ["texto de un externo", { "id": "n3", "encargado": "Manuel Parra" }, { "id": "", "nombre": "Manuel Parra", "encargo": "", "desde": "", "fuente": "encargado" }],
+    ["{a, id, desde} (forma canónica)", { "id": "n4", "encargado": { "a": "samuel", "id": "e1", "desde": "2026-10-06" } }, { "id": "samuel", "nombre": "Samuel", "encargo": "e1", "desde": "2026-10-06", "fuente": "encargado" }],
+    ["{id} de encargo", { "id": "n5", "encargado": { "id": "e2" } }, { "id": "karina", "nombre": "Karina", "encargo": "e2", "desde": "", "fuente": "encargado" }],
+    ["{id} de persona", { "id": "n6", "encargado": { "id": "josue" } }, { "id": "josue", "nombre": "Josué", "encargo": "", "desde": "", "fuente": "encargado" }],
+    ["{id} de un encargo que no está", { "id": "n7", "encargado": { "id": "eX" } }, { "id": "", "nombre": "", "encargo": "eX", "desde": "", "fuente": "encargado" }],
+    ["responsable del bot", { "id": "n8", "responsable": "Alejandro Mozo Cumbres" }, { "id": "", "nombre": "Alejandro Mozo Cumbres", "encargo": "", "desde": "", "fuente": "responsable" }],
+    ["encargado gana a responsable", { "id": "n9", "encargado": "samuel", "responsable": "Alejandro" }, { "id": "samuel", "nombre": "Samuel", "encargo": "", "desde": "", "fuente": "encargado" }],
+    ["vacío", { "id": "n10", "encargado": "" }, null],
+    ["objeto vacío", { "id": "n11", "encargado": {} }, null],
+    ["número", { "id": "n12", "encargado": 7 }, null],
+    ["null", { "id": "n13", "encargado": null }, null]
+  ]
+}
