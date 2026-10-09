@@ -15,7 +15,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 315 · Bandeja → Mensajes muestra los mensajes por acomodar del servidor";
+var VERSION_APP = "build 316 · Cada quien ve solo lo suyo y botón Cerrar sesión";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 

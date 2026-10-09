@@ -202,6 +202,8 @@ function vYo(){
   if(PERSONAS[yo].jefe)
     h+='<div class="card"><h3>Encargos tuyos sin respuesta</h3><div class="sm">'+nlc+
        '. Si este número crece, no es problema de tareas: es que no te contestan.</div></div>';
+  h+='<h2 style="margin-top:22px">Sesión</h2><div class="card"><div class="sm">Entraste con '+esc(mp.mail_trabajo||mp.mail_personal||"tu cuenta de Google")+'.</div>'+
+     '<div class="acts"><button class="mini" id="bsalir">Cerrar sesión</button></div></div>';
   return h+'</div></div>';
 }
 

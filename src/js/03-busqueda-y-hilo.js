@@ -1244,6 +1244,23 @@ function leToca(t){
   if(!PERSONAS[yo] || !PERSONAS[yo].jefe) return false;
   return !!subeAlJefe(t);                        // ya escalo
 }
+/* QUÉ TAREAS LLEGAN A ESTE TELÉFONO. El servidor (fs_lista) y Firestore entregan la base completa, y
+   muchas vistas recorren `tareas` entera (Te esperan, Vencidas, porRevisar, Bandeja, la barra, el correteo):
+   si una ajena entra a la lista, alguna vista acaba pintándola. Por eso el filtro va en la puerta, al cargar:
+   el jefe ve todo (su pantalla ya decide qué le sube); los demás solo lo suyo y lo que les toca por las
+   reglas de siempre: lo crearon, son encargados o revisores, están integrados, la tarea los espera
+   (leToca), escribieron en ella, o cubren al dueño mientras está fuera. Una tarea sin dueño es del jefe. */
+function veTarea(t){
+  if(!t) return false;
+  if(!yo || esJefe(yo)) return true;
+  if(t.duenio===yo || t.creada_por===yo || t.encargado===yo) return true;
+  if((t.revisores||[]).indexOf(yo)>=0 || (t.integrantes||[]).indexOf(yo)>=0) return true;
+  try{ if(leToca(t)) return true; }catch(e){}
+  try{ if((encargadoDe(t)||{}).id===yo) return true; }catch(e){}
+  if((t.msgs||[]).some(function(m){ return m && m.de===yo; })) return true;
+  try{ var s=t.duenio && suplencias[t.duenio]; if(s && s.suplente===yo && estaFuera(t.duenio)) return true; }catch(e){}
+  return false;
+}
 function mias(){
   try{ despiertaTodas(); }catch(e){}
   /* EL BARRIDO CORRE SOBRE TODAS, no solo sobre las que se pintan: si no, una

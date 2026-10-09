@@ -1801,7 +1801,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 315 · Bandeja → Mensajes muestra los mensajes por acomodar del servidor";
+var VERSION_APP = "build 316 · Cada quien ve solo lo suyo y botón Cerrar sesión";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -4248,6 +4248,38 @@ function pintaBloqueado(mail){
       .catch(function(){ pintaLogin() });
   };
 }
+/* CERRAR SESIÓN (⋯ del inicio y Tu cuenta). La sesión de Google vive dentro de la app instalada y sobrevive
+   a reinstalarla, así que sin este botón nadie podía cambiar de cuenta. Antes de salir se intenta subir lo
+   que quedó en la cola de MySQL (con tope, para no colgarse sin red); luego se limpia lo LOCAL de la sesión
+   (usuario, cola, motor de prueba, liga pendiente, caché de Firestore) y se recarga en el login. En el
+   servidor no se borra nada. */
+var SESION_LOCAL=["bit_u","doit_cola_mysql","doit_motor_tareas","bit_alta"];
+function cerrarSesion(sinPreguntar){
+  if(!sinPreguntar){
+    var pend=0; try{ pend=datosTareas.pendientes(); }catch(e){}
+    var q="¿Cerrar sesión"+(yo&&PERSONAS[yo]?" de "+PERSONAS[yo].nombre:"")+"?"+
+      (pend?"\n\nHay "+pend+" cambio"+(pend===1?"":"s")+" sin subir; se intentará subirlos antes de salir.":"");
+    if(!window.confirm(q)) return Promise.resolve(false);
+  }
+  try{ toast("Cerrando sesión…"); }catch(e){}
+  var tope=function(p, ms){ return Promise.race([p, new Promise(function(ok){ setTimeout(ok, ms); })]).catch(function(){}); };
+  var sube=Promise.resolve(); try{ sube=tope(datosTareas.vacia(), 4000); }catch(e){}
+  return sube.then(function(){
+    try{ datosTareas.para(); }catch(e){}
+    try{ SESION_LOCAL.forEach(function(k){ localStorage.removeItem(k); }); }catch(e){}
+    try{ olvidaLigaTarea(); }catch(e){}
+    var fa=null; try{ fa=firebase.auth(); }catch(e){}
+    return tope(fa ? fa.signOut() : Promise.resolve(), 4000);
+  }).then(function(){
+    var fs=null; try{ fs=firebase.firestore(); }catch(e){}
+    if(fs && typeof fs.terminate==="function" && typeof fs.clearPersistence==="function")
+      return tope(fs.terminate().then(function(){ return fs.clearPersistence(); }), 3000);
+  }).then(function(){
+    yo=null;
+    try{ location.replace(location.pathname); }catch(e){ location.reload(); }
+    return true;
+  });
+}
 /* LA MAÑA DE IPHONE: dentro de la app instalada, el camino por redirect es
    el que Safari rompe (particiona el almacenamiento del dominio de auth).
    Por eso el camino PRINCIPAL es el popup en todos lados, y el redirect
@@ -4969,13 +5001,14 @@ function arranca(){
     });
     datosTareas.suscribir(function(snap){
       dbFail=false;   /* enganchó de verdad: no hay falla */
-      tareas=[]; var _fus={}, _desc={}; snap.forEach(function(d){var o=d.data();o.id=d.id;
+      tareas=[]; var _fus={}, _desc={}, _enBase=0; snap.forEach(function(d){var o=d.data();o.id=d.id; _enBase++;
         /* build 155: una tarea fusionada (enlazada a otra) NO se pinta en ninguna vista;
            sigue en la base (nada se borra). Y las que crea WhatsApp con `tarea` en vez de
            `nombre` se leen con ese nombre. La liga a una fusionada lleva a la tarea en que quedó. */
         if(o.fusionada_en || o.vinculada_a) _fus[o.id]=String(o.fusionada_en||o.vinculada_a);   /* vinculada_a (la pone la Mac) = quedó dentro de otra tarea */
         if(o.estado==="descartada") _desc[o.id]=1;
         if(o.estado==="fusionada" || o.fusionada_en || o.vinculada_a || o.estado==="descartada") return;   /* build 256: la propuesta descartada no se pinta (queda en la base) */
+        if(!veTarea(o)) return;   /* las de otros no entran a este teléfono (ver veTarea) */
         if(!o.nombre && o.tarea) o.nombre=String(o.tarea);
         if(o.nombre && !o.es_recordatorio) o.nombre=tituloTarea(o.nombre);   /* build 196: se ve ya normalizado; se guarda asi la proxima vez */
         tareas.push(o)});
@@ -4986,11 +5019,11 @@ function arranca(){
          como si fueran reales. Ahora, si la base está vacía, los ejemplos se
          pintan SOLO en pantalla y jamás se suben (ver el candado en guarda()).
          En cuanto haya una tarea de verdad, los ejemplos desaparecen solos. */
-      var _hayReal=tareas.length>0;
+      var _hayReal=_enBase>0;   /* la base tiene tareas aunque ninguna sea de este usuario: no se pintan ejemplos */
       /* build 136: si el snapshot vacio viene de la cache local (aun no llega
          el servidor) NO se siembran ejemplos: en un segundo llega lo real. */
       var _deCache=!!(snap.metadata && snap.metadata.fromCache);
-      if(!tareas.length && !_deCache) tareas=SEMILLA.slice();
+      if(!_hayReal && !_deCache) tareas=SEMILLA.slice();
       listo=true; render();
       /* ESPEJO INICIAL: los avisos que ya existían también se registran en
          bitacora_avisos, una sola vez por tarea (Salvador 2026-09-18). Nunca con
@@ -6516,6 +6549,23 @@ function leToca(t){
   if(!PERSONAS[yo] || !PERSONAS[yo].jefe) return false;
   return !!subeAlJefe(t);                        // ya escalo
 }
+/* QUÉ TAREAS LLEGAN A ESTE TELÉFONO. El servidor (fs_lista) y Firestore entregan la base completa, y
+   muchas vistas recorren `tareas` entera (Te esperan, Vencidas, porRevisar, Bandeja, la barra, el correteo):
+   si una ajena entra a la lista, alguna vista acaba pintándola. Por eso el filtro va en la puerta, al cargar:
+   el jefe ve todo (su pantalla ya decide qué le sube); los demás solo lo suyo y lo que les toca por las
+   reglas de siempre: lo crearon, son encargados o revisores, están integrados, la tarea los espera
+   (leToca), escribieron en ella, o cubren al dueño mientras está fuera. Una tarea sin dueño es del jefe. */
+function veTarea(t){
+  if(!t) return false;
+  if(!yo || esJefe(yo)) return true;
+  if(t.duenio===yo || t.creada_por===yo || t.encargado===yo) return true;
+  if((t.revisores||[]).indexOf(yo)>=0 || (t.integrantes||[]).indexOf(yo)>=0) return true;
+  try{ if(leToca(t)) return true; }catch(e){}
+  try{ if((encargadoDe(t)||{}).id===yo) return true; }catch(e){}
+  if((t.msgs||[]).some(function(m){ return m && m.de===yo; })) return true;
+  try{ var s=t.duenio && suplencias[t.duenio]; if(s && s.suplente===yo && estaFuera(t.duenio)) return true; }catch(e){}
+  return false;
+}
 function mias(){
   try{ despiertaTodas(); }catch(e){}
   /* EL BARRIDO CORRE SOBRE TODAS, no solo sobre las que se pintan: si no, una
@@ -7483,6 +7533,8 @@ function vYo(){
   if(PERSONAS[yo].jefe)
     h+='<div class="card"><h3>Encargos tuyos sin respuesta</h3><div class="sm">'+nlc+
        '. Si este número crece, no es problema de tareas: es que no te contestan.</div></div>';
+  h+='<h2 style="margin-top:22px">Sesión</h2><div class="card"><div class="sm">Entraste con '+esc(mp.mail_trabajo||mp.mail_personal||"tu cuenta de Google")+'.</div>'+
+     '<div class="acts"><button class="mini" id="bsalir">Cerrar sesión</button></div></div>';
   return h+'</div></div>';
 }
 
@@ -16971,13 +17023,14 @@ function bindLista(){
   var b=$("badm"); if(b) b.onclick=function(){vista="admin";render()};
   var _hm=$("bhmas"); if(_hm) _hm.onclick=function(){
     var v=document.createElement("div"); v.className="hoja-velo"; v.id="hojav";
-    v.innerHTML='<div class="hoja"><div class="grp"><button id="hmhist">'+ico("reloj",18,1.9)+' Historial</button><button id="hmnotif">'+ico("campana",18,1.9)+' Notificaciones</button><button id="hmvoces">'+ico("voces",18,1.9)+' Voces</button></div><button class="cancel" id="hojano">Cancelar</button></div>';
+    v.innerHTML='<div class="hoja"><div class="grp"><button id="hmhist">'+ico("reloj",18,1.9)+' Historial</button><button id="hmnotif">'+ico("campana",18,1.9)+' Notificaciones</button><button id="hmvoces">'+ico("voces",18,1.9)+' Voces</button></div><div class="grp"><button id="hmsalir" style="color:#FF453A">Cerrar sesión</button></div><button class="cancel" id="hojano">Cancelar</button></div>';
     document.body.appendChild(v);
     v.onclick=function(e){ if(e.target===v) cierraHoja(); };
     $("hojano").onclick=cierraHoja;
     $("hmnotif").onclick=function(){ cierraHoja(); vista="notif"; render(); };
     $("hmhist").onclick=function(){ cierraHoja(); vista="historial"; render(); };
     $("hmvoces").onclick=function(){ cierraHoja(); vista="voces"; render(); };
+    $("hmsalir").onclick=function(){ cierraHoja(); cerrarSesion(); };
   };
   var by=$("byo");  if(by) by.onclick=function(){vista="yo";render()};
   bindBotonAvisos();
@@ -17984,6 +18037,7 @@ function bindYo(){
   var f24=$("bfmt24"); if(f24) f24.onclick=function(){ try{localStorage.setItem("bit_fmt24","1")}catch(e){} toast("Horas como 16:35"); render() };
   bindBotonAvisos();
   var bb=$("bback"); if(bb) bb.onclick=function(){ vista="lista"; render() };
+  var bsal=$("bsalir"); if(bsal) bsal.onclick=function(){ cerrarSesion(); };
   var bp=$("bponsup"); if(bp) bp.onclick=function(){
     var d=$("supd").value, hh=$("suph").value, q=$("sups").value,
         tp=$("supt").value, ar=$("supa").value;

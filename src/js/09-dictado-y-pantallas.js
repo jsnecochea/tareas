@@ -176,13 +176,14 @@ function bindLista(){
   var b=$("badm"); if(b) b.onclick=function(){vista="admin";render()};
   var _hm=$("bhmas"); if(_hm) _hm.onclick=function(){
     var v=document.createElement("div"); v.className="hoja-velo"; v.id="hojav";
-    v.innerHTML='<div class="hoja"><div class="grp"><button id="hmhist">'+ico("reloj",18,1.9)+' Historial</button><button id="hmnotif">'+ico("campana",18,1.9)+' Notificaciones</button><button id="hmvoces">'+ico("voces",18,1.9)+' Voces</button></div><button class="cancel" id="hojano">Cancelar</button></div>';
+    v.innerHTML='<div class="hoja"><div class="grp"><button id="hmhist">'+ico("reloj",18,1.9)+' Historial</button><button id="hmnotif">'+ico("campana",18,1.9)+' Notificaciones</button><button id="hmvoces">'+ico("voces",18,1.9)+' Voces</button></div><div class="grp"><button id="hmsalir" style="color:#FF453A">Cerrar sesión</button></div><button class="cancel" id="hojano">Cancelar</button></div>';
     document.body.appendChild(v);
     v.onclick=function(e){ if(e.target===v) cierraHoja(); };
     $("hojano").onclick=cierraHoja;
     $("hmnotif").onclick=function(){ cierraHoja(); vista="notif"; render(); };
     $("hmhist").onclick=function(){ cierraHoja(); vista="historial"; render(); };
     $("hmvoces").onclick=function(){ cierraHoja(); vista="voces"; render(); };
+    $("hmsalir").onclick=function(){ cierraHoja(); cerrarSesion(); };
   };
   var by=$("byo");  if(by) by.onclick=function(){vista="yo";render()};
   bindBotonAvisos();
@@ -1189,6 +1190,7 @@ function bindYo(){
   var f24=$("bfmt24"); if(f24) f24.onclick=function(){ try{localStorage.setItem("bit_fmt24","1")}catch(e){} toast("Horas como 16:35"); render() };
   bindBotonAvisos();
   var bb=$("bback"); if(bb) bb.onclick=function(){ vista="lista"; render() };
+  var bsal=$("bsalir"); if(bsal) bsal.onclick=function(){ cerrarSesion(); };
   var bp=$("bponsup"); if(bp) bp.onclick=function(){
     var d=$("supd").value, hh=$("suph").value, q=$("sups").value,
         tp=$("supt").value, ar=$("supa").value;

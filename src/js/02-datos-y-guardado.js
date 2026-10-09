@@ -261,6 +261,38 @@ function pintaBloqueado(mail){
       .catch(function(){ pintaLogin() });
   };
 }
+/* CERRAR SESIÓN (⋯ del inicio y Tu cuenta). La sesión de Google vive dentro de la app instalada y sobrevive
+   a reinstalarla, así que sin este botón nadie podía cambiar de cuenta. Antes de salir se intenta subir lo
+   que quedó en la cola de MySQL (con tope, para no colgarse sin red); luego se limpia lo LOCAL de la sesión
+   (usuario, cola, motor de prueba, liga pendiente, caché de Firestore) y se recarga en el login. En el
+   servidor no se borra nada. */
+var SESION_LOCAL=["bit_u","doit_cola_mysql","doit_motor_tareas","bit_alta"];
+function cerrarSesion(sinPreguntar){
+  if(!sinPreguntar){
+    var pend=0; try{ pend=datosTareas.pendientes(); }catch(e){}
+    var q="¿Cerrar sesión"+(yo&&PERSONAS[yo]?" de "+PERSONAS[yo].nombre:"")+"?"+
+      (pend?"\n\nHay "+pend+" cambio"+(pend===1?"":"s")+" sin subir; se intentará subirlos antes de salir.":"");
+    if(!window.confirm(q)) return Promise.resolve(false);
+  }
+  try{ toast("Cerrando sesión…"); }catch(e){}
+  var tope=function(p, ms){ return Promise.race([p, new Promise(function(ok){ setTimeout(ok, ms); })]).catch(function(){}); };
+  var sube=Promise.resolve(); try{ sube=tope(datosTareas.vacia(), 4000); }catch(e){}
+  return sube.then(function(){
+    try{ datosTareas.para(); }catch(e){}
+    try{ SESION_LOCAL.forEach(function(k){ localStorage.removeItem(k); }); }catch(e){}
+    try{ olvidaLigaTarea(); }catch(e){}
+    var fa=null; try{ fa=firebase.auth(); }catch(e){}
+    return tope(fa ? fa.signOut() : Promise.resolve(), 4000);
+  }).then(function(){
+    var fs=null; try{ fs=firebase.firestore(); }catch(e){}
+    if(fs && typeof fs.terminate==="function" && typeof fs.clearPersistence==="function")
+      return tope(fs.terminate().then(function(){ return fs.clearPersistence(); }), 3000);
+  }).then(function(){
+    yo=null;
+    try{ location.replace(location.pathname); }catch(e){ location.reload(); }
+    return true;
+  });
+}
 /* LA MAÑA DE IPHONE: dentro de la app instalada, el camino por redirect es
    el que Safari rompe (particiona el almacenamiento del dominio de auth).
    Por eso el camino PRINCIPAL es el popup en todos lados, y el redirect
@@ -982,13 +1014,14 @@ function arranca(){
     });
     datosTareas.suscribir(function(snap){
       dbFail=false;   /* enganchó de verdad: no hay falla */
-      tareas=[]; var _fus={}, _desc={}; snap.forEach(function(d){var o=d.data();o.id=d.id;
+      tareas=[]; var _fus={}, _desc={}, _enBase=0; snap.forEach(function(d){var o=d.data();o.id=d.id; _enBase++;
         /* build 155: una tarea fusionada (enlazada a otra) NO se pinta en ninguna vista;
            sigue en la base (nada se borra). Y las que crea WhatsApp con `tarea` en vez de
            `nombre` se leen con ese nombre. La liga a una fusionada lleva a la tarea en que quedó. */
         if(o.fusionada_en || o.vinculada_a) _fus[o.id]=String(o.fusionada_en||o.vinculada_a);   /* vinculada_a (la pone la Mac) = quedó dentro de otra tarea */
         if(o.estado==="descartada") _desc[o.id]=1;
         if(o.estado==="fusionada" || o.fusionada_en || o.vinculada_a || o.estado==="descartada") return;   /* build 256: la propuesta descartada no se pinta (queda en la base) */
+        if(!veTarea(o)) return;   /* las de otros no entran a este teléfono (ver veTarea) */
         if(!o.nombre && o.tarea) o.nombre=String(o.tarea);
         if(o.nombre && !o.es_recordatorio) o.nombre=tituloTarea(o.nombre);   /* build 196: se ve ya normalizado; se guarda asi la proxima vez */
         tareas.push(o)});
@@ -999,11 +1032,11 @@ function arranca(){
          como si fueran reales. Ahora, si la base está vacía, los ejemplos se
          pintan SOLO en pantalla y jamás se suben (ver el candado en guarda()).
          En cuanto haya una tarea de verdad, los ejemplos desaparecen solos. */
-      var _hayReal=tareas.length>0;
+      var _hayReal=_enBase>0;   /* la base tiene tareas aunque ninguna sea de este usuario: no se pintan ejemplos */
       /* build 136: si el snapshot vacio viene de la cache local (aun no llega
          el servidor) NO se siembran ejemplos: en un segundo llega lo real. */
       var _deCache=!!(snap.metadata && snap.metadata.fromCache);
-      if(!tareas.length && !_deCache) tareas=SEMILLA.slice();
+      if(!_hayReal && !_deCache) tareas=SEMILLA.slice();
       listo=true; render();
       /* ESPEJO INICIAL: los avisos que ya existían también se registran en
          bitacora_avisos, una sola vez por tarea (Salvador 2026-09-18). Nunca con
