@@ -1789,7 +1789,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 305 · Lo dictado que no se aplicó se vuelve encargo para la Mac en el acto";
+var VERSION_APP = "build 306 · Cada dictado se mide: tiempo total, tiempo del modelo y tamaño de lo que se le manda";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -2272,7 +2272,7 @@ function preguntaAClaude(mensajes, modelo, cb){
     var tOut = ctrl ? setTimeout(function(){ vencio=true; ctrl.abort(); }, (modelo==="rapido")?8000:25000) : null;   /* build 283: el rápido corta a los 8 s */
     /* si Claude YA contesto y lo que truena es lo que la app hace despues, NO se
        vuelve a preguntar (antes eso duplicaba el recordatorio). 2026-09-23 */
-    var entregado = false;
+    var entregado = false, t0lat=Date.now(), chLat=planos.reduce(function(a, m){ return a+String(m.content||"").length; }, 0);
     fetch(PROXY,{method:"POST",
       headers:{"content-type":"application/json","x-app-token":APP_TOKEN,"x-usuario":yo||"anonimo"},
       body:JSON.stringify({modelo:modelo||"rapido",messages:planos}),
@@ -2281,6 +2281,7 @@ function preguntaAClaude(mensajes, modelo, cb){
      .then(function(res){
        if(tOut) clearTimeout(tOut);
        entregado = true;
+       try{ window.__lat={modelo:modelo||"rapido", ms:Date.now()-t0lat, chars:chLat, fin:Date.now()}; }catch(_l){}   /* cuánto tardó el modelo y cuánto se le mandó (se anota en el dictado) */
        if(!res.ok){ cb(null,(res.j&&res.j.error)||"No se pudo preguntar."); return }
        try{ if(res.j && res.j.model) window.__MODELO_CLAUDE[modelo||"rapido"]=String(res.j.model); }catch(_m){}   /* build 251: el modelo que dice el servidor */
        cb((res.j.content&&res.j.content[0]&&res.j.content[0].text)||"",null);
@@ -5040,13 +5041,15 @@ function registraDictado(t, v){
 function marcaDictado(t, estado){
   var w=window.__dict; if(!t || !w || w.tid!==t.id) return;
   var d=(t.dictados||[]).filter(function(x){ return x && x.id===w.id; })[0];
-  if(d && d.estado==="recibido"){ d.estado=estado; d.ap_ts=Date.now(); }
+  if(d && d.estado==="recibido"){ d.estado=estado; d.ap_ts=Date.now(); d.ms=d.ap_ts-d.ts;
+    var L=window.__lat; if(L && L.fin>=d.ts){ d.ms_modelo=L.ms; d.prompt_chars=L.chars; d.modelo=L.modelo; } }
   if(estado!=="recibido") window.__dict=null;
 }
 function revisaDictado(tid, did){
   var t=(typeof tareas!=="undefined" ? tareas : []).filter(function(x){ return x && x.id===tid; })[0]; if(!t) return;
   var d=(t.dictados||[]).filter(function(x){ return x && x.id===did; })[0];
   if(!d || d.estado!=="recibido") return;
+  if((t.encargos||[]).some(function(e){ return e && e.origen==="app283" && e.creado>=d.ts && String(e.t||"")===String(d.t).slice(0,1500); })){ d.estado="encargado"; d.ap_ts=Date.now(); guarda(t); return; }   /* ya quedó de encargo (IA caída): no se duplica */
   if(window.__dict && window.__dict.id===did) window.__dict=null;
   d.estado="sin_aplicar"; d.ap_ts=Date.now();
   var e=null; try{ if(typeof ordenPendiente283==="function"){ window.__dict=null; e=ordenPendiente283(t, d.t, "dictado_sin_aplicar"); } }catch(er){}
@@ -5058,7 +5061,7 @@ function revisaDictado(tid, did){
 function guarda(t){
   t.tocada=Date.now();
   if(t && t.nombre && !t.es_recordatorio) t.nombre=tituloTarea(t.nombre);   /* build 196: titulos con mayuscula inicial */
-  if(t && window.__dict && window.__dict.tid===t.id && !window.__dict.registrando) marcaDictado(t, "aplicado");
+  if(t && window.__dict && window.__dict.tid===t.id && !window.__dict.registrando && !window.__dict.espera) marcaDictado(t, "aplicado");
   try{ if(t && (t.duenio===yo || t.creada_por===yo)) recalculaFalta263(t); }catch(e){}   /* build 263: la marca de Falta info se recalcula al guardar */
   /* CANDADO: un ejemplo se ve, pero NUNCA sube a la base que comparte el
      equipo. Y se dice, para que nadie crea que quedó guardado. */
@@ -10080,6 +10083,7 @@ function completaRevision(t, v, op){
   var _modo283=_pes283?MODO_CEREBRO:(typeof MODO_RAPIDO283==="string"?MODO_RAPIDO283:"rapido"), _caida283=false, _pend283=false, _LP283=(typeof LO_PASO283==="string"?LO_PASO283:"No cambié nada todavía: lo paso a Claude para que lo aplique.");
   var _ov249=!op.alTerminar && _pes283; if(_ov249) mostrarAcomoda249();   /* build 249: pantalla difuminada mientras el cerebro trabaja */
   if(!_pes283 && !op.alTerminar) try{ toast("Entendido, lo aplico…"); }catch(e){}   /* build 283: respuesta optimista; la caja ya quedó libre */
+  if(window.__dict && window.__dict.tid===t.id) window.__dict.espera=true;   /* el dictado queda «aplicado» cuando el cerebro termina, no al primer guardado */
   try{ cargaAgendaWA(); }catch(e){}   /* build 248: la agenda se pide ya, para no preguntar "¿Quién es Fernando de BBVA?" si está en ella */
   if(!op.sinRevision) t.en_revision=true;   /* build 209: ya la esta completando: no sale de "Falta info" hasta "Autorizar" */
   var _antes208=okDeRevision(t);   /* build 208: lo que ya estaba palomeado ANTES de dictar (el dictado mismo cuenta en contextoDe) */
@@ -10109,6 +10113,7 @@ function completaRevision(t, v, op){
     try{ _T238.hecho238.falta=(_T238.hecho238.falta||[]).filter(function(f){ return f && !bloqueaQ267(_T238, f.q); }); }catch(e267){}   /* build 267: una respuesta no genera preguntas nuevas; las de relleno no salen */
     if(op.conservaFalta && op.conservaFalta.length){ var _qs255=_T238.hecho238.falta.map(function(f){ return f.q; }); op.conservaFalta.forEach(function(f){ if(f && !bloqueaQ267(_T238, f.q) && _qs255.indexOf(f.q)<0) _T238.hecho238.falta.push(f); }); }   /* build 255: lo que no contestó se queda */
     if(_T238!==t) guarda(_T238);
+    if(window.__dict && window.__dict.tid===t.id){ window.__dict.espera=false; marcaDictado(t, _pend283?"encargado":"aplicado"); }
     guarda(t); render();
     if(_ov249 || !op.alTerminar) liberaAcomoda249((_T238||t).id); else ocultaAcomoda249();   /* build 249: se libera YA REFRESCADA y, si hay dudas, sale su ventanita (283: también en el rápido, sin difuminar) */
     if(op.alTerminar) try{ op.alTerminar({hecho:hecho||[], dudas:dudas||[], vinc:vinc||[], falta:f}); }catch(e){} };

@@ -43,11 +43,14 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
     /* 1 · al dictar se guarda antes de interpretar; la interpretación lo marca aplicado */
     var A = await p.evaluate(async function () { var subidos = []; var g0 = datosTareas.guardar; datosTareas.guardar = function (t) { subidos.push(JSON.parse(JSON.stringify(t.dictados || []))); return Promise.resolve(); };
       window.modelo({ tipo: "tarea", ordenes: [], dudas: [], recordar: [], vinculos: [], entendi: "Recordar a los invitados el 10-nov", pasos: [{ quien: "IA", que: "Recordar a los invitados", fecha: "2026-11-10" }], que_toca: "Claude recuerda a los invitados el 10-nov" }, 200);
+      var pq = preguntaAClaude; preguntaAClaude = function (m, mo, cb) { var t0 = Date.now(); pq(m, mo, function (a, b) { window.__lat = { modelo: mo, ms: Date.now() - t0, chars: String(m[0].content).length, fin: Date.now() }; cb(a, b); }); };   /* como lo anota preguntaAClaude real */
       var T = COMEDOR(); abre(T); envia("el 10 de noviembre recuérdales a todos los invitados que no se les olvide la fiesta");
       var primero = subidos[0] || []; await espera(900); datosTareas.guardar = g0; var D = (tareas[0].dictados || []);
-      return { primero: primero.map(function (d) { return [d.estado, /10 de noviembre/.test(d.t), d.por]; }), final: D.map(function (d) { return d.estado; }) }; });
+      return { primero: primero.map(function (d) { return [d.estado, /10 de noviembre/.test(d.t), d.por]; }), final: D.map(function (d) { return d.estado; }),
+        medida: D.map(function (d) { return [typeof d.ms === "number" && d.ms >= 150, typeof d.ms_modelo === "number", d.prompt_chars > 0, d.modelo]; }) }; });
     eq("lo dictado sube al servidor ANTES de interpretarse (estado recibido, texto completo, quién)", A.primero, [["recibido", true, "salvador"]]);
-    eq("al aplicarse queda «aplicado»", A.final, ["aplicado"]);
+    eq("al aplicarse queda «aplicado» (cuando el cerebro termina, no al primer guardado)", A.final, ["aplicado"]);
+    eq("se mide: tiempo total, tiempo del modelo, tamaño de lo que se le mandó y modelo", A.medida, [[true, true, true, "rapido"]]);
     /* 2 · si nada lo aplica: aviso en la plática y queda sin_aplicar */
     var B = await p.evaluate(async function () { DICTADO_ESPERA_MS = 300; var T = MORIC(); abre(T);
       var g0 = guarda; var antes = 0;
