@@ -1789,7 +1789,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 304 · Choques: si una persona y la Mac cambian el mismo dato, gana la persona y lo otro queda en el historial";
+var VERSION_APP = "build 305 · Lo dictado que no se aplicó se vuelve encargo para la Mac en el acto";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -5026,7 +5026,8 @@ function esEjemplo(t){
 /* ENTRADA ÚNICA DEL DICTADO. Todo lo que se dicta o escribe dentro de una tarea queda primero en t.dictados (estado
    "recibido") y se sube al servidor en ese momento; después se interpreta. Al guardar la tarea con lo aplicado pasa a
    "aplicado" (o "consulta" si solo era una búsqueda). Si a los 90 s sigue "recibido" (una hoja que se cerró sin terminar,
-   un modelo caído), se dice en la plática con el texto completo y queda "sin_aplicar" para que la Mac lo retome. */
+   un modelo caído), queda "sin_aplicar", se vuelve encargo para la Mac (ordenPendiente283, que la Mac aplica en ~2 min)
+   y se dice en la plática con el texto completo. */
 var DICTADO_ESPERA_MS=90000;
 function registraDictado(t, v){
   var d={id:"d"+Date.now().toString(36)+Math.random().toString(36).slice(2,6), ts:Date.now(), t:String(v), por:yo, estado:"recibido"};
@@ -5048,9 +5049,11 @@ function revisaDictado(tid, did){
   if(!d || d.estado!=="recibido") return;
   if(window.__dict && window.__dict.id===did) window.__dict=null;
   d.estado="sin_aplicar"; d.ap_ts=Date.now();
-  msg(t,"bi","⚠️ No quedó aplicada tu indicación: «"+String(d.t).slice(0,300)+"». Quedó guardada; la Mac la retoma, o dímela otra vez.");
+  var e=null; try{ if(typeof ordenPendiente283==="function"){ window.__dict=null; e=ordenPendiente283(t, d.t, "dictado_sin_aplicar"); } }catch(er){}
+  if(e) d.encargo_id=e.id;
+  msg(t,"bi","⚠️ Tu indicación «"+String(d.t).slice(0,300)+"» no quedó aplicada aquí: ya se la pasé a Claude en la Mac y te confirmo en un par de minutos qué quedó.");
   var m=t.msgs[t.msgs.length-1]; m.canal="priv:"+yo; m.nota_claude=1; m.dictado_id=did;
-  guarda(t); try{ render(); }catch(e){}
+  guarda(t); try{ render(); }catch(e2){}
 }
 function guarda(t){
   t.tocada=Date.now();

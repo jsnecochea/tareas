@@ -52,10 +52,12 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
     var B = await p.evaluate(async function () { DICTADO_ESPERA_MS = 300; var T = MORIC(); abre(T);
       var g0 = guarda; var antes = 0;
       window.registraDictado(T, "algo que ninguna rama aplicó"); window.__dict = null;   /* como una hoja cerrada sin terminar */
-      await espera(600); var V = tareas[0]; var av = (V.msgs || []).filter(function (m) { return /No quedó aplicada/.test(m.t || ""); })[0] || {};
-      return { estado: (V.dictados || []).map(function (d) { return d.estado; }), aviso: [!!av.t, /ninguna rama/.test(av.t || ""), av.canal, av.nota_claude] }; });
+      await espera(600); var V = tareas[0]; var av = (V.msgs || []).filter(function (m) { return /no quedó aplicada/.test(m.t || ""); })[0] || {};
+      var en = (V.encargos || []).filter(function (x) { return x.motivo === "dictado_sin_aplicar"; })[0] || {};
+      return { estado: (V.dictados || []).map(function (d) { return d.estado; }), aviso: [!!av.t, /ninguna rama/.test(av.t || ""), av.canal, av.nota_claude], encargo: [en.estado, en.origen, en.t, (V.dictados[0] || {}).encargo_id === en.id] }; });
     eq("sin aplicar: estado sin_aplicar", B.estado, ["sin_aplicar"]);
     eq("sin aplicar: se dice en la plática, privado, con el texto", B.aviso, [true, true, "priv:salvador", 1]);
+    eq("sin aplicar: se vuelve encargo para la Mac (app283) con el texto", B.encargo, ["pendiente", "app283", "algo que ninguna rama aplicó", true]);
     /* 3 · una búsqueda queda como consulta */
     var C = await p.evaluate(async function () { var T = MORIC(); abre(T); envia("busca el costo de la cena del Moric"); await espera(100);
       [].forEach.call(document.querySelectorAll(".leemask,.cnlbg,.cnlsheet,#busq"), function (e) { e.remove(); });
