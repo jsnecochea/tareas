@@ -1,6 +1,8 @@
 # Doit · reglas para trabajar en este repo
 
-App de una sola página: `index.html` (HTML + CSS + JS) y `sw.js`. El servidor publica SOLO esos dos archivos
+App de una sola página: `index.html` (HTML + CSS + JS) y `sw.js`. **`index.html` ya no se edita a mano:** se arma con
+`node build.js` desde `src/` (`src/plantilla.html`, `src/css/app.css`, `src/js/NN-*.js` en orden; `src/MAPA.md` dice qué
+función vive en cada archivo). Se publica igual que siempre (un solo index.html), y `tests/correr.js` arma antes de probar. El servidor publica SOLO esos dos archivos
 (no sirve `/img`, `/js` ni `/tests`); cualquier archivo nuevo que la app necesite en producción hay que
 coordinarlo antes con Josué (el publicador).
 

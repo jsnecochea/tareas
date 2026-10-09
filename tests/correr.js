@@ -10,6 +10,9 @@
 "use strict";
 var fs = require("fs"), path = require("path"), cp = require("child_process");
 var DIR = __dirname;
+/* las pruebas leen index.html: primero se arma desde src/ (build.js), así nunca se prueba algo viejo */
+try { process.stdout.write(cp.execFileSync(process.execPath, [path.join(DIR, "..", "build.js")]).toString()); }
+catch (e) { console.log("build.js falló:", String(e.stdout || e.message)); process.exit(1); }
 var AREAS = JSON.parse(fs.readFileSync(path.join(DIR, "areas.json"), "utf8"));
 var ALIAS = { claude: "barra", agenda: "fechas", acomodo: "home", hilo: "tarea", voz: "lectura", wa: "whatsapp", notificaciones: "avisos" };
 
