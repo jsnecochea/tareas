@@ -111,7 +111,7 @@ async function vueltas(k) { for (var x = 0; x < (k || 6); x++) await espera(); }
     eq("sin red: queda 1 en la cola local", C.d.pendientes(), 1);
     eq("la cola vive en localStorage (sobrevive a cerrar la app)", Object.keys(JSON.parse(C.L.getItem("doit_cola_mysql"))), ["tRED"]);
     await C.d.guardar({ id: "tRED", nombre: "Sin red", estado: "hoy" }); await vueltas();
-    eq("dos cambios sin red: se queda la versión más nueva", JSON.parse(C.L.getItem("doit_cola_mysql")).tRED.estado, "hoy");
+    eq("dos cambios sin red: se queda la versión más nueva", JSON.parse(C.L.getItem("doit_cola_mysql")).tRED.cambios.estado, "hoy");
     var ms1 = C.corre(); await vueltas();
     eq("reintenta con espera creciente", ms1.length >= 1 && ms1[0] >= 2000, true);
     eq("sigue sin red: no se pierde", C.d.pendientes(), 1);

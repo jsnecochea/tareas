@@ -1789,7 +1789,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 302 · Entrada única del dictado: lo que dices se guarda antes de interpretarlo y, si no se aplicó, se dice";
+var VERSION_APP = "build 303 · Nadie pisa a nadie: la app manda solo lo que cambió, relee antes de escribir y junta mensajes y bitácoras con lo de la Mac";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -4665,10 +4665,66 @@ var datosTareas=(function(){
     return cola;
   }
   function grabaCola(){ try{ var s=ls(); if(s) s.setItem(COLA_KEY, JSON.stringify(leeCola())); }catch(e){} }
-  function encola(id, campos){
-    var c=leeCola(), prev=c[id]||{};
-    c[id]=Object.assign({}, prev, JSON.parse(JSON.stringify(campos)));
+  /* NADIE PISA A NADIE. La app, la Mac y el conector escriben la misma tarea. Por eso aquí:
+     1) se manda SOLO lo que cambió contra la última versión leída del servidor (bases[id]);
+     2) antes de escribir se relee la tarea (fs_doc) y se junta: lo que cambió el otro se respeta y las listas que
+        crecen (mensajes, bitácoras, encargos, dictados) se juntan a tres bandas (base / mío / servidor): lo que yo
+        agregué entra, lo que yo quité sale, y lo que agregó el otro se queda;
+     3) lo que no sube queda en la cola (solo los cambios, con su base) y se reintenta con el mismo cuidado. */
+  var bases={};
+  function copia(o){ return o==null ? o : JSON.parse(JSON.stringify(o)); }
+  function igual(a, b){ return JSON.stringify(a)===JSON.stringify(b); }
+  function claveItem(x){ return (x && typeof x==="object") ? String(x.id || x.nid || x.wa_id || ((x.ts||"")+"|"+(x.k||"")+"|"+String(x.t||x.texto||"").slice(0,80))) : JSON.stringify(x); }
+  function esLista(k){ return CONCILIA_UNEN.indexOf(k)>=0 || k==="dictados"; }
+  /* junta una lista a tres bandas, por clave de cada elemento */
+  function junta3(base, mio, srv){
+    base=Array.isArray(base)?base:[]; mio=Array.isArray(mio)?mio:[]; srv=Array.isArray(srv)?srv:[];
+    var B={}, M={}, S={}; base.forEach(function(x){ B[claveItem(x)]=x; }); mio.forEach(function(x){ M[claveItem(x)]=x; }); srv.forEach(function(x){ S[claveItem(x)]=x; });
+    var out=[], vistos={};
+    mio.forEach(function(x){ var c=claveItem(x); if(vistos[c]) return; vistos[c]=1;
+      if(c in S && c in B && igual(x, B[c])) out.push(S[c]); else out.push(x); });     /* sin cambio mío: gana la del servidor */
+    srv.forEach(function(x){ var c=claveItem(x); if(vistos[c]) return; vistos[c]=1;
+      if(c in B && !(c in M)) return;                                                   /* yo lo quité: no regresa */
+      out.push(x); });
+    if(out.some(function(x){ return x && typeof x==="object" && x.ts; })) out.sort(function(a,b){ return ((a&&+a.ts)||0)-((b&&+b.ts)||0); });
+    return out;
+  }
+  /* qué cambió: los campos de d distintos de la base (y las listas con su base para juntar después) */
+  /* cada tarea recuerda (sin que se vea ni se guarde) la versión del servidor de la que salió: así un guardado tardío
+     (una respuesta del modelo que llega 8 s después) nunca "deshace" lo que la Mac escribió mientras tanto */
+  function ponBase(o, b){ try{ Object.defineProperty(o, "__base", {value:b, writable:true, configurable:true, enumerable:false}); }catch(e){} return o; }
+  function cambiosDe(id, d, b0){
+    var b=b0 || bases[id], c={}, cb={};
+    if(!b) return { cambios:copia(d), base:{} };
+    Object.keys(d).forEach(function(k){ if(!igual(d[k], b[k])){ c[k]=copia(d[k]); if(esLista(k)) cb[k]=copia(b[k]); } });
+    return { cambios:c, base:cb };
+  }
+  /* ---- cola local de lo que falta subir a MySQL ---- */
+  function leeCola(){
+    if(cola) return cola;
+    cola={};
+    try{ var s=ls(), v=s && s.getItem(COLA_KEY); if(v) cola=JSON.parse(v)||{}; }catch(e){ cola={}; }
+    return cola;
+  }
+  function grabaCola(){ try{ var s=ls(); if(s) s.setItem(COLA_KEY, JSON.stringify(leeCola())); }catch(e){} }
+  /* entrada de la cola: {cambios, base}; las viejas (doc suelto) se leen como cambios sin base */
+  function entrada(x){ return (x && x.__v===2) ? x : { __v:2, cambios:x||{}, base:{} }; }
+  function encola(id, campos, base){
+    var c=leeCola(), prev=entrada(c[id]);
+    var nb=Object.assign({}, base||{}); Object.keys(prev.base||{}).forEach(function(k){ nb[k]=prev.base[k]; });   /* la base más vieja manda */
+    c[id]={ __v:2, cambios:Object.assign({}, prev.cambios, copia(campos)), base:nb };
     grabaCola();
+  }
+  function vistaCola(id){ var x=leeCola()[id]; return x ? entrada(x).cambios : null; }
+  /* sube una entrada: relee la tarea, junta y escribe solo lo que cambió */
+  function subeUna(id, ent){
+    return llama("fs_doc", {col:COL, id:id}).then(function(j){
+      var S=j ? (j.doc||j) : {}; var data={};
+      Object.keys(ent.cambios).forEach(function(k){
+        data[k]= esLista(k) ? junta3(ent.base[k], ent.cambios[k], S[k]) : ent.cambios[k]; });
+      if(!Object.keys(data).length) return S;
+      return llama("fs_set", {col:COL}, {col:COL, id:id, data:data, merge:true}).then(function(){ return Object.assign({}, S, data); });
+    });
   }
   function vacia(){
     var c=leeCola(), ids=Object.keys(c);
@@ -4676,8 +4732,9 @@ var datosTareas=(function(){
     return ids.reduce(function(p, id){
       return p.then(function(){
         var mandado=c[id]; if(!mandado) return;
-        return llama("fs_set", {col:COL}, {col:COL, id:id, data:mandado, merge:true}).then(function(){
+        return subeUna(id, entrada(mandado)).then(function(nuevo){
           if(c[id]===mandado){ delete c[id]; grabaCola(); }   /* si cambió mientras subía, se queda la versión nueva */
+          if(nuevo){ var b=copia(nuevo); delete b.id; bases[id]=b; }
         });
       });
     }, Promise.resolve()).then(function(){ intento=0; return true; }, function(e){
@@ -4689,8 +4746,8 @@ var datosTareas=(function(){
     var ms=MYSQL_REINTENTOS_MS[Math.min(intento, MYSQL_REINTENTOS_MS.length-1)]; intento++;
     reintento=setTimeout(function(){ reintento=null; vacia().catch(function(){}); }, ms);
   }
-  function aMySQL(id, campos){
-    encola(id, campos);
+  function aMySQL(id, campos, base){
+    encola(id, campos, base);
     return vacia().catch(function(e){
       try{ console.warn("MySQL: queda en cola para reintento", e); }catch(_e){}
       return false;
@@ -4701,14 +4758,14 @@ var datosTareas=(function(){
     return llama("fs_lista", {col:COL, usuario:yo, limit:1000}).then(function(j){
       var arr=Array.isArray(j) ? j : ((j&&(j.docs||j.documentos))||[]);
       var c=leeCola();   /* lo que aún no sube se ve como el usuario lo dejó */
-      var porId={}; arr.forEach(function(o){ if(o && o.id) porId[o.id]=o; });
-      Object.keys(c).forEach(function(id){ porId[id]=Object.assign({id:id}, porId[id]||{}, c[id]); });
+      var porId={}; arr.forEach(function(o){ if(o && o.id){ porId[o.id]=o; var b=copia(o); delete b.id; bases[o.id]=b; } });
+      Object.keys(c).forEach(function(id){ porId[id]=Object.assign({id:id}, porId[id]||{}, vistaCola(id)); });
       return Object.keys(porId).map(function(id){ return porId[id]; });
     });
   }
   function leer(id){
     if(motor()==="mysql") return llama("fs_doc", {col:COL, id:id}).then(function(j){
-      if(!j) return null; var o=j.doc||j; return Object.assign({}, o, leeCola()[id]||{});
+      if(!j) return null; var o=j.doc||j; var b=copia(o); delete b.id; bases[id]=b; return Object.assign({}, o, vistaCola(id)||{});
     });
     return db.collection(COL).doc(id).get().then(function(d){ return (d && d.exists) ? d.data() : null; });
   }
@@ -4717,8 +4774,11 @@ var datosTareas=(function(){
     var pf=null;
     if(db) pf=db.collection(COL).doc(t.id).set(t);
     if(motor()!=="mysql") return pf;
-    var d=Object.assign({}, t); delete d.id;
-    var pm=aMySQL(t.id, d);
+    var d=copia(t); delete d.id;
+    var cb=cambiosDe(t.id, d, t.__base);
+    if(!Object.keys(cb.cambios).length) return pf || Promise.resolve(true);
+    ponBase(t, copia(d));   /* lo siguiente que cambie se mide contra lo que ya mandé */
+    var pm=aMySQL(t.id, cb.cambios, cb.base);
     return pf || pm;
   }
   /* guarda solo unos campos (merge), en el motor elegido y en Firestore */
@@ -4726,7 +4786,8 @@ var datosTareas=(function(){
     var pf=null;
     if(db) pf=db.collection(COL).doc(id).set(campos, {merge:true});
     if(motor()!=="mysql") return pf;
-    var pm=aMySQL(id, campos);
+    var base={}; Object.keys(campos||{}).forEach(function(k){ if(esLista(k) && bases[id]) base[k]=copia(bases[id][k]); });
+    var pm=aMySQL(id, campos, base);
     return pf || pm;
   }
   /* en MySQL no se borra: queda descartada. En Firestore, como siempre. */
@@ -4755,7 +4816,7 @@ var datosTareas=(function(){
      y solo se avisa si cambió. El "snap" imita al de Firestore para que el resto de la app no cambie. */
   function comoSnap(arr){
     return { metadata:{fromCache:false}, forEach:function(g){ arr.forEach(function(o){
-      g({ id:o.id, data:function(){ var x=Object.assign({}, o); delete x.id; return x; } }); }); } };
+      g({ id:o.id, data:function(){ var x=Object.assign({}, o); delete x.id; return ponBase(x, bases[o.id] ? copia(bases[o.id]) : null); } }); }); } };
   }
   function suscribir(alCambiar, alFallar){
     para();
