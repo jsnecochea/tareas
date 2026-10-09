@@ -1789,7 +1789,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 301 · Una sola base: la app de todos lee y escribe en MySQL, igual que la Mac, y junta lo que quedó solo en Firestore";
+var VERSION_APP = "build 302 · Entrada única del dictado: lo que dices se guarda antes de interpretarlo y, si no se aplicó, se dice";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -4944,9 +4944,39 @@ function esEjemplo(t){
   return !!IDS_EJEMPLO[t.id];
 }
 
+/* ENTRADA ÚNICA DEL DICTADO. Todo lo que se dicta o escribe dentro de una tarea queda primero en t.dictados (estado
+   "recibido") y se sube al servidor en ese momento; después se interpreta. Al guardar la tarea con lo aplicado pasa a
+   "aplicado" (o "consulta" si solo era una búsqueda). Si a los 90 s sigue "recibido" (una hoja que se cerró sin terminar,
+   un modelo caído), se dice en la plática con el texto completo y queda "sin_aplicar" para que la Mac lo retome. */
+var DICTADO_ESPERA_MS=90000;
+function registraDictado(t, v){
+  var d={id:"d"+Date.now().toString(36)+Math.random().toString(36).slice(2,6), ts:Date.now(), t:String(v), por:yo, estado:"recibido"};
+  t.dictados=(t.dictados||[]).concat([d]).slice(-60);
+  window.__dict={tid:t.id, id:d.id, ts:d.ts, registrando:true};
+  try{ guarda(t); }finally{ if(window.__dict && window.__dict.id===d.id) window.__dict.registrando=false; }
+  setTimeout(function(){ revisaDictado(t.id, d.id); }, DICTADO_ESPERA_MS);
+  return d;
+}
+function marcaDictado(t, estado){
+  var w=window.__dict; if(!t || !w || w.tid!==t.id) return;
+  var d=(t.dictados||[]).filter(function(x){ return x && x.id===w.id; })[0];
+  if(d && d.estado==="recibido"){ d.estado=estado; d.ap_ts=Date.now(); }
+  if(estado!=="recibido") window.__dict=null;
+}
+function revisaDictado(tid, did){
+  var t=(typeof tareas!=="undefined" ? tareas : []).filter(function(x){ return x && x.id===tid; })[0]; if(!t) return;
+  var d=(t.dictados||[]).filter(function(x){ return x && x.id===did; })[0];
+  if(!d || d.estado!=="recibido") return;
+  if(window.__dict && window.__dict.id===did) window.__dict=null;
+  d.estado="sin_aplicar"; d.ap_ts=Date.now();
+  msg(t,"bi","⚠️ No quedó aplicada tu indicación: «"+String(d.t).slice(0,300)+"». Quedó guardada; la Mac la retoma, o dímela otra vez.");
+  var m=t.msgs[t.msgs.length-1]; m.canal="priv:"+yo; m.nota_claude=1; m.dictado_id=did;
+  guarda(t); try{ render(); }catch(e){}
+}
 function guarda(t){
   t.tocada=Date.now();
   if(t && t.nombre && !t.es_recordatorio) t.nombre=tituloTarea(t.nombre);   /* build 196: titulos con mayuscula inicial */
+  if(t && window.__dict && window.__dict.tid===t.id && !window.__dict.registrando) marcaDictado(t, "aplicado");
   try{ if(t && (t.duenio===yo || t.creada_por===yo)) recalculaFalta263(t); }catch(e){}   /* build 263: la marca de Falta info se recalcula al guardar */
   /* CANDADO: un ejemplo se ve, pero NUNCA sube a la base que comparte el
      equipo. Y se dice, para que nadie crea que quedó guardado. */
@@ -17282,6 +17312,7 @@ function bindHilo(){
     /* build 141: con la alarma roja abierta no se escribe ni se dicta */
     if(alarmaRoja(t)){ toast("Primero: Eliminar alarma o Posponer 1 hora"); render(); return; }
     var v=limpiaHoraDictada($("txt").value.trim()); if(!v)return;
+    if(!window.__ctxPasa) registraDictado(t, v);   /* lo dicho se guarda ANTES de interpretarlo: nunca se pierde */
     /* build 255: con el bloque de preguntas abierto, lo dictado o escrito las contesta TODAS (un solo paso) */
     if(window.__preg255===t.id && document.getElementById("preg249")){ $("txt").value=""; marcaEnvio("tenv","");
       if(!preguntas249(t).length){ cierraPreg255(); completaRevision(t, sinPrefijoClaude(v), {sinRevision:tipoRevisar(t)!=="falta"}); return; }   /* build 273: el cuestionario de lo que falta */
@@ -17295,7 +17326,7 @@ function bindHilo(){
       completaRevision(t, sinPrefijoClaude(v), {sinRevision:tipoRevisar(t)!=="falta"}); return; }
     /* build 188 (Salvador 08:39): lo que le dices a Claude (correcciones, aclaraciones) nunca sale por WhatsApp */
     /* build 194: "abre / busca / el costo de X" dentro de una tarea (aunque empiece con "Claude") = busqueda en todas */
-    var _qT=pideBuscar(v); if(_qT){ $("txt").value=""; marcaEnvio("tenv",""); abreBusqueda(_qT, v, buscaTodo(_qT)); return; }
+    var _qT=pideBuscar(v); if(_qT){ $("txt").value=""; marcaEnvio("tenv",""); marcaDictado(t, "consulta"); abreBusqueda(_qT, v, buscaTodo(_qT)); return; }
     /* build 225: mensaje en curso (lo que faltaba decirle, o el cambio al borrador) y "ponle un mensaje a X para…" */
     /* build 225: "me mezclaste / esto es de otra tarea / esto es de <tarea>" -> se mueven los mensajes; NUNCA se tocan metas ni lista */
     /* build 236: en una tarea por clasificar, "vincúlala a X" hace lo mismo que el botón Vincular (la hoja, con X ya buscado) */

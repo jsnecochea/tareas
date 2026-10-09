@@ -3,7 +3,7 @@
   "home": ["b226", "b237", "b239", "b246", "b257", "b260", "b263", "b264", "b270", "b271", "b272", "b284", "b285", "voces", "mysql-app", "inicio", "inicio-filtros", "inicio-fechas", "contestadas", "plan-seguimiento", "campos-unicos"],
   "tarea": ["b215", "b216", "b224", "b225", "b227", "b228", "b229", "b230", "b231", "b232", "b233", "b234", "b235", "b236", "b240", "b242", "b243", "b247", "b249", "b250", "b251", "b252", "b253", "b254", "b255", "b259", "b261", "b262", "b265", "b266", "b267", "b273", "b278", "mysql-app", "campos-unicos"],
   "barra": ["b221", "b238", "b248", "b259", "b262", "b278", "b283", "b286"],
-  "dictado": ["b213", "b238", "b248", "b252", "b253", "b254", "b255", "b266", "b283"],
+  "dictado": ["b213", "b238", "b248", "b252", "b253", "b254", "b255", "b266", "b283", "dictado-entrada"],
   "caminata": ["b274", "b275", "b276", "b276-hotfix", "b277", "b278", "b286", "voces"],
   "fechas": ["b222", "b234", "b246", "b248", "b250", "b267", "b282"],
   "avisos": ["b217", "b258", "b263", "b264", "b268", "b282", "autodiagnostico", "ligatarea"],
