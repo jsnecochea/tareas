@@ -1084,17 +1084,21 @@ html.cam274on,html.cam274on body{overflow:hidden}
 .bprog{border:1px solid #2f6fa8;background:var(--fi-bluebg,#10283f)!important}.bprog.cancel{opacity:.5;border-color:#3a3a3e}
 .bprog .pgh{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#4aa3ff}.bprog .pgt{display:block;margin-top:4px}
 .bprog .pgx{display:block;margin-top:4px;font-size:12px;color:var(--ink-3,#9a9aa2)}
-.ntf{padding:6px 14px 30px;display:flex;flex-direction:column}
-.ntf .presets{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:6px 0 4px}
-.ntf .presets button{font-size:13px;text-align:center;padding:9px 2px;border-radius:10px;background:var(--surface-2,#2a2a2d);color:var(--ink-3,#9a9aa2);border:1px solid transparent}
+.ntf{padding:6px 16px 30px;display:flex;flex-direction:column}
+.ntf .presets{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0 6px}
+.ntf .presets button{font-size:14px;text-align:center;padding:10px 2px;border-radius:10px;background:var(--surface-2,#2a2a2d);color:var(--ink-2,#c7c7cc);border:1px solid transparent;font-family:inherit}
 .ntf .presets button.on{background:var(--fi-bluebg,#10283f);color:#4aa3ff;border-color:#2f6fa8}
-.ntf .ngrp{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3,#9a9aa2);margin:14px 0 2px}
-.ntf .nrow{display:flex;align-items:center;gap:10px;padding:11px 2px;border:0;border-bottom:1px solid #3a3a3e;background:none;color:var(--ink,#f2f2f4);text-align:left;font:inherit}
+.ntf .nexp{font-size:14px;line-height:1.5;color:var(--ink-3,#9a9aa2);margin:4px 0 2px}.ntf .nexp b{color:var(--ink,#f2f2f4);font-weight:600}
+.ntf .ngrp{display:flex;align-items:flex-end;gap:8px;font-size:12px;letter-spacing:.06em;color:var(--ink-3,#9a9aa2);margin:18px 0 2px;padding-bottom:4px}
+.ntf .ngrp span:first-child{flex:1;text-transform:uppercase}
+.ntf .ngrp .ncol{width:58px;text-align:center;letter-spacing:0;font-size:12px;flex:none}
+.ntf .nrow{display:flex;align-items:center;gap:8px;padding:12px 0;border-bottom:1px solid #3a3a3e;color:var(--ink,#f2f2f4)}
 .ntf .nrow svg{color:var(--ink-3,#9a9aa2);flex:none}
-.ntf .nrow .tx{flex:1;min-width:0;font-size:16px}.ntf .nrow .tx small{display:block;color:var(--ink-3,#9a9aa2);font-size:13px;margin-top:2px}
-.ntf .tg{width:46px;height:28px;border-radius:99px;background:#3a3a3e;position:relative;flex:none;transition:background .2s}
+.ntf .nrow .tx{flex:1;min-width:0;font-size:16px;line-height:1.35}.ntf .nrow .tx small{display:block;color:var(--ink-3,#9a9aa2);font-size:13px;line-height:1.4;margin-top:3px}
+.ntf .tg{width:44px;height:28px;border-radius:99px;background:#48484a;position:relative;flex:none;transition:background .2s;border:0;padding:0;margin:0 7px;cursor:pointer}
 .ntf .tg::after{content:"";position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .2s}
-.ntf .tg.on{background:#30d158}.ntf .tg.on::after{left:20px}
+.ntf .tg.on{background:#30d158}.ntf .tg.on::after{left:18px}
+.ntf .tg:focus-visible{outline:2px solid #4aa3ff;outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.ntf .tg,.ntf .tg::after{transition:none}}
 /* Voces: letra grande y renglones aireados (lectura fácil), monocromo */
 .voc{padding:8px 16px 40px;display:flex;flex-direction:column;font-size:18px;line-height:1.5}
@@ -1789,7 +1793,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 312 · «Contactos» en el Resumen de cada tarea (agregar de tu agenda); eliminar fotos ya no saca al contacto";
+var VERSION_APP = "build 313 · Notificaciones con dos columnas (Doit y WhatsApp) por tipo de aviso; por defecto solo recordatorios, citas, llamadas, quien te espera y lo que hay que autorizar";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -1807,86 +1811,97 @@ var VAPID_PUBLIC="BFnf9NwBioqZIXQ7jibjMPViaGHLDfB5aNLowJMco_u9PdaEZVRibceXV8mlG3
 /* build 150: la notificacion lleva la liga EXACTA a la tarea (?recordatorio=<id>),
    asi al tocarla abre ese hilo y no otro. */
 function urlTarea(id){ return "https://doit.ok-doit.com/?recordatorio="+encodeURIComponent(id); }
-/* ===== build 200 (Salvador 2026-10-04 16:39, maqueta "Fichas limpias" pantalla 7): NOTIFICACIONES =====
-   En ⋯ del inicio. Cada persona elige que hace sonar su celular. Se guarda en SU ficha
-   (bitacora_personas/<usuario>.notif = {v, preset, tipos:{clave:true/false}, ts}) para que el servidor
-   (push.php) tambien la lea. CATALOGO UNICO: para agregar un tipo de aviso nuevo se agrega UNA linea aqui
-   (k = clave que viaja en el aviso como "tipo"; nivel = en que atajo entra: urgente < normal < todas). ===== */
-var NOTIF_VERSION=3;
+/* ===== NOTIFICACIONES: qué te llega y por dónde (⋯ del inicio → Notificaciones) =====
+   Cada tipo de aviso tiene DOS interruptores: «Doit» (la notificación de esta app en el teléfono) y «WhatsApp» (el mensaje que
+   manda el número de Doit). Se guarda en la ficha de cada quien, bitacora_personas/<usuario>.notif =
+   {v:2, preset, tipos:{clave:{push:bool, wa:bool}}, ts}; la app lee «push», la Mac lee «wa» y push.php lee «push».
+   Lo guardado con el formato de un solo interruptor (tipos:{clave:bool}, cualquier v) no se conserva: vale el defecto
+   (Salvador pidió empezar de cero con su regla). Un tipo que no está en el catálogo no suena por ningún lado.
+   CATÁLOGO ÚNICO: un tipo nuevo de aviso = una línea aquí, con la misma clave en la Mac y en push.php
+   (k viaja en el aviso como "tipo"; esencial = encendido en ambas columnas por defecto). ===== */
+var NOTIF_VERSION=2;
 var NOTIF_TIPOS=[
-  /* build 269: LOS 5 DE SALVADOR (los mismos que le manda la Mac por WhatsApp) */
-  {k:"acuerdo",      grupo:"Lo esencial", nivel:"esencial", ico:"cal",    tx:"Acuerdos",                            sub:"Una cita, hora o lugar confirmado o cambiado"},
-  {k:"llamada",      grupo:"Lo esencial", nivel:"esencial", ico:"alerta", tx:"Te necesito: llamada",                sub:"Alguien te pide una llamada"},
-  {k:"atorado",      grupo:"Lo esencial", nivel:"esencial", ico:"pers",   tx:"Te necesito: atorado",                sub:"Alguien espera tu sí, tu dato o tu pago"},
-  {k:"ia_atorada",   grupo:"Lo esencial", nivel:"esencial", ico:"alerta", tx:"Te necesito: la IA se atoró",         sub:"Claude no puede seguir sin ti"},
-  {k:"te_necesito", grupo:"Urgente",  nivel:"urgente", ico:"alerta", tx:"Claude necesita tu respuesta",        sub:"Solo lo que requiere tu sí o tu dato para seguir avanzando"},
-  {k:"recordatorio", grupo:"Urgente",  nivel:"urgente", ico:"reloj",  tx:"Recordatorios y alarmas",            sub:"Cuando suena un recordatorio que te toca"},
-  {k:"espera",       grupo:"Urgente",  nivel:"urgente", ico:"pers",   tx:"Alguien te espera o está atorado",    sub:"Una persona espera tu respuesta o algo se detuvo"},
-  {k:"falla",        grupo:"Urgente",  nivel:"urgente", ico:"alerta", tx:"Falla del sistema",                   sub:"La Mac sin señal o un WhatsApp que no salió"},
-  {k:"falta_info",   grupo:"Trabajo",  nivel:"normal",  ico:"dato",   tx:"Nueva tarea o dato por completar",    sub:"Llega algo a “Falta info”"},
-  {k:"seguimiento",  grupo:"Trabajo",  nivel:"normal",  ico:"recur",  tx:"Seguimientos de Claude",              sub:"Vencidas y ritmos sin avance"},
-  {k:"asignado",     grupo:"Trabajo",  nivel:"normal",  ico:"chk",    tx:"Te asignaron o te mencionaron",       sub:"En una tarea compartida"},
-  {k:"wa_tarea",     grupo:"WhatsApp", nivel:"normal",  ico:"msj",    tx:"Mensaje de una persona de una tarea", sub:"Solo chats ligados a tus tareas"},
-  {k:"wa_todo",      grupo:"WhatsApp", nivel:"todas",   ico:"msj",    tx:"Cualquier WhatsApp",                  sub:"Incluye grupos y plática"}
+  {k:"recordatorio", grupo:"Lo que te toca",  esencial:true, ico:"reloj",  tx:"Recordatorio que pusiste",       sub:"Cuando suena un recordatorio o una alarma tuya"},
+  {k:"cita",         grupo:"Lo que te toca",  esencial:true, ico:"cal",    tx:"Cita o reunión",                 sub:"Una invitación, una cita nueva o un cambio en tu agenda"},
+  {k:"acuerdo",      grupo:"Lo que te toca",  esencial:true, ico:"cal",    tx:"Acuerdo de hora o lugar",        sub:"Alguien confirmó o cambió la hora o el lugar de una cita"},
+  {k:"llamada",      grupo:"Lo que te toca",  esencial:true, ico:"people", tx:"Llamada",                        sub:"Alguien te pide que le llames o quiere hablar contigo"},
+  {k:"espera",       grupo:"Lo que te toca",  esencial:true, ico:"pers",   tx:"Alguien espera tu respuesta",    sub:"Una persona no puede seguir hasta que contestes o decidas"},
+  {k:"autorizar",    grupo:"Lo que te toca",  esencial:true, ico:"llave",  tx:"Pago o compra por autorizar",    sub:"Un pago, una compra o un gasto espera tu sí"},
+  {k:"ia_atorada",   grupo:"Claude y el sistema", ico:"info",  tx:"Claude necesita un dato tuyo",   sub:"Claude no puede seguir sin tu sí o un dato que solo tú tienes"},
+  {k:"no_supe",      grupo:"Claude y el sistema", ico:"chat",  tx:"No supe qué contestar",          sub:"Alguien escribió y la IA no supo qué responderle"},
+  {k:"claude_listo", grupo:"Claude y el sistema", ico:"check", tx:"Claude terminó algo",            sub:"Copia de lo que la IA contestó por ti o un encargo que ya quedó"},
+  {k:"resumen",      grupo:"Claude y el sistema", ico:"hoja",  tx:"Resumen del día",                sub:"El reporte de la mañana, de la tarde o de la semana"},
+  {k:"falla",        grupo:"Claude y el sistema", ico:"warn",  tx:"Falla técnica del sistema",      sub:"La Mac sin señal, un WhatsApp que no salió o un error"},
+  {k:"falta_info",   grupo:"Tareas",   ico:"dato",   tx:"Tarea nueva o dato por completar", sub:"Llega algo a «Falta info»"},
+  {k:"seguimiento",  grupo:"Tareas",   ico:"recur",  tx:"Seguimiento atrasado",             sub:"Algo vencido, sin avance o con fecha límite cerca"},
+  {k:"asignado",     grupo:"Tareas",   ico:"chk",    tx:"Te asignaron o te escribieron",    sub:"Un encargo, una revisión o un comentario en una tarea"},
+  {k:"wa_tarea",     grupo:"WhatsApp", ico:"msj",    tx:"Mensaje nuevo de una persona",     sub:"De un chat ligado a tus tareas"},
+  {k:"wa_grupo",     grupo:"WhatsApp", ico:"people", tx:"Mensaje en un grupo",              sub:"Cualquier grupo de WhatsApp"},
+  {k:"wa_todo",      grupo:"WhatsApp", ico:"bubble", tx:"Cualquier otro mensaje",           sub:"Plática que no es de tus tareas"}
 ];
-var NOTIF_PRESETS=[{k:"ninguna",tx:"Ninguna",n:0},{k:"esencial",tx:"Solo lo esencial",n:0.4},{k:"respuesta",tx:"Solo lo que necesita mi respuesta",n:0.5},{k:"urgente",tx:"Solo urgente",n:1},{k:"normal",tx:"Normal",n:2},{k:"todas",tx:"Todas",n:3}];
-var NOTIF_NIVEL={esencial:0.4, urgente:1, normal:2, todas:3};
-var NOTIF_ESENCIAL=["acuerdo","llamada","atorado","ia_atorada","recordatorio"];   /* build 269: lo único que le suena a Salvador */
-function esJefe269(k){ return k==="salvador" || !!(PERSONAS[k]&&PERSONAS[k].jefe); }
-var NOTIF_DEFECTO="urgente";   /* la maqueta: "Solo urgente" queda de inicio */
+var NOTIF_PRESETS=[{k:"esencial",tx:"Solo lo esencial"},{k:"todas",tx:"Todo"},{k:"ninguna",tx:"Nada"}];
+/* lo que además le suena (solo en Doit) a quien no es jefe si nunca eligió: su trabajo diario */
+var NOTIF_EQUIPO=["falta_info","seguimiento","asignado"];
+/* claves de antes que todavía pueden llegar (de la Mac o de push.php viejos): a qué renglón van */
+function notifClave(tipo, sub){
+  var t=String(tipo||"");
+  if(t==="te_necesito") return sub==="llamada"?"llamada":(sub==="ia_atorada"?"ia_atorada":"espera");
+  if(t==="atorado" || t==="pregunta") return "espera";
+  return t;
+}
+function notifTipo(k){ return NOTIF_TIPOS.filter(function(t){ return t.k===k; })[0]||null; }
+function esJefe(k){ return k==="salvador" || !!(PERSONAS[k]&&PERSONAS[k].jefe); }
 function notifDePreset(pk){
-  var n=(NOTIF_PRESETS.filter(function(x){ return x.k===pk; })[0]||{n:1}).n, o={};
-  if(pk==="esencial"){ NOTIF_TIPOS.forEach(function(t){ o[t.k]=NOTIF_ESENCIAL.indexOf(t.k)>=0 || t.k==="te_necesito"; }); return o; }   /* build 269: los 5 (te_necesito = llamada/atorado/IA atorada, para el servidor) */
-  if(pk==="respuesta"){ NOTIF_TIPOS.forEach(function(t){ o[t.k]=(t.k==="te_necesito"); }); return o; }   /* build 258: caso explícito, no es un nivel */
-  NOTIF_TIPOS.forEach(function(t){ o[t.k]=NOTIF_NIVEL[t.nivel]<=n; });
+  var o={};
+  NOTIF_TIPOS.forEach(function(t){
+    var on = pk==="todas" ? true : pk==="ninguna" ? false : pk==="equipo" ? (!!t.esencial || NOTIF_EQUIPO.indexOf(t.k)>=0) : !!t.esencial;
+    o[t.k]={push:on, wa:(pk==="equipo") ? !!t.esencial : on};
+  });
   return o;
 }
-/* preferencias que valen para una persona: las guardadas (completadas con el defecto si falta algun tipo nuevo) o el defecto */
-/* build 263: el defecto de Salvador (y de quien es jefe) es "Solo lo que necesita mi respuesta"; los demás siguen con "Solo urgente" */
-function notifDefectoDe(k){ var p=PERSONAS[k]||{}; return (k==="salvador" || p.jefe)?"esencial":NOTIF_DEFECTO; }   /* build 269: "Solo lo esencial" */
+function notifDefectoDe(k){ return esJefe(k) ? "esencial" : "equipo"; }
+/* ¿lo guardado ya es de dos columnas? (el formato de antes traía true/false por tipo) */
+function notifFormatoNuevo(p){
+  if(!p || !p.tipos || typeof p.tipos!=="object" || (+p.v||1)<2) return false;
+  var ks=Object.keys(p.tipos); return ks.length>0 && ks.every(function(k){ var x=p.tipos[k]; return !!x && typeof x==="object"; });
+}
+function notifGuardadas(k){ return notifFormatoNuevo((PERSONAS[k]||{}).notif); }
+/* lo que vale para k: lo guardado (un tipo que no traiga toma su defecto) o, si no hay o es del formato viejo, el defecto */
 function notifPrefs(k){
-  var p=(PERSONAS[k]||{}).notif, base=notifDePreset(notifDefectoDe(k)), o={};
-  /* build 263: lo que Salvador guardó con la versión 1 (el defecto de entonces era "Solo urgente") pasa una vez al nuevo defecto */
-  if(p && p.tipos && (+p.v||1)<2 && notifDefectoDe(k)==="respuesta" && p.preset==="urgente") p=null;
-  if(p && p.tipos && (+p.v||1)<3 && esJefe269(k)) p=null;   /* build 269: a Salvador se le aplica "Solo lo esencial" una vez */
-  NOTIF_TIPOS.forEach(function(t){ o[t.k]=(p && p.tipos && typeof p.tipos[t.k]==="boolean")?p.tipos[t.k]:base[t.k]; });
-  /* build 258: migración — quien ya guardó sus preferencias recibe te_necesito encendido, salvo que su preset sea "ninguna" */
-  if(p && p.tipos && typeof p.tipos.te_necesito!=="boolean") o.te_necesito=(p.preset!=="ninguna");
+  var p=(PERSONAS[k]||{}).notif, base=notifDePreset(notifDefectoDe(k)), nuevo=notifFormatoNuevo(p), o={};
+  NOTIF_TIPOS.forEach(function(t){ var x=nuevo?p.tipos[t.k]:null;
+    o[t.k]=(x && typeof x==="object") ? {push:!!x.push, wa:!!x.wa} : {push:base[t.k].push, wa:base[t.k].wa}; });
   return o;
 }
-function notifGuardadas(k){ var p=(PERSONAS[k]||{}).notif; return !!(p && p.v && p.tipos); }
-/* que atajo coincide con lo prendido ("" = personalizado) */
+/* qué atajo coincide con lo prendido ("" = a tu medida) */
 function notifPresetDe(tipos){
   for(var i=0;i<NOTIF_PRESETS.length;i++){ var o=notifDePreset(NOTIF_PRESETS[i].k);
-    if(NOTIF_TIPOS.every(function(t){ return !!tipos[t.k]===!!o[t.k]; })) return NOTIF_PRESETS[i].k; }
+    if(NOTIF_TIPOS.every(function(t){ var a=tipos[t.k]||{}; return !!a.push===o[t.k].push && !!a.wa===o[t.k].wa; })) return NOTIF_PRESETS[i].k; }
   return "";
 }
-/* ¿le suena a k un aviso de este tipo? Tipo desconocido o persona que nunca eligio = como siempre (si suena) */
+/* ¿le suena a k en el teléfono (columna Doit) un aviso de este tipo? Tipo desconocido o vacío = no */
 function notifPermite(k, tipo, sub){
-  /* build 269: a Salvador (jefe) SOLO le suenan los 5 de lo esencial; todo lo demás (wa_tarea, wa_todo, seguimiento, falta_info, asignado, falla, espera genérica, toques, empujones, tipo desconocido) NO */
-  if(esJefe269(k)){
-    var key=(tipo==="te_necesito")?(/^(llamada|atorado|ia_atorada)$/.test(sub||"")?sub:"atorado"):tipo;
-    if(NOTIF_ESENCIAL.indexOf(key)<0) return false;
-    return !!notifPrefs(k)[key];
-  }
-  if(!tipo || !NOTIF_TIPOS.some(function(t){ return t.k===tipo; })) return true;
-  if(!notifGuardadas(k)) return notifDefectoDe(k)==='respuesta' ? !!notifPrefs(k)[tipo] : true;   /* build 263: el defecto de Salvador es 'Solo lo que necesita mi respuesta' */
-  return !!notifPrefs(k)[tipo];
+  var key=notifClave(tipo, sub);
+  if(!key || !notifTipo(key)) return false;
+  return !!notifPrefs(k)[key].push;
 }
-/* el tipo de un aviso que manda la app, por su titulo (los que no se reconocen suenan como siempre) */
+/* el tipo de un aviso que manda la app, por su título y cuerpo ("" = no se reconoce y no suena) */
 function tipoDePush(titulo, cuerpo){
   var s=_nn(String(titulo||"")+" | "+String(cuerpo||""));
   if(/acuerdo|quedamos|(cita|hora|lugar) (confirmad|cambi)|se (confirmo|cambio) (la|el) (cita|hora|lugar)/.test(s)) return "acuerdo";
-  if(/necesita tu respuesta|necesito tu (respuesta|si\b|dato)|requiere tu (si|dato)|llamada|te llama/.test(s)) return "te_necesito";
-  if(/^urgente|requiere tu (accion|decision)|te espera|esperan tu decision|atorad/.test(s)) return "te_necesito";   /* build 269: alguien espera tu sí/dato/pago = te_necesito/atorado */
-  if(/atrasad|no ha cumplido|vencid|sin avance|tocaba/.test(s)) return "seguimiento";
+  if(/\b(cita|reunion|junta|invitacion)\b/.test(s)) return "cita";
+  if(/llamada|te llama|llamame/.test(s)) return "llamada";
+  if(/(ia|claude) (se )?(atoro|atorad|no puede|no pudo)|claude necesita tu respuesta/.test(s)) return "ia_atorada";
+  if(/necesita tu respuesta|necesito tu (respuesta|si\b|dato)|requiere tu (si|dato|accion|decision)|^urgente|te espera|esperan tu decision|atorad/.test(s)) return "espera";
   if(/recordatorio|alarma/.test(s)) return "recordatorio";
+  if(/\b(autoriza|autorizar|pago|pagar|compra|comprar|gasto)\b/.test(s)) return "autorizar";
+  if(/atrasad|no ha cumplido|vencid|sin avance|tocaba/.test(s)) return "seguimiento";
   if(/no salio|sin senal|fallo|falla/.test(s)) return "falla";
   if(/falta info|por completar/.test(s)) return "falta_info";
-  if(/asignad|encargo|revision|comentari|respuesta a tu consulta|medida|nuevo mensaje|te menciono/.test(s)) return "asignado";
+  if(/asignad|encargo|revision|comentari|respuesta a tu consulta|medida|nuevo mensaje|te menciono|aprobad/.test(s)) return "asignado";
   return "";
 }
-/* build 269: subtipo de un te_necesito */
+/* subtipo de un te_necesito que llegue con la clave de antes */
 function subtipoDePush(titulo, cuerpo){
   var s=_nn(String(titulo||"")+" | "+String(cuerpo||""));
   if(/llamada|te llama|llamame/.test(s)) return "llamada";
@@ -1894,32 +1909,42 @@ function subtipoDePush(titulo, cuerpo){
   return "atorado";
 }
 function guardaNotif(tipos){
-  var o={v:NOTIF_VERSION, preset:notifPresetDe(tipos)||"personalizado", tipos:tipos, ts:Date.now()};
+  var limpio={}; NOTIF_TIPOS.forEach(function(t){ var x=tipos[t.k]||{}; limpio[t.k]={push:!!x.push, wa:!!x.wa}; });
+  var o={v:NOTIF_VERSION, preset:notifPresetDe(limpio)||"personalizado", tipos:limpio, ts:Date.now()};
   PERSONAS[yo]=PERSONAS[yo]||{}; PERSONAS[yo].notif=o;
   try{ if(db) db.collection(COLP).doc(yo).set({notif:o},{merge:true}).catch(function(){ toast("No se pudieron guardar tus notificaciones"); }); }catch(e){}
   try{ localStorage.setItem("bit_notif_"+yo, JSON.stringify(o)); }catch(e){}
-  try{ resyncAvisosNotif(); }catch(e){}   /* build 263: lo que se apagó deja de sonar desde el servidor y lo que se prendió se vuelve a mandar */
+  /* la misma ficha por push.php (fs_set), que es por donde la leen la Mac y el servidor */
+  try{ if(typeof APP_TOKEN!=="undefined" && String(APP_TOKEN).indexOf("__")!==0) fetch(PUSH+"?action=fs_set",{method:"POST", headers:{"content-type":"application/json","x-app-token":APP_TOKEN,"x-usuario":yo||"anonimo"},
+    body:JSON.stringify({col:COLP, id:yo, data:{notif:o}, merge:true})}).catch(function(){}); }catch(e){}
+  try{ resyncAvisosNotif(); }catch(e){}   /* lo que se apagó deja de sonar desde el servidor y lo que se prendió se vuelve a mandar */
   return o;
 }
+function notifSwitch(k, canal, on, tx){
+  return '<button class="tg'+(on?' on':'')+'" data-ncol="'+canal+'" data-ntipo="'+k+'" role="switch" aria-checked="'+(on?"true":"false")+'" aria-label="'+(canal==="push"?"Doit":"WhatsApp")+': '+esc(tx)+'"></button>';
+}
 function vNotif(){
-  /* la primera vez se guarda lo que se ve (el defecto), para que lo que dice la pantalla sea lo que vale */
-  if(!notifGuardadas(yo) || ((+(PERSONAS[yo].notif||{}).v||1)<NOTIF_VERSION && notifDefectoDe(yo)==="esencial")) guardaNotif(notifDePreset(notifDefectoDe(yo)));
-  var pr=notifPrefs(yo), pk=notifPresetDe(pr), h='<div class="top"><button class="iconbtn" id="bback">‹</button><div><div class="tnm"><span class="t">Notificaciones</span></div><div class="d">Qué hace sonar tu celular</div></div></div>';
-  var _jf=esJefe269(yo);   /* build 269: Salvador ve solo los 5 de lo esencial */
-  h+='<div class="scroll"><div class="ntf"><div class="presets">'+NOTIF_PRESETS.filter(function(x){ return _jf ? (x.k==="ninguna"||x.k==="esencial") : x.k!=="esencial"; }).map(function(x){ return '<button data-npre="'+x.k+'" class="'+(x.k===pk?'on':'')+'">'+esc(x.tx)+'</button>'; }).join("")+'</div>';
-  var g="";
+  /* la primera vez (o si lo guardado es del formato viejo) se guarda lo que se ve: el defecto */
+  if(!notifGuardadas(yo)) guardaNotif(notifDePreset(notifDefectoDe(yo)));
+  var pr=notifPrefs(yo), pk=notifPresetDe(pr), g="";
+  var h='<div class="top"><button class="iconbtn" id="bback">‹</button><div><div class="tnm"><span class="t">Notificaciones</span></div><div class="d">Qué te llega y por dónde</div></div></div>';
+  h+='<div class="scroll"><div class="ntf">';
+  h+='<div class="presets">'+NOTIF_PRESETS.map(function(x){ return '<button data-npre="'+x.k+'" class="'+(x.k===pk?'on':'')+'">'+esc(x.tx)+'</button>'; }).join("")+'</div>';
+  h+='<p class="nexp"><b>Doit</b>: aviso de esta app en tu teléfono. <b>WhatsApp</b>: mensaje del número de Doit.</p>';
   NOTIF_TIPOS.forEach(function(t){
-    if(_jf ? NOTIF_ESENCIAL.indexOf(t.k)<0 : t.grupo==="Lo esencial") return;
-    if(t.grupo!==g){ g=t.grupo; h+='<div class="ngrp">'+esc(tituloTarea(g))+'</div>'; }
-    h+='<button class="nrow" data-ntipo="'+t.k+'" role="switch" aria-checked="'+(pr[t.k]?"true":"false")+'">'+ico(t.ico,20,1.9)+
-       '<span class="tx">'+esc(tituloTarea(t.tx))+'<small>'+esc(t.sub)+'</small></span><span class="tg'+(pr[t.k]?' on':'')+'"></span></button>';
+    if(t.grupo!==g){ g=t.grupo; h+='<div class="ngrp"><span>'+esc(tituloTarea(g))+'</span><span class="ncol">Doit</span><span class="ncol">WhatsApp</span></div>'; }
+    var p=pr[t.k];
+    h+='<div class="nrow" data-nfila="'+t.k+'">'+ico(t.ico,20,1.5)+'<span class="tx">'+esc(tituloTarea(t.tx))+'<small>'+esc(t.sub)+'</small></span>'+
+       notifSwitch(t.k,"push",p.push,t.tx)+notifSwitch(t.k,"wa",p.wa,t.tx)+'</div>';
   });
   return h+'</div></div>';
 }
 function bindNotif(){
   var bb=$("bback"); if(bb) bb.onclick=function(){ vista="lista"; render(); };
   Array.prototype.forEach.call(document.querySelectorAll("[data-npre]"),function(b){ b.onclick=function(){ guardaNotif(notifDePreset(b.getAttribute("data-npre"))); render(); }; });
-  Array.prototype.forEach.call(document.querySelectorAll("[data-ntipo]"),function(b){ b.onclick=function(){ var pr=notifPrefs(yo), k=b.getAttribute("data-ntipo"); pr[k]=!pr[k]; guardaNotif(pr); render(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-ncol]"),function(b){ b.onclick=function(){
+    var pr=notifPrefs(yo), k=b.getAttribute("data-ntipo"), c=b.getAttribute("data-ncol");
+    if(!pr[k]) return; pr[k][c]=!pr[k][c]; guardaNotif(pr); render(); }; });
 }
 /* ===== VOCES: el elenco de la Caminata y de la lectura en voz alta (⋯ del inicio → Voces) =====
    Solo voces del dispositivo (speechSynthesis): no hay servicio de paga detrás. Cada quien palomea hasta 3 voces en español;
@@ -2095,7 +2120,8 @@ function disparaPushInstantaneo(para, titulo, cuerpo, url, tipo, tag) {
   /* build 200: lo que esa persona apago en Notificaciones no se le manda; el tipo viaja al servidor */
   tipo = tipo || tipoDePush(titulo, cuerpo);
   var sub = (tipo==="te_necesito") ? subtipoDePush(titulo, cuerpo) : "";
-  if (!notifPermite(para, tipo, sub)) return;
+  tipo = notifClave(tipo, sub);   /* las claves de antes (te_necesito, atorado) viajan con la del catálogo */
+  if (!notifPermite(para, tipo, sub)) return;   /* tipo desconocido = no suena */
   
   fetch('/push.php?action=send', {
     method: 'POST',
@@ -8825,7 +8851,7 @@ setInterval(function(){ try{ if(vista==="hilo" && abierta){ var t=tareas.filter(
 function mandaDM(t, k, v){
   msg(t,"bo",v); var m=t.msgs[t.msgs.length-1]; m.canal="dm:"+k; m.de=yo;
   t.ultima=((PERSONAS[yo]||{}).nombre||"")+": "+v; guarda(t);
-  try{ disparaPushInstantaneo(k, (PERSONAS[yo]||{}).nombre||"Mensaje", v, urlTarea(t.id)); }catch(e){}
+  try{ disparaPushInstantaneo(k, (PERSONAS[yo]||{}).nombre||"Mensaje", v, urlTarea(t.id), "asignado"); }catch(e){}
   render();
 }
 function partesMsg(x){
@@ -14744,7 +14770,7 @@ function apruebaMeta(t, mid){
   if(!m.foto && (e.fotos||[]).length) m.foto=e.fotos[0];
   var ej=ejecutorNombre(t);
   if(t.revisa_ext && ej) pideWhatsApp({usuario:yo, tarea_id:t.id, contacto:ej, texto:"IA: ¡Gracias, "+nombreCorto(ej).split(" ")[0]+"! "+((PERSONAS[yo]||{}).nombre||"Salvador")+" aprobó “"+metaCorta(m)+"”.", sin_espera:1}).catch(function(){});
-  else if(t.duenio && t.duenio!==yo){ try{ disparaPushInstantaneo(t.duenio, tareaCorta(t), "Aprobada: “"+metaCorta(m)+"”", urlTarea(t.id)); }catch(e2){} }
+  else if(t.duenio && t.duenio!==yo){ try{ disparaPushInstantaneo(t.duenio, tareaCorta(t), "Aprobada: “"+metaCorta(m)+"”", urlTarea(t.id), "asignado"); }catch(e2){} }
   var tx="Aprobada: “"+metaCorta(m)+"”. Queda en el historial."; msg(t,"bi",tx); guarda(t); return tx;
 }
 function pideCorreccion(t, mid){

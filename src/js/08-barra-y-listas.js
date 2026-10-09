@@ -252,7 +252,7 @@ function apruebaMeta(t, mid){
   if(!m.foto && (e.fotos||[]).length) m.foto=e.fotos[0];
   var ej=ejecutorNombre(t);
   if(t.revisa_ext && ej) pideWhatsApp({usuario:yo, tarea_id:t.id, contacto:ej, texto:"IA: ¡Gracias, "+nombreCorto(ej).split(" ")[0]+"! "+((PERSONAS[yo]||{}).nombre||"Salvador")+" aprobó “"+metaCorta(m)+"”.", sin_espera:1}).catch(function(){});
-  else if(t.duenio && t.duenio!==yo){ try{ disparaPushInstantaneo(t.duenio, tareaCorta(t), "Aprobada: “"+metaCorta(m)+"”", urlTarea(t.id)); }catch(e2){} }
+  else if(t.duenio && t.duenio!==yo){ try{ disparaPushInstantaneo(t.duenio, tareaCorta(t), "Aprobada: “"+metaCorta(m)+"”", urlTarea(t.id), "asignado"); }catch(e2){} }
   var tx="Aprobada: “"+metaCorta(m)+"”. Queda en el historial."; msg(t,"bi",tx); guarda(t); return tx;
 }
 function pideCorreccion(t, mid){

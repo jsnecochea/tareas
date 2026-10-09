@@ -1584,7 +1584,7 @@ setInterval(function(){ try{ if(vista==="hilo" && abierta){ var t=tareas.filter(
 function mandaDM(t, k, v){
   msg(t,"bo",v); var m=t.msgs[t.msgs.length-1]; m.canal="dm:"+k; m.de=yo;
   t.ultima=((PERSONAS[yo]||{}).nombre||"")+": "+v; guarda(t);
-  try{ disparaPushInstantaneo(k, (PERSONAS[yo]||{}).nombre||"Mensaje", v, urlTarea(t.id)); }catch(e){}
+  try{ disparaPushInstantaneo(k, (PERSONAS[yo]||{}).nombre||"Mensaje", v, urlTarea(t.id), "asignado"); }catch(e){}
   render();
 }
 function partesMsg(x){

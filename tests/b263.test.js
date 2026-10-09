@@ -45,11 +45,11 @@ eq("versión >= 263", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     var A = await p.evaluate(async function () {
       var r = {}; delete PERSONAS.salvador.notif;
       r.defecto = notifPresetDe(notifPrefs("salvador"));
-      PERSONAS.salvador.notif = { v: 1, preset: "urgente", tipos: notifDePreset("urgente"), ts: 1 }; r.migra = notifPresetDe(notifPrefs("salvador"));
+      PERSONAS.salvador.notif = { v: 1, preset: "urgente", tipos: { recordatorio: true, espera: true, falla: true, wa_todo: false }, ts: 1 }; r.migra = notifPresetDe(notifPrefs("salvador"));
       delete PERSONAS.salvador.notif; window.__memAv263 = {}; try { localStorage.removeItem("bit_avsig263"); } catch (e) {}
       var rec = T("tREC", "Mandar documentos al contador", "x", { es_recordatorio: true, f_vigente: "2026-10-07", aviso_hora: "10:55", ritmo: "" });
       tareas = [rec]; window.__push = []; sincronizaAvisos(rec); r.conDefecto = window.__push.filter(function (x) { return x[0] === "aviso_set"; }).length;
-      guardaNotif(notifDePreset("urgente")); r.trasPreset = window.__push.filter(function (x) { return x[0] === "aviso_set"; }).length;
+      guardaNotif(notifDePreset("todas")); r.trasPreset = window.__push.filter(function (x) { return x[0] === "aviso_set"; }).length;
       window.__push = []; window.__esp = [];
       for (var i = 0; i < 4; i++) { sincronizaAvisos(rec); guarda(rec); }
       r.repetidos = window.__push.filter(function (x) { return x[0] === "aviso_set"; }).length;
@@ -62,20 +62,20 @@ eq("versión >= 263", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
       tareas = [tes, rv, av, rec]; window.__push = [];
       sincronizaAvisos(rv); sincronizaAvisos(av);
       r.deClaude = window.__push.filter(function (x) { return x[0] === "aviso_set"; }).length;
-      /* con el tablero en "Solo lo que necesita mi respuesta" no se manda ni uno */
-      guardaNotif(notifDePreset("respuesta")); window.__push = []; window.__memAv263 = {}; rec.aviso_hora = "12:30"; sincronizaAvisos(rec);
+      /* con el atajo «Nada» no se manda ni uno */
+      guardaNotif(notifDePreset("ninguna")); window.__push = []; window.__memAv263 = {}; rec.aviso_hora = "12:30"; sincronizaAvisos(rec);
       r.conRespuesta = window.__push.filter(function (x) { return x[0] === "aviso_set"; }).length;
       r.permite = [notifPermite("salvador", "recordatorio"), notifPermite("salvador", "te_necesito")];
       return r; });
-    eq("Salvador: el defecto del tablero es 'Solo lo esencial' (build 269)", A.defecto, "esencial");
-    eq("Lo guardado con el defecto viejo (Solo urgente) pasa al nuevo", A.migra, "esencial");
-    eq("Build 269: con ese defecto el recordatorio SÍ se manda (es uno de los 5), una vez", A.conDefecto, 1);
+    eq("Salvador: el defecto del tablero es 'Solo lo esencial'", A.defecto, "esencial");
+    eq("Lo guardado con el formato de una columna pasa al defecto (Solo lo esencial)", A.migra, "esencial");
+    eq("Con ese defecto el recordatorio SÍ se manda (es de lo esencial), una vez", A.conDefecto, 1);
     eq("Al cambiar de preset no se duplica el aviso (una vez)", A.trasPreset, 2);
     eq("Guardar la tarea 4 veces NO vuelve a mandar el aviso (antes: re-disparo en cada barrido)", A.repetidos, 0);
     eq("El espejo se escribe con merge y NO pisa avisado_en en cada guardado (solo la primera vez o si cambia)", [A.espejo.length > 1, A.espejo.slice(1).every(function (x) { return x[0] === false && x[1] === true; })], [true, true]);
     eq("Si cambia la hora sí se manda otra vez, tipo recordatorio y repite_max 1", A.cambio, [["2026-10-07 11:30:00", "recordatorio", 1]]);
     eq("Los de 'revisar avance' y 'revisar si Cynthia…' de lo que lleva Claude no se mandan a Salvador", A.deClaude, 0);
-    eq("Con 'Solo lo que necesita mi respuesta' el recordatorio ya no pasa para Salvador (solo los 5 de lo esencial: ese preset ya no está en su tablero)", [A.conRespuesta, A.permite], [0, [false, false]]);
+    eq("Con el atajo «Nada» el recordatorio ya no pasa para Salvador", [A.conRespuesta, A.permite], [0, [false, false]]);
 
     /* ===================== 2. SIGUIENTE EN ORDEN ===================== */
     var B = await p.evaluate(async function () {

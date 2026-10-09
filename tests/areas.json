@@ -6,7 +6,7 @@
   "dictado": ["b213", "b238", "b248", "b252", "b253", "b254", "b255", "b266", "b283", "dictado-entrada", "candado-datos", "no-ahora", "contactos-tarea"],
   "caminata": ["b274", "b275", "b276", "b276-hotfix", "b277", "b278", "b286", "voces"],
   "fechas": ["b222", "b234", "b246", "b248", "b250", "b267", "b282"],
-  "avisos": ["b217", "b258", "b263", "b264", "b268", "b282", "autodiagnostico", "ligatarea"],
+  "avisos": ["b217", "b258", "b263", "b264", "b268", "b282", "autodiagnostico", "ligatarea", "notif-columnas"],
   "whatsapp": ["b217", "b219", "b226", "b237", "b239", "b244", "b245", "b249", "b250", "b251", "b260", "b265", "ligatarea", "mysql-app"],
   "lectura": ["b228", "b229", "b233", "b261", "b270", "voces"]
 }

@@ -20,3 +20,4 @@ La función retirada está íntegra en `archivo/home-tres-fichas-2026-10-08.js`.
 estaba en el build 293. Su parte 2 (secciones del home plegables por día, el resumen de abajo que abría
 la sección plegada) cubría solo funciones retiradas: en el home nuevo cada grupo se abre en su propia
 vista, siempre desplegado. La parte 1 («Tu historial») sigue viva en `tests/b285.test.js`.
+- b269.test.js (2026-10-09, build 313): cubría el forzado de Salvador a «Solo lo esencial» de una columna (esJefe269). La pantalla de dos columnas lo quitó; lo vigente (defecto de Salvador, lo que le llega por título) lo cubren tests/notificaciones.test.js y tests/notif-columnas.test.js. Copia del código retirado en archivo/notificaciones-una-columna-2026-10-09.js.
