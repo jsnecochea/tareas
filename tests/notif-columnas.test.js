@@ -16,7 +16,7 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
     window.firebase = { apps: [1], initializeApp: function () {}, firestore: function () { return fs0; }, auth: function () { return { onAuthStateChanged: function () {}, signOut: P }; } }; window.firebase.auth.GoogleAuthProvider = function () {};
     try { Object.defineProperty(navigator, "serviceWorker", { value: { addEventListener: function () {}, register: function () { return Promise.resolve({}); }, ready: Promise.resolve({}) }, configurable: true }); } catch (e) {} });
   async function foto(nom) { if (!process.env.CAP) return; await p.waitForTimeout(250); await p.screenshot({ path: path.join(process.env.CAP, nom), fullPage: true }); }
-  var E6 = ["recordatorio", "cita", "acuerdo", "llamada", "espera", "autorizar"];
+  var E6 = ["recordatorio", "cita", "acuerdo", "llamada", "espera", "autorizar", "falla"];
   try {
     await p.goto("file://" + path.join(__dirname, "..", "index.html")); await p.waitForTimeout(500);
     await p.evaluate(function () { yo = "salvador"; PERSONAS.salvador = PERSONAS.salvador || { nombre: "Salvador", jefe: true };
@@ -60,7 +60,7 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
       return o; });
     eq("«Todo» prende las dos columnas", r3.todas, [17, 17]);
     eq("«Nada» apaga las dos columnas y ya no suena ni el recordatorio", [r3.nada, r3.permNada], [[0, 0], false]);
-    eq("«Solo lo esencial» deja 6 y 6", [r3.esencial, r3.pre], [[6, 6], "esencial"]);
+    eq("«Solo lo esencial» deja 7 y 7", [r3.esencial, r3.pre], [[7, 7], "esencial"]);
     /* 4. lo que la app manda: el tipo viaja y respeta la columna Doit */
     var r4 = await p.evaluate(function () { var mand = []; window.fetch = function (u, o) { mand.push(JSON.parse(o.body)); return Promise.resolve({ json: function () { return {}; } }); };
       yo = "samuel"; PERSONAS.samuel = PERSONAS.samuel || { nombre: "Samuel" };

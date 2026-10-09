@@ -972,6 +972,7 @@ function arranca(){
         if(o.nombre&&o.apellido) p.ini=iniciales(o.nombre,o.apellido);
       });
       fichasLeidas=true;
+      try{ notifFallaUnaVez(); }catch(e){}
       if(listo) render();
     },function(){
       /* si la coleccion esta bloqueada NO se abre la puerta de la ficha:

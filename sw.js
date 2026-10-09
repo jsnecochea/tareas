@@ -6,7 +6,7 @@ const APP_TOKEN_SW = '__APP_TOKEN__';
 
 /* build 270 (276): versión del service worker. Cambiar este número cambia los bytes de sw.js, y el navegador instala el SW nuevo
    (skipWaiting + clients.claim abajo) y borra los caches viejos en 'activate'. */
-var SW_VERSION = 'build 313';
+var SW_VERSION = 'build 314';
 
 self.addEventListener('install', function(e){ self.skipWaiting(); });
 

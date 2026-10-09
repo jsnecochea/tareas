@@ -38,7 +38,7 @@ var ok = 0, n = 0, malas = [];
 function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
 function si(nom, v) { eq(nom, !!v, true); }
 function col(o, c2) { return Object.keys(o).filter(function (k) { return o[k][c2]; }); }
-var ESENCIAL = ["recordatorio", "cita", "acuerdo", "llamada", "espera", "autorizar"];
+var ESENCIAL = ["recordatorio", "cita", "acuerdo", "llamada", "espera", "autorizar", "falla"];
 
 /* catálogo */
 var KEYS = c.NOTIF_TIPOS.map(function (t) { return t.k; });
@@ -80,7 +80,7 @@ eq("cada tipo {push, wa}", [g[2].notif.tipos.no_supe, g[2].notif.tipos.recordato
 eq("y la misma ficha va a push.php (fs_set merge), por donde la lee la Mac", [fichas.length > 0 && fichas[fichas.length - 1].col, fichas.length > 0 && fichas[fichas.length - 1].id, fichas.length > 0 && fichas[fichas.length - 1].merge, fichas.length > 0 && fichas[fichas.length - 1].data.notif.tipos.no_supe], ["bitacora_personas", "salvador", true, { push: true, wa: false }]);
 eq("y se lee igual (formato nuevo)", [c.notifGuardadas("salvador"), c.notifPrefs("salvador").no_supe], [true, { push: true, wa: false }]);
 c.PERSONAS.salvador.notif = { v: 2, preset: "personalizado", tipos: { recordatorio: { push: false, wa: true } }, ts: 2 };
-eq("tipo que lo guardado no trae: toma su defecto", [c.notifPrefs("salvador").recordatorio, c.notifPrefs("salvador").cita, c.notifPrefs("salvador").falla], [{ push: false, wa: true }, { push: true, wa: true }, { push: false, wa: false }]);
+eq("tipo que lo guardado no trae: toma su defecto", [c.notifPrefs("salvador").recordatorio, c.notifPrefs("salvador").cita, c.notifPrefs("salvador").falla], [{ push: false, wa: true }, { push: true, wa: true }, { push: true, wa: true }]);
 
 /* notifPermite = columna Doit (push) */
 eq("recordatorio con push apagado no suena aunque WhatsApp esté prendido", c.notifPermite("salvador", "recordatorio"), false);
@@ -95,7 +95,7 @@ function manda(tit, cu, tipo) { c.disparaPushInstantaneo("salvador", tit, cu, "h
 manda("Nuevo mensaje", "Cynthia: hola"); manda("Nueva tarea asignada", "Te asignaron: x"); manda("Nuevo comentario", "x comentó"); manda("Respuesta a tu consulta", "x"); manda("Revisión asignada", "x");
 manda("Tarea", "“Paso” está atrasado"); manda("Tarea", "Fulano no ha cumplido “x”"); manda("Meta", "Meta “x”: ¿para cuándo queda?", "seguimiento"); manda("Nuevo encargo", "x te encargó: y"); manda("Nueva medida en la tarea", "x");
 manda("Falta info", "algo por completar"); manda("Falla", "WhatsApp no salió"); manda("Claude necesita tu respuesta", "La IA se atoró"); manda("Hola", "algo que no se reconoce");
-eq("Con el defecto no le llega nada de lo demás (ni lo que no se reconoce)", enviados.map(function (x) { return x.tipo; }), []);
+eq("Con el defecto no le llega nada de lo demás (ni lo que no se reconoce), salvo la falla técnica (encendida 9-oct)", enviados.map(function (x) { return x.tipo; }), ["falla"]);
 manda("Acuerdo", "Quedamos el jueves 10:00 en la oficina");
 manda("Te necesito", "Te necesito en una llamada con el notario");
 manda("Urgente: Requiere tu acción", "La tarea \"Pago\" requiere tu decisión/autorización");
@@ -103,7 +103,7 @@ manda("Decide", "Manuel no da el dato", "espera");
 manda("Compra", "Hay que autorizar la compra de cemento");
 manda("Recordatorio", "Llamar al notario", "recordatorio");
 manda("Cita", "Reunión con el arquitecto el lunes");
-eq("Lo esencial sí, con su clave del catálogo", enviados.map(function (x) { return x.tipo; }), ["acuerdo", "llamada", "espera", "espera", "autorizar", "recordatorio", "cita"]);
+eq("Lo esencial sí, con su clave del catálogo", enviados.map(function (x) { return x.tipo; }), ["falla", "acuerdo", "llamada", "espera", "espera", "autorizar", "recordatorio", "cita"]);
 eq("Y todos llevan tag", enviados.every(function (x) { return !!x.tag; }), true);
 eq("Al equipo le sigue llegando 'te asignaron' por defecto", (function () { enviados.length = 0; c.disparaPushInstantaneo("cynthia", "Nueva tarea asignada", "Te asignaron: x", "u"); return enviados.map(function (x) { return x.tipo; }); })(), ["asignado"]);
 eq("nunca a uno mismo", (function () { enviados.length = 0; c.yo = "salvador"; manda("Recordatorio", "x", "recordatorio"); return enviados.length; })(), 0);
@@ -114,7 +114,7 @@ var h = c.vNotif();
 eq("al abrir con nada guardado se guarda lo que se ve (v2, esencial)", [escritos.length, escritos[0][2].notif.v, escritos[0][2].notif.preset], [1, 2, "esencial"]);
 eq("una fila por tipo, nada oculto para Salvador", (h.match(/data-nfila=/g) || []).length, KEYS.length);
 eq("dos interruptores por fila", [(h.match(/data-ncol="push"/g) || []).length, (h.match(/data-ncol="wa"/g) || []).length], [KEYS.length, KEYS.length]);
-eq("prendidos: los 6 esenciales en ambas columnas", (h.match(/class="tg on"/g) || []).length, 12);
+eq("prendidos: los 7 esenciales en ambas columnas", (h.match(/class="tg on"/g) || []).length, 14);
 eq("tres atajos, «Solo lo esencial» marcado", [(h.match(/data-npre=/g) || []).length, (h.match(/data-npre="(\w+)" class="on"/) || [])[1]], [3, "esencial"]);
 si("encabezados de columna Doit y WhatsApp", /class="ncol">Doit</.test(h) && /class="ncol">WhatsApp</.test(h));
 si("interruptores accesibles (role switch, aria-label)", /role="switch" aria-checked="true" aria-label="Doit: Recordatorio que pusiste"/.test(h));

@@ -1793,7 +1793,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 313 · Notificaciones con dos columnas (Doit y WhatsApp) por tipo de aviso; por defecto solo recordatorios, citas, llamadas, quien te espera y lo que hay que autorizar";
+var VERSION_APP = "build 314 · «Falla técnica» encendida por defecto en Notificaciones";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -1831,7 +1831,7 @@ var NOTIF_TIPOS=[
   {k:"no_supe",      grupo:"Claude y el sistema", ico:"chat",  tx:"No supe qué contestar",          sub:"Alguien escribió y la IA no supo qué responderle"},
   {k:"claude_listo", grupo:"Claude y el sistema", ico:"check", tx:"Claude terminó algo",            sub:"Copia de lo que la IA contestó por ti o un encargo que ya quedó"},
   {k:"resumen",      grupo:"Claude y el sistema", ico:"hoja",  tx:"Resumen del día",                sub:"El reporte de la mañana, de la tarde o de la semana"},
-  {k:"falla",        grupo:"Claude y el sistema", ico:"warn",  tx:"Falla técnica del sistema",      sub:"La Mac sin señal, un WhatsApp que no salió o un error"},
+  {k:"falla",        grupo:"Claude y el sistema", esencial:true, ico:"warn",  tx:"Falla técnica del sistema",      sub:"La Mac sin señal, un WhatsApp que no salió o un error"},
   {k:"falta_info",   grupo:"Tareas",   ico:"dato",   tx:"Tarea nueva o dato por completar", sub:"Llega algo a «Falta info»"},
   {k:"seguimiento",  grupo:"Tareas",   ico:"recur",  tx:"Seguimiento atrasado",             sub:"Algo vencido, sin avance o con fecha límite cerca"},
   {k:"asignado",     grupo:"Tareas",   ico:"chk",    tx:"Te asignaron o te escribieron",    sub:"Un encargo, una revisión o un comentario en una tarea"},
@@ -1910,7 +1910,7 @@ function subtipoDePush(titulo, cuerpo){
 }
 function guardaNotif(tipos){
   var limpio={}; NOTIF_TIPOS.forEach(function(t){ var x=tipos[t.k]||{}; limpio[t.k]={push:!!x.push, wa:!!x.wa}; });
-  var o={v:NOTIF_VERSION, preset:notifPresetDe(limpio)||"personalizado", tipos:limpio, ts:Date.now()};
+  var o={v:NOTIF_VERSION, preset:notifPresetDe(limpio)||"personalizado", tipos:limpio, ts:Date.now(), falla_on:1};
   PERSONAS[yo]=PERSONAS[yo]||{}; PERSONAS[yo].notif=o;
   try{ if(db) db.collection(COLP).doc(yo).set({notif:o},{merge:true}).catch(function(){ toast("No se pudieron guardar tus notificaciones"); }); }catch(e){}
   try{ localStorage.setItem("bit_notif_"+yo, JSON.stringify(o)); }catch(e){}
@@ -1919,6 +1919,11 @@ function guardaNotif(tipos){
     body:JSON.stringify({col:COLP, id:yo, data:{notif:o}, merge:true})}).catch(function(){}); }catch(e){}
   try{ resyncAvisosNotif(); }catch(e){}   /* lo que se apagó deja de sonar desde el servidor y lo que se prendió se vuelve a mandar */
   return o;
+}
+/* «Falla técnica» quedó encendida por defecto (Salvador 9-oct 10:33): a quien ya había guardado sus interruptores sin ella se le prende una vez */
+function notifFallaUnaVez(){
+  try{ var p=(PERSONAS[yo]||{}).notif; if(!notifFormatoNuevo(p) || p.falla_on) return false;
+    var t=JSON.parse(JSON.stringify(p.tipos)); t.falla={push:true, wa:true}; guardaNotif(t); return true; }catch(e){ return false; }
 }
 function notifSwitch(k, canal, on, tx){
   return '<button class="tg'+(on?' on':'')+'" data-ncol="'+canal+'" data-ntipo="'+k+'" role="switch" aria-checked="'+(on?"true":"false")+'" aria-label="'+(canal==="push"?"Doit":"WhatsApp")+': '+esc(tx)+'"></button>';
@@ -4946,6 +4951,7 @@ function arranca(){
         if(o.nombre&&o.apellido) p.ini=iniciales(o.nombre,o.apellido);
       });
       fichasLeidas=true;
+      try{ notifFallaUnaVez(); }catch(e){}
       if(listo) render();
     },function(){
       /* si la coleccion esta bloqueada NO se abre la puerta de la ficha:
