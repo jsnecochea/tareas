@@ -1644,3 +1644,11 @@ html.cam274on,html.cam274on body{overflow:hidden}
 #holdbar .hrow{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#1f1f26;border:1.5px solid #ff9f0a;border-radius:14px;padding:8px 8px 8px 14px;color:#fff;font-size:15.5px}
 #holdbar button{border:0;border-radius:10px;background:#ff9f0a;color:#2b1700;font-weight:700;font-size:15px;padding:9px 14px}
 .extpop .cx{background:none;color:#8e8e93}
+/* Bandeja → Mensajes: los por_acomodar del servidor (12-bandeja-servidor.js) */
+.bsrv{margin:6px 12px 12px}.bsrv-h{display:flex;align-items:baseline;justify-content:space-between;padding:2px 4px 8px}.bsrv-h b{font-size:17px}.bsrv-h span{color:var(--ink-3);font-size:14px}
+.bsrv-t{color:var(--ink-2);font-size:15.5px;white-space:normal;overflow-wrap:anywhere}.bsrv-t .q{color:var(--ink-3)}.bsrv-url{color:var(--fi-blue);font-weight:600;margin-left:4px}
+.bsrv-b{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-top:6px}
+.bsrv-b button{border:0;background:none;font:inherit;font-size:14.5px;font-weight:600;color:var(--fi-blue);padding:6px 2px;min-height:34px}
+.bsrv-b .bsrv-si{background:#0A84FF;color:#FFFFFF;border-radius:999px;padding:6px 14px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bsrv-b .bsrv-no{color:var(--ink-3)}
+.bsrv-b button:focus-visible{outline:2px solid #0A84FF;outline-offset:2px}

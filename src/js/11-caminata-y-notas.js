@@ -1806,5 +1806,3 @@ function ejecutaNotaClaude(t, v){
   }catch(e){ nota(_LP283); }
 }
 
-/* Último renglón del script principal: si se llega aquí, la app arrancó (lo revisa el vigía de errores de arriba y vigia/humo.js). */
-window.__doitArranco=Date.now();

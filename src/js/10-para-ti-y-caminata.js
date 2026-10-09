@@ -454,7 +454,8 @@ var COL270={preg:"#FF7A00", venc:"#FF3B30", hoy:"#8e8e93"};
 /* ===================== HOME DE TRES FICHAS (maqueta D12b) =====================
    Arriba tres fichas iguales que dicen cuánto hay en cada grupo y lo abren en su propia vista («‹ Inicio» regresa):
    · Te esperan — lo que hoy era «Decide tú» + «Te pregunta Doit» (la misma lista H.preg); el número es H.preg.length.
-   · Bandeja — «Tareas nuevas» (propuestas256) + «Mensajes por acomodar» (platicasAcomodo), en dos pestañas.
+   · Bandeja — «Tareas nuevas» (propuestas256) + «Mensajes» (los por_acomodar del servidor, vBandejaSrv, y las pláticas con
+     duda que ya viven en tareas, platicasAcomodo), en dos pestañas.
    · Hoy — «Hoy mías» (H.hoy).
    Abajo una lista agrupada (Vencidas, Te encargaron, Próximas, Las revisas tú, Compartidas, Las lleva Claude, Historial):
    un renglón sin nada no sale, salvo Historial. Una ficha en cero se queda, apagada.
@@ -484,7 +485,7 @@ function cierraGrupoInicio(){
   var sc=document.querySelector("#app .scroll"); if(sc) sc.scrollTop=+window.__scrollInicio||0;
 }
 function cuentaBandeja(){
-  var a=0, b=0; try{ a=propuestas256().length; }catch(e){} try{ b=platicasAcomodo().length; }catch(e){}
+  var a=0, b=0; try{ a=propuestas256().length; }catch(e){} try{ b=platicasAcomodo().length; }catch(e){} try{ b+=bandejaSrvVisible().length; }catch(e){}
   return {nuevas:a, mensajes:b, total:a+b};
 }
 /* sin pestaña elegida: Tareas nuevas si hay, si no Mensajes */
@@ -559,7 +560,7 @@ function vGrupoInicio(g, C){
     var nb=cuentaBandeja(), sg=segBandeja();
     cuerpo='<div class="seg-bandeja" role="tablist" aria-label="Bandeja">'+[["nuevas","Tareas nuevas",nb.nuevas],["mensajes","Mensajes",nb.mensajes]].map(function(x){
       return '<button role="tab" data-seg="'+x[0]+'" aria-selected="'+(sg===x[0]?"true":"false")+'">'+x[1]+'<em>'+x[2]+'</em></button>'; }).join("")+'</div>';
-    var dentro=sg==="nuevas"?vAcomodo(true):vMsgs(true);
+    var dentro=sg==="nuevas"?vAcomodo(true):(vBandejaSrv()+vMsgs(true));
     cuerpo+=dentro||'<div class="vacio-grupo">'+(sg==="nuevas"?"No hay tareas nuevas por revisar.":"No hay mensajes por acomodar.")+'</div>';
     vacio="";
   }
@@ -581,6 +582,7 @@ function bindInicio(){
   Array.prototype.forEach.call(document.querySelectorAll("[data-grupo]"), function(b){ b.onclick=function(ev){ if(ev) ev.preventDefault(); abreGrupoInicio(b.getAttribute("data-grupo")); anima("entra-grupo"); }; });
   var bi=$("binicio"); if(bi) bi.onclick=function(){ cierraGrupoInicio(); anima("sale-grupo"); };
   Array.prototype.forEach.call(document.querySelectorAll(".seg-bandeja [data-seg]"), function(b){ b.onclick=function(){ window.__segBandeja=b.getAttribute("data-seg"); render(); }; });
+  try{ bindBandejaSrv(); }catch(e){ console.warn("bandeja servidor", e); }
 }
 /* ===================== build 284 (Salvador 7-oct, mockup «C · Filas con respuesta rápida»): «DECIDE TÚ» LIMPIO =====================
    Lo que pide decisión de Salvador sale arriba en «Decide tú» (20px, contador gris), en UN bloque gris #1C1C1E con filas separadas por
