@@ -104,7 +104,7 @@ eq("versión >= 251", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     eq("Mensaje simple: 'Karina' coincide con varias -> sale la tarjeta al momento y NO se manda nada", [r4.wa, r4.modal, r4.falta, r4.ops], [0, true, ["msg"], ["Karina GP", "Karina Gomez"]]);
     await foto("b251-2-cual-karina-mensaje.png");
     var r4b = await p.evaluate(async function () { modelo2({ respuestas: [{ n: 1, r: "Karina Gomez" }] }, {}, 5); dicta255("Karina Gomez"); await espera(600);
-      return { wa: __WA.map(function (w) { return [w.contacto, /^IA: Karina, de parte de Salvador: ¿Puedes cenar el jueves\?/.test(w.texto)]; }), modal: !!document.getElementById("preg249") }; });
+      return { wa: __WA.map(function (w) { return [w.contacto, /^IA: ¿Puedes cenar el jueves\?/.test(w.texto)]; }), modal: !!document.getElementById("preg249") }; });
     eq("Al elegir, el mensaje sale al contacto exacto", [r4b.wa, r4b.modal], [[["Karina Gomez", true]], false]);
     /* ninguno: tampoco se manda; el campo autocompleta */
     var r5 = await p.evaluate(async function () { __WA.length = 0; var T = TKT(); abre(T, [OTRA()]);

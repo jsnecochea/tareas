@@ -453,9 +453,10 @@ function candidatasVinc(t, o, abiertas){
 }
 function corto238(s){ s=String(s||"").replace(/\s+/g," ").trim(); return s.length>70?s.slice(0,69).replace(/\s+\S*$/,"")+"…":s; }
 function nombreTarea(id){ var d=tareas.filter(function(x){ return x.id===id; })[0]; return d?String(d.nombre||""):""; }
-/* manda por la cola de WhatsApp de siempre, "IA: " y de parte de Salvador */
+/* manda por la cola de WhatsApp de siempre, con "IA: " */
 function mandaOrden(T, persona, texto, alId){
-  var p1=String(persona.nombre||"").split(/\s+/)[0], tx=conIA(p1+", de parte de "+(((PERSONAS[yo]||{}).nombre)||"Salvador")+": "+String(texto||"").replace(/^IA:\s*/i,"").trim());
+  /* sin «Néstor, de parte de Salvador:» (Salvador 9-oct: «nada que ver»): el texto ya va escrito como él, solo con «IA: » */
+  var tx=conIA(String(texto||"").replace(/^IA:\s*/i,"").trim());
   if(PERSONAS[persona.id]){ var G=null; try{ G=contactosWA(T).filter(function(g){ return g.eq===persona.id; })[0]; }catch(e){}
     if(G && G.nombre){ mandaAExterno(T, G.nombre, tx, null, "dm:"+persona.id, alId); return "por WhatsApp"; }
     mandaDM(T, persona.id, tx); return "en Doit"; }
@@ -914,7 +915,7 @@ function promptDecision(t, v){
   return "Eres Claude dentro de la app de tareas Doit. "+((PERSONAS[yo]||{}).nombre||"Salvador")+" contestó la decisión de esta tarea. Convierte su respuesta en cambios concretos del plan, sin inventar.\n"+
     "Fechas AAAA-MM-DD copiadas de este calendario (NO calcules el día): "+calendarioProximo(10).join(", ")+". HOY en Monterrey es "+fechaMty(0)+".\n"+
     "- quien de cada paso: \"IA\" (lo hace Claude), \"Salvador\", o un contacto TAL CUAL de CONTACTOS DE LA TAREA.\n"+
-    "- seguir: solo si hay que escribirle a un contacto: {\"en\":\"AAAA-MM-DDTHH:MM\" entre 07:00 y 21:00,\"a\":\"contacto tal cual\",\"texto\":\"IA: … en segunda persona, de parte de Salvador\"}; si no, null.\n"+
+    "- seguir: solo si hay que escribirle a un contacto: {\"en\":\"AAAA-MM-DDTHH:MM\" entre 08:00 y 20:00,\"a\":\"contacto tal cual\",\"texto\":\"IA: … en segunda persona, de parte de Salvador\"}; si no, null.\n"+
     "- hechos: ids del PLAN ACTUAL que ya quedaron. que_toca: la línea «en qué vamos» nueva. decision_resuelta=true si su respuesta decide. campos: solo lo que dijo (ritmo, fecha AAAA-MM-DD, contexto a sumar).\n"+
     "- entendi: qué entendiste, en una frase. pregunta: SOLO si de verdad no se puede aplicar nada; si no, null.\n"+
     "Contesta SOLO JSON: {\"tipo\":\"datos|orden|decision|nada\",\"entendi\":\"…\",\"hechos\":[],\"pasos\":[{\"quien\":\"IA\",\"que\":\"…\",\"fecha\":null,\"seguir\":null}],\"que_toca\":null,\"decision_resuelta\":false,\"campos\":{\"ritmo\":null,\"fecha\":null,\"contexto\":null},\"pregunta\":null}\n\n"+

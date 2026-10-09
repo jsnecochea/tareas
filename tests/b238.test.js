@@ -56,7 +56,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
       var H = T.hecho238 || {}, c = document.querySelector(".hc238");
       o.modelo = [__MOD, /ordenes/.test(__PROMPT), /dudas/.test(__PROMPT), /HOY en Monterrey es/.test(__PROMPT)];
       o.duenio = [T.duenio, T.revisa_ext || "", T.transferida || null];
-      o.wa = __WA.map(function (w) { return [w.contacto, /^IA: Cynthia, de parte de Salvador: ¿Me mandas/.test(w.texto), w.tarea_id]; });
+      o.wa = __WA.map(function (w) { return [w.contacto, /^IA: ¿Me mandas/.test(w.texto), w.tarea_id]; });
       o.encargos = (T.encargos || []).map(function (e) { return [/Revisar los testamentos/.test(e.t), e.cuando === fechaMty(1) + "T09:00:00-06:00", e.origen, e.estado, typeof e.creado]; });
       o.contexto = /4 partes/.test(T.contexto) && /Ocampo 777/.test(T.contexto);
       o.tarjeta = c ? { hecho: [].map.call(c.querySelectorAll(".hch li"), function (x) { return x.textContent; }), falta: [].map.call(document.querySelectorAll("#preg249 .pq255l li"), function (x) { return x.firstChild.textContent; }), ops: ((document.querySelector("#preg249 .pq255l small") || { textContent: "" }).textContent.replace(/[()]/g, "").split(" · ")).filter(Boolean) } : null;   /* build 255: las preguntas van en el bloque difuminado */
@@ -104,7 +104,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
     if (process.env.CAP) await p.screenshot({ path: path.join(process.env.CAP, "b238-globo-menu.png") });
     eq("el mismo cerebro (promptRevision, modelo 'pesado') pide ordenes y dudas, con la fecha de Monterrey", r2.modelo, ["pesado", true, true, true]);
     eq("dueño SIN cambio (aunque Claude dijo quien/responsable Cynthia)", r2.duenio, ["salvador", "", null]);
-    eq("mensaje a Cynthia por la cola de WhatsApp, con 'IA: ' y de parte de Salvador", r2.wa, [["Cynthia Contadora GrupoNec Rangel", true, "tIAMUVUZNUD1K"]]);
+    eq("mensaje a Cynthia por la cola de WhatsApp, con IA: (sin «de parte de Salvador», 9-oct)", r2.wa, [["Cynthia Contadora GrupoNec Rangel", true, "tIAMUVUZNUD1K"]]);
     eq("encargo a Claude: revisar los testamentos MAÑANA (t.encargos)", r2.encargos, [[true, true, "dictado", "pendiente", "number"]]);
     eq("contexto: el reparto", r2.contexto, true);
     eq("tarjeta: Hecho (mensaje y encargo) · Me falta: ¿a cuál la vinculo? con 'Mandar a hacer testamentos' primero; no pide fecha", [r2.tarjeta.hecho.length >= 2, r2.tarjeta.hecho.some(function (x) { return /Le escribí a Cynthia/.test(x); }), r2.tarjeta.hecho.some(function (x) { return /Lo reviso yo mañana/.test(x); }), r2.tarjeta.falta[0], r2.tarjeta.ops[0], r2.tarjeta.falta.some(function (x) { return /fecha|finiquito/i.test(x); })],

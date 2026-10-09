@@ -104,9 +104,9 @@ eq("versión >= 249", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     await foto("b249-2-acomodando.png");
     await p.waitForTimeout(2600);
     var r2b = await p.evaluate(function () { var T = tareas.filter(function (x) { return x.id === "tNUEVA"; })[0], hc = document.querySelector(".hc238"), txt = document.getElementById("app").innerText;
-      return { overlay: !!document.getElementById("acom249"), wa: __WA.map(function (w) { return [w.contacto, /^IA: Carlos, de parte de Salvador: ¿Me confirmas mañana si ya instalaron el motor del portón\?/.test(w.texto), w.texto.indexOf("dile a Carlos") < 0]; }),
+      return { overlay: !!document.getElementById("acom249"), wa: __WA.map(function (w) { return [w.contacto, /^IA: ¿Me confirmas mañana si ya instalaron el motor del portón\?/.test(w.texto), w.texto.indexOf("dile a Carlos") < 0]; }),
         f: T.f_vigente, ctx: /Remodelación del acceso/.test(T.contexto || ""), hecho: !!(T.hecho238 && (T.hecho238.hecho || []).length), tarjeta: !!hc, tarjetaTxt: hc ? /Le escribí a Carlos/.test(hc.textContent) : false, enPantalla: /Remodelación del acceso|Hecho/.test(txt) }; });
-    eq("Revisión: el cerebro armó el mensaje (con IA: y de parte de Salvador), no el dictado tal cual", r2b.wa, [["Carlos Ibarra", true, true]]);
+    eq("Revisión: el cerebro armó el mensaje (con IA:, sin «de parte de Salvador», 9-oct), no el dictado tal cual", r2b.wa, [["Carlos Ibarra", true, true]]);
     eq("Revisión: se libera la pantalla (sin overlay)", r2b.overlay, false);
     eq("Revisión: queda refrescada con el cambio hecho sobre la tarea viva (fecha, contexto, tarjeta Hecho)", [r2b.f, r2b.ctx, r2b.hecho, r2b.tarjeta, r2b.tarjetaTxt], ["2026-10-15", true, true, true, true]);
     await foto("b249-2-refrescada.png");
