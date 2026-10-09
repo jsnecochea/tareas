@@ -463,6 +463,46 @@ function mandaOrden(T, persona, texto, alId){
   T.wa_contactos=T.wa_contactos||[]; if(!T.wa_contactos.some(function(c){ return _nn(String(c.nombre||c))===_nn(nomWA); })) T.wa_contactos.push({nombre:nomWA, desde:Date.now()});
   mandaAExterno(T, nomWA, tx, null, null, alId); return "por WhatsApp";
 }
+/* UN MENSAJE NO SALE AHORA SI NO SE PIDIÓ AHORA (caso Fiesta 9-oct: «también avísale a Néstor y a Xavier» mandó el mensaje
+   en el acto, cuando lo que quería era sumarlos al recordatorio del 10 de noviembre). Sin palabra de inmediatez, si la tarea ya
+   tiene recordatorios programados a otros contactos, va a esa misma fecha y hora; si la orden o lo dicho trae una fecha futura,
+   va a esa fecha a las 10:30. Si no hay ninguna de las dos, sale ahora, como siempre. */
+var YA_MISMO=/\b(ahora|ahorita|ya mismo|de inmediato|inmediatamente|en este momento|hoy mismo|hoy)\b/i;
+var TAMBIEN_RECORDATORIO=/\b(tambien|igual|igualmente|a ellos|a ellas|recuerdal\w*|recordatorio|recuerdales)\b/i;
+function cuandoMandar(T, v, o){
+  var sv=_fsa(v); if(YA_MISMO.test(sv)) return null;
+  var f0=(o && /^\d{4}-\d{2}-\d{2}$/.test(String(o.fecha||"")))?String(o.fecha):"";   /* solo la fecha explícita de ESA orden («mañana» dentro del texto no la programa) */
+  if(f0 && f0>hoy()) return f0+"T"+((o && /^\d{2}:\d{2}$/.test(o.hora||""))?o.hora:"10:30")+":00-06:00";
+  if(!TAMBIEN_RECORDATORIO.test(sv)) return null;   /* «dile a X que…» sin más: sale ahora (en horario) */
+  var ahora=Date.now(), plan=((T.resumen && Array.isArray(T.resumen.plan))?T.resumen.plan:[]).filter(function(p){ return p && p.seguir && p.seguir.en && p.estado!=="hecho" && Date.parse(p.seguir.en)>ahora; });
+  if(plan.length){ plan.sort(function(a,b){ return Date.parse(a.seguir.en)-Date.parse(b.seguir.en); }); return String(plan[0].seguir.en); }
+  return null;
+}
+/* HORARIO (Salvador 9-oct): a nadie le sale un mensaje antes de las 8:00 ni después de las 20:00 (Monterrey). Fuera de ese
+   horario, lo que pidió se le pregunta: «¿lo mando ya o a las 8:00?»; mientras contesta, queda programado para las 8:00. */
+function fueraDeHorario(){
+  if(location.protocol==="file:" && !window.__PRUEBA_HORARIO) return false;   /* las pruebas corren a cualquier hora con file://; la de horario lo prende */
+  var h=+horaMty().slice(0,2); return h<8 || h>=20; }
+function proximas8(){ var h=+horaMty().slice(0,2); return (h>=20?fechaMty(1):hoy())+"T08:00:00-06:00"; }
+function preguntaHorario(tid, contacto, texto, en){
+  var corto=nombreCorto(contacto).split(" ")[0];
+  sobreHoja('<div class="mov225" role="dialog" aria-label="Fuera de horario"><div class="h225g"></div><div class="h225h"><b>🌙 Son las '+esc(horaMty().slice(0,5))+'</b><button class="h225b" data-hx254="1" aria-label="Cerrar">×</button></div>'+
+    '<div class="h225c"><p class="h225v0">El mensaje a '+esc(corto)+' quedó para las 8:00. ¿Se lo mando ya?</p><p class="h225v0">«'+esc(String(texto).replace(/^IA:\s*/i,"").slice(0,200))+'»</p>'+
+    '<button class="hop big254 pri" data-h254="espera">Sí, a las 8:00</button><button class="hop big254" data-h254="ya">Mandarlo ya</button></div></div>',
+    function(k){ if(k!=="ya") return; var T=tareas.filter(function(x){ return x.id===tid; })[0]; if(!T) return;
+      var pl=(T.resumen && Array.isArray(T.resumen.plan))?T.resumen.plan:[], p=pl.filter(function(x){ return x && x.seguir && x.seguir.a===contacto && x.seguir.en===en && x.estado!=="hecho"; })[0];
+      if(p) p.estado="hecho";
+      var r=personasPara(T, contacto); if(r.estado==="uno") mandaOrden(T, r.persona, texto);
+      guarda(T); try{ render(); }catch(e){} });
+}
+/* el mismo formato de paso que usa la Mac (resumen.plan con seguir): la Mac lo manda el día y hora indicados */
+function agregaRecordatorio(T, contacto, texto, en){
+  T.resumen=(T.resumen && typeof T.resumen==="object")?T.resumen:{}; T.resumen.plan=Array.isArray(T.resumen.plan)?T.resumen.plan:[];
+  var tx=/^IA:/i.test(texto)?texto:"IA: "+texto, pn=nombreCorto(contacto).split(" ")[0];
+  if(T.resumen.plan.some(function(p){ return p && p.seguir && p.seguir.a===contacto && String(p.seguir.en).slice(0,10)===String(en).slice(0,10) && p.estado!=="hecho"; })) return;
+  T.resumen.plan.push({id:"rec"+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36), quien:"IA", que:"Recordarle a "+pn, estado:"pendiente", requiere_autorizacion:false,
+    origen:"salvador37", dicho_ts:Date.now(), fecha:String(en).slice(0,10), seguir:{en:en, a:contacto, texto:tx}});
+}
 function ejecutaOrdenes(t, v, j, abiertas){
   var L=(Array.isArray(j&&j.ordenes)?j.ordenes:[]).filter(function(o){ return o && typeof o==="object"; }).slice(0,8), hecho=[], falta=[], T=t, hm=horaMty();
   /* 1) vincular primero: con una sola candidata clara, lo demás se hace en la tarea vinculada */
@@ -474,7 +514,13 @@ function ejecutaOrdenes(t, v, j, abiertas){
     else if(tp==="mensaje"){ var a=String(o.a||"").trim(), tx=String(o.texto||"").trim(); if(!a || !tx) return;
       if(String(o.canal||"").toLowerCase()==="correo"){ falta.push({k:"txt", q:"El correo a "+a+" no lo mando desde aquí: ¿se lo mando por WhatsApp?", ops:[]}); return; }
       var r=personasPara(T, a);   /* build 251: nombre repetido o sin coincidencia = pregunta cuál, no se manda nada */
-      if(r.estado==="uno"){ var por=mandaOrden(T, r.persona, tx); hecho.push("Le escribí a "+nombreCorto(r.persona.nombre).split(" ")[0]+" "+por+": “"+corto238(tx.replace(/^IA:\s*/i,""))+"”"); }
+      var cuando=(r.estado==="uno")?cuandoMandar(T, v, o):null;
+      if(r.estado==="uno" && cuando){ var pn=nombreCorto(r.persona.nombre).split(" ")[0];
+        agregaRecordatorio(T, r.persona.nombre, tx, cuando);
+        hecho.push("Le escribo a "+pn+" el "+fechaBonita(cuando.slice(0,10))+" a las "+cuando.slice(11,16)+" (no ahora): “"+corto238(tx.replace(/^IA:\s*/i,""))+"”"); }
+      else if(r.estado==="uno" && fueraDeHorario()){ var en8=proximas8(), pn8=nombreCorto(r.persona.nombre).split(" ")[0]; agregaRecordatorio(T, r.persona.nombre, tx, en8);
+        hecho.push("Le escribo a "+pn8+" a las 8:00 (fuera de horario)"); var _tid8=T.id, _np8=r.persona.nombre; setTimeout(function(){ preguntaHorario(_tid8, _np8, tx, en8); }, 600); }
+      else if(r.estado==="uno"){ var por=mandaOrden(T, r.persona, tx); hecho.push("Le escribí a "+nombreCorto(r.persona.nombre).split(" ")[0]+" "+por+": “"+corto238(tx.replace(/^IA:\s*/i,""))+"”"); }
       else falta.push({k:"msg", q:"¿A quién le mando “"+tx+"”? "+(r.cands.length?"Hay varios "+a+":":"No encontré a "+a+": escribe el nombre."), texto:tx, ops:r.cands.slice(0,4).map(function(c){ return {id:c.id, label:c.nombre}; })}); }
     else if(tp==="claude"){ var que=String(o.que||o.texto||"").trim(); if(!que) return; var f=fechaOrden(o, "");
       if(!f){ var sv=_fsa(v); if(/\bmanana\b/.test(sv) && !/\bpasado manana\b/.test(sv)) f=fechaMty(1); }

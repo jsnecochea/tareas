@@ -38,6 +38,11 @@ function arma() {
     eq("lo que solo tiene la Mac se queda (_historico)", !!R._historico.falta_paso_claude, true);
     eq("la versión de Firestore queda copiada (sin msgs)", [typeof R._fb_copia, /nuevo con el 10/.test(R._fb_copia), /recuérdales/.test(R._fb_copia), R._fb_tocada], ["string", true, false, F.tocada]);
     eq("ya conciliada: no se vuelve a subir", m(R, F), null);
+    /* lo eliminado en el teléfono no revive (caso Fiesta: fotos borradas reaparecieron) */
+    var M3 = { tocada: 1, msgs: [{ ts: 5, k: "bi", t: "foto", url: "u1" }] }, F3 = { tocada: T("2026-10-09T01:00:00Z"), msgs: [{ ts: 5, k: "bi", t: "foto", url: "u1", eliminado: true, eliminado_por: "salvador" }] };
+    eq("lo eliminado en el teléfono queda eliminado en MySQL", (m(M3, F3).msgs[0] || {}).eliminado, true);
+    var M4 = Object.assign({}, R, { _fb_v: undefined }); M4.msgs = [{ ts: 5, k: "bi", t: "foto", url: "u1" }];
+    eq("una conciliación vieja (sin _fb_v) vuelve a pasar una vez", !!m(M4, Object.assign({}, F, { msgs: F3.msgs, tocada: R._fb_tocada })), true);
     eq("tocada en Firestore antes de la copia a MySQL: no se toca", m(M, Object.assign({}, F, { tocada: T("2026-10-08T10:00:00Z") })), null);
     var M2 = Object.assign({}, M, { tocada: T("2026-10-09T01:30:00Z"), contexto: "de la Mac, más nuevo" });
     var R2 = m(M2, F);

@@ -650,12 +650,13 @@ var CONCILIA_DESDE=Date.parse("2026-10-08T14:55:00Z");
 var CONCILIA_HASTA=Date.parse("2026-10-20T06:00:00Z");   /* después de esta fecha ningún teléfono escribe solo en Firestore */
 var CONCILIA_UNEN=["msgs","notas_claude","respuestas_log","plan_log","notas","evidencia","censo_acomodo","encargos"];
 var CONCILIA_JUNTA=["msg_imp","contestadas","_historico"];
+var MARCAS_BAJA=["eliminado","eliminado_ts","eliminado_por","oculto","oculto_ts","oculto_por","oculto_motivo","apartado","apartado_ts","apartado_por","movido_a","borrado_servidor"];
 /* junta la versión de Firestore (F) sobre la de MySQL (M). Devuelve null si F no trae nada nuevo. */
 function mezclaFirestore(M, F){
   if(!F) return null;
   var fT=+F.tocada||0;
   if(!M) return fT>CONCILIA_DESDE ? Object.assign({}, F, {_fb_tocada:fT}) : null;
-  if(fT<=CONCILIA_DESDE || fT<=(+M._fb_tocada||0)) return null;
+  if(fT<=CONCILIA_DESDE || (fT<=(+M._fb_tocada||0) && (+M._fb_v||1)>=2)) return null;   /* v2: vuelve a pasar una vez para recuperar lo eliminado/oculto en el teléfono */
   var clave=function(x){ return (x && typeof x==="object") ? (x.id || x.nid || x.wa_id || ((x.ts||"")+"|"+(x.k||"")+"|"+String(x.t||x.texto||"").slice(0,80))) : JSON.stringify(x); };
   var R=Object.assign({}, M), gana=fT>(+M.tocada||0), cambio=false;
   Object.keys(F).forEach(function(k){
@@ -664,7 +665,10 @@ function mezclaFirestore(M, F){
     if(JSON.stringify(f)===JSON.stringify(m)) return;
     if(CONCILIA_UNEN.indexOf(k)>=0 && (Array.isArray(f) || Array.isArray(m))){
       var vistos={}, out=[];
-      (Array.isArray(m)?m:[]).concat(Array.isArray(f)?f:[]).forEach(function(x){ var c=clave(x); if(!vistos[c]){ vistos[c]=1; out.push(x); } });
+      var porC={}; (Array.isArray(f)?f:[]).forEach(function(x){ porC[clave(x)]=x; });
+      (Array.isArray(m)?m:[]).concat(Array.isArray(f)?f:[]).forEach(function(x){ var c=clave(x); if(vistos[c]) return; vistos[c]=1;
+        var y=porC[c]; if(y && y!==x && x && typeof x==="object"){ var z=null; MARCAS_BAJA.forEach(function(k){ if(y[k] && !x[k]){ z=z||Object.assign({}, x); z[k]=y[k]; } }); if(z) x=z; }
+        out.push(x); });   /* lo que en el teléfono quedó eliminado, oculto o apartado sigue así: no revive */
       if(k==="msgs") out.sort(function(a,b){ return ((a&&+a.ts)||0)-((b&&+b.ts)||0); });
       if(JSON.stringify(out)!==JSON.stringify(m)){ R[k]=out; cambio=true; }
       return;
@@ -677,7 +681,7 @@ function mezclaFirestore(M, F){
   if(!cambio) return null;
   var copia=Object.assign({}, F); delete copia.msgs; delete copia._fb_copia;
   R._fb_copia=JSON.stringify(copia).slice(0, 60000);
-  R._fb_tocada=fT;
+  R._fb_tocada=fT; R._fb_v=2;
   if(gana) R.tocada=fT;
   return R;
 }
@@ -779,7 +783,8 @@ var datosTareas=(function(){
      pendiente_info, resumen, sabemos…) no es una decisión: en un choque gana la versión del servidor (la Mac lo acaba de escribir). */
   var DE_PERSONA={nombre:1, f_vigente:1, f_original:1, fecha_dictada:1, indefinida:1, estado:1, cierre:1, cierra:1, duenio:1, encargado:1, espera_a:1,
     checklist:1, checklist_apartado:1, avisos:1, citas:1, evento:1, plan_seguimiento:1, contexto:1, contexto_detalle:1, autorizada:1, autorizada_ts:1,
-    tipo_item:1, tipo_elegido:1, es_dato:1, criticidad:1, ritmo:1, periodicidad:1, compartida_con:1, revisores:1, claves:1, metas:1, gasto:1};
+    tipo_item:1, tipo_elegido:1, es_dato:1, criticidad:1, ritmo:1, periodicidad:1, compartida_con:1, revisores:1, claves:1, metas:1, gasto:1,
+    wa_contactos:1, wa_excluidos:1, wa_no_excluir:1};
   function subeUna(id, ent){
     return llama("fs_doc", {col:COL, id:id}).then(function(j){
       var S=j ? (j.doc||j) : {}; var data={}, choques=[], ahora=Date.now(), tp=Object.assign({}, S._tocado_por||{});

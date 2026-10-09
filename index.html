@@ -1789,7 +1789,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 309 · Candado de datos: si dictas una fecha o un monto distinto al documentado, pregunta antes de cambiarlo";
+var VERSION_APP = "build 310 · Mensajes solo de 8 a 8 y no antes de tiempo; lo eliminado no revive; aprende a sacar contactos de una tarea";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -3882,8 +3882,26 @@ function eliminaAdjuntos(t, refs){
     if(String(r).split(":")[0]==="ms"){ if(f.url) urls.push(String(f.url)); }
     else { if(f.data && !/^https?:/.test(String(f.data))) f.data=""; else if(f.data) urls.push(String(f.data)); } });
   if(urls.length){ t.eliminar_pendiente=(t.eliminar_pendiente||[]).concat(urls.map(function(u){ return {url:u, ts:ahora}; })); }
-  if(n){ guarda(t); }
+  if(n){ guarda(t); setTimeout(function(){ try{ preguntaExcluir(t.id); }catch(e){} }, 500); }
   return {n:n, urls:urls};
+}
+/* APRENDER DE LO QUE SE ELIMINA (Salvador 9-oct: «borré imágenes que no tienen nada que ver y volvieron; que aprenda»).
+   Si ya quitó 2 o más cosas que mandó el mismo contacto, se le ofrece sacar a ese contacto de la tarea: la Mac (18z53) deja de
+   pegar aquí lo suyo por la liga del contacto y lo manda a Acomodo. Se pregunta una vez por contacto. */
+function preguntaExcluir(tid){
+  var t=tareas.filter(function(x){ return x.id===tid; })[0]; if(!t) return;
+  var cuenta={}; (t.msgs||[]).forEach(function(m){ if(m && m.wa_c && (m.eliminado||m.apartado) && (m.wa_in===1 || m.k==="bi")) cuenta[m.wa_c]=(cuenta[m.wa_c]||0)+1; });
+  var ya=(t.wa_excluidos||[]).concat(t.wa_no_excluir||[]);
+  var c=Object.keys(cuenta).filter(function(k){ return cuenta[k]>=2 && ya.indexOf(k)<0; })[0]; if(!c) return;
+  var corto=nombreCorto(c);
+  sobreHoja('<div class="mov225" role="dialog" aria-label="¿Saco a este contacto?"><div class="h225g"></div><div class="h225h"><b>¿Ya no meto aquí lo de '+esc(corto)+'?</b><button class="h225b" data-hx254="1" aria-label="Cerrar">×</button></div>'+
+    '<div class="h225c"><p class="h225v0">Quitaste '+cuenta[c]+' cosas que mandó '+esc(corto)+'. Si dices que sí, lo que mande ya no cae solo en esta tarea: se va a Acomodo para que tú decidas.</p>'+
+    '<button class="hop big254 pri" data-h254="si">Sí, ya no lo metas aquí</button><button class="hop big254" data-h254="no">No, sí es de esta tarea</button></div></div>',
+    function(k){ var T=tareas.filter(function(x){ return x.id===tid; })[0]||t;
+      if(k==="si"){ T.wa_excluidos=(T.wa_excluidos||[]).concat([c]); T.wa_contactos=(T.wa_contactos||[]).filter(function(x){ return x && x.nombre!==c; });
+        msg(T,"bi","Listo: lo que mande "+corto+" ya no cae solo en esta tarea; va a Acomodo."); var m=T.msgs[T.msgs.length-1]; m.canal="priv:"+yo; m.res238=1; }
+      else T.wa_no_excluir=(T.wa_no_excluir||[]).concat([c]);
+      guarda(T); try{ render(); }catch(e){} });
 }
 function borraEnServidor(tid, url){
   if(typeof APP_TOKEN==="undefined" || String(APP_TOKEN).indexOf("__")===0) return Promise.resolve(false);
@@ -4598,12 +4616,13 @@ var CONCILIA_DESDE=Date.parse("2026-10-08T14:55:00Z");
 var CONCILIA_HASTA=Date.parse("2026-10-20T06:00:00Z");   /* después de esta fecha ningún teléfono escribe solo en Firestore */
 var CONCILIA_UNEN=["msgs","notas_claude","respuestas_log","plan_log","notas","evidencia","censo_acomodo","encargos"];
 var CONCILIA_JUNTA=["msg_imp","contestadas","_historico"];
+var MARCAS_BAJA=["eliminado","eliminado_ts","eliminado_por","oculto","oculto_ts","oculto_por","oculto_motivo","apartado","apartado_ts","apartado_por","movido_a","borrado_servidor"];
 /* junta la versión de Firestore (F) sobre la de MySQL (M). Devuelve null si F no trae nada nuevo. */
 function mezclaFirestore(M, F){
   if(!F) return null;
   var fT=+F.tocada||0;
   if(!M) return fT>CONCILIA_DESDE ? Object.assign({}, F, {_fb_tocada:fT}) : null;
-  if(fT<=CONCILIA_DESDE || fT<=(+M._fb_tocada||0)) return null;
+  if(fT<=CONCILIA_DESDE || (fT<=(+M._fb_tocada||0) && (+M._fb_v||1)>=2)) return null;   /* v2: vuelve a pasar una vez para recuperar lo eliminado/oculto en el teléfono */
   var clave=function(x){ return (x && typeof x==="object") ? (x.id || x.nid || x.wa_id || ((x.ts||"")+"|"+(x.k||"")+"|"+String(x.t||x.texto||"").slice(0,80))) : JSON.stringify(x); };
   var R=Object.assign({}, M), gana=fT>(+M.tocada||0), cambio=false;
   Object.keys(F).forEach(function(k){
@@ -4612,7 +4631,10 @@ function mezclaFirestore(M, F){
     if(JSON.stringify(f)===JSON.stringify(m)) return;
     if(CONCILIA_UNEN.indexOf(k)>=0 && (Array.isArray(f) || Array.isArray(m))){
       var vistos={}, out=[];
-      (Array.isArray(m)?m:[]).concat(Array.isArray(f)?f:[]).forEach(function(x){ var c=clave(x); if(!vistos[c]){ vistos[c]=1; out.push(x); } });
+      var porC={}; (Array.isArray(f)?f:[]).forEach(function(x){ porC[clave(x)]=x; });
+      (Array.isArray(m)?m:[]).concat(Array.isArray(f)?f:[]).forEach(function(x){ var c=clave(x); if(vistos[c]) return; vistos[c]=1;
+        var y=porC[c]; if(y && y!==x && x && typeof x==="object"){ var z=null; MARCAS_BAJA.forEach(function(k){ if(y[k] && !x[k]){ z=z||Object.assign({}, x); z[k]=y[k]; } }); if(z) x=z; }
+        out.push(x); });   /* lo que en el teléfono quedó eliminado, oculto o apartado sigue así: no revive */
       if(k==="msgs") out.sort(function(a,b){ return ((a&&+a.ts)||0)-((b&&+b.ts)||0); });
       if(JSON.stringify(out)!==JSON.stringify(m)){ R[k]=out; cambio=true; }
       return;
@@ -4625,7 +4647,7 @@ function mezclaFirestore(M, F){
   if(!cambio) return null;
   var copia=Object.assign({}, F); delete copia.msgs; delete copia._fb_copia;
   R._fb_copia=JSON.stringify(copia).slice(0, 60000);
-  R._fb_tocada=fT;
+  R._fb_tocada=fT; R._fb_v=2;
   if(gana) R.tocada=fT;
   return R;
 }
@@ -4727,7 +4749,8 @@ var datosTareas=(function(){
      pendiente_info, resumen, sabemos…) no es una decisión: en un choque gana la versión del servidor (la Mac lo acaba de escribir). */
   var DE_PERSONA={nombre:1, f_vigente:1, f_original:1, fecha_dictada:1, indefinida:1, estado:1, cierre:1, cierra:1, duenio:1, encargado:1, espera_a:1,
     checklist:1, checklist_apartado:1, avisos:1, citas:1, evento:1, plan_seguimiento:1, contexto:1, contexto_detalle:1, autorizada:1, autorizada_ts:1,
-    tipo_item:1, tipo_elegido:1, es_dato:1, criticidad:1, ritmo:1, periodicidad:1, compartida_con:1, revisores:1, claves:1, metas:1, gasto:1};
+    tipo_item:1, tipo_elegido:1, es_dato:1, criticidad:1, ritmo:1, periodicidad:1, compartida_con:1, revisores:1, claves:1, metas:1, gasto:1,
+    wa_contactos:1, wa_excluidos:1, wa_no_excluir:1};
   function subeUna(id, ent){
     return llama("fs_doc", {col:COL, id:id}).then(function(j){
       var S=j ? (j.doc||j) : {}; var data={}, choques=[], ahora=Date.now(), tp=Object.assign({}, S._tocado_por||{});
@@ -9062,6 +9085,7 @@ function promptRevision(t, v, abiertas, op){
     "- de_quien y cifras: para datos (de quién o qué proyecto; montos o medidas tal cual). ya_hecha=true solo si dice que ya se hizo.\n",
     "- pregunta: SOLO lo que de verdad quedó ambiguo, en una pregunta corta; lo demás llénalo igual. Si todo quedó claro, null.\n",
     "- ordenes (build 238): TODO lo que pidió HACER (no los datos), en orden, sin perder ninguna: [{\"tipo\":\"vincular|mensaje|claude|agendar|seguimiento|clasificar\",\"a\":\"persona tal cual (mensaje)\",\"canal\":\"whatsapp|correo\",\"texto\":\"lo que se le dice, breve, en segunda persona, de parte de Salvador\",\"que\":\"qué tiene que revisar o investigar Claude, o qué se agenda\",\"fecha\":\"AAAA-MM-DD copiada del calendario o null\",\"hora\":\"HH:MM o null\",\"tareas\":[ids de TAREAS ABIERTAS candidatas para vincular, la más probable primero],\"busca\":\"cómo nombró la tarea a vincular\",\"tipo_item\":\"tarea|dato\"}]. 'revísalo/investiga/checa' dirigido a ti = tipo claude. 'pídele/dile/escríbele a X' = tipo mensaje. Si no pidió nada, [].\n",
+    "- TONO de los mensajes a amigos y familia (fiesta, comida, reunión): casual, alegre y cálido, como lo escribiría Salvador; nunca de tarea u obligación ni «tienes recordatorio». Ej.: «¡Ya casi es la fiesta! Te esperamos el 13 de noviembre en casa de mi papá, no se te olvide, nos la vamos a pasar increíble 🎉». Con proveedores y equipo: cordial y breve.\n",
     "- CONDICIONAL (build 250): 'pregúntale/mándale mensaje a A y si dice/te contesta que sí, dile/confírmale a B' es UNA SOLA orden {\"tipo\":\"condicional\",\"pregunta_a\":\"A tal cual\",\"pregunta_texto\":\"lo que se le pregunta a A, con el contexto (qué, cuándo, para qué), de parte de Salvador\",\"si_a\":\"B tal cual\",\"si_texto\":\"lo que se le confirma a B si A dice que sí\",\"vence\":\"AAAA-MM-DD fecha límite que dijo, o null\",\"vence_hora\":\"HH:MM o null\",\"evento_fecha\":\"AAAA-MM-DD del evento o plan de que se trata (copiada del calendario), o null\"}. No la partas en dos mensajes ni la conviertas en aviso: se manda la pregunta a A y la respuesta de B queda esperando. Si en la misma frase dice 'tengo que contestarle a X' y a la vez pide ejecutarlo, NO pongas recordar: la orden ya lo hace.\n",
     "- dudas: SOLO lo genuinamente ambiguo que no se puede ejecutar sin preguntar: [{\"pregunta\":\"corta\",\"opciones\":[\"opción\",…]}] (máx 4 opciones, la más probable primero). Si no hay, [].\n",
     "- OJO DUEÑO: pedirle algo a una persona, o que una persona dé información, NO la hace dueña. quien/responsable SOLO si dijo explícito que la tarea es suya o la hace ella ('pásasela a X', 'la hace X', 'X es el responsable').\n",
@@ -9626,6 +9650,46 @@ function mandaOrden(T, persona, texto, alId){
   T.wa_contactos=T.wa_contactos||[]; if(!T.wa_contactos.some(function(c){ return _nn(String(c.nombre||c))===_nn(nomWA); })) T.wa_contactos.push({nombre:nomWA, desde:Date.now()});
   mandaAExterno(T, nomWA, tx, null, null, alId); return "por WhatsApp";
 }
+/* UN MENSAJE NO SALE AHORA SI NO SE PIDIÓ AHORA (caso Fiesta 9-oct: «también avísale a Néstor y a Xavier» mandó el mensaje
+   en el acto, cuando lo que quería era sumarlos al recordatorio del 10 de noviembre). Sin palabra de inmediatez, si la tarea ya
+   tiene recordatorios programados a otros contactos, va a esa misma fecha y hora; si la orden o lo dicho trae una fecha futura,
+   va a esa fecha a las 10:30. Si no hay ninguna de las dos, sale ahora, como siempre. */
+var YA_MISMO=/\b(ahora|ahorita|ya mismo|de inmediato|inmediatamente|en este momento|hoy mismo|hoy)\b/i;
+var TAMBIEN_RECORDATORIO=/\b(tambien|igual|igualmente|a ellos|a ellas|recuerdal\w*|recordatorio|recuerdales)\b/i;
+function cuandoMandar(T, v, o){
+  var sv=_fsa(v); if(YA_MISMO.test(sv)) return null;
+  var f0=(o && /^\d{4}-\d{2}-\d{2}$/.test(String(o.fecha||"")))?String(o.fecha):"";   /* solo la fecha explícita de ESA orden («mañana» dentro del texto no la programa) */
+  if(f0 && f0>hoy()) return f0+"T"+((o && /^\d{2}:\d{2}$/.test(o.hora||""))?o.hora:"10:30")+":00-06:00";
+  if(!TAMBIEN_RECORDATORIO.test(sv)) return null;   /* «dile a X que…» sin más: sale ahora (en horario) */
+  var ahora=Date.now(), plan=((T.resumen && Array.isArray(T.resumen.plan))?T.resumen.plan:[]).filter(function(p){ return p && p.seguir && p.seguir.en && p.estado!=="hecho" && Date.parse(p.seguir.en)>ahora; });
+  if(plan.length){ plan.sort(function(a,b){ return Date.parse(a.seguir.en)-Date.parse(b.seguir.en); }); return String(plan[0].seguir.en); }
+  return null;
+}
+/* HORARIO (Salvador 9-oct): a nadie le sale un mensaje antes de las 8:00 ni después de las 20:00 (Monterrey). Fuera de ese
+   horario, lo que pidió se le pregunta: «¿lo mando ya o a las 8:00?»; mientras contesta, queda programado para las 8:00. */
+function fueraDeHorario(){
+  if(location.protocol==="file:" && !window.__PRUEBA_HORARIO) return false;   /* las pruebas corren a cualquier hora con file://; la de horario lo prende */
+  var h=+horaMty().slice(0,2); return h<8 || h>=20; }
+function proximas8(){ var h=+horaMty().slice(0,2); return (h>=20?fechaMty(1):hoy())+"T08:00:00-06:00"; }
+function preguntaHorario(tid, contacto, texto, en){
+  var corto=nombreCorto(contacto).split(" ")[0];
+  sobreHoja('<div class="mov225" role="dialog" aria-label="Fuera de horario"><div class="h225g"></div><div class="h225h"><b>🌙 Son las '+esc(horaMty().slice(0,5))+'</b><button class="h225b" data-hx254="1" aria-label="Cerrar">×</button></div>'+
+    '<div class="h225c"><p class="h225v0">El mensaje a '+esc(corto)+' quedó para las 8:00. ¿Se lo mando ya?</p><p class="h225v0">«'+esc(String(texto).replace(/^IA:\s*/i,"").slice(0,200))+'»</p>'+
+    '<button class="hop big254 pri" data-h254="espera">Sí, a las 8:00</button><button class="hop big254" data-h254="ya">Mandarlo ya</button></div></div>',
+    function(k){ if(k!=="ya") return; var T=tareas.filter(function(x){ return x.id===tid; })[0]; if(!T) return;
+      var pl=(T.resumen && Array.isArray(T.resumen.plan))?T.resumen.plan:[], p=pl.filter(function(x){ return x && x.seguir && x.seguir.a===contacto && x.seguir.en===en && x.estado!=="hecho"; })[0];
+      if(p) p.estado="hecho";
+      var r=personasPara(T, contacto); if(r.estado==="uno") mandaOrden(T, r.persona, texto);
+      guarda(T); try{ render(); }catch(e){} });
+}
+/* el mismo formato de paso que usa la Mac (resumen.plan con seguir): la Mac lo manda el día y hora indicados */
+function agregaRecordatorio(T, contacto, texto, en){
+  T.resumen=(T.resumen && typeof T.resumen==="object")?T.resumen:{}; T.resumen.plan=Array.isArray(T.resumen.plan)?T.resumen.plan:[];
+  var tx=/^IA:/i.test(texto)?texto:"IA: "+texto, pn=nombreCorto(contacto).split(" ")[0];
+  if(T.resumen.plan.some(function(p){ return p && p.seguir && p.seguir.a===contacto && String(p.seguir.en).slice(0,10)===String(en).slice(0,10) && p.estado!=="hecho"; })) return;
+  T.resumen.plan.push({id:"rec"+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36), quien:"IA", que:"Recordarle a "+pn, estado:"pendiente", requiere_autorizacion:false,
+    origen:"salvador37", dicho_ts:Date.now(), fecha:String(en).slice(0,10), seguir:{en:en, a:contacto, texto:tx}});
+}
 function ejecutaOrdenes(t, v, j, abiertas){
   var L=(Array.isArray(j&&j.ordenes)?j.ordenes:[]).filter(function(o){ return o && typeof o==="object"; }).slice(0,8), hecho=[], falta=[], T=t, hm=horaMty();
   /* 1) vincular primero: con una sola candidata clara, lo demás se hace en la tarea vinculada */
@@ -9637,7 +9701,13 @@ function ejecutaOrdenes(t, v, j, abiertas){
     else if(tp==="mensaje"){ var a=String(o.a||"").trim(), tx=String(o.texto||"").trim(); if(!a || !tx) return;
       if(String(o.canal||"").toLowerCase()==="correo"){ falta.push({k:"txt", q:"El correo a "+a+" no lo mando desde aquí: ¿se lo mando por WhatsApp?", ops:[]}); return; }
       var r=personasPara(T, a);   /* build 251: nombre repetido o sin coincidencia = pregunta cuál, no se manda nada */
-      if(r.estado==="uno"){ var por=mandaOrden(T, r.persona, tx); hecho.push("Le escribí a "+nombreCorto(r.persona.nombre).split(" ")[0]+" "+por+": “"+corto238(tx.replace(/^IA:\s*/i,""))+"”"); }
+      var cuando=(r.estado==="uno")?cuandoMandar(T, v, o):null;
+      if(r.estado==="uno" && cuando){ var pn=nombreCorto(r.persona.nombre).split(" ")[0];
+        agregaRecordatorio(T, r.persona.nombre, tx, cuando);
+        hecho.push("Le escribo a "+pn+" el "+fechaBonita(cuando.slice(0,10))+" a las "+cuando.slice(11,16)+" (no ahora): “"+corto238(tx.replace(/^IA:\s*/i,""))+"”"); }
+      else if(r.estado==="uno" && fueraDeHorario()){ var en8=proximas8(), pn8=nombreCorto(r.persona.nombre).split(" ")[0]; agregaRecordatorio(T, r.persona.nombre, tx, en8);
+        hecho.push("Le escribo a "+pn8+" a las 8:00 (fuera de horario)"); var _tid8=T.id, _np8=r.persona.nombre; setTimeout(function(){ preguntaHorario(_tid8, _np8, tx, en8); }, 600); }
+      else if(r.estado==="uno"){ var por=mandaOrden(T, r.persona, tx); hecho.push("Le escribí a "+nombreCorto(r.persona.nombre).split(" ")[0]+" "+por+": “"+corto238(tx.replace(/^IA:\s*/i,""))+"”"); }
       else falta.push({k:"msg", q:"¿A quién le mando “"+tx+"”? "+(r.cands.length?"Hay varios "+a+":":"No encontré a "+a+": escribe el nombre."), texto:tx, ops:r.cands.slice(0,4).map(function(c){ return {id:c.id, label:c.nombre}; })}); }
     else if(tp==="claude"){ var que=String(o.que||o.texto||"").trim(); if(!que) return; var f=fechaOrden(o, "");
       if(!f){ var sv=_fsa(v); if(/\bmanana\b/.test(sv) && !/\bpasado manana\b/.test(sv)) f=fechaMty(1); }
