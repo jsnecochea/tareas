@@ -9,6 +9,7 @@
 "use strict";
 var fs = require("fs"), path = require("path"), vm = require("vm");
 var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+var IDN = html.slice(html.indexOf("/* @@IDENTIDAD-INICIO"), html.indexOf("/* @@IDENTIDAD-FIN */"));   /* llamaServidor y su prueba de identidad: toda llamada al servidor pasa por ahí */
 var lineas = html.split("\n");
 function saca(tipo, nombre) {
   var re = tipo === "function" ? new RegExp("^function " + nombre.replace(/\$/g, "\\$") + "\\(") : new RegExp("^var " + nombre + "\\s*=");
@@ -107,7 +108,7 @@ var pagina = '<!doctype html><meta charset="utf-8"><style>' + css + '</style><bo
   'var INTS=[{k:"salvador",rol:"hace"}]; function integrantesDe(){ return INTS; } var CNL={id:"ext:x", nom:"Eduardo Madero \\"Lalo\\" (padel Verde) LNN", col:"#30d158", wa:"Eduardo"}; function canalActual(){ return CNL; } function canalesDe(){ return [1,2,3,4]; } function modoClaude(){ return false; }' +
   'window.__vf230={a:""};var tareas=[{id:"a", msgs:[{wa_c:"Eduardo Madero \\"Lalo\\" (padel Verde) LNN", ts:Date.now()-86400000}, {wa_c:"Rogelio Sada", ts:Date.now()}]}];' +
   'window.fetch=function(u){ FETCH++; return Promise.resolve({ok:true,status:200,json:function(){ return Promise.resolve(AG); }}); };' +
-  UF.map(function (f) { return saca("function", f); }).join("\n").replace(/<\/script>/g, "<\\/script>") + '</script>';
+  (IDN + "\n" + UF.map(function (f) { return saca("function", f); }).join("\n")).replace(/<\/script>/g, "<\\/script>") + '</script>';
 var tmp = path.join(os.tmpdir(), "b219-" + process.pid + ".html"); fs.writeFileSync(tmp, pagina);
 (async function () {
   var pw = require("/opt/node22/lib/node_modules/playwright"), b = await pw.chromium.launch(), p = await b.newPage({ viewport: { width: 390, height: 844 } }), errs = [];

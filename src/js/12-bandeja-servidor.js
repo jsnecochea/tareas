@@ -40,7 +40,7 @@ function bandejaSrvVisible(){ var m=marcasBandeja(); return BANDEJA_SRV.lista.fi
 function llamaBandeja(accion, cuerpo){
   var op={method:cuerpo?"POST":"GET", headers:{"x-app-token":APP_TOKEN, "x-usuario":yo||"anonimo"}};
   if(cuerpo){ op.headers["content-type"]="application/json"; op.body=JSON.stringify(cuerpo); }
-  return fetch(PUSH+"?action="+accion, op).then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){
+  return llamaServidor(PUSH+"?action="+accion, op).then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){
     if(!r.ok || (j && !Array.isArray(j) && j.error)) throw new Error((j&&j.error)||("HTTP "+r.status)); return j; }); });
 }
 function cargaBandejaSrv(){

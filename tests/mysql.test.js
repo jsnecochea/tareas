@@ -6,6 +6,7 @@
 "use strict";
 var fs = require("fs"), path = require("path"), vm = require("vm");
 var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+var IDN = html.slice(html.indexOf("/* @@IDENTIDAD-INICIO"), html.indexOf("/* @@IDENTIDAD-FIN */"));   /* llamaServidor y su prueba de identidad: toda llamada al servidor pasa por ahí */
 var i = html.indexOf("/* @@DATOS-TAREAS-INICIO"), j = html.indexOf("/* @@DATOS-TAREAS-FIN */");
 if (i < 0 || j < 0) { console.log("RESULTADO 0/1\nno encontre el bloque @@DATOS-TAREAS"); process.exit(1); }
 var codigo = html.slice(i, j);
@@ -54,7 +55,7 @@ function arma(usuario, opts) {
     setTimeout: function (f, ms) { timers.push({ f: f, ms: ms }); return timers.length; }, clearTimeout: function (k) { if (timers[k - 1]) timers[k - 1].f = null; },
     fetch: S.fetch, APP_TOKEN: "tok-prueba", PUSH: "push.php", COL: "bitacora_tareas", yo: usuario, PERSONAS: opts.personas || {}, db: F,
     toast: function (x) { toasts.push(x); } };
-  vm.createContext(c); vm.runInContext(codigo, c);
+  vm.createContext(c); vm.runInContext(IDN + "\n" + codigo, c);
   return { c: c, S: S, F: F, L: L, timers: timers, toasts: toasts, d: c.datosTareas,
     corre: function () { var t = timers.filter(function (x) { return x.f; }); timers.length = 0; t.forEach(function (x) { x.f(); }); return t.map(function (x) { return x.ms; }); } };
 }

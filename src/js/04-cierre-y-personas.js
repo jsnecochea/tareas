@@ -1574,7 +1574,7 @@ function consultaEstadosWA(t){
     pidsWA(x).forEach(function(p){ if(!p) return; var g=(x.wa_st||{})[p]; if(g && g.ne) return; var n=nivelWA(WA_EST[p]||g); if(n>=0 && n<3 && ids.indexOf(p)<0) ids.push(p); }); });
   if(!ids.length) return Promise.resolve(false);
   ids=ids.slice(-WA_EST_TOPE);   /* tope del servidor: los mas recientes */
-  return fetch(PUSH+"?action=wa_estados",{method:"POST",
+  return llamaServidor(PUSH+"?action=wa_estados",{method:"POST",
       headers:{"content-type":"application/json","x-app-token":APP_TOKEN}, body:JSON.stringify({usuario:yo, ids:ids})})
     .then(function(r){ return r.json().catch(function(){ return {error:"HTTP "+r.status}; }); })
     .then(function(j){ var l=_estadosDe(j);

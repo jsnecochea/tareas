@@ -1801,7 +1801,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 316 · Cada quien ve solo lo suyo y botón Cerrar sesión";
+var VERSION_APP = "build 317 · Prueba de identidad (ID token) en cada llamada al servidor";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -1815,6 +1815,76 @@ var APP_TOKEN="__APP_TOKEN__";
    llamada es relativa, igual que la del proxy. */
 var PUSH="push.php";
 var VAPID_PUBLIC="BFnf9NwBioqZIXQ7jibjMPViaGHLDfB5aNLowJMco_u9PdaEZVRibceXV8mlG38wcYi-cjipIi8V4BU0ZjftMwE";
+
+/* @@IDENTIDAD-INICIO (las pruebas de Node sacan este bloque completo; no partirlo) */
+/* ===== IDENTIDAD EN CADA LLAMADA AL SERVIDOR =====
+   APP_TOKEN va escrito en la página pública y x-usuario lo pone la propia app: ninguno de los dos prueba QUIÉN llama.
+   Por eso TODA llamada a push.php y a claude.php sale por llamaServidor, que agrega «Authorization: Bearer <ID token
+   de Firebase>» para que el servidor verifique la firma con las llaves de Google y saque el correo real
+   (especificación en docs/seguridad-servidor.md). El SDK cachea el token y lo renueva solo.
+   Mientras el servidor no lo exija: sin usuario de Firebase, o si el token falla o tarda, la llamada sale igual sin
+   ese encabezado (y se anota en consola), para no romper nada. Sin usuario la llamada sale en el mismo instante,
+   como antes; con usuario sale en cuanto el SDK entrega el token.
+   Si el servidor contesta 401/403 con error de sesión ({error:"auth"}), se avisa «Tu sesión venció, vuelve a
+   entrar» y se manda al login UNA vez por carga; no se reintenta. Los cambios sin subir se quedan en el teléfono. */
+var MSG_SESION_VENCIDA="Tu sesión venció, vuelve a entrar";
+var TOPE_ID_TOKEN_MS=4000;
+function usuarioFirebase(){
+  try{ if(typeof firebase==="undefined" || !firebase.auth || !(firebase.apps&&firebase.apps.length)) return null;
+    return firebase.auth().currentUser||null; }catch(e){ return null; }
+}
+function notaSinIdentidad(motivo){
+  try{ if(window.__notaSinIdentidad===motivo) return; window.__notaSinIdentidad=motivo;
+    console.warn("servidor: llamada sin Authorization ("+motivo+")"); }catch(e){}
+}
+/* null = no hay usuario (la llamada sale ya); promesa = el token, o "" si falló o tardó más del tope */
+function tokenIdentidad(){
+  var u=usuarioFirebase();
+  if(!u || typeof u.getIdToken!=="function"){ notaSinIdentidad("sin usuario de Firebase"); return null; }
+  var tope=new Promise(function(_ok, no){ setTimeout(function(){ no(new Error("tardó más de "+TOPE_ID_TOKEN_MS+" ms")); }, TOPE_ID_TOKEN_MS); });
+  return Promise.race([Promise.resolve().then(function(){ return u.getIdToken(); }), tope])
+    .then(function(t){ if(!t) notaSinIdentidad("token vacío"); return t||""; },
+          function(e){ notaSinIdentidad("getIdToken: "+String((e&&e.message)||e)); return ""; });
+}
+/* el service worker también llama a push.php (Borrar / Posponer desde la notificación): se le pasa el token vigente */
+function tokenAlServiceWorker(t){
+  try{ var c=navigator.serviceWorker && navigator.serviceWorker.controller;
+    if(!t || !c || (window.__tokenSW===t && window.__tokenSWc===c)) return;
+    c.postMessage({tipo:"id_token", token:t}); window.__tokenSW=t; window.__tokenSWc=c; }catch(e){}
+}
+function esErrorDeSesion(j){
+  if(!j || typeof j!=="object") return false;
+  if(j.auth===false) return true;
+  return /^\s*(auth\b|auth_|sesi[oó]n|id[_ ]?token|bearer|firebase|unauthenticated)/i.test(String(j.error||j.code||""));
+}
+function revisaSesion(r){
+  if(!r || (r.status!==401 && r.status!==403) || typeof yo==="undefined" || !yo || typeof r.clone!=="function") return;
+  try{ r.clone().json().then(function(j){ if(esErrorDeSesion(j)) sesionVencida(); }).catch(function(){}); }catch(e){}
+}
+function sesionVencida(){
+  if(window.__sesionVencida) return; window.__sesionVencida=true;
+  try{ console.warn("servidor: sesión vencida (401 auth); al login"); }catch(e){}
+  try{ toast(MSG_SESION_VENCIDA); }catch(e){}
+  try{ sessionStorage.setItem("doit_msg_login", MSG_SESION_VENCIDA); }catch(e){}
+  try{ datosTareas.para(); }catch(e){}
+  var fa=null; try{ fa=firebase.auth(); }catch(e){}
+  var sale=Promise.resolve(); try{ if(fa && fa.signOut) sale=fa.signOut(); }catch(e){}
+  return Promise.race([sale, new Promise(function(ok){ setTimeout(ok, 3000); })]).catch(function(){}).then(function(){
+    yo=null;
+    try{ location.replace(location.pathname); }catch(e){ location.reload(); }
+  });
+}
+/* igual que fetch(url, op), con la prueba de identidad */
+function llamaServidor(url, op){
+  op=op||{}; op.headers=op.headers||{};
+  function sale(t){
+    if(t){ op.headers["Authorization"]="Bearer "+t; tokenAlServiceWorker(t); }
+    return fetch(url, op).then(function(r){ revisaSesion(r); return r; });
+  }
+  var tk=tokenIdentidad();
+  return tk ? tk.then(sale) : sale("");
+}
+/* @@IDENTIDAD-FIN */
 
 /* build 150: la notificacion lleva la liga EXACTA a la tarea (?recordatorio=<id>),
    asi al tocarla abre ese hilo y no otro. */
@@ -1923,7 +1993,7 @@ function guardaNotif(tipos){
   try{ if(db) db.collection(COLP).doc(yo).set({notif:o},{merge:true}).catch(function(){ toast("No se pudieron guardar tus notificaciones"); }); }catch(e){}
   try{ localStorage.setItem("bit_notif_"+yo, JSON.stringify(o)); }catch(e){}
   /* la misma ficha por push.php (fs_set), que es por donde la leen la Mac y el servidor */
-  try{ if(typeof APP_TOKEN!=="undefined" && String(APP_TOKEN).indexOf("__")!==0) fetch(PUSH+"?action=fs_set",{method:"POST", headers:{"content-type":"application/json","x-app-token":APP_TOKEN,"x-usuario":yo||"anonimo"},
+  try{ if(typeof APP_TOKEN!=="undefined" && String(APP_TOKEN).indexOf("__")!==0) llamaServidor(PUSH+"?action=fs_set",{method:"POST", headers:{"content-type":"application/json","x-app-token":APP_TOKEN,"x-usuario":yo||"anonimo"},
     body:JSON.stringify({col:COLP, id:yo, data:{notif:o}, merge:true})}).catch(function(){}); }catch(e){}
   try{ resyncAvisosNotif(); }catch(e){}   /* lo que se apagó deja de sonar desde el servidor y lo que se prendió se vuelve a mandar */
   return o;
@@ -2136,7 +2206,7 @@ function disparaPushInstantaneo(para, titulo, cuerpo, url, tipo, tag) {
   tipo = notifClave(tipo, sub);   /* las claves de antes (te_necesito, atorado) viajan con la del catálogo */
   if (!notifPermite(para, tipo, sub)) return;   /* tipo desconocido = no suena */
   
-  fetch('/push.php?action=send', {
+  llamaServidor('/push.php?action=send', {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
@@ -2203,7 +2273,7 @@ function activaAvisos(cb){
          suscripcion nunca quedaba: el telefono se suscribia con el navegador
          pero el servidor jamas la guardaba, asi que los avisos no podian
          llegarle a nadie. Encontrado probando en vivo el 2026-09-04. */
-      return fetch(PUSH,{
+      return llamaServidor(PUSH,{
         method:"POST",
         headers:{"content-type":"application/json","x-app-token":APP_TOKEN},
         body:JSON.stringify({
@@ -2237,7 +2307,7 @@ function resincronizaAvisos(cb){
       });
     }).then(function(sub){
       var j=sub.toJSON();
-      return fetch(PUSH,{method:"POST",
+      return llamaServidor(PUSH,{method:"POST",
         headers:{"content-type":"application/json","x-app-token":APP_TOKEN},
         body:JSON.stringify({usuario:yo||"anonimo", subscription:{endpoint:j.endpoint, keys:j.keys}})});
     }).then(function(r){ cb(!!(r&&r.ok)); }).catch(function(){ cb(false); });
@@ -2312,7 +2382,7 @@ function preguntaAClaude(mensajes, modelo, cb){
     /* si Claude YA contesto y lo que truena es lo que la app hace despues, NO se
        vuelve a preguntar (antes eso duplicaba el recordatorio). 2026-09-23 */
     var entregado = false, t0lat=Date.now(), chLat=planos.reduce(function(a, m){ return a+String(m.content||"").length; }, 0);
-    fetch(PROXY,{method:"POST",
+    llamaServidor(PROXY,{method:"POST",
       headers:{"content-type":"application/json","x-app-token":APP_TOKEN,"x-usuario":yo||"anonimo"},
       body:JSON.stringify({modelo:modelo||"rapido",messages:planos}),
       signal: ctrl ? ctrl.signal : undefined
@@ -3926,7 +3996,7 @@ function eliminaAdjuntos(t, refs){
 }
 function borraEnServidor(tid, url){
   if(typeof APP_TOKEN==="undefined" || String(APP_TOKEN).indexOf("__")===0) return Promise.resolve(false);
-  try{ return fetch(PUSH+"?action=borrar_archivo",{method:"POST", headers:{"content-type":"application/json","x-app-token":APP_TOKEN}, body:JSON.stringify({tarea_id:tid, url:url})})
+  try{ return llamaServidor(PUSH+"?action=borrar_archivo",{method:"POST", headers:{"content-type":"application/json","x-app-token":APP_TOKEN}, body:JSON.stringify({tarea_id:tid, url:url})})
     .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){ return !!(r.ok && j && (j.ok||j.success||j.borrado) && !j.error); }); })
     .catch(function(){ return false; }); }catch(e){ return Promise.resolve(false); }
 }
@@ -4214,6 +4284,8 @@ function gz(html){ var z=$("gzona"); if(z) z.innerHTML=html }
 function gErr(t){ var e=$("gerr"); if(e) e.textContent=t||"" }
 
 function pintaLogin(err){
+  /* si el servidor dio la sesión por vencida, el aviso sobrevive a la recarga y sale aquí una vez */
+  if(!err){ try{ err=sessionStorage.getItem("doit_msg_login")||""; sessionStorage.removeItem("doit_msg_login"); }catch(e){} }
   $("gate").classList.add("on");
   gTitulos(null);
   gz('<button class="gbtn" id="bgoogle" style="margin-top:52px">'+G_LOGO+'<span>Entrar con Google</span></button>');
@@ -4486,7 +4558,7 @@ function avisaVisto(){
   if(window.__vistoTs && ah-window.__vistoTs<60000) return;
   window.__vistoTs=ah;
   try{
-    fetch(PUSH+"?action=visto&usuario="+encodeURIComponent(yo),{method:"GET", keepalive:true,
+    llamaServidor(PUSH+"?action=visto&usuario="+encodeURIComponent(yo),{method:"GET", keepalive:true,
       headers:{"x-app-token":APP_TOKEN}}).catch(function(){});
   }catch(e){}
 }
@@ -4642,7 +4714,7 @@ function pideWhatsApp(cuerpo){
   cuerpo=Object.assign({prioridad:"urgente"}, cuerpo||{});
   if(typeof APP_TOKEN==="undefined" || String(APP_TOKEN).indexOf("__")===0)
     return Promise.reject(new Error("sin token"));
-  return fetch(PUSH+"?action=wa_pedido",{method:"POST", keepalive:true,
+  return llamaServidor(PUSH+"?action=wa_pedido",{method:"POST", keepalive:true,
       headers:{"content-type":"application/json","x-app-token":APP_TOKEN},
       body:JSON.stringify(cuerpo)})
     .then(function(r){ return r.json().catch(function(){return {}}).then(function(j){
@@ -4725,7 +4797,7 @@ var datosTareas=(function(){
     Object.keys(params||{}).forEach(function(k){ if(params[k]!=null && params[k]!=="") q+="&"+k+"="+encodeURIComponent(params[k]); });
     var op={method:cuerpo?"POST":"GET", headers:{"x-app-token":APP_TOKEN,"x-usuario":yo||"anonimo"}};
     if(cuerpo){ op.headers["content-type"]="application/json"; op.body=JSON.stringify(cuerpo); }
-    return fetch(PUSH+q, op).then(function(r){
+    return llamaServidor(PUSH+q, op).then(function(r){
       return r.json().catch(function(){ return {}; }).then(function(j){
         if(r.status===404 && accion==="fs_doc") return null;
         if(!r.ok || (j && j.error && !Array.isArray(j))) throw new Error((j&&j.error)||("HTTP "+r.status));
@@ -8905,7 +8977,7 @@ function consultaEstadosWA(t){
     pidsWA(x).forEach(function(p){ if(!p) return; var g=(x.wa_st||{})[p]; if(g && g.ne) return; var n=nivelWA(WA_EST[p]||g); if(n>=0 && n<3 && ids.indexOf(p)<0) ids.push(p); }); });
   if(!ids.length) return Promise.resolve(false);
   ids=ids.slice(-WA_EST_TOPE);   /* tope del servidor: los mas recientes */
-  return fetch(PUSH+"?action=wa_estados",{method:"POST",
+  return llamaServidor(PUSH+"?action=wa_estados",{method:"POST",
       headers:{"content-type":"application/json","x-app-token":APP_TOKEN}, body:JSON.stringify({usuario:yo, ids:ids})})
     .then(function(r){ return r.json().catch(function(){ return {error:"HTTP "+r.status}; }); })
     .then(function(j){ var l=_estadosDe(j);
@@ -15887,7 +15959,7 @@ function borraAvisoEspejo(key){ if(!db||!key) return; try{ db.collection(COLAV).
 function llamaPush(accion, cuerpo){
   if(typeof APP_TOKEN==="undefined" || String(APP_TOKEN).indexOf("__")===0) return;
   try{
-    fetch(PUSH+"?action="+accion,{method:"POST", keepalive:true,
+    llamaServidor(PUSH+"?action="+accion,{method:"POST", keepalive:true,
       headers:{"content-type":"application/json","x-app-token":APP_TOKEN},
       body:JSON.stringify(cuerpo)})
     .then(function(r){ return r.json().catch(function(){return {}}).then(function(j){
@@ -18645,7 +18717,7 @@ function cargaAgendaWA(alLlegar){
   if(window.AGENDA_WA || window.__agendaNo || window.__agendaPide) return;
   if(typeof APP_TOKEN==="undefined" || String(APP_TOKEN).indexOf("__")===0){ window.__agendaNo=1; return; }
   window.__agendaPide=1;
-  fetch(PUSH+"?action=wa_agenda",{method:"POST", headers:{"content-type":"application/json","x-app-token":APP_TOKEN}, body:JSON.stringify({usuario:yo})})
+  llamaServidor(PUSH+"?action=wa_agenda",{method:"POST", headers:{"content-type":"application/json","x-app-token":APP_TOKEN}, body:JSON.stringify({usuario:yo})})
     .then(function(r){ return r.json().catch(function(){ return {error:"HTTP "+r.status}; }); })
     .then(function(j){ window.__agendaPide=0; var l=_agendaDe(j); if(!l){ window.__agendaNo=1; return; } window.AGENDA_WA=l; if(alLlegar) try{ alLlegar(); }catch(e){} try{ reintentaDudas(); }catch(e){} })
     .catch(function(){ window.__agendaPide=0; window.__agendaNo=1; });
@@ -22279,7 +22351,7 @@ function bandejaSrvVisible(){ var m=marcasBandeja(); return BANDEJA_SRV.lista.fi
 function llamaBandeja(accion, cuerpo){
   var op={method:cuerpo?"POST":"GET", headers:{"x-app-token":APP_TOKEN, "x-usuario":yo||"anonimo"}};
   if(cuerpo){ op.headers["content-type"]="application/json"; op.body=JSON.stringify(cuerpo); }
-  return fetch(PUSH+"?action="+accion, op).then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){
+  return llamaServidor(PUSH+"?action="+accion, op).then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){
     if(!r.ok || (j && !Array.isArray(j) && j.error)) throw new Error((j&&j.error)||("HTTP "+r.status)); return j; }); });
 }
 function cargaBandejaSrv(){

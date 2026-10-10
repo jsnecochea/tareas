@@ -6,6 +6,7 @@
 "use strict";
 var fs = require("fs"), path = require("path"), vm = require("vm");
 var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+var IDN = html.slice(html.indexOf("/* @@IDENTIDAD-INICIO"), html.indexOf("/* @@IDENTIDAD-FIN */"));   /* llamaServidor y su prueba de identidad: toda llamada al servidor pasa por ahí */
 var lineas = html.split("\n");
 function saca(tipo, nombre) {
   var re = tipo === "function" ? new RegExp("^function " + nombre.replace(/\$/g, "\\$") + "\\(") : new RegExp("^var " + nombre + "\\s*=");
@@ -33,7 +34,7 @@ var c = { console: { log: function () {}, error: function () {} }, JSON: JSON, S
   localStorage: { setItem: function () {} }, COLP: "bitacora_personas",
   db: { collection: function (col) { return { doc: function (id) { return { set: function (o, m) { escritos.push([col, id, o, m]); return Promise.resolve(); } }; } }; } },
   fetch: function (u, o) { if (/action=fs_set/.test(u)) fichas.push(JSON.parse(o.body)); else enviados.push(JSON.parse(o.body)); return Promise.resolve({ json: function () { return {}; } }); } };
-vm.createContext(c); vm.runInContext(codigo, c);
+vm.createContext(c); vm.runInContext(IDN + "\n" + codigo, c);
 var ok = 0, n = 0, malas = [];
 function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
 function si(nom, v) { eq(nom, !!v, true); }

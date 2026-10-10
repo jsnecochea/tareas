@@ -227,6 +227,8 @@ function gz(html){ var z=$("gzona"); if(z) z.innerHTML=html }
 function gErr(t){ var e=$("gerr"); if(e) e.textContent=t||"" }
 
 function pintaLogin(err){
+  /* si el servidor dio la sesión por vencida, el aviso sobrevive a la recarga y sale aquí una vez */
+  if(!err){ try{ err=sessionStorage.getItem("doit_msg_login")||""; sessionStorage.removeItem("doit_msg_login"); }catch(e){} }
   $("gate").classList.add("on");
   gTitulos(null);
   gz('<button class="gbtn" id="bgoogle" style="margin-top:52px">'+G_LOGO+'<span>Entrar con Google</span></button>');
@@ -499,7 +501,7 @@ function avisaVisto(){
   if(window.__vistoTs && ah-window.__vistoTs<60000) return;
   window.__vistoTs=ah;
   try{
-    fetch(PUSH+"?action=visto&usuario="+encodeURIComponent(yo),{method:"GET", keepalive:true,
+    llamaServidor(PUSH+"?action=visto&usuario="+encodeURIComponent(yo),{method:"GET", keepalive:true,
       headers:{"x-app-token":APP_TOKEN}}).catch(function(){});
   }catch(e){}
 }
@@ -655,7 +657,7 @@ function pideWhatsApp(cuerpo){
   cuerpo=Object.assign({prioridad:"urgente"}, cuerpo||{});
   if(typeof APP_TOKEN==="undefined" || String(APP_TOKEN).indexOf("__")===0)
     return Promise.reject(new Error("sin token"));
-  return fetch(PUSH+"?action=wa_pedido",{method:"POST", keepalive:true,
+  return llamaServidor(PUSH+"?action=wa_pedido",{method:"POST", keepalive:true,
       headers:{"content-type":"application/json","x-app-token":APP_TOKEN},
       body:JSON.stringify(cuerpo)})
     .then(function(r){ return r.json().catch(function(){return {}}).then(function(j){
@@ -738,7 +740,7 @@ var datosTareas=(function(){
     Object.keys(params||{}).forEach(function(k){ if(params[k]!=null && params[k]!=="") q+="&"+k+"="+encodeURIComponent(params[k]); });
     var op={method:cuerpo?"POST":"GET", headers:{"x-app-token":APP_TOKEN,"x-usuario":yo||"anonimo"}};
     if(cuerpo){ op.headers["content-type"]="application/json"; op.body=JSON.stringify(cuerpo); }
-    return fetch(PUSH+q, op).then(function(r){
+    return llamaServidor(PUSH+q, op).then(function(r){
       return r.json().catch(function(){ return {}; }).then(function(j){
         if(r.status===404 && accion==="fs_doc") return null;
         if(!r.ok || (j && j.error && !Array.isArray(j))) throw new Error((j&&j.error)||("HTTP "+r.status));

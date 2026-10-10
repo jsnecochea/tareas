@@ -8,6 +8,7 @@
 "use strict";
 var fs = require("fs"), path = require("path"), os = require("os");
 var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8"), L = html.split("\n");
+var IDN = html.slice(html.indexOf("/* @@IDENTIDAD-INICIO"), html.indexOf("/* @@IDENTIDAD-FIN */"));   /* llamaServidor y su prueba de identidad: toda llamada al servidor pasa por ahí */
 function saca(n) { var re = new RegExp("^(function " + n.replace(/\$/g, "\\$") + "\\(|var " + n + "\\s*=)"), i = -1; L.forEach(function (l, k) { if (re.test(l)) i = k; });
   if (i < 0) throw new Error("no encontre " + n); var o = [L[i]]; for (var k = i + 1; k < L.length; k++) { var x = L[k]; if (x.length && !/^[\s}\]]/.test(x)) break; o.push(x); if (/^}/.test(x)) break; } return o.join("\n"); }
 var F = ["_nn", "_telDe", "_nomWA", "esMsgWA", "miembroDeNombre", "_cwMemo", "contactosWA", "_contactosWA", "integrantesDe", "msg",
@@ -32,7 +33,7 @@ var pagina = '<!doctype html><meta charset="utf-8"><style>' + css + '</style><bo
   'function guarda(){ GUARDADO++; } function toast(t){ TOAST.push(t); } function render(){ RENDER++; } function hhmm(){ return "9:30"; }' +
   'function pideWhatsApp(c){ PED.push(c); return Promise.resolve({id:"p"+PED.length}); }' +
   'window.fetch=function(u,o){ FETCH.push({u:u, b:JSON.parse(o.body)}); return Promise.resolve({ok:true, status:200, json:function(){ return Promise.resolve(RESP); }}); };' +
-  (html.slice(html.indexOf("/* @@CAMPOS-UNICOS-INICIO"), html.indexOf("/* @@CAMPOS-UNICOS-FIN */")) + "\n" + saca("ctxCampos") + "\n" + F.map(saca).join("\n")).replace(/<\/script>/g, "<\\/script>") + '</script>';
+  (IDN + "\n" + html.slice(html.indexOf("/* @@CAMPOS-UNICOS-INICIO"), html.indexOf("/* @@CAMPOS-UNICOS-FIN */")) + "\n" + saca("ctxCampos") + "\n" + F.map(saca).join("\n")).replace(/<\/script>/g, "<\\/script>") + '</script>';
 var tmp = path.join(os.tmpdir(), "b217-" + process.pid + ".html"); fs.writeFileSync(tmp, pagina);
 (async function () {
   var pw = require("/opt/node22/lib/node_modules/playwright"), b = await pw.chromium.launch(), p = await b.newPage({ viewport: { width: 390, height: 844 } }), errs = [];

@@ -6,6 +6,7 @@
 "use strict";
 var fs = require("fs"), path = require("path"), vm = require("vm");
 var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8"), L = html.split("\n");
+var IDN = html.slice(html.indexOf("/* @@IDENTIDAD-INICIO"), html.indexOf("/* @@IDENTIDAD-FIN */"));   /* llamaServidor y su prueba de identidad: toda llamada al servidor pasa por ahí */
 function saca(n) { var re = new RegExp("^(function " + n.replace(/\$/g, "\\$") + "\\(|var " + n + "\\s*=)"), i = -1; L.forEach(function (l, k) { if (re.test(l)) i = k; });
   if (i < 0) throw new Error("no encontre " + n); var o = [L[i]]; for (var k = i + 1; k < L.length; k++) { var x = L[k]; if (x.length && !/^[\s}\]]/.test(x)) break; o.push(x); if (/^}/.test(x)) break; } return o.join("\n"); }
 var ok = 0, n = 0, malas = [];
@@ -17,7 +18,7 @@ var F = ["WA_EST", "nivelWA", "llevaPalomitas", "pidsWA", "nivelMsgWA", "_estado
 var c = { PUSH: "push.php", APP_TOKEN: "tok", yo: "salvador", vista: "lista", abierta: null, window: {}, FETCH: [], RESP: null, G: 0, Date: Date, JSON: JSON, String: String, Array: Array, Object: Object, Math: Math, Promise: Promise,
   guarda: function () { c.G++; }, render: function () {} };
 c.fetch = function (u, o) { c.FETCH.push({ u: u, b: JSON.parse(o.body) }); var r = c.RESP; return Promise.resolve({ ok: true, status: 200, json: function () { return Promise.resolve(typeof r === "function" ? r() : r); } }); };
-vm.createContext(c); vm.runInContext(F.map(saca).join("\n"), c);
+vm.createContext(c); vm.runInContext(IDN + "\n" + F.map(saca).join("\n"), c);
 (async function () {
   var now = Date.now();
   var t = { id: "t1", msgs: [{ k: "bo", t: "a", wa_auto: "R", wa_pid: "a1", ts: now }, { k: "bo", t: "b", wa_auto: "R", wa_pid: "viejo1", ts: now }] };

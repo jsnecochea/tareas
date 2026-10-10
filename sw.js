@@ -6,9 +6,34 @@ const APP_TOKEN_SW = '__APP_TOKEN__';
 
 /* build 270 (276): versión del service worker. Cambiar este número cambia los bytes de sw.js, y el navegador instala el SW nuevo
    (skipWaiting + clients.claim abajo) y borra los caches viejos en 'activate'. */
-var SW_VERSION = 'build 316';
+var SW_VERSION = 'build 317';
 
 self.addEventListener('install', function(e){ self.skipWaiting(); });
+
+/* PRUEBA DE IDENTIDAD para push.php: la app le pasa al SW su ID token de Firebase vigente (postMessage {tipo:'id_token'})
+   y el SW lo manda como «Authorization: Bearer» en Borrar / Posponer desde la notificación. Se guarda en memoria y en un
+   cache propio porque el navegador apaga el SW entre avisos. El ID token dura 1 h: si ya venció cuando se toca el botón,
+   lo que vale es el accion_token firmado que el servidor puede poner en cada push (docs/seguridad-servidor.md). */
+var ID_TOKEN_SW = '';
+function idTokenSW() {
+  if (ID_TOKEN_SW || !self.caches) return Promise.resolve(ID_TOKEN_SW);
+  return caches.open('doit-id').then(function (c) { return c.match('/__id_token'); })
+    .then(function (r) { return r ? r.text() : ''; }).catch(function () { return ''; });
+}
+self.addEventListener('message', function (e) {
+  var d = e && e.data;
+  if (!d || d.tipo !== 'id_token' || !d.token) return;
+  ID_TOKEN_SW = String(d.token);
+  if (self.caches) e.waitUntil(caches.open('doit-id').then(function (c) { return c.put('/__id_token', new Response(ID_TOKEN_SW)); }).catch(function () {}));
+});
+function encabezadosSW(data) {
+  return idTokenSW().then(function (t) {
+    var h = { 'x-app-token': APP_TOKEN_SW };
+    if (t) h['Authorization'] = 'Bearer ' + t;
+    if (data && data.accion_token) h['x-accion-token'] = String(data.accion_token);
+    return h;
+  });
+}
 
 self.addEventListener('activate', function(e){
   e.waitUntil(Promise.resolve()
@@ -133,17 +158,17 @@ self.addEventListener('notificationclick', function(event) {
 
   if (action === 'del') {
     event.waitUntil(
-      fetch(`/push.php?action=recordatorio_del&id=${data.id}&aviso_ts=${data.aviso_ts || ''}`, {
+      encabezadosSW(data).then(function (h) { return fetch(`/push.php?action=recordatorio_del&id=${data.id}&aviso_ts=${data.aviso_ts || ''}`, {
         method: 'POST',
-        headers: { 'x-app-token': APP_TOKEN_SW }
-      })
+        headers: h
+      }); })
     );
   } else if (action === 'snooze') {
     event.waitUntil(
-      fetch(`/push.php?action=recordatorio_snooze&id=${data.id}&aviso_ts=${data.aviso_ts || ''}`, {
+      encabezadosSW(data).then(function (h) { return fetch(`/push.php?action=recordatorio_snooze&id=${data.id}&aviso_ts=${data.aviso_ts || ''}`, {
         method: 'POST',
-        headers: { 'x-app-token': APP_TOKEN_SW }
-      })
+        headers: h
+      }); })
     );
   } else {
     // Acción 'mic' o clic directo sobre la notificación: ABRE LA APP

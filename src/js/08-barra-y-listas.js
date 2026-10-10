@@ -1303,7 +1303,7 @@ function borraAvisoEspejo(key){ if(!db||!key) return; try{ db.collection(COLAV).
 function llamaPush(accion, cuerpo){
   if(typeof APP_TOKEN==="undefined" || String(APP_TOKEN).indexOf("__")===0) return;
   try{
-    fetch(PUSH+"?action="+accion,{method:"POST", keepalive:true,
+    llamaServidor(PUSH+"?action="+accion,{method:"POST", keepalive:true,
       headers:{"content-type":"application/json","x-app-token":APP_TOKEN},
       body:JSON.stringify(cuerpo)})
     .then(function(r){ return r.json().catch(function(){return {}}).then(function(j){

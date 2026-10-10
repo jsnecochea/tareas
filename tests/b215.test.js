@@ -4,6 +4,7 @@
 "use strict";
 var fs = require("fs"), path = require("path"), os = require("os");
 var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8"), L = html.split("\n");
+var IDN = html.slice(html.indexOf("/* @@IDENTIDAD-INICIO"), html.indexOf("/* @@IDENTIDAD-FIN */"));   /* llamaServidor y su prueba de identidad: toda llamada al servidor pasa por ahí */
 function saca(n) { var re = new RegExp("^(function " + n.replace(/\$/g, "\\$") + "\\(|var " + n + "\\s*=)"), i = -1; L.forEach(function (l, k) { if (re.test(l)) i = k; });
   if (i < 0) throw new Error("no encontre " + n); var o = [L[i]]; for (var k = i + 1; k < L.length; k++) { var x = L[k]; if (x.length && !/^[\s}\]]/.test(x)) break; o.push(x); if (/^}/.test(x)) break; } return o.join("\n"); }
 var F = ["adjuntos", "fuenteAdj", "eliminaAdjuntos", "borraEnServidor", "procesaEliminar", "hojaEliminar", "svgBasura", "SVG_DESTELLO", "SVG_CHAT", "preguntaExterno", "PUSH"];
@@ -24,7 +25,7 @@ var pagina = '<!doctype html><meta charset="utf-8"><style>' + css + '</style><bo
   'var yo="salvador", APP_TOKEN="tok", GUARDADO=0, TOAST=[], MODO="noexiste", LLAMADAS=[]; function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;"); }' +
   'function $(i){ return document.getElementById(i); } function guarda(){ GUARDADO++; } function toast(t){ TOAST.push(t); }' +
   'window.fetch=function(u,o){ LLAMADAS.push({u:u, b:JSON.parse(o.body)}); var ex=MODO==="existe"; return Promise.resolve({ok:ex, status:ex?200:400, json:function(){ return Promise.resolve(ex?{ok:true}:{error:"accion desconocida"}); }}); };' +
-  F.map(saca).join("\n").replace(/<\/script>/g, "<\\/script>") + '</script>';
+  (IDN + "\n" + F.map(saca).join("\n")).replace(/<\/script>/g, "<\\/script>") + '</script>';
 var tmp = path.join(os.tmpdir(), "b215-" + process.pid + ".html"); fs.writeFileSync(tmp, pagina);
 (async function () {
   var pw = require("/opt/node22/lib/node_modules/playwright"), b = await pw.chromium.launch(), p = await b.newPage({ viewport: { width: 390, height: 844 } }), errs = [];

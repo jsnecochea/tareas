@@ -1798,7 +1798,7 @@ function cargaAgendaWA(alLlegar){
   if(window.AGENDA_WA || window.__agendaNo || window.__agendaPide) return;
   if(typeof APP_TOKEN==="undefined" || String(APP_TOKEN).indexOf("__")===0){ window.__agendaNo=1; return; }
   window.__agendaPide=1;
-  fetch(PUSH+"?action=wa_agenda",{method:"POST", headers:{"content-type":"application/json","x-app-token":APP_TOKEN}, body:JSON.stringify({usuario:yo})})
+  llamaServidor(PUSH+"?action=wa_agenda",{method:"POST", headers:{"content-type":"application/json","x-app-token":APP_TOKEN}, body:JSON.stringify({usuario:yo})})
     .then(function(r){ return r.json().catch(function(){ return {error:"HTTP "+r.status}; }); })
     .then(function(j){ window.__agendaPide=0; var l=_agendaDe(j); if(!l){ window.__agendaNo=1; return; } window.AGENDA_WA=l; if(alLlegar) try{ alLlegar(); }catch(e){} try{ reintentaDudas(); }catch(e){} })
     .catch(function(){ window.__agendaPide=0; window.__agendaNo=1; });

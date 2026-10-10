@@ -5,6 +5,7 @@
 "use strict";
 var fs = require("fs"), path = require("path"), vm = require("vm");
 var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+var IDN = html.slice(html.indexOf("/* @@IDENTIDAD-INICIO"), html.indexOf("/* @@IDENTIDAD-FIN */"));   /* llamaServidor y su prueba de identidad: toda llamada al servidor pasa por ahí */
 var i = html.indexOf("/* @@DATOS-TAREAS-INICIO"), j = html.indexOf("/* @@DATOS-TAREAS-FIN */");
 var ok = 0, n = 0, malas = [];
 function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
@@ -20,7 +21,7 @@ function arma() {
       if (a === "fs_doc") { var d = S.tareas[u.searchParams.get("id")]; return d ? r(200, Object.assign({ id: u.searchParams.get("id") }, JSON.parse(JSON.stringify(d)))) : r(404, { error: "no" }); }
       if (a === "fs_set") { S.sets.push(Object.keys(cu.data).filter(function (k) { return k !== "_tocado_por" && k !== "conflictos"; }).sort()); S.tareas[cu.id] = Object.assign({}, S.tareas[cu.id] || {}, cu.data); return r(200, { ok: true }); }
       return r(200, { ok: true }); } };
-  vm.createContext(c); vm.runInContext(html.slice(i, j), c); return { c: c, S: S, d: c.datosTareas };
+  vm.createContext(c); vm.runInContext(IDN + "\n" + html.slice(i, j), c); return { c: c, S: S, d: c.datosTareas };
 }
 var m = function (ts, t) { return { ts: ts, k: "bi", t: t }; };
 (async function () {

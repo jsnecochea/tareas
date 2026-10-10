@@ -7,6 +7,7 @@
 "use strict";
 var fs = require("fs"), path = require("path"), vm = require("vm");
 var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+var IDN = html.slice(html.indexOf("/* @@IDENTIDAD-INICIO"), html.indexOf("/* @@IDENTIDAD-FIN */"));   /* llamaServidor y su prueba de identidad: toda llamada al servidor pasa por ahí */
 var i = html.indexOf("/* @@DATOS-TAREAS-INICIO"), j = html.indexOf("/* @@DATOS-TAREAS-FIN */");
 var ok = 0, n = 0, malas = [];
 function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringify(exp); if (a === b) ok++; else malas.push(nom + "\n    dio " + a + "\n    espera " + b); }
@@ -23,7 +24,7 @@ function arma() {
       return r({ ok: true }); },
     db: { collection: function () { return { get: function () { return Promise.resolve({ forEach: function (g) { Object.keys(F.docs).forEach(function (k) { g({ id: k, data: function () { return F.docs[k]; } }); }); } }); },
       doc: function (id) { return { set: function (d) { F.docs[id] = d; return Promise.resolve(); } }; }, onSnapshot: function () { return function () {}; } }; } } };
-  vm.createContext(c); vm.runInContext(html.slice(i, j), c); return { c: c, S: S, F: F };
+  vm.createContext(c); vm.runInContext(IDN + "\n" + html.slice(i, j), c); return { c: c, S: S, F: F };
 }
 (async function () {
   try {
