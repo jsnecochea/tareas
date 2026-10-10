@@ -4,7 +4,7 @@
    1) Lista y contadores (ficha Bandeja y pestaña Mensajes). 2) Un toque en la tarea que propuso la Mac: pega el mensaje
    («Contacto: texto», k bi, wa_in 1) y llama bandeja_marca {estado:"acomodado", tarea_id}. 3) Saliente (es_salida=1): k bo,
    wa_in 0, sin prefijo. 4) «Acomodar en…» con la hoja de tareas. 5) Descartar. 6) Marca que falla: no regresa y se reintenta.
-   7) Se relee al abrir la pestaña y cada 60 s. 8) Sin token no llama a nada y no rompe.
+   7) Se relee al abrir la pestaña y cada 60 s. 8) Sin token no llama a nada y no rompe. 9) Otro usuario no la pide ni la ve.
    Correr: node tests/bandeja-servidor.test.js */
 "use strict";
 var path = require("path"), IDX = path.join(__dirname, "..", "index.html");
@@ -24,7 +24,7 @@ var BANDEJA = [
 ];
 (async function () {
   var pw = require("/opt/node22/lib/node_modules/playwright"), b = await pw.chromium.launch(), errs = [];
-  async function pagina(conToken) {
+  async function pagina(conToken, quien) {
     var ctx = await b.newContext({ viewport: { width: 390, height: 844 }, timezoneId: "America/Monterrey" }), p = await ctx.newPage();
     p.on("pageerror", function (e) { errs.push(e.message); });
     await p.route(/^https?:/, function (r) { r.abort(); });
@@ -55,7 +55,7 @@ var BANDEJA = [
       };
       try { localStorage.setItem("bit_avisos_visto_salvador", "1"); } catch (e) {} }, { tareas: TAREAS, bandeja: BANDEJA });
     await p.goto("file://" + IDX); await p.waitForTimeout(400);
-    await p.evaluate(function (t) { if (t) APP_TOKEN = "tok-prueba"; entrar("salvador"); }, conToken);
+    await p.evaluate(function (a) { if (a.t) APP_TOKEN = "tok-prueba"; entrar(a.q); }, { t: conToken, q: quien || "salvador" });
     await p.waitForTimeout(900); return { ctx: ctx, p: p };
   }
   var vista = function (p) { return p.evaluate(function () {
@@ -129,6 +129,12 @@ var BANDEJA = [
     var sB = await srv(B.p), vB = await vista(B.p);
     eq("sin token: no llama a bandeja_lista, la pestaña sale en cero", [sB.llamadas.indexOf("bandeja_lista"), vB.tabs], [-1, ["nuevas:0", "mensajes:0"]]);
     await B.ctx.close();
+    /* 9 · otro usuario (Josué, con token): la bandeja es el WhatsApp de Salvador; ni se pide ni se ve */
+    var C = await pagina(true, "josue");
+    await C.p.evaluate(function () { abreGrupoInicio("bandeja", "mensajes"); }); await C.p.waitForTimeout(300);
+    var sC = await srv(C.p), vC = await vista(C.p);
+    eq("otro usuario: no llama a bandeja_lista ni bandeja_marca y no ve mensajes", [sC.llamadas.indexOf("bandeja_lista"), sC.llamadas.indexOf("bandeja_marca"), vC.filas.length, await C.p.evaluate(function () { return bandejaSrvVisible().length; })], [-1, -1, 0, 0]);
+    await C.ctx.close();
     eq("sin errores de página", errs.filter(function (m) { return !/firebase is not defined/.test(m); }), []);
   } catch (e) { malas.push("EXCEPCIÓN " + e.stack); }
   await b.close();

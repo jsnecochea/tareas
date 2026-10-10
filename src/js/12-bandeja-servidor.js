@@ -36,7 +36,11 @@ function leeRespuestaBandeja(j){
   return [];
 }
 /* lo que se ve: lo del servidor menos lo ya marcado aquí; la más reciente primero */
-function bandejaSrvVisible(){ var m=marcasBandeja(); return BANDEJA_SRV.lista.filter(function(x){ return !m[x.id]; }); }
+/* La bandeja del servidor es el WhatsApp de Salvador (lo sube su Mac): nadie más la carga ni la ve, aunque el
+   servidor todavía se la entregue a cualquiera. El candado definitivo es del servidor (permiso por ID token). */
+var BANDEJA_DUENO="salvador";
+function veBandejaSrv(){ return typeof yo!=="undefined" && yo===BANDEJA_DUENO; }
+function bandejaSrvVisible(){ if(!veBandejaSrv()) return []; var m=marcasBandeja(); return BANDEJA_SRV.lista.filter(function(x){ return !m[x.id]; }); }
 function llamaBandeja(accion, cuerpo){
   var op={method:cuerpo?"POST":"GET", headers:{"x-app-token":APP_TOKEN, "x-usuario":yo||"anonimo"}};
   if(cuerpo){ op.headers["content-type"]="application/json"; op.body=JSON.stringify(cuerpo); }
@@ -44,7 +48,7 @@ function llamaBandeja(accion, cuerpo){
     if(!r.ok || (j && !Array.isArray(j) && j.error)) throw new Error((j&&j.error)||("HTTP "+r.status)); return j; }); });
 }
 function cargaBandejaSrv(){
-  if(!hayTokenBandeja() || BANDEJA_SRV.enCurso || !yo) return Promise.resolve(false);
+  if(!hayTokenBandeja() || BANDEJA_SRV.enCurso || !veBandejaSrv()) return Promise.resolve(false);
   BANDEJA_SRV.enCurso=true;
   var antes=bandejaSrvVisible().map(function(x){ return x.id; }).join(",");
   return llamaBandeja("bandeja_lista").then(function(j){
@@ -64,7 +68,7 @@ function cargaBandejaSrv(){
 /* repinta solo si se está viendo el inicio y no hay una hoja abierta encima */
 function repintaBandeja(){ try{ if(vista==="lista" && !document.querySelector(".leemask")) render(); }catch(e){} }
 function mandaMarcaBandeja(id, m){
-  if(!hayTokenBandeja()) return Promise.resolve(false);
+  if(!hayTokenBandeja() || !veBandejaSrv()) return Promise.resolve(false);
   var c={id:id, ids:[id], estado:m.estado, usuario:yo||""}; if(m.tarea_id) c.tarea_id=m.tarea_id;
   return llamaBandeja("bandeja_marca", c).then(function(){ return true; }).catch(function(e){ console.warn("bandeja_marca", e); return false; });
 }
