@@ -400,7 +400,7 @@ function sigAviso(cuerpo){ return [cuerpo.texto, cuerpo.cuando, cuerpo.cada||"",
 function memAv(){ if(window.__memAv263) return window.__memAv263; var o={}; try{ o=JSON.parse(localStorage.getItem("bit_avsig263")||"{}")||{}; }catch(e){ o={}; } window.__memAv263=o; return o; }
 function guardaMemAv(){ try{ localStorage.setItem("bit_avsig263", JSON.stringify(window.__memAv263||{})); }catch(e){} }
 function resyncAvisosNotif(){
-  window.__memAv263={}; guardaMemAv();
+  window.__memAv263={}; guardaMemAv(); window.__avisoEnVuelo={};   /* reenvío a propósito: también lo que iba en camino */
   (tareas||[]).forEach(function(t){ if(!t || t.cierre || (t.duenio||"")!==yo) return; avisosDe(t).forEach(function(a){ avisoAlServidor(t, a, claveAviso(t,a)); }); });
 }
 

@@ -15,7 +15,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 317 · Prueba de identidad (ID token) en cada llamada al servidor";
+var VERSION_APP = "build 318 · Nada se queda trabado a medio proceso";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -88,12 +88,29 @@ function sesionVencida(){
     try{ location.replace(location.pathname); }catch(e){ location.reload(); }
   });
 }
-/* igual que fetch(url, op), con la prueba de identidad */
+/* NADA SE QUEDA COLGADO ESPERANDO AL SERVIDOR: sin red de vuelta o con el servidor saturado, un fetch puede no contestar
+   ni fallar nunca, y lo que lo espera (la cola de MySQL, la bandeja, la lectura de cada 20 s, un WhatsApp) se queda
+   trabado con su bandera «en curso» para siempre. Cada llamada tiene tope: si no contesta a tiempo se corta (AbortController)
+   y la promesa falla con «tope», para que quien llamó limpie y reintente. op.tope = ms para esa llamada (0 = sin tope). */
+var TOPE_SERVIDOR_MS=20000;
+/* igual que fetch(url, op), con la prueba de identidad y con tope de tiempo */
 function llamaServidor(url, op){
   op=op||{}; op.headers=op.headers||{};
+  var tope=("tope" in op)?(+op.tope||0):TOPE_SERVIDOR_MS; delete op.tope;
   function sale(t){
     if(t){ op.headers["Authorization"]="Bearer "+t; tokenAlServiceWorker(t); }
-    return fetch(url, op).then(function(r){ revisaSesion(r); return r; });
+    var ctrl=null;
+    if(tope && !op.signal && typeof AbortController!=="undefined"){ try{ ctrl=new AbortController(); op.signal=ctrl.signal; }catch(e){ ctrl=null; } }
+    return new Promise(function(ok, no){
+      var listo=false, tm=null;
+      if(tope && typeof setTimeout==="function") tm=setTimeout(function(){ if(listo) return; listo=true;
+        try{ if(ctrl) ctrl.abort(); }catch(e){}
+        var e=new Error("tope: el servidor no contestó en "+Math.round(tope/1000)+" s"); e.tope=true; no(e); }, tope);
+      var fin=function(){ listo=true; if(tm!=null && typeof clearTimeout==="function") clearTimeout(tm); };
+      var p; try{ p=fetch(url, op); }catch(e){ fin(); no(e); return; }
+      Promise.resolve(p).then(function(r){ if(listo) return; fin(); revisaSesion(r); ok(r); },
+        function(e){ if(listo) return; fin(); no(e); });
+    });
   }
   var tk=tokenIdentidad();
   return tk ? tk.then(sale) : sale("");
@@ -320,9 +337,13 @@ function vozRota(rol){ var E=vozElenco(); if(!E.length) return null;
 function vozTurnoNuevo(){ VOZ_ROT.rol=undefined; }
 /* voz para lectura (un mensaje = un turno) */
 function vozLectura(){ return vozRota(null)||vozMejor(); }
+/* fin se llama UNA vez: al terminar, al fallar o, si el motor de voz se traba sin avisar (pasa en iOS al cambiar de
+   app o de audífono), por el vigía de tiempo, igual que en Lectura y Caminata */
+function vigiaVoz(texto){ return 4000+String(texto||"").length*90/(+_leeRate()||1); }
 function vozDi(texto, voz, fin){
+  var listo=false, wd=null, uno=function(ev){ if(listo) return; listo=true; if(wd) clearTimeout(wd); if(fin) try{ fin(ev); }catch(e){} };
   try{ speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(texto); if(voz){ u.voice=voz; u.lang=voz.lang||"es-MX"; } else u.lang="es-MX";
-    u.rate=_leeRate(); u.pitch=vozTono(); if(fin){ u.onend=fin; u.onerror=fin; } speechSynthesis.speak(u); return u; }catch(e){ return null; } }
+    u.rate=_leeRate(); u.pitch=vozTono(); if(fin){ u.onend=uno; u.onerror=uno; wd=setTimeout(uno, vigiaVoz(texto)); } speechSynthesis.speak(u); return u; }catch(e){ uno(); return null; } }
 /* el mini diálogo de "Probar el elenco": cada línea con la siguiente voz */
 function vocesPrueba(){
   var E=vozElenco(); if(!E.length){ var m=vozMejor(); E=m?[m]:[]; }
@@ -403,7 +424,9 @@ function resueltaNotif(n){
   var id=String((n&&n.data&&(n.data.id||n.data.tarea_id||n.data.tareaId))||tidDeUrl(n&&n.data&&n.data.url)||""); if(id && !/^acuerdo:/.test(tag)){ var t3=tt(id); if(t3 && tareaResuelta(t3)) return true; }
   return false;
 }
-function swReg(){ try{ if(!("serviceWorker" in navigator)) return Promise.resolve(null); return navigator.serviceWorker.ready.catch(function(){ return null; }); }catch(e){ return Promise.resolve(null); } }
+/* ready no resuelve nunca si el service worker no quedó registrado: con tope, para no dejar nada esperando */
+function swReg(){ try{ if(!("serviceWorker" in navigator)) return Promise.resolve(null);
+  return Promise.race([navigator.serviceWorker.ready, new Promise(function(ok){ setTimeout(function(){ ok(null); }, AVISOS_TOPE_MS); })]).catch(function(){ return null; }); }catch(e){ return Promise.resolve(null); } }
 /* barre las notificaciones abiertas y cierra las de cosas resueltas. force = sin esperar el respiro de 20 s */
 function barreNotifs(force){
   try{ if(!force && window.__barreN268 && Date.now()-window.__barreN268<20000) return Promise.resolve(0); window.__barreN268=Date.now();
@@ -467,12 +490,27 @@ function estadoAvisos(){
 }
 
 /* pedir permiso + suscribir + mandar la suscripcion a push.php.
-   TIENE QUE SALIR DE UN TOQUE del usuario: iOS no deja pedir permiso solo. */
+   TIENE QUE SALIR DE UN TOQUE del usuario: iOS no deja pedir permiso solo.
+   SIEMPRE CONTESTA: si el service worker nunca quedó registrado, navigator.serviceWorker.ready no resuelve jamás, y el
+   botón «Entrar» del alta (o «Activar avisos aquí») se quedaba en «Entrando…/Activando…» para siempre. Por eso cb se
+   llama una sola vez y con tope: AVISOS_TOPE_MS desde que hay permiso (o AVISOS_TOPE_PERMISO_MS si el diálogo del
+   permiso no contesta); al vencer se entra sin avisos y se dice. Si después termina, la suscripción igual llega al
+   servidor (solo ya no se espera). */
+var AVISOS_TOPE_MS=8000, AVISOS_TOPE_PERMISO_MS=45000;
+var MSG_AVISOS_TOPE="Entraste sin avisos: este teléfono no respondió a tiempo. Puedes activarlos después en Tu cuenta.";
 function activaAvisos(cb){
-  var e=estadoAvisos();
-  if(!e.ok){ cb(false,e.motivo); return }
-  Notification.requestPermission().then(function(p){
-    if(p!=="granted"){ cb(false,"No diste permiso de avisos."); return }
+  var listo=false, tm=null;
+  var fin=function(ok, msg){ if(listo) return; listo=true; if(tm) clearTimeout(tm); try{ cb(ok, msg); }catch(e){ try{ console.error("activaAvisos cb", e); }catch(_e){} } };
+  var tope=function(ms){ if(tm) clearTimeout(tm); tm=setTimeout(function(){ fin(false, MSG_AVISOS_TOPE); }, ms); };
+  var e; try{ e=estadoAvisos(); }catch(x){ e={ok:false, motivo:"Este navegador no maneja avisos."}; }
+  if(!e.ok){ fin(false,e.motivo); return }
+  tope(AVISOS_TOPE_PERMISO_MS);
+  /* Safari viejo contesta por callback y no por promesa */
+  var pide=new Promise(function(ok, no){ try{ var r=Notification.requestPermission(ok); if(r && typeof r.then==="function") r.then(ok, no); }catch(x){ no(x); } });
+  pide.then(function(p){
+    if(listo) return;
+    if(p!=="granted"){ fin(false,"No diste permiso de avisos."); return }
+    tope(AVISOS_TOPE_MS);
     navigator.serviceWorker.ready.then(function(reg){
       return reg.pushManager.getSubscription().then(function(sub){
         if(sub) return sub;
@@ -488,7 +526,7 @@ function activaAvisos(cb){
          pero el servidor jamas la guardaba, asi que los avisos no podian
          llegarle a nadie. Encontrado probando en vivo el 2026-09-04. */
       return llamaServidor(PUSH,{
-        method:"POST",
+        method:"POST", tope:AVISOS_TOPE_MS,
         headers:{"content-type":"application/json","x-app-token":APP_TOKEN},
         body:JSON.stringify({
           usuario:yo||"anonimo",
@@ -496,12 +534,12 @@ function activaAvisos(cb){
         })
       });
     }).then(function(r){
-      if(r && r.ok) cb(true,"Listo: los avisos llegan a este teléfono.");
-      else cb(false,"El teléfono quedó suscrito, pero el servidor no confirmó. Falta instalar push.php.");
+      if(r && r.ok) fin(true,"Listo: los avisos llegan a este teléfono.");
+      else fin(false,"El teléfono quedó suscrito, pero el servidor no confirmó. Falta instalar push.php.");
     }).catch(function(){
-      cb(false,"No se pudo activar. Revisa la señal e inténtalo otra vez.");
+      fin(false,"No se pudo activar. Revisa la señal e inténtalo otra vez.");
     });
-  }).catch(function(){ cb(false,"No se pudo pedir el permiso."); });
+  }).catch(function(){ fin(false,"No se pudo pedir el permiso."); });
 }
 
 /* RESINCRONIZAR SIN PREGUNTAR (Salvador 2026-09-22). Al borrar y reinstalar la
@@ -510,10 +548,12 @@ function activaAvisos(cb){
    el permiso ya esta dado, aqui NO se pide (no hace falta toque): solo se toma
    la suscripcion del navegador (o se crea) y se vuelve a mandar al servidor.
    Corre al arrancar y cada vez que se pica el boton de avisos. */
-function resincronizaAvisos(cb){
-  cb=cb||function(){};
+function resincronizaAvisos(alTerminar){
+  var listo=false, cb=function(ok){ if(listo) return; listo=true; try{ if(alTerminar) alTerminar(ok); }catch(e){} };
   try{
     if(!("serviceWorker" in navigator) || !("PushManager" in window) || Notification.permission!=="granted"){ cb(false); return; }
+    /* con tope: sin service worker registrado, ready nunca resuelve (y cb nunca se llamaba) */
+    setTimeout(function(){ cb(false); }, AVISOS_TOPE_MS*2);
     navigator.serviceWorker.ready.then(function(reg){
       return reg.pushManager.getSubscription().then(function(sub){
         if(sub) return sub;
@@ -599,7 +639,7 @@ function preguntaAClaude(mensajes, modelo, cb){
     llamaServidor(PROXY,{method:"POST",
       headers:{"content-type":"application/json","x-app-token":APP_TOKEN,"x-usuario":yo||"anonimo"},
       body:JSON.stringify({modelo:modelo||"rapido",messages:planos}),
-      signal: ctrl ? ctrl.signal : undefined
+      signal: ctrl ? ctrl.signal : undefined, tope:35000   /* respaldo del corte propio de arriba (25 s), por si el navegador no respeta el abort */
     }).then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j} }) })
      .then(function(res){
        if(tOut) clearTimeout(tOut);

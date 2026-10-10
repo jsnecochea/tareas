@@ -1666,6 +1666,9 @@ html.cam274on,html.cam274on body{overflow:hidden}
 .bsrv-b .bsrv-si{background:#0A84FF;color:#FFFFFF;border-radius:999px;padding:6px 14px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bsrv-b .bsrv-no{color:var(--ink-3)}
 .bsrv-b button:focus-visible{outline:2px solid #0A84FF;outline-offset:2px}
+/* «N cambios sin subir»: discreto, arriba al centro; solo sale si el servidor no ha recibido algo */
+.sinsubir{position:fixed;top:calc(env(safe-area-inset-top,0px) + 4px);left:50%;transform:translateX(-50%);z-index:80;border:.5px solid rgba(255,159,10,.55);background:rgba(255,159,10,.16);color:#B25D00;font:inherit;font-size:12.5px;font-weight:600;line-height:1;padding:6px 12px;border-radius:999px;max-width:calc(100% - 32px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+@media (prefers-color-scheme:dark){.sinsubir{color:#FFB340}}
 </style>
 </head>
 <body>
@@ -1801,7 +1804,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 317 · Prueba de identidad (ID token) en cada llamada al servidor";
+var VERSION_APP = "build 318 · Nada se queda trabado a medio proceso";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -1874,12 +1877,29 @@ function sesionVencida(){
     try{ location.replace(location.pathname); }catch(e){ location.reload(); }
   });
 }
-/* igual que fetch(url, op), con la prueba de identidad */
+/* NADA SE QUEDA COLGADO ESPERANDO AL SERVIDOR: sin red de vuelta o con el servidor saturado, un fetch puede no contestar
+   ni fallar nunca, y lo que lo espera (la cola de MySQL, la bandeja, la lectura de cada 20 s, un WhatsApp) se queda
+   trabado con su bandera «en curso» para siempre. Cada llamada tiene tope: si no contesta a tiempo se corta (AbortController)
+   y la promesa falla con «tope», para que quien llamó limpie y reintente. op.tope = ms para esa llamada (0 = sin tope). */
+var TOPE_SERVIDOR_MS=20000;
+/* igual que fetch(url, op), con la prueba de identidad y con tope de tiempo */
 function llamaServidor(url, op){
   op=op||{}; op.headers=op.headers||{};
+  var tope=("tope" in op)?(+op.tope||0):TOPE_SERVIDOR_MS; delete op.tope;
   function sale(t){
     if(t){ op.headers["Authorization"]="Bearer "+t; tokenAlServiceWorker(t); }
-    return fetch(url, op).then(function(r){ revisaSesion(r); return r; });
+    var ctrl=null;
+    if(tope && !op.signal && typeof AbortController!=="undefined"){ try{ ctrl=new AbortController(); op.signal=ctrl.signal; }catch(e){ ctrl=null; } }
+    return new Promise(function(ok, no){
+      var listo=false, tm=null;
+      if(tope && typeof setTimeout==="function") tm=setTimeout(function(){ if(listo) return; listo=true;
+        try{ if(ctrl) ctrl.abort(); }catch(e){}
+        var e=new Error("tope: el servidor no contestó en "+Math.round(tope/1000)+" s"); e.tope=true; no(e); }, tope);
+      var fin=function(){ listo=true; if(tm!=null && typeof clearTimeout==="function") clearTimeout(tm); };
+      var p; try{ p=fetch(url, op); }catch(e){ fin(); no(e); return; }
+      Promise.resolve(p).then(function(r){ if(listo) return; fin(); revisaSesion(r); ok(r); },
+        function(e){ if(listo) return; fin(); no(e); });
+    });
   }
   var tk=tokenIdentidad();
   return tk ? tk.then(sale) : sale("");
@@ -2106,9 +2126,13 @@ function vozRota(rol){ var E=vozElenco(); if(!E.length) return null;
 function vozTurnoNuevo(){ VOZ_ROT.rol=undefined; }
 /* voz para lectura (un mensaje = un turno) */
 function vozLectura(){ return vozRota(null)||vozMejor(); }
+/* fin se llama UNA vez: al terminar, al fallar o, si el motor de voz se traba sin avisar (pasa en iOS al cambiar de
+   app o de audífono), por el vigía de tiempo, igual que en Lectura y Caminata */
+function vigiaVoz(texto){ return 4000+String(texto||"").length*90/(+_leeRate()||1); }
 function vozDi(texto, voz, fin){
+  var listo=false, wd=null, uno=function(ev){ if(listo) return; listo=true; if(wd) clearTimeout(wd); if(fin) try{ fin(ev); }catch(e){} };
   try{ speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(texto); if(voz){ u.voice=voz; u.lang=voz.lang||"es-MX"; } else u.lang="es-MX";
-    u.rate=_leeRate(); u.pitch=vozTono(); if(fin){ u.onend=fin; u.onerror=fin; } speechSynthesis.speak(u); return u; }catch(e){ return null; } }
+    u.rate=_leeRate(); u.pitch=vozTono(); if(fin){ u.onend=uno; u.onerror=uno; wd=setTimeout(uno, vigiaVoz(texto)); } speechSynthesis.speak(u); return u; }catch(e){ uno(); return null; } }
 /* el mini diálogo de "Probar el elenco": cada línea con la siguiente voz */
 function vocesPrueba(){
   var E=vozElenco(); if(!E.length){ var m=vozMejor(); E=m?[m]:[]; }
@@ -2189,7 +2213,9 @@ function resueltaNotif(n){
   var id=String((n&&n.data&&(n.data.id||n.data.tarea_id||n.data.tareaId))||tidDeUrl(n&&n.data&&n.data.url)||""); if(id && !/^acuerdo:/.test(tag)){ var t3=tt(id); if(t3 && tareaResuelta(t3)) return true; }
   return false;
 }
-function swReg(){ try{ if(!("serviceWorker" in navigator)) return Promise.resolve(null); return navigator.serviceWorker.ready.catch(function(){ return null; }); }catch(e){ return Promise.resolve(null); } }
+/* ready no resuelve nunca si el service worker no quedó registrado: con tope, para no dejar nada esperando */
+function swReg(){ try{ if(!("serviceWorker" in navigator)) return Promise.resolve(null);
+  return Promise.race([navigator.serviceWorker.ready, new Promise(function(ok){ setTimeout(function(){ ok(null); }, AVISOS_TOPE_MS); })]).catch(function(){ return null; }); }catch(e){ return Promise.resolve(null); } }
 /* barre las notificaciones abiertas y cierra las de cosas resueltas. force = sin esperar el respiro de 20 s */
 function barreNotifs(force){
   try{ if(!force && window.__barreN268 && Date.now()-window.__barreN268<20000) return Promise.resolve(0); window.__barreN268=Date.now();
@@ -2253,12 +2279,27 @@ function estadoAvisos(){
 }
 
 /* pedir permiso + suscribir + mandar la suscripcion a push.php.
-   TIENE QUE SALIR DE UN TOQUE del usuario: iOS no deja pedir permiso solo. */
+   TIENE QUE SALIR DE UN TOQUE del usuario: iOS no deja pedir permiso solo.
+   SIEMPRE CONTESTA: si el service worker nunca quedó registrado, navigator.serviceWorker.ready no resuelve jamás, y el
+   botón «Entrar» del alta (o «Activar avisos aquí») se quedaba en «Entrando…/Activando…» para siempre. Por eso cb se
+   llama una sola vez y con tope: AVISOS_TOPE_MS desde que hay permiso (o AVISOS_TOPE_PERMISO_MS si el diálogo del
+   permiso no contesta); al vencer se entra sin avisos y se dice. Si después termina, la suscripción igual llega al
+   servidor (solo ya no se espera). */
+var AVISOS_TOPE_MS=8000, AVISOS_TOPE_PERMISO_MS=45000;
+var MSG_AVISOS_TOPE="Entraste sin avisos: este teléfono no respondió a tiempo. Puedes activarlos después en Tu cuenta.";
 function activaAvisos(cb){
-  var e=estadoAvisos();
-  if(!e.ok){ cb(false,e.motivo); return }
-  Notification.requestPermission().then(function(p){
-    if(p!=="granted"){ cb(false,"No diste permiso de avisos."); return }
+  var listo=false, tm=null;
+  var fin=function(ok, msg){ if(listo) return; listo=true; if(tm) clearTimeout(tm); try{ cb(ok, msg); }catch(e){ try{ console.error("activaAvisos cb", e); }catch(_e){} } };
+  var tope=function(ms){ if(tm) clearTimeout(tm); tm=setTimeout(function(){ fin(false, MSG_AVISOS_TOPE); }, ms); };
+  var e; try{ e=estadoAvisos(); }catch(x){ e={ok:false, motivo:"Este navegador no maneja avisos."}; }
+  if(!e.ok){ fin(false,e.motivo); return }
+  tope(AVISOS_TOPE_PERMISO_MS);
+  /* Safari viejo contesta por callback y no por promesa */
+  var pide=new Promise(function(ok, no){ try{ var r=Notification.requestPermission(ok); if(r && typeof r.then==="function") r.then(ok, no); }catch(x){ no(x); } });
+  pide.then(function(p){
+    if(listo) return;
+    if(p!=="granted"){ fin(false,"No diste permiso de avisos."); return }
+    tope(AVISOS_TOPE_MS);
     navigator.serviceWorker.ready.then(function(reg){
       return reg.pushManager.getSubscription().then(function(sub){
         if(sub) return sub;
@@ -2274,7 +2315,7 @@ function activaAvisos(cb){
          pero el servidor jamas la guardaba, asi que los avisos no podian
          llegarle a nadie. Encontrado probando en vivo el 2026-09-04. */
       return llamaServidor(PUSH,{
-        method:"POST",
+        method:"POST", tope:AVISOS_TOPE_MS,
         headers:{"content-type":"application/json","x-app-token":APP_TOKEN},
         body:JSON.stringify({
           usuario:yo||"anonimo",
@@ -2282,12 +2323,12 @@ function activaAvisos(cb){
         })
       });
     }).then(function(r){
-      if(r && r.ok) cb(true,"Listo: los avisos llegan a este teléfono.");
-      else cb(false,"El teléfono quedó suscrito, pero el servidor no confirmó. Falta instalar push.php.");
+      if(r && r.ok) fin(true,"Listo: los avisos llegan a este teléfono.");
+      else fin(false,"El teléfono quedó suscrito, pero el servidor no confirmó. Falta instalar push.php.");
     }).catch(function(){
-      cb(false,"No se pudo activar. Revisa la señal e inténtalo otra vez.");
+      fin(false,"No se pudo activar. Revisa la señal e inténtalo otra vez.");
     });
-  }).catch(function(){ cb(false,"No se pudo pedir el permiso."); });
+  }).catch(function(){ fin(false,"No se pudo pedir el permiso."); });
 }
 
 /* RESINCRONIZAR SIN PREGUNTAR (Salvador 2026-09-22). Al borrar y reinstalar la
@@ -2296,10 +2337,12 @@ function activaAvisos(cb){
    el permiso ya esta dado, aqui NO se pide (no hace falta toque): solo se toma
    la suscripcion del navegador (o se crea) y se vuelve a mandar al servidor.
    Corre al arrancar y cada vez que se pica el boton de avisos. */
-function resincronizaAvisos(cb){
-  cb=cb||function(){};
+function resincronizaAvisos(alTerminar){
+  var listo=false, cb=function(ok){ if(listo) return; listo=true; try{ if(alTerminar) alTerminar(ok); }catch(e){} };
   try{
     if(!("serviceWorker" in navigator) || !("PushManager" in window) || Notification.permission!=="granted"){ cb(false); return; }
+    /* con tope: sin service worker registrado, ready nunca resuelve (y cb nunca se llamaba) */
+    setTimeout(function(){ cb(false); }, AVISOS_TOPE_MS*2);
     navigator.serviceWorker.ready.then(function(reg){
       return reg.pushManager.getSubscription().then(function(sub){
         if(sub) return sub;
@@ -2385,7 +2428,7 @@ function preguntaAClaude(mensajes, modelo, cb){
     llamaServidor(PROXY,{method:"POST",
       headers:{"content-type":"application/json","x-app-token":APP_TOKEN,"x-usuario":yo||"anonimo"},
       body:JSON.stringify({modelo:modelo||"rapido",messages:planos}),
-      signal: ctrl ? ctrl.signal : undefined
+      signal: ctrl ? ctrl.signal : undefined, tope:35000   /* respaldo del corte propio de arriba (25 s), por si el navegador no respeta el abort */
     }).then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j} }) })
      .then(function(res){
        if(tOut) clearTimeout(tOut);
@@ -4323,9 +4366,12 @@ function pintaBloqueado(mail){
 /* CERRAR SESIÓN (⋯ del inicio y Tu cuenta). La sesión de Google vive dentro de la app instalada y sobrevive
    a reinstalarla, así que sin este botón nadie podía cambiar de cuenta. Antes de salir se intenta subir lo
    que quedó en la cola de MySQL (con tope, para no colgarse sin red); luego se limpia lo LOCAL de la sesión
-   (usuario, cola, motor de prueba, liga pendiente, caché de Firestore) y se recarga en el login. En el
-   servidor no se borra nada. */
-var SESION_LOCAL=["bit_u","doit_cola_mysql","doit_motor_tareas","bit_alta"];
+   (usuario, motor de prueba, liga pendiente, caché de Firestore) y se recarga en el login. En el servidor no se borra nada.
+   LO QUE NO SUBIÓ NO SE PIERDE: si tras el intento quedan cambios en la cola, se dice cuántos y se deja elegir entre
+   quedarse (sigue reintentando) o salir dejándolos apartados en este teléfono para cuando esa misma cuenta vuelva a
+   entrar (datosTareas.aparta / recupera). La cola nunca se borra a ciegas. */
+var SESION_LOCAL=["bit_u","doit_motor_tareas","bit_alta"];
+var MSG_SIN_SUBIR="Quedan N cambios sin subir al servidor (no hay señal o el servidor no contestó).\n\nAceptar: salir y dejarlos guardados en este teléfono; se suben cuando vuelvas a entrar con tu cuenta.\nCancelar: quedarme; se siguen intentando subir.";
 function cerrarSesion(sinPreguntar){
   if(!sinPreguntar){
     var pend=0; try{ pend=datosTareas.pendientes(); }catch(e){}
@@ -4335,21 +4381,37 @@ function cerrarSesion(sinPreguntar){
   }
   try{ toast("Cerrando sesión…"); }catch(e){}
   var tope=function(p, ms){ return Promise.race([p, new Promise(function(ok){ setTimeout(ok, ms); })]).catch(function(){}); };
+  var quien=yo;
   var sube=Promise.resolve(); try{ sube=tope(datosTareas.vacia(), 4000); }catch(e){}
   return sube.then(function(){
-    try{ datosTareas.para(); }catch(e){}
-    try{ SESION_LOCAL.forEach(function(k){ localStorage.removeItem(k); }); }catch(e){}
-    try{ olvidaLigaTarea(); }catch(e){}
-    var fa=null; try{ fa=firebase.auth(); }catch(e){}
-    return tope(fa ? fa.signOut() : Promise.resolve(), 4000);
-  }).then(function(){
-    var fs=null; try{ fs=firebase.firestore(); }catch(e){}
-    if(fs && typeof fs.terminate==="function" && typeof fs.clearPersistence==="function")
-      return tope(fs.terminate().then(function(){ return fs.clearPersistence(); }), 3000);
-  }).then(function(){
-    yo=null;
-    try{ location.replace(location.pathname); }catch(e){ location.reload(); }
+    var quedan=0; try{ quedan=datosTareas.pendientes(); }catch(e){}
+    if(quedan){
+      var n=quedan+" cambio"+(quedan===1?"":"s");
+      if(!sinPreguntar && !window.confirm(MSG_SIN_SUBIR.replace("N cambios", n))){
+        try{ toast("Sigues dentro: "+n+" sin subir, reintento solo"); }catch(e){}
+        try{ datosTareas.vacia().catch(function(){}); }catch(e){}
+        return false;
+      }
+      try{ datosTareas.aparta(quien); }catch(e){}
+    } else { try{ localStorage.removeItem("doit_cola_mysql"); }catch(e){} }   /* vacía: no hay nada que guardar */
     return true;
+  }).then(function(sale){
+    if(!sale) return false;
+    return Promise.resolve().then(function(){
+      try{ datosTareas.para(); }catch(e){}
+      try{ SESION_LOCAL.forEach(function(k){ localStorage.removeItem(k); }); }catch(e){}
+      try{ olvidaLigaTarea(); }catch(e){}
+      var fa=null; try{ fa=firebase.auth(); }catch(e){}
+      return tope(fa ? fa.signOut() : Promise.resolve(), 4000);
+    }).then(function(){
+      var fs=null; try{ fs=firebase.firestore(); }catch(e){}
+      if(fs && typeof fs.terminate==="function" && typeof fs.clearPersistence==="function")
+        return tope(fs.terminate().then(function(){ return fs.clearPersistence(); }), 3000);
+    }).then(function(){
+      yo=null;
+      try{ location.replace(location.pathname); }catch(e){ location.reload(); }
+      return true;
+    });
   });
 }
 /* LA MAÑA DE IPHONE: dentro de la app instalada, el camino por redirect es
@@ -4460,12 +4522,17 @@ function pasoAvisos(cont){
     activaAvisos(function(ok,m){ cont(); if(m) toast(m) });
   };
 }
-function entrar(u){ yo=u; $("gate").classList.remove("on"); $("app").style.display="flex"; arranca();
+function entrar(u){ yo=u; $("gate").classList.remove("on"); $("app").style.display="flex";
+  try{ var _rec=datosTareas.recupera(u); if(_rec) setTimeout(function(){ toast(_rec+" cambio"+(_rec===1?"":"s")+" que dejaste sin subir: los subo ahora"); }, 1200); }catch(e){}
+  arranca();
   /* Salvador 2026-09-22: re-mandar la suscripcion push al servidor en cada
      arranque, por si se reinstalo la app y el servidor la perdio. Silencioso. */
   setTimeout(function(){ resincronizaAvisos(); }, 2500);
   /* y los avisos que nunca llegaron al servidor nuevo (2026-09-23) */
-  setTimeout(function(){ try{ subeAvisosPendientes(); }catch(e){} }, 9000);
+  setTimeout(function(){ try{ subeAvisosPendientes(); }catch(e){} try{ reintentaAvisosFallidos(); }catch(e){} try{ reintentaWAFallidos(); }catch(e){} }, 9000);
+  /* lo que no llegó al servidor (avisos, WhatsApp automáticos) se reintenta solo mientras la app está abierta */
+  if(!window.__ciclo_reintentos) window.__ciclo_reintentos=setInterval(function(){ if(!yo) return;
+    try{ reintentaAvisosFallidos(); }catch(e){} try{ reintentaWAFallidos(); }catch(e){} }, AVISOS_REINTENTO_MS);
   setTimeout(function(){ try{ limpiaWABasura(); }catch(e){} }, 11000);
   /* build 136: le dice al servidor que este usuario acaba de ver la app, para
      que no le repita por push lo que ya vio (Carlos: nunca se llamaba visto) */
@@ -4721,6 +4788,43 @@ function pideWhatsApp(cuerpo){
       if(!r.ok || (j&&j.error)) throw new Error((j&&j.error)||("HTTP "+r.status)); return j; }); });
 }
 
+/* WHATSAPP QUE LA APP MANDA SOLA (agradecer una meta aprobada, avisar una fecha nueva o una autorización): nadie está
+   viendo la pantalla para dictarlo otra vez, así que si wa_pedido falla no se traga el error. En la tarea queda un renglón
+   claro («no salió, reintento») y el pedido se guarda en este teléfono (WA_FALLIDOS_K) para reintentarlo al arrancar, al
+   volver la red y cada AVISOS_REINTENTO_MS; si sale, el renglón lo dice; si en WA_FALLIDOS_VENCE_MS no salió, se deja de
+   intentar (un mensaje de hace un día ya no sirve) y la tarea dice que no salió. */
+var WA_FALLIDOS_K="doit_wa_fallidos", WA_FALLIDOS_VENCE_MS=24*3600000;
+function waFallidos(){ var a=[]; try{ a=JSON.parse(localStorage.getItem(WA_FALLIDOS_K)||"[]")||[]; }catch(e){ a=[]; } return Array.isArray(a)?a:[]; }
+function grabaWAFallidos(a){ try{ if(a.length) localStorage.setItem(WA_FALLIDOS_K, JSON.stringify(a)); else localStorage.removeItem(WA_FALLIDOS_K); }catch(e){} }
+function tareaWA(id){ return (typeof tareas!=="undefined" && tareas || []).filter(function(x){ return x && x.id===id; })[0]||null; }
+function notaWA(t, id){ return t ? (t.msgs||[]).filter(function(m){ return m && m.wa_nota===id; })[0]||null : null; }
+function pideWhatsAppAuto(t, cuerpo){
+  var id="waf"+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36);
+  return pideWhatsApp(cuerpo).then(function(){ return true; }, function(e){
+    var err=String((e&&e.message)||e||"sin red").slice(0,60), quien=String(cuerpo.contacto||"el contacto");
+    if(t){ msg(t,"bi","⚠️ El WhatsApp a "+quien+" no salió ("+err+") · reintento solo"); var m=t.msgs[t.msgs.length-1]; m.canal="priv:"+(yo||""); m.nota_ia=1; m.wa_nota=id; m.wa_falla=1; guarda(t);
+      try{ if(vista==="hilo" && abierta===t.id) render(); }catch(_r){} }
+    var a=waFallidos(); a.push({id:id, tarea_id:t?t.id:"", cuerpo:cuerpo, ts:Date.now(), n:1, err:err}); grabaWAFallidos(a);
+    return false; });
+}
+function reintentaWAFallidos(){
+  var a=waFallidos(); if(!a.length) return Promise.resolve(0);
+  if(window.__reintWA) return window.__reintWA;
+  var ahora=Date.now();
+  window.__reintWA=a.reduce(function(p, x){ return p.then(function(){
+    var t=tareaWA(x.tarea_id), m=notaWA(t, x.id), quien=String((x.cuerpo&&x.cuerpo.contacto)||"el contacto");
+    var quita=function(){ grabaWAFallidos(waFallidos().filter(function(y){ return y.id!==x.id; })); };
+    if(ahora-(+x.ts||0)>WA_FALLIDOS_VENCE_MS){ quita();
+      if(m){ m.t="⚠️ El WhatsApp a "+quien+" no salió y ya no lo mando (pasó un día); díctalo otra vez si sigue haciendo falta."; delete m.wa_falla; m.wa_vencido=1; guarda(t); }
+      return; }
+    return pideWhatsApp(x.cuerpo).then(function(j){ quita();
+      if(m){ m.t="✓ El WhatsApp a "+quien+" ya salió (en el reintento)."; delete m.wa_falla; var pid=(j&&(j.id||j.pedido_id))||null; if(pid) m.wa_pid=pid; guarda(t); } },
+      function(e){ var b=waFallidos(); b.forEach(function(y){ if(y.id===x.id){ y.n=(+y.n||1)+1; y.err=String((e&&e.message)||e||"").slice(0,60); } }); grabaWAFallidos(b); }); }); }, Promise.resolve())
+    .then(function(){ window.__reintWA=null; try{ if(vista==="hilo") render(); }catch(e){} return waFallidos().length; }, function(){ window.__reintWA=null; return -1; });
+  return window.__reintWA;
+}
+try{ window.addEventListener("online", function(){ try{ reintentaWAFallidos(); }catch(e){} }); }catch(e){}
+
 /* @@DATOS-TAREAS-INICIO
    CAPA DE DATOS DE TAREAS. Toda lectura y escritura de bitacora_tareas pasa por aquí, con dos motores:
    "firestore" (el de siempre) y "mysql" (push.php: fs_lista, fs_doc, fs_set, msg_agregar, hay_nuevo).
@@ -4778,6 +4882,7 @@ function mezclaFirestore(M, F){
 }
 var MYSQL_CADA_MS=20000;                       /* cada cuánto se vuelve a leer la lista en MySQL */
 var MYSQL_REINTENTOS_MS=[2000,5000,15000,60000];
+var MYSQL_TOPE_LISTA_MS=30000;
 var datosTareas=(function(){
   var COLA_KEY="doit_cola_mysql", MOTOR_KEY="doit_motor_tareas";
   var cola=null, reintento=null, intento=0, sub=null, ultimoJSON="";
@@ -4797,6 +4902,7 @@ var datosTareas=(function(){
     Object.keys(params||{}).forEach(function(k){ if(params[k]!=null && params[k]!=="") q+="&"+k+"="+encodeURIComponent(params[k]); });
     var op={method:cuerpo?"POST":"GET", headers:{"x-app-token":APP_TOKEN,"x-usuario":yo||"anonimo"}};
     if(cuerpo){ op.headers["content-type"]="application/json"; op.body=JSON.stringify(cuerpo); }
+    if(accion==="fs_lista") op.tope=MYSQL_TOPE_LISTA_MS;   /* la lista completa (hasta 1000 tareas) tarda más que una sola */
     return llamaServidor(PUSH+q, op).then(function(r){
       return r.json().catch(function(){ return {}; }).then(function(j){
         if(r.status===404 && accion==="fs_doc") return null;
@@ -4900,20 +5006,50 @@ var datosTareas=(function(){
       return llama("fs_set", {col:COL}, {col:COL, id:id, data:data, merge:true}).then(function(){ return Object.assign({}, S, data); });
     });
   }
+  /* UNA SUBIDA A LA VEZ. Dos guardados casi juntos llamaban a vacia() en paralelo: las dos releían la tarea y
+     escribían, y si la vieja llegaba al último pisaba a la nueva. Ahora, si ya hay una subida en camino, la siguiente
+     espera a que termine y luego vuelve a vaciar: así lo más reciente siempre sale después. */
+  var enVuelo=null;
   function vacia(){
+    if(enVuelo) return enVuelo.then(function(){ return vacia(); });
+    enVuelo=vaciaUnaVez().then(function(r){ enVuelo=null; pintaSinSubir(); return r; }, function(e){ enVuelo=null; pintaSinSubir(e); throw e; });
+    return enVuelo;
+  }
+  function vaciaUnaVez(){
     var c=leeCola(), ids=Object.keys(c);
     if(!ids.length){ intento=0; return Promise.resolve(true); }
     return ids.reduce(function(p, id){
       return p.then(function(){
         var mandado=c[id]; if(!mandado) return;
-        return subeUna(id, entrada(mandado)).then(function(nuevo){
-          if(c[id]===mandado){ delete c[id]; grabaCola(); }   /* si cambió mientras subía, se queda la versión nueva */
+        var ent=entrada(mandado);
+        return subeUna(id, ent).then(function(nuevo){
+          if(c[id]===mandado){ delete c[id]; grabaCola(); }
+          else if(c[id]){
+            /* cambió mientras subía: se queda la versión nueva, medida contra lo que se acaba de escribir (no contra la
+               base de antes), para que su subida no lo cuente como choque consigo misma */
+            var e2=entrada(c[id]);
+            Object.keys(ent.cambios).forEach(function(k){ if(k in e2.base) e2.base[k]=copia(nuevo && (k in nuevo) ? nuevo[k] : ent.cambios[k]); });
+            c[id]=e2; grabaCola(); }
           if(nuevo){ var b=copia(nuevo); delete b.id; bases[id]=b; }
         });
       });
     }, Promise.resolve()).then(function(){ intento=0; return true; }, function(e){
       programaReintento(); throw e;
     });
+  }
+  /* «N cambios sin subir»: un renglón discreto mientras el servidor no los ha recibido (sin red o rechazo); se quita
+     solo al subir. Sin token (app sin publicar, pruebas) no hay servidor al que subir y no se pinta. */
+  function pintaSinSubir(err){
+    try{
+      var n=Object.keys(leeCola()).length, el=document.getElementById("sinsubir");
+      if(!n || !hayToken() || motor()!=="mysql"){ if(el) el.remove(); return; }
+      if(!err && navigator.onLine!==false){ if(el) el.remove(); return; }
+      if(!el){ el=document.createElement("button"); el.id="sinsubir"; el.type="button"; el.className="sinsubir";
+        el.onclick=function(){ el.textContent="Subiendo…"; vacia().then(function(){ toast("Listo: ya se subió todo"); }, function(){ toast("Todavía no se pudo subir; reintento solo"); }); };
+        document.body.appendChild(el); }
+      el.textContent=n+" cambio"+(n===1?"":"s")+" sin subir";
+      el.setAttribute("aria-label", n+" cambio"+(n===1?"":"s")+" sin subir al servidor; toca para reintentar");
+    }catch(e){}
   }
   function programaReintento(){
     if(reintento) return;
@@ -5008,6 +5144,8 @@ var datosTareas=(function(){
         if(!vivo.falla){ vivo.falla=true; try{ toast("No se pudieron leer las tareas del servidor; reintento solo"); }catch(_t){} }
         if(alFallar) alFallar(e);
       })
+      /* la siguiente vuelta se programa SIEMPRE: si pintar o avisar truena, la lista no se queda congelada */
+      .then(null, function(e){ try{ console.warn("lectura de tareas", e); }catch(_e){} })
       .then(function(){ if(sub===vivo) vivo.timer=setTimeout(vuelta, MYSQL_CADA_MS); });
     }
     /* primero se junta lo que quedó solo en Firestore y luego se lee: así nunca se pinta (ni se edita) la versión vieja */
@@ -5019,9 +5157,32 @@ var datosTareas=(function(){
   }
   function para(){ var s=sub; sub=null; if(!s) return; try{ if(s.tipo==="firestore"){ if(typeof s.fin==="function") s.fin(); } else s.fin(); }catch(e){} }
   try{ window.addEventListener("online", function(){ vacia().catch(function(){}); }); }catch(e){}
+  try{ window.addEventListener("offline", function(){ pintaSinSubir(); }); }catch(e){}
+  /* AL CERRAR SESIÓN CON CAMBIOS SIN SUBIR: la cola no se borra ni la sube otra cuenta (saldría con su nombre). Se
+     aparta para ESE usuario y regresa a la cola cuando él vuelve a entrar en este teléfono. */
+  var APARTE_KEY="doit_cola_mysql_de_";
+  function aparta(usuario){
+    var c=leeCola(); if(!usuario || !Object.keys(c).length) return 0;
+    var s=ls(), k=APARTE_KEY+usuario, prev={}; try{ prev=JSON.parse((s && s.getItem(k))||"{}")||{}; }catch(e){ prev={}; }
+    Object.keys(c).forEach(function(id){ prev[id]=c[id]; });
+    try{ if(s){ s.setItem(k, JSON.stringify(prev)); s.removeItem(COLA_KEY); } }catch(e){ return 0; }
+    cola={}; pintaSinSubir(); return Object.keys(prev).length;
+  }
+  function recupera(usuario){
+    var s=ls(), k=APARTE_KEY+usuario, ap=null; if(!usuario || !s) return 0;
+    try{ ap=JSON.parse(s.getItem(k)||"null"); }catch(e){ ap=null; }
+    if(!ap || typeof ap!=="object") return 0;
+    var c=leeCola(), n=0;
+    Object.keys(ap).forEach(function(id){ n++;
+      if(!c[id]){ c[id]=ap[id]; return; }
+      var a=entrada(ap[id]), b=entrada(c[id]);   /* lo apartado es más viejo: lo nuevo encima, la base más vieja manda */
+      c[id]={ __v:2, cambios:Object.assign({}, a.cambios, b.cambios), base:Object.assign({}, b.base, a.base) }; });
+    grabaCola(); try{ s.removeItem(k); }catch(e){}
+    return n;
+  }
   return { motor:motor, listar:listar, leer:leer, guardar:guardar, guardarCampos:guardarCampos, borrar:borrar,
            agregarMsg:agregarMsg, hayNuevo:hayNuevo, suscribir:suscribir, para:para, vacia:vacia, concilia:concilia,
-           pendientes:function(){ return Object.keys(leeCola()).length; } };
+           pendientes:function(){ return Object.keys(leeCola()).length; }, aparta:aparta, recupera:recupera, pintaSinSubir:pintaSinSubir };
 })();
 /* @@DATOS-TAREAS-FIN */
 
@@ -5223,7 +5384,10 @@ function guarda(t){
   /* CANDADO: un ejemplo se ve, pero NUNCA sube a la base que comparte el
      equipo. Y se dice, para que nadie crea que quedó guardado. */
   if(esEjemplo(t)){ toast("Es una tarea de ejemplo: no se guarda"); render(); return }
-  if(!db){render();return}
+  /* sin Firestore solo se corta si el motor tampoco es MySQL: en MySQL la tarea se guarda por push.php aunque
+     Firestore no haya arrancado (antes eso dejaba el cambio solo en pantalla) */
+  var _motor=""; try{ _motor=datosTareas.motor(); }catch(e){}
+  if(!db && _motor!=="mysql"){render();return}
   /* Red: se limpian los undefined antes de subir, y si Firestore truena en el
      acto se DICE (antes el error rompia todo lo que venia despues). 2026-09-23 */
   limpiaUndef(t);
@@ -6547,8 +6711,13 @@ SEMILLA.forEach(function(t){
 });
 
 /* ============ FOTOS: EXIF primero, luego comprimir ============ */
+/* cb se llama SIEMPRE una vez: si el archivo no se puede leer (FileReader con error, iCloud sin bajar) se sigue sin EXIF,
+   en vez de quedarse en «Comprimiendo…» */
 function leerExif(file,cb){
-  var fr=new FileReader();
+  var listo=false, sale=function(out){ if(listo) return; listo=true; try{ out.tomada=out.tomada||(file&&file.lastModified?new Date(file.lastModified).toISOString():null); }catch(e){} cb(out); };
+  var fr; try{ fr=new FileReader(); }catch(e){ sale({}); return; }
+  fr.onerror=function(){ sale({error_lectura:true}); };
+  fr.onabort=function(){ sale({error_lectura:true}); };
   fr.onload=function(e){
     var out={};
     try{
@@ -6562,11 +6731,16 @@ function leerExif(file,cb){
       }
     }catch(err){}
     out.tomada=file.lastModified?new Date(file.lastModified).toISOString():null;
-    cb(out);
+    sale(out);
   };
-  fr.readAsArrayBuffer(file.slice(0,131072));
+  try{ fr.readAsArrayBuffer(file.slice(0,131072)); }catch(e){ sale({error_lectura:true}); }
 }
-function comprime(file,cb){
+var FOTO_TOPE_MS=20000;
+function comprime(file,cb0){
+  /* una sola respuesta y con tope: la ubicación (iOS puede no contestar nunca si el permiso queda en el aire) o una
+     imagen que no termina de cargar no dejan la foto en «Comprimiendo…» */
+  var listo=false, tm=setTimeout(function(){ cb(null, {}); }, FOTO_TOPE_MS);
+  var cb=function(data, meta){ if(listo) return; listo=true; clearTimeout(tm); cb0(data, meta); };
   leerExif(file,function(meta){
     var img=new Image(), url=URL.createObjectURL(file);
     img.onload=function(){
@@ -6577,10 +6751,11 @@ function comprime(file,cb){
       URL.revokeObjectURL(url);
       var data=c.toDataURL("image/jpeg",0.62);
       if(navigator.geolocation){
-        navigator.geolocation.getCurrentPosition(function(p){
+        var sinUbic=setTimeout(function(){ cb(data,meta); }, 6000);
+        try{ navigator.geolocation.getCurrentPosition(function(p){ clearTimeout(sinUbic);
           meta.lat=+p.coords.latitude.toFixed(5); meta.lon=+p.coords.longitude.toFixed(5);
           cb(data,meta);
-        },function(){cb(data,meta)},{timeout:4000,maximumAge:60000});
+        },function(){ clearTimeout(sinUbic); cb(data,meta); },{timeout:4000,maximumAge:60000}); }catch(e){ clearTimeout(sinUbic); cb(data,meta); }
       } else cb(data,meta);
     };
     img.onerror=function(){URL.revokeObjectURL(url);cb(null,meta)};
@@ -6762,12 +6937,15 @@ function leeEnVoz(texto, boton){
     /* leyendo = rojo + ícono de PAUSA (para que se vea que puedes pausar);
        en reposo = verde + play. Salvador 2026-09-17. */
     var vuelvePlay=function(b){ if(b){ b.classList.remove("on"); b.innerHTML=svgPlay(); } };
-    if(S.speaking || window.__leyendo){ S.cancel(); window.__leyendo=false;
+    if(S.speaking || window.__leyendo){ S.cancel(); window.__leyendo=false; window.__leyU=null; clearTimeout(window.__leyWd);
       vuelvePlay(window.__leyBtn); return; }
     var u=new SpeechSynthesisUtterance(String(texto||"")); u.lang="es-MX"; u.rate=1;
     try{ var v=_leeVoz(); if(v){ u.voice=v; u.lang=v.lang||"es-MX"; } u.pitch=vozTono(); }catch(e){}
-    u.onend=function(){ window.__leyendo=false; vuelvePlay(boton); };
-    u.onerror=function(){ window.__leyendo=false; vuelvePlay(boton); };
+    /* vigía: si el motor de voz no avisa que terminó (se traba en iOS), el botón no se queda en pausa para siempre */
+    clearTimeout(window.__leyWd);
+    var termina=function(){ clearTimeout(window.__leyWd); if(window.__leyU!==u) return; window.__leyendo=false; window.__leyU=null; vuelvePlay(boton); };
+    u.onend=termina; u.onerror=termina;
+    window.__leyU=u; window.__leyWd=setTimeout(function(){ if(window.__leyU===u){ try{ S.cancel(); }catch(e){} termina(); } }, vigiaVoz(texto));
     window.__leyendo=true; window.__leyBtn=boton;
     if(boton){ boton.classList.add("on"); boton.innerHTML=svgPausa(); }
     S.cancel(); S.speak(u);
@@ -10346,6 +10524,8 @@ function confirmaClave(tid, lista){
 }
 function completaRevision(t, v, op){
   op=op||{};   /* build 210: {alTerminar(r), sinRevision}: audifonos (respuesta hablada; en una tarea ya autorizada no la regresa a Falta info) */
+  /* NADA SE QUEDA A MEDIAS: alTerminar se llama UNA vez pase lo que pase (la Caminata y la lectura esperan ese aviso para seguir) */
+  var _alT=op.alTerminar, _termino=false; if(_alT) op.alTerminar=function(r){ if(_termino) return; _termino=true; return _alT(r); };
   /* build 283: "pesado" (y pantalla difuminada) solo para «Falta info» / tarea nueva; dictados e indicaciones van en "rapido", sin difuminar */
   var _pes283=!!op.pesado; if(!_pes283 && !op.sinRevision){ try{ _pes283=(tipoRevisar(t)==="falta"); }catch(e){} }
   var _modo283=_pes283?MODO_CEREBRO:(typeof MODO_RAPIDO283==="string"?MODO_RAPIDO283:"rapido"), _caida283=false, _pend283=false, _LP283=(typeof LO_PASO283==="string"?LO_PASO283:"No cambié nada todavía: lo paso a Claude para que lo aplique.");
@@ -10358,9 +10538,25 @@ function completaRevision(t, v, op){
   var _m0=(typeof registraDictado263==="function")?registraDictado263(t, v):(msg(t,"bo",v), t.msgs[t.msgs.length-1]); _m0.de=yo; _m0.completa_info=1; _m0.dict238=1;   /* build 238: queda en el historial, no se repite en la vista; 263: oculto y sin duplicarse */
   t.hecho238=null; var _j238=null, _T238=t, _or238={hecho:[], falta:[]};
   t._leyendo=Date.now(); guarda(t); render();   /* la tarjeta dice "Claude está leyendo…" */
-  var _fin=function(hecho, dudas, vinc){ delete t._leyendo; guarda(t); try{ sincronizaAvisos(t); }catch(e){}
-    palomeaEnOrden(t, _antes208, function(){ _cierre(hecho, dudas, vinc); }); };
-  var _cierre=function(hecho, dudas, vinc){
+  /* RED: si aplicar la respuesta truena a medio camino (aplicaRevisionClaude, ejecutaOrdenes, el cierre), antes se quedaban
+     t._leyendo («Claude está leyendo…»), el dictado en espera y alTerminar sin llamar. Igual que en la barra: se limpia,
+     lo dictado queda de encargo para la Mac (no se pierde), se dice el error y se avisa a quien espera. */
+  var _rescate=function(e){
+    try{ console.error("completaRevision", e); }catch(_e){}
+    try{ t=viva249(t); }catch(_e){}
+    try{ delete t._leyendo; if(_T238 && _T238!==t) delete _T238._leyendo; }catch(_e){}
+    var _enc=null; try{ _enc=ordenPendiente(t, v, "falla_app"); }catch(_e){}
+    try{ if(window.__dict && window.__dict.tid===t.id){ window.__dict.espera=false; marcaDictado(t, _enc?"encargado":"sin_aplicar"); } }catch(_e){}
+    try{ guarda(t); }catch(_e){}
+    try{ ocultaAcomoda(); }catch(_e){}
+    try{ render(); }catch(_e){}
+    try{ toast("Falló al aplicar lo que dictaste; quedó para Claude en la Mac ("+String((e&&e.message)||e).slice(0,60)+")"); }catch(_e){}
+    if(op.alTerminar) try{ op.alTerminar({hecho:[], dudas:[], vinc:[], falta:[], error:String((e&&e.message)||e)}); }catch(_e){}
+  };
+  var _fin=function(hecho, dudas, vinc){ try{ delete t._leyendo; guarda(t); try{ sincronizaAvisos(t); }catch(e){}
+    palomeaEnOrden(t, _antes208, function(){ _cierre(hecho, dudas, vinc); }); }catch(e){ _rescate(e); } };
+  var _cierre=function(hecho, dudas, vinc){ try{ _cierre0(hecho, dudas, vinc); }catch(e){ _rescate(e); } };
+  var _cierre0=function(hecho, dudas, vinc){
     var _pv=(vinc||[]).map(function(id){ var d=tareas.filter(function(x){ return x.id===id; })[0]; return d?"“"+nombreVinc(d)+"”":""; }).filter(Boolean);
     var _vx=_pv.length?" Posible vínculo con "+_pv.join(" o ")+": te lo dejo propuesto, no lo vinculé.":"";
     if(!op.sinRevision) revisaCompleta(t);
@@ -10386,12 +10582,12 @@ function completaRevision(t, v, op){
     if(_ov249 || !op.alTerminar) liberaAcomoda((_T238||t).id); else ocultaAcomoda();   /* build 249: se libera YA REFRESCADA y, si hay dudas, sale su ventanita (283: también en el rápido, sin difuminar) */
     if(op.alTerminar) try{ op.alTerminar({hecho:hecho||[], dudas:dudas||[], vinc:vinc||[], falta:f}); }catch(e){} };
   /* respaldo SIN red (o respuesta ilegible): la extraccion local del 205 */
-  var _respaldo=function(){ t=viva249(t); _T238=t; _caida283=true; var loc=extraeLocal(t, v); if(t.pendiente_info && !loc.length){ delete t._leyendo; try{ ordenPendiente(t, v, "ia_caida"); }catch(e283){} completaPendiente(t.id, v); ocultaAcomoda(); if(op.alTerminar) try{ op.alTerminar({hecho:[], dudas:[], vinc:[], falta:soloMeFalta(t)}); }catch(e){} return; } _fin(loc, [], []); };
+  var _respaldo=function(){ try{ t=viva249(t); _T238=t; _caida283=true; var loc=extraeLocal(t, v); if(t.pendiente_info && !loc.length){ delete t._leyendo; try{ ordenPendiente(t, v, "ia_caida"); }catch(e283){} completaPendiente(t.id, v); ocultaAcomoda(); if(op.alTerminar) try{ op.alTerminar({hecho:[], dudas:[], vinc:[], falta:soloMeFalta(t)}); }catch(e){} return; } _fin(loc, [], []); }catch(e){ _rescate(e); } };
   /* build 283: «Falta info» con 15 tareas para vincular; el rápido solo 5 y solo si habla de vincular */
   var _ab=_pes283?abiertasParaVincular(t, v, 15):(/\b(vincul\w*|enlaz\w*|misma tarea|es de la tarea|junta\w*)\b/.test(_fsa(v))?abiertasParaVincular(t, v, 5):[]);
   var _lanza251=function(prompt, intento){
   try{
-    preguntaAClaude([{role:"user",content:prompt}],_modo283,function(txt,err){   /* build 283: una sola llamada, sin reintento en serie */
+    preguntaAClaude([{role:"user",content:prompt}],_modo283,function(txt,err){ try{   /* build 283: una sola llamada, sin reintento en serie */
       if(err){ _respaldo(); return; }
       var j=null; try{ var mm=String(txt||"").match(/\{[\s\S]*\}/); j=mm?JSON.parse(mm[0]):null; }catch(e){ j=null; }
       if(!j){ _respaldo(); return; }
@@ -10413,7 +10609,7 @@ function completaRevision(t, v, op){
       var _cg=(_clave && typeof revisaClave==="function")?revisaClave(_T238||t, _clave, v):[];
       _fin(r.hecho, r.dudas, r.vinc);
       if(_cg.length) setTimeout(function(){ confirmaClave((_T238||t).id, _cg); }, 400);
-    });
+    }catch(eCb){ _rescate(eCb); } });
   }catch(e){ _respaldo(); }
   };
   _lanza251(promptRevision(t, v, _ab, {rapido:!_pes283}), 0);
@@ -14907,7 +15103,7 @@ function apruebaMeta(t, mid){
   var e=m.entrega||{}; m.estado=2; m.cumplida=hoy(); m.cumplida_ts=Date.now(); m.aprobada_por=yo; m.fuente="aprobó "+((PERSONAS[yo]||{}).nombre||"");
   if(!m.foto && (e.fotos||[]).length) m.foto=e.fotos[0];
   var ej=ejecutorNombre(t);
-  if(t.revisa_ext && ej) pideWhatsApp({usuario:yo, tarea_id:t.id, contacto:ej, texto:"IA: ¡Gracias, "+nombreCorto(ej).split(" ")[0]+"! "+((PERSONAS[yo]||{}).nombre||"Salvador")+" aprobó “"+metaCorta(m)+"”.", sin_espera:1}).catch(function(){});
+  if(t.revisa_ext && ej) pideWhatsAppAuto(t, {usuario:yo, tarea_id:t.id, contacto:ej, texto:"IA: ¡Gracias, "+nombreCorto(ej).split(" ")[0]+"! "+((PERSONAS[yo]||{}).nombre||"Salvador")+" aprobó “"+metaCorta(m)+"”.", sin_espera:1});
   else if(t.duenio && t.duenio!==yo){ try{ disparaPushInstantaneo(t.duenio, tareaCorta(t), "Aprobada: “"+metaCorta(m)+"”", urlTarea(t.id), "asignado"); }catch(e2){} }
   var tx="Aprobada: “"+metaCorta(m)+"”. Queda en el historial."; msg(t,"bi",tx); guarda(t); return tx;
 }
@@ -15296,10 +15492,10 @@ function decideMeta(t, did, accion, fecha){
   if(t.pendiente_meta===did){ t.pendiente_info=""; t.pendiente_tipo=""; delete t.pendiente_meta; }
   if(accion==="fecha" && m){ var nf=/^\d{4}-\d{2}-\d{2}$/.test(fecha||"")?fecha:d.nueva; m.fecha_antes=(m.fecha_antes||[]).concat([m.fecha]); m.fecha=nf; m.escalada=null; m.empuje=null; m.aviso_atraso=null;
     tx="Nueva fecha para “"+d.corta+"”: "+fechaMeta(nf)+".";
-    if(ej && !ej.k) pideWhatsApp({usuario:yo, tarea_id:t.id, contacto:ej.nombre, texto:"IA: Hola "+nombreCorto(ej.nombre).split(" ")[0]+", quedamos para el "+fechaMeta(nf)+" con “"+d.corta+"”. ¡Gracias!", sin_espera:1}).catch(function(){}); }
+    if(ej && !ej.k) pideWhatsAppAuto(t, {usuario:yo, tarea_id:t.id, contacto:ej.nombre, texto:"IA: Hola "+nombreCorto(ej.nombre).split(" ")[0]+", quedamos para el "+fechaMeta(nf)+" con “"+d.corta+"”. ¡Gracias!", sin_espera:1}); }
   else if(accion==="hablo" && m){ m.yo_hablo=true; tx="Tú hablas con "+(d.ejecutor?nombreCorto(d.ejecutor):"el responsable")+" de “"+d.corta+"”; dejo de insistirle."; }
   else if(accion==="autorizo" && m){ m.autorizado={costo:d.costo||"", ts:Date.now(), por:yo}; m.escalada=m.fecha; tx="Autorizaste “"+d.corta+"”"+(d.costo?" ("+d.costo+")":"")+".";
-    if(ej && !ej.k) pideWhatsApp({usuario:yo, tarea_id:t.id, contacto:ej.nombre, texto:"IA: Hola "+nombreCorto(ej.nombre).split(" ")[0]+", Salvador autoriza “"+d.corta+"”"+(d.costo?" ("+d.costo+")":"")+". Adelante, ¡gracias!", sin_espera:1}).catch(function(){}); }
+    if(ej && !ej.k) pideWhatsAppAuto(t, {usuario:yo, tarea_id:t.id, contacto:ej.nombre, texto:"IA: Hola "+nombreCorto(ej.nombre).split(" ")[0]+", Salvador autoriza “"+d.corta+"”"+(d.costo?" ("+d.costo+")":"")+". Adelante, ¡gracias!", sin_espera:1}); }
   if(tx) msg(t,"bi",tx); guarda(t); return tx;
 }
 /* PENDIENTE DE CONECTAR (revisión 8-oct) */
@@ -15934,8 +16130,9 @@ function nombraCada(c){ var cod=normalizaCada(c);
 var COLAV="bitacora_avisos";
 function claveAviso(t, a){ return a.self ? t.id : (t.id+"|"+a.id); }
 function escribeAvisoEspejo(t, a){
-  if(!db) return;
   var key=claveAviso(t,a);
+  /* sin Firestore (motor MySQL) el espejo no se escribe, pero el aviso SÍ va al servidor de push */
+  if(!db){ avisoAlServidor(t, a, key); return; }
   var doc={ id:key, tarea:t.id, aviso_ts:(a.self?"self":a.id), owner:(t.duenio||yo),
     texto:(a.texto||t.nombre||""), fecha:(a.fecha||""), hora:(a.hora||""),
     cada:normalizaCada(a.cada), deep:key, activo:true, actualizado:Date.now() };
@@ -15946,7 +16143,7 @@ function escribeAvisoEspejo(t, a){
   try{ db.collection(COLAV).doc(key).set(doc,{merge:true}); }catch(e){}
   avisoAlServidor(t, a, key);
 }
-function borraAvisoEspejo(key){ if(!db||!key) return; try{ db.collection(COLAV).doc(key).delete(); }catch(e){}
+function borraAvisoEspejo(key){ if(!key) return; if(db){ try{ db.collection(COLAV).doc(key).delete(); }catch(e){} }
   llamaPush("aviso_del", {id:key}); }
 /* ===== LOS AVISOS AL SERVIDOR DE PUSH (Salvador 2026-09-23) =====
    Desde el 23-sep Josue cambio el servidor: barrido.php ya NO lee Firestore,
@@ -15956,17 +16153,44 @@ function borraAvisoEspejo(key){ if(!db||!key) return; try{ db.collection(COLAV).
    {id, usuario, tarea, texto, cuando:"AAAA-MM-DD HH:MM:SS", cada?}; aviso_del {id}.
    Nunca se manda un aviso ya pasado (sonaria de golpe): si es recurrente se
    corre a su proxima vez; si no, se omite. */
+/* Devuelve una promesa: true si el servidor lo confirmó, false si no. Un aviso_set / aviso_del que falla (sin red,
+   servidor caído, tope) queda anotado en este teléfono (AVISOS_FALLIDOS_K, el último por id) y se reintenta al arrancar,
+   al volver la red y cada AVISOS_REINTENTO_MS; antes se daba por mandado y no se volvía a intentar en 20 h. */
+var AVISOS_FALLIDOS_K="doit_avisos_fallidos", AVISOS_REINTENTO_MS=600000;
+function avisosFallidos(){ var m={}; try{ m=JSON.parse(localStorage.getItem(AVISOS_FALLIDOS_K)||"{}")||{}; }catch(e){ m={}; } return (m && typeof m==="object")?m:{}; }
+function grabaAvisosFallidos(m){ try{ if(Object.keys(m).length) localStorage.setItem(AVISOS_FALLIDOS_K, JSON.stringify(m)); else localStorage.removeItem(AVISOS_FALLIDOS_K); }catch(e){} }
 function llamaPush(accion, cuerpo){
-  if(typeof APP_TOKEN==="undefined" || String(APP_TOKEN).indexOf("__")===0) return;
+  if(typeof APP_TOKEN==="undefined" || String(APP_TOKEN).indexOf("__")===0) return Promise.resolve(false);
+  var id=(accion==="aviso_set" || accion==="aviso_del") && cuerpo && cuerpo.id ? String(cuerpo.id) : "", t0=Date.now();
+  var mal=function(m){ fallaPush(accion+": "+m);
+    if(id){ var f=avisosFallidos(), ya=f[id]; if(!(ya && +ya.ts>t0)){ f[id]={accion:accion, cuerpo:cuerpo, ts:t0, n:(ya && ya.accion===accion ? (+ya.n||0) : 0)+1}; grabaAvisosFallidos(f); } }
+    return false; };
   try{
-    llamaServidor(PUSH+"?action="+accion,{method:"POST", keepalive:true,
+    return llamaServidor(PUSH+"?action="+accion,{method:"POST", keepalive:true,
       headers:{"content-type":"application/json","x-app-token":APP_TOKEN},
       body:JSON.stringify(cuerpo)})
     .then(function(r){ return r.json().catch(function(){return {}}).then(function(j){
-      if(!r.ok || (j&&j.error)) fallaPush(accion+": "+((j&&j.error)||("HTTP "+r.status))); }); })
-    .catch(function(e){ fallaPush(accion+": "+((e&&e.message)||"sin red")); });
-  }catch(e){ fallaPush(accion+": "+e.message); }
+      if(!r.ok || (j&&j.error)) return mal((j&&j.error)||("HTTP "+r.status));
+      if(id){ var f=avisosFallidos(); if(f[id] && +f[id].ts<=t0){ delete f[id]; grabaAvisosFallidos(f); } }
+      return true; }); })
+    .catch(function(e){ return mal((e&&e.message)||"sin red"); });
+  }catch(e){ return Promise.resolve(mal(e.message)); }
 }
+/* reintenta lo que no llegó; un aviso único ya pasado no se manda (sonaría de golpe) */
+function reintentaAvisosFallidos(){
+  var f=avisosFallidos(), ids=Object.keys(f); if(!ids.length) return Promise.resolve(0);
+  if(window.__reintAvisos) return window.__reintAvisos;
+  var ahora=hoy()+" "+nowHM()+":00", pasados=[];
+  window.__reintAvisos=ids.reduce(function(p, id){ return p.then(function(){
+    var x=f[id]; if(!x || !x.cuerpo) return;
+    if(x.accion==="aviso_set" && !x.cuerpo.cada && String(x.cuerpo.cuando||"")<=ahora){ pasados.push([id, x.ts]); return; }
+    return Promise.resolve(llamaPush(x.accion, x.cuerpo)).then(function(ok){
+      if(ok && x.accion==="aviso_set"){ var mm=memAv(); mm[id]={sig:sigAviso(x.cuerpo), ts:Date.now()}; guardaMemAv(); } }); }); }, Promise.resolve())
+    .then(function(){ if(pasados.length){ var g=avisosFallidos(); pasados.forEach(function(p){ if(g[p[0]] && g[p[0]].ts===p[1]) delete g[p[0]]; }); grabaAvisosFallidos(g); }
+      window.__reintAvisos=null; return Object.keys(avisosFallidos()).length; }, function(){ window.__reintAvisos=null; return -1; });
+  return window.__reintAvisos;
+}
+try{ window.addEventListener("online", function(){ try{ reintentaAvisosFallidos(); }catch(e){} }); }catch(e){}
 function fallaPush(m){
   window.__fallasPush=(window.__fallasPush||[]); window.__fallasPush.push(m);
   try{ console.error("push", m); }catch(_e){}
@@ -16009,8 +16233,12 @@ function avisoAlServidor(t, a, key){
   /* build 263: el mismo aviso no se vuelve a mandar en cada guardado ni en cada arranque: solo si cambió o pasó un día (para sanar el servidor) */
   var sg=sigAviso(cuerpo), ya=mm[kk];
   if(ya && ya.sig===sg && Date.now()-(+ya.ts||0)<20*3600000) return;
-  mm[kk]={sig:sg, ts:Date.now()}; guardaMemAv();
-  llamaPush("aviso_set", cuerpo);
+  /* se da por mandado SOLO cuando el servidor lo confirma; mientras va en camino no se manda otra vez */
+  var vuelo=window.__avisoEnVuelo||(window.__avisoEnVuelo={}); if(vuelo[kk]===sg) return; vuelo[kk]=sg;
+  return Promise.resolve(llamaPush("aviso_set", cuerpo)).then(function(ok){
+    if(vuelo[kk]===sg) delete vuelo[kk];
+    if(ok){ var m2=memAv(); m2[kk]={sig:sg, ts:Date.now()}; guardaMemAv(); }
+    return ok; });
 }
 /* una vez por arranque: sube los avisos FUTUROS de mis tareas vivas, para los
    que se crearon antes de este arreglo y nunca llegaron al servidor */
@@ -16022,7 +16250,7 @@ function subeAvisosPendientes(){
   });
 }
 function sincronizaAvisos(t){
-  if(!db||!t) return;
+  if(!t) return;   /* también sin Firestore: en MySQL los avisos igual van a push.php */
   var cerr=!!(t.cierre) || !!t.fusionada_en || estadoReal(t)==="cerrada" || esDormida(t);   /* build 155: una fusionada no suena */
   var av=cerr?[]:avisosDe(t);
   var ahora=av.map(function(a){ return claveAviso(t,a); });
@@ -19287,7 +19515,7 @@ function sigAviso(cuerpo){ return [cuerpo.texto, cuerpo.cuando, cuerpo.cada||"",
 function memAv(){ if(window.__memAv263) return window.__memAv263; var o={}; try{ o=JSON.parse(localStorage.getItem("bit_avsig263")||"{}")||{}; }catch(e){ o={}; } window.__memAv263=o; return o; }
 function guardaMemAv(){ try{ localStorage.setItem("bit_avsig263", JSON.stringify(window.__memAv263||{})); }catch(e){} }
 function resyncAvisosNotif(){
-  window.__memAv263={}; guardaMemAv();
+  window.__memAv263={}; guardaMemAv(); window.__avisoEnVuelo={};   /* reenvío a propósito: también lo que iba en camino */
   (tareas||[]).forEach(function(t){ if(!t || t.cierre || (t.duenio||"")!==yo) return; avisosDe(t).forEach(function(a){ avisoAlServidor(t, a, claveAviso(t,a)); }); });
 }
 
@@ -22495,6 +22723,68 @@ function bindBandejaSrv(){
     if(a==="otra"){ abreTareaBandeja(x); return; }
     if(a==="desc"){ toast(descartaBandeja(x)); render(); } }; });
 }
+/* ===================== BOTÓN «ATRÁS» DE ANDROID =====================
+   Con una hoja, menú o visor abierto, el atrás del teléfono (o el gesto) sacaba de la app en vez de cerrar lo de
+   encima. Mientras haya algo abierto se deja UNA entrada de historial de guarda (pushState): el atrás la consume y
+   aquí se cierra lo de arriba (como si se tocara el velo o la ×). Si lo abierto se cierra con un toque, la guarda se
+   devuelve sola (history.back) para que el siguiente atrás no se «gaste» en nada. Con nada abierto el atrás hace lo
+   de siempre. */
+var ATRAS={guarda:false, ignora:0, obs:null, pend:false};
+/* lo que se puede cerrar, de arriba hacia abajo */
+function capasAbiertas(){
+  var L=[];
+  try{
+    var v=document.getElementById("visor"); if(v && v.classList.contains("on")) L.push({k:"visor", el:v});
+    Array.prototype.forEach.call(document.body.children, function(el){
+      if(el && el.nodeType===1 && /(^|\s)(leemask|hoja-velo)(\s|$)/.test(el.className||"") && el.style.display!=="none") L.push({k:"velo", el:el}); });
+    if(typeof window.__hoja225!=="undefined" && window.__hoja225 && document.querySelector(".h225")) L.push({k:"hoja225"});
+  }catch(e){}
+  return L;
+}
+function hayCapaAbierta(){ return capasAbiertas().length>0; }
+/* cierra la de más arriba: el visor, luego el último velo agregado (su ×, o el toque en el velo), luego la hoja de la tarea */
+function cierraCapaArriba(){
+  var L=capasAbiertas(); if(!L.length) return false;
+  var vis=L.filter(function(c){ return c.k==="visor"; })[0];
+  if(vis){ vis.el.classList.remove("on"); return true; }
+  var velos=L.filter(function(c){ return c.k==="velo"; });
+  if(velos.length){
+    var el=velos[velos.length-1].el, x=el.querySelector('[data-hx254],[data-bsrvx],[aria-label="Cerrar"]');
+    try{ if(x) x.click(); else el.dispatchEvent(new MouseEvent("click", {bubbles:true, cancelable:true})); }catch(e){}
+    if(el.parentNode && el.style.display!=="none"){ try{ el.remove(); }catch(e){} }   /* si no supo cerrarse, se quita */
+    return true;
+  }
+  if(L.some(function(c){ return c.k==="hoja225"; })){ window.__hoja225=null; try{ render(); }catch(e){} return true; }
+  return false;
+}
+function revisaGuardaAtras(){
+  ATRAS.pend=false;
+  var hay=hayCapaAbierta();
+  try{
+    if(hay && !ATRAS.guarda){ history.pushState({doitCapa:Date.now()}, ""); ATRAS.guarda=true; }
+    else if(!hay && ATRAS.guarda){ ATRAS.guarda=false;
+      if(history.state && history.state.doitCapa){ ATRAS.ignora++; history.back(); } }
+  }catch(e){}
+}
+function alAtras(){
+  if(ATRAS.ignora>0){ ATRAS.ignora--; return; }
+  ATRAS.guarda=false;
+  if(!hayCapaAbierta()) return;
+  cierraCapaArriba();
+  /* si quedó otra abajo, se vuelve a poner la guarda para el siguiente atrás */
+  setTimeout(revisaGuardaAtras, 0);
+}
+(function(){
+  try{
+    if(!window.history || typeof history.pushState!=="function" || typeof MutationObserver==="undefined") return;
+    window.addEventListener("popstate", alAtras);
+    var pide=function(){ if(ATRAS.pend) return; ATRAS.pend=true; setTimeout(revisaGuardaAtras, 0); };
+    ATRAS.obs=new MutationObserver(pide);
+    var monta=function(){ try{ ATRAS.obs.observe(document.body, {childList:true, subtree:true});
+      var v=document.getElementById("visor"); if(v) ATRAS.obs.observe(v, {attributes:true, attributeFilter:["class"]}); }catch(e){} };
+    if(document.body) monta(); else document.addEventListener("DOMContentLoaded", monta);
+  }catch(e){}
+})();
 /* Último renglón del script principal (por eso este archivo va al final): si se llega aquí, la app arrancó (lo revisa el vigía de errores de arriba y vigia/humo.js). */
 window.__doitArranco=Date.now();
 </script>

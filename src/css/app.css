@@ -1652,3 +1652,6 @@ html.cam274on,html.cam274on body{overflow:hidden}
 .bsrv-b .bsrv-si{background:#0A84FF;color:#FFFFFF;border-radius:999px;padding:6px 14px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bsrv-b .bsrv-no{color:var(--ink-3)}
 .bsrv-b button:focus-visible{outline:2px solid #0A84FF;outline-offset:2px}
+/* «N cambios sin subir»: discreto, arriba al centro; solo sale si el servidor no ha recibido algo */
+.sinsubir{position:fixed;top:calc(env(safe-area-inset-top,0px) + 4px);left:50%;transform:translateX(-50%);z-index:80;border:.5px solid rgba(255,159,10,.55);background:rgba(255,159,10,.16);color:#B25D00;font:inherit;font-size:12.5px;font-weight:600;line-height:1;padding:6px 12px;border-radius:999px;max-width:calc(100% - 32px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+@media (prefers-color-scheme:dark){.sinsubir{color:#FFB340}}

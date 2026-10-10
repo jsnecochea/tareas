@@ -121,7 +121,7 @@ var BANDEJA = [
     eq("acomodar dos veces el mismo no lo duplica", await A.p.evaluate(function () { var t = tareas.filter(function (x) { return x.id === "tCOM"; })[0]; acomodaBandeja(normalizaBandeja({ id: 105, contacto: "Manuel Parra", texto: "Mando foto" }), t); return t.msgs.length; }), 2);
     eq("grupo (forma real del servidor): se respeta «Quién: texto» y no se pone el grupo encima; url null no sale", await A.p.evaluate(function () {
       var t = tareas.filter(function (x) { return x.id === "tGOL"; })[0], x = normalizaBandeja({ id: "wa_3A90", texto: "Silvia Gomez: Gracias comadrita", contacto: "Grupo Gómez padilla", tipo: "texto", estado: "por_acomodar", es_salida: 0, hora: "2026-10-09 10:38:46", wa_id: "3A90", url: null });
-      acomodaBandeja(x, t); var m = t.msgs[t.msgs.length - 1]; return [x.h, x.url, m.t, m.wa_c, m.url === undefined]; }), ["10:38", "", "Silvia Gomez: Gracias comadrita", "Grupo Gómez padilla", true]);
+      acomodaBandeja(x, t); var m = t.msgs.filter(function (y) { return y.bandeja_id === "wa_3A90"; })[0] || {}; return [x.h, x.url, m.t, m.wa_c, m.url === undefined]; }), ["10:38", "", "Silvia Gomez: Gracias comadrita", "Grupo Gómez padilla", true]);
     await A.ctx.close();
     /* 8 · sin token */
     var B = await pagina(false);

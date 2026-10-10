@@ -15,6 +15,9 @@ eq("versión 229 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
   var pw = require("/opt/node22/lib/node_modules/playwright"), b = await pw.chromium.launch(), p = await b.newPage({ viewport: { width: 390, height: 844 } }), errs = [];
   p.on("pageerror", function (e) { if (!/firebase is not defined/.test(e.message)) errs.push(e.message); });
   await p.route(/^https?:/, function (r) { r.abort(); });
+  /* el caso Blue Cup es del 5-oct (límite el viernes 9): el reloj de la página se fija ese día para que la franja «Agendar»
+     (que solo propone fechas por venir) no dependa del día en que se corre la prueba */
+  await p.clock.setFixedTime(new Date("2026-10-05T10:00:00-06:00"));
   await p.addInitScript(function () { var P = function () { return Promise.resolve(); };   /* firebase sin red: solo lo que se llama al arrancar */
     var fs0 = { enablePersistence: P, collection: function () { return { doc: function () { return { set: P, get: P, delete: P, onSnapshot: function () {} }; }, where: function () { return this; }, onSnapshot: function () {}, get: P }; } };
     window.firebase = { apps: [1], initializeApp: function () {}, firestore: function () { return fs0; }, auth: function () { return { onAuthStateChanged: function () {}, signOut: P }; } }; window.firebase.auth.GoogleAuthProvider = function () {}; });

@@ -1013,6 +1013,8 @@ function confirmaClave(tid, lista){
 }
 function completaRevision(t, v, op){
   op=op||{};   /* build 210: {alTerminar(r), sinRevision}: audifonos (respuesta hablada; en una tarea ya autorizada no la regresa a Falta info) */
+  /* NADA SE QUEDA A MEDIAS: alTerminar se llama UNA vez pase lo que pase (la Caminata y la lectura esperan ese aviso para seguir) */
+  var _alT=op.alTerminar, _termino=false; if(_alT) op.alTerminar=function(r){ if(_termino) return; _termino=true; return _alT(r); };
   /* build 283: "pesado" (y pantalla difuminada) solo para «Falta info» / tarea nueva; dictados e indicaciones van en "rapido", sin difuminar */
   var _pes283=!!op.pesado; if(!_pes283 && !op.sinRevision){ try{ _pes283=(tipoRevisar(t)==="falta"); }catch(e){} }
   var _modo283=_pes283?MODO_CEREBRO:(typeof MODO_RAPIDO283==="string"?MODO_RAPIDO283:"rapido"), _caida283=false, _pend283=false, _LP283=(typeof LO_PASO283==="string"?LO_PASO283:"No cambié nada todavía: lo paso a Claude para que lo aplique.");
@@ -1025,9 +1027,25 @@ function completaRevision(t, v, op){
   var _m0=(typeof registraDictado263==="function")?registraDictado263(t, v):(msg(t,"bo",v), t.msgs[t.msgs.length-1]); _m0.de=yo; _m0.completa_info=1; _m0.dict238=1;   /* build 238: queda en el historial, no se repite en la vista; 263: oculto y sin duplicarse */
   t.hecho238=null; var _j238=null, _T238=t, _or238={hecho:[], falta:[]};
   t._leyendo=Date.now(); guarda(t); render();   /* la tarjeta dice "Claude está leyendo…" */
-  var _fin=function(hecho, dudas, vinc){ delete t._leyendo; guarda(t); try{ sincronizaAvisos(t); }catch(e){}
-    palomeaEnOrden(t, _antes208, function(){ _cierre(hecho, dudas, vinc); }); };
-  var _cierre=function(hecho, dudas, vinc){
+  /* RED: si aplicar la respuesta truena a medio camino (aplicaRevisionClaude, ejecutaOrdenes, el cierre), antes se quedaban
+     t._leyendo («Claude está leyendo…»), el dictado en espera y alTerminar sin llamar. Igual que en la barra: se limpia,
+     lo dictado queda de encargo para la Mac (no se pierde), se dice el error y se avisa a quien espera. */
+  var _rescate=function(e){
+    try{ console.error("completaRevision", e); }catch(_e){}
+    try{ t=viva249(t); }catch(_e){}
+    try{ delete t._leyendo; if(_T238 && _T238!==t) delete _T238._leyendo; }catch(_e){}
+    var _enc=null; try{ _enc=ordenPendiente(t, v, "falla_app"); }catch(_e){}
+    try{ if(window.__dict && window.__dict.tid===t.id){ window.__dict.espera=false; marcaDictado(t, _enc?"encargado":"sin_aplicar"); } }catch(_e){}
+    try{ guarda(t); }catch(_e){}
+    try{ ocultaAcomoda(); }catch(_e){}
+    try{ render(); }catch(_e){}
+    try{ toast("Falló al aplicar lo que dictaste; quedó para Claude en la Mac ("+String((e&&e.message)||e).slice(0,60)+")"); }catch(_e){}
+    if(op.alTerminar) try{ op.alTerminar({hecho:[], dudas:[], vinc:[], falta:[], error:String((e&&e.message)||e)}); }catch(_e){}
+  };
+  var _fin=function(hecho, dudas, vinc){ try{ delete t._leyendo; guarda(t); try{ sincronizaAvisos(t); }catch(e){}
+    palomeaEnOrden(t, _antes208, function(){ _cierre(hecho, dudas, vinc); }); }catch(e){ _rescate(e); } };
+  var _cierre=function(hecho, dudas, vinc){ try{ _cierre0(hecho, dudas, vinc); }catch(e){ _rescate(e); } };
+  var _cierre0=function(hecho, dudas, vinc){
     var _pv=(vinc||[]).map(function(id){ var d=tareas.filter(function(x){ return x.id===id; })[0]; return d?"“"+nombreVinc(d)+"”":""; }).filter(Boolean);
     var _vx=_pv.length?" Posible vínculo con "+_pv.join(" o ")+": te lo dejo propuesto, no lo vinculé.":"";
     if(!op.sinRevision) revisaCompleta(t);
@@ -1053,12 +1071,12 @@ function completaRevision(t, v, op){
     if(_ov249 || !op.alTerminar) liberaAcomoda((_T238||t).id); else ocultaAcomoda();   /* build 249: se libera YA REFRESCADA y, si hay dudas, sale su ventanita (283: también en el rápido, sin difuminar) */
     if(op.alTerminar) try{ op.alTerminar({hecho:hecho||[], dudas:dudas||[], vinc:vinc||[], falta:f}); }catch(e){} };
   /* respaldo SIN red (o respuesta ilegible): la extraccion local del 205 */
-  var _respaldo=function(){ t=viva249(t); _T238=t; _caida283=true; var loc=extraeLocal(t, v); if(t.pendiente_info && !loc.length){ delete t._leyendo; try{ ordenPendiente(t, v, "ia_caida"); }catch(e283){} completaPendiente(t.id, v); ocultaAcomoda(); if(op.alTerminar) try{ op.alTerminar({hecho:[], dudas:[], vinc:[], falta:soloMeFalta(t)}); }catch(e){} return; } _fin(loc, [], []); };
+  var _respaldo=function(){ try{ t=viva249(t); _T238=t; _caida283=true; var loc=extraeLocal(t, v); if(t.pendiente_info && !loc.length){ delete t._leyendo; try{ ordenPendiente(t, v, "ia_caida"); }catch(e283){} completaPendiente(t.id, v); ocultaAcomoda(); if(op.alTerminar) try{ op.alTerminar({hecho:[], dudas:[], vinc:[], falta:soloMeFalta(t)}); }catch(e){} return; } _fin(loc, [], []); }catch(e){ _rescate(e); } };
   /* build 283: «Falta info» con 15 tareas para vincular; el rápido solo 5 y solo si habla de vincular */
   var _ab=_pes283?abiertasParaVincular(t, v, 15):(/\b(vincul\w*|enlaz\w*|misma tarea|es de la tarea|junta\w*)\b/.test(_fsa(v))?abiertasParaVincular(t, v, 5):[]);
   var _lanza251=function(prompt, intento){
   try{
-    preguntaAClaude([{role:"user",content:prompt}],_modo283,function(txt,err){   /* build 283: una sola llamada, sin reintento en serie */
+    preguntaAClaude([{role:"user",content:prompt}],_modo283,function(txt,err){ try{   /* build 283: una sola llamada, sin reintento en serie */
       if(err){ _respaldo(); return; }
       var j=null; try{ var mm=String(txt||"").match(/\{[\s\S]*\}/); j=mm?JSON.parse(mm[0]):null; }catch(e){ j=null; }
       if(!j){ _respaldo(); return; }
@@ -1080,7 +1098,7 @@ function completaRevision(t, v, op){
       var _cg=(_clave && typeof revisaClave==="function")?revisaClave(_T238||t, _clave, v):[];
       _fin(r.hecho, r.dudas, r.vinc);
       if(_cg.length) setTimeout(function(){ confirmaClave((_T238||t).id, _cg); }, 400);
-    });
+    }catch(eCb){ _rescate(eCb); } });
   }catch(e){ _respaldo(); }
   };
   _lanza251(promptRevision(t, v, _ab, {rapido:!_pes283}), 0);

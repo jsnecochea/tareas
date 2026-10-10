@@ -17,9 +17,12 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
 (function () {
   var html = fs.readFileSync(IDX, "utf8"), sw = fs.readFileSync(SW, "utf8");
   /* cada línea con fetch( que no sea comentario ni la de llamaServidor es una llamada que se saltó la identidad */
-  var sueltos = html.split("\n").filter(function (l) { return /\bfetch\s*\(/.test(l) && !/^\s*(\/\*|\*|\/\/)/.test(l) && l.indexOf("return fetch(url, op).then(function(r){ revisaSesion(r)") < 0; })
+  var sueltos = html.split("\n").filter(function (l) { return /\bfetch\s*\(/.test(l) && !/^\s*(\/\*|\*|\/\/)/.test(l) && l.indexOf("var p; try{ p=fetch(url, op); }catch(e){ fin(); no(e); return; }") < 0; })
     .map(function (l) { return l.trim().slice(0, 120); });
   eq("index.html: ningún fetch suelto (todo sale por llamaServidor)", sueltos, []);
+  /* el único fetch permitido vive dentro de llamaServidor (con tope y revisión de sesión) y está una sola vez */
+  var ls0 = html.indexOf("function llamaServidor("), ls1 = html.indexOf("/* @@IDENTIDAD-FIN */"), cuerpoLS = html.slice(ls0, ls1);
+  eq("el fetch de llamaServidor: uno, dentro de llamaServidor, y revisa la sesión", [html.split("p=fetch(url, op)").length - 1, cuerpoLS.indexOf("p=fetch(url, op)") > 0, /revisaSesion\(r\)/.test(cuerpoLS)], [1, true, true]);
   var pushSW = (sw.match(/fetch\(`\/push\.php[^`]*`/g) || []).length, conEnc = (sw.match(/encabezadosSW\(data\)\.then\(function \(h\) \{ return fetch\(`\/push\.php/g) || []).length;
   eq("sw.js: cada llamada a push.php va con encabezadosSW", [pushSW, conEnc], [2, 2]);
   eq("sw.js: encabezadosSW pone Authorization Bearer", /h\['Authorization'\] = 'Bearer ' \+ t/.test(sw), true);

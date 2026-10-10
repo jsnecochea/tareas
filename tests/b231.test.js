@@ -14,6 +14,9 @@ eq("versión 231 o mayor", +((html.match(/var VERSION_APP = "build (\d+)/) || []
   var pw = require("/opt/node22/lib/node_modules/playwright"), b = await pw.chromium.launch(), p = await b.newPage({ viewport: { width: 390, height: 844 } }), errs = [];
   p.on("pageerror", function (e) { if (!/firebase is not defined/.test(e.message)) errs.push(e.message); });
   await p.route(/^https?:/, function (r) { r.abort(); });
+  /* los casos (Lerdo, Fiesta) traen metas y fechas de la semana del 6-oct: el reloj se fija ese día para que «lo de hoy»
+     y lo vencido no dependan del día en que se corre la prueba */
+  await p.clock.setFixedTime(new Date("2026-10-06T10:00:00-06:00"));
   await p.addInitScript(function () { var P = function () { return Promise.resolve(); };   /* firebase sin red: solo lo que se llama al arrancar */
     var fs0 = { enablePersistence: P, collection: function () { return { doc: function () { return { set: P, get: P, delete: P, onSnapshot: function () {} }; }, where: function () { return this; }, onSnapshot: function () {}, get: P }; } };
     window.firebase = { apps: [1], initializeApp: function () {}, firestore: function () { return fs0; }, auth: function () { return { onAuthStateChanged: function () {}, signOut: P }; } }; window.firebase.auth.GoogleAuthProvider = function () {}; });

@@ -13,7 +13,7 @@ function eq(nom, got, exp) { n++; var a = JSON.stringify(got), b = JSON.stringif
 function si(nom, v) { eq(nom, !!v, true); }
 si("VERSION_APP build 224", +((html.match(/var VERSION_APP = "build (\d+)/) || [])[1] || 0) >= 224);
 var F = ["_nn", "_n179", "nombreCorto", "tareaCorta", "esMetas", "metasDe", "metaCumplida", "metaCorta", "fechaMeta", "semaforoMeta", "fechaMovCorta", "dDif", "_compartirLista",
-  "ejecutorNombre", "vistaSup", "necesitaAprobacion", "subSupHTML", "pila233", "propietario233", "_supAb", "porAprobar", "resumenDatos", "vMetasSup", "vSecSup", "vSupSecciones", "vEntregas", "apruebaMeta", "pideCorreccion", "sugSup", "cumpleMeta"];
+  "ejecutorNombre", "vistaSup", "necesitaAprobacion", "subSupHTML", "pila233", "propietario233", "_supAb", "porAprobar", "resumenDatos", "vMetasSup", "vSecSup", "vSupSecciones", "vEntregas", "apruebaMeta", "pideWhatsAppAuto", "waFallidos", "grabaWAFallidos", "pideCorreccion", "sugSup", "cumpleMeta"];
 var pre = 'var yo="salvador", PERSONAS={salvador:{nombre:"Salvador",jefe:true}, samuel:{nombre:"Samuel"}}, H0="2026-10-11", WA=[], PUSH=[], MSG=[], window_={};' +
   'function hoy(){ return H0; } function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;"); } function esDato(){ return false; }' +
   'function soySupervisor(t){ return !!(t && t.duenio && t.duenio!==yo && (t.revisores||[]).indexOf(yo)>=0); } function contextoDe(t){ return t.contexto||""; } function fechaConDia(f){ return f; }' +

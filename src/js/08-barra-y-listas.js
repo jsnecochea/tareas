@@ -251,7 +251,7 @@ function apruebaMeta(t, mid){
   var e=m.entrega||{}; m.estado=2; m.cumplida=hoy(); m.cumplida_ts=Date.now(); m.aprobada_por=yo; m.fuente="aprobó "+((PERSONAS[yo]||{}).nombre||"");
   if(!m.foto && (e.fotos||[]).length) m.foto=e.fotos[0];
   var ej=ejecutorNombre(t);
-  if(t.revisa_ext && ej) pideWhatsApp({usuario:yo, tarea_id:t.id, contacto:ej, texto:"IA: ¡Gracias, "+nombreCorto(ej).split(" ")[0]+"! "+((PERSONAS[yo]||{}).nombre||"Salvador")+" aprobó “"+metaCorta(m)+"”.", sin_espera:1}).catch(function(){});
+  if(t.revisa_ext && ej) pideWhatsAppAuto(t, {usuario:yo, tarea_id:t.id, contacto:ej, texto:"IA: ¡Gracias, "+nombreCorto(ej).split(" ")[0]+"! "+((PERSONAS[yo]||{}).nombre||"Salvador")+" aprobó “"+metaCorta(m)+"”.", sin_espera:1});
   else if(t.duenio && t.duenio!==yo){ try{ disparaPushInstantaneo(t.duenio, tareaCorta(t), "Aprobada: “"+metaCorta(m)+"”", urlTarea(t.id), "asignado"); }catch(e2){} }
   var tx="Aprobada: “"+metaCorta(m)+"”. Queda en el historial."; msg(t,"bi",tx); guarda(t); return tx;
 }
@@ -640,10 +640,10 @@ function decideMeta(t, did, accion, fecha){
   if(t.pendiente_meta===did){ t.pendiente_info=""; t.pendiente_tipo=""; delete t.pendiente_meta; }
   if(accion==="fecha" && m){ var nf=/^\d{4}-\d{2}-\d{2}$/.test(fecha||"")?fecha:d.nueva; m.fecha_antes=(m.fecha_antes||[]).concat([m.fecha]); m.fecha=nf; m.escalada=null; m.empuje=null; m.aviso_atraso=null;
     tx="Nueva fecha para “"+d.corta+"”: "+fechaMeta(nf)+".";
-    if(ej && !ej.k) pideWhatsApp({usuario:yo, tarea_id:t.id, contacto:ej.nombre, texto:"IA: Hola "+nombreCorto(ej.nombre).split(" ")[0]+", quedamos para el "+fechaMeta(nf)+" con “"+d.corta+"”. ¡Gracias!", sin_espera:1}).catch(function(){}); }
+    if(ej && !ej.k) pideWhatsAppAuto(t, {usuario:yo, tarea_id:t.id, contacto:ej.nombre, texto:"IA: Hola "+nombreCorto(ej.nombre).split(" ")[0]+", quedamos para el "+fechaMeta(nf)+" con “"+d.corta+"”. ¡Gracias!", sin_espera:1}); }
   else if(accion==="hablo" && m){ m.yo_hablo=true; tx="Tú hablas con "+(d.ejecutor?nombreCorto(d.ejecutor):"el responsable")+" de “"+d.corta+"”; dejo de insistirle."; }
   else if(accion==="autorizo" && m){ m.autorizado={costo:d.costo||"", ts:Date.now(), por:yo}; m.escalada=m.fecha; tx="Autorizaste “"+d.corta+"”"+(d.costo?" ("+d.costo+")":"")+".";
-    if(ej && !ej.k) pideWhatsApp({usuario:yo, tarea_id:t.id, contacto:ej.nombre, texto:"IA: Hola "+nombreCorto(ej.nombre).split(" ")[0]+", Salvador autoriza “"+d.corta+"”"+(d.costo?" ("+d.costo+")":"")+". Adelante, ¡gracias!", sin_espera:1}).catch(function(){}); }
+    if(ej && !ej.k) pideWhatsAppAuto(t, {usuario:yo, tarea_id:t.id, contacto:ej.nombre, texto:"IA: Hola "+nombreCorto(ej.nombre).split(" ")[0]+", Salvador autoriza “"+d.corta+"”"+(d.costo?" ("+d.costo+")":"")+". Adelante, ¡gracias!", sin_espera:1}); }
   if(tx) msg(t,"bi",tx); guarda(t); return tx;
 }
 /* PENDIENTE DE CONECTAR (revisión 8-oct) */
@@ -1278,8 +1278,9 @@ function nombraCada(c){ var cod=normalizaCada(c);
 var COLAV="bitacora_avisos";
 function claveAviso(t, a){ return a.self ? t.id : (t.id+"|"+a.id); }
 function escribeAvisoEspejo(t, a){
-  if(!db) return;
   var key=claveAviso(t,a);
+  /* sin Firestore (motor MySQL) el espejo no se escribe, pero el aviso SÍ va al servidor de push */
+  if(!db){ avisoAlServidor(t, a, key); return; }
   var doc={ id:key, tarea:t.id, aviso_ts:(a.self?"self":a.id), owner:(t.duenio||yo),
     texto:(a.texto||t.nombre||""), fecha:(a.fecha||""), hora:(a.hora||""),
     cada:normalizaCada(a.cada), deep:key, activo:true, actualizado:Date.now() };
@@ -1290,7 +1291,7 @@ function escribeAvisoEspejo(t, a){
   try{ db.collection(COLAV).doc(key).set(doc,{merge:true}); }catch(e){}
   avisoAlServidor(t, a, key);
 }
-function borraAvisoEspejo(key){ if(!db||!key) return; try{ db.collection(COLAV).doc(key).delete(); }catch(e){}
+function borraAvisoEspejo(key){ if(!key) return; if(db){ try{ db.collection(COLAV).doc(key).delete(); }catch(e){} }
   llamaPush("aviso_del", {id:key}); }
 /* ===== LOS AVISOS AL SERVIDOR DE PUSH (Salvador 2026-09-23) =====
    Desde el 23-sep Josue cambio el servidor: barrido.php ya NO lee Firestore,
@@ -1300,17 +1301,44 @@ function borraAvisoEspejo(key){ if(!db||!key) return; try{ db.collection(COLAV).
    {id, usuario, tarea, texto, cuando:"AAAA-MM-DD HH:MM:SS", cada?}; aviso_del {id}.
    Nunca se manda un aviso ya pasado (sonaria de golpe): si es recurrente se
    corre a su proxima vez; si no, se omite. */
+/* Devuelve una promesa: true si el servidor lo confirmó, false si no. Un aviso_set / aviso_del que falla (sin red,
+   servidor caído, tope) queda anotado en este teléfono (AVISOS_FALLIDOS_K, el último por id) y se reintenta al arrancar,
+   al volver la red y cada AVISOS_REINTENTO_MS; antes se daba por mandado y no se volvía a intentar en 20 h. */
+var AVISOS_FALLIDOS_K="doit_avisos_fallidos", AVISOS_REINTENTO_MS=600000;
+function avisosFallidos(){ var m={}; try{ m=JSON.parse(localStorage.getItem(AVISOS_FALLIDOS_K)||"{}")||{}; }catch(e){ m={}; } return (m && typeof m==="object")?m:{}; }
+function grabaAvisosFallidos(m){ try{ if(Object.keys(m).length) localStorage.setItem(AVISOS_FALLIDOS_K, JSON.stringify(m)); else localStorage.removeItem(AVISOS_FALLIDOS_K); }catch(e){} }
 function llamaPush(accion, cuerpo){
-  if(typeof APP_TOKEN==="undefined" || String(APP_TOKEN).indexOf("__")===0) return;
+  if(typeof APP_TOKEN==="undefined" || String(APP_TOKEN).indexOf("__")===0) return Promise.resolve(false);
+  var id=(accion==="aviso_set" || accion==="aviso_del") && cuerpo && cuerpo.id ? String(cuerpo.id) : "", t0=Date.now();
+  var mal=function(m){ fallaPush(accion+": "+m);
+    if(id){ var f=avisosFallidos(), ya=f[id]; if(!(ya && +ya.ts>t0)){ f[id]={accion:accion, cuerpo:cuerpo, ts:t0, n:(ya && ya.accion===accion ? (+ya.n||0) : 0)+1}; grabaAvisosFallidos(f); } }
+    return false; };
   try{
-    llamaServidor(PUSH+"?action="+accion,{method:"POST", keepalive:true,
+    return llamaServidor(PUSH+"?action="+accion,{method:"POST", keepalive:true,
       headers:{"content-type":"application/json","x-app-token":APP_TOKEN},
       body:JSON.stringify(cuerpo)})
     .then(function(r){ return r.json().catch(function(){return {}}).then(function(j){
-      if(!r.ok || (j&&j.error)) fallaPush(accion+": "+((j&&j.error)||("HTTP "+r.status))); }); })
-    .catch(function(e){ fallaPush(accion+": "+((e&&e.message)||"sin red")); });
-  }catch(e){ fallaPush(accion+": "+e.message); }
+      if(!r.ok || (j&&j.error)) return mal((j&&j.error)||("HTTP "+r.status));
+      if(id){ var f=avisosFallidos(); if(f[id] && +f[id].ts<=t0){ delete f[id]; grabaAvisosFallidos(f); } }
+      return true; }); })
+    .catch(function(e){ return mal((e&&e.message)||"sin red"); });
+  }catch(e){ return Promise.resolve(mal(e.message)); }
 }
+/* reintenta lo que no llegó; un aviso único ya pasado no se manda (sonaría de golpe) */
+function reintentaAvisosFallidos(){
+  var f=avisosFallidos(), ids=Object.keys(f); if(!ids.length) return Promise.resolve(0);
+  if(window.__reintAvisos) return window.__reintAvisos;
+  var ahora=hoy()+" "+nowHM()+":00", pasados=[];
+  window.__reintAvisos=ids.reduce(function(p, id){ return p.then(function(){
+    var x=f[id]; if(!x || !x.cuerpo) return;
+    if(x.accion==="aviso_set" && !x.cuerpo.cada && String(x.cuerpo.cuando||"")<=ahora){ pasados.push([id, x.ts]); return; }
+    return Promise.resolve(llamaPush(x.accion, x.cuerpo)).then(function(ok){
+      if(ok && x.accion==="aviso_set"){ var mm=memAv(); mm[id]={sig:sigAviso(x.cuerpo), ts:Date.now()}; guardaMemAv(); } }); }); }, Promise.resolve())
+    .then(function(){ if(pasados.length){ var g=avisosFallidos(); pasados.forEach(function(p){ if(g[p[0]] && g[p[0]].ts===p[1]) delete g[p[0]]; }); grabaAvisosFallidos(g); }
+      window.__reintAvisos=null; return Object.keys(avisosFallidos()).length; }, function(){ window.__reintAvisos=null; return -1; });
+  return window.__reintAvisos;
+}
+try{ window.addEventListener("online", function(){ try{ reintentaAvisosFallidos(); }catch(e){} }); }catch(e){}
 function fallaPush(m){
   window.__fallasPush=(window.__fallasPush||[]); window.__fallasPush.push(m);
   try{ console.error("push", m); }catch(_e){}
@@ -1353,8 +1381,12 @@ function avisoAlServidor(t, a, key){
   /* build 263: el mismo aviso no se vuelve a mandar en cada guardado ni en cada arranque: solo si cambió o pasó un día (para sanar el servidor) */
   var sg=sigAviso(cuerpo), ya=mm[kk];
   if(ya && ya.sig===sg && Date.now()-(+ya.ts||0)<20*3600000) return;
-  mm[kk]={sig:sg, ts:Date.now()}; guardaMemAv();
-  llamaPush("aviso_set", cuerpo);
+  /* se da por mandado SOLO cuando el servidor lo confirma; mientras va en camino no se manda otra vez */
+  var vuelo=window.__avisoEnVuelo||(window.__avisoEnVuelo={}); if(vuelo[kk]===sg) return; vuelo[kk]=sg;
+  return Promise.resolve(llamaPush("aviso_set", cuerpo)).then(function(ok){
+    if(vuelo[kk]===sg) delete vuelo[kk];
+    if(ok){ var m2=memAv(); m2[kk]={sig:sg, ts:Date.now()}; guardaMemAv(); }
+    return ok; });
 }
 /* una vez por arranque: sube los avisos FUTUROS de mis tareas vivas, para los
    que se crearon antes de este arreglo y nunca llegaron al servidor */
@@ -1366,7 +1398,7 @@ function subeAvisosPendientes(){
   });
 }
 function sincronizaAvisos(t){
-  if(!db||!t) return;
+  if(!t) return;   /* también sin Firestore: en MySQL los avisos igual van a push.php */
   var cerr=!!(t.cierre) || !!t.fusionada_en || estadoReal(t)==="cerrada" || esDormida(t);   /* build 155: una fusionada no suena */
   var av=cerr?[]:avisosDe(t);
   var ahora=av.map(function(a){ return claveAviso(t,a); });

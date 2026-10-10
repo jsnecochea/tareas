@@ -1170,8 +1170,13 @@ SEMILLA.forEach(function(t){
 });
 
 /* ============ FOTOS: EXIF primero, luego comprimir ============ */
+/* cb se llama SIEMPRE una vez: si el archivo no se puede leer (FileReader con error, iCloud sin bajar) se sigue sin EXIF,
+   en vez de quedarse en «Comprimiendo…» */
 function leerExif(file,cb){
-  var fr=new FileReader();
+  var listo=false, sale=function(out){ if(listo) return; listo=true; try{ out.tomada=out.tomada||(file&&file.lastModified?new Date(file.lastModified).toISOString():null); }catch(e){} cb(out); };
+  var fr; try{ fr=new FileReader(); }catch(e){ sale({}); return; }
+  fr.onerror=function(){ sale({error_lectura:true}); };
+  fr.onabort=function(){ sale({error_lectura:true}); };
   fr.onload=function(e){
     var out={};
     try{
@@ -1185,11 +1190,16 @@ function leerExif(file,cb){
       }
     }catch(err){}
     out.tomada=file.lastModified?new Date(file.lastModified).toISOString():null;
-    cb(out);
+    sale(out);
   };
-  fr.readAsArrayBuffer(file.slice(0,131072));
+  try{ fr.readAsArrayBuffer(file.slice(0,131072)); }catch(e){ sale({error_lectura:true}); }
 }
-function comprime(file,cb){
+var FOTO_TOPE_MS=20000;
+function comprime(file,cb0){
+  /* una sola respuesta y con tope: la ubicación (iOS puede no contestar nunca si el permiso queda en el aire) o una
+     imagen que no termina de cargar no dejan la foto en «Comprimiendo…» */
+  var listo=false, tm=setTimeout(function(){ cb(null, {}); }, FOTO_TOPE_MS);
+  var cb=function(data, meta){ if(listo) return; listo=true; clearTimeout(tm); cb0(data, meta); };
   leerExif(file,function(meta){
     var img=new Image(), url=URL.createObjectURL(file);
     img.onload=function(){
@@ -1200,10 +1210,11 @@ function comprime(file,cb){
       URL.revokeObjectURL(url);
       var data=c.toDataURL("image/jpeg",0.62);
       if(navigator.geolocation){
-        navigator.geolocation.getCurrentPosition(function(p){
+        var sinUbic=setTimeout(function(){ cb(data,meta); }, 6000);
+        try{ navigator.geolocation.getCurrentPosition(function(p){ clearTimeout(sinUbic);
           meta.lat=+p.coords.latitude.toFixed(5); meta.lon=+p.coords.longitude.toFixed(5);
           cb(data,meta);
-        },function(){cb(data,meta)},{timeout:4000,maximumAge:60000});
+        },function(){ clearTimeout(sinUbic); cb(data,meta); },{timeout:4000,maximumAge:60000}); }catch(e){ clearTimeout(sinUbic); cb(data,meta); }
       } else cb(data,meta);
     };
     img.onerror=function(){URL.revokeObjectURL(url);cb(null,meta)};
@@ -1385,12 +1396,15 @@ function leeEnVoz(texto, boton){
     /* leyendo = rojo + ícono de PAUSA (para que se vea que puedes pausar);
        en reposo = verde + play. Salvador 2026-09-17. */
     var vuelvePlay=function(b){ if(b){ b.classList.remove("on"); b.innerHTML=svgPlay(); } };
-    if(S.speaking || window.__leyendo){ S.cancel(); window.__leyendo=false;
+    if(S.speaking || window.__leyendo){ S.cancel(); window.__leyendo=false; window.__leyU=null; clearTimeout(window.__leyWd);
       vuelvePlay(window.__leyBtn); return; }
     var u=new SpeechSynthesisUtterance(String(texto||"")); u.lang="es-MX"; u.rate=1;
     try{ var v=_leeVoz(); if(v){ u.voice=v; u.lang=v.lang||"es-MX"; } u.pitch=vozTono(); }catch(e){}
-    u.onend=function(){ window.__leyendo=false; vuelvePlay(boton); };
-    u.onerror=function(){ window.__leyendo=false; vuelvePlay(boton); };
+    /* vigía: si el motor de voz no avisa que terminó (se traba en iOS), el botón no se queda en pausa para siempre */
+    clearTimeout(window.__leyWd);
+    var termina=function(){ clearTimeout(window.__leyWd); if(window.__leyU!==u) return; window.__leyendo=false; window.__leyU=null; vuelvePlay(boton); };
+    u.onend=termina; u.onerror=termina;
+    window.__leyU=u; window.__leyWd=setTimeout(function(){ if(window.__leyU===u){ try{ S.cancel(); }catch(e){} termina(); } }, vigiaVoz(texto));
     window.__leyendo=true; window.__leyBtn=boton;
     if(boton){ boton.classList.add("on"); boton.innerHTML=svgPausa(); }
     S.cancel(); S.speak(u);

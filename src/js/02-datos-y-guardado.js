@@ -266,9 +266,12 @@ function pintaBloqueado(mail){
 /* CERRAR SESIÓN (⋯ del inicio y Tu cuenta). La sesión de Google vive dentro de la app instalada y sobrevive
    a reinstalarla, así que sin este botón nadie podía cambiar de cuenta. Antes de salir se intenta subir lo
    que quedó en la cola de MySQL (con tope, para no colgarse sin red); luego se limpia lo LOCAL de la sesión
-   (usuario, cola, motor de prueba, liga pendiente, caché de Firestore) y se recarga en el login. En el
-   servidor no se borra nada. */
-var SESION_LOCAL=["bit_u","doit_cola_mysql","doit_motor_tareas","bit_alta"];
+   (usuario, motor de prueba, liga pendiente, caché de Firestore) y se recarga en el login. En el servidor no se borra nada.
+   LO QUE NO SUBIÓ NO SE PIERDE: si tras el intento quedan cambios en la cola, se dice cuántos y se deja elegir entre
+   quedarse (sigue reintentando) o salir dejándolos apartados en este teléfono para cuando esa misma cuenta vuelva a
+   entrar (datosTareas.aparta / recupera). La cola nunca se borra a ciegas. */
+var SESION_LOCAL=["bit_u","doit_motor_tareas","bit_alta"];
+var MSG_SIN_SUBIR="Quedan N cambios sin subir al servidor (no hay señal o el servidor no contestó).\n\nAceptar: salir y dejarlos guardados en este teléfono; se suben cuando vuelvas a entrar con tu cuenta.\nCancelar: quedarme; se siguen intentando subir.";
 function cerrarSesion(sinPreguntar){
   if(!sinPreguntar){
     var pend=0; try{ pend=datosTareas.pendientes(); }catch(e){}
@@ -278,21 +281,37 @@ function cerrarSesion(sinPreguntar){
   }
   try{ toast("Cerrando sesión…"); }catch(e){}
   var tope=function(p, ms){ return Promise.race([p, new Promise(function(ok){ setTimeout(ok, ms); })]).catch(function(){}); };
+  var quien=yo;
   var sube=Promise.resolve(); try{ sube=tope(datosTareas.vacia(), 4000); }catch(e){}
   return sube.then(function(){
-    try{ datosTareas.para(); }catch(e){}
-    try{ SESION_LOCAL.forEach(function(k){ localStorage.removeItem(k); }); }catch(e){}
-    try{ olvidaLigaTarea(); }catch(e){}
-    var fa=null; try{ fa=firebase.auth(); }catch(e){}
-    return tope(fa ? fa.signOut() : Promise.resolve(), 4000);
-  }).then(function(){
-    var fs=null; try{ fs=firebase.firestore(); }catch(e){}
-    if(fs && typeof fs.terminate==="function" && typeof fs.clearPersistence==="function")
-      return tope(fs.terminate().then(function(){ return fs.clearPersistence(); }), 3000);
-  }).then(function(){
-    yo=null;
-    try{ location.replace(location.pathname); }catch(e){ location.reload(); }
+    var quedan=0; try{ quedan=datosTareas.pendientes(); }catch(e){}
+    if(quedan){
+      var n=quedan+" cambio"+(quedan===1?"":"s");
+      if(!sinPreguntar && !window.confirm(MSG_SIN_SUBIR.replace("N cambios", n))){
+        try{ toast("Sigues dentro: "+n+" sin subir, reintento solo"); }catch(e){}
+        try{ datosTareas.vacia().catch(function(){}); }catch(e){}
+        return false;
+      }
+      try{ datosTareas.aparta(quien); }catch(e){}
+    } else { try{ localStorage.removeItem("doit_cola_mysql"); }catch(e){} }   /* vacía: no hay nada que guardar */
     return true;
+  }).then(function(sale){
+    if(!sale) return false;
+    return Promise.resolve().then(function(){
+      try{ datosTareas.para(); }catch(e){}
+      try{ SESION_LOCAL.forEach(function(k){ localStorage.removeItem(k); }); }catch(e){}
+      try{ olvidaLigaTarea(); }catch(e){}
+      var fa=null; try{ fa=firebase.auth(); }catch(e){}
+      return tope(fa ? fa.signOut() : Promise.resolve(), 4000);
+    }).then(function(){
+      var fs=null; try{ fs=firebase.firestore(); }catch(e){}
+      if(fs && typeof fs.terminate==="function" && typeof fs.clearPersistence==="function")
+        return tope(fs.terminate().then(function(){ return fs.clearPersistence(); }), 3000);
+    }).then(function(){
+      yo=null;
+      try{ location.replace(location.pathname); }catch(e){ location.reload(); }
+      return true;
+    });
   });
 }
 /* LA MAÑA DE IPHONE: dentro de la app instalada, el camino por redirect es
@@ -403,12 +422,17 @@ function pasoAvisos(cont){
     activaAvisos(function(ok,m){ cont(); if(m) toast(m) });
   };
 }
-function entrar(u){ yo=u; $("gate").classList.remove("on"); $("app").style.display="flex"; arranca();
+function entrar(u){ yo=u; $("gate").classList.remove("on"); $("app").style.display="flex";
+  try{ var _rec=datosTareas.recupera(u); if(_rec) setTimeout(function(){ toast(_rec+" cambio"+(_rec===1?"":"s")+" que dejaste sin subir: los subo ahora"); }, 1200); }catch(e){}
+  arranca();
   /* Salvador 2026-09-22: re-mandar la suscripcion push al servidor en cada
      arranque, por si se reinstalo la app y el servidor la perdio. Silencioso. */
   setTimeout(function(){ resincronizaAvisos(); }, 2500);
   /* y los avisos que nunca llegaron al servidor nuevo (2026-09-23) */
-  setTimeout(function(){ try{ subeAvisosPendientes(); }catch(e){} }, 9000);
+  setTimeout(function(){ try{ subeAvisosPendientes(); }catch(e){} try{ reintentaAvisosFallidos(); }catch(e){} try{ reintentaWAFallidos(); }catch(e){} }, 9000);
+  /* lo que no llegó al servidor (avisos, WhatsApp automáticos) se reintenta solo mientras la app está abierta */
+  if(!window.__ciclo_reintentos) window.__ciclo_reintentos=setInterval(function(){ if(!yo) return;
+    try{ reintentaAvisosFallidos(); }catch(e){} try{ reintentaWAFallidos(); }catch(e){} }, AVISOS_REINTENTO_MS);
   setTimeout(function(){ try{ limpiaWABasura(); }catch(e){} }, 11000);
   /* build 136: le dice al servidor que este usuario acaba de ver la app, para
      que no le repita por push lo que ya vio (Carlos: nunca se llamaba visto) */
@@ -664,6 +688,43 @@ function pideWhatsApp(cuerpo){
       if(!r.ok || (j&&j.error)) throw new Error((j&&j.error)||("HTTP "+r.status)); return j; }); });
 }
 
+/* WHATSAPP QUE LA APP MANDA SOLA (agradecer una meta aprobada, avisar una fecha nueva o una autorización): nadie está
+   viendo la pantalla para dictarlo otra vez, así que si wa_pedido falla no se traga el error. En la tarea queda un renglón
+   claro («no salió, reintento») y el pedido se guarda en este teléfono (WA_FALLIDOS_K) para reintentarlo al arrancar, al
+   volver la red y cada AVISOS_REINTENTO_MS; si sale, el renglón lo dice; si en WA_FALLIDOS_VENCE_MS no salió, se deja de
+   intentar (un mensaje de hace un día ya no sirve) y la tarea dice que no salió. */
+var WA_FALLIDOS_K="doit_wa_fallidos", WA_FALLIDOS_VENCE_MS=24*3600000;
+function waFallidos(){ var a=[]; try{ a=JSON.parse(localStorage.getItem(WA_FALLIDOS_K)||"[]")||[]; }catch(e){ a=[]; } return Array.isArray(a)?a:[]; }
+function grabaWAFallidos(a){ try{ if(a.length) localStorage.setItem(WA_FALLIDOS_K, JSON.stringify(a)); else localStorage.removeItem(WA_FALLIDOS_K); }catch(e){} }
+function tareaWA(id){ return (typeof tareas!=="undefined" && tareas || []).filter(function(x){ return x && x.id===id; })[0]||null; }
+function notaWA(t, id){ return t ? (t.msgs||[]).filter(function(m){ return m && m.wa_nota===id; })[0]||null : null; }
+function pideWhatsAppAuto(t, cuerpo){
+  var id="waf"+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36);
+  return pideWhatsApp(cuerpo).then(function(){ return true; }, function(e){
+    var err=String((e&&e.message)||e||"sin red").slice(0,60), quien=String(cuerpo.contacto||"el contacto");
+    if(t){ msg(t,"bi","⚠️ El WhatsApp a "+quien+" no salió ("+err+") · reintento solo"); var m=t.msgs[t.msgs.length-1]; m.canal="priv:"+(yo||""); m.nota_ia=1; m.wa_nota=id; m.wa_falla=1; guarda(t);
+      try{ if(vista==="hilo" && abierta===t.id) render(); }catch(_r){} }
+    var a=waFallidos(); a.push({id:id, tarea_id:t?t.id:"", cuerpo:cuerpo, ts:Date.now(), n:1, err:err}); grabaWAFallidos(a);
+    return false; });
+}
+function reintentaWAFallidos(){
+  var a=waFallidos(); if(!a.length) return Promise.resolve(0);
+  if(window.__reintWA) return window.__reintWA;
+  var ahora=Date.now();
+  window.__reintWA=a.reduce(function(p, x){ return p.then(function(){
+    var t=tareaWA(x.tarea_id), m=notaWA(t, x.id), quien=String((x.cuerpo&&x.cuerpo.contacto)||"el contacto");
+    var quita=function(){ grabaWAFallidos(waFallidos().filter(function(y){ return y.id!==x.id; })); };
+    if(ahora-(+x.ts||0)>WA_FALLIDOS_VENCE_MS){ quita();
+      if(m){ m.t="⚠️ El WhatsApp a "+quien+" no salió y ya no lo mando (pasó un día); díctalo otra vez si sigue haciendo falta."; delete m.wa_falla; m.wa_vencido=1; guarda(t); }
+      return; }
+    return pideWhatsApp(x.cuerpo).then(function(j){ quita();
+      if(m){ m.t="✓ El WhatsApp a "+quien+" ya salió (en el reintento)."; delete m.wa_falla; var pid=(j&&(j.id||j.pedido_id))||null; if(pid) m.wa_pid=pid; guarda(t); } },
+      function(e){ var b=waFallidos(); b.forEach(function(y){ if(y.id===x.id){ y.n=(+y.n||1)+1; y.err=String((e&&e.message)||e||"").slice(0,60); } }); grabaWAFallidos(b); }); }); }, Promise.resolve())
+    .then(function(){ window.__reintWA=null; try{ if(vista==="hilo") render(); }catch(e){} return waFallidos().length; }, function(){ window.__reintWA=null; return -1; });
+  return window.__reintWA;
+}
+try{ window.addEventListener("online", function(){ try{ reintentaWAFallidos(); }catch(e){} }); }catch(e){}
+
 /* @@DATOS-TAREAS-INICIO
    CAPA DE DATOS DE TAREAS. Toda lectura y escritura de bitacora_tareas pasa por aquí, con dos motores:
    "firestore" (el de siempre) y "mysql" (push.php: fs_lista, fs_doc, fs_set, msg_agregar, hay_nuevo).
@@ -721,6 +782,7 @@ function mezclaFirestore(M, F){
 }
 var MYSQL_CADA_MS=20000;                       /* cada cuánto se vuelve a leer la lista en MySQL */
 var MYSQL_REINTENTOS_MS=[2000,5000,15000,60000];
+var MYSQL_TOPE_LISTA_MS=30000;
 var datosTareas=(function(){
   var COLA_KEY="doit_cola_mysql", MOTOR_KEY="doit_motor_tareas";
   var cola=null, reintento=null, intento=0, sub=null, ultimoJSON="";
@@ -740,6 +802,7 @@ var datosTareas=(function(){
     Object.keys(params||{}).forEach(function(k){ if(params[k]!=null && params[k]!=="") q+="&"+k+"="+encodeURIComponent(params[k]); });
     var op={method:cuerpo?"POST":"GET", headers:{"x-app-token":APP_TOKEN,"x-usuario":yo||"anonimo"}};
     if(cuerpo){ op.headers["content-type"]="application/json"; op.body=JSON.stringify(cuerpo); }
+    if(accion==="fs_lista") op.tope=MYSQL_TOPE_LISTA_MS;   /* la lista completa (hasta 1000 tareas) tarda más que una sola */
     return llamaServidor(PUSH+q, op).then(function(r){
       return r.json().catch(function(){ return {}; }).then(function(j){
         if(r.status===404 && accion==="fs_doc") return null;
@@ -843,20 +906,50 @@ var datosTareas=(function(){
       return llama("fs_set", {col:COL}, {col:COL, id:id, data:data, merge:true}).then(function(){ return Object.assign({}, S, data); });
     });
   }
+  /* UNA SUBIDA A LA VEZ. Dos guardados casi juntos llamaban a vacia() en paralelo: las dos releían la tarea y
+     escribían, y si la vieja llegaba al último pisaba a la nueva. Ahora, si ya hay una subida en camino, la siguiente
+     espera a que termine y luego vuelve a vaciar: así lo más reciente siempre sale después. */
+  var enVuelo=null;
   function vacia(){
+    if(enVuelo) return enVuelo.then(function(){ return vacia(); });
+    enVuelo=vaciaUnaVez().then(function(r){ enVuelo=null; pintaSinSubir(); return r; }, function(e){ enVuelo=null; pintaSinSubir(e); throw e; });
+    return enVuelo;
+  }
+  function vaciaUnaVez(){
     var c=leeCola(), ids=Object.keys(c);
     if(!ids.length){ intento=0; return Promise.resolve(true); }
     return ids.reduce(function(p, id){
       return p.then(function(){
         var mandado=c[id]; if(!mandado) return;
-        return subeUna(id, entrada(mandado)).then(function(nuevo){
-          if(c[id]===mandado){ delete c[id]; grabaCola(); }   /* si cambió mientras subía, se queda la versión nueva */
+        var ent=entrada(mandado);
+        return subeUna(id, ent).then(function(nuevo){
+          if(c[id]===mandado){ delete c[id]; grabaCola(); }
+          else if(c[id]){
+            /* cambió mientras subía: se queda la versión nueva, medida contra lo que se acaba de escribir (no contra la
+               base de antes), para que su subida no lo cuente como choque consigo misma */
+            var e2=entrada(c[id]);
+            Object.keys(ent.cambios).forEach(function(k){ if(k in e2.base) e2.base[k]=copia(nuevo && (k in nuevo) ? nuevo[k] : ent.cambios[k]); });
+            c[id]=e2; grabaCola(); }
           if(nuevo){ var b=copia(nuevo); delete b.id; bases[id]=b; }
         });
       });
     }, Promise.resolve()).then(function(){ intento=0; return true; }, function(e){
       programaReintento(); throw e;
     });
+  }
+  /* «N cambios sin subir»: un renglón discreto mientras el servidor no los ha recibido (sin red o rechazo); se quita
+     solo al subir. Sin token (app sin publicar, pruebas) no hay servidor al que subir y no se pinta. */
+  function pintaSinSubir(err){
+    try{
+      var n=Object.keys(leeCola()).length, el=document.getElementById("sinsubir");
+      if(!n || !hayToken() || motor()!=="mysql"){ if(el) el.remove(); return; }
+      if(!err && navigator.onLine!==false){ if(el) el.remove(); return; }
+      if(!el){ el=document.createElement("button"); el.id="sinsubir"; el.type="button"; el.className="sinsubir";
+        el.onclick=function(){ el.textContent="Subiendo…"; vacia().then(function(){ toast("Listo: ya se subió todo"); }, function(){ toast("Todavía no se pudo subir; reintento solo"); }); };
+        document.body.appendChild(el); }
+      el.textContent=n+" cambio"+(n===1?"":"s")+" sin subir";
+      el.setAttribute("aria-label", n+" cambio"+(n===1?"":"s")+" sin subir al servidor; toca para reintentar");
+    }catch(e){}
   }
   function programaReintento(){
     if(reintento) return;
@@ -951,6 +1044,8 @@ var datosTareas=(function(){
         if(!vivo.falla){ vivo.falla=true; try{ toast("No se pudieron leer las tareas del servidor; reintento solo"); }catch(_t){} }
         if(alFallar) alFallar(e);
       })
+      /* la siguiente vuelta se programa SIEMPRE: si pintar o avisar truena, la lista no se queda congelada */
+      .then(null, function(e){ try{ console.warn("lectura de tareas", e); }catch(_e){} })
       .then(function(){ if(sub===vivo) vivo.timer=setTimeout(vuelta, MYSQL_CADA_MS); });
     }
     /* primero se junta lo que quedó solo en Firestore y luego se lee: así nunca se pinta (ni se edita) la versión vieja */
@@ -962,9 +1057,32 @@ var datosTareas=(function(){
   }
   function para(){ var s=sub; sub=null; if(!s) return; try{ if(s.tipo==="firestore"){ if(typeof s.fin==="function") s.fin(); } else s.fin(); }catch(e){} }
   try{ window.addEventListener("online", function(){ vacia().catch(function(){}); }); }catch(e){}
+  try{ window.addEventListener("offline", function(){ pintaSinSubir(); }); }catch(e){}
+  /* AL CERRAR SESIÓN CON CAMBIOS SIN SUBIR: la cola no se borra ni la sube otra cuenta (saldría con su nombre). Se
+     aparta para ESE usuario y regresa a la cola cuando él vuelve a entrar en este teléfono. */
+  var APARTE_KEY="doit_cola_mysql_de_";
+  function aparta(usuario){
+    var c=leeCola(); if(!usuario || !Object.keys(c).length) return 0;
+    var s=ls(), k=APARTE_KEY+usuario, prev={}; try{ prev=JSON.parse((s && s.getItem(k))||"{}")||{}; }catch(e){ prev={}; }
+    Object.keys(c).forEach(function(id){ prev[id]=c[id]; });
+    try{ if(s){ s.setItem(k, JSON.stringify(prev)); s.removeItem(COLA_KEY); } }catch(e){ return 0; }
+    cola={}; pintaSinSubir(); return Object.keys(prev).length;
+  }
+  function recupera(usuario){
+    var s=ls(), k=APARTE_KEY+usuario, ap=null; if(!usuario || !s) return 0;
+    try{ ap=JSON.parse(s.getItem(k)||"null"); }catch(e){ ap=null; }
+    if(!ap || typeof ap!=="object") return 0;
+    var c=leeCola(), n=0;
+    Object.keys(ap).forEach(function(id){ n++;
+      if(!c[id]){ c[id]=ap[id]; return; }
+      var a=entrada(ap[id]), b=entrada(c[id]);   /* lo apartado es más viejo: lo nuevo encima, la base más vieja manda */
+      c[id]={ __v:2, cambios:Object.assign({}, a.cambios, b.cambios), base:Object.assign({}, b.base, a.base) }; });
+    grabaCola(); try{ s.removeItem(k); }catch(e){}
+    return n;
+  }
   return { motor:motor, listar:listar, leer:leer, guardar:guardar, guardarCampos:guardarCampos, borrar:borrar,
            agregarMsg:agregarMsg, hayNuevo:hayNuevo, suscribir:suscribir, para:para, vacia:vacia, concilia:concilia,
-           pendientes:function(){ return Object.keys(leeCola()).length; } };
+           pendientes:function(){ return Object.keys(leeCola()).length; }, aparta:aparta, recupera:recupera, pintaSinSubir:pintaSinSubir };
 })();
 /* @@DATOS-TAREAS-FIN */
 
@@ -1166,7 +1284,10 @@ function guarda(t){
   /* CANDADO: un ejemplo se ve, pero NUNCA sube a la base que comparte el
      equipo. Y se dice, para que nadie crea que quedó guardado. */
   if(esEjemplo(t)){ toast("Es una tarea de ejemplo: no se guarda"); render(); return }
-  if(!db){render();return}
+  /* sin Firestore solo se corta si el motor tampoco es MySQL: en MySQL la tarea se guarda por push.php aunque
+     Firestore no haya arrancado (antes eso dejaba el cambio solo en pantalla) */
+  var _motor=""; try{ _motor=datosTareas.motor(); }catch(e){}
+  if(!db && _motor!=="mysql"){render();return}
   /* Red: se limpian los undefined antes de subir, y si Firestore truena en el
      acto se DICE (antes el error rompia todo lo que venia despues). 2026-09-23 */
   limpiaUndef(t);
