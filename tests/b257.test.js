@@ -68,7 +68,7 @@ eq("versión >= 257", +(html.match(/var VERSION_APP = "build (\d+)/) || [0, 0])[
     /* 4) Dato */
     var r6 = await p.evaluate(function () { lista([PR("p1", "Plano de la azotea"), NORMAL()]); document.querySelector('[data-p256="p1"] [data-p256a="dato"]').click(); return /Dato suelto/.test(document.body.innerText); });
     eq("Dato abre el selector con la opción 'Dato suelto'", r6, true);
-    await p.evaluate(function () { var els = [].slice.call(document.querySelectorAll("button")).filter(function (e) { return /Dato suelto/.test(e.textContent); }); els[0].click(); });
+    await p.evaluate(function () { var els = [].slice.call(document.querySelectorAll("button")).filter(function (e) { return /Dato suelto/.test(e.textContent); }); els[0].click(); var ok = document.querySelector('#nom249 [data-nom249="ok"]'); if (ok) ok.click(); });   /* el dato pide su nombre: se acepta el propuesto */
     var r7 = await p.evaluate(function () { var t = tareas.filter(function (x) { return x.id === "p1"; })[0]; return { dato: t.es_dato, tipo: t.tipo_item, te: t.tipo_elegido, es: esPropuesta(t) }; });
     eq("Dato: queda como dato (tipo_elegido) y deja de ser propuesta", r7, { dato: true, tipo: "dato", te: true, es: false });
     /* 5) No guardar -> descartada + popover */

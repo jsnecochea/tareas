@@ -15,7 +15,7 @@ var FB={apiKey:"AIzaSyCmEJj5Qkd3wWM-YM2jdjFX9C_GXx9TeIk",authDomain:"doit-cce6f.
 /* MARCA DE VERSION — para saber de un vistazo si la app trae los ultimos
    cambios. Se sube el numero en cada build. Si el engrane muestra un
    numero viejo, la app no se ha actualizado (publicador o cache). */
-var VERSION_APP = "build 319 · La bandeja de WhatsApp solo la ve Salvador";
+var VERSION_APP = "build 320 · Nombrar un dato desde la Bandeja";
 var PROXY="claude.php";
 var APP_TOKEN="__APP_TOKEN__";
 
@@ -1937,11 +1937,9 @@ function altaToken(){
   try{ return localStorage.getItem("bit_alta")||null }catch(e){ return null }
 }
 function nuevaLiga(cb){
-  if(!db){ cb(null,"Sin conexión"); return }
   var tk=uid()+uid();
-  db.collection(COLI).doc(tk).set({token:tk, por:yo, creada:Date.now(), usada:0})
-    .then(function(){ cb(location.origin+location.pathname+"?alta="+tk, null) })
-    .catch(function(){ cb(null,"No se pudo generar la liga") });
+  escribeDoble(COLI, tk, {token:tk, por:yo, creada:Date.now(), usada:0}, false)
+    .then(function(r){ if(r.ok) cb(location.origin+location.pathname+"?alta="+tk, null); else cb(null,"No se pudo generar la liga: sin conexión"); });
 }
 /* ¿la liga que trae este telefono es valida y esta sin usar? Si si, la QUEMA
    amarrandola a este correo y contesta true. */
@@ -2010,6 +2008,27 @@ function fichaCompleta(k){
   var p=PERSONAS[k];
   return !!(p && p.nombre && p.apellido && p.mail_trabajo);
 }
+/* ESCRITURA DOBLE. Encargos, suplencias, la ficha de cada quien y las ligas de alta todavía viven en Firestore, pero la Mac
+   y el servidor ya leen por push.php: se escriben en los dos lados (fs_set con su col=). Lo que la app le dice a la persona
+   («Le llegó a Samuel», «Listo») sale solo cuando al menos una de las dos escrituras confirmó; si fallan las dos, lo dice.
+   Firestore con caché local puede no contestar sin red: cada lado tiene tope. */
+var TOPE_ESCRITURA_MS=10000;
+function conTope(p, ms){ return new Promise(function(ok){ var t=setTimeout(function(){ ok(false); }, ms); p.then(function(v){ clearTimeout(t); ok(v); }, function(){ clearTimeout(t); ok(false); }); }); }
+function escribeEnServidor(col, id, data){
+  if(typeof APP_TOKEN==="undefined" || String(APP_TOKEN).indexOf("__")===0) return Promise.resolve(false);
+  return llamaServidor(PUSH+"?action=fs_set",{method:"POST", headers:{"content-type":"application/json","x-app-token":APP_TOKEN,"x-usuario":yo||"anonimo"},
+    body:JSON.stringify({col:col, id:id, data:data, merge:true})})
+    .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){ return !!(r.ok && !(j && j.error)); }); })
+    .catch(function(){ return false; });
+}
+function escribeDoble(col, id, data, merge){
+  var enFs=Promise.resolve(false);
+  try{ if(db){ var d=db.collection(col).doc(id); enFs=Promise.resolve(merge?d.set(data,{merge:true}):d.set(data)).then(function(){ return true; }); } }catch(e){ enFs=Promise.resolve(false); }
+  return Promise.all([conTope(enFs, TOPE_ESCRITURA_MS), conTope(escribeEnServidor(col, id, data), TOPE_ESCRITURA_MS)])
+    .then(function(r){ return {fs:!!r[0], srv:!!r[1], ok:!!(r[0]||r[1])}; });
+}
+/* el toast de «le llegó» espera a que la escritura confirme */
+function avisaSiLlego(p, siOk, siNo){ return Promise.resolve(p).then(function(r){ toast(r && r.ok ? siOk : siNo); return r; }); }
 function guardaFicha(k, d){
   var p=PERSONAS[k]; if(!p) return;
   p.nombre=String(d.nombre||"").trim()||p.nombre;
@@ -2017,11 +2036,11 @@ function guardaFicha(k, d){
   p.mail_trabajo=String(d.mail_trabajo||"").trim();
   p.mail_personal=String(d.mail_personal||"").trim();
   p.ini=iniciales(p.nombre, p.apellido);
-  if(db) db.collection(COLP).doc(k).set({
+  return escribeDoble(COLP, k, {
     nombre:p.nombre, apellido:p.apellido,
     mail_trabajo:p.mail_trabajo, mail_personal:p.mail_personal,
     ini:p.ini, tocada:Date.now()
-  },{merge:true}).catch(function(){ toast("No se pudo guardar tu ficha") });
+  }, true);
 }
 var encargos=[], suplencias={};
 
@@ -2045,7 +2064,8 @@ function creaEncargo(para, texto, tareaId, limite){
   }
   return e;
 }
-function guardaEncargo(e){ if(db) db.collection(COLE).doc(e.id).set(e).catch(function(){}) }
+var ENC_ESCRITURA={};   /* id del encargo -> promesa de su última escritura (para avisar «le llegó» solo si confirmó) */
+function guardaEncargo(e){ var p=escribeDoble(COLE, e.id, e, false); ENC_ESCRITURA[e.id]=p; return p; }
 
 function marcaVistoEncargo(e){ if(!e.visto){ e.visto=Date.now(); guardaEncargo(e) } }
 
@@ -2092,11 +2112,15 @@ function noLeContestan(persona){
 function ponSuplencia(persona, desde, hasta, suplente, tope, arriba){
   suplencias[persona]={desde:desde,hasta:hasta,suplente:suplente,
     tope:Number(tope)||0, arriba:arriba||"espera"};
-  if(db) db.collection(COLS).doc(persona).set(suplencias[persona]).catch(function(){});
+  return escribeDoble(COLS, persona, suplencias[persona], false);
 }
 function quitaSuplencia(persona){
   delete suplencias[persona];
-  if(db) db.collection(COLS).doc(persona).delete().catch(function(){});
+  var fs=Promise.resolve(false);
+  try{ if(db) fs=Promise.resolve(db.collection(COLS).doc(persona).delete()).then(function(){ return true; }); }catch(e){}
+  /* push.php no borra documentos: se deja la suplencia vacía y con la hora en que se quitó */
+  var srv=escribeEnServidor(COLS, persona, {desde:"", hasta:"", suplente:"", quitada:Date.now()});
+  return Promise.all([conTope(fs, TOPE_ESCRITURA_MS), conTope(srv, TOPE_ESCRITURA_MS)]).then(function(r){ return {fs:!!r[0], srv:!!r[1], ok:!!(r[0]||r[1])}; });
 }
 function estaFuera(persona){
   var s=suplencias[persona]; if(!s) return false;

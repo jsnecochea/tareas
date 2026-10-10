@@ -744,14 +744,20 @@ function cierraPreg(){ var v=document.getElementById("preg249"); if(v){ try{ cle
 function abrePreguntas(tid, opt){
   var t=(tareas||[]).filter(function(z){ return z.id===tid; })[0]; if(!t) return;
   var P=preguntas249(t), _sf273=false; if(!P.length){ P=faltaComoPreg(t); _sf273=true; } if(!P.length) return;   /* build 273: sin preguntas precisas, lo que falta */
+  /* si falta agendar, el renglón va siempre (con Sí / No), también junto a las preguntas precisas, que no lo traen */
+  try{ if(!P.some(function(p){ return p.k==="agenda273"; }) && completitud(t).items.some(function(x){ return x.k==="agenda" && !x.ok; }) && eventoPendiente(t))
+    P=P.concat([{k:"agenda273", q:"¿Te lo agendo?", ops:[]}]); }catch(e){}
   var ya=document.getElementById("preg249"); if(ya){ try{ clearInterval(ya.__iv); }catch(e){} ya.remove(); }
   window.__preg255=tid; window.__pq255Last=tid;
   var v=document.createElement("div"); v.className="pq255"; v.id="preg249"; if(_sf273) v.setAttribute("data-falta273","1");
   v.innerHTML='<div class="pq255c" role="dialog" aria-label="Preguntas de Claude"><button class="pq255x" data-pq255="later" aria-label="Cerrar">'+ico("x",16)+'</button>'+
     '<h3>Contéstame por favor estas preguntas sobre <b>'+esc(t.nombre||"esta tarea")+'</b></h3>'+
     '<ol class="pq255l">'+P.map(function(p){ var ex=(p.k==="persona")?(p.cands||[]).map(function(c){ return c.nombre; }):(p.ops||[]).map(function(o){ return o.label; });
-      return '<li>'+esc(p.q)+(ex.length?'<small>('+esc(ex.join(" · "))+')</small>':'')+'</li>'; }).join("")+'</ol>'+
+      /* agendar se contesta también con un toque: sin micrófono (caminando, o con el permiso bloqueado) no había cómo */
+      var ag=p.k==="agenda273"?'<span class="pq255ag"><button data-pqag="si">Sí, agéndalo</button><button data-pqag="no">No</button></span>':'';
+      return '<li>'+esc(p.q)+(ex.length?'<small>('+esc(ex.join(" · "))+')</small>':'')+ag+'</li>'; }).join("")+'</ol>'+
     '<button class="pq255m" data-pq255="mic">'+ico("mic",28,1.7)+'<span>Toca y contesta con tu voz</span></button>'+
+    '<p class="pq255o">o escríbela en la caja de abajo</p>'+
     '<button class="pq255d" data-pq255="later">Después</button></div>';
   document.body.appendChild(v);
   /* la barra normal (cuadro + micrófono) queda libre abajo: el bloque se detiene justo arriba de ella */
@@ -759,6 +765,12 @@ function abrePreguntas(tid, opt){
     v.style.bottom=Math.max(h,h2,60)+"px"; v.classList.toggle("oyendo255", !!window.__oyendo); };
   ajusta(); v.__iv=setInterval(ajusta, 300);
   v.addEventListener("click", function(ev){
+    var ag=ev.target.closest("[data-pqag]");
+    if(ag){ ev.stopPropagation(); var T=(tareas||[]).filter(function(z){ return z.id===tid; })[0]; if(!T) return; cierraPreg();
+      if(ag.getAttribute("data-pqag")==="si"){ var _ev=eventoDe(T); if(agendaEvento(T, "", !(_ev&&_ev.hora))) toast("Agendado"); }
+      else { noAgendar(T); toast("No lo agendo"); }
+      if(!document.getElementById("preg249") && (preguntas249(T).length || faltaComoPreg(T).length)) abrePreguntas(tid);
+      return; }
     if(ev.target.closest("[data-pq255='mic']")){ ev.stopPropagation(); var m=document.getElementById("tmic"); if(m && !window.__oyendo) m.click(); return; }
     if(ev.target.closest("[data-pq255='later']") || ev.target===v){ ev.stopPropagation(); if(window.__oyendo){ try{ paraDictadoHilo(); cierraDictado(); }catch(e){} } cierraPreg(); } });
   /* build 265: el micrófono ya NO arranca solo; Salvador lo toca (o escribe) para contestar */

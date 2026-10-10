@@ -352,18 +352,23 @@ function sugerenciaNombre(t, ixs){
     if(_nn(n)===orig) n="Nueva: "+n; }
   return n.slice(0,60);
 }
-function pideNombreNueva(t, ixs, alCrear){
-  var ya=document.getElementById("nom249"); if(ya) ya.remove();
+/* Ventanita para nombrar lo que nace del acomodo (tarea nueva o dato). Vive en <body>, fuera de #app, para que ningún
+   render() de fondo (sondeo del servidor, respuesta de Claude) la borre mientras se escribe.
+   op.dato: «Dato nuevo» en vez de «Tarea nueva»; op.valor: nombre propuesto; op.boton: texto del botón; op.alCancelar. */
+function pideNombreNueva(t, ixs, alCrear, op){
+  op=op||{}; var ya=document.getElementById("nom249"); if(ya) ya.remove();
+  var tit=op.dato?"Dato nuevo":"Tarea nueva", et=op.dato?"Nombre del dato":"Nombre de la tarea nueva";
   var v=document.createElement("div"); v.className="leemask"; v.id="nom249";
-  v.innerHTML='<div class="nom249" role="dialog" aria-label="Tarea nueva"><h3>Tarea nueva</h3><label for="nom249i">Nombre de la tarea nueva</label>'+
+  v.innerHTML='<div class="nom249" role="dialog" aria-label="'+esc(tit)+'"><h3>'+esc(tit)+'</h3><label for="nom249i">'+esc(et)+'</label>'+
     '<div class="row252"><input id="nom249i" type="text" maxlength="80" autocomplete="off" autocapitalize="sentences" enterkeyhint="done">'+micBtn()+'</div>'+
-    '<div class="nom249b"><button class="no" data-nom249="x">Cancelar</button><button class="si" data-nom249="ok">Crear</button></div></div>';
+    '<div class="nom249b"><button class="no" data-nom249="x">Cancelar</button><button class="si" data-nom249="ok">'+esc(op.boton||(op.dato?"Guardar":"Crear"))+'</button></div></div>';
   document.body.appendChild(v);
-  var inp=v.querySelector("#nom249i"); inp.value=sugerenciaNombre(t, ixs);
-  enfoca252(inp); try{ inp.setSelectionRange(inp.value.length, inp.value.length); }catch(e){}   /* build 252: focus SÍNCRONO, dentro del toque que abrió la ventanita (iOS) */
+  var inp=v.querySelector("#nom249i"); inp.value=(op.valor!=null && String(op.valor).trim())?String(op.valor).trim():sugerenciaNombre(t, ixs);
+  enfoca252(inp); try{ inp.setSelectionRange(inp.value.length, inp.value.length); }catch(e){}   /* focus SÍNCRONO, dentro del toque que abrió la ventanita: iOS solo así saca el teclado */
+  function cancela(){ paraDictadosCampo(v); v.remove(); if(op.alCancelar) try{ op.alCancelar(); }catch(e){} }
   function crea(){ var nm=String(inp.value||"").replace(/\s+/g," ").trim(); if(!nm){ toast("Ponle un nombre"); return; } paraDictadosCampo(v); v.remove(); alCrear(nm.slice(0,80)); }
   v.addEventListener("click", function(ev){ ev.stopPropagation(); var mb=ev.target.closest("[data-mic252]"); if(mb){ dictaACampo(mb, inp); return; } var b=ev.target.closest("[data-nom249]");
-    if(b){ if(b.getAttribute("data-nom249")==="ok") crea(); else { paraDictadosCampo(v); v.remove(); } return; } if(ev.target===v){ paraDictadosCampo(v); v.remove(); } });
+    if(b){ if(b.getAttribute("data-nom249")==="ok") crea(); else cancela(); return; } if(ev.target===v) cancela(); });
   inp.addEventListener("keydown", function(ev){ if(ev.key==="Enter"){ ev.preventDefault(); crea(); } });
 }
 function tareaNuevaDe(t, ixs){ for(var i=0;i<ixs.length;i++){ var m=(t.msgs||[])[ixs[i]]; if(m && m.movido_a && m.movido_a.id){ var d=tareas.filter(function(z){ return z.id===m.movido_a.id; })[0]; if(d) return d; } } return null; }
@@ -876,8 +881,8 @@ function moverG(t, ixs, did){
   return n?(n===1?"Lo moví":"Moví los "+n)+" a “"+(d.nombre||"la otra tarea")+"”. Aquí quedan ocultos, no borrados.":"";
 }
 /* build 240: Dato = un dato nuevo con ese mensaje (el mismo "Dato" de la tarea nueva); sin importancia = se queda aquí con msg_imp 0 */
-function datoG(t, ixs){
-  var n=nuevaG(t, ixs, true); if(!n) return null;
+function datoG(t, ixs, nombre){
+  var n=nuevaG(t, ixs, true, nombre); if(!n) return null;
   n.tipo_item="dato"; n.es_dato=true; n.tipo_elegido=true; n.falta_fecha=false; guarda(n); return n;
 }
 /* build 243: "No guardar" = lo mismo que "Solo plática" (no va a ninguna tarea, queda oculto, no se borra). Debajo, 6 s, una pregunta
@@ -984,7 +989,9 @@ function bindAcomodo(raiz, tareaDe){
   function q2(sel, fn){ Array.prototype.forEach.call(raiz.querySelectorAll(sel), function(el){ el.onclick=function(ev){ ev.stopPropagation(); try{ var _rc=el.getBoundingClientRect(); window.__tap245={l:_rc.left, t:_rc.top, w:_rc.width, h:_rc.height, ts:Date.now()}; }catch(e){} var ix=+el.getAttribute(sel.slice(1,-1)), t=tareaDe(el); if(!t) return; fn(t, ix, ixsDe(el, ix)); if(raiz.id==="det242" && raiz.parentNode) raiz.remove(); }; }); }   /* build 252: la hoja de detalle se cierra al usar su botón */
   q2("[data-acok]", function(t, ix, ixs){ var r=okG(t, ixs); if(r) toast(r); render(); });
   q2("[data-acmov]", function(t, ix, ixs){ abreMover(t, ix, ixs); });
-  q2("[data-acdato]", function(t, ix, ixs){ var n=datoG(t, ixs); if(n) toast("Dato nuevo “"+n.nombre+"”; "+(ixs.length===1?"el mensaje pasó":"la plática pasó")+" ahí."); render(); });
+  /* Dato pide su nombre igual que Nueva: el que escribe Salvador es el que se guarda */
+  q2("[data-acdato]", function(t, ix, ixs){ var dv=document.getElementById("det242"); if(dv) dv.remove();
+    pideNombreNueva(t, ixs, function(nombre){ var n=datoG(t, ixs, nombre); if(n) toast("Dato nuevo “"+n.nombre+"”; "+(ixs.length===1?"el mensaje pasó":"la plática pasó")+" ahí."); render(); }, {dato:true}); });
   q2("[data-acng]", function(t, ix, ixs){ var r=noGuardar(t, ixs); if(r) render(); });
   q2("[data-acnueva]", function(t, ix, ixs){ var dv=document.getElementById("det242"); if(dv) dv.remove();   /* build 249: pide el nombre */
     pideNombreNueva(t, ixs, function(nombre){ var n=nuevaG(t, ixs, false, nombre); if(n) toast("Tarea nueva “"+n.nombre+"”; "+(ixs.length===1?"el mensaje pasó":"la plática pasó")+" ahí."); if(n) vaATareaNueva(n); else render(); }); });
@@ -1216,8 +1223,11 @@ function bindPropuestas(){
     var sim=[]; try{ sim=similares229(t).map(function(d){ return d.id; }); }catch(e){}
     window.__volver256={oid:t.id};
     if(a==="vinc"){ abreEnlazar(t.id, {similares:sim}); return; }
-    if(a==="dato"){ abreEnlazar(t.id, {similares:sim, etiquetaNueva:"Dato suelto", subNueva:"Queda como dato", tareaNueva:function(){ t.tipo_item="dato"; t.es_dato=true; t.tipo_elegido=true; t.autorizada=true; t.autorizada_ts=Date.now(); t.por_autorizar=false; t.falta_fecha=false; guarda(t);
-      try{ hist240("Propuesta como dato: “"+String(t.nombre||"")+"”", t, {tipo:"prop256", prev:t.tipo_item||"", dato:false}); }catch(e){} window.__volver256=null; toast("Quedó como dato “"+corta40(t.nombre)+"”"); render(); }}); return; } }; });
+    if(a==="dato"){ abreEnlazar(t.id, {similares:sim, etiquetaNueva:"Dato suelto", subNueva:"Queda como dato", tareaNueva:function(){
+      pideNombreNueva(t, [], function(nombre){ var prev=t.tipo_item||"";
+        t.nombre=tituloTarea(nombre); t.tipo_item="dato"; t.es_dato=true; t.tipo_elegido=true; t.autorizada=true; t.autorizada_ts=Date.now(); t.por_autorizar=false; t.falta_fecha=false; guarda(t);
+        try{ hist240("Propuesta como dato: “"+String(t.nombre||"")+"”", t, {tipo:"prop256", prev:prev, dato:false}); }catch(e){} window.__volver256=null; toast("Quedó como dato “"+corta40(t.nombre)+"”"); render(); },
+        {dato:true, valor:t.nombre, alCancelar:function(){ window.__volver256=null; }}); }}); return; } }; });
   Array.prototype.forEach.call(r.querySelectorAll("[data-p256d]"), function(el){ el.onclick=function(ev){ ev.stopPropagation(); var t=tDe(el); if(!t) return; var f=fechaProp(t, el.getAttribute("data-p256d")); toast("Creada: “"+corta40(t.nombre)+"”"+(f?" · "+fechaMovCorta(f):" · sin fecha")); render(); }; });
 }
 function vAcomodo(fijo){

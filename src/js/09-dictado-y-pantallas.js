@@ -355,6 +355,7 @@ function bindHilo(){
   var enm146=$("enom");
   if(enm146){
     var guardaNombre146=function(){
+      if(enm146.__guardado) return; enm146.__guardado=1;   /* Enter guarda y el repintado le quita el foco: el blur no debe guardar dos veces */
       var v146=(enm146.value||"").trim();
       editaNombre=null;
       if(v146 && v146!==t.nombre){ var F278=null, n278=t.nombre; try{ F278=camFoto([t]); }catch(e){} t.nombre=v146; guarda(t); try{ ultNombre(t, F278, n278); }catch(e){} try{ hist240("Cambió el nombre a “"+v146+"” (era “"+n278+"”)", t, null); }catch(e){} toast("Nombre actualizado"); }
@@ -721,7 +722,10 @@ function bindHilo(){
   Array.prototype.forEach.call(document.querySelectorAll("[data-tipoi]"),function(b){ b.onclick=function(){ var k=b.getAttribute("data-tipoi");
     if(k==="vincular"){ abreEnlazar(t.id, {similares:similares229(t).map(function(d){ return d.id; }), tareaNueva:function(){ t.tipo_item="tarea"; t.es_dato=false; t.tipo_elegido=true; guarda(t); if(!revisaCompleta(t)) render(); }}); return; }
     try{ hist240("Tocó “"+(k==="dato"?"Dato":"Tarea")+"”", t, {tipo:"tipo", prev:t.tipo_item||"", elegido:!!t.tipo_elegido}); }catch(e){}
-    t.tipo_item=k; t.es_dato=(k==="dato"); t.tipo_elegido=true; guarda(t); if(!revisaCompleta(t)) render(); }; });   /* build 195; 237: tipo_elegido */
+    var eraDato=t.tipo_item==="dato";
+    t.tipo_item=k; t.es_dato=(k==="dato"); t.tipo_elegido=true; guarda(t); if(!revisaCompleta(t)) render();
+    /* al volverlo dato se le pone nombre en ese momento (el que trae lo puso la Mac); Cancelar deja el que tenía */
+    if(k==="dato" && !eraDato) pideNombreNueva(t, [], function(nombre){ var nv=tituloTarea(nombre); if(nv && nv!==t.nombre){ var ant=t.nombre; t.nombre=nv; guarda(t); try{ hist240("Cambió el nombre a “"+nv+"” (era “"+ant+"”)", t, null); }catch(e){} } toast("Dato “"+corta40(t.nombre)+"”"); render(); }, {dato:true, valor:t.nombre}); }; });   /* build 195; 237: tipo_elegido */
   Array.prototype.forEach.call(document.querySelectorAll("[data-agenda]"),function(b){ b.onclick=function(){ if(b.getAttribute("data-agenda")==="si"){ var _ev=eventoDe(t); agendaEvento(t, "", !(_ev&&_ev.hora)); } else noAgendar(t); }; });   /* build 202/203; 229: sin hora = todo el dia (lo que propone la franja) */
   Array.prototype.forEach.call(document.querySelectorAll("[data-agmenu]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); menuAgenda(t, b); }; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-evid]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); abreEvidencia(t); }; });
@@ -1196,11 +1200,10 @@ function bindYo(){
         tp=$("supt").value, ar=$("supa").value;
     if(!d||!hh||!q){ toast("Faltan las fechas"); return }
     if(dDif(d,hh)<0){ toast("La fecha de regreso va después"); return }
-    ponSuplencia(yo,d,hh,q,tp,ar);
-    toast("Listo. Lo ve "+PERSONAS[q].nombre);
+    avisaSiLlego(ponSuplencia(yo,d,hh,q,tp,ar), "Listo. Lo ve "+PERSONAS[q].nombre, "No se pudo guardar tu ausencia: revisa tu conexión");
     render();
   };
-  var bq=$("bquitasup"); if(bq) bq.onclick=function(){ quitaSuplencia(yo); toast("Bienvenido"); render() };
+  var bq=$("bquitasup"); if(bq) bq.onclick=function(){ avisaSiLlego(quitaSuplencia(yo), "Bienvenido", "No se pudo quitar tu ausencia: revisa tu conexión"); render() };
 }
 
 function bindEncargo(){
@@ -1210,7 +1213,7 @@ function bindEncargo(){
     var v=($("txtenc")||{}).value||"";
     if(!v.trim()){ toast("Escribe aunque sea una línea"); return }
     respondeEncargo(e,v);
-    toast("Le llegó a "+PERSONAS[e.de].nombre);
+    avisaSiLlego(ENC_ESCRITURA[e.id], "Le llegó a "+PERSONAS[e.de].nombre, "No le llegó a "+PERSONAS[e.de].nombre+": revisa tu conexión");
     vista="lista"; encAbierto=null; render();
   };
 }
@@ -1235,7 +1238,7 @@ function bindPedir(tareaId){
     if(!txt.trim()){ toast("Escribe qué le pides"); return }
     var e=creaEncargo(elegido,txt,tareaId);
     if(!e){ toast("No se pudo"); return }
-    toast("Le llegó a "+PERSONAS[elegido].nombre);
+    avisaSiLlego(ENC_ESCRITURA[e.id], "Le llegó a "+PERSONAS[elegido].nombre, "No le llegó a "+PERSONAS[elegido].nombre+": revisa tu conexión");
     vista=tareaId?"hilo":"lista"; render();
   };
 }
@@ -1463,7 +1466,7 @@ function avisoLigaTarea(txt){ var e=$("toast"); if(!e) return; e.textContent=txt
       if(i==="BUSCAR" && j.terminos) window.__terminosExtra=String(j.terminos);
       i="CREAR"; j.intencion="CREAR";
       if(!j.tarea||!j.tarea.nombre)
-        j.tarea={nombre:conMayuscula(limpiaDictado(sinLaFecha(nombreDeLoDicho(dicho)))),
+        j.tarea={nombre:conMayuscula(limpiaDictado(quitaHoraNombre(sinLaFecha(nombreDeLoDicho(dicho))))),
                  duenio:quienDicho(dicho)||yo, fecha:diaW(dichoTotal)||"",
                  cierra:"",revisar:"",criticidad:"normal",periodicidad:null,
                  recuperable:true,gasto:""};
@@ -1481,14 +1484,14 @@ function avisoLigaTarea(txt){ var e=$("toast"); if(!e) return; e.textContent=txt
        ["RECORDATORIO","CREAR","ENVIAR"].indexOf(i)<0 && !_VERBO_ACCION.test(_norm(dicho))){
       i="RECORDATORIO"; j.intencion="RECORDATORIO";
       var _rt=String(dicho||"").replace(/^\s*(recu[e\u00e9]rda(me|nos)?|acu[e\u00e9]rda(te|me)?|ponme (un )?recordatorio( de| para)?)\s+/i,"");
-      j.recordatorio={texto:conMayuscula(limpiaDictado(sinLaFecha(nombreDeLoDicho(_rt||dicho)))),
+      j.recordatorio={texto:conMayuscula(limpiaDictado(quitaHoraNombre(sinLaFecha(nombreDeLoDicho(_rt||dicho))))),
                       fecha:diaW(dichoTotal)||""};
     } else if(/\b(recu[e\u00e9]rda(me|nos)?|acu[e\u00e9]rda(te|me)?|recordatorio)\b/.test(_norm(dicho)) &&
        ["CREAR","ENVIAR"].indexOf(i)<0 && _VERBO_ACCION.test(_norm(dicho))){
       i="CREAR"; j.intencion="CREAR";
       var _rt2=String(dicho||"").replace(/^\s*(recu[e\u00e9]rda(me|nos)?|acu[e\u00e9]rda(te|me)?|ponme (un )?recordatorio( de| para)?)\s+/i,"");
       if(!j.tarea||!j.tarea.nombre)
-        j.tarea={nombre:conMayuscula(limpiaDictado(sinLaFecha(nombreDeLoDicho(_rt2||dicho)))),
+        j.tarea={nombre:conMayuscula(limpiaDictado(quitaHoraNombre(sinLaFecha(nombreDeLoDicho(_rt2||dicho))))),
                  duenio:quienDicho(dicho)||yo, fecha:diaW(dichoTotal)||"",
                  cierra:"",revisar:"",criticidad:"normal",periodicidad:null,
                  recuperable:true,gasto:""};

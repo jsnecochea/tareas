@@ -252,14 +252,51 @@ function bindFicha(primera){
            mail_trabajo:$("fmt").value, mail_personal:$("fmp").value};
     if(!d.nombre.trim() || !d.apellido.trim()){ toast("Falta nombre y apellido"); return }
     if(!/.+@.+\..+/.test(d.mail_trabajo.trim())){ toast("Falta tu correo del trabajo"); return }
-    guardaFicha(yo, d);
-    toast("Listo. Tus iniciales son "+PERSONAS[yo].ini);
+    avisaSiLlego(guardaFicha(yo, d), "Listo. Tus iniciales son "+PERSONAS[yo].ini, "No se pudo guardar tu ficha: revisa tu conexión");
     vista="lista"; render();
   };
 }
 
 /* ============ RENDER ============ */
+/* UN CAMPO A MEDIO ESCRIBIR NO SE BORRA. render() reemplaza #app completo. Si llegaba uno de fondo (el sondeo del servidor
+   que trae cambios, una respuesta de Claude, un reloj) mientras se escribía en un campo de #app —el nombre de una tarea o de
+   un dato (⋯ → Cambiar nombre), «Tus datos», la fecha de la agenda— el campo se destruía: se cerraba el teclado y lo escrito
+   se perdía o se guardaba a medias. Justo después de acomodar algo de la Bandeja es cuando más pasa, porque lo recién guardado
+   regresa en el siguiente sondeo. Ahora ese repintado de fondo espera a que se termine de escribir; lo que hace la persona
+   (tocar fuera del campo, o una tecla dentro de él, como Enter = guardar) repinta de inmediato. La barra de escribir (.pie)
+   tiene su propio manejo en pintaHilo y no entra aquí. */
+var EDICION={pendiente:false, toqueFuera:0, enEvento:false, actividad:0, montado:false};
+var EDICION_TOPE_MS=120000;   /* un campo olvidado con el foco no congela la pantalla para siempre */
+function campoEnEdicion(){
+  var ae=document.activeElement, app=$("app");
+  if(!ae || !app || ae===document.body || !app.contains(ae)) return null;
+  if(!/^(INPUT|TEXTAREA)$/.test(ae.tagName)) return null;
+  if(/^(button|checkbox|radio|submit|reset|range|file|color|hidden)$/i.test(ae.type||"")) return null;
+  if(ae.closest && ae.closest(".pie")) return null;
+  return ae;
+}
+function montaEdicionUnaVez(){
+  if(EDICION.montado || typeof document==="undefined") return; EDICION.montado=true;
+  var fuera=function(ev){ var c=campoEnEdicion(); if(c && !(ev.target && c.contains(ev.target))) EDICION.toqueFuera=Date.now(); };
+  ["pointerdown","touchstart","mousedown"].forEach(function(n){ document.addEventListener(n, fuera, true); });
+  document.addEventListener("click", function(ev){ var c=campoEnEdicion(); if(c && !(ev.target && c.contains(ev.target))){ EDICION.enEvento=true; setTimeout(function(){ EDICION.enEvento=false; }, 0); } }, true);
+  var propio=function(ev){ var c=campoEnEdicion(); if(c && ev.target===c){ EDICION.enEvento=true; EDICION.actividad=Date.now(); setTimeout(function(){ EDICION.enEvento=false; }, 0); } };
+  ["keydown","input","change","compositionend"].forEach(function(n){ document.addEventListener(n, propio, true); });
+  document.addEventListener("focusin", function(){ if(campoEnEdicion()) EDICION.actividad=Date.now(); }, true);
+  /* al soltar el campo se pinta lo que quedó pendiente; espera un momento para no robarle el clic al botón que se tocó */
+  document.addEventListener("focusout", function(){ if(!EDICION.pendiente) return;
+    setTimeout(function(){ if(EDICION.pendiente && !campoEnEdicion()){ EDICION.pendiente=false; render(); } }, 400); }, true);
+}
+function posponerRender(){
+  montaEdicionUnaVez();
+  var c=campoEnEdicion(); if(!c) return false;
+  if(EDICION.enEvento || Date.now()-EDICION.toqueFuera<1500) return false;
+  if(EDICION.actividad && Date.now()-EDICION.actividad>EDICION_TOPE_MS) return false;
+  EDICION.pendiente=true; return true;
+}
 function render(){
+  if(posponerRender()) return;
+  EDICION.pendiente=false;
   try{ barreNotifs(); }catch(e){}   /* build 268: cierra las notificaciones de lo ya resuelto (cada 20 s como mucho) */
   cierraDudaHilo();
   if(vista!=="hilo" && vista!=="galeria") window.__visitaDe=null;   /* build 197: salir de la tarea termina la visita */

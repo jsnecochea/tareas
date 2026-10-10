@@ -161,7 +161,7 @@ function bindCapas(t){
     style:{}, scrollHeight:0, focus:function(){ var e=$("dec273t"); if(e) e.focus(); } };
   ta.oninput=function(){ window.__dec273[tid]=ta.value; };
   var manda=function(){ var e=$("dec273t"), v=(e?e.value:"")||window.__dec273[tid]||""; if(window.__oyendo){ try{ paraDictadoHilo(); cierraDictado(); }catch(er){} }
-    var T=tareas.filter(function(x){ return x.id===tid; })[0]; if(!String(v).trim()){ if(e) e.focus(); return; } contestaDecision(T||t, v); };
+    var T=tareas.filter(function(x){ return x.id===tid; })[0]; if(!String(v).trim()){ toast("Escribe o dicta tu respuesta, o toca una opción"); if(e) e.focus(); return; } contestaDecision(T||t, v); };   /* la flecha sin texto avisa: antes no hacía nada y parecía descompuesta */
   ta.onkeydown=function(ev){ if(ev.key==="Enter" && !ev.shiftKey){ ev.preventDefault(); manda(); } };
   var be=$("dec273e"); if(be) be.onclick=function(ev){ ev.stopPropagation(); manda(); };
   var bm=$("dec273m"); if(bm) bm.onclick=function(ev){ ev.stopPropagation(); arrancaDictadoRev(bm, px); };
@@ -170,7 +170,7 @@ function bindCapas(t){
    falta (soloMeFalta); lo dictado o escrito con ese bloque abierto completa la tarea (completaRevision), como antes del 255. */
 function faltaComoPreg(t){
   var f=[]; try{ if(tipoRevisar(t)==="falta" && !vistaSup(t)) f=soloMeFalta(t); }catch(e){}
-  return f.map(function(x){ var s=String(x||"").trim(); return {k:"falta273", q:"Dime "+s+".", ops:[]}; });
+  return f.map(function(x){ var s=String(x||"").trim(); return {k:s==="si te lo agendo"?"agenda273":"falta273", q:"Dime "+s+".", ops:[]}; });   /* agenda273 lleva Sí / No en pantalla */
 }
 /* nombre que se puede mostrar: un "nombre" de puro numero se busca en la agenda o en otro mensaje del mismo numero */
 function nombreVisible(nom, t){
@@ -1366,9 +1366,10 @@ function aplicaAmPm(t, cual){
 function sinHoraEnTitulo(txt){
   var s=String(txt||"")
     .replace(/\b(hoy|ma[nñ]ana)\s+/gi," ")
-    .replace(/\ba\s+la(s)?\s+\d{1,2}([:.]\d{2})?\s*(am|pm|a\.?m\.?|p\.?m\.?|hrs?|horas?)?\b/gi," ")
-    .replace(/\b\d{1,2}[:.]\d{2}\s*(am|pm|a\.?m\.?|p\.?m\.?|hrs?|horas?)?\b/gi," ")
-    .replace(/\b\d{1,2}\s*(am|pm|a\.?m\.?|p\.?m\.?)\b/gi," ")
+    /* sin \b al final: tras «a.m.» o «p.m.» no hay frontera de palabra y se quedaba el punto suelto */
+    .replace(/\ba\s+la(s)?\s+\d{1,2}([:.]\d{2})?(\s*(a\.?\s?m\.?|p\.?\s?m\.?|hrs?\.?|horas?))?(?![\wáéíóúñ])/gi," ")
+    .replace(/\b\d{1,2}[:.]\d{2}(\s*(a\.?\s?m\.?|p\.?\s?m\.?|hrs?\.?|horas?))?(?![\wáéíóúñ])/gi," ")
+    .replace(/\b\d{1,2}\s*(a\.?\s?m\.?|p\.?\s?m\.?)(?![\wáéíóúñ])/gi," ")
     .replace(/\s+/g," ").trim().replace(/^(de|para|a|que|,|\.)\s+/i,"")
     .replace(/^\d{1,2}\s+/,"").replace(/^(de|para|a|que)\s+/i,"").trim();
   return s.length>=3 ? conMayuscula(s) : String(txt||"");
@@ -1475,7 +1476,13 @@ function pegaFuerte(t, pistas){
 /* el nombre de una tarea NO carga la fecha: la fecha ya es su propio campo y
    repetirla ensucia la lista ("Cortar el pasto del jardin EL VIERNES"). */
 function sinLaFecha(txt){
-  return String(txt||"")
+  var orig=String(txt||""), s=orig
+    /* también al principio: «recuérdame el lunes pagar el agua» → «Pagar el agua» (antes quedaba «El Lunes Pagar el Agua») */
+    .replace(/^\s*(el|este|esta|para el|para este|el pr[oó]ximo|pr[oó]ximo)\s+(lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)\b[\s,]*/i,"")
+    .replace(/^\s*(pasado ma[ñn]ana|ma[ñn]ana|hoy)\b[\s,]+(?=\S)/i,"")
+    .replace(/^\s*(el|para el)\s+\d{1,2}\s+de\s+[a-záéíóú]+\b[\s,]*/i,"");
+  if(s.trim().length<3) s=orig;
+  return s
     .replace(/\s*[,·-]?\s*\b(el|este|proximo|próximo|para el|para)?\s*(lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo|ma[ñn]ana|hoy|pasado ma[ñn]ana)\b\s*$/i,"")
     .replace(/\s*[,·-]?\s*\b(el|para el)?\s*\d{1,2}\s+de\s+[a-záéíóú]+\s*$/i,"")
     .trim().replace(/[.,;·-]+$/,"").trim();
@@ -1543,6 +1550,21 @@ function hayQueHacerAlgo(dicho, j){
    que elimine hoy", para decidir si se ofrece el boton "Ver mas" (historial
    completo). Coincide con los sinonimos que ya trae SYS_BARRA 2b. */
 var RE_CERRADAS_Q=/\b(qu[eé]\s+(hice|hizo|complet[eé]|termin[eé]|elimin[eé]|cancel[eé]))\b|\blogr[eé]\b|\bavanc[eé]\b|\bcerr[eé]\b|\btach[eé]\b|\bresolv[ií]\b|\bc[oó]mo\s+me\s+fue\b|\ben\s+qu[eé]\s+trabaj[eé]\b|\bresumen\s+del\s+d[ií]a\b|\bcancel[eé]\b|\bquit[eé]\b|\bdesech[eé]\b|\bbot[eé]\b|\bsaqu[eé]\s+de\s+la\s+lista\b|\bya\s+no\s+aplica\b/i;
+/* tareas abiertas (mías o donde soy integrante) donde ese contacto ya está: en wa_contactos, como integrante o como
+   externo que revisa. Se compara sin acentos; «Manuel» pega con «Manuel Parra» por el primer nombre. */
+function tareasDeContacto(nombre){
+  var c=_nn(nombreLimpio(String(nombre||""))).trim(); if(!c) return [];
+  var c1=c.split(/\s+/)[0], uno=c.indexOf(" ")<0;
+  var pega=function(n){ n=_nn(nombreLimpio(String(n||""))).trim(); if(!n) return false; return n===c || (uno && n.split(/\s+/)[0]===c1) || (n.indexOf(" ")<0 && n===c1); };
+  return (tareas||[]).filter(function(t){
+    if(!t || t.es_recordatorio || t.cierre || t.fusionada_en || t.estado==="descartada" || estadoReal(t)==="cerrada") return false;
+    if(t.duenio!==yo && (t.integrantes||[]).indexOf(yo)<0) return false;
+    var ns=(t.wa_contactos||[]).map(function(w){ return (w&&w.nombre)||w; })
+      .concat((t.integrantes||[]).filter(function(k){ return k!==yo; }).map(function(k){ return (PERSONAS[k]&&PERSONAS[k].nombre)||k; }))
+      .concat([t.revisa_ext]);
+    return ns.some(pega);
+  });
+}
 function aplicaIntencion(j, dicho, hist, foto){
   var i=String(j.intencion||"").toUpperCase().replace(/[^A-Z_]/g,"");
   if(SINONIMOS_INT[i]) i=SINONIMOS_INT[i];
@@ -2048,6 +2070,20 @@ function aplicaIntencion(j, dicho, hist, foto){
        encontraba nada). Si no pega ninguna, se abre una tarea nueva tuya. */
     var tw=null, _nueva="";
     if(_waDesde) tw=tareas.filter(function(x){ return x.id===_waDesde })[0];
+    /* primero las tareas abiertas donde esa persona YA es contacto (Manuel Parra → «Comedor nuevo»): con una sola, va ahí;
+       con varias, se pregunta. Si Claude nombró la tarea (w.tarea), manda lo suyo. */
+    if(!tw && !w.tarea){
+      var _deC=tareasDeContacto(w.contacto);
+      if(_deC.length===1) tw=_deC[0];
+      else if(_deC.length>1){
+        var _pc=_deC.map(function(t){ return {t:t, n:pegaFuerte(t, w.texto||"")} }).sort(function(a,b){ return b.n-a.n });
+        if(_pc[0].n>0 && _pc[0].n>_pc[1].n) tw=_pc[0].t;
+        else { barraEstado={modo:"respuesta", dicho:dicho,
+            texto:w.contacto+" está en "+_deC.length+" tareas: "+_deC.slice(0,4).map(function(t){ return "“"+t.nombre+"”" }).join(", ")+
+                  ". ¿En cuál va ese WhatsApp? Ábrela y dímelo desde ahí."};
+          vista="barra"; render(); return; }
+      }
+    }
     if(!tw){
       var _pis=[w.tarea||"", w.texto||"", w.contacto||""].join(" ");
       var _mias=tareas.filter(function(t){ return t.duenio===yo && !t.es_recordatorio && !t.cierre && estadoReal(t)!=="cerrada" });

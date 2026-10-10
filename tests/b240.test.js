@@ -64,7 +64,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
       function card(re) { return [].filter.call(document.querySelectorAll(".aco226 .acor.g237"), function (f) { return re.test(f.textContent); })[0]; }
       __ESCR.length = 0;   /* 243: ya no hay "OK · sin importancia" */
       var x = FI.msgs[0]; o.triv = [!!card(/Javier/).querySelector("[data-actriv]")];
-      card(/Rogelio/).querySelector(":scope > .acob > .ac226 [data-acdato]").click(); var n = tareas[tareas.length - 1];
+      card(/Rogelio/).querySelector(":scope > .acob > .ac226 [data-acdato]").click(); o.pideNombre = !!document.getElementById("nom249"); document.querySelector('#nom249 [data-nom249="ok"]').click(); var n = tareas[tareas.length - 1];   /* el dato pide su nombre: se acepta el propuesto */
       o.dato = [n.tipo_item, n.es_dato, n.tipo_elegido, n.msgs.filter(function (x) { return x.movido_de; }).length, FI.msgs[1].oculto];
       /* en la hoja ¿A dónde va? */
       var G = { id: "tG", nombre: "Comedor nuevo", duenio: "salvador", estado: "abierta", msgs: [{ k: "bi", wa_in: 1, wa_c: "Lalo", t: "Lalo: jajaja igualmente", ts: Date.now() - 1000, h: "21:00", wa_id: "zz" }] };
@@ -101,6 +101,7 @@ eq("ninguna font-family sin respaldo del sistema", (html.match(/font-family:(Arc
     eq("Acomodo (243): OK · Mover · Nueva · Dato · No guardar", r2.botones, ["OK", "Mover", "Nueva", "Dato", "No guardar"]);
     eq("243: ya no existe 'OK · sin importancia' (regla trivial y atajo quitados)", r3.triv, [false]);
     eq("Dato: un dato nuevo con el mensaje", r3.dato, ["dato", true, true, 1, true]);
+    eq("Dato: pide el nombre antes de crearlo", r3.pideNombre, true);
     eq("243: hoja ¿A dónde va? sin 'Bien, pero sin importancia'; termina en 'Solo plática'", [r3.hoja.indexOf("Bien, pero sin importancia"), r3.hoja.slice(-1)], [-1, ["Solo plática"]]);
     eq("243: ni botón de sin importancia en la hoja", r3.hojaTriv, [false]);
     eq("Historial: lo más reciente arriba, con Deshacer donde se puede", r4.renglones.slice(0, 4), [["Comprar Regalo", "Ya está (la cerró)", true], ["Comprar Regalo", "Movió un mensaje a “Fiesta”", true], ["Comprar Regalo", "Movió la fecha del sáb 10 oct al lun 12 oct", true], ["Comprar regalo", "Abrió la tarea", false]]);

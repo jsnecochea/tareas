@@ -1496,8 +1496,9 @@ function asuntoRecordatorio(v, t){
   var s=String(v||"").trim();
   s=s.replace(/\b(recu[e\u00e9]rdamel[oa]|av[i\u00ed]samel[oa]|acu[e\u00e9]rdamel[oa]|recu[e\u00e9]rdame|recu[e\u00e9]rdanos|recuerda|acu[e\u00e9]rdame|acu[e\u00e9]rdate|acuerda|recordatorio|record[a\u00e1]me|alarma|alerta|av[i\u00ed]same|avisa|aviso|notif[i\u00ed]came|notifica|dime|com[e\u00e9]ntame)\b/gi," ")
      .replace(/\b(por|en|a|de)\s+la\s+(ma[n\u00f1]ana|tarde|noche)\b/gi," ")
-     .replace(/\ba\s+la(s)?\s+(una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|\d{1,2})([:.]\d{2})?\b/gi," ")
-     .replace(/\b\d{1,2}([:.]\d{2})?\s*(am|pm|a\.?m\.?|p\.?m\.?|horas?|hrs?)\b/gi," ")
+     /* la hora se va con su «am / pm / a.m. / p.m. / hrs»; si no, «a las 9 am confirmar» dejaba «Am confirmar» */
+     .replace(/\ba\s+la(s)?\s+(una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|\d{1,2})([:.]\d{2})?(\s*(a\.?\s?m\.?|p\.?\s?m\.?|hrs?\.?|horas?))?(?![\wáéíóúñ])/gi," ")
+     .replace(/\b\d{1,2}([:.]\d{2})?\s*(a\.?\s?m\.?|p\.?\s?m\.?|horas?|hrs?\.?)(?![\wáéíóúñ])/gi," ")
      .replace(/\b(en|dentro de)\s+(\d{1,3}|un|una|uno|dos|tres|cuatro|cinco|diez|quince|veinte|treinta|media|un cuarto de)\s*(minutos?|min|horas?|hrs?|hora y media)?\b/gi," ")
      .replace(/\b(mediod[i\u00ed]a|medianoche|hoy|ma[n\u00f1]ana|pasado ma[n\u00f1]ana|lunes|martes|mi[e\u00e9]rcoles|jueves|viernes|s[a\u00e1]bado|domingo)\b/gi," ")
      .replace(/\s+/g," ").trim()

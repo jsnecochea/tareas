@@ -2176,8 +2176,8 @@ function confirmaAccion(b){
     barraEstado=null; consulta=""; fotoEnMano=null; vista="lista"; render(); return;
   }
   if(b.accion==="encargar"){
-    var e=b.pendiente.encargo; creaEncargo(e.para, e.texto, null, null);
-    toast("Le llegó a "+PERSONAS[e.para].nombre);
+    var e=b.pendiente.encargo, ne=creaEncargo(e.para, e.texto, null, null);
+    if(ne) avisaSiLlego(ENC_ESCRITURA[ne.id], "Le llegó a "+PERSONAS[e.para].nombre, "No le llegó a "+PERSONAS[e.para].nombre+": revisa tu conexión"); else toast("No se pudo");
     barraEstado=null; consulta=""; fotoEnMano=null; vista="lista"; render(); return;
   }
   if(b.accion==="recordatorio"){
